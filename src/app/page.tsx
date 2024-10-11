@@ -1,13 +1,9 @@
-import Head from 'next/head';
-import dynamic from 'next/dynamic';
-
-// Get map component with dynamic import
-const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false });
+import GamePage from './game/page';
 
 export default function Home() {
   return (
-    <main className='h-screen w-screen'>
-      <MapComponent />
+    <main>
+      <GamePage />
     </main>
   );
 }
