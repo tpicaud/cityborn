@@ -1,4 +1,9 @@
 export default interface StarEntity {
     name: string;
-    birthPlace: { lat: number, lng: number };
+    description: string;
+    image: string;
+    birthPlace: {
+        city: string,
+        coordinates: {lat: number, lng: number}
+    };
 }
