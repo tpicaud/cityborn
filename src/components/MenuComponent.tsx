@@ -14,8 +14,8 @@ export default function MenuComponent() {
     const router = useRouter();
 
     return (
-        <div className="relative min-h-[100vh]">
-            <div className="absolute inset-0 ">
+        <div className="relative h-screen">
+            <div className="absolute inset-0">
                 <MapContainer center={[0, 0]} zoom={3} zoomControl={false} className="h-full w-full z-0">
                     <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -26,7 +26,7 @@ export default function MenuComponent() {
 
             </div>
             
-            <div className="relative z-10 flex flex-col items-center justify-center min-h-[100vh] py-4 px-2 bg-transparent text-gray-200 pointer-events-none">
+            <div className="relative z-10 flex flex-col items-center justify-center h-full py-4 px-2 bg-transparent text-gray-200 pointer-events-none">
                 <h1 className="text-3xl font-bold mb-4">CityStarGuessr</h1>
                 <p className="text-lg text-center mb-8">Guess where the stars were born on the map</p>
                 <Button

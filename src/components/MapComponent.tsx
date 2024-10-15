@@ -95,7 +95,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     // Render
     /////////////////////////////////////////////////////////////////
     return (
-        <div className="relative w-full h-[100vh]">
+        <div className="relative w-full h-screen">
             <MapContainer center={France} zoom={3} className="h-[100%] w-full bg-transparent z-0">
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

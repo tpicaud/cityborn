@@ -16,7 +16,7 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handle
             <Backdrop
                 sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
                 open={true}
-                className="flex flex-col items-center justify-center min-h-[100vh] py-4"
+                className="flex flex-col items-center justify-center min-h-screen py-4"
             >
                 <h2 className="text-2xl font-bold mb-4">Game Results</h2>
 
