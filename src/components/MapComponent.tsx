@@ -8,7 +8,8 @@ import L from 'leaflet';
 import 'leaflet/dist/images/marker-icon.png';
 import 'leaflet/dist/images/marker-shadow.png';
 import StarEntity from '@/entities/StarEntity';
-import { Box, Button } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
+import { ArrowForward } from '@mui/icons-material';
 
 const blueIcon = new L.Icon(({
     iconUrl: '/img/marker-icon-blue.png', // Utilise une URL pour une icône bleue
@@ -143,19 +144,19 @@ const MapComponent: React.FC<MapComponentProps> = ({
                         variant="contained"
                         onClick={handleGuess}
                         disabled={!marker || hasGuessed}
-                        className='text-white font-bold py-2 px-4 rounded w-[50%] block text-center'
+                        className='text-white font-bold rounded py-2 px-4 w-[50%] block text-center'
                     >
                         Guess
                     </Button>
 
                     {hasGuessed && (
                         <Button
-                            variant="contained"
+                        variant='contained'
                             color='error'
                             onClick={() => handleNextStar()}
-                            className='text-white font-bold py-2 px-4 rounded w-[auto] absolute right-0'
+                            className='text-white font-bold rounded-3xl py-2 px-4 absolute right-0'
                         >
-                            Next
+                            <ArrowForward />
                         </Button>
                     )}
                 </div>
