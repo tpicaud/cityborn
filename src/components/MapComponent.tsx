@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, useMapEvents, Marker, useMap, Polyline } from 'react-leaflet';
 import { LatLngBounds, LatLngExpression } from 'leaflet';
@@ -8,7 +8,7 @@ import L from 'leaflet';
 import 'leaflet/dist/images/marker-icon.png';
 import 'leaflet/dist/images/marker-shadow.png';
 import StarEntity from '@/entities/StarEntity';
-import { Box, Button, IconButton } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
 
 const blueIcon = new L.Icon(({
@@ -133,9 +133,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     <Box
                         className="mb-4 p-2 text-center bg-blue-200 text-blue-600 rounded shadow-sm mx-auto"
                     >
-                        {star.name} est né à <b>{star.birthPlace.city}</b>
+                        {star.name} was born in <b>{star.birthPlace.city}</b>
                         <br />
-                        Vous êtes à <b>{distance.toFixed(2)} km</b>
+                        You are at <b>{distance.toFixed(2)} km</b>
                     </Box>
                 )}
 

@@ -6,10 +6,10 @@ import { Button } from '@mui/material';
 
 interface ResultsComponentProps {
     gameSession: GameSession;
-    handleRestart: () => void;
+    handleEndGame: () => void;
 }
 
-const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handleRestart }) => {
+const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handleEndGame }) => {
 
     return (
         <div >
@@ -46,10 +46,10 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handle
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleRestart}
+                    onClick={handleEndGame}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
                 >
-                    Restart Game
+                    End Game
                 </Button>
             </Backdrop>
         </div>

@@ -5,13 +5,16 @@ import StarComponent from '@/components/StarComponent';
 import StarEntity from '@/entities/StarEntity';
 import dynamic from 'next/dynamic';
 import { starList } from '@/data/stars';
-import { GameSession, GuessResult } from '@/entities/GameSession';
+import { GameSession } from '@/entities/GameSession';
 import ResultsComponent from '@/components/ResultsComponent';
+import { useRouter } from 'next/navigation';
 
 // Get map component with dynamic import
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
 
 export default function GamePage() {
+
+    const router = useRouter();
 
     const stars: StarEntity[] = starList;
 
@@ -58,12 +61,13 @@ export default function GamePage() {
         return Math.max(0, Math.round(maxDistance - distance));
     };
 
-    const handleRestart = () => {
+    const handleEndGame = () => {
         // Reset game session and state
         resetGuess();
         setGameSession({ results: [] });
         setCurrentStarIndex(0);
         setIsFinished(false);
+        router.push('/');
     };
 
     return (
@@ -82,7 +86,7 @@ export default function GamePage() {
                 setDistance={setDistance}
             />
             {isFinished && (
-                <ResultsComponent gameSession={gameSession} handleRestart={handleRestart} />
+                <ResultsComponent gameSession={gameSession} handleEndGame={handleEndGame} />
             )}
         </div>
     );

@@ -1,9 +1,9 @@
-import GamePage from './game/GamePage';
+import MenuComponent from '@/components/MenuComponent';
 
 export default function Home() {
   return (
     <main>
-      <GamePage />
+      <MenuComponent />
     </main>
   );
 }
