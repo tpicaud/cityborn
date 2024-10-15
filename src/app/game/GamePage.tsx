@@ -1,0 +1,89 @@
+'use client';
+
+import { useState } from 'react';
+import StarComponent from '@/components/StarComponent';
+import StarEntity from '@/entities/StarEntity';
+import dynamic from 'next/dynamic';
+import { starList } from '@/data/stars';
+import { GameSession, GuessResult } from '@/entities/GameSession';
+import ResultsComponent from '@/components/ResultsComponent';
+
+// Get map component with dynamic import
+const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
+
+export default function GamePage() {
+
+    const stars: StarEntity[] = starList;
+
+    const [gameSession, setGameSession] = useState<GameSession>({ results: [] });
+    const [isFinished, setIsFinished] = useState(false);
+
+    const [currentStarIndex, setCurrentStarIndex] = useState(0);
+    const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null);
+    const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
+    const [hasGuessed, setHasGuessed] = useState(false);
+    const [distance, setDistance] = useState(0);
+
+    const currentStar: StarEntity = stars[currentStarIndex];
+
+    const handleNextStar = () => {
+        // Save guess result
+        saveGuessResult();
+
+        if (currentStarIndex < stars.length - 1) {
+            setCurrentStarIndex(currentStarIndex + 1); // Move to next star
+            resetGuess(); // Reset guess
+        } else {
+            setIsFinished(true); // Game is finished
+        }
+    };
+
+    const resetGuess = () => {
+        setGuess(null);
+        setHasGuessed(false);
+        setMarker(null);
+    };
+
+    const saveGuessResult = () => {
+        const points = calculatePoints(distance);
+        const result = { star: currentStar.name, distance, points };
+        setGameSession(prevSession => ({
+            ...prevSession,
+            results: [...prevSession.results, result]
+        }));
+    };
+
+    const calculatePoints = (distance: number) => {
+        const maxDistance = 10000;
+        return Math.max(0, Math.round(maxDistance - distance));
+    };
+
+    const handleRestart = () => {
+        // Reset game session and state
+        resetGuess();
+        setGameSession({ results: [] });
+        setCurrentStarIndex(0);
+        setIsFinished(false);
+    };
+
+    return (
+        <div>
+            <StarComponent star={currentStar} />
+            <MapComponent
+                key={currentStarIndex}
+                star={currentStar}
+                hasGuessed={hasGuessed}
+                marker={marker}
+                distance={distance}
+                setMarker={setMarker}
+                setHasGuessed={setHasGuessed}
+                setGuess={setGuess}
+                handleNextStar={handleNextStar}
+                setDistance={setDistance}
+            />
+            {isFinished && (
+                <ResultsComponent gameSession={gameSession} handleRestart={handleRestart} />
+            )}
+        </div>
+    );
+}

@@ -14,7 +14,7 @@ export default function StarComponent({ star }: Readonly<{ star: StarEntity }>) 
         className="object-cover"
       />
       <CardContent className="flex flex-col break-words">
-        <Typography component="div" className=" text-xs md:text-sm lg:text-base font-bold">
+        <Typography component="div" className=" text-xs md:text-sm lg:text-base font-bold text-center">
           {star.name}
         </Typography>
       </CardContent>
