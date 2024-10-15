@@ -51,7 +51,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
     // Functions
     /////////////////////////////////////////////////////////////////
     const MarkerHandler = () => {
-        if (!hasGuessed) {
             useMapEvents({
                 click(e) {
                     const lat = e.latlng.lat
@@ -59,7 +58,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     setMarker({ lat, lng });
                 },
             });
-        }
         return null;
     };
 
@@ -102,7 +100,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MarkerHandler />
+                { !hasGuessed && (
+                    <MarkerHandler />
+                )}
                 {marker && (
                     <Marker position={marker} icon={blueIcon} />
                 )}
