@@ -32,7 +32,6 @@ interface MapComponentProps {
     distance: number;
     setMarker: React.Dispatch<React.SetStateAction<{ lat: number; lng: number } | null>>; // Type for setMarker
     setHasGuessed: React.Dispatch<React.SetStateAction<boolean>>; // Type for setHasGuessed
-    setGuess: React.Dispatch<React.SetStateAction<{ lat: number; lng: number } | null>>; // Type for setGuess
     handleNextStar: () => void;
     setDistance: React.Dispatch<React.SetStateAction<number>>; // Type for setDistance
 }
@@ -44,7 +43,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
     distance,
     setMarker,
     setHasGuessed,
-    setGuess,
     handleNextStar,
     setDistance
 }) => {
@@ -68,7 +66,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
     const handleGuess = () => {
         if (marker) {
             const { lat, lng } = marker;
-            setGuess({ lat, lng });
             setHasGuessed(true);
             setDistance(getDistanceTo(lat, lng));
         }
@@ -104,7 +101,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
             <MapContainer center={France} zoom={3} className="h-[100%] w-full bg-transparent z-0">
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
                 <MarkerHandler />
                 {marker && (
