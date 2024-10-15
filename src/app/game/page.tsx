@@ -23,7 +23,6 @@ export default function GamePage() {
 
     const [currentStarIndex, setCurrentStarIndex] = useState(0);
     const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null);
-    const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
     const [hasGuessed, setHasGuessed] = useState(false);
     const [distance, setDistance] = useState(0);
 
@@ -42,7 +41,6 @@ export default function GamePage() {
     };
 
     const resetGuess = () => {
-        setGuess(null);
         setHasGuessed(false);
         setMarker(null);
     };
@@ -81,7 +79,6 @@ export default function GamePage() {
                 distance={distance}
                 setMarker={setMarker}
                 setHasGuessed={setHasGuessed}
-                setGuess={setGuess}
                 handleNextStar={handleNextStar}
                 setDistance={setDistance}
             />
