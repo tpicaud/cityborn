@@ -146,14 +146,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     </Button>
 
                     {hasGuessed && (
-                        <Button
-                        variant='contained'
-                            color='error'
-                            onClick={() => handleNextStar()}
-                            className='text-white font-bold rounded-3xl py-2 px-4 absolute right-0'
-                        >
-                            <ArrowForward />
-                        </Button>
+                        <div className='absolute right-0 rounded-3xl'>
+                            <Button
+                                variant='contained'
+                                color='error'
+                                onClick={() => handleNextStar()}
+                                className="text-white font-bold"
+                            >
+                                <ArrowForward />
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>
