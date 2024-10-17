@@ -2,18 +2,6 @@ import StarEntity from "@/entities/StarEntity";
 
 const starList: StarEntity[] = [
     {
-        name: "Stéfanos Tsitsipás",
-        description: "Joueur de tennis grec",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Tsitsipas_S._MCM22_%2820%29_%2852036915350%29.jpg/250px-Tsitsipas_S._MCM22_%2820%29_%2852036915350%29.jpg",
-        birthPlace: {
-        city: "Athènes",
-        coordinates: {
-            lat: 37.9838,
-            lng: 23.7275
-        }
-        }
-    },
-    {
         name: "Roger Federer",
         description: "Joueur de tennis suisse",
         image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Roger_Federer_Australian_Open_2020.jpg/280px-Roger_Federer_Australian_Open_2020.jpg",
