@@ -7,3 +7,4 @@
 | 13/10/2024 | 2h | Card du joueur |
 | 14/10/2024 | 6h | Meilleur affichage + plusieurs guess |
 | 15/10/2024 | 3h | Affichage des scores et reset de la game |
+| 17/10/2024 | 4h | Création de l'appli android |
