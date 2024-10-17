@@ -12,7 +12,7 @@ interface ResultsComponentProps {
 const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handleEndGame }) => {
 
     return (
-        <div >
+        <div className='m-2'>
             <Backdrop
                 sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
                 open={true}
