@@ -2,11 +2,10 @@ import StarEntity from "@/entities/StarEntity";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import Typography from "@mui/material/Typography";
 
 export default function StarComponent({ star }: Readonly<{ star: StarEntity }>) {
   return (
-    <Card className="absolute top-0 right-0 m-4 w-auto h-auto min-w-[6em] max-w-[10vw] z-10">
+    <Card className="absolute top-0 right-0 m-4 w-[10%] min-w-[6em] z-10">
       <CardMedia
         component="img"
         image={star.image}
@@ -14,9 +13,9 @@ export default function StarComponent({ star }: Readonly<{ star: StarEntity }>) 
         className="object-cover"
       />
       <CardContent className="flex flex-col break-words">
-        <Typography component="div" className=" text-xs md:text-sm lg:text-base font-bold text-center">
+        <h2 className="text-center text-xs md:text-sm lg:text-base font-bold">
           {star.name}
-        </Typography>
+        </h2>
       </CardContent>
     </Card>
   );

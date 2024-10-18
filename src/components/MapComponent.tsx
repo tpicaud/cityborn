@@ -135,7 +135,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     </Box>
                 )}
 
-                <div className="relative w-full flex justify-center">
+                <div className="relative w-full flex justify-center items-center">
                     <Button
                         variant="contained"
                         onClick={handleGuess}
@@ -146,11 +146,14 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     </Button>
 
                     {hasGuessed && (
-                        <div className='absolute right-0 rounded-3xl'>
+                        <div className='absolute right-0'>
                             <Button
                                 variant='contained'
                                 color='error'
                                 onClick={() => handleNextStar()}
+                                sx={{
+                                    borderRadius: '20px',
+                                }}
                                 className="text-white font-bold"
                             >
                                 <ArrowForward />

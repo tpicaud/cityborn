@@ -21,7 +21,7 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handle
                 <h2 className="text-2xl font-bold mb-4">Game Results</h2>
 
                 {/* Table Container */}
-                <TableContainer component={Paper} className="max-w-4xl w-[90%] mb-8 shadow-lg">
+                <TableContainer component={Paper} sx={{ width: '90%' }} className="max-w-4xl mb-8 shadow-lg">
                     <Table>
                         <TableHead>
                             <TableRow>
