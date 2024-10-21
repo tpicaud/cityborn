@@ -1,6 +1,6 @@
 'use client';
 
-import { GameSession, GuessResult } from '@/entities/GameSession';
+import { GameSession, GuessResult } from '@/types/GameSession';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Backdrop } from '@mui/material';
 import { Button } from '@mui/material';
 

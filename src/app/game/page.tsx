@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import StarComponent from '@/components/StarComponent';
-import StarEntity from '@/entities/StarEntity';
+import StarEntity from '@/types/ObjectToGuess';
 import dynamic from 'next/dynamic';
 import { starList } from '@/data/stars';
-import { GameSession } from '@/entities/GameSession';
+import { GameSession } from '@/types/GameSession';
 import ResultsComponent from '@/components/ResultsComponent';
 import { useRouter } from 'next/navigation';
 
 // Get map component with dynamic import
-const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
+const MapComponent = dynamic(() => import('@/components/guess/MapComponent'), { ssr: false });
 
 export default function GamePage() {
 
