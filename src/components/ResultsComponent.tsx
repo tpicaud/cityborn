@@ -3,6 +3,7 @@
 import { PlayerResults, Result } from '@/types/Results';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Backdrop } from '@mui/material';
 import { Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
 
 interface ResultsComponentProps {
     playerResults: PlayerResults;
@@ -10,6 +11,8 @@ interface ResultsComponentProps {
 }
 
 const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, resetGame }) => {
+
+    const router = useRouter();
 
     return (
         <div>
@@ -46,7 +49,13 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, rese
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={resetGame}
+                    onClick={
+                        () => {
+                            resetGame;
+                            router.push('/game')
+                        }
+                    }
+
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
                 >
                     End Game
