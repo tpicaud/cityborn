@@ -1,15 +1,15 @@
 'use client';
 
-import { GameSession, GuessResult } from '@/types/GameSession';
+import { PlayerResults, Result } from '@/types/Results';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Backdrop } from '@mui/material';
 import { Button } from '@mui/material';
 
 interface ResultsComponentProps {
-    gameSession: GameSession;
-    handleEndGame: () => void;
+    playerResults: PlayerResults;
+    resetGame: () => void;
 }
 
-const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handleEndGame }) => {
+const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, resetGame }) => {
 
     return (
         <div>
@@ -25,15 +25,15 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handle
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell className="font-bold">Star</TableCell>
-                                <TableCell className="font-bold">Distance (km)</TableCell>
-                                <TableCell className="font-bold">Points</TableCell>
+                                <TableCell><p className="font-bold">Name</p></TableCell>
+                                <TableCell><p className="font-bold">Distance (km)</p></TableCell>
+                                <TableCell><p className="font-bold">Points</p></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {gameSession.results.map((result: GuessResult, index: number) => (
+                            {playerResults.results.map((result: Result, index: number) => (
                                 <TableRow key={index}>
-                                    <TableCell>{result.star}</TableCell>
+                                    <TableCell>{result.guessObject.name}</TableCell>
                                     <TableCell>{result.distance.toFixed(2)} km</TableCell>
                                     <TableCell>{result.points}</TableCell>
                                 </TableRow>
@@ -46,7 +46,7 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ gameSession, handle
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleEndGame}
+                    onClick={resetGame}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
                 >
                     End Game

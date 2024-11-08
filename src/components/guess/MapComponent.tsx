@@ -8,26 +8,27 @@ import L from 'leaflet';
 import 'leaflet/dist/images/marker-icon.png';
 import 'leaflet/dist/images/marker-shadow.png';
 import Coord from '@/types/Coord';
+import Guess from '@/types/Guess';
 
-const blueIcon = new L.Icon(({
-    iconUrl: '/img/marker-icon-blue.png', // Utilise une URL pour une icône bleue
+const blueIcon = new L.Icon({
+    iconUrl: '/img/marker-icon-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     iconAnchor: [12, 41],
-}));
+});
 
-const redIcon = new L.Icon(({
-    iconUrl: '/img/marker-icon-red.png', // Utilise une URL pour une icône rouge
+const redIcon = new L.Icon({
+    iconUrl: '/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     iconAnchor: [12, 41],
-}));
+});
 
 const France: LatLngExpression = [46.603354, 1.888334];
 
 interface MapComponentProps {
-    preGuess: Coord | undefined;
-    guess: Coord | undefined;
+    preGuess: Guess | undefined;
+    guess: Guess | undefined;
     answer: Coord;
-    handlePreGuess: (value: Coord) => void;
+    handlePreGuess: (value: Guess) => void;
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({
@@ -37,54 +38,43 @@ const MapComponent: React.FC<MapComponentProps> = ({
     handlePreGuess
 }) => {
 
-    /////////////////////////////////////////////////////////////////
-    // Functions
-    /////////////////////////////////////////////////////////////////
-    useMapEvent("click", (event) => {
-        handlePreGuess({
-            lat: event.latlng.lat,
-            lng: event.latlng.lng
-        }); // Met à jour la position du marqueur
-    });
+    // Calculates points based on distance
+    const calculatePoints = (distance: number) => {
+        return Math.max(0, Math.round(1000 * Math.exp(-0.0006 * distance)));
+    }
 
-
-    // const getDistanceTo = (guessLat: number, guessLng: number) => {
-    //     const guessedLatLng = L.latLng(guessLat, guessLng);
-    //     const starLatLng = L.latLng(star.birthPlace.coordinates.lat, star.birthPlace.coordinates.lng);
-    //     const distance = guessedLatLng.distanceTo(starLatLng) / 1000; // Distance en km
-    //     return distance;
-    // }
-
-
+    // Gets the distance to a given latitude and longitude
+    const getDistanceTo = (guessLat: number, guessLng: number) => {
+        const guessedLatLng = L.latLng(guessLat, guessLng);
+        const starLatLng = L.latLng(answer.lat, answer.lng);
+        const distance = guessedLatLng.distanceTo(starLatLng) / 1000; // Distance in km
+        return distance;
+    }
 
     // Custom component to fit bounds when the user has guessed
     const FitBoundsOnGuess: React.FC<{ positionA: LatLngExpression, positionB: LatLngExpression }> = ({ positionA, positionB }) => {
-        const map = useMap(); // Access the map instance
+        const map = useMap();
         useEffect(() => {
             if (positionA && positionB) {
                 const bounds = new LatLngBounds(positionA, positionB);
-                map.fitBounds(bounds); // Adjust the view to show both markers
+                map.fitBounds(bounds);
             }
         }, [positionA, positionB, map]);
 
         return null;
     };
 
-    /////////////////////////////////////////////////////////////////
-    // Render
-    /////////////////////////////////////////////////////////////////
     return (
         <div className="relative w-full h-screen">
             <MapContainer center={France} zoom={3} className="h-[100%] w-full bg-transparent z-0">
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <GuessMarker position={preGuess} />
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <MapClickHandler handlePreGuess={handlePreGuess} getDistanceTo={getDistanceTo} calculatePoints={calculatePoints} />
+                <GuessMarker position={preGuess?.coordinates} />
                 {guess && (
                     <>
                         <AnswerMarker position={answer} />
-                        <GuessLine positionA={guess} positionB={answer} />
-                        <FitBoundsOnGuess positionA={guess} positionB={answer} />
+                        <GuessLine positionA={guess.coordinates} positionB={answer} />
+                        <FitBoundsOnGuess positionA={guess.coordinates} positionB={answer} />
                     </>
                 )}
             </MapContainer>
@@ -92,19 +82,34 @@ const MapComponent: React.FC<MapComponentProps> = ({
     );
 };
 
-function GuessMarker({position}: {position: Coord | undefined}) {
+// Map click handler to manage click events inside the map
+function MapClickHandler({ handlePreGuess, getDistanceTo, calculatePoints }: {
+    handlePreGuess: (value: Guess) => void;
+    getDistanceTo: (lat: number, lng: number) => number;
+    calculatePoints: (distance: number) => number;
+}) {
+    useMapEvent("click", (event) => {
+        const { lat, lng } = event.latlng;
+        const distance = getDistanceTo(lat, lng);
+        handlePreGuess({ coordinates: { lat, lng }, distance, points: calculatePoints(distance) });
+    });
+
+    return null;
+}
+
+function GuessMarker({ position }: { position: Coord | undefined }) {
     return position && (
         <Marker position={toLatLngExpression(position)} icon={blueIcon} />
     )
 }
 
-function AnswerMarker({position}: {position: Coord}) {
+function AnswerMarker({ position }: { position: Coord }) {
     return (
         <Marker position={toLatLngExpression(position)} icon={redIcon} />
     )
 }
 
-function GuessLine({positionA, positionB}: {positionA: Coord, positionB: Coord}) {
+function GuessLine({ positionA, positionB }: { positionA: Coord, positionB: Coord }) {
     return (
         <Polyline positions={[toLatLngExpression(positionA), toLatLngExpression(positionB)]} />
     )
