@@ -2,7 +2,7 @@ import Guess from "@/types/Guess";
 import GuessObject from "@/types/GuessObject";
 import { ArrowForward } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
-import GuessObjectComponent from "../GuessObjectComponent";
+import GuessObjectComponent from "./GuessObjectComponent";
 
 function GuessButton({
     preGuess,

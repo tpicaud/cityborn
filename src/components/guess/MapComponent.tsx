@@ -9,6 +9,7 @@ import 'leaflet/dist/images/marker-icon.png';
 import 'leaflet/dist/images/marker-shadow.png';
 import Coord from '@/types/Coord';
 import Guess from '@/types/Guess';
+import { calculatePoints } from '@/utils/calculateScore';
 
 const blueIcon = new L.Icon({
     iconUrl: '/img/marker-icon-blue.png',
@@ -39,8 +40,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
 }) => {
 
     // Calculates points based on distance
-    const calculatePoints = (distance: number) => {
-        return Math.max(0, Math.round(1000 * Math.exp(-0.0006 * distance)));
+    const getPoints = (distance: number) => {
+        return calculatePoints(distance);
     }
 
     // Gets the distance to a given latitude and longitude
@@ -68,7 +69,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         <div className="relative w-full h-screen">
             <MapContainer center={France} zoom={3} className="h-[100%] w-full bg-transparent z-0">
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <MapClickHandler handlePreGuess={handlePreGuess} getDistanceTo={getDistanceTo} calculatePoints={calculatePoints} />
+                <MapClickHandler handlePreGuess={handlePreGuess} getDistanceTo={getDistanceTo} getPoints={getPoints} />
                 <GuessMarker position={preGuess?.coordinates} />
                 {guess && (
                     <>
@@ -83,38 +84,43 @@ const MapComponent: React.FC<MapComponentProps> = ({
 };
 
 // Map click handler to manage click events inside the map
-function MapClickHandler({ handlePreGuess, getDistanceTo, calculatePoints }: {
+function MapClickHandler({ handlePreGuess, getDistanceTo, getPoints }: {
     handlePreGuess: (value: Guess) => void;
     getDistanceTo: (lat: number, lng: number) => number;
-    calculatePoints: (distance: number) => number;
+    getPoints: (distance: number) => number;
 }) {
     useMapEvent("click", (event) => {
         const { lat, lng } = event.latlng;
         const distance = getDistanceTo(lat, lng);
-        handlePreGuess({ coordinates: { lat, lng }, distance, points: calculatePoints(distance) });
+        handlePreGuess({ coordinates: { lat, lng }, distance, points: getPoints(distance) });
     });
 
     return null;
 }
 
+
+// Handle GuessMarker component
 function GuessMarker({ position }: { position: Coord | undefined }) {
     return position && (
         <Marker position={toLatLngExpression(position)} icon={blueIcon} />
     )
 }
 
+// Handle AnswerMarker component
 function AnswerMarker({ position }: { position: Coord }) {
     return (
         <Marker position={toLatLngExpression(position)} icon={redIcon} />
     )
 }
 
+// Handle GuessLine component
 function GuessLine({ positionA, positionB }: { positionA: Coord, positionB: Coord }) {
     return (
         <Polyline positions={[toLatLngExpression(positionA), toLatLngExpression(positionB)]} />
     )
 }
 
+// Converts a Coord object to a LatLngExpression
 function toLatLngExpression(coord: Coord): LatLngExpression {
     return [coord.lat, coord.lng];
 }

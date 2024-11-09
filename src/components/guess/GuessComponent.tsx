@@ -1,9 +1,11 @@
-import MapComponent from "@/components/guess/MapComponent";
 import OverlayComponent from "@/components/guess/OverlayComponent";
 import useGuess from "@/hooks/useGuess";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+
+const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false });
 
 interface GuessComponentProps {
     guessObject: GuessObject,

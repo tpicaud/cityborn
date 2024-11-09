@@ -51,8 +51,8 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, rese
                     color="primary"
                     onClick={
                         () => {
-                            resetGame;
-                            router.push('/game')
+                            resetGame();
+                            router.push('/')
                         }
                     }
 
