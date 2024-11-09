@@ -33,7 +33,7 @@ export default function MenuComponent() {
                     variant="contained"
                     color="primary"
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded pointer-events-auto"
-                    onClick={() => { router.push('/game') }}
+                    onClick={() => { router.push('/game/solo') }}
                 >
                     <b>Start Game</b>
                 </Button>

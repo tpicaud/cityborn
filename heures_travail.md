@@ -8,3 +8,5 @@
 | 14/10/2024 | 6h | Meilleur affichage + plusieurs guess |
 | 15/10/2024 | 3h | Affichage des scores et reset de la game |
 | 17/10/2024 | 4h | Création de l'appli android |
+| 30/10/2024 | 3h | Redesign de l'architecture |
+| 09/11/2024 | 4h | Amélioration de l'architeture |
