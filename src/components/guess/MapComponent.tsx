@@ -29,6 +29,7 @@ interface MapComponentProps {
     preGuess: Guess | undefined;
     guess: Guess | undefined;
     answer: Coord;
+    isTimeUp: boolean;
     handlePreGuess: (value: Guess) => void;
 }
 
@@ -66,21 +67,28 @@ const MapComponent: React.FC<MapComponentProps> = ({
     };
 
     return (
-        <div className="relative w-full h-screen">
-            <MapContainer center={France} zoom={3} className="h-[100%] w-full bg-transparent z-0">
+        <div className="fixed w-full h-screen z-0">
+            <MapContainer center={France} zoom={3} zoomControl={false} className="h-[100%] w-full bg-transparent">
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <MapClickHandler handlePreGuess={handlePreGuess} getDistanceTo={getDistanceTo} getPoints={getPoints} />
                 <GuessMarker position={preGuess?.coordinates} />
                 {guess && (
                     <>
                         <AnswerMarker position={answer} />
-                        <GuessLine positionA={guess.coordinates} positionB={answer} />
-                        <FitBoundsOnGuess positionA={guess.coordinates} positionB={answer} />
+                        {(guess.distance !== -1) ? (
+                            <>
+                                <GuessLine positionA={guess.coordinates} positionB={answer} />
+                                <FitBoundsOnGuess positionA={guess.coordinates} positionB={answer} />
+                            </>
+                        ) : (
+                            <FitBoundsOnGuess positionA={answer} positionB={answer} />
+                        )}
                     </>
                 )}
             </MapContainer>
         </div>
     );
+    
 };
 
 // Map click handler to manage click events inside the map

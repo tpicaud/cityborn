@@ -20,7 +20,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const [refreshCounter, setRefreshCounter] = useState(0);
-    const { preGuess, guess, handlePreGuess, handleGuess, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
+    const { preGuess, guess, isTimeUp, handlePreGuess, handleGuess, handleIsTimeUp, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
 
     useEffect(() => {
         setRefreshCounter(prev => prev + 1);
@@ -32,6 +32,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                 key={refreshCounter}
                 preGuess={preGuess}
                 guess={guess}
+                isTimeUp={isTimeUp}
                 answer={guessObject.coordinates}
                 handlePreGuess={handlePreGuess}
             />
@@ -39,6 +40,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
             <OverlayComponent
                 preGuess={preGuess}
                 guess={guess}
+                handleIsTimeUp={handleIsTimeUp}
                 guessObject={guessObject}
                 handleGuess={handleGuess}
                 handleNextGuessObject={handleNextGuessObject}

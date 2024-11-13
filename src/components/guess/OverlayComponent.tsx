@@ -3,6 +3,7 @@ import GuessObject from "@/types/GuessObject";
 import { ArrowForward } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
+import CountdownComponent from "./CountdownComponent";
 
 function GuessButton({
     preGuess,
@@ -33,7 +34,11 @@ function GuessResult({
 }) {
     return guess && (
         <Box className="mb-4 p-2 text-center bg-blue-200 text-blue-600 rounded shadow-sm mx-auto" >
-            You are at <b>{guess.distance.toFixed(2)} km</b>
+            { guess.distance !== -1 ? (
+                <p>You are at <b>{guess.distance.toFixed(2)} km</b></p>
+            ) : (
+                <b>You did not guess in time</b>
+            )}
         </Box>
     )
 }
@@ -63,6 +68,7 @@ interface OverlayComponentProps {
     guess: Guess | undefined;
     guessObject: GuessObject;
     handleGuess: (value: Guess) => void;
+    handleIsTimeUp: () => void;
     handleNextGuessObject: () => void;
 }
 
@@ -71,11 +77,17 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
     guess,
     guessObject,
     handleGuess,
+    handleIsTimeUp,
     handleNextGuessObject,
 }) => {
     return (
         <div>
             <GuessObjectComponent guessObject={guessObject} />
+            <div className="absolute w-[30%] min-w-36 m-4">
+                { !guess && (
+                    <CountdownComponent totalTime={15} endMessage="Time's up!" handleIsTimeUp={handleIsTimeUp} />
+                )}
+            </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
                 <GuessResult guess={guess} />
                 <div className="relative w-full flex justify-center items-center">

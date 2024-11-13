@@ -5,18 +5,18 @@ import CardMedia from "@mui/material/CardMedia";
 
 export default function GuessObjectComponent({ guessObject }: Readonly<{ guessObject: GuessObject }>) {
   return (
-    <Card className="absolute top-0 right-0 m-4 w-[10%] min-w-[6em] z-10">
-      <CardMedia
-        component="img"
-        image={guessObject.image}
-        alt="pas de photo"
-        className="object-cover"
-      />
-      <CardContent className="flex flex-col break-words">
-        <h2 className="text-center text-xs md:text-sm lg:text-base font-bold">
-          {guessObject.name}
-        </h2>
-      </CardContent>
-    </Card>
+      <Card className="absolute top-0 right-0 m-4 w-[10%] min-w-[6em]">
+        <CardMedia
+          component="img"
+          image={guessObject.image}
+          alt="pas de photo"
+          className="object-cover"
+        />
+        <CardContent className="flex flex-col break-words">
+          <h2 className="text-center text-xs md:text-sm lg:text-base font-bold">
+            {guessObject.name}
+          </h2>
+        </CardContent>
+      </Card>
   );
 }

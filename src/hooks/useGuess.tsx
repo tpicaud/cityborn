@@ -12,6 +12,7 @@ interface UseGuessProps {
 const useGuess = ({guessObject, recordResult, nextGuessObject}: UseGuessProps) => {
     const [guess, setGuess] = useState<Guess>();
     const [preGuess, setPreGuess] = useState<Guess>();
+    const [isTimeUp, setIsTimeUp] = useState(false);
     
     const handleGuess = (value: Guess) => {
         setGuess(value);
@@ -21,11 +22,20 @@ const useGuess = ({guessObject, recordResult, nextGuessObject}: UseGuessProps) =
         setPreGuess(value);
     }
 
+    const handleIsTimeUp = () => {
+        setIsTimeUp(true);
+        handleGuess({
+            coordinates: guessObject.coordinates,
+            distance: preGuess ? preGuess.distance : -1,
+            points: preGuess ? preGuess.points : 0
+        });
+    }
+
     const handleNextGuessObject = () => {
         const newResult: Result = {
             guessObject: guessObject,
             distance: guess!.distance,
-            points: guess!.points,
+            points: guess !.points
         };
             
         recordResult(newResult);
@@ -34,7 +44,7 @@ const useGuess = ({guessObject, recordResult, nextGuessObject}: UseGuessProps) =
         setPreGuess(undefined);
     }
     
-    return { guess, preGuess, handleGuess, handlePreGuess, handleNextGuessObject };
+    return { guess, preGuess, isTimeUp, handleGuess, handlePreGuess, handleIsTimeUp, handleNextGuessObject };
 }
 
 export default useGuess;
