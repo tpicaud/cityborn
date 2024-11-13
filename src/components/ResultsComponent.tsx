@@ -36,7 +36,13 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
                             {playerResults.results.map((result: Result, index: number) => (
                                 <TableRow key={index}>
                                     <TableCell>{result.guessObject.name}</TableCell>
-                                    <TableCell>{result.distance.toFixed(2)} km</TableCell>
+                                    <TableCell>
+                                        {result.distance !== -1 ? (
+                                            <p>{result.distance.toFixed(2)} km</p>
+                                        ) : (
+                                            <p>No guess</p>
+                                        )}
+                                    </TableCell>
                                     <TableCell>{result.points}</TableCell>
                                 </TableRow>
                             ))}
