@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 
 interface ResultsComponentProps {
     playerResults: PlayerResults;
-    resetGame: () => void;
 }
 
-const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, resetGame }) => {
+const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) => {
 
     const router = useRouter();
 
@@ -49,12 +48,7 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults, rese
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={
-                        () => {
-                            resetGame();
-                            router.push('/')
-                        }
-                    }
+                    onClick={ () => router.push('/') }
 
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
                 >

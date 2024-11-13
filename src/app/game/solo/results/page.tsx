@@ -4,14 +4,16 @@ import ResultsComponent from "@/components/ResultsComponent";
 import { useGameResults } from "@/contexts/GameResultsContext";
 
 const SoloGameResultsPage = () => {
-    const { playerResults, setPlayerResults } = useGameResults();
-
-    const handleResetGame = () => {
-        //setPlayerResults(undefined); // Réinitialiser les résultats
-    };
+    const { playerResults } = useGameResults();
 
     return (
-        <ResultsComponent playerResults={playerResults!} resetGame={handleResetGame} />
+        playerResults ? (
+            <ResultsComponent playerResults={playerResults} />
+        ) : (
+            <div>
+                <h1>Results not found</h1>
+            </div>
+        )
     );
 };
 

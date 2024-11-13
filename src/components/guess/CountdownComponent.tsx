@@ -31,7 +31,7 @@ const CountdownComponent: React.FC<CountdownComponentProps> = ({ totalTime, endM
 
     // Nettoyage du composant si démonté
     return () => cancelAnimationFrame(animationFrameId.current);
-  }, [totalTime]);
+  }, [totalTime, handleIsTimeUp]);
 
   // Calcul de la largeur de la barre de progression en pourcentage
   const progress = (timeLeft / totalTime) * 100;

@@ -21,7 +21,6 @@ const SoloGameComponent = () => {
         isFinished,
         recordResult,
         nextGuessObject,
-        resetGame,
     } = useGame(guessObjectList);
 
     useEffect(() => {
@@ -31,7 +30,7 @@ const SoloGameComponent = () => {
             // push to /result, relative to /game/solo
             router.push('solo/results');
         }
-    }, [isFinished]);
+    }, [isFinished, playerResults, setPlayerResults, router]);
 
     return (
         <div>
