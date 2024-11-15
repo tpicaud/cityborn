@@ -11,4 +11,4 @@
 | 30/10/2024 | 3h | Redesign de l'architecture |
 | 09/11/2024 | 4h | Amélioration de l'architeture |
 | 13/11/2024 | 4h | AJout du timer |
-| 14/11/2024 | 4h | Lecture de la base de données de célébrités avec vérification de leur page wikipedia |
+| 15/11/2024 | 4h | Lecture de la base de données de célébrités avec vérification de leur page wikipedia |
