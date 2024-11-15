@@ -6,14 +6,32 @@ import useGame from "@/hooks/useGame";
 import { getLocalObjectList } from "@/services/LocalGameService";
 import { useGameResults } from "@/contexts/GameResultsContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const SoloGameComponent = () => {
 
     const router = useRouter();
-    const guessObjectList: GuessObject[] = getLocalObjectList();
-
+    const [guessObjects, setGuessObjects] = useState<GuessObject[]>([]);
     const { setPlayerResults } = useGameResults();
+
+    useEffect(() => {
+        // Définir une fonction asynchrone à l'intérieur de useEffect
+        const fetchData = async () => {
+            try {
+                const objects = await getLocalObjectList();
+                setGuessObjects(objects); // Mettre à jour l'état avec les objets récupérés
+            } catch (error) {
+                console.error('Erreur lors de la récupération des objets:', error);
+            }
+        };
+
+        // Appeler la fonction asynchrone
+        fetchData();
+    }, []);
+
+    if (guessObjects.length === 0) {
+        return <div>Loading...</div>;
+    }
 
     const {
         currentGuessObject,
@@ -21,7 +39,7 @@ const SoloGameComponent = () => {
         isFinished,
         recordResult,
         nextGuessObject,
-    } = useGame(guessObjectList);
+    } = useGame(guessObjects);
 
     useEffect(() => {
         if (isFinished) {

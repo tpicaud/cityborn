@@ -21,7 +21,7 @@ function buildWikipediaURL(language: string) {
 }
 
 // Fonction pour créer dynamiquement la requête à Wikipédia
-export const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
+const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
   const {
     titles,
     props,
@@ -54,3 +54,38 @@ export const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
     throw new Error('La récupération des données de Wikipedia a échoué.');
   }
 };
+
+async function checkPagesValidity(noms: string[]): Promise<string[]> {
+  const nomsNonTrouves: string[] = [];
+
+  // Pour chaque nom, vérifier si la page Wikipedia existe
+  for (const nom of noms) {
+    //const encodedNom = encodeURIComponent(nom); // Encoder le nom pour l'URL
+
+    try {
+      // Faire la requête avec la fonction fetchWikipediaData
+      const data = await fetchWikipediaData({
+        titles: nom,
+        props: ['info'], // Nous avons besoin de la propriété "info" pour vérifier l'existence
+      });
+
+      // Vérifier si la page existe : si l'article n'existe pas, il n'y a pas d'ID de page valide
+      const pages = data.query.pages;
+      const page = Object.keys(pages)[0];
+      const pageId = pages[page].pageid;
+
+
+      if (pageId === undefined || pageId === -1) {
+        // Si l'ID de page est '-1', cela signifie que la page n'existe pas
+        nomsNonTrouves.push(nom);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la requête pour', nom, error);
+      nomsNonTrouves.push(nom); // Ajouter le nom à la liste si une erreur se produit
+    }
+  }
+
+  return nomsNonTrouves;
+}
+
+export { checkPagesValidity };
