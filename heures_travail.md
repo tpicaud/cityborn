@@ -12,3 +12,4 @@
 | 09/11/2024 | 4h | Amélioration de l'architeture |
 | 13/11/2024 | 4h | AJout du timer |
 | 15/11/2024 | 4h | Lecture de la base de données de célébrités avec vérification de leur page wikipedia |
+| 18/11/2024 | 6h | Récupération des données via wikipedia et wikidata |
