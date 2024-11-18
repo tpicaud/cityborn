@@ -6,7 +6,7 @@ Alain Delon,Cinema/Humour,France
 Alban Ivanov,Cinema/Humour,France
 Albert Dupontel,Cinema/Humour,France
 Ana Girardot,Cinema/Humour,France
-Artus,Cinema/Humour,France
+Artus (humoriste),Cinema/Humour,France
 Audrey Fleurot,Cinema/Humour,France
 Audrey Tautou,Cinema/Humour,France
 Aymeric Lompret,Cinema/Humour,France
@@ -46,7 +46,6 @@ Gilles Lellouche,Cinema/Humour,France
 Grégoire Ludig,Cinema/Humour,France
 Guillaume Canet,Cinema/Humour,France
 Guillaume Meurice,Cinema/Humour,France
-Haroun (humoriste),Cinema/Humour,France
 Isabelle Adjani,Cinema/Humour,France
 Jamel Debbouze,Cinema/Humour,France
 Jean Dujardin,Cinema/Humour,France
@@ -69,10 +68,10 @@ Louis de Funes,Cinema/Humour,France
 Louis Garrel,Cinema/Humour,France
 Louise Bourgoin,Cinema/Humour,France
 Manu Payet,Cinema/Humour,France
-Marina Fois,Cinema/Humour,France
+Marina Foïs,Cinema/Humour,France
 Marion Cotillard,Cinema/Humour,France
 Mathieu Kassovitz,Cinema/Humour,France
-Melanie Laurent,Cinema/Humour,France
+Mélanie Laurent,Cinema/Humour,France
 Michel Blanc,Cinema/Humour,France
 Michaël Youn,Cinema/Humour,France
 Monica Bellucci,Cinema/Humour,France
@@ -82,7 +81,7 @@ Patrick Sebastien,Cinema/Humour,France
 Paul Mirabel,Cinema/Humour,France
 Pierre Niney,Cinema/Humour,France
 Pierre Palmade,Cinema/Humour,France
-Pio Marmai,Cinema/Humour,France
+Pio Marmaï,Cinema/Humour,France
 Ramzy Bedia,Cinema/Humour,France
 Raphaël Quenard,Cinema/Humour,France
 Romain Duris,Cinema/Humour,France
@@ -91,7 +90,7 @@ Samy Naceri,Cinema/Humour,France
 Sophie Marceau,Cinema/Humour,France
 Thierry Lhermitte,Cinema/Humour,France
 Thomas Ngijol,Cinema/Humour,France
-Valerie Lemercier,Cinema/Humour,France
+Valérie Lemercier,Cinema/Humour,France
 Vanessa Paradis,Cinema/Humour,France
 Vincent Cassel,Cinema/Humour,France
 Vincent Lacoste,Cinema/Humour,France
@@ -107,7 +106,7 @@ Eric Cantona,Foot,France
 Fabien Barthez,Foot,France
 Franck Ribéry,Foot,France
 Hugo Lloris,Foot,France
-Jean Pierre Papin,Foot,France
+Jean-Pierre Papin,Foot,France
 Karim Benzema,Foot,France
 Kylian Mbappé,Foot,France
 Laurent Blanc,Foot,France
@@ -124,7 +123,7 @@ Thierry Henry,Foot,France
 Zinédine Zidane,Foot,France
 Alain Juppé,Politique,France
 Charles de Gaulle,Politique,France
-Dominique Strauss Kahn,Politique,France
+Dominique Strauss-Kahn,Politique,France
 Emmanuel Macron,Politique,France
 François Bayrou,Politique,France
 François Fillon,Politique,France
@@ -133,14 +132,14 @@ Georges Pompidou,Politique,France
 Gérald Darmanin,Politique,France
 Jack Lang,Politique,France
 Jacques Chirac,Politique,France
-Jean-Luc Mélanchon,Politique,France
+Jean-Luc Mélenchon,Politique,France
 Jean-Marie Le Pen,Politique,France
 Jordan Bardella,Politique,France
 Lionel Jospin,Politique,France
 Marine Le Pen,Politique,France
 Nicolas Hulot,Politique,France
 Nicolas Sarkozy,Politique,France
-Segolene Royal,Politique,France
+Ségolène Royal,Politique,France
 Simone Veil,Politique,France
 Valéry Giscard d'Estaing,Politique,France
 Andrés Iniesta,Foot,Other
@@ -157,7 +156,7 @@ José Mourinho,Foot,Other
 Jürgen Klopp,Foot,Other
 Kevin De Bruyne,Foot,Other
 "Luis Suárez (football, 1987)",Foot,Other
-Luka Modric,Foot,Other
+Luka Modrić,Foot,Other
 Manuel Neuer,Foot,Other
 Mario Balotelli,Foot,Other
 Lionel Messi,Foot,Other
@@ -174,6 +173,6 @@ Ronaldo,Foot,Other
 Samuel Eto'o,Foot,Other
 Sergio Ramos,Foot,Other
 Steven Gerrard,Foot,Other
-Tony Kroos,Foot,Other
+Toni Kroos,Foot,Other
 Wayne Rooney,Foot,Other
-Zlatan Ibrahimovic,Foot,Other
+Zlatan Ibrahimović,Foot,Other
