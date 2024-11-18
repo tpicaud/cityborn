@@ -1,29 +1,24 @@
 import GuessObject from "@/types/GuessObject";
 
 const getLocalObjectList = async (): Promise<GuessObject[]> => {
-    const objectsCSV: CSVObject[] = [];
+    const objects: GuessObject[] = [];
 
     try {
-        const response = await fetch('http://localhost:3000/api/read-csv');
+        const {signal} = new AbortController();
+        const response = await fetch('http://localhost:3000/api/guess-objects', { signal });
         const data = await response.json();
 
-        data.forEach((element: CSVObject) => {
-            objectsCSV.push({
-                name: element.name,
-                category: element.category,
-                nationality: element.nationality
-            });
-        });
-    } catch (error) {
-        console.error('Erreur lors de la récupération des données:', error);
-    }
-    return [];
-};
+        console.log('Données récupérées:', data);
 
-interface CSVObject {
-    name: string;
-    category: string;
-    nationality: string;
-}
+        if (Array.isArray(data)) {
+            objects.push(...data);
+        }
+
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données dans la base de donnée:', error);
+    }
+
+    return objects;
+};
 
 export { getLocalObjectList };

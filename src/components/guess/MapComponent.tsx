@@ -122,8 +122,6 @@ function AnswerMarker({ position }: { position: Coord }) {
 
 // Handle GuessLine component
 function GuessLine({ positionA, positionB }: { positionA: Coord, positionB: Coord }) {
-    console.log("guess: ", positionA);
-    console.log("answer: ", positionB);
     return (
         <Polyline positions={[toLatLngExpression(positionA), toLatLngExpression(positionB)]} />
     )

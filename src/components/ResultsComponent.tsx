@@ -1,7 +1,7 @@
 'use client';
 
 import { PlayerResults, Result } from '@/types/Results';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Backdrop } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
@@ -14,16 +14,13 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
     const router = useRouter();
 
     return (
-        <div>
-            <Backdrop
-                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
-                open={true}
-                className="flex flex-col items-center justify-center min-h-screen"
-            >
-                <h2 className="text-2xl font-bold mb-4">Game Results</h2>
+        <div className="h-full w-full">
+            <div className="flex flex-col justify-center items-center gap-6">
+
+                <h2 className="text-2xl font-bold">Game Results</h2>
 
                 {/* Table Container */}
-                <TableContainer component={Paper} sx={{ width: '90%' }} className="max-w-4xl mb-8 shadow-lg">
+                <TableContainer component={Paper} className="max-w-4xl shadow-lg">
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -54,13 +51,13 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={ () => router.push('/') }
+                    onClick={() => router.push('/')}
 
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white rounded"
                 >
                     End Game
                 </Button>
-            </Backdrop>
+            </div>
         </div>
     );
 }

@@ -24,13 +24,13 @@ function buildWikipediaURL(language: string) {
 const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
   const {
     titles,
-    props,
+    props = ['pageprops', 'extracts', 'pageimages', 'coordinates'],
     formatVersion = 2,
     language = 'fr',
     exintro = true,
     exsentences = 1,
     explainText = true,
-    piprop = ['thumbnail'],
+    piprop = ['original'],
   } = options;
 
   const params = new URLSearchParams({
@@ -43,7 +43,7 @@ const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
     exsentences: exsentences.toString(),
     explaintext: explainText ? 'true' : 'false',
     piprop: piprop.join('|'),
-    origin: '*', // Pour éviter les problèmes de CORS dans le navigateur
+    origin: '*',
   });
 
   try {
@@ -60,7 +60,6 @@ async function checkPagesValidity(noms: string[]): Promise<string[]> {
 
   // Pour chaque nom, vérifier si la page Wikipedia existe
   for (const nom of noms) {
-    //const encodedNom = encodeURIComponent(nom); // Encoder le nom pour l'URL
 
     try {
       // Faire la requête avec la fonction fetchWikipediaData
@@ -88,4 +87,4 @@ async function checkPagesValidity(noms: string[]): Promise<string[]> {
   return nomsNonTrouves;
 }
 
-export { checkPagesValidity };
+export { checkPagesValidity, fetchWikipediaData };

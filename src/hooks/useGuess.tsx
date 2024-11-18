@@ -14,7 +14,6 @@ const useGuess = ({guessObject, recordResult, nextGuessObject}: UseGuessProps) =
     const [preGuess, setPreGuess] = useState<Guess>();
     
     const handleGuess = (value: Guess) => {
-        console.log("Guess value position: ", value.coordinates);
         setGuess(value);
     };
 
