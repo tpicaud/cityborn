@@ -10,9 +10,9 @@ function GuessButton({
     guess,
     handleGuess,
 }: {
-    preGuess: OverlayComponentProps['preGuess'],
-    guess: OverlayComponentProps['guess'],
-    handleGuess: OverlayComponentProps['handleGuess'],
+    preGuess: OverlayComponentProps['preGuess'];
+    guess: OverlayComponentProps['guess'];
+    handleGuess: OverlayComponentProps['handleGuess'];
 }) {
     const isDisabled = !Boolean(preGuess) || Boolean(guess);
     return (
@@ -20,12 +20,21 @@ function GuessButton({
             variant="contained"
             onClick={() => preGuess && handleGuess(preGuess)}
             disabled={isDisabled}
-            className='text-white font-bold rounded py-2 px-4 w-[50%] block text-center'
+            sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                borderRadius: 2,
+                py: 1,
+                px: 2,
+                width: '50%',
+                textAlign: 'center',
+            }}
         >
             Guess
         </Button>
-    )
+    );
 }
+
 
 function GuessResult({
     guess,
@@ -49,18 +58,25 @@ const NextButton: React.FC<{
 }> = ({ handleNextGuessObject }) => {
     return (
         <Button
-            variant='contained'
-            color='error'
+            variant="contained"
+            color="error"
             onClick={handleNextGuessObject}
             sx={{
-                borderRadius: '20px',
+                borderRadius: 6,
+                color: 'white',
+                fontWeight: 'bold',
+                minWidth: 40,
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
             }}
-            className="text-white font-bold"
         >
             <ArrowForward />
         </Button>
-    )
-}
+    );
+};
+
 
 
 interface OverlayComponentProps {
@@ -85,7 +101,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
             <GuessObjectComponent guessObject={guessObject} />
             <div className="absolute w-[30%] min-w-36 m-4">
                 { !guess && (
-                    <CountdownComponent totalTime={15} endMessage="Time's up!" handleIsTimeUp={handleIsTimeUp} />
+                    <CountdownComponent totalTime={20} endMessage="Time's up!" handleIsTimeUp={handleIsTimeUp} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">

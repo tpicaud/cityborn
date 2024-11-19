@@ -1,6 +1,7 @@
 'use client';
 
 import { PlayerResults, Result } from '@/types/Results';
+import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
@@ -17,7 +18,10 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
         <div className="h-full w-full">
             <div className="flex flex-col justify-center items-center gap-6">
 
-                <h2 className="text-2xl font-bold">Game Results</h2>
+                <h2 className="text-2xl font-bold flex flex-row items-end">
+                    <p className='text-4xl'>{calculateTotalPoints(playerResults)}</p>
+                    <span className='ml-2'>pts</span>
+                </h2>
 
                 {/* Table Container */}
                 <TableContainer component={Paper} className="max-w-4xl shadow-lg">
