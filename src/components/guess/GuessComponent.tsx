@@ -5,7 +5,7 @@ import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
-const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false });
+const MapComponent = dynamic(() => import('./maps/OpenStreetMapComponent'), { ssr: false });
 
 interface GuessComponentProps {
     guessObject: GuessObject,
