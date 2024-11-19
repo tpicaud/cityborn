@@ -1,29 +1,15 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, useMap, Polyline, useMapEvent } from 'react-leaflet';
-import { LatLngBounds, LatLngExpression } from 'leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/images/marker-icon.png';
-import 'leaflet/dist/images/marker-shadow.png';
+import React, { useEffect, useState } from 'react';
+import { GoogleMap, Marker, Polyline, useLoadScript, useGoogleMap } from '@react-google-maps/api';
+import { LatLng, LatLngLiteral } from 'google.maps';
+import { calculatePoints } from '@/utils/calculateScore';
 import Coord from '@/types/Coord';
 import Guess from '@/types/Guess';
-import { calculatePoints } from '@/utils/calculateScore';
 
-const blueIcon = new L.Icon({
-    iconUrl: '/img/marker-icon-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconAnchor: [12, 41],
-});
+const googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY';  // Remplacez par votre clé API Google Maps
 
-const redIcon = new L.Icon({
-    iconUrl: '/img/marker-icon-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconAnchor: [12, 41],
-});
-
-const France: LatLngExpression = [46.603354, 1.888334];
+const France: LatLngLiteral = { lat: 46.603354, lng: 1.888334 };
 
 interface MapComponentProps {
     preGuess: Guess | undefined;
@@ -36,100 +22,99 @@ const GoogleMapComponent: React.FC<MapComponentProps> = ({
     preGuess,
     guess,
     answer,
-    handlePreGuess
+    handlePreGuess,
 }) => {
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey,
+    });
 
-    // Calculates points based on distance
+    // Calcul des points en fonction de la distance
     const getPoints = (distance: number) => {
         return calculatePoints(distance);
-    }
-
-    // Gets the distance to a given latitude and longitude
-    const getDistanceTo = (guessLat: number, guessLng: number) => {
-        const guessedLatLng = L.latLng(guessLat, guessLng);
-        const starLatLng = L.latLng(answer.lat, answer.lng);
-        const distance = guessedLatLng.distanceTo(starLatLng) / 1000; // Distance in km
-        return distance;
-    }
-
-    // Custom component to fit bounds when the user has guessed
-    const FitBoundsOnGuess: React.FC<{ positionA: LatLngExpression, positionB: LatLngExpression }> = ({ positionA, positionB }) => {
-        const map = useMap();
-        useEffect(() => {
-            if (positionA && positionB) {
-                const bounds = new LatLngBounds(positionA, positionB);
-                map.fitBounds(bounds);
-            }
-        }, [positionA, positionB, map]);
-
-        return null;
     };
+
+    // Calcule la distance entre la devinette et la réponse
+    const getDistanceTo = (guessLat: number, guessLng: number) => {
+        const guessedLatLng = new LatLng(guessLat, guessLng);
+        const starLatLng = new LatLng(answer.lat, answer.lng);
+        const distance = guessedLatLng.distanceTo(starLatLng) / 1000; // Distance en km
+        return distance;
+    };
+
+    const [map, setMap] = useState<any>(null);
+
+    const onMapLoad = (mapInstance: any) => {
+        setMap(mapInstance);
+    };
+
+    useEffect(() => {
+        if (map && preGuess) {
+            // Ajuste les limites de la carte en fonction des positions
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(new LatLng(preGuess.coordinates.lat, preGuess.coordinates.lng));
+            bounds.extend(new LatLng(answer.lat, answer.lng));
+            map.fitBounds(bounds);
+        }
+    }, [map, preGuess, answer]);
+
+    const onClick = (event: any) => {
+        const { latLng } = event;
+        const lat = latLng.lat();
+        const lng = latLng.lng();
+        const distance = getDistanceTo(lat, lng);
+        handlePreGuess({
+            coordinates: { lat, lng },
+            distance,
+            points: getPoints(distance),
+        });
+    };
+
+    if (!isLoaded) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="fixed w-full h-screen z-0">
-            <MapContainer center={France} zoom={3} zoomControl={false} className="h-[100%] w-full bg-transparent">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <MapClickHandler handlePreGuess={handlePreGuess} getDistanceTo={getDistanceTo} getPoints={getPoints} />
-                <GuessMarker position={preGuess?.coordinates} />
+            <GoogleMap
+                center={France}
+                zoom={3}
+                mapContainerClassName="h-[100%] w-full bg-transparent"
+                onLoad={onMapLoad}
+                onClick={onClick}
+            >
+                {preGuess?.coordinates && (
+                    <Marker
+                        position={preGuess.coordinates}
+                        icon={{
+                            url: '/img/marker-icon-blue.png',
+                            scaledSize: new window.google.maps.Size(24, 24),
+                        }}
+                    />
+                )}
                 {guess && (
                     <>
-                        <AnswerMarker position={answer} />
-                        {(guess.distance !== -1) ? (
-                            <>
-                                <GuessLine positionA={guess.coordinates} positionB={answer} />
-                                <FitBoundsOnGuess positionA={guess.coordinates} positionB={answer} />
-                            </>
-                        ) : (
-                            <FitBoundsOnGuess positionA={answer} positionB={answer} />
+                        <Marker
+                            position={answer}
+                            icon={{
+                                url: '/img/marker-icon-red.png',
+                                scaledSize: new window.google.maps.Size(24, 24),
+                            }}
+                        />
+                        {guess.distance !== -1 && (
+                            <Polyline
+                                path={[guess.coordinates, answer]}
+                                options={{
+                                    strokeColor: '#ff0000',
+                                    strokeOpacity: 1,
+                                    strokeWeight: 2,
+                                }}
+                            />
                         )}
                     </>
                 )}
-            </MapContainer>
+            </GoogleMap>
         </div>
     );
-    
 };
 
-// Map click handler to manage click events inside the map
-function MapClickHandler({ handlePreGuess, getDistanceTo, getPoints }: {
-    handlePreGuess: (value: Guess) => void;
-    getDistanceTo: (lat: number, lng: number) => number;
-    getPoints: (distance: number) => number;
-}) {
-    useMapEvent("click", (event) => {
-        const { lat, lng } = event.latlng;
-        const distance = getDistanceTo(lat, lng);
-        handlePreGuess({ coordinates: { lat, lng }, distance, points: getPoints(distance) });
-    });
-
-    return null;
-}
-
-
-// Handle GuessMarker component
-function GuessMarker({ position }: { position: Coord | undefined }) {
-    return position && (
-        <Marker position={toLatLngExpression(position)} icon={blueIcon} />
-    )
-}
-
-// Handle AnswerMarker component
-function AnswerMarker({ position }: { position: Coord }) {
-    return (
-        <Marker position={toLatLngExpression(position)} icon={redIcon} />
-    )
-}
-
-// Handle GuessLine component
-function GuessLine({ positionA, positionB }: { positionA: Coord, positionB: Coord }) {
-    return (
-        <Polyline positions={[toLatLngExpression(positionA), toLatLngExpression(positionB)]} />
-    )
-}
-
-// Converts a Coord object to a LatLngExpression
-function toLatLngExpression(coord: Coord): LatLngExpression {
-    return [coord.lat, coord.lng];
-}
-
-export default MapComponent;
+export default GoogleMapComponent;
