@@ -12,7 +12,7 @@ export async function GET() {
     console.log('GET /api/guess-objects');
 
     // Définition des constantes
-    const numberOfObjects = 6;
+    const numberOfObjects = 10;
     const category = 'all';
 
     // Définition du tableau d'objets
