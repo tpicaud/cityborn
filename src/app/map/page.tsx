@@ -7,12 +7,11 @@ const DynamicGoogleMap = dynamic(() => import("@/components/guess/maps/GoogleMap
 });
 
 const MapPage: React.FC = () => {
-  const googleMapsApiKey = process.env.GOOGLE_MAP_API_KEY!; // Remplace par ta clé API
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY!; // Remplace par ta clé API
   const center = { lat: 48.8566, lng: 2.3522 }; // Exemple : coordonnées de Paris
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>
-      <h1>Ma Google Map</h1>
       <DynamicGoogleMap apiKey={googleMapsApiKey} center={center} zoom={12} />
     </div>
   );

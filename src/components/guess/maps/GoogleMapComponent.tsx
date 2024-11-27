@@ -1,119 +1,148 @@
-// 'use client';
+'use client';
 
-// import React, { useEffect, useState } from 'react';
-// import { GoogleMap, Marker, Polyline, useLoadScript, useGoogleMap } from '@react-google-maps/api';
-// import { calculatePoints } from '@/utils/calculateScore';
-// import Coord from '@/types/Coord';
-// import Guess from '@/types/Guess';
+import React, { useEffect, useRef } from "react";
+import { AdvancedMarker, AdvancedMarkerAnchorPoint, APIProvider, Map, MapMouseEvent, useMap } from "@vis.gl/react-google-maps";
+import { calculatePoints } from "@/utils/calculateScore";
+import MapProps from "@/types/MapProps";
+import Coord from "@/types/Coord";
+import Guess from "@/types/Guess";
+import path from "path";
 
-// const googleMapsApiKey = 'AIzaSyAbjxtsZiJqj4HACkrqA5lWvUMkuZMzdgw';  // Remplacez par votre clé API Google Maps
+type GoogleMapProps = {
+  API_KEY: string;
+  mapProps: MapProps;
+};
 
-// const France: LatLngLiteral = { lat: 46.603354, lng: 1.888334 };
+const GoogleMapComponent: React.FC<GoogleMapProps> = ({
+  API_KEY,
+  mapProps: { center, zoom, preGuess, guess, answer, handlePreGuess },
+}) => {
 
-// interface MapComponentProps {
-//     preGuess: Guess | undefined;
-//     guess: Guess | undefined;
-//     answer: Coord;
-//     handlePreGuess: (value: Guess) => void;
-// }
+  const mapOptions = {
+    mapId: 'e475de68d18cf73',
+    defaultCenter: center || { lat: 22.54992, lng: 0 },
+    defaultZoom: zoom || 3,
+    zoomControl: false,
+    fullscreenControl: false,
+    mapTypeControl: false,
+    streetViewControl: false,
+    minZoom: 2,
+    defaultLogo: false,
+    restriction: {
+      latLngBounds: {
+        north: 85,
+        south: -85,
+        west: -180,
+        east: 180,
+      },
+    },
+  };
 
-// const GoogleMapComponent: React.FC<MapComponentProps> = ({
-//     preGuess,
-//     guess,
-//     answer,
-//     handlePreGuess,
-// }) => {
-//     const { isLoaded } = useLoadScript({
-//         googleMapsApiKey,
-//     });
+  const getDistanceTo = (lat: number, lng: number): number => {
+    const guessedLatLng = new google.maps.LatLng(lat, lng);
+    const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
-//     // Calcul des points en fonction de la distance
-//     const getPoints = (distance: number) => {
-//         return calculatePoints(distance);
-//     };
+    return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
+  };
 
-//     // Calcule la distance entre la devinette et la réponse
-//     const getDistanceTo = (guessLat: number, guessLng: number) => {
-//         const guessedLatLng = new LatLng(guessLat, guessLng);
-//         const starLatLng = new LatLng(answer.lat, answer.lng);
-//         const distance = guessedLatLng.distanceTo(starLatLng) / 1000; // Distance en km
-//         return distance;
-//     };
+  const handleMapClick = (event: MapMouseEvent) => {
+    if (event.detail.latLng) {
+      const lat = event.detail.latLng.lat;
+      const lng = event.detail.latLng.lng;
+      const distance = getDistanceTo(lat, lng);
+      const points = calculatePoints(distance);
 
-//     const [map, setMap] = useState<any>(null);
+      const newGuess: Guess = {
+        coordinates: { lat, lng },
+        distance,
+        points,
+      };
 
-//     const onMapLoad = (mapInstance: any) => {
-//         setMap(mapInstance);
-//     };
+      handlePreGuess(newGuess);
+    }
+  };
 
-//     useEffect(() => {
-//         if (map && preGuess) {
-//             // Ajuste les limites de la carte en fonction des positions
-//             const bounds = new window.google.maps.LatLngBounds();
-//             bounds.extend(new LatLng(preGuess.coordinates.lat, preGuess.coordinates.lng));
-//             bounds.extend(new LatLng(answer.lat, answer.lng));
-//             map.fitBounds(bounds);
-//         }
-//     }, [map, preGuess, answer]);
 
-//     const onClick = (event: any) => {
-//         const { latLng } = event;
-//         const lat = latLng.lat();
-//         const lng = latLng.lng();
-//         const distance = getDistanceTo(lat, lng);
-//         handlePreGuess({
-//             coordinates: { lat, lng },
-//             distance,
-//             points: getPoints(distance),
-//         });
-//     };
+  return (
+    <APIProvider apiKey={API_KEY} libraries={['geometry']}>
+      <Map
+        {...mapOptions}
+        onClick={(event) => {
+          if (!guess) {
+            handleMapClick(event);
+          }
+        }}
+      >
+        {/* Pre-guess advanced marker */}
+        {preGuess && <AdvancedMarker position={preGuess.coordinates} />}
 
-//     if (!isLoaded) {
-//         return <div>Loading...</div>;
-//     }
+        {/* Confirmed guess advanced marker */}
+        {guess && (
+          <>
+            <AdvancedMarker position={answer} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
+              <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+            </AdvancedMarker>
+            <ZoomToBounds guess={guess.coordinates} answer={answer} />
+            <LineBetween guess={guess.coordinates} answer={answer} />
+          </>
+        )}
+      </Map>
+    </APIProvider>
+  );
+};
 
-//     return (
-//         <div className="fixed w-full h-screen z-0">
-//             <GoogleMap
-//                 center={France}
-//                 zoom={3}
-//                 mapContainerClassName="h-[100%] w-full bg-transparent"
-//                 onLoad={onMapLoad}
-//                 onClick={onClick}
-//             >
-//                 {preGuess?.coordinates && (
-//                     <Marker
-//                         position={preGuess.coordinates}
-//                         icon={{
-//                             url: '/img/marker-icon-blue.png',
-//                             scaledSize: new window.google.maps.Size(24, 24),
-//                         }}
-//                     />
-//                 )}
-//                 {guess && (
-//                     <>
-//                         <Marker
-//                             position={answer}
-//                             icon={{
-//                                 url: '/img/marker-icon-red.png',
-//                                 scaledSize: new window.google.maps.Size(24, 24),
-//                             }}
-//                         />
-//                         {guess.distance !== -1 && (
-//                             <Polyline
-//                                 path={[guess.coordinates, answer]}
-//                                 options={{
-//                                     strokeColor: '#ff0000',
-//                                     strokeOpacity: 1,
-//                                     strokeWeight: 2,
-//                                 }}
-//                             />
-//                         )}
-//                     </>
-//                 )}
-//             </GoogleMap>
-//         </div>
-//     );
-// };
+const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
+  const map = useMap();
 
-// // export default GoogleMapComponent;
+  useEffect(() => {
+    if (map) {
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
+      bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
+      map.fitBounds(bounds);
+    }
+  }, [guess, answer]);
+
+  return null; // No visual render, just zooming to bounds
+};
+
+const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const map = useMap();
+
+  useEffect(() => {
+
+    const line = new google.maps.Polyline({
+      path: [
+        { lat: guess.lat, lng: guess.lng },
+        { lat: answer.lat, lng: answer.lng },
+      ],
+      geodesic: true,
+      strokeColor: '#0000FF',
+      strokeOpacity: 0,
+      icons: [{
+        icon: {
+          path: 'M 0,-1 0,1',
+          strokeOpacity: 1,
+          scale: 4
+        },
+        offset: '20',
+        repeat: '20px'
+      }],
+      map: map,
+    });
+    line.setMap(map);
+
+    return () => {
+      // Cleanup the line on unmount
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+        polylineRef.current = null;
+      }
+    };
+  }, [guess, answer]);
+
+  return null; // No visual render, just adding a line to the map
+};
+
+export default GoogleMapComponent;
