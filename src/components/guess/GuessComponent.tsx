@@ -5,7 +5,6 @@ import useGuess from "@/hooks/useGuess";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 
@@ -21,7 +20,6 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     recordResult,
 }) => {
 
-    const [refreshCounter, setRefreshCounter] = useState(0);
     const { preGuess, guess, handlePreGuess, handleGuess, handleIsTimeUp, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
 
     // Map properties
@@ -34,16 +32,10 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
         handlePreGuess,
     };
 
-
-    useEffect(() => {
-        setRefreshCounter(prev => prev + 1);
-    }, [guessObject]);
-
     return (
         <div>
             <div className="fixed w-full h-full z-0">
                 <GoogleMapComponent
-                    key={refreshCounter}
                     API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY!}
                     mapProps={mapProps}
                 />
