@@ -8,11 +8,14 @@ import { useGameResults } from "@/contexts/GameResultsContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import LoadingComponent from "../LoadingComponent";
+import Snackbar from "@mui/material/Snackbar";
+import { Alert } from "@mui/material";
 
 const SoloGameComponent = () => {
     const router = useRouter();
     const [guessObjects, setGuessObjects] = useState<GuessObject[]>([]);
     const { setPlayerResults } = useGameResults();
+    const [snackBarOpen, setSnackBarOpen] = useState(false);
 
     const {
         currentGuessObject,
@@ -27,8 +30,13 @@ const SoloGameComponent = () => {
             try {
                 const objects = await getLocalObjectList();
                 setGuessObjects(objects);
+
+                throw new Error('Test error');
+
             } catch (error) {
                 console.error('Erreur lors de la récupération des objets:', error);
+                handleSnackBar();
+                fetchData();
             }
         };
         fetchData();
@@ -41,8 +49,19 @@ const SoloGameComponent = () => {
         }
     }, [isFinished, playerResults, setPlayerResults, router]);
 
+    const handleSnackBar = () => {
+        setSnackBarOpen(true);
+    };
+
     if (!currentGuessObject) {
-        return <LoadingComponent />;
+        return <>
+            <LoadingComponent />
+            <Snackbar open={snackBarOpen} autoHideDuration={5000} onClose={() => setSnackBarOpen(false)} >
+                <Alert severity="error" onClose={() => setSnackBarOpen(false)}>
+                    Error while getting object. Trying again..."
+                </Alert>
+            </Snackbar>
+        </>;
     }
 
     return (
