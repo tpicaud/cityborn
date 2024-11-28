@@ -4,8 +4,7 @@ const getLocalObjectList = async (): Promise<GuessObject[]> => {
     const objects: GuessObject[] = [];
 
     try {
-        const {signal} = new AbortController();
-        const response = await fetch('/api/guess-objects', { signal });
+        const response = await fetch('/api/guess-objects');
         const data = await response.json();
 
         console.log('Données récupérées:', data);
