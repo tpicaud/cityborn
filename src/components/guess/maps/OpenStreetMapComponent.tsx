@@ -32,7 +32,7 @@ interface MapComponentProps {
     handlePreGuess: (value: Guess) => void;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({
+const OpenStreetMapComponent: React.FC<MapComponentProps> = ({
     preGuess,
     guess,
     answer,
@@ -132,4 +132,4 @@ function toLatLngExpression(coord: Coord): LatLngExpression {
     return [coord.lat, coord.lng];
 }
 
-export default MapComponent;
+export default OpenStreetMapComponent;

@@ -14,3 +14,5 @@
 | 15/11/2024 | 4h | Lecture de la base de données de célébrités avec vérification de leur page wikipedia |
 | 18/11/2024 | 6h | Récupération des données via wikipedia et wikidata |
 | 19/11/2024 | 4h | hotfix mineurs |
+| 20/11/2024 | 4h | Ajout du total des points et corrections de bugs |
+| 25/11/2024 | 8h | Passage à google map |

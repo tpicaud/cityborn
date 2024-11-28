@@ -25,7 +25,7 @@ export default function MenuComponent() {
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
 
             </div>
-            
+
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
                 <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%]">
                     <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-32 md:max-h-48' />
@@ -42,5 +42,5 @@ export default function MenuComponent() {
             </div>
         </div>
     );
-    
+
 }
