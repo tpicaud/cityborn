@@ -30,9 +30,6 @@ const SoloGameComponent = () => {
             try {
                 const objects = await getLocalObjectList();
                 setGuessObjects(objects);
-
-                throw new Error('Test error');
-
             } catch (error) {
                 console.error('Erreur lors de la récupération des objets:', error);
                 handleSnackBar();
