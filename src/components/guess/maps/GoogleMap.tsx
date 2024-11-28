@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
-import { APIProvider, useMap, Map } from "@vis.gl/react-google-maps";
-import test from "node:test";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
 
 type GoogleMapProps = {
 	apiKey: string;
@@ -12,7 +10,6 @@ type GoogleMapProps = {
 
 const MapComponent: React.FC<GoogleMapProps> = ({ apiKey, center, zoom }) => {
 	// State to hold the map instance
-	let featureLayer: google.maps.Data;
 
 	// new function component named test
 	function test() {

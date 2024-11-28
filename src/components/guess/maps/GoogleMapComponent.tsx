@@ -6,7 +6,6 @@ import { calculatePoints } from "@/utils/calculateScore";
 import MapProps from "@/types/MapProps";
 import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
-import path from "path";
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -82,8 +81,13 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
             <AdvancedMarker position={answer} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
               <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
             </AdvancedMarker>
-            <ZoomToBounds guess={guess.coordinates} answer={answer} />
-            <LineBetween guess={guess.coordinates} answer={answer} />
+            {(guess.distance !== -1) ? (
+              <>
+                <ZoomToBounds guess={guess.coordinates} answer={answer} />
+                <LineBetween guess={guess.coordinates} answer={answer} />
+              </>) : (
+              <ZoomToBounds guess={answer} answer={answer} />
+            )}
           </>
         )}
       </Map>
@@ -94,14 +98,17 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
   const map = useMap();
 
-  useEffect(() => {
+  // useEffect(() => {
+  console.log('Zooming to bounds');
+  console.log('Guess:', guess);
+  console.log('Answer:', answer);
     if (map) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
       map.fitBounds(bounds);
     }
-  }, [guess, answer]);
+  // }, [guess, answer, map]);
 
   return null; // No visual render, just zooming to bounds
 };
