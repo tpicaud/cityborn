@@ -106,7 +106,7 @@ const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
-      const padding = 75;
+      const padding = {top: 100, right: 25, bottom: 25, left: 25 };
 
       // add 0.1 delay
       setTimeout(() => {
