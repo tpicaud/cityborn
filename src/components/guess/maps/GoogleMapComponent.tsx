@@ -51,6 +51,8 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
       const distance = getDistanceTo(lat, lng);
       const points = calculatePoints(distance);
 
+      console.log('Guess:', { lat, lng });
+
       const newGuess: Guess = {
         coordinates: { lat, lng },
         distance,
@@ -98,17 +100,16 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
   const map = useMap();
 
-  // useEffect(() => {
-  console.log('Zooming to bounds');
-  console.log('Guess:', guess);
-  console.log('Answer:', answer);
+  useEffect(() => {
     if (map) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
-      map.fitBounds(bounds);
+      const padding = 50;
+      map.fitBounds(bounds, padding);
+      map.panToBounds(bounds, padding);
     }
-  // }, [guess, answer, map]);
+  }, [guess, answer, map]);
 
   return null; // No visual render, just zooming to bounds
 };
