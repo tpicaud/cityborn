@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { AdvancedMarker, AdvancedMarkerAnchorPoint, APIProvider, Map, MapMouseEvent, useMap } from "@vis.gl/react-google-maps";
 import { calculatePoints } from "@/utils/calculateScore";
 import MapProps from "@/types/MapProps";
@@ -65,6 +65,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   return (
     <APIProvider apiKey={API_KEY} libraries={['geometry']}>
       <Map
+        id="map"
         {...mapOptions}
         onClick={(event) => {
           if (!guess) {
@@ -90,6 +91,8 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
             )}
           </>
         )}
+        <ResetMap answer={answer} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+
       </Map>
     </APIProvider>
   );
@@ -98,23 +101,25 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
   const map = useMap();
 
-  // useEffect(() => {
-  console.log('Zooming to bounds');
-  console.log('Guess:', guess);
-  console.log('Answer:', answer);
+  useEffect(() => {
     if (map) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
-      map.fitBounds(bounds);
+      const padding = {top: 100, right: 25, bottom: 25, left: 25 };
+
+      // add 0.1 delay
+      setTimeout(() => {
+        map.fitBounds(bounds, padding);
+        map.panToBounds(bounds, padding);
+      }, 100);
     }
-  // }, [guess, answer, map]);
+  }, [guess, answer, map]);
 
   return null; // No visual render, just zooming to bounds
 };
 
 const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
-  const polylineRef = useRef<google.maps.Polyline | null>(null);
   const map = useMap();
 
   useEffect(() => {
@@ -142,14 +147,33 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer 
 
     return () => {
       // Cleanup the line on unmount
-      if (polylineRef.current) {
-        polylineRef.current.setMap(null);
-        polylineRef.current = null;
+      if (line) {
+        line.setMap(null);
       }
     };
   }, [guess, answer]);
 
   return null; // No visual render, just adding a line to the map
 };
+
+const ResetMap: React.FC<{ answer: Coord, center: Coord, zoom: number }> = ({ answer, center, zoom }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (map) {
+      console.log('Resetting map');
+      console.log('New answer:', answer);
+      map.setCenter(center);
+      map.setZoom(zoom);
+
+      // Remove any existing lines
+      map.data.forEach((feature) => {
+        map.data.remove(feature);
+      });
+    }
+  }, [answer]);
+
+  return null; // No visual render, just resetting the map
+}
 
 export default GoogleMapComponent;
