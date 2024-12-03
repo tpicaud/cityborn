@@ -4,7 +4,6 @@ import { ArrowForward } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import CountdownComponent from "./CountdownComponent";
-import { ClassNames } from "@emotion/react";
 
 function GuessButton({
     preGuess,
