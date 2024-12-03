@@ -51,14 +51,16 @@ const SoloGameComponent = () => {
     };
 
     if (!currentGuessObject) {
-        return <>
-            <LoadingComponent />
-            <Snackbar open={snackBarOpen} autoHideDuration={5000} onClose={() => setSnackBarOpen(false)} >
-                <Alert severity="error" onClose={() => setSnackBarOpen(false)}>
-                    Error while getting object. Trying again...
-                </Alert>
-            </Snackbar>
-        </>;
+        return (
+            <>
+                <LoadingComponent />
+                <Snackbar open={snackBarOpen} autoHideDuration={5000} onClose={() => setSnackBarOpen(false)} >
+                    <Alert severity="error" onClose={() => setSnackBarOpen(false)}>
+                        Error while getting object. Trying again...
+                    </Alert>
+                </Snackbar>
+            </>
+        );
     }
 
     return (

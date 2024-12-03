@@ -38,11 +38,14 @@ function GuessButton({
 
 function GuessResult({
     guess,
+    guessObject,
 }: {
     guess: OverlayComponentProps['guess'],
+    guessObject: OverlayComponentProps['guessObject'],
 }) {
     return guess && (
-        <Box className="mb-4 p-2 text-center bg-blue-200 text-blue-600 rounded shadow-sm mx-auto" >
+        <Box className="mb-4 p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm mx-auto" >
+            <p><b>{guessObject.name}</b> was born in <b>{guessObject.city}</b></p>
             { guess.distance !== -1 ? (
                 <p>You are at <b>{guess.distance.toFixed(2)} km</b></p>
             ) : (
@@ -105,7 +108,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-                <GuessResult guess={guess} />
+                <GuessResult guess={guess} guessObject={guessObject} />
                 <div className="relative w-full flex justify-center items-center">
                     <GuessButton preGuess={preGuess} guess={guess} handleGuess={handleGuess} />
                     {guess && (
