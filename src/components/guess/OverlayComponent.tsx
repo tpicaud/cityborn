@@ -44,12 +44,12 @@ function GuessResult({
     guessObject: OverlayComponentProps['guessObject'],
 }) {
     return guess && (
-        <div className="flex flex-col m-2 gap-2 items-center justify-center">
+        <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
             {/* Box for points */}
-            <Box className="p-2 text-xl md:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm w-40">
+            <Box className="p-2 text-xl md:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm w-36">
                 <p><b>{guess.points}</b> pts</p>
             </Box>
-            <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm mx-auto" >
+            <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
                 <p><b>{guessObject.name}</b> was born in <b>{guessObject.city}</b></p>
                 {guess.distance !== -1 ? (
                     <p>You are at <b>{guess.distance.toFixed(2)} km</b></p>
