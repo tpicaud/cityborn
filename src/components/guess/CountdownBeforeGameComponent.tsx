@@ -6,7 +6,7 @@ interface CountdownComponentProps {
     initialCount?: number; // Default value 3
 }
 
-const CountdownBeforeGameComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd, initialCount = 3 }) => {
+const CountdownComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd, initialCount = 3 }) => {
     const [countdown, setCountdown] = useState(initialCount);
 
     useEffect(() => {
@@ -23,11 +23,15 @@ const CountdownBeforeGameComponent: React.FC<CountdownComponentProps> = ({ onCou
 
     return (
         <Backdrop open={true} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-            <Typography variant="h1" component="div">
+            <Typography
+                variant="h1"
+                component="div"
+                fontFamily={'"Roboto", "Helvetica", "Arial", sans-serif'}
+                >
                 {countdown > 0 ? countdown : "GO!"}
             </Typography>
         </Backdrop>
     );
 };
 
-export default CountdownBeforeGameComponent;
+export default CountdownComponent;
