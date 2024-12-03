@@ -5,6 +5,8 @@ import useGuess from "@/hooks/useGuess";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
+import { useState } from "react";
+import CountdownBeforeGameComponent from "./CountdownBeforeGameComponent";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 
@@ -21,6 +23,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const { preGuess, guess, handlePreGuess, handleGuess, handleIsTimeUp, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
+    const [isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished] = useState(false);
 
     // Map properties
     const mapProps = {
@@ -40,16 +43,23 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                     mapProps={mapProps}
                 />
             </div>
-            <div className="z-10">
-                <OverlayComponent
-                    preGuess={preGuess}
-                    guess={guess}
-                    handleIsTimeUp={handleIsTimeUp}
-                    guessObject={guessObject}
-                    handleGuess={handleGuess}
-                    handleNextGuessObject={handleNextGuessObject}
-                />
-            </div>
+
+            {!isCountdownBeforeGameFinished && (
+                <CountdownBeforeGameComponent onCountdownEnd={() => setisCountdownBeforeGameFinished(true)} />
+            )}
+            
+            {isCountdownBeforeGameFinished && (
+                <div className="z-10">
+                    <OverlayComponent
+                        preGuess={preGuess}
+                        guess={guess}
+                        handleIsTimeUp={handleIsTimeUp}
+                        guessObject={guessObject}
+                        handleGuess={handleGuess}
+                        handleNextGuessObject={handleNextGuessObject}
+                    />
+                </div>
+            )}
         </div>
     );
 }
