@@ -16,4 +16,5 @@
 | 19/11/2024 | 4h | hotfix mineurs |
 | 20/11/2024 | 4h | Ajout du total des points et corrections de bugs |
 | 25/11/2024 | 8h | Passage à google map |
-| 28/11/2024 | 6h | Fixing des bug google map | 
+| 28/11/2024 | 6h | Fixing des bug google map |
+| 3/12/2024 | 7h | Ajout de la base de données MongoDB |
