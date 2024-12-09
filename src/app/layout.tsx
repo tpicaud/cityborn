@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CItyStarGuessr",
-  description: "Guess where the stars were born on the map",
+  title: "CityBorn",
+  description: "Trouvez le lieu de naissances des personnalités",
 };
 
 export default function RootLayout({
