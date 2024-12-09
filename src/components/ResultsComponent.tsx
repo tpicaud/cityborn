@@ -20,7 +20,7 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
 
     useEffect(() => {
         const getScoreType = (totalPoints: number) => {
-            switch (true) {
+            switch (true) { 
                 case totalPoints < 3500:
                     return 'Mauvais';
                 case totalPoints < 4500:
@@ -32,10 +32,11 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
 
         const fetchSentence = async () => {
             const totalPoints = calculateTotalPoints(playerResults);
-            const score_type = getScoreType(totalPoints);
-            const sentence: string = await getEndSentence(score_type);
-            console.log(sentence)
-            setSentence(sentence);
+            if (totalPoints > 0) {
+                const score_type = getScoreType(totalPoints);
+                const sentence: string = await getEndSentence(score_type);
+                setSentence(sentence);
+            }
         };
 
         fetchSentence();

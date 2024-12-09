@@ -29,14 +29,14 @@ export default function MenuComponent() {
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
                 <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%]">
                     <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-32 md:max-h-48' />
-                    <p className="text-base md:text-lg text-center ">Guess where the celebrities were born on the map</p>
+                    <p className="text-base md:text-lg text-center ">Trouvez le lieu de naissance des personnalités</p>
                     <Button
                         variant="contained"
                         color="primary"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded pointer-events-auto"
                         onClick={() => { router.push('/game/solo') }}
                     >
-                        <b>Start Game</b>
+                        <b>Jouer</b>
                     </Button>
                 </Box>
             </div>

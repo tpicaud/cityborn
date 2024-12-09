@@ -50,11 +50,11 @@ function GuessResult({
                 <p><b>{guess.points}</b> pts</p>
             </Box>
             <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
-                <p><b>{guessObject.name}</b> was born in <b>{guessObject.city}</b></p>
+                <p><b>{guessObject.name}</b> est né à <b>{guessObject.city}</b></p>
                 {guess.distance !== -1 ? (
-                    <p>You are at <b>{guess.distance.toFixed(2)} km</b></p>
+                    <p>Tu es à <b>{guess.distance.toFixed(2)}</b> km</p>
                 ) : (
-                    <b>You did not guess in time</b>
+                    <b>Tu n'as pas deviné à temps !</b>
                 )}
             </Box>
         </div>
