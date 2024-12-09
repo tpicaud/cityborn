@@ -11,7 +11,7 @@ import LoadingComponent from "../LoadingComponent";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "@mui/material";
 
-const SoloGameComponent = () => {
+const SoloGameComponent = ({ category }: { category: string }) => {
     const router = useRouter();
     const [guessObjects, setGuessObjects] = useState<GuessObject[]>([]);
     const { setPlayerResults } = useGameResults();
@@ -28,7 +28,7 @@ const SoloGameComponent = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const objects = await getLocalObjectList();
+                const objects = await getLocalObjectList(category);
                 setGuessObjects(objects);
             } catch (error) {
                 console.error('Erreur lors de la récupération des objets:', error);

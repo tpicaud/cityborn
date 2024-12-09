@@ -1,13 +1,12 @@
 import GuessObject from "@/types/GuessObject";
 
-const getLocalObjectList = async (): Promise<GuessObject[]> => {
+const getLocalObjectList = async (category: string): Promise<GuessObject[]> => {
     const objects: GuessObject[] = [];
+    console.log(category)
 
     try {
-        const response = await fetch('/api/guess-objects');
+        const response = await fetch(`/api/guess-objects?category=${encodeURIComponent(category)}`);
         const data = await response.json();
-
-        //console.log('Données récupérées:', data);
 
         if (Array.isArray(data)) {
             objects.push(...data);

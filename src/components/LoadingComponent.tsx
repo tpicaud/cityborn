@@ -6,7 +6,7 @@ const LoadingComponent = () => {
     <Backdrop open={true}>
         <Box className="flex flex-col justify-center items-center gap-5 px-12 py-8 bg-slate-100 shadow-xl rounded-2xl">
             <CircularProgress />
-            <p>Loading</p>
+            <p>Chargement</p>
         </Box>
     </Backdrop>
   );

@@ -9,17 +9,27 @@ const client = new MongoClient(uri);
 const dbName = "celebritiesDB";
 const collectionName = "celebrities";
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+
     try {
         // Connexion à la base de données
         await client.connect();
         const db = client.db(dbName);
         const collection = db.collection(collectionName);
 
+        // Construire la pipeline
+        const pipeline = []
+
+        if (category !== 'all') {
+            pipeline.push({ $match: { category } });
+        }
+
+        pipeline.push({ $sample: { size: 6 } });
+
         // Récupérer 6 documents aléatoires
-        const randomCelebrities = await collection.aggregate([
-            { $sample: { size: 6 } }, // Étape d'échantillonnage aléatoire
-        ]).toArray();
+        const randomCelebrities = await collection.aggregate(pipeline).toArray();
 
         // Retourner les résultats
         return NextResponse.json(randomCelebrities);

@@ -1,9 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic';
-import { Box, Button } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, NativeSelect } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
+import { useState } from 'react';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -12,6 +13,11 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 export default function MenuComponent() {
 
     const router = useRouter();
+    const [category, setCategory] = useState('all');
+
+    const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setCategory(event.target.value);
+    };     
 
     return (
         <div className="relative h-screen">
@@ -23,24 +29,54 @@ export default function MenuComponent() {
                     />
                 </MapContainer>
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
-
             </div>
 
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
                 <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%]">
                     <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-32 md:max-h-48' />
                     <p className="text-base md:text-lg text-center ">Trouvez le lieu de naissance des personnalités</p>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded pointer-events-auto"
-                        onClick={() => { router.push('/game/solo') }}
-                    >
-                        <b>Jouer</b>
-                    </Button>
+
+                    <div className='flex flex-row gap-2 justify-center pointer-events-auto'>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                            onClick={() => {
+                                router.push(`/game/solo?category=${category}`);
+                            }}
+                        >
+                            <b>Jouer</b>
+                        </Button>
+                        <CategorySelector handleCategory={handleCategory} />
+                    </div>
                 </Box>
             </div>
         </div>
     );
+}
 
+const CategorySelector = ({ handleCategory }: { handleCategory: (event: React.ChangeEvent<HTMLSelectElement>) => void }) => {
+
+    return (
+        <FormControl fullWidth>
+            <InputLabel variant="standard" htmlFor="uncontrolled-native">
+                Catégorie
+            </InputLabel>
+            <NativeSelect
+                defaultValue={'all'}
+                inputProps={{
+                    name: 'Catégorie',
+                    id: 'uncontrolled-native',
+                }}
+                onChange={handleCategory}
+            >
+                <option value={'all'}>Toutes</option>
+                <option value={'Sport'}>Sport</option>
+                <option value={'Cinema/Humour'}>Cinema/Humour</option>
+                <option value={'Musique'}>Musique</option>
+                <option value={'Politique'}>Politique</option>
+                <option value={'Autre domaine'}>Autre domaine</option>
+            </NativeSelect>
+        </FormControl>
+    )
 }
