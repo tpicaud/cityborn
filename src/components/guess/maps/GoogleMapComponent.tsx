@@ -161,8 +161,6 @@ const ResetMap: React.FC<{ answer: Coord, center: Coord, zoom: number }> = ({ an
 
   useEffect(() => {
     if (map) {
-      console.log('Resetting map');
-      console.log('New answer:', answer);
       map.setCenter(center);
       map.setZoom(zoom);
 

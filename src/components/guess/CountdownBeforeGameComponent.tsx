@@ -28,7 +28,7 @@ const CountdownComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd,
                 component="div"
                 fontFamily={'"Roboto", "Helvetica", "Arial", sans-serif'}
                 >
-                {countdown > 0 ? countdown : "GO!"}
+                {countdown}
             </Typography>
         </Backdrop>
     );
