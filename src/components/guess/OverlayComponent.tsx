@@ -54,7 +54,7 @@ function GuessResult({
                 {guess.distance !== -1 ? (
                     <p>Tu es à <b>{guess.distance.toFixed(2)}</b> km</p>
                 ) : (
-                    <b>Tu n'as pas deviné à temps !</b>
+                    <p><b>Tu n'as pas deviné à temps !</b></p>
                 )}
             </Box>
         </div>
