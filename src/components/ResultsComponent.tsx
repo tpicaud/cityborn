@@ -25,9 +25,9 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
     useEffect(() => {
         const getScoreType = (totalPoints: number) => {
             switch (true) { 
-                case totalPoints < 2500:
+                case totalPoints < 3000:
                     return 'Mauvais';
-                case totalPoints < 4000:
+                case totalPoints < 5000:
                     return 'Moyen';
                 default:
                     return 'Bon';
