@@ -16,14 +16,18 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
 
     const router = useRouter();
 
-    const [sentence, setSentence] = useState('');
+    const [sentence, setSentence] = useState({
+        message: '',
+        sub_message_1: '',
+        sub_message_2: ''
+    });
 
     useEffect(() => {
         const getScoreType = (totalPoints: number) => {
             switch (true) { 
-                case totalPoints < 3500:
+                case totalPoints < 2500:
                     return 'Mauvais';
-                case totalPoints < 4500:
+                case totalPoints < 4000:
                     return 'Moyen';
                 default:
                     return 'Bon';
@@ -34,8 +38,25 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
             const totalPoints = calculateTotalPoints(playerResults);
             if (totalPoints > 0) {
                 const score_type = getScoreType(totalPoints);
-                const sentence: string = await getEndSentence(score_type);
-                setSentence(sentence);
+                const sentence = await getEndSentence(score_type);
+
+                let sub_message_1 = '';
+                let sub_message_2 = ''
+
+                if (score_type === 'Mauvais') {
+                    sub_message_1 = 'Bon... ';
+                    sub_message_2 = 'Essaie encore !'
+                } else if (score_type === 'Bon') {
+                    sub_message_1 = 'Félicitation ! ';
+                } else if (score_type === 'Moyen') {
+                    sub_message_2 = 'Essaie encore !'
+                }
+
+                setSentence({
+                    message: sentence,
+                    sub_message_1: sub_message_1,
+                    sub_message_2: sub_message_2
+                });
             }
         };
 
@@ -52,7 +73,9 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
                     <p className='ml-2 mb-1 text-xl'>pts</p>
                 </h1>
 
-                <h2 className='text-center text-xl'>{sentence}</h2>
+                <h2 className='text-center text-xl'>{sentence.sub_message_1}{sentence.message}</h2>
+                <h2 className='text-center text-xl'>{sentence.sub_message_2}</h2>
+
 
                 {/* Table Container */}
                 <TableContainer component={Paper} className="max-w-4xl shadow-lg">
