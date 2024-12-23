@@ -2,8 +2,14 @@ import Coord from "./Coord";
 
 export default interface GuessObject {
     name: string;
+    category: string
     description: string;
     image: string;
-    city: string;
-    coordinates: Coord
+    answer: {
+        place_name: string,
+        coordinates: {
+            type: string,
+            value: any
+        }
+    }
 }

@@ -6,6 +6,7 @@ import { calculatePoints } from "@/utils/calculateScore";
 import MapProps from "@/types/MapProps";
 import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
+import GuessObject from "@/types/GuessObject";
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -14,7 +15,14 @@ type GoogleMapProps = {
 
 const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   API_KEY,
-  mapProps: { center, zoom, preGuess, guess, answer, handlePreGuess },
+  mapProps: {
+    center,
+    zoom,
+    preGuess,
+    guess,
+    guessObject,
+    handlePreGuess
+  },
 }) => {
 
   const mapOptions = {
@@ -38,8 +46,13 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   };
 
   const getDistanceTo = (lat: number, lng: number): number => {
-    const guessedLatLng = new google.maps.LatLng(lat, lng);
+
+    let answer: Coord = getCenterOfGuessObject(guessObject)
+
+    // TODO find if answer is in polygon
+
     const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
+    const guessedLatLng = new google.maps.LatLng(lat, lng);
 
     return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
   };
@@ -48,6 +61,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     if (event.detail.latLng) {
       const lat = event.detail.latLng.lat;
       const lng = event.detail.latLng.lng;
+
       const distance = getDistanceTo(lat, lng);
       const points = calculatePoints(distance);
 
@@ -55,6 +69,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         coordinates: { lat, lng },
         distance,
         points,
+        win: (distance === 0) ? true : false
       };
 
       handlePreGuess(newGuess);
@@ -79,34 +94,41 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {/* Confirmed guess advanced marker */}
         {guess && (
           <>
-            <AdvancedMarker position={answer} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
-              <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
-            </AdvancedMarker>
+            <AnswerDisplay guessObject={guessObject} />
             {(guess.distance !== -1) ? (
               <>
-                <ZoomToBounds guess={guess.coordinates} answer={answer} />
-                <LineBetween guess={guess.coordinates} answer={answer} />
+                <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
+                {!guess.win && (
+                  <LineBetween answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates}  />
+                )}
+
               </>) : (
-              <ZoomToBounds guess={answer} answer={answer} />
+
+              <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
             )}
           </>
         )}
-        <ResetMap answer={answer} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+        <ResetMap guessObject={guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
 
       </Map>
     </APIProvider>
   );
 };
 
-const ZoomToBounds: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
+const ZoomToBounds: React.FC<{ answer: Coord, guess?: Coord, }> = ({ answer, guess }) => {
   const map = useMap();
 
   useEffect(() => {
     if (map) {
+
       const bounds = new google.maps.LatLngBounds();
-      bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
-      const padding = {top: 100, right: 25, bottom: 25, left: 25 };
+
+      if (guess) {
+        bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
+      }
+
+      const padding = { top: 100, right: 25, bottom: 25, left: 25 };
 
       // add 0.1 delay
       setTimeout(() => {
@@ -156,7 +178,7 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer 
   return null; // No visual render, just adding a line to the map
 };
 
-const ResetMap: React.FC<{ answer: Coord, center: Coord, zoom: number }> = ({ answer, center, zoom }) => {
+const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number }> = ({ guessObject, center, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -169,9 +191,46 @@ const ResetMap: React.FC<{ answer: Coord, center: Coord, zoom: number }> = ({ an
         map.data.remove(feature);
       });
     }
-  }, [answer]);
+  }, [guessObject]);
 
   return null; // No visual render, just resetting the map
+}
+
+const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) => {
+  const answerCoordinates = guessObject.answer.coordinates;
+
+  if (answerCoordinates.type === 'Point') {
+    const point: Coord = answerCoordinates.value
+    return (
+      <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
+        <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+      </AdvancedMarker>
+    )
+  }
+
+  if (answerCoordinates.type === 'GeoJSON') {
+    const map = useMap()
+    if (map) {
+      map.data.loadGeoJson(answerCoordinates.value);
+      map.data.setStyle({
+        fillColor: '#FF0000',
+        strokeColor: '#FF0000',
+        strokeWeight: 2,
+        fillOpacity: 0.5,
+      })
+    }
+  }
+
+  return null;
+}
+
+const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
+  if (guessObject.answer.coordinates.type === 'Point') {
+    return guessObject.answer.coordinates.value;
+  } else {
+    // TODO find center of geoJSON
+  }
+  return {lat: 0, lng: 0}
 }
 
 export default GoogleMapComponent;
