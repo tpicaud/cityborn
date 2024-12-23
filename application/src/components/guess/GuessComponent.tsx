@@ -23,7 +23,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const { preGuess, guess, handlePreGuess, handleGuess, handleIsTimeUp, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
-    const [isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished] = useState(false);
+    const [ isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished ] = useState(false);
 
     // Map properties
     const mapProps = {
@@ -31,7 +31,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
         zoom: 2,
         preGuess,
         guess,
-        answer: guessObject.coordinates,
+        guessObject,
         handlePreGuess,
     };
 
