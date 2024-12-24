@@ -19,3 +19,5 @@
 | 28/11/2024 | 6h | Fixing des bug google map |
 | 03/12/2024 | 7h | Ajout de la base de données MongoDB |
 | 09/12/2024 | 7h | Ajout des phrases de fin et passage du jeu en français |
+| 16/12/2024 | 8h | Récupération des données sous geoJSON |
+| 23/12/2024 | 5h | Support des données geoJson par le jeu |
