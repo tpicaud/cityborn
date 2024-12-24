@@ -47,12 +47,17 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 
   const getDistanceTo = (lat: number, lng: number): number => {
 
-    let answer: Coord = getCenterOfGuessObject(guessObject)
-
-    // TODO find if answer is in polygon
-
-    const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
     const guessedLatLng = new google.maps.LatLng(lat, lng);
+
+    if (isGeoJSON(guessObject)) {
+      const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value);
+      if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
+        return 0;
+      }
+    }
+
+    let answer: Coord = getCenterOfGuessObject(guessObject)
+    const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
     return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
   };
@@ -101,7 +106,6 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
                 {!guess.win && (
                   <LineBetween answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates}  />
                 )}
-
               </>) : (
 
               <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
@@ -225,12 +229,30 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
 }
 
 const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
-  if (guessObject.answer.coordinates.type === 'Point') {
+  if (!isGeoJSON(guessObject)) {
     return guessObject.answer.coordinates.value;
   } else {
     // TODO find center of geoJSON
+    
   }
   return {lat: 0, lng: 0}
+}
+
+const getPolyfromGeoJSON = (geoJSON: any): google.maps.Polygon => {
+  const coordinates = geoJSON.geometry.coordinates[0];
+
+  // Transform coordinates from GeoJSON to Google Maps LatLng format
+  const polygonPath = coordinates.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
+
+  const polygon = new google.maps.Polygon({
+    paths: coordinates
+  });
+
+  return polygon;
+}
+
+const isGeoJSON = (guessObject: GuessObject): Boolean => {
+  return guessObject.answer.coordinates.type === 'GeoJSON'
 }
 
 export default GoogleMapComponent;
