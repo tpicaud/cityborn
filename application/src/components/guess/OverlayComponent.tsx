@@ -52,7 +52,11 @@ function GuessResult({
             <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
                 <p><b>{guessObject.name}</b> est né à <b>{guessObject.answer.place_name}</b></p>
                 {guess.distance !== -1 ? (
-                    <p>Tu es à <b>{guess.distance.toFixed(2)}</b> km</p>
+                    guess.distance === 0 ? (
+                        <p><b>Bien joué ! Tu as deviné !</b></p>
+                    ) : (
+                        <p>Tu es à <b>{guess.distance.toFixed(2)}</b> km</p>
+                    )
                 ) : (
                     <p><b>Tu n'as pas deviné à temps !</b></p>
                 )}

@@ -7,7 +7,7 @@ const client = new MongoClient(uri);
 
 // Nom de la base de données et de la collection
 const dbName = "celebritiesDB";
-const collectionName = "celebrities";
+const collectionName = "celebrities2";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)

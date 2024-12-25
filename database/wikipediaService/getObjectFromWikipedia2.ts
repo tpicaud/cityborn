@@ -55,10 +55,8 @@ const fetchCoordinatesFromWikidata = async (place_id: string) => {
     }
 
     // Get location from wikidata labels
-    // console.log(entity.claims.P625)
-    // console.log(entity.claims.P625?.[0]);
-    console.log(entity.claims.P625?.[0].mainsnak?.datavalue.value);
     const location = entity.claims?.P625?.[0]?.mainsnak?.datavalue?.value;
+    console.log(location);
     if (location?.latitude && location?.longitude) {
         return {
             lat: location.latitude,
@@ -68,19 +66,27 @@ const fetchCoordinatesFromWikidata = async (place_id: string) => {
     return null
 }
 
-const fetchAnswer = async (wikidataEntity: WikidataEntity) => {
-
-    // Extract place name
-    const placeName = wikidataEntity.labels?.fr?.value || wikidataEntity.labels?.en?.value || '';
-    if (!placeName) {
-        throw new Error(`Aucun nom trouvé pour sur wikidata`)
+const fetchPlaceNameFromWikidata = async (place_id: string): Promise<string> => {
+    const entity = await fetchWikidataEntity(place_id);
+    if (!entity) {
+        throw new Error(`ID ${place_id} does not exist on Wikidata`)
     }
+    const placeName = entity.labels?.fr?.value || entity.labels?.en?.value || '';
+
+    return placeName as string
+}
+
+const fetchAnswer = async (wikidataEntity: WikidataEntity) => {
 
     // Extract place ID
     const placeId = wikidataEntity.claims?.P19?.[0]?.mainsnak?.datavalue?.value?.id || null;
     if (!placeId) {
-        throw new Error(`Aucun id wikidata trouvé pour "${placeName}".`)
+        throw new Error(`Aucun id wikidata trouvé pour "${placeId}".`)
     }
+
+    // Extract place name
+    const placeName = await fetchPlaceNameFromWikidata(placeId)
+    console.log(placeName)
 
     const answer = {
         place_name: placeName,
@@ -90,15 +96,16 @@ const fetchAnswer = async (wikidataEntity: WikidataEntity) => {
     // Try fetch boundaries, use exact location instead
     try {
         // Fetch Boundaries
-        const boundaries = await fetchBoundariesFromOverpassAPI(placeId);
+        const geoJSON = await fetchBoundariesFromOverpassAPI(placeId);
         answer.coordinates.type = 'GeoJSON';
-        answer.coordinates.value = boundaries;
+        answer.coordinates.value = geoJSON;
     } catch (error) {
         console.log('Failed to fetch geoJSON, using exact location instead');
         answer.coordinates.type = 'Point'
 
         try {
-            const value = fetchCoordinatesFromWikidata(placeId);
+            const value = await fetchCoordinatesFromWikidata(placeId);
+            console.log(value)
             if (!value) {
                 throw new Error;
             }
@@ -130,10 +137,17 @@ const fetchBoundariesFromOverpassAPI = async (place_id: string) => {
         if (!response.ok) throw new Error(`Error: ${response.status}`);
 
         const data = await response.json();
-        const cityBoundaries = osmtogeojson(data).features[0];
+
+        const cityCenter = await fetchCoordinatesFromWikidata(place_id);
+
+        const geoJSON = osmtogeojson(data);
+        const cityBoundaries = geoJSON.features[0];
 
         if (cityBoundaries) {
-            return cityBoundaries
+            return {
+                cityCenter: cityCenter,
+                boundaries: cityBoundaries
+            }
         } else {
             throw new Error(`Boundaries not found for ${place_id}`);
         }
@@ -153,7 +167,7 @@ const validateObject = (object: GuessObject): void => {
         throw new Error(`Coordonnées manquantes pour ${object.name}`);
     }
 };
-''
+
 const getObjectFromWikipedia = async (name: string, category: string): Promise<GuessObject | null> => {
     try {
 
