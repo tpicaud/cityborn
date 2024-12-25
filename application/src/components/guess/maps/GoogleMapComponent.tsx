@@ -50,8 +50,11 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
     if (isGeoJSON(guessObject)) {
-      const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value);
+      console.log('get distance from geoJSON')
+      const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value.boundaries);
+      console.log(polygon)
       if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
+        console.log('has win')
         return 0;
       }
     }
@@ -104,7 +107,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
               <>
                 <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
                 {!guess.win && (
-                  <LineBetween answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates}  />
+                  <LineBetween answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
                 )}
               </>) : (
 
@@ -201,28 +204,50 @@ const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number
 }
 
 const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) => {
-  const answerCoordinates = guessObject.answer.coordinates;
 
-  if (answerCoordinates.type === 'Point') {
-    const point: Coord = answerCoordinates.value
+  if (!isGeoJSON(guessObject)) {
+
+    // Display the point
+    const point: Coord = guessObject.answer.coordinates.value
     return (
       <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
         <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
       </AdvancedMarker>
     )
-  }
+  } else {
 
-  if (answerCoordinates.type === 'GeoJSON') {
+    // Display boundaries of the city
     const map = useMap()
-    if (map) {
-      map.data.loadGeoJson(answerCoordinates.value);
-      map.data.setStyle({
-        fillColor: '#FF0000',
-        strokeColor: '#FF0000',
-        strokeWeight: 2,
-        fillOpacity: 0.5,
-      })
-    }
+    // if (map) {
+    //   console.log('in answer display for geojson')
+    //   map.data.addGeoJson(guessObject.answer.coordinates.value.boundaries);
+    //   map.data.setStyle({
+    //     fillColor: '#FF0000',
+    //     strokeColor: '#FF0000',
+    //     strokeWeight: 1,
+    //     fillOpacity: 0.2,
+    //   })
+    // }
+
+    //////////////////
+    const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value.boundaries)
+    polygon.setOptions({
+      strokeColor: '#00FF00',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#00FF00',
+      fillOpacity: 0.35
+    });
+    polygon.setMap(map)
+    //////////////
+
+    // Display center of the city
+    const point: Coord = guessObject.answer.coordinates.value.cityCenter
+    return (
+      <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
+        <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+      </AdvancedMarker>
+    )
   }
 
   return null;
@@ -232,20 +257,19 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
   if (!isGeoJSON(guessObject)) {
     return guessObject.answer.coordinates.value;
   } else {
-    // TODO find center of geoJSON
-    
+    return guessObject.answer.coordinates.value.cityCenter
   }
-  return {lat: 0, lng: 0}
 }
 
 const getPolyfromGeoJSON = (geoJSON: any): google.maps.Polygon => {
   const coordinates = geoJSON.geometry.coordinates[0];
+  console.log(coordinates)
 
   // Transform coordinates from GeoJSON to Google Maps LatLng format
   const polygonPath = coordinates.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
 
   const polygon = new google.maps.Polygon({
-    paths: coordinates
+    paths: polygonPath
   });
 
   return polygon;
