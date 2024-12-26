@@ -50,11 +50,8 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
     if (isGeoJSON(guessObject)) {
-      console.log('get distance from geoJSON')
       const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value.boundaries);
-      console.log(polygon)
       if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
-        console.log('has win')
         return 0;
       }
     }
@@ -218,28 +215,15 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
 
     // Display boundaries of the city
     const map = useMap()
-    // if (map) {
-    //   console.log('in answer display for geojson')
-    //   map.data.addGeoJson(guessObject.answer.coordinates.value.boundaries);
-    //   map.data.setStyle({
-    //     fillColor: '#FF0000',
-    //     strokeColor: '#FF0000',
-    //     strokeWeight: 1,
-    //     fillOpacity: 0.2,
-    //   })
-    // }
-
-    //////////////////
-    const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value.boundaries)
-    polygon.setOptions({
-      strokeColor: '#00FF00',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#00FF00',
-      fillOpacity: 0.35
-    });
-    polygon.setMap(map)
-    //////////////
+    if (map) {
+      map.data.addGeoJson(guessObject.answer.coordinates.value.boundaries);
+      map.data.setStyle({
+        fillColor: '#FF0000',
+        strokeColor: '#FF0000',
+        strokeWeight: 1,
+        fillOpacity: 0.2,
+      })
+    }
 
     // Display center of the city
     const point: Coord = guessObject.answer.coordinates.value.cityCenter
@@ -263,7 +247,6 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
 
 const getPolyfromGeoJSON = (geoJSON: any): google.maps.Polygon => {
   const coordinates = geoJSON.geometry.coordinates[0];
-  console.log(coordinates)
 
   // Transform coordinates from GeoJSON to Google Maps LatLng format
   const polygonPath = coordinates.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
