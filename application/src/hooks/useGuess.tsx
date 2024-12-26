@@ -25,7 +25,8 @@ const useGuess = ({guessObject, recordResult, nextGuessObject}: UseGuessProps) =
         handleGuess({
             coordinates: preGuess ? preGuess.coordinates : { lat: 0, lng: 0 },
             distance: preGuess ? preGuess.distance : -1,
-            points: preGuess ? preGuess.points : 0
+            points: preGuess ? preGuess.points : 0,
+            win: preGuess ? preGuess.win : false
         });
     }
 
