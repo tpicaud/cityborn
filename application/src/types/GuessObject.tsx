@@ -1,5 +1,3 @@
-import Coord from "./Coord";
-
 export default interface GuessObject {
     name: string;
     category: string
@@ -9,6 +7,7 @@ export default interface GuessObject {
         place_name: string,
         coordinates: {
             type: string,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             value: any
         }
     }
