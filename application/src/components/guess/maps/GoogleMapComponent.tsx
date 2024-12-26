@@ -50,13 +50,13 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
     if (isGeoJSON(guessObject)) {
-      const polygon = getPolyfromGeoJSON(guessObject.answer.coordinates.value.boundaries);
+      const polygon = getPolyfromGeoJSON(guessObject);
       if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
         return 0;
       }
     }
 
-    let answer: Coord = getCenterOfGuessObject(guessObject)
+    const answer: Coord = getCenterOfGuessObject(guessObject)
     const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
     return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
@@ -201,6 +201,7 @@ const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number
 }
 
 const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) => {
+  const map = useMap()
 
   if (!isGeoJSON(guessObject)) {
 
@@ -214,7 +215,6 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
   } else {
 
     // Display boundaries of the city
-    const map = useMap()
     if (map) {
       map.data.addGeoJson(guessObject.answer.coordinates.value.boundaries);
       map.data.setStyle({
@@ -245,8 +245,8 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
   }
 }
 
-const getPolyfromGeoJSON = (geoJSON: any): google.maps.Polygon => {
-  const coordinates = geoJSON.geometry.coordinates[0];
+const getPolyfromGeoJSON = (guessObject: GuessObject): google.maps.Polygon => {
+  const coordinates = guessObject.answer.coordinates.value.boundaries.geometry.coordinates[0];
 
   // Transform coordinates from GeoJSON to Google Maps LatLng format
   const polygonPath = coordinates.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
@@ -258,7 +258,7 @@ const getPolyfromGeoJSON = (geoJSON: any): google.maps.Polygon => {
   return polygon;
 }
 
-const isGeoJSON = (guessObject: GuessObject): Boolean => {
+const isGeoJSON = (guessObject: GuessObject): boolean => {
   return guessObject.answer.coordinates.type === 'GeoJSON'
 }
 

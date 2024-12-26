@@ -99,7 +99,7 @@ function MapClickHandler({ handlePreGuess, getDistanceTo, getPoints }: {
     useMapEvent("click", (event) => {
         const { lat, lng } = event.latlng;
         const distance = getDistanceTo(lat, lng);
-        handlePreGuess({ coordinates: { lat, lng }, distance, points: getPoints(distance) });
+        handlePreGuess({ coordinates: { lat, lng }, distance, points: getPoints(distance), win: false });
     });
 
     return null;
