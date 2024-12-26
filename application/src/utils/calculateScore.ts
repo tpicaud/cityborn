@@ -2,7 +2,7 @@ import { PlayerResults } from "@/types/Results";
 
 // Calculates points based on distance
 const calculatePoints = (distance: number) => {
-    return Math.max(0, Math.round(1000 / (1 + 0.1 * Math.log(distance + 1)))); // Logarithmique
+    return Math.max(0, Math.round(1000 * Math.exp(-0.001 * distance))); // Augmentation du facteur 0.0006 -> 0.001
 };
 
 
