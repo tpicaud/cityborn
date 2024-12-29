@@ -21,3 +21,4 @@
 | 09/12/2024 | 7h | Ajout des phrases de fin et passage du jeu en français |
 | 16/12/2024 | 8h | Récupération des données sous geoJSON |
 | 23/12/2024 | 5h | Support des données geoJson par le jeu |
+| 26/12/2024 | 4h | Correction de bug et passage en production |
