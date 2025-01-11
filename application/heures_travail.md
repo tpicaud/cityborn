@@ -22,3 +22,4 @@
 | 16/12/2024 | 8h | Récupération des données sous geoJSON |
 | 23/12/2024 | 5h | Support des données geoJson par le jeu |
 | 26/12/2024 | 4h | Correction de bug et passage en production |
+| 11/01/2025 | 3h | Création de l'application sur google play console |
