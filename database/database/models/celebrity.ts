@@ -4,7 +4,13 @@ export interface GuessObject {
     name: string;
     category: string;
     description: string;
+    short_description: string;
     image: string;
-    city: string;
-    coordinates: { lat: number; lng: number };
+    answer: {
+        place_name: string,
+        coordinates: {
+            type: string,
+            value: any
+        }
+    }
 }
