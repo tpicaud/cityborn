@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { fetchWikipediaData } from './fetchWikipediaData';
-import { GuessObject } from '../database/models/celebrity2';
+import { GuessObject } from '../database/models/celebrity';
 import osmtogeojson from 'osmtogeojson';
 
 interface WikipediaPage {
@@ -168,7 +168,7 @@ const validateObject = (object: GuessObject): void => {
     }
 };
 
-const getObjectFromWikipedia = async (name: string, category: string): Promise<GuessObject | null> => {
+const getObjectFromWikipedia = async (name: string, category: string, short_description: string): Promise<GuessObject | null> => {
     try {
 
         // Get wikipedia page
@@ -195,6 +195,7 @@ const getObjectFromWikipedia = async (name: string, category: string): Promise<G
             name,
             category,
             description: wikipediaPage?.extract || 'Description indisponible.',
+            short_description: short_description,
             image,
             answer,
         };

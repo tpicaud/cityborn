@@ -1,5 +1,5 @@
-import { GuessObject } from "./database/models/celebrity2";
-import { addCelebrities } from "./database/scripts/addCelebrities2";
+import { GuessObject } from "./database/models/celebrity";
+import { addCelebrities } from "./database/scripts/addCelebrities";
 import { parseCelebritiesCSV } from "./utils/parseCelebritiesCSV";
 import { getObjectFromWikipedia } from "./wikipediaService/getObjectFromWikipedia2";
 
@@ -16,7 +16,7 @@ const populateDB = async () => {
         console.log('Récupération des données Wikipedia...');
         for (const obj of objects) {
             console.log(`\nRécupération des données pour ${obj.name}...`);
-            const object: GuessObject | null = await getObjectFromWikipedia(obj.name, obj.category);
+            const object: GuessObject | null = await getObjectFromWikipedia(obj.name, obj.category, obj.short_description);
 
             if (object) {
                 if (object.answer.coordinates.type !== 'GeoJSON') {
