@@ -4,7 +4,8 @@ import path from 'path';
 export interface Celebrity {
     name: string,
     category: string,
-    nationality: string
+    nationality: string,
+    short_description: string
 }
 
 const parseCelebritiesCSV = async (): Promise<Celebrity[]> => {
@@ -23,6 +24,7 @@ const parseCelebritiesCSV = async (): Promise<Celebrity[]> => {
             name: values[0].trim(),
             category: values[1].trim(),
             nationality: values[2].trim(),
+            short_description: values[3].trim(),
         };
     });
 
