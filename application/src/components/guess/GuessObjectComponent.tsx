@@ -12,10 +12,19 @@ export default function GuessObjectComponent({ guessObject }: Readonly<{ guessOb
           alt="pas de photo"
           className="object-cover"
         />
-        <CardContent className="flex flex-col break-words">
-          <h2 className="text-center text-xs md:text-sm lg:text-base font-bold">
+        <CardContent
+            sx={{
+              '&:last-child': {
+                paddingBottom: 1,
+              },
+              paddingY: 1,
+              paddingX: 2,
+            }}
+          className="break-words">
+          <h2 className="text-center text-xs md:text-sm lg:text-base font-bold pb-1">
             {guessObject.name}
           </h2>
+          <p className="text-center text-xs md:text-sm lg:text-base">{guessObject.short_description}</p>
         </CardContent>
       </Card>
   );
