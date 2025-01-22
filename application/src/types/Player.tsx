@@ -1,6 +1,7 @@
-import { PlayerResults } from "@/types/Results"
+import { Result } from "@/types/Results"
 
 export default interface Player {
-    name: string
-    retults: PlayerResults
+    id: string
+    results: Result[]
+    connected?: boolean
 }
