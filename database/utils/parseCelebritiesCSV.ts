@@ -1,34 +1,37 @@
 import fs from 'fs';
-import path from 'path';
+import csvParser from 'csv-parser';
 
 export interface Celebrity {
-    name: string,
-    category: string,
-    nationality: string,
-    short_description: string
+    name: string;
+    category: string;
+    nationality: string;
+    short_description: string;
 }
 
 const parseCelebritiesCSV = async (): Promise<Celebrity[]> => {
-    // Résolution du chemin vers le fichier CSV
-    const csvPath = path.join(process.cwd(), 'data/celebrities.csv');
-
-    // Lecture du contenu du fichier CSV
-    const csv = fs.readFileSync(csvPath, 'utf-8');
-
-    // Traitement des lignes du fichier CSV
-    const lines = csv.split('\n').filter(line => line.trim() !== '');
-    //const headers = lines[0].split(',');
-    const objects: Celebrity[] = lines.slice(1).map(line => {
-        const values = line.split(',');
-        return {
-            name: values[0].trim(),
-            category: values[1].trim(),
-            nationality: values[2].trim(),
-            short_description: values[3].trim(),
-        };
+    const celebrities: Celebrity[] = [];
+    return new Promise((resolve, reject) => {
+        fs.createReadStream('data/celebrities.csv') // Adjust the file path as needed
+            .pipe(csvParser({
+                headers: ['Name', 'Category', 'Nationality', 'Description', '', ''],
+                skipLines: 1 // Skip header row if present
+            }))
+            .on('data', (row) => {
+                const celebrity: Celebrity = {
+                    name: row['Name'].trim(),
+                    category: row['Category'].trim(),
+                    nationality: row['Nationality'].trim(),
+                    short_description: row['Description'].trim(),
+                };
+                celebrities.push(celebrity);
+            })
+            .on('end', () => {
+                resolve(celebrities);
+            })
+            .on('error', (error) => {
+                reject(error);
+            });
     });
-
-    return objects;
-}
+};
 
 export { parseCelebritiesCSV };
