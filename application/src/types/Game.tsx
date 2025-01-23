@@ -1,9 +1,9 @@
 import { RoundStatus } from "@/enums/RoundStatus";
 import GameConfig from "./GameConfig";
-import Guess from "./Guess";
 import GuessObject from "./GuessObject";
 import Player from "./Player";
 import { GameStatus } from "@/enums/GameStatus";
+import Round from "./Round";
 
 export default interface Game {
     id: string;
@@ -13,10 +13,5 @@ export default interface Game {
     localPlayer: Player;
     players: Player[];
     guessObjects: GuessObject[];
-    currentRound: {
-        status: RoundStatus
-        guessObject: GuessObject;
-        localPlayerGuess: Guess | undefined
-        remotePlayersGuesses?: Guess[];
-    }
+    currentRound: Round;
 }

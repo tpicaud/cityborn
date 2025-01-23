@@ -2,27 +2,30 @@
 
 import OverlayComponent from "@/components/guess/OverlayComponent";
 import useGuess from "@/hooks/useGuess";
-import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import CountdownBeforeGameComponent from "./CountdownBeforeGameComponent";
+import Round from "@/types/Round";
+import Guess from "@/types/Guess";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 
 interface GuessComponentProps {
-    guessObject: GuessObject,
-    nextGuessObject: () => void,
+    currentRound: Round;
+    handleGuess: (guess: Guess) => void
+    handleNextRound: () => void,
     recordResult: (newResult: Result) => void,
 }
 
 const GuessComponent: React.FC<GuessComponentProps> = ({
-    guessObject,
-    nextGuessObject,
-    recordResult,
+   currentRound,
+   handleGuess,
+   handleNextRound,
+   recordResult
 }) => {
 
-    const { preGuess, guess, handlePreGuess, handleGuess, handleIsTimeUp, handleNextGuessObject } = useGuess({ guessObject, recordResult, nextGuessObject });
+    const { preGuess, handlePreGuess, handleIsTimeUp } = useGuess();
     const [ isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished ] = useState(false);
 
     // Map properties
@@ -30,8 +33,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
         center: { lat: 48.8566, lng: 2.3522 },
         zoom: 2,
         preGuess,
-        guess,
-        guessObject,
+        currentRound,
         handlePreGuess,
     };
 
@@ -52,11 +54,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                 <div className="z-10">
                     <OverlayComponent
                         preGuess={preGuess}
-                        guess={guess}
-                        handleIsTimeUp={handleIsTimeUp}
-                        guessObject={guessObject}
+                        currentRound={currentRound}
                         handleGuess={handleGuess}
-                        handleNextGuessObject={handleNextGuessObject}
+                        handleIsTimeUp={handleIsTimeUp}
+                        handleNextRound={handleNextRound}
+                        recordResult={recordResult}
                     />
                 </div>
             )}

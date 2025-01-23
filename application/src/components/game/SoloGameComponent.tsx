@@ -2,28 +2,23 @@
 
 import GuessComponent from "@/components/guess/GuessComponent";
 import GuessObject from "@/types/GuessObject";
-import useGame from "@/hooks/useGame";
 import { getLocalObjectList } from "@/services/LocalGameService";
-import { useGameResults } from "@/contexts/GameResultsContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import LoadingComponent from "../LoadingComponent";
-import Snackbar from "@mui/material/Snackbar";
-import { Alert } from "@mui/material";
+
+import { useSoloGame } from "@/hooks/useSoloGame";
+import { GameStatus } from "@/enums/GameStatus";
 
 const SoloGameComponent = ({ category }: { category: string }) => {
     const router = useRouter();
     const [guessObjects, setGuessObjects] = useState<GuessObject[]>([]);
-    const { setPlayerResults } = useGameResults();
-    const [snackBarOpen, setSnackBarOpen] = useState(false);
 
     const {
-        currentGuessObject,
-        playerResults,
-        isFinished,
+        game,
+        handleGuess,
+        handleNextRound,
         recordResult,
-        nextGuessObject,
-    } = useGame(guessObjects);
+    } = useSoloGame(newGame);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,7 +27,6 @@ const SoloGameComponent = ({ category }: { category: string }) => {
                 setGuessObjects(objects);
             } catch (error) {
                 console.error('Erreur lors de la récupération des objets:', error);
-                handleSnackBar();
                 fetchData();
             }
         };
@@ -40,34 +34,17 @@ const SoloGameComponent = ({ category }: { category: string }) => {
     }, []);
 
     useEffect(() => {
-        if (isFinished) {
-            setPlayerResults(playerResults);
+        if (game.status === GameStatus.FINISHED) {
             router.push('solo/results');
         }
-    }, [isFinished, playerResults, setPlayerResults, router]);
-
-    const handleSnackBar = () => {
-        setSnackBarOpen(true);
-    };
-
-    if (!currentGuessObject) {
-        return (
-            <>
-                <LoadingComponent />
-                <Snackbar open={snackBarOpen} autoHideDuration={5000} onClose={() => setSnackBarOpen(false)} >
-                    <Alert severity="error" onClose={() => setSnackBarOpen(false)}>
-                        Error while getting object. Trying again...
-                    </Alert>
-                </Snackbar>
-            </>
-        );
-    }
+    }, [game]);
 
     return (
         <div>
             <GuessComponent
-                guessObject={currentGuessObject}
-                nextGuessObject={nextGuessObject}
+                currentRound={game.currentRound}
+                handleGuess={handleGuess}
+                handleNextRound={handleNextRound}
                 recordResult={recordResult}
             />
         </div>
