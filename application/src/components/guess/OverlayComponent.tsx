@@ -1,25 +1,26 @@
 import Guess from "@/types/Guess";
-import GuessObject from "@/types/GuessObject";
 import { ArrowForward } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import CountdownComponent from "./CountdownComponent";
+import { Result } from "@/types/Results";
+import Round from "@/types/Round";
+import { RoundStatus } from "@/enums/RoundStatus";
 
 function GuessButton({
     preGuess,
-    guess,
+    disabled,
     handleGuess,
 }: {
     preGuess: OverlayComponentProps['preGuess'];
-    guess: OverlayComponentProps['guess'];
+    disabled: boolean;
     handleGuess: OverlayComponentProps['handleGuess'];
 }) {
-    const isDisabled = !Boolean(preGuess) || Boolean(guess);
     return (
         <Button
             variant="contained"
             onClick={() => preGuess && handleGuess(preGuess)}
-            disabled={isDisabled}
+            disabled={disabled}
             sx={{
                 color: 'white',
                 fontWeight: 'bold',
@@ -37,25 +38,23 @@ function GuessButton({
 
 
 function GuessResult({
-    guess,
-    guessObject,
+    currentRound
 }: {
-    guess: OverlayComponentProps['guess'],
-    guessObject: OverlayComponentProps['guessObject'],
+    currentRound: Round
 }) {
-    return guess && (
+    return (currentRound.localPlayerGuess && currentRound.status === RoundStatus.SHOWING_RESULTS) && (
         <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
             {/* Box for points */}
             <Box className="p-2 text-xl md:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm w-36">
-                <p><b>{guess.points}</b> pts</p>
+                <p><b>{currentRound.localPlayerGuess.points}</b> pts</p>
             </Box>
             <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
-                <p><b>{guessObject.name}</b> est né à <b>{guessObject.answer.place_name}</b></p>
-                {guess.distance !== -1 ? (
-                    guess.distance === 0 ? (
+                <p><b>{currentRound.guessObject.name}</b> est né à <b>{currentRound.guessObject.answer.place_name}</b></p>
+                {currentRound.localPlayerGuess.distance !== -1 ? (
+                    currentRound.localPlayerGuess.distance === 0 ? (
                         <p><b>Bien joué ! Tu as deviné !</b></p>
                     ) : (
-                        <p>Tu es à <b>{guess.distance.toFixed(2)}</b> km</p>
+                        <p>Tu es à <b>{currentRound.localPlayerGuess.distance.toFixed(2)}</b> km</p>
                     )
                 ) : (
                     <p><b>Tu n'as pas deviné à temps !</b></p>
@@ -67,13 +66,23 @@ function GuessResult({
 
 // Convert NextButton to a functional component that accepts props
 const NextButton: React.FC<{
-    handleNextGuessObject: OverlayComponentProps['handleNextGuessObject'];
-}> = ({ handleNextGuessObject }) => {
+    handleNextRound: OverlayComponentProps['handleNextRound'];
+    recordResult: OverlayComponentProps['recordResult']
+    currentRound: Round
+}> = ({ handleNextRound, recordResult, currentRound }) => {
+    const result: Result = {
+        guessObject: currentRound.guessObject,
+        distance: currentRound.localPlayerGuess!.distance,
+        points: currentRound.localPlayerGuess!.points
+    }
     return (
         <Button
             variant="contained"
             color="error"
-            onClick={handleNextGuessObject}
+            onClick={() => {
+                handleNextRound;
+                recordResult(result)
+            }}
             sx={{
                 borderRadius: 6,
                 color: 'white',
@@ -94,36 +103,36 @@ const NextButton: React.FC<{
 
 interface OverlayComponentProps {
     preGuess: Guess | undefined;
-    guess: Guess | undefined;
-    guessObject: GuessObject;
+    currentRound: Round
     handleGuess: (value: Guess) => void;
     handleIsTimeUp: () => void;
-    handleNextGuessObject: () => void;
+    handleNextRound: () => void;
+    recordResult: (result: Result) => void;
 }
 
 const OverlayComponent: React.FC<OverlayComponentProps> = ({
     preGuess,
-    guess,
-    guessObject,
+    currentRound,
     handleGuess,
     handleIsTimeUp,
-    handleNextGuessObject,
+    handleNextRound,
+    recordResult
 }) => {
     return (
         <div>
-            <GuessObjectComponent guessObject={guessObject} />
+            <GuessObjectComponent guessObject={currentRound.guessObject} />
             <div className="absolute w-[30%] min-w-36 m-4">
-                {!guess && (
+                {(currentRound.status === RoundStatus.GUESSING) && (
                     <CountdownComponent totalTime={20} endMessage="Time's up!" handleIsTimeUp={handleIsTimeUp} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-                <GuessResult guess={guess} guessObject={guessObject} />
+                <GuessResult currentRound={currentRound} />
                 <div className="relative w-full flex justify-center items-center">
-                    <GuessButton preGuess={preGuess} guess={guess} handleGuess={handleGuess} />
-                    {guess && (
+                    <GuessButton preGuess={preGuess} disabled={currentRound.status !== RoundStatus.GUESSING} handleGuess={handleGuess} />
+                    {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
                         <div className='absolute right-0'>
-                            <NextButton handleNextGuessObject={handleNextGuessObject} />
+                            <NextButton handleNextRound={handleNextRound} recordResult={recordResult} currentRound={currentRound} />
                         </div>
                     )}
                 </div>

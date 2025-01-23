@@ -1,13 +1,12 @@
 import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
-import GuessObject from "@/types/GuessObject";
+import Round from "./Round";
 
 interface MapProps {
     center: Coord;
     zoom: number,
     preGuess: Guess | undefined;
-    guess: Guess | undefined;
-    guessObject: GuessObject
+    currentRound: Round
     handlePreGuess: (value: Guess) => void;
 }
 

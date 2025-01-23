@@ -7,6 +7,7 @@ import MapProps from "@/types/MapProps";
 import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
 import GuessObject from "@/types/GuessObject";
+import { RoundStatus } from "@/enums/RoundStatus";
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -19,8 +20,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     center,
     zoom,
     preGuess,
-    guess,
-    guessObject,
+    currentRound,
     handlePreGuess
   },
 }) => {
@@ -49,14 +49,14 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
-    if (isGeoJSON(guessObject)) {
-      const polygon = getPolyfromGeoJSON(guessObject);
+    if (isGeoJSON(currentRound.guessObject)) {
+      const polygon = getPolyfromGeoJSON(currentRound.guessObject);
       if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
         return 0;
       }
     }
 
-    const answer: Coord = getCenterOfGuessObject(guessObject)
+    const answer: Coord = getCenterOfGuessObject(currentRound.guessObject)
     const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
     return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
@@ -88,7 +88,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         id="map"
         {...mapOptions}
         onClick={(event) => {
-          if (!guess) {
+          if (currentRound.status === RoundStatus.GUESSING) {
             handleMapClick(event);
           }
         }}
@@ -97,22 +97,22 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {preGuess && <AdvancedMarker position={preGuess.coordinates} />}
 
         {/* Confirmed guess advanced marker */}
-        {guess && (
+        {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
-            <AnswerDisplay guessObject={guessObject} />
-            {(guess.distance !== -1) ? (
+            <AnswerDisplay guessObject={currentRound.guessObject} />
+            {(currentRound.localPlayerGuess && currentRound.localPlayerGuess.distance !== -1) ? (
               <>
-                <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
-                {!guess.win && (
-                  <LineBetween answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
+                <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={currentRound.localPlayerGuess.coordinates} />
+                {!currentRound.localPlayerGuess.win && (
+                  <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={currentRound.localPlayerGuess.coordinates} />
                 )}
               </>) : (
 
-              <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
+              <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} />
             )}
           </>
         )}
-        <ResetMap guessObject={guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+        <ResetMap guessObject={currentRound.guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
 
       </Map>
     </APIProvider>
