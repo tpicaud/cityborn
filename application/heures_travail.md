@@ -23,4 +23,7 @@
 | 23/12/2024 | 5h | Support des données geoJson par le jeu |
 | 26/12/2024 | 4h | Correction de bug et passage en production |
 | 11/01/2025 | 3h | Création de l'application sur google play console |
+| 13/01/2025 | 3h | Diagramme du jeu pour intégration du multi |
 | 19/01/2025 | 2h | Lancement du test fermé de l'application |
+| 22/01/2025 | 3h | Préparation et début du refactoring |
+| 23/01/2025 | 3h | Refactoring du solo en prévision du multi |
