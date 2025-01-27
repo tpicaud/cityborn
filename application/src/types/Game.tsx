@@ -10,7 +10,6 @@ export default interface Game {
     hostID: string;
     status: GameStatus;
     config: GameConfig
-    localPlayer: Player;
     players: Player[];
     guessObjects: GuessObject[];
     currentRound: Round;

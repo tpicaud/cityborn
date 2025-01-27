@@ -100,11 +100,11 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
             <AnswerDisplay guessObject={currentRound.guessObject} />
-            {(currentRound.localPlayerGuess && currentRound.localPlayerGuess.distance !== -1) ? (
+            {(preGuess && preGuess.distance !== -1) ? (
               <>
-                <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={currentRound.localPlayerGuess.coordinates} />
-                {!currentRound.localPlayerGuess.win && (
-                  <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={currentRound.localPlayerGuess.coordinates} />
+                <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
+                {!preGuess.win && (
+                  <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
                 )}
               </>) : (
 
