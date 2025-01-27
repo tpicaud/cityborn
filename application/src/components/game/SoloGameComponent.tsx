@@ -8,6 +8,10 @@ import { useEffect, useState } from "react";
 
 import { useSoloGame } from "@/hooks/useSoloGame";
 import { GameStatus } from "@/enums/GameStatus";
+import { ArrowForward } from "@mui/icons-material";
+import { Button } from "@mui/material";
+import { Result } from "@/types/Results";
+import { RoundStatus } from "@/enums/RoundStatus";
 
 const SoloGameComponent = ({ category }: { category: string }) => {
     const router = useRouter();
@@ -39,6 +43,36 @@ const SoloGameComponent = ({ category }: { category: string }) => {
         }
     }, [game]);
 
+    const NextButton: React.FC = () => {
+        const result: Result = {
+            guessObject: game.currentRound.guessObject,
+            distance: game.currentRound.playersGuesses![getLocalPlayerID()].distance,
+            points: game.currentRound.playersGuesses![getLocalPlayerID()].points
+        }
+        return (
+            <Button
+                variant="contained"
+                color="error"
+                onClick={() => {
+                    handleNextRound;
+                    recordResult(result)
+                }}
+                sx={{
+                    borderRadius: 6,
+                    color: 'white',
+                    fontWeight: 'bold',
+                    minWidth: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <ArrowForward />
+            </Button>
+        );
+    };
+
     return (
         <div>
             <GuessComponent
@@ -47,8 +81,19 @@ const SoloGameComponent = ({ category }: { category: string }) => {
                 handleNextRound={handleNextRound}
                 recordResult={recordResult}
             />
+            <div>
+                {(game.currentRound.status === RoundStatus.SHOWING_RESULTS) && (
+                    <div className='absolute right-0'>
+                        <NextButton />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default SoloGameComponent;
+function getLocalPlayerID() {
+    return 0
+}
+

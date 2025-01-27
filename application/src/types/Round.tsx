@@ -5,6 +5,5 @@ import GuessObject from "./GuessObject";
 export default interface Round {
     status: RoundStatus
     guessObject: GuessObject;
-    localPlayerGuess: Guess | undefined
-    remotePlayersGuesses?: Guess[];
+    playersGuesses?: Record<string,Guess>;
 }
