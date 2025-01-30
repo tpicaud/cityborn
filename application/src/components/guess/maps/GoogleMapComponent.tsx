@@ -100,6 +100,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
             <AnswerDisplay guessObject={currentRound.guessObject} />
+            <OtherPlayersGuesses playerGuesses={currentRound.playersGuesses}/>
             {(preGuess && preGuess.distance !== -1) ? (
               <>
                 <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
@@ -118,6 +119,26 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     </APIProvider>
   );
 };
+
+const OtherPlayersGuesses: React.FC<{ playerGuesses: Record<string, Guess> | undefined }> = ({ playerGuesses }) => {
+
+  const points = playerGuesses ? Object.values(playerGuesses).map(guess => guess.coordinates) : [];
+
+  return (
+    <>
+      {points.map((point, index) => (
+        <AdvancedMarker 
+          key={index} 
+          position={point} 
+          anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
+        >
+          <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+        </AdvancedMarker>
+      ))}
+    </>
+  );
+};
+
 
 const ZoomToBounds: React.FC<{ answer: Coord, guess?: Coord, }> = ({ answer, guess }) => {
   const map = useMap();
