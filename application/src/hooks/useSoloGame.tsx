@@ -5,12 +5,10 @@ import Guess from "@/types/Guess";
 import { RoundStatus } from "@/enums/RoundStatus";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
-import ResultsComponent from "@/components/ResultsComponent";
 
 export function useSoloGame(game: Game): IUseGame {
     const [currentGame, setCurrentGame] = useState<Game>(game);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [localPlayerGuess, setLocalPlayerGuess] = useState()
 
     const handleGuess = (guess: Guess) => {
         setCurrentGame((prevGame) => ({
