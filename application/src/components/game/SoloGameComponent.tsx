@@ -1,10 +1,8 @@
 'use client';
 
 import GuessComponent from "@/components/guess/GuessComponent";
-import GuessObject from "@/types/GuessObject";
-import { getLocalObjectList } from "@/services/LocalGameService";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { useSoloGame } from "@/hooks/useSoloGame";
 import { GameStatus } from "@/enums/GameStatus";
@@ -12,29 +10,27 @@ import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { Result } from "@/types/Results";
 import { RoundStatus } from "@/enums/RoundStatus";
+import GameConfig from "@/types/GameConfig";
+import { useGameContext } from "@/contexts/GameContext";
 
-const SoloGameComponent = ({ category }: { category: string }) => {
+const SoloGameComponent = ({ gameConfig }: { gameConfig: GameConfig }) => {
     const router = useRouter();
-    const [guessObjects, setGuessObjects] = useState<GuessObject[]>([]);
+
+    const { localPlayerID } = useGameContext()
+
+    // TODO fetch new game with gameConfig
+
+    // TODO Update contexte on launch
 
     const {
         game,
         handleGuess,
         handleNextRound,
         recordResult,
-    } = useSoloGame(newGame);
+    } = useSoloGame(game);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const objects = await getLocalObjectList(category);
-                setGuessObjects(objects);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des objets:', error);
-                fetchData();
-            }
-        };
-        fetchData();
+        // TODO put new game with gameConfig
     }, []);
 
     useEffect(() => {
@@ -46,8 +42,8 @@ const SoloGameComponent = ({ category }: { category: string }) => {
     const NextButton: React.FC = () => {
         const result: Result = {
             guessObject: game.currentRound.guessObject,
-            distance: game.currentRound.playersGuesses![getLocalPlayerID()].distance,
-            points: game.currentRound.playersGuesses![getLocalPlayerID()].points
+            distance: game.currentRound.playersGuesses![localPlayerID].distance,
+            points: game.currentRound.playersGuesses![localPlayerID].points
         }
         return (
             <Button
@@ -91,9 +87,3 @@ const SoloGameComponent = ({ category }: { category: string }) => {
         </div>
     );
 };
-
-export default SoloGameComponent;
-function getLocalPlayerID() {
-    return 0
-}
-

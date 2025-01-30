@@ -1,6 +1,6 @@
 'use client';
 
-import { GameResultsProvider } from '@/contexts/GameResultsContext';
+import { GameProvider } from '@/contexts/GameContext';
 import { ReactNode } from 'react';
 
 interface GameLayoutProps {
@@ -9,8 +9,8 @@ interface GameLayoutProps {
 
 export default function GameLayout({ children }: GameLayoutProps) {
   return (
-    <GameResultsProvider>
+    <GameProvider>
       {children}
-    </GameResultsProvider>
+    </GameProvider>
   );
 }

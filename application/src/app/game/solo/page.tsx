@@ -1,6 +1,7 @@
 'use client';
 
 import SoloGameComponent from '@/components/game/SoloGameComponent';
+import GameConfig from '@/types/GameConfig';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -14,9 +15,11 @@ export default function SoloGamePage() {
 
 function Game() {
     const searchParams = useSearchParams()
-    const category = searchParams.get('category')
+
+    // TODO Parse gameconfig from request
+    const gameConfig: GameConfig = {}
 
     return (
-        <SoloGameComponent category={category as string} />
+        <SoloGameComponent gameConfig={gameConfig} />
     )
 }
