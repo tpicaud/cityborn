@@ -4,22 +4,19 @@ import { createContext, useState, ReactNode, useContext } from 'react';
 
 interface GameContextType {
   localPlayerID: string;
-  gameConfig: GameConfig | undefined;
-  game: Game | undefined;
+  game: Game;
   setLocalPlayerID: (id: string) => void;
-  setGameConfig: (gameConfig: GameConfig) => void;
   setGame: (game: Game) => void;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);
 
-export function GameProvider({ children }: { children: ReactNode }) {
-  const [localPlayerID, setLocalPlayerID] = useState<string>('');
-  const [game, setGame] = useState<Game>()
-  const [gameConfig, setGameConfig] = useState<GameConfig | undefined>()
+export function GameProvider({ children, newGame, playerID }: { children: ReactNode, newGame: Game, playerID: string }) {
+  const [localPlayerID, setLocalPlayerID] = useState<string>(playerID);
+  const [game, setGame] = useState<Game>(newGame)
 
   return (
-    <GameContext.Provider value={{ localPlayerID, gameConfig, game, setLocalPlayerID, setGameConfig, setGame }}>
+    <GameContext.Provider value={{ localPlayerID, game, setLocalPlayerID, setGame }}>
       {children}
     </GameContext.Provider>
   );

@@ -10,24 +10,19 @@ import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { Result } from "@/types/Results";
 import { RoundStatus } from "@/enums/RoundStatus";
-import GameConfig from "@/types/GameConfig";
 import { useGameContext } from "@/contexts/GameContext";
 
-const SoloGameComponent = ({ gameConfig }: { gameConfig: GameConfig }) => {
+export const SoloGameComponent = () => {
     const router = useRouter();
 
-    const { localPlayerID } = useGameContext()
-
-    // TODO fetch new game with gameConfig
-
-    // TODO Update contexte on launch
 
     const {
         game,
+        localPlayerID,
         handleGuess,
         handleNextRound,
         recordResult,
-    } = useSoloGame(game);
+    } = useSoloGame();
 
     useEffect(() => {
         // TODO put new game with gameConfig
