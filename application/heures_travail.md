@@ -29,3 +29,4 @@
 | 23/01/2025 | 3h | Refactoring du solo en prévision du multi |
 | 27/01/2025 | 3h | Continuation de refactoring |
 | 28/01/2025 | 1h | Continuation refactoring |
+| 31/01/2025 | 2h | Continuation refactoring |
