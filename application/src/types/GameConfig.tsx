@@ -1,5 +1,5 @@
 export default interface GameConfig {
-    category: string[];
+    categories: string[];
     timer: number;
     nbOfObjects: number;
 }

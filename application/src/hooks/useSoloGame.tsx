@@ -5,38 +5,41 @@ import Guess from "@/types/Guess";
 import { RoundStatus } from "@/enums/RoundStatus";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
+import { useGameContext } from "@/contexts/GameContext";
 
-export function useSoloGame(game: Game): IUseGame {
-    const [currentGame, setCurrentGame] = useState<Game>(game);
+export function useSoloGame(): IUseGame {
+
+    const { game, localPlayerID, setGame } = useGameContext();
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handleGuess = (guess: Guess) => {
-        setCurrentGame((prevGame) => ({
-            ...prevGame,
+        setGame({
+            ...game,
             currentRound: {
-                ...prevGame.currentRound,
-                localPlayerGuess: guess, // Met à jour le guess de l'utilisateur
+                ...game.currentRound,
+                playersGuesses: {
+                    ...game.currentRound.playersGuesses,
+                    [localPlayerID]: guess   // Met à jour le guess de l'utilisateur
+                }
             },
-        }));
+        });
     };
 
     const handleNextRound = () => {
-        setCurrentGame((prevGame) => ({
-            ...prevGame,
+        setGame({
+            ...game,
             currentRound: {
-                ...prevGame.currentRound,
-                localPlayerGuess: undefined,
                 status: RoundStatus.GUESSING,
-                remotePlayersGuesses: [],
-                guessObject: getNextObject(prevGame),
+                playersGuesses: {},
+                guessObject: getNextObject(),
             },
-        }));
+        });
     };
 
     const recordResult = (result: Result) => {
-        setCurrentGame((prevGame) => ({
-            ...prevGame,
-            players: prevGame.players.map((player, index) =>
+        setGame({
+            ...game,
+            players: game.players.map((player, index) =>
                 index === 0 // Remplacez 0 par l'index souhaité ou une condition pour identifier le joueur
                     ? {
                         ...player,
@@ -44,18 +47,19 @@ export function useSoloGame(game: Game): IUseGame {
                     }
                     : player // Les autres joueurs restent inchangés
             ),
-        }));
+        });
     };
-    
 
-    const getNextObject = (prevGame: Game): GuessObject => {
-        const nextObject = prevGame.guessObjects[currentIndex];
+
+    const getNextObject = (): GuessObject => {
+        const nextObject = game.guessObjects[currentIndex];
         setCurrentIndex((prevIndex) => prevIndex + 1);
         return nextObject;
     };
 
     return {
-        game: currentGame,
+        game: game,
+        localPlayerID,
         handleGuess,
         handleNextRound,
         recordResult,
