@@ -30,3 +30,4 @@
 | 27/01/2025 | 3h | Continuation de refactoring |
 | 28/01/2025 | 1h | Continuation refactoring |
 | 31/01/2025 | 2h | Continuation refactoring |
+| 01/02/2025 | 2h | Continuation refactoring |
