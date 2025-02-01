@@ -8,8 +8,8 @@ export default interface Game {
     id: string;
     hostID: string;
     status: GameStatus;
-    config: GameConfig
+    gameConfig: GameConfig
     players: Player[];
     guessObjects: GuessObject[];
-    currentRound: Round;
+    currentRound: Round | undefined;
 }

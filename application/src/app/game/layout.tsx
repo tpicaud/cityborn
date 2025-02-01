@@ -1,6 +1,7 @@
 'use client';
 
 import { GameProvider } from '@/contexts/GameContext';
+import { Categories } from '@/enums/Categories';
 import { GameStatus } from '@/enums/GameStatus';
 import { RoundStatus } from '@/enums/RoundStatus';
 import Game from '@/types/Game';
@@ -15,32 +16,46 @@ interface GameLayoutProps {
 
 export default function GameLayout({ children }: GameLayoutProps) {
 
-  // TODO Parse gameconfig from request
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
+
+  // parsing request
+  const playerID = searchParams.get('playerID') || 'guest'
+
+  const validCategories = Object.values(Categories);
+
+  const categories: Categories[] = searchParams.get('category')
+    ? searchParams.get('category')!.split(',')
+      .filter(cat => validCategories.includes(cat as Categories)) // Filtrer les catégories valides
+      .map(cat => cat as Categories) // Convertir les valeurs string en Categories
+    : [Categories.TOUTES];
 
   const gameConfig: GameConfig = {
-    categories: searchParams.get('category') ? searchParams.get('category')!.split(',') : ['all'],
-    timer: parseInt(searchParams.get('timer') || '20'),
-    nbOfObjects: parseInt(searchParams.get('nbOfObjects') || '6')
-  }
+    categories,
+    timer: parseInt(searchParams.get('timer') || '20', 10),
+    nbOfObjects: parseInt(searchParams.get('nbOfObjects') || '6', 10),
+  };
+
 
   // TODO fetch new game with gameConfig
+  async function createNewGame(gameConfig: GameConfig, hostID: string) {
+    const response = await fetch('/api/endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ hostID, gameConfig })
+    });
 
-  // Contexte variables
-  const playerID = '';
-  const newGame: Game = { // TODO replace game
-    id: "",
-    hostID: "",
-    status: GameStatus.LOBBY, // Tu peux remplacer par le statut approprié
-    config: {} as GameConfig, // Assure-toi que GameConfig est correctement défini
-    players: [],
-    guessObjects: [],
-    currentRound: {
-      status: RoundStatus.GUESSING, // Remplace par un statut approprié
-      playersGuesses: {},
-      guessObject: {} as GuessObject,
-    },
-  };
+    if (!response.ok) {
+      throw new Error('Erreur lors de la création de la game');
+    }
+
+    const newGame: Game = await response.json();
+    return newGame;
+  }
+
+
+  const newGame = createNewGame(gameConfig, playerID)
 
 
   return (
