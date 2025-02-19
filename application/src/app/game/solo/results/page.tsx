@@ -1,10 +1,19 @@
 'use client';
 
+import LoadingComponent from "@/components/LoadingComponent";
 import ResultsComponent from "@/components/ResultsComponent";
-import { useGameResults } from "@/contexts/GameResultsContext";
+import { useGameContext } from "@/contexts/GameContext";
+import Game from "@/types/Game";
+import { PlayerResults } from "@/types/Results";
 
 const SoloGameResultsPage = () => {
-    const { playerResults } = useGameResults();
+    const { game, localPlayerID } = useGameContext();
+
+    if (!game || !localPlayerID) {
+        return <LoadingComponent />;
+    }
+
+    const playerResults = getGameResult(game, localPlayerID);
 
     return (
         <div className="flex flex-col justify-center items-center min-h-screen">
@@ -19,6 +28,11 @@ const SoloGameResultsPage = () => {
             </div>
         </div>
     );
+};
+
+const getGameResult = (game: Game, localPlayerID: string): PlayerResults | null => {
+    const player = game.players.find((p) => p.id === localPlayerID);
+    return player ? { results: player.results } : null;
 };
 
 export default SoloGameResultsPage;

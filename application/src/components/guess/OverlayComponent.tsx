@@ -1,5 +1,4 @@
 import Guess from "@/types/Guess";
-import { ArrowForward } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import CountdownComponent from "./CountdownComponent";
@@ -82,8 +81,6 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
     currentRound,
     handleGuess,
     handleIsTimeUp,
-    handleNextRound,
-    recordResult
 }) => {
     return (
         <div>

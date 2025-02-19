@@ -5,6 +5,7 @@ import { Box, Button, FormControl, InputLabel, NativeSelect } from "@mui/materia
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
+import { GameMode } from '@/enums/GameMode';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -13,11 +14,29 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 export default function MenuComponent() {
 
     const router = useRouter();
+
+    // Game Config variables
+    const [playerID, setPlayerID] = useState('guest')
+    const [gameMode, setGameMode] = useState(GameMode.SOLO);
+    const [timer, setTimer] = useState(20);
+    const [nbOfObjects, setNbOfObjects] = useState(6)
     const [category, setCategory] = useState('all');
 
     const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setCategory(event.target.value);
-    };     
+    };
+
+    const handlePlay = () => {
+        const queryParams = new URLSearchParams({
+            playerID: playerID,
+            gameMode: gameMode.toString(),
+            timer: timer.toString(),
+            nbOfObjects: nbOfObjects.toString(),
+            category,
+        }).toString();
+
+        router.push(`/game/solo?${queryParams}`);
+    };
 
     return (
         <div className="relative h-screen">
@@ -41,9 +60,7 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
-                            onClick={() => {
-                                router.push(`/game/solo?category=${category}`);
-                            }}
+                            onClick={handlePlay}
                         >
                             <b>Jouer</b>
                         </Button>
