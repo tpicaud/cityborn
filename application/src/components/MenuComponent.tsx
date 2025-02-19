@@ -35,7 +35,7 @@ export default function MenuComponent() {
             category,
         }).toString();
 
-        router.push(`/game/solo?${queryParams}`);
+        router.push(`/game?${queryParams}`);
     };
 
     return (
