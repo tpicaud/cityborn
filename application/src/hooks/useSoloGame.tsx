@@ -5,63 +5,68 @@ import Guess from "@/types/Guess";
 import { RoundStatus } from "@/enums/RoundStatus";
 import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
-import { useGameContext } from "@/contexts/GameContext";
 
-export function useSoloGame(): IUseGame {
+export function useSoloGame(game: Game, localPlayerID: string, setGame: ((game: Game) => void)): IUseGame {
 
-    const { game, localPlayerID, setGame } = useGameContext();
+    //const { game, localPlayerID, setGame } = useGameContext();
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handleGuess = (guess: Guess) => {
-        setGame({
-            ...game,
-            currentRound: {
-                ...game.currentRound,
-                playersGuesses: {
-                    ...game.currentRound.playersGuesses,
-                    [localPlayerID]: guess   // Met à jour le guess de l'utilisateur
-                }
-            },
-        });
+        if (game && game.currentRound && localPlayerID ) { // Vérifie si game est null
+
+            setGame({
+                ...game,
+                currentRound: {
+                    ...game.currentRound,
+                    playersGuesses: {
+                        ...game.currentRound.playersGuesses,
+                        [localPlayerID]: guess
+                    }
+                },
+            });
+        }
     };
 
     const handleNextRound = () => {
-        setGame({
-            ...game,
-            currentRound: {
-                status: RoundStatus.GUESSING,
-                playersGuesses: {},
-                guessObject: getNextObject(),
-            },
-        });
+        if (game) {
+            setGame({
+                ...game,
+                currentRound: {
+                    status: RoundStatus.GUESSING,
+                    playersGuesses: {},
+                    guessObject: getNextObject()!,
+                },
+            });
+        }
     };
 
     const recordResult = (result: Result) => {
+        if (!game) return;
+
         setGame({
             ...game,
             players: game.players.map((player, index) =>
-                index === 0 // Remplacez 0 par l'index souhaité ou une condition pour identifier le joueur
+                index === 0
                     ? {
                         ...player,
-                        results: [...player.results, result], // Ajoute le résultat au tableau existant
+                        results: [...player.results, result],
                     }
-                    : player // Les autres joueurs restent inchangés
+                    : player
             ),
         });
     };
 
+    const getNextObject = (): GuessObject | null => {
+        if (!game) return null; // Retourne null si game est null
 
-    const getNextObject = (): GuessObject => {
         const nextObject = game.guessObjects[currentIndex];
         setCurrentIndex((prevIndex) => prevIndex + 1);
         return nextObject;
     };
 
     return {
-        game: game,
-        localPlayerID,
-        handleGuess,
         handleNextRound,
         recordResult,
-    };
+        handleGuess
+    }
 }
