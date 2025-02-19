@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, ReadonlyURLSearchParams } from 'next/navigation';
 import { useGameContext } from '@/contexts/GameContext';
 import { GameMode } from '@/enums/GameMode';
 import { Categories } from '@/enums/Categories';
@@ -11,6 +11,8 @@ import LoadingComponent from '@/components/LoadingComponent';
 
 export default function GamePage() {
   const router = useRouter();
+  const searchParams = useSearchParams()
+
   const { setGame, setLocalPlayerID } = useGameContext();
 
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,7 @@ export default function GamePage() {
   useEffect(() => {
     async function fetchGame() {
       try {
-        const { playerID, gameMode, gameConfig } = parseNewGameParams();
+        const { playerID, gameMode, gameConfig } = parseNewGameParams(searchParams);
         const newGame = await createNewGame(playerID, gameMode, gameConfig);
 
         setGame(newGame);
@@ -43,6 +45,11 @@ export default function GamePage() {
 }
 
 async function createNewGame(hostID: string, gameMode: GameMode, gameConfig: GameConfig): Promise<Game> {
+  console.log('creating game with params', {
+    hostID,
+    gameMode,
+    gameConfig
+  })
   const response = await fetch('/api/game', {
     method: 'POST',
     headers: {
@@ -58,10 +65,10 @@ async function createNewGame(hostID: string, gameMode: GameMode, gameConfig: Gam
   return response.json();
 }
 
-function parseNewGameParams() {
+function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
   const validCategories = Object.values(Categories);
   const validGameModes = Object.values(GameMode);
-  const searchParams = useSearchParams();
+
 
   const playerID = searchParams.get('playerID') || 'guest';
   const gameMode: GameMode =
@@ -69,13 +76,19 @@ function parseNewGameParams() {
       ? (searchParams.get('gameMode') as GameMode)
       : GameMode.SOLO;
 
-  const timer = parseInt(searchParams.get('timer') || '20', 10);
-  const nbOfObjects = parseInt(searchParams.get('nbOfObjects') || '20', 10);
+  const timer: number = parseInt(searchParams.get('timer') || '20', 10);
+  const nbOfObjects: number = parseInt(searchParams.get('nbOfObjects') || '20', 10);
   const categories: Categories[] = searchParams
     .get('category')
     ?.split(',')
     .filter((cat) => validCategories.includes(cat as Categories))
     .map((cat) => cat as Categories) || [Categories.TOUTES];
 
-  return { playerID, gameMode, gameConfig: { categories, timer, nbOfObjects } };
+    const gameConfig: GameConfig = {
+      categories,
+      timer,
+      nbOfObjects
+    }
+
+  return { playerID, gameMode, gameConfig };
 }
