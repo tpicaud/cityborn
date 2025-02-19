@@ -20,11 +20,11 @@ const celebritiesCollection = process.env.NEXT_PUBLIC_CELEBRITIES_COLLECTION || 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { hostID, gameConfig } = body;
+        const { hostID, gameMode, gameConfig } = body;
 
-        if (!hostID || !gameConfig) {
+        if (!hostID || !gameMode || !gameConfig) {
             return NextResponse.json(
-                { message: "hostID et config sont requis." },
+                { message: "hostID, gameMode et gameConfig sont requis." },
                 { status: 400 }
             ); 
         }
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
                 separator: '-',
                 length: 3
             }),
+            mode: gameMode,
             hostID,
             status: GameStatus.LOBBY, // statut initial du jeu
             gameConfig,
