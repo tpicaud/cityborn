@@ -30,8 +30,6 @@ export default function SoloGamePage() {
     }
 
     return (
-        <Suspense>
-            <SoloGameComponent props={gameComponentProps} />
-        </Suspense>
+        <SoloGameComponent props={gameComponentProps} />
     );
 }
