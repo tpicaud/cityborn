@@ -5,7 +5,7 @@ import LoadingComponent from '@/components/LoadingComponent';
 import { useGameContext } from '@/contexts/GameContext';
 import { useSoloGame } from '@/hooks/useSoloGame';
 import { GameComponentProps } from '@/types/GameComponentProps';
-import { Suspense } from 'react';
+import { useEffect } from 'react';
 
 export default function SoloGamePage() {
 
@@ -14,7 +14,7 @@ export default function SoloGamePage() {
     if (!game || !localPlayerID) {
         return <LoadingComponent />
     }
-
+    
     const {
         handleGuess,
         handleNextRound,
@@ -28,6 +28,10 @@ export default function SoloGamePage() {
         handleNextRound,
         recordResult
     }
+
+    useEffect(() => {
+        console.log(game)
+    })
 
     return (
         <SoloGameComponent props={gameComponentProps} />

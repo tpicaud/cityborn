@@ -20,10 +20,13 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     center,
     zoom,
     preGuess,
-    currentRound,
+    localPlayerID,
+    game,
     handlePreGuess
   },
 }) => {
+
+  const currentRound = game.currentRound!
 
   const mapOptions = {
     mapId: 'e475de68d18cf73',
@@ -100,15 +103,15 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
             <AnswerDisplay guessObject={currentRound.guessObject} />
-            <OtherPlayersGuesses playerGuesses={currentRound.playersGuesses}/>
+            <OtherPlayersGuesses playerGuesses={currentRound.playersGuesses} localPlayerID={localPlayerID} />
             {(preGuess && preGuess.distance !== -1) ? (
               <>
                 <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
                 {!preGuess.win && (
                   <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
                 )}
-              </>) : (
-
+              </>
+            ) : (
               <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} />
             )}
           </>
@@ -120,16 +123,20 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   );
 };
 
-const OtherPlayersGuesses: React.FC<{ playerGuesses: Record<string, Guess> | undefined }> = ({ playerGuesses }) => {
+const OtherPlayersGuesses: React.FC<{ playerGuesses: Record<string, Guess> | undefined, localPlayerID: string }> = ({ playerGuesses, localPlayerID }) => {
 
-  const points = playerGuesses ? Object.values(playerGuesses).map(guess => guess.coordinates) : [];
+  const points = playerGuesses 
+  ? Object.entries(playerGuesses)
+      .filter(([playerID]) => playerID !== localPlayerID) // Exclut le guess du localPlayerID
+      .map(([, guess]) => guess.coordinates) 
+  : [];
 
   return (
     <>
       {points.map((point, index) => (
-        <AdvancedMarker 
-          key={index} 
-          position={point} 
+        <AdvancedMarker
+          key={index}
+          position={point}
           anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
         >
           <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />

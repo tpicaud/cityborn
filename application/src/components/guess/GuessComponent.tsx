@@ -4,38 +4,45 @@ import OverlayComponent from "@/components/guess/OverlayComponent";
 import useGuess from "@/hooks/useGuess";
 import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CountdownBeforeGameComponent from "./CountdownBeforeGameComponent";
-import Round from "@/types/Round";
 import Guess from "@/types/Guess";
+import Game from "@/types/Game";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 
 interface GuessComponentProps {
-    currentRound: Round;
-    handleGuess: (guess: Guess) => void
+    localPlayerID: string,
+    game: Game,
+    handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
     recordResult: (newResult: Result) => void,
 }
 
 const GuessComponent: React.FC<GuessComponentProps> = ({
-   currentRound,
-   handleGuess,
-   handleNextRound,
-   recordResult
+    localPlayerID,
+    game,
+    handleGuess,
+    handleNextRound,
+    recordResult
 }) => {
 
-    const { preGuess, handlePreGuess, handleIsTimeUp } = useGuess();
-    const [ isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished ] = useState(false);
+    const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess();
+    const [isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished] = useState(false);
 
     // Map properties
     const mapProps = {
         center: { lat: 48.8566, lng: 2.3522 },
         zoom: 2,
         preGuess,
-        currentRound,
+        localPlayerID,
+        game,
         handlePreGuess,
     };
+
+    useEffect(() => {
+        resetPreGuess()
+    }, [game.currentRound?.guessObject])
 
     return (
         <div>
@@ -49,12 +56,12 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
             {!isCountdownBeforeGameFinished && (
                 <CountdownBeforeGameComponent onCountdownEnd={() => setisCountdownBeforeGameFinished(true)} />
             )}
-            
+
             {isCountdownBeforeGameFinished && (
                 <div className="z-10">
                     <OverlayComponent
                         preGuess={preGuess}
-                        currentRound={currentRound}
+                        game={game}
                         handleGuess={handleGuess}
                         handleIsTimeUp={handleIsTimeUp}
                         handleNextRound={handleNextRound}

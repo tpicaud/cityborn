@@ -59,4 +59,4 @@ const useGame = (guessObjectList: GuessObject[]) => {
     };
 };
 
-export default useGame;
+//export default useGame;

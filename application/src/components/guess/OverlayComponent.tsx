@@ -5,6 +5,7 @@ import CountdownComponent from "./CountdownComponent";
 import { Result } from "@/types/Results";
 import Round from "@/types/Round";
 import { RoundStatus } from "@/enums/RoundStatus";
+import Game from "@/types/Game";
 
 function GuessButton({
     preGuess,
@@ -69,7 +70,7 @@ function GuessResult({
 
 interface OverlayComponentProps {
     preGuess: Guess | undefined;
-    currentRound: Round
+    game: Game,
     handleGuess: (value: Guess) => void;
     handleIsTimeUp: () => void;
     handleNextRound: () => void;
@@ -78,22 +79,22 @@ interface OverlayComponentProps {
 
 const OverlayComponent: React.FC<OverlayComponentProps> = ({
     preGuess,
-    currentRound,
+    game,
     handleGuess,
     handleIsTimeUp,
 }) => {
     return (
         <div>
-            <GuessObjectComponent guessObject={currentRound.guessObject} />
+            <GuessObjectComponent guessObject={game.currentRound!.guessObject} />
             <div className="absolute w-[30%] min-w-36 m-4">
-                {(currentRound.status === RoundStatus.GUESSING) && (
+                {(game.currentRound!.status === RoundStatus.GUESSING) && (
                     <CountdownComponent totalTime={20} endMessage="Time's up!" handleIsTimeUp={handleIsTimeUp} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-                <GuessResult currentRound={currentRound} preGuess={preGuess} />
+                <GuessResult currentRound={game.currentRound!} preGuess={preGuess} />
                 <div className="relative w-full flex justify-center items-center">
-                    <GuessButton preGuess={preGuess} disabled={currentRound.status !== RoundStatus.GUESSING} handleGuess={handleGuess} />
+                    <GuessButton preGuess={preGuess} disabled={game.currentRound!.status !== RoundStatus.GUESSING || !preGuess} handleGuess={handleGuess} />
                 </div>
             </div>
         </div>
