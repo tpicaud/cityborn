@@ -54,7 +54,11 @@ export async function POST(request: Request) {
       hostID,
       status: GameStatus.LOBBY,
       gameConfig,
-      players: [hostID],
+      players: [{
+        id: hostID,
+        results: [],
+        connected: true
+      }],
       guessObjects: guessObjects,
       currentRound: undefined,
     };

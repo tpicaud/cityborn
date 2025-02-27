@@ -4,8 +4,8 @@ import { createContext, useState, ReactNode, useContext } from 'react';
 interface GameContextType {
   localPlayerID: string | null;
   game: Game | null;
-  setLocalPlayerID: (id: string) => void;
-  setGame: (game: Game) => void;
+  setLocalPlayerID: React.Dispatch<React.SetStateAction<string | null>>
+  setGame: React.Dispatch<React.SetStateAction<Game | null>>
 }
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);

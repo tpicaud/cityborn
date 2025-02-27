@@ -12,7 +12,7 @@ import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "../LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";
 
-export const SoloGameComponent = ({props}: {props: GameComponentProps}  ) => {
+export const SoloGameComponent = ({ props }: { props: GameComponentProps }) => {
     const router = useRouter();
 
     const {
@@ -24,7 +24,7 @@ export const SoloGameComponent = ({props}: {props: GameComponentProps}  ) => {
     } = props
 
     useEffect(() => {
-        if (game?.status === GameStatus.FINISHED) {
+        if (game?.status === GameStatus.RESULTS) {
             router.push('solo/results');
         }
     }, [game]);
@@ -67,7 +67,8 @@ export const SoloGameComponent = ({props}: {props: GameComponentProps}  ) => {
     return (
         <div>
             <GuessComponent
-                currentRound={game.currentRound}
+                localPlayerID={localPlayerID}
+                game={game}
                 handleGuess={handleGuess}
                 handleNextRound={handleNextRound}
                 recordResult={recordResult}

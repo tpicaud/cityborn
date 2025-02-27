@@ -17,7 +17,11 @@ const useGuess = () => {
         });
     }
 
-    return { preGuess, handlePreGuess, handleIsTimeUp };
+    const resetPreGuess = () => {
+        setPreGuess(undefined);
+    }
+
+    return { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp };
 }
 
 export default useGuess;

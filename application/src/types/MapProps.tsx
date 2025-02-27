@@ -1,12 +1,13 @@
 import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
-import Round from "./Round";
+import Game from "./Game";
 
 interface MapProps {
     center: Coord;
     zoom: number,
     preGuess: Guess | undefined;
-    currentRound: Round
+    game: Game,
+    localPlayerID: string,
     handlePreGuess: (value: Guess) => void;
 }
 
