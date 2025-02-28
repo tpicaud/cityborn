@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Guess from "@/types/Guess";
+import Game from "@/types/Game";
 
-const useGuess = () => {
+const useGuess = (handleGuess: (guess: Guess) => void) => {
     const [preGuess, setPreGuess] = useState<Guess>();
 
     const handlePreGuess = (value: Guess) => {
@@ -9,12 +10,16 @@ const useGuess = () => {
     }
 
     const handleIsTimeUp = () => {
-        handlePreGuess({
+
+        const defaultGuess: Guess = {
             coordinates: preGuess ? preGuess.coordinates : { lat: 0, lng: 0 },
             distance: preGuess ? preGuess.distance : -1,
             points: preGuess ? preGuess.points : 0,
             win: preGuess ? preGuess.win : false
-        });
+        }
+        handlePreGuess(defaultGuess);
+        handleGuess(defaultGuess)
+        console.log('handle time up')
     }
 
     const resetPreGuess = () => {
