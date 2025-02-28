@@ -27,7 +27,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     recordResult
 }) => {
 
-    const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess();
+    const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
     const [isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished] = useState(false);
 
     // Map properties
