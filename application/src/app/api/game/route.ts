@@ -6,22 +6,7 @@ import GameConfig from "@/types/GameConfig";
 import GuessObject from "@/types/GuessObject";
 import { Categories } from "@/enums/Categories";
 import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
-
-// Configuration de la connexion MongoDB
-const uri = process.env.NEXT_PUBLIC_MONGODB_URI || "";
-const client = new MongoClient(uri);
-
-// Connexion persistante
-let dbClient: MongoClient | null = null;
-
-// Fonction pour établir la connexion
-async function connectToDatabase() {
-  if (!dbClient) {
-    dbClient = new MongoClient(uri);
-    await dbClient.connect();
-  }
-  return dbClient;
-}
+import { connectToDatabase } from "../utils";
 
 export async function POST(request: Request) {
   try {
@@ -75,6 +60,54 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { gameID, update } = body;
+
+    if (!gameID || !update) {
+      return NextResponse.json(
+        { message: "gameID et update sont requis." },
+        { status: 400 }
+      );
+    }
+
+    // Connexion à la base de données
+    const client = await connectToDatabase();
+    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
+    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
+
+    // Vérifier si la game existe
+    const existingGame = await collection.findOne({ id: gameID });
+    if (!existingGame) {
+      return NextResponse.json(
+        { message: "Game non trouvée." },
+        { status: 404 }
+      );
+    }
+
+    // Mise à jour de la game
+    await collection.updateOne(
+      { id: gameID },
+      { $set: update }
+    );
+
+    // Récupérer la game mise à jour
+    const updatedGame = await collection.findOne({ id: gameID });
+
+    return NextResponse.json(updatedGame, { status: 200 });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la game:", error);
+    return NextResponse.json(
+      { message: "Erreur lors de la mise à jour de la game." },
+      { status: 500 }
+    );
+  }
+}
+
+
+// Auxiliary functions
 
 async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]> {
   try {
