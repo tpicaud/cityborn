@@ -33,3 +33,4 @@
 | 01/02/2025 | 2h | Continuation refactoring |
 | 17/02/2025 | 3h | Continuation refactoring |
 | 19/02/2025 | 2h | Continuation refactoring + début api back |
+| 04/02/2025 | 5h | ajout des endpoints pour get game et join game |
