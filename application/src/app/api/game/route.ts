@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
 import { GameStatus } from "@/enums/GameStatus";
 import Game from "@/types/Game";
 import GameConfig from "@/types/GameConfig";
@@ -7,6 +6,26 @@ import GuessObject from "@/types/GuessObject";
 import { Categories } from "@/enums/Categories";
 import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 import { connectToDatabase } from "../utils";
+
+export async function GET(request: Request) {
+  try {
+    // Connexion à la base de données
+    const client = await connectToDatabase();
+    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
+    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
+
+    // Récupérer toutes les games
+    const games = await collection.find().toArray();
+
+    return NextResponse.json(games, { status: 200 });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des games:", error);
+    return NextResponse.json(
+      { message: "Erreur lors de la récupération des games." },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -60,52 +79,6 @@ export async function POST(request: Request) {
     );
   }
 }
-
-export async function PUT(request: Request) {
-  try {
-    const body = await request.json();
-    const { gameID, update } = body;
-
-    if (!gameID || !update) {
-      return NextResponse.json(
-        { message: "gameID et update sont requis." },
-        { status: 400 }
-      );
-    }
-
-    // Connexion à la base de données
-    const client = await connectToDatabase();
-    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
-    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
-
-    // Vérifier si la game existe
-    const existingGame = await collection.findOne({ id: gameID });
-    if (!existingGame) {
-      return NextResponse.json(
-        { message: "Game non trouvée." },
-        { status: 404 }
-      );
-    }
-
-    // Mise à jour de la game
-    await collection.updateOne(
-      { id: gameID },
-      { $set: update }
-    );
-
-    // Récupérer la game mise à jour
-    const updatedGame = await collection.findOne({ id: gameID });
-
-    return NextResponse.json(updatedGame, { status: 200 });
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de la game:", error);
-    return NextResponse.json(
-      { message: "Erreur lors de la mise à jour de la game." },
-      { status: 500 }
-    );
-  }
-}
-
 
 // Auxiliary functions
 
