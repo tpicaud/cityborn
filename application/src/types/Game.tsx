@@ -11,6 +11,6 @@ export default interface Game {
     status: GameStatus;
     gameConfig: GameConfig
     players: Player[];
-    guessObjects: GuessObject[];
     currentRound: Round | undefined;
+    guessObjects: GuessObject[];
 }
