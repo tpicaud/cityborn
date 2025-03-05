@@ -30,11 +30,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { hostID, gameMode, gameConfig } = body;
+    const { gameMode, gameConfig } = body;
 
-    if (!hostID || !gameMode || !gameConfig) {
+    if (!gameMode || !gameConfig) {
       return NextResponse.json(
-        { message: "hostID, gameMode et gameConfig sont requis." },
+        { message: "gameMode et gameConfig sont requis." },
         { status: 400 }
       ); 
     }
@@ -55,22 +55,18 @@ export async function POST(request: Request) {
         length: 3
       }),
       mode: gameMode,
-      hostID,
+      hostID: '',
       status: GameStatus.LOBBY,
       gameConfig,
-      players: [{
-        id: hostID,
-        results: [],
-        connected: true
-      }],
-      guessObjects: guessObjects,
+      players: [],
       currentRound: undefined,
+      guessObjects: guessObjects,
     };
 
     // Insérer la nouvelle game dans la base de données
     await collection.insertOne(newGame);
 
-    return NextResponse.json(newGame, { status: 201 });
+    return NextResponse.json(newGame.id, { status: 201 });
   } catch (error) {
     console.error("Erreur lors de la création de la game:", error);
     return NextResponse.json(

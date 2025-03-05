@@ -168,11 +168,10 @@ const swaggerDefinition = {
                             schema: {
                                 type: "object",
                                 properties: {
-                                    hostID: { type: "string" },
                                     gameMode: { $ref: "#/components/schemas/GameMode" },
                                     gameConfig: { $ref: "#/components/schemas/GameConfig" },
                                 },
-                                required: ["hostID", "gameMode", "gameConfig"],
+                                required: ["gameMode", "gameConfig"],
                             },
                         },
                     },
@@ -244,6 +243,116 @@ const swaggerDefinition = {
                                 schema: { $ref: "#/components/schemas/Game" },
                             },
                         },
+                    },
+                    404: {
+                        description: "Partie non trouvée",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/Error" },
+                                example: {
+                                    message: "Partie introuvable",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "/game/{id}/start": {
+            post: {
+                summary: "Démarrer la partie",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string" },
+                        description: "Identifiant de la partie à récupérer",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "La partie a commencé",
+                    },
+                    404: {
+                        description: "Partie non trouvée",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/Error" },
+                                example: {
+                                    message: "Partie introuvable",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "/game/{id}/guess": {
+            post: {
+                summary: "Poster un guess",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string" },
+                        description: "Identifiant de la partie à récupérer",
+                    },
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    playerID: { type: "string" },
+                                    guess: { $ref: "#/components/schemas/Guess" },
+                                },
+                                required: ["playerID", "guess"],
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: "Partie trouvée",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/Game" },
+                            },
+                        },
+                    },
+                    404: {
+                        description: "Partie non trouvée",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/Error" },
+                                example: {
+                                    message: "Partie introuvable",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "/game/{id}/nextRound": {
+            put: {
+                summary: "Aller au round suivant",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string" },
+                        description: "Identifiant de la partie à récupérer",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Passage au round suivant effectué",
                     },
                     404: {
                         description: "Partie non trouvée",
