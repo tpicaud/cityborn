@@ -25,6 +25,7 @@ export function useSoloGame(
     
                 return {
                     ...prevGame,
+                    status: GameStatus.IN_PROGRESS,
                     currentRound: {
                         status: RoundStatus.GUESSING,
                         guessObject: firstObject,
