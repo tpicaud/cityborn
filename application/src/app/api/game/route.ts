@@ -5,7 +5,7 @@ import GameConfig from "@/types/GameConfig";
 import GuessObject from "@/types/GuessObject";
 import { Categories } from "@/enums/Categories";
 import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
-import { connectToDatabase } from "../utils";
+import { connectToDatabase } from "@/utils/connectToDatabase";
 
 export async function GET(request: Request) {
   try {
