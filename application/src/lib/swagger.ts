@@ -207,21 +207,124 @@ const swaggerDefinition = {
                 },
             },
             get: {
-                summary: "Récupérer toutes les parties",
+                summary: "Récupérer une partie par son ID",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "query",
+                        required: true,
+                        description: "L'identifiant unique de la partie à récupérer",
+                        schema: {
+                            type: "string"
+                        }
+                    }
+                ],
                 responses: {
                     200: {
-                        description: "Liste des parties",
+                        description: "Détails de la partie trouvée",
                         content: {
                             "application/json": {
-                                schema: {
-                                    type: "array",
-                                    items: { $ref: "#/components/schemas/Game" },
-                                },
+                                example: {
+                                    id: "defensive-silver-newt",
+                                    mode: "multi",
+                                    hostID: "",
+                                    status: 1,
+                                    gameConfig: {},
+                                    players: [],
+                                    currentRound: {},
+                                    guessObjects: []
+                                }
+                            }
+                        }
+                    },
+                    400: {
+                        description: "Requête invalide (id manquant)",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "L'identifiant de la game est requis."
+                                }
+                            }
+                        }
+                    },
+                    404: {
+                        description: "Aucune partie trouvée avec cet ID",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "Aucune game trouvée avec cet identifiant."
+                                }
+                            }
+                        }
+                    },
+                    500: {
+                        description: "Erreur interne du serveur",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "Erreur lors de la récupération de la game."
+                                }
+                            }
+                        }
+                    }
+                }
+            },            
+            delete: {
+                summary: "Supprimer une partie",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "query",
+                        required: true,
+                        description: "L'identifiant unique de la partie à supprimer",
+                        schema: {
+                            type: "string"
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "L'id de la partie supprimée",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "La partie {id} a été supprimée"
+                                }
                             },
                         },
                     },
-                },
-            },
+                    400: {
+                        description: "Requête invalide (id manquant ou incorrect)",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "L'identifiant de la game est requis."
+                                }
+                            }
+                        }
+                    },
+                    404: {
+                        description: "Aucune partie trouvée avec cet ID",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "Aucune game trouvée avec cet identifiant."
+                                }
+                            }
+                        }
+                    },
+                    500: {
+                        description: "Erreur interne du serveur",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "Erreur lors de la suppression de la game."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "/game/{id}": {
             get: {

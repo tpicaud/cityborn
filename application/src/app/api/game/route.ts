@@ -9,23 +9,41 @@ import { connectToDatabase } from "@/utils/connectToDatabase";
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const gameId = searchParams.get("id");
+
+    if (!gameId) {
+      return NextResponse.json(
+        { message: "L'identifiant de la game est requis." },
+        { status: 400 }
+      );
+    }
+
     // Connexion à la base de données
     const client = await connectToDatabase();
     const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
     const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
 
-    // Récupérer toutes les games
-    const games = await collection.find().toArray();
+    // Rechercher la game par son id
+    const game = await collection.findOne({ id: gameId });
 
-    return NextResponse.json(games, { status: 200 });
+    if (!game) {
+      return NextResponse.json(
+        { message: "Aucune game trouvée avec cet identifiant." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(game, { status: 200 });
   } catch (error) {
-    console.error("Erreur lors de la récupération des games:", error);
+    console.error("Erreur lors de la récupération de la game:", error);
     return NextResponse.json(
-      { message: "Erreur lors de la récupération des games." },
+      { message: "Erreur lors de la récupération de la game." },
       { status: 500 }
     );
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -36,7 +54,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { message: "gameMode et gameConfig sont requis." },
         { status: 400 }
-      ); 
+      );
     }
 
     // Fetch guessObjects
@@ -75,6 +93,49 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const gameId = searchParams.get("id");
+
+    if (!gameId) {
+      return NextResponse.json(
+        { message: "L'identifiant de la game est requis." },
+        { status: 400 }
+      );
+    }
+
+    // Connexion à la base de données
+    const client = await connectToDatabase();
+    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
+    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
+
+    console.log(gameId);
+
+    // Suppression de la game
+    const result = await collection.deleteOne({ id: gameId });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { message: "Aucune game trouvée avec cet identifiant." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: `Game ${gameId} supprimée avec succès.` },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la game:", error);
+    return NextResponse.json(
+      { message: "Erreur lors de la suppression de la game." },
+      { status: 500 }
+    );
+  }
+}
+
 
 // Auxiliary functions
 
