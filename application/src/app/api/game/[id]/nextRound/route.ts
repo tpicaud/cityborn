@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import Game from "@/types/Game";
 import Round from "@/types/Round";
+import { Result } from "@/types/Results"
 import { RoundStatus } from "@/enums/RoundStatus";
+import { GameStatus } from "@/enums/GameStatus";
 
 export async function PUT(
     request: Request,
@@ -36,12 +38,53 @@ export async function PUT(
             ? game.guessObjects.findIndex(obj => obj.name === game.currentRound?.guessObject.name)
             : -1;
 
-        console.log("'index", currentIndex);
-        console.log('length', game.guessObjects.length)
+        // Vérifier que l'objet est dans la liste
+        if (currentIndex === -1) {
+            return NextResponse.json({ message: "L'objet à deviner ne fais pas partie de la liste de la partie" }, { status: 400 });
+        }
+
+
+        // Récupérer les résultats des joueurs et les enregistrer dans la base de données
+        if (game.currentRound?.playersGuesses) {
+            await collection.updateOne(
+                { id: game.id },
+                {
+                    $set: {
+                        players: game.players.map(player => {
+
+                            const newResult: Result = {
+                                guessObject: game.currentRound!.guessObject,
+                                distance: game.currentRound!.playersGuesses![player.id].distance,
+                                points: game.currentRound!.playersGuesses![player.id].points
+                            }
+
+                            return {
+                                ...player,
+                                results: [
+                                    ...player.results,
+                                    newResult
+                                ].filter(result => result !== null) // Filtrer les valeurs nulles
+                            }
+                        })
+                    }
+                }
+            );
+        }
+
 
         // Vérifier s'il y a un round suivant
-        if (currentIndex === -1 || currentIndex + 1 >= game.guessObjects.length) {
-            return NextResponse.json({ message: "Plus de rounds disponibles." }, { status: 400 });
+        if (currentIndex + 1 >= game.guessObjects.length) {
+            // Mise à jour du round actuel dans la base de données
+            await collection.updateOne(
+                { id: gameID },
+                {
+                    $set: {
+                        status: GameStatus.RESULTS,
+                        currentRound: undefined
+                    }
+                }
+            );
+            return NextResponse.json({ message: "Plus de rounds, la partie passe aux résultats" }, { status: 200 });
         }
 
         // Définir le prochain round
