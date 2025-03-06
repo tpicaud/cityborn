@@ -30,12 +30,17 @@ export async function POST(
 
         // Check si la partie est démarrable
         if (game.status !== GameStatus.LOBBY) {
-            return NextResponse.json({ message: "La partie n'est plus joignable" }, { status: 400 });
+            return NextResponse.json({ message: "La partie est déjà démarrée" }, { status: 400 });
         }
 
         // Vérifier s'il y a des objets à deviner
         if (!game.guessObjects || game.guessObjects.length === 0) {
             return NextResponse.json({ message: "Aucun objet à deviner disponible." }, { status: 400 });
+        }
+
+        // Vérifier si des joueurs sont présent dans le lobby
+        if (game.players.length === 0) {
+            return NextResponse.json({ message: "Aucun joueur dans la partie" }, { status: 400 });
         }
 
         // Sélection du premier objet à deviner

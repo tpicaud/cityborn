@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/utils/connectToDatabase";
+import Game from "@/types/Game";
 
 export async function POST(
     request: Request,
@@ -7,6 +8,7 @@ export async function POST(
 ) {
     try {
         const { playerID, guess } = await request.json();
+        const gameID = params.id
 
         if (!playerID || !guess) {
             return NextResponse.json(
@@ -20,32 +22,23 @@ export async function POST(
         const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
         const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
 
-        // Récupérer la game actuelle
-        const game = await collection.findOne({ id: params.id });
+        // Récupération du jeu dans la base de données
+        const game: Game | null = (await collection.findOne({ id: gameID })) as Game | null;
 
+        // Check si la partie existe
         if (!game) {
-            return NextResponse.json(
-                { message: "Game non trouvée." },
-                { status: 404 }
-            );
+            return NextResponse.json({ message: "Partie introuvable." }, { status: 404 });
         }
 
         // Vérifier si playerID existe dans la liste des joueurs (game.players)
         const playerExists = game.players.some((player: { id: string }) => player.id === playerID);
-
         if (!playerExists) {
-            return NextResponse.json(
-                { message: "Joueur non trouvé dans cette partie." },
-                { status: 403 }
-            );
+            return NextResponse.json({ message: "Joueur non trouvé dans cette partie." }, { status: 403 });
         }
 
         // Vérifier si un round est actif
-        if (!game.round) {
-            return NextResponse.json(
-                { message: "Aucun round en cours." },
-                { status: 400 }
-            );
+        if (!game.currentRound) {
+            return NextResponse.json({ message: "Aucun round en cours." }, { status: 400 });
         }
 
         // Mettre à jour le guess du joueur dans currentRound.playersGuesses
