@@ -33,4 +33,6 @@
 | 01/02/2025 | 2h | Continuation refactoring |
 | 17/02/2025 | 3h | Continuation refactoring |
 | 19/02/2025 | 2h | Continuation refactoring + début api back |
-| 04/02/2025 | 5h | ajout des endpoints pour get game et join game |
+| 04/03/2025 | 5h | ajout des endpoints pour get game et join game |
+| 06/03/2025 | 5h | complétion des endpoints |
+| 11/03/2025 | 2h | mise a jour de l'appli pour le plein écran |
