@@ -6,6 +6,7 @@ import GuessObject from "@/types/GuessObject";
 import { Categories } from "@/enums/Categories";
 import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 import { connectToDatabase } from "@/utils/connectToDatabase";
+import { GameMode } from "@/enums/GameMode";
 
 export async function GET(request: Request) {
   try {
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { gameMode, gameConfig } = body;
+    const { playerID, gameMode, gameConfig } = body;
 
     if (!gameMode || !gameConfig) {
       return NextResponse.json(
@@ -65,26 +66,18 @@ export async function POST(request: Request) {
     const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
     const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
 
-    // Création de la nouvelle game
-    const newGame: Game = {
-      id: uniqueNamesGenerator({
-        dictionaries: [adjectives, colors, animals],
-        separator: '-',
-        length: 3
-      }),
-      mode: gameMode,
-      hostID: '',
-      status: GameStatus.LOBBY,
-      gameConfig,
-      players: [],
-      currentRound: undefined,
-      guessObjects: guessObjects,
-    };
+    switch (gameMode){
+      
+      case GameMode.MULTI:
+        const newMultiGame: Game = createMultiGame(gameConfig, guessObjects);
+        await collection.insertOne(newMultiGame);
+        return NextResponse.json(newMultiGame.id, { status: 201 });
 
-    // Insérer la nouvelle game dans la base de données
-    await collection.insertOne(newGame);
+      case GameMode.SOLO:
+        const newSoloGame: Game = createSoloGame(gameConfig, guessObjects, playerID);
+        return NextResponse.json(newSoloGame, { status: 201 });
+    }
 
-    return NextResponse.json(newGame.id, { status: 201 });
   } catch (error) {
     console.error("Erreur lors de la création de la game:", error);
     return NextResponse.json(
@@ -174,3 +167,44 @@ async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]>
     throw new Error("Erreur lors de la récupération des célébrités.");
   }
 }
+
+
+function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
+      // Création de la nouvelle game
+      const newGame: Game = {
+        id: uniqueNamesGenerator({
+          dictionaries: [adjectives, colors, animals],
+          separator: '-',
+          length: 3
+        }),
+        mode: GameMode.MULTI,
+        hostID: '',
+        status: GameStatus.LOBBY,
+        gameConfig,
+        players: [],
+        currentRound: undefined,
+        guessObjects: guessObjects,
+      };
+
+      return newGame
+}
+
+function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[], playerID: string): Game {
+  // Création de la nouvelle game
+  const newGame: Game = {
+    id: 'solo',
+    mode: GameMode.SOLO,
+    hostID: playerID,
+    status: GameStatus.LOBBY,
+    gameConfig,
+    players: [{
+      id: playerID,
+      results: [ ]
+    }],
+    currentRound: undefined,
+    guessObjects: guessObjects,
+  };
+
+  return newGame
+}
+

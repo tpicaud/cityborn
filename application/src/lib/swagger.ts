@@ -170,8 +170,10 @@ const swaggerDefinition = {
                                 properties: {
                                     gameMode: { $ref: "#/components/schemas/GameMode" },
                                     gameConfig: { $ref: "#/components/schemas/GameConfig" },
+                                    playerID: { type: "string" },
+
                                 },
-                                required: ["gameMode", "gameConfig"],
+                                required: ["gameMode", "gameConfig", "playerID"],
                             },
                         },
                     },
