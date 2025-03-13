@@ -24,14 +24,6 @@ const useGame = (guessObjectList: GuessObject[]) => {
         }
     }, [guessObjectIndex, guessObjectList]);
 
-    // Enregistrer un résultat pour un joueur
-    const recordResult = (newResult: Result) => {
-        setPlayerResults((prevResults) => ({
-            ...prevResults,
-            results: [...prevResults.results, newResult], // Ajouter le nouveau résultat
-        }));
-    };
-
     // Passer au prochain guessObject
     const nextGuessObject = () => {
         if (guessObjectIndex < guessObjectList.length - 1) {
@@ -52,7 +44,6 @@ const useGame = (guessObjectList: GuessObject[]) => {
         currentGuessObject,
         playerResults,
         isFinished,
-        recordResult,
         nextGuessObject,
         resetGame,
         isEmpty, // Exposez la fonction isEmpty pour une utilisation extérieure

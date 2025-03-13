@@ -16,7 +16,6 @@ interface GuessComponentProps {
     game: Game,
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
-    recordResult: (newResult: Result) => void,
 }
 
 const GuessComponent: React.FC<GuessComponentProps> = ({
@@ -24,7 +23,6 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     game,
     handleGuess,
     handleNextRound,
-    recordResult
 }) => {
 
     const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
@@ -65,7 +63,6 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                         handleGuess={handleGuess}
                         handleIsTimeUp={handleIsTimeUp}
                         handleNextRound={handleNextRound}
-                        recordResult={recordResult}
                     />
                 </div>
             )}

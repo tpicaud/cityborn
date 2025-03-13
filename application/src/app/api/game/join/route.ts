@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import Game from "@/types/Game";
 import { GameStatus } from "@/enums/GameStatus";
+import { sendMessage } from "../../../../../server";
 
 export async function PUT(request: Request) {
     try {
@@ -48,7 +49,19 @@ export async function PUT(request: Request) {
             updateFields
         );
 
-        return NextResponse.json({ message: "Joueur ajouté avec succès." }, { status: 200 });
+        // Récupérer l'objet mis à jour
+        const updatedGame = (await collection.findOne({ id: gameID })) as Game | null;
+
+        if (!updatedGame) {
+            return NextResponse.json({ message: "Erreur lors de la récupération de la partie mise à jour." }, { status: 500 });
+        }
+
+        sendMessage(JSON.stringify({
+            type: 'gameUpdate',
+            data: updatedGame
+        }))
+
+        return NextResponse.json({ message: "Le joueur a été ajouté avec succès." }, { status: 200 });
     } catch (error) {
         console.error("Erreur lors de l'ajout du joueur:", error);
         return NextResponse.json({ message: "Erreur serveur." }, { status: 500 });

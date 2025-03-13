@@ -1,7 +1,7 @@
 'use client';
 
 import LoadingComponent from "@/components/LoadingComponent";
-import ResultsComponent from "@/components/ResultsComponent";
+import ResultsComponent from "@/components/game/ResultsComponent";
 import { useGameContext } from "@/contexts/GameContext";
 import Game from "@/types/Game";
 import { PlayerResults } from "@/types/Results";
@@ -31,6 +31,8 @@ const SoloGameResultsPage = () => {
 };
 
 const getGameResult = (game: Game, localPlayerID: string): PlayerResults | null => {
+    console.log(localPlayerID)
+    console.log(game.players)
     const player = game.players.find((p) => p.id === localPlayerID);
     return player ? { results: player.results } : null;
 };

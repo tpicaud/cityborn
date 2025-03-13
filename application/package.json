@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "ts-node server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "ts-node server.ts",
     "lint": "next lint"
   },
   "dependencies": {
@@ -26,6 +26,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "swagger-ui-react": "^5.20.0",
     "unique-names-generator": "^4.7.1"
   },

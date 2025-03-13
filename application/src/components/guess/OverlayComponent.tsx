@@ -74,7 +74,6 @@ interface OverlayComponentProps {
     handleGuess: (value: Guess) => void;
     handleIsTimeUp: () => void;
     handleNextRound: () => void;
-    recordResult: (result: Result) => void;
 }
 
 const OverlayComponent: React.FC<OverlayComponentProps> = ({

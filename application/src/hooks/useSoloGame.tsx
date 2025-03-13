@@ -22,7 +22,7 @@ export function useSoloGame(
                 if (!prevGame) {
                     throw new Error('Cannot start game because game is not initialized');
                 }
-    
+
                 return {
                     ...prevGame,
                     status: GameStatus.IN_PROGRESS,
@@ -37,12 +37,25 @@ export function useSoloGame(
             throw new Error('Cannot start game because no guess objects are available');
         }
     };
-    
+
+    const joinGame = () => {
+        setGame((prevGame) => {
+            if (!prevGame) return prevGame;
+
+            return {
+                ...prevGame,
+                players: [{
+                    id: localPlayerID,
+                    results: []
+                }]
+            }
+        })
+    }
 
     const handleGuess = (guess: Guess) => {
         setGame((prevGame) => {
             if (!prevGame || !prevGame.currentRound || !localPlayerID) return prevGame;
-    
+
             return {
                 ...prevGame,
                 currentRound: {
@@ -56,9 +69,35 @@ export function useSoloGame(
             };
         });
     };
-    
+
 
     const handleNextRound = () => {
+
+        // Record result of the round
+        setGame((prevGame) => {
+            if (!prevGame) return prevGame;
+
+            return {
+                ...prevGame,
+                players: game.players.map(player => {
+                    const newResult: Result = {
+                        guessObject: game.currentRound!.guessObject,
+                        distance: game.currentRound!.playersGuesses![player.id].distance,
+                        points: game.currentRound!.playersGuesses![player.id].points
+                    }
+
+                    return {
+                        ...player,
+                        results: [
+                            ...player.results,
+                            newResult
+                        ].filter(result => result !== null) // Filtrer les valeurs nulles
+                    }
+                })
+            }
+        })
+
+        // Go to next guessObject
         const nextObject = getNextObject();
         console.log(nextObject);
 
@@ -80,26 +119,6 @@ export function useSoloGame(
         }
     };
 
-
-    const recordResult = (result: Result) => {
-        setGame((prevGame) => {
-            if (!prevGame) return prevGame;
-
-            return {
-                ...prevGame,
-                players: prevGame.players.map((player, index) =>
-                    index === 0
-                        ? {
-                            ...player,
-                            results: [...player.results, result],
-                        }
-                        : player
-                ),
-            };
-        });
-    };
-
-
     const getNextObject = (): GuessObject | null => {
         if (!game) return null;
 
@@ -110,7 +129,7 @@ export function useSoloGame(
         } else {
             setGame((prevGame) => {
                 if (!prevGame) return prevGame;
-    
+
                 return {
                     ...prevGame,
                     status: GameStatus.RESULTS
@@ -125,8 +144,9 @@ export function useSoloGame(
     }, []);
 
     return {
+        joinGame,
         handleNextRound,
-        recordResult,
-        handleGuess
+        handleGuess,
+        startGame
     }
 }

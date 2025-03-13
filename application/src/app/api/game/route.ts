@@ -49,11 +49,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { playerID, gameMode, gameConfig } = body;
+    const { gameMode, gameConfig } = body;
 
     if (!gameMode || !gameConfig) {
       return NextResponse.json(
-        { message: "gameMode et gameConfig sont requis." },
+        { message: "gameMode, gameConfig et playerID sont requis." },
         { status: 400 }
       );
     }
@@ -66,15 +66,15 @@ export async function POST(request: Request) {
     const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
     const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
 
-    switch (gameMode){
-      
+    switch (gameMode) {
+
       case GameMode.MULTI:
         const newMultiGame: Game = createMultiGame(gameConfig, guessObjects);
         await collection.insertOne(newMultiGame);
-        return NextResponse.json(newMultiGame.id, { status: 201 });
+        return NextResponse.json({ id: newMultiGame.id }, { status: 201 });
 
       case GameMode.SOLO:
-        const newSoloGame: Game = createSoloGame(gameConfig, guessObjects, playerID);
+        const newSoloGame: Game = createSoloGame(gameConfig, guessObjects);
         return NextResponse.json(newSoloGame, { status: 201 });
     }
 
@@ -170,37 +170,38 @@ async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]>
 
 
 function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
-      // Création de la nouvelle game
-      const newGame: Game = {
-        id: uniqueNamesGenerator({
-          dictionaries: [adjectives, colors, animals],
-          separator: '-',
-          length: 3
-        }),
-        mode: GameMode.MULTI,
-        hostID: '',
-        status: GameStatus.LOBBY,
-        gameConfig,
-        players: [],
-        currentRound: undefined,
-        guessObjects: guessObjects,
-      };
-
-      return newGame
-}
-
-function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[], playerID: string): Game {
   // Création de la nouvelle game
   const newGame: Game = {
-    id: 'solo',
-    mode: GameMode.SOLO,
-    hostID: playerID,
+    id: uniqueNamesGenerator({
+      dictionaries: [adjectives, colors, animals],
+      separator: '-',
+      length: 3
+    }),
+    mode: GameMode.MULTI,
+    hostID: '',
     status: GameStatus.LOBBY,
     gameConfig,
-    players: [{
-      id: playerID,
-      results: [ ]
-    }],
+    players: [],
+    currentRound: undefined,
+    guessObjects: guessObjects,
+  };
+
+  return newGame
+}
+
+function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
+  // Création de la nouvelle game
+  const newGame: Game = {
+    id: uniqueNamesGenerator({
+      dictionaries: [adjectives, colors, animals],
+      separator: '-',
+      length: 3
+    }),
+    mode: GameMode.SOLO,
+    hostID: '',
+    status: GameStatus.LOBBY,
+    gameConfig,
+    players: [],
     currentRound: undefined,
     guessObjects: guessObjects,
   };

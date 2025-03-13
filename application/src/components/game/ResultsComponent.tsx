@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface ResultsComponentProps {
-    playerResults: PlayerResults;
+    playerResults: PlayerResults | null;
 }
 
 const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) => {
@@ -23,8 +23,12 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
     });
 
     useEffect(() => {
+        if (!playerResults) {
+            return;
+        }
+
         const getScoreType = (totalPoints: number) => {
-            switch (true) { 
+            switch (true) {
                 case totalPoints < 3000:
                     return 'Mauvais';
                 case totalPoints < 5000:
@@ -67,53 +71,50 @@ const ResultsComponent: React.FC<ResultsComponentProps> = ({ playerResults }) =>
     return (
         <div className="h-full w-full">
             <div className="flex flex-col justify-center items-center gap-6">
+                {!playerResults ?
+                    <h1>Pas de résultat trouvées</h1>
+                    :
+                    <div>
+                        <h1 className="font-bold flex flex-row items-end">
+                            <p className='text-4xl'>{calculateTotalPoints(playerResults)}</p>
+                            <p className='ml-2 mb-1 text-xl'>pts</p>
+                        </h1>
 
-                <h1 className="font-bold flex flex-row items-end">
-                    <p className='text-4xl'>{calculateTotalPoints(playerResults)}</p>
-                    <p className='ml-2 mb-1 text-xl'>pts</p>
-                </h1>
-
-                <h2 className='text-center text-xl'>{sentence.sub_message_1}{sentence.message}</h2>
-                <h2 className='text-center text-xl'>{sentence.sub_message_2}</h2>
+                        <h2 className='text-center text-xl'>{sentence.sub_message_1}{sentence.message}</h2>
+                        <h2 className='text-center text-xl'>{sentence.sub_message_2}</h2>
 
 
-                {/* Table Container */}
-                <TableContainer component={Paper} className="max-w-4xl shadow-lg">
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell><p className="font-bold">Nom</p></TableCell>
-                                <TableCell><p className="font-bold">Distance (km)</p></TableCell>
-                                <TableCell><p className="font-bold">Points</p></TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {playerResults.results.map((result: Result, index: number) => (
-                                <TableRow key={index}>
-                                    <TableCell>{result.guessObject.name}</TableCell>
-                                    <TableCell>
-                                        {result.distance !== -1 ? (
-                                            <p>{result.distance.toFixed(2)}</p>
-                                        ) : (
-                                            <p>Pas de guess</p>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{result.points}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        {/* Table Container */}
+                        <TableContainer component={Paper} className="max-w-4xl shadow-lg">
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell><p className="font-bold">Nom</p></TableCell>
+                                        <TableCell><p className="font-bold">Distance (km)</p></TableCell>
+                                        <TableCell><p className="font-bold">Points</p></TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {playerResults.results.map((result: Result, index: number) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{result.guessObject.name}</TableCell>
+                                            <TableCell>
+                                                {result.distance !== -1 ? (
+                                                    <p>{result.distance.toFixed(2)}</p>
+                                                ) : (
+                                                    <p>Pas de guess</p>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>{result.points}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </div>
+                }
 
                 <div className='flex flex-row justify-center w-full gap-3'>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        onClick={() => router.back()}
-                        className='w-24'
-                    >
-                        Rejouer
-                    </Button>
                     <Button
                         variant="contained"
                         color="primary"

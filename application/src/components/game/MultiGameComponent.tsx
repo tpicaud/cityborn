@@ -3,11 +3,12 @@
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
+import { Result } from "@/types/Results";
 import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "../LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";
 
-export const SoloGameComponent = ({ props }: { props: GameComponentProps }) => {
+export const MultiGameComponent = ({ props }: { props: GameComponentProps }) => {
 
     const {
         game,
