@@ -16,20 +16,17 @@ export default function MenuComponent() {
     const router = useRouter();
 
     // Game Config variables
-    const [playerID, setPlayerID] = useState('guest')
-    const [gameMode, setGameMode] = useState(GameMode.SOLO);
     const [timer, setTimer] = useState(20);
-    const [nbOfObjects, setNbOfObjects] = useState(6)
+    const [nbOfObjects, setNbOfObjects] = useState(3)
     const [category, setCategory] = useState('all');
 
     const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setCategory(event.target.value);
     };
 
-    const handlePlay = () => {
+    const handlePlay = (gameMode: GameMode) => {
         const queryParams = new URLSearchParams({
-            playerID: playerID,
-            gameMode: gameMode.toString(),
+            gameMode: gameMode,
             timer: timer.toString(),
             nbOfObjects: nbOfObjects.toString(),
             category,
@@ -60,9 +57,17 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
-                            onClick={handlePlay}
+                            onClick={() => handlePlay(GameMode.SOLO)}
                         >
-                            <b>Jouer</b>
+                            <b>SOLO</b>
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                            onClick={() => handlePlay(GameMode.MULTI)}
+                        >
+                            <b>MULTI</b>
                         </Button>
                         <CategorySelector handleCategory={handleCategory} />
                     </div>

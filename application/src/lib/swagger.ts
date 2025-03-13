@@ -375,6 +375,20 @@ const swaggerDefinition = {
                         description: "Identifiant de la partie à récupérer",
                     },
                 ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    playerID: { type: "string" },
+                                },
+                                required: ["playerID"],
+                            },
+                        },
+                    },
+                },
                 responses: {
                     200: {
                         description: "La partie a commencé",
@@ -455,6 +469,20 @@ const swaggerDefinition = {
                         description: "Identifiant de la partie à récupérer",
                     },
                 ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    playerID: { type: "string" },
+                                },
+                                required: ["playerID"],
+                            },
+                        },
+                    },
+                },
                 responses: {
                     200: {
                         description: "Passage au round suivant effectué",

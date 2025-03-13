@@ -22,12 +22,19 @@ export default function GamePage() {
   useEffect(() => {
     async function fetchGame() {
       try {
-        const { playerID, gameMode, gameConfig } = parseNewGameParams(searchParams);
-        const newGame = await createNewGame(playerID, gameMode, gameConfig);
+        const { gameMode, gameConfig } = parseNewGameParams(searchParams);
+        const newGame: any = await createNewGame(gameMode, gameConfig);
 
-        setGame(newGame);
-        setLocalPlayerID(playerID)
-        router.push(`/game/${newGame.mode}/${newGame.id}`);
+        switch (gameMode) {
+          case GameMode.SOLO:
+            setGame(newGame as Game);
+
+          case GameMode.MULTI:
+            break;
+        }
+
+        router.push(`/game/${gameMode}/${newGame.id}`);
+
       } catch (err) {
         setError('Erreur lors de la création de la partie');
       } finally {
@@ -44,9 +51,8 @@ export default function GamePage() {
   return <p>Redirection...</p>; // Il sera remplacé par le redirect
 }
 
-async function createNewGame(hostID: string, gameMode: GameMode, gameConfig: GameConfig): Promise<Game> {
+async function createNewGame(gameMode: GameMode, gameConfig: GameConfig): Promise<any> {
   console.log('creating game with params', {
-    hostID,
     gameMode,
     gameConfig
   })
@@ -55,7 +61,7 @@ async function createNewGame(hostID: string, gameMode: GameMode, gameConfig: Gam
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ hostID, gameMode, gameConfig }),
+    body: JSON.stringify({ gameMode, gameConfig }),
   });
 
   if (!response.ok) {
@@ -70,7 +76,6 @@ function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
   const validGameModes = Object.values(GameMode);
 
 
-  const playerID = searchParams.get('playerID') || 'guest';
   const gameMode: GameMode =
     searchParams.get('gameMode') && validGameModes.includes(searchParams.get('gameMode') as GameMode)
       ? (searchParams.get('gameMode') as GameMode)
@@ -84,11 +89,11 @@ function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
     .filter((cat) => validCategories.includes(cat as Categories))
     .map((cat) => cat as Categories) || [Categories.TOUTES];
 
-    const gameConfig: GameConfig = {
-      categories,
-      timer,
-      nbOfObjects
-    }
+  const gameConfig: GameConfig = {
+    categories,
+    timer,
+    nbOfObjects
+  }
 
-  return { playerID, gameMode, gameConfig };
+  return { gameMode, gameConfig };
 }

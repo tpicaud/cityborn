@@ -11,8 +11,10 @@ export async function POST(
 ) {
     try {
         const gameID = params.id;
+        const { playerID } = await request.json();
 
-        if (!gameID) {
+
+        if (!gameID || !playerID) {
             return NextResponse.json({ message: "Données invalides." }, { status: 400 });
         }
 
@@ -26,6 +28,11 @@ export async function POST(
         // Check si la partie existe
         if (!game) {
             return NextResponse.json({ message: "Partie introuvable." }, { status: 404 });
+        }
+
+        // Vérifier que le host
+        if (game.hostID !== playerID) {
+            return NextResponse.json({ message: "Accès interdit." }, { status: 403 });
         }
 
         // Check si la partie est démarrable

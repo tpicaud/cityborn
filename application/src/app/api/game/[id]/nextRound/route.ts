@@ -12,6 +12,7 @@ export async function PUT(
 ) {
     try {
         const gameID = params.id;
+        const { playerID } = await request.json();
 
         if (!gameID) {
             return NextResponse.json({ message: "Données invalides." }, { status: 400 });
@@ -26,6 +27,11 @@ export async function PUT(
 
         if (!game) {
             return NextResponse.json({ message: "Partie introuvable." }, { status: 404 });
+        }
+
+        // Vérifier que le host
+        if (game.hostID !== playerID) {
+            return NextResponse.json({ message: "Accès interdit." }, { status: 403 });
         }
 
         // Vérification que la partie a encore des rounds à jouer

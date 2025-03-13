@@ -1,8 +1,7 @@
 import Guess from "@/types/Guess";
-import { Result } from "@/types/Results";
 
 export default interface IUseGame {
+    startGame: () => void;
     handleGuess: (guess: Guess) => void;
     handleNextRound: () => void;
-    recordResult: (result: Result) => void;
 }
