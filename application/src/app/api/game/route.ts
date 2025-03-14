@@ -61,17 +61,12 @@ export async function POST(request: Request) {
     // Fetch guessObjects
     const guessObjects = await fetchGuessObjects(gameConfig);
 
-    // Connexion à la base de données
-    const client = await connectToDatabase();
-    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
-    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
-
     switch (gameMode) {
 
       case GameMode.MULTI:
         const newMultiGame: Game = createMultiGame(gameConfig, guessObjects);
-        await collection.insertOne(newMultiGame);
-        return NextResponse.json({ id: newMultiGame.id }, { status: 201 });
+        //await collection.insertOne(newMultiGame);
+        return NextResponse.json(newMultiGame, { status: 201 });
 
       case GameMode.SOLO:
         const newSoloGame: Game = createSoloGame(gameConfig, guessObjects);

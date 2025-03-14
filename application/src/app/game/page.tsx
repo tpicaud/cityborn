@@ -23,15 +23,9 @@ export default function GamePage() {
     async function fetchGame() {
       try {
         const { gameMode, gameConfig } = parseNewGameParams(searchParams);
-        const newGame: any = await createNewGame(gameMode, gameConfig);
+        const newGame: Game = await createNewGame(gameMode, gameConfig);
 
-        switch (gameMode) {
-          case GameMode.SOLO:
-            setGame(newGame as Game);
-
-          case GameMode.MULTI:
-            break;
-        }
+        setGame(newGame)
 
         router.push(`/game/${gameMode}/${newGame.id}`);
 
@@ -51,7 +45,7 @@ export default function GamePage() {
   return <p>Redirection...</p>; // Il sera remplacé par le redirect
 }
 
-async function createNewGame(gameMode: GameMode, gameConfig: GameConfig): Promise<any> {
+async function createNewGame(gameMode: GameMode, gameConfig: GameConfig): Promise<Game> {
   console.log('creating game with params', {
     gameMode,
     gameConfig

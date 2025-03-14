@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import Game from "@/types/Game";
 import { GameStatus } from "@/enums/GameStatus";
-import { sendMessage } from "../../../../../server";
+import { NextApiResponse } from "next";
+import redis from 'redis'
 
-export async function PUT(request: Request) {
+// Connexion à Redis
+const redisClient = redis.createClient({
+    url: 'redis://localhost:6379',
+});
+
+export async function PUT(request: Request, res: NextApiResponse) {
     try {
         const { gameID, playerID } = await request.json();
         if (!gameID || !playerID) {
@@ -56,12 +62,16 @@ export async function PUT(request: Request) {
             return NextResponse.json({ message: "Erreur lors de la récupération de la partie mise à jour." }, { status: 500 });
         }
 
-        sendMessage(JSON.stringify({
-            type: 'gameUpdate',
-            data: updatedGame
-        }))
-
-        return NextResponse.json({ message: "Le joueur a été ajouté avec succès." }, { status: 200 });
+        try {
+            // Publier un message Redis pour notifier les joueurs de la game
+            const channel = `game:${gameID}`;  // Utilisation d'un canal spécifique à chaque game
+            redisClient.publish(channel, JSON.stringify(updatedGame));  // Publier l'update de la game
+        
+            return NextResponse.json({ message: "Le joueur a été ajouté avec succès." }, { status: 200 });
+        } catch (error) {
+            console.error("Erreur lors de la mise à jour de la game:", error);
+            return res.status(500).json({ message: "Erreur serveur" });
+          }
     } catch (error) {
         console.error("Erreur lors de l'ajout du joueur:", error);
         return NextResponse.json({ message: "Erreur serveur." }, { status: 500 });
