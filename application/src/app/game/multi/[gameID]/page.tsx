@@ -13,58 +13,34 @@ import { LobbyComponent } from '@/components/game/LobbyComponent';
 import { Card, CardContent, TextField, Button } from '@mui/material';
 import Game from '@/types/Game';
 import { useParams } from 'next/navigation';
-import useSocket from '@/hooks/useSocket';
+import { useSocket } from '@/hooks/useWebSocketGame';
+import { updateGame } from 'server/gamesStore';
 
 export default function MultiGamePage() {
 
-    const { gameID } = useParams();
+    const { gameID } = useParams<{ gameID: string }>();
     const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
     const [playerNameInput, setPlayerNameInput] = useState('');
-    const { messages } = useSocket();
+    const { gameUpdate, postGame, joinGame } = useSocket(gameID)
 
-
-    // Join game when localPlayer is defined
     useEffect(() => {
-
-        const initializeGame = async () => {
-            if (localPlayerID && !game) {
-                try {
-                    const gameIDString = Array.isArray(gameID) ? gameID[0] : gameID;
-
-                    await joinGame(gameIDString, localPlayerID);
-                    const game = await getGame(gameIDString);
-                    setGame(game);
-                    console.log('Chargement de la partie réussi')
-                } catch {
-                    throw new Error('Erreur lors du chargement de la partie')
+        const setupGame = async () => {
+            if (localPlayerID) {
+                if (game) {
+                    await postGame(game);
+                    console.log("before")
                 }
+                await joinGame(gameID, localPlayerID)
             }
         }
+        setupGame()
+    }, [localPlayerID, gameID])
 
-        initializeGame();
-    }, [localPlayerID, game, setGame])
-    
     useEffect(() => {
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-    
-            try {
-                const parsedMessage = JSON.parse(lastMessage);
-    
-                if (parsedMessage.type === 'gameUpdate' && parsedMessage.data) {
-                    setGame(parsedMessage.data);
-                    console.log('Mise à jour de la partie via WebSocket');
-                }
-            } catch (error) {
-                console.error('Erreur lors du parsing du message reçu:', error);
-            }
+        if (gameUpdate) {
+            setGame(gameUpdate);
         }
-    }, [messages, setGame]);
-    
-
-    useEffect(() => {
-        console.log(game)
-    }, [game])
+    }, [gameUpdate])
 
     if (!localPlayerID) {
         return (
@@ -151,35 +127,4 @@ async function getGame(gameID: string): Promise<Game> {
 
     const game: any = response.json();
     return game as Game;
-}
-
-async function listenGame(localPlayerID: string, game: Game, setGame: React.Dispatch<React.SetStateAction<Game | null>>) {
-    const socket = new WebSocket("ws://localhost:3000");
-    
-    socket.onopen = () => {
-        console.log("✅ WebSocket connecté");
-        socket.send(JSON.stringify({ type: "join", gameId: game.id, playerId: localPlayerID }));
-    };
-
-    socket.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            console.log("📩 Message reçu :", data);
-
-            if (data.type === "updateGame") {
-                setGame(data.game);
-            }
-
-        } catch (error) {
-            console.error("❌ Erreur parsing WebSocket message :", error);
-        }
-    };
-
-    socket.onclose = () => {
-        console.log("❌ WebSocket déconnecté");
-    };
-
-    return () => {
-        socket.close();
-    };
 }
