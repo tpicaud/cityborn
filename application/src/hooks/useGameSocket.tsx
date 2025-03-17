@@ -5,7 +5,7 @@ import Guess from "@/types/Guess";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-export const useSocket = (gameId: string) => {
+export const useGameSocket = (gameId: string) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [gameUpdate, setGameUpdate] = useState<Game>()
 
@@ -38,7 +38,6 @@ export const useSocket = (gameId: string) => {
     const postGame = (game: Game): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
-                console.log('Socket pas initialisé');
                 reject(new Error("Socket non initialisée"));
                 return;
             }
@@ -57,7 +56,6 @@ export const useSocket = (gameId: string) => {
     const joinGame = (gameID: string, playerID: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
-                console.log('Socket pas initialisé');
                 reject(new Error("Socket non initialisée"));
                 return;
             }
@@ -72,11 +70,28 @@ export const useSocket = (gameId: string) => {
         });
     }
 
+    // Démarrer la partie
+    const startGame = (gameID: string, playerID: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            if (!socket) {
+                reject(new Error("Socket non initialisée"));
+                return;
+            }
+
+            socket.emit('startGame', gameID, playerID, (response: { success: boolean, message?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.message || "Erreur inconnue"));
+                }
+            });
+        });
+    }
+
     // Envoyer un guess
     const handleGuess = (gameID: string, playerID: string, guess: Guess): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
-                console.log('Socket pas initialisé');
                 reject(new Error("Socket non initialisée"));
                 return;
             }
@@ -91,5 +106,52 @@ export const useSocket = (gameId: string) => {
         });
     }
 
-    return { gameUpdate, postGame, joinGame, handleGuess };
+    // Passer au round suivant
+    const handleNextRound = (gameID: string, playerID: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            if (!socket) {
+                reject(new Error("Socket non initialisée"));
+                return;
+            }
+
+            socket.emit('nextRound', gameID, playerID, (response: { success: boolean, message?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.message || "Erreur inconnue"));
+                }
+            });
+        });
+    }
+
+    // Terminer la partie
+    const endGame = (gameID: string, playerID: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            if (!socket) {
+                reject(new Error("Socket non initialisée"));
+                return;
+            }
+
+            socket.emit('endGame', gameID, playerID, (response: { success: boolean, message?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.message || "Erreur inconnue"));
+                }
+            });
+        });
+    }
+
+    return { gameUpdate, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
 };
+
+export type GameSocket = {
+    gameUpdate: Game | undefined;
+    postGame: (game: Game) => Promise<void>;
+    joinGame: (gameID: string, playerID: string) => Promise<void>;
+    startGame: (gameID: string, playerID: string) => Promise<void>;
+    handleGuess: (gameID: string, playerID: string, guess: Guess) => Promise<void>;
+    handleNextRound: (gameID: string, playerID: string) => Promise<void>;
+    endGame: (gameID: string, playerID: string) => Promise<void>;
+};
+
