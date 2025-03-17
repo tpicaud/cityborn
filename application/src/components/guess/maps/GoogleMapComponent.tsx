@@ -8,6 +8,7 @@ import Coord from "@/types/Coord";
 import Guess from "@/types/Guess";
 import GuessObject from "@/types/GuessObject";
 import { RoundStatus } from "@/enums/RoundStatus";
+import Round from "@/types/Round";
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -91,7 +92,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         id="map"
         {...mapOptions}
         onClick={(event) => {
-          if (currentRound.status === RoundStatus.GUESSING) {
+          if (currentRound.status === RoundStatus.GUESSING && currentRound.playersGuesses?.[localPlayerID] === undefined) {
             handleMapClick(event);
           }
         }}
@@ -103,17 +104,8 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
             <AnswerDisplay guessObject={currentRound.guessObject} />
-            <OtherPlayersGuesses playerGuesses={currentRound.playersGuesses} localPlayerID={localPlayerID} />
-            {(preGuess && preGuess.distance !== -1) ? (
-              <>
-                <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
-                {!preGuess.win && (
-                  <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={preGuess.coordinates} />
-                )}
-              </>
-            ) : (
-              <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} />
-            )}
+            <LocalPlayerGuess currentRound={currentRound} localPlayerID={localPlayerID} />
+            <OtherPlayersGuesses currentRound={currentRound} localPlayerID={localPlayerID} />
           </>
         )}
         <ResetMap guessObject={currentRound.guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
@@ -123,25 +115,45 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   );
 };
 
-const OtherPlayersGuesses: React.FC<{ playerGuesses: Record<string, Guess> | undefined, localPlayerID: string }> = ({ playerGuesses, localPlayerID }) => {
+const OtherPlayersGuesses: React.FC<{ currentRound: Round, localPlayerID: string }> = ({ currentRound, localPlayerID }) => {
 
-  const points = playerGuesses 
-  ? Object.entries(playerGuesses)
+  const coordinates = currentRound.playersGuesses
+    ? Object.entries(currentRound.playersGuesses)
       .filter(([playerID]) => playerID !== localPlayerID) // Exclut le guess du localPlayerID
-      .map(([, guess]) => guess.coordinates) 
-  : [];
+      .map(([, guess]) => guess.coordinates)
+    : [];
 
   return (
     <>
-      {points.map((point, index) => (
+      {coordinates.map((point, index) => (
         <AdvancedMarker
           key={index}
           position={point}
           anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
         >
-          <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+          <img src={'/img/player.png'} alt="players Marker" width={28} height={28} />
         </AdvancedMarker>
       ))}
+    </>
+  );
+};
+
+const LocalPlayerGuess: React.FC<{ currentRound: Round, localPlayerID: string }> = ({ currentRound, localPlayerID }) => {
+
+  const guess = currentRound.playersGuesses![localPlayerID];
+
+  return (
+    <>
+      {(guess.distance !== -1) ? (
+        <>
+          <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={guess.coordinates} />
+          {!guess.win && (
+            <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={guess.coordinates} />
+          )}
+        </>
+      ) : (
+        <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} />
+      )}
     </>
   );
 };

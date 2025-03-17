@@ -209,17 +209,6 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
             throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
         }
 
-        if (currentIndex + 1 >= game.guessObjects.length) {
-            game.status = 'Results'
-            game.currentRound = undefined
-        } else {
-            game.currentRound = {
-                status: 'Guessing',
-                guessObject: game.guessObjects[currentIndex + 1],
-                playersGuesses: {},
-            }
-        }
-
         // Register results
         game.players = game.players.map((player: any) => {
 
@@ -238,8 +227,20 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
             }
         });
 
+        // Go to next guess object
+        if (currentIndex + 1 >= game.guessObjects.length) {
+            game.status = 'Results'
+            game.currentRound = undefined
+        } else {
+            game.currentRound = {
+                status: 'Guessing',
+                guessObject: game.guessObjects[currentIndex + 1],
+                playersGuesses: {},
+            }
+        }
+
         // Update game and send to the room
-        updateGame(game)
+        updateGame(game);
 
         const updatedGame = getGame(gameID)
         socket.to(gameID).emit('updatedGame', updatedGame);
@@ -273,7 +274,7 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
 
         // To change later
         return game;
-        
+
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);

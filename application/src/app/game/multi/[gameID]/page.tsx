@@ -31,6 +31,7 @@ export default function MultiGamePage() {
                     }
                     await gameSocket.joinGame(gameID, localPlayerID)
                 } catch (error) {
+                    setLocalPlayerID(null)
                     console.error(`Erreur lors de la connexion à la partie: ${error}`);
                 }
             }
@@ -88,7 +89,7 @@ export default function MultiGamePage() {
 
     switch (game.status) {
         case GameStatus.LOBBY:
-            return <LobbyComponent game={game} startGame={startGame} />
+            return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
 
         case GameStatus.IN_PROGRESS:
             return <MultiGameComponent props={gameComponentProps} />
