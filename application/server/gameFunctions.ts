@@ -1,13 +1,18 @@
 import { Socket } from "socket.io";
-import { addGame, getAllGames, getGame, updateGame } from "./gamesStore.ts";
+import { addGame, getAllGames, getGame, removeGame, updateGame } from "./gamesStore.ts";
 
 export async function postGame(socket: Socket, game: any) {
-    console.log('Posted game:', game.id)
     try {
+        if (getGame(game.id)) {
+            throw new Error(`La partie ${game.id} existe déjà.`);
+        }
         addGame(game)
     } catch (error) {
-        console.error("Erreur lors de la création de la game:", error);
-        socket.emit('error', 'Erreur lors de la création de la game');
+        if (error instanceof Error) {
+            throw new Error(`Impossible créer la partie ${game.id}: ${error.message}`);
+        } else {
+            throw new Error(`Erreur lors de la création de la partie ${game.id}: ${error}`);
+        }
     }
 }
 
@@ -36,10 +41,10 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
         // Créer un nouveau joueur
         const newPlayer: any = { id: playerID, results: [], connected: true };
 
-        game.players.push(newPlayer)
         if (game.players.length === 0) {
             game.hostID = playerID
         }
+        game.players.push(newPlayer)
 
         updateGame(game)
         const updatedGame = getGame(gameID);
@@ -49,11 +54,9 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
 
     } catch (error) {
         if (error instanceof Error) {
-            console.error("Erreur lors de l'ajout du joueur:", error);
             throw new Error(`Impossible de rejoindre la partie: ${error.message}`);
         } else {
-            console.error("Erreur inconnue:", error);
-            throw new Error("Une erreur inconnue s'est produite.");
+            throw new Error(`Erreur lors de la connexion de ${playerID} à la partie ${gameID}: ${error}`);
         }
     }
 }
@@ -107,11 +110,9 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
         socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
         if (error instanceof Error) {
-            console.error("Erreur lors du démarrage de la partie:", error);
-            throw new Error(`Impossible ddémarrer la partie: ${error.message}`);
+            throw new Error(`Impossible démarrer la partie ${playerID}: ${error.message}`);
         } else {
-            console.error("Erreur inconnue:", error);
-            throw new Error("Une erreur inconnue s'est produite.");
+            throw new Error(`Erreur lors du démarrage de la partie ${gameID}: ${error}`);
         }
     }
 }
@@ -144,32 +145,35 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
             throw new Error("Aucun round actif.");
         }
 
-        // Mettre à jour le guess du joueur dans currentRound.playersGuesses
-        game.currentRound.playerGuesses[playerID] = guess;
+        try {
+            // Mettre à jour le guess du joueur dans currentRound.playersGuesses
+            game.currentRound.playersGuesses[playerID] = guess;
 
-        // Vérifier si tout le monde à guess
-        const connectedPlayers = game.players.filter((player: any) => player.connected);
-        if (Object.keys(game.currentRound.playerGuesses).length === connectedPlayers.length) {
-            game.currentRound.status = 'Showing_results'
+            // Vérifier si tout le monde à guess
+            const connectedPlayers = game.players.filter((player: any) => player.connected);
+            if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
+                game.currentRound.status = 'Showing_results'
+            }
+
+            //update game
+            updateGame(game)
+        } catch {
+            throw new Error(`Erreur lors de la modification dans la base de données`)
         }
 
-        //update game
-        updateGame(game)
         const updatedGame = getGame(gameID)
         socket.emit('updatedGame', updatedGame)
         socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
         if (error instanceof Error) {
-            console.error("Erreur lors du démarrage de la partie:", error);
-            throw new Error(`Impossible ddémarrer la partie: ${error.message}`);
+            throw new Error(`Impossible d'enregistrer le guess de ${playerID} dans la partie ${gameID}: ${error.message}`);
         } else {
-            console.error("Erreur inconnue:", error);
-            throw new Error("Une erreur inconnue s'est produite.");
+            throw new Error(`Erreur lors de l'enregistrement du guess de ${playerID} dans la partie ${gameID}: ${error}`);
         }
     }
 }
 
-export function nextRound(socket: Socket, gameID: string, playerID: string) {
+export function handleNextRound(socket: Socket, gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
         const game = getGame(gameID)
@@ -235,18 +239,36 @@ export function nextRound(socket: Socket, gameID: string, playerID: string) {
         socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
         if (error instanceof Error) {
-            console.error("Erreur lors du démarrage de la partie:", error);
-            throw new Error(`Impossible ddémarrer la partie: ${error.message}`);
+            throw new Error(`Impossible passer au round suivant: ${error.message}`);
         } else {
-            console.error("Erreur inconnue:", error);
-            throw new Error("Une erreur inconnue s'est produite.");
+            throw new Error(`Erreur lors du passage au round suivant dans la partie ${gameID}: ${error}`);
         }
     }
 }
 
-// export function endGame(gameID) {
-//     // Implémentation à ajouter
-// }
+export function endGame(socket: Socket, gameID: string, playerID: string) {
+    try {
+        // Récupération du jeu dans la base de données
+        const game = getGame(gameID)
+
+        if (!game) {
+            throw new Error("Partie introuvable.");
+        }
+
+        // Vérifier que le host
+        if (game.hostID !== playerID) {
+            throw new Error("Le joueur n'est pas le host de la partie.");
+        }
+
+        removeGame(gameID);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
+        } else {
+            throw new Error(`Erreur lors de la suppression de la partie ${gameID}: ${error}`);
+        }
+    }
+}
 
 export function disconnectPlayer(socket: Socket, playerID: string, gameID: string) {
     try {
@@ -269,6 +291,6 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
         socket.leave(gameID)
         socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
-        console.error("Erreur lors la déconnexion du joueur:", error);
+        throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
     }
 }

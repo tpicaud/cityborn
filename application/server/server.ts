@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import { disconnectPlayer, handleGuess, joinGame, nextRound, postGame, startGame } from "./gameFunctions.ts";
+import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, startGame } from "./gameFunctions.ts";
 
 const app = express();
 const server = http.createServer(app);
@@ -22,62 +22,96 @@ io.on('connection', (socket) => {
     console.log(`Le client ${socket.id} est connecté`);
 
     // Poster une partie
-
     socket.on('postGame', async (game, callback) => {
         try {
-            await postGame(socket, game)
-            callback({ success: true })
+            if (!game || typeof game !== 'object') {
+                throw new Error("Paramètre invalide : un objet 'game' est requis.");
+            }
+            await postGame(socket, game);
+            callback?.({ success: true });
         } catch (error) {
-            callback({ success: false, message: error })
+            console.error("Erreur lors de l'enregistrement du jeu :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
         }
-    })
+    });
+    
 
 
     // Rejoindre une partie
     socket.on('joinGame', async (gameID, playerID, callback) => {
         try {
-            await joinGame(socket, gameID, playerID)
-            playerSockets.set(socket.id, { playerID, gameID });  // Associer le socket au playerID
-            callback({ success: true })
+            if (!gameID || !playerID) {
+                throw new Error("Paramètres invalides : gameID et playerID sont requis.");
+            }
+            await joinGame(socket, gameID, playerID);
+            playerSockets.set(socket.id, { playerID, gameID });
+            callback?.({ success: true });
         } catch (error) {
-            callback({ success: false, message: error })
+            console.error("Erreur lors de la tentative de rejoindre la partie :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
         }
     });
+    
 
     // // Lancer une partie
     socket.on('startGame', async (gameID, playerID, callback) => {
         try {
-            await startGame(socket, gameID, playerID)
-            callback({ success: true })
+            if (!gameID || !playerID) {
+                throw new Error("Paramètres invalides : gameID et playerID sont requis.");
+            }
+            await startGame(socket, gameID, playerID);
+            callback?.({ success: true });
         } catch (error) {
-            callback({ success: false, message: error })
+            console.error("Erreur lors du démarrage de la partie :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
         }
     });
+    
 
     // // Enregistrer un guess
     socket.on('handleGuess', async (gameID, playerID, guess, callback) => {
         try {
-            await handleGuess(socket, gameID, playerID, guess)
-            callback({ success: true })
+            if (!gameID || !playerID || guess === undefined) {
+                throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
+            }
+            await handleGuess(socket, gameID, playerID, guess);
+            callback?.({ success: true });
         } catch (error) {
-            callback({ success: false, message: error })
+            console.error("Erreur lors du traitement du guess :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
         }
     });
+    
 
     // // Aller au round suivant
-    socket.on('nextRound', async (gameID, playerID, callback) => {
+    socket.on('handleNextRound', async (gameID, playerID, callback) => {
         try {
-            await nextRound(socket, gameID, playerID)
-            callback({ success: true })
+            if (!gameID || !playerID) {
+                throw new Error("Paramètres invalides : gameID et playerID sont requis.");
+            }
+            await handleNextRound(socket, gameID, playerID);
+            callback?.({ success: true });
         } catch (error) {
-            callback({ success: false, message: error })
+            console.error("Erreur lors du passage au tour suivant :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
         }
     });
+    
 
     // // Terminer la partie
-    // socket.on('endGame', (gameID, playerID) => {
-    //     endGame(socket, gameID, playerID)
-    // })
+    socket.on('endGame', async (gameID, playerID, callback) => {
+        try {
+            if (!gameID || !playerID) {
+                throw new Error("Paramètres invalides : gameID et playerID sont requis.");
+            }
+            await endGame(socket, gameID, playerID);
+            callback?.({ success: true });
+        } catch (error) {
+            console.error("Erreur lors de la fin de la partie :", error);
+            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+        }
+    });
+    
 
     // Événement pour déconnexion
     socket.on('disconnect', () => {

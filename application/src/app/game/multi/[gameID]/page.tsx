@@ -11,36 +11,34 @@ import { getGameResult } from '@/utils/getGameResult';
 import { useEffect, useState } from 'react';
 import { LobbyComponent } from '@/components/game/LobbyComponent';
 import { Card, CardContent, TextField, Button } from '@mui/material';
-import Game from '@/types/Game';
-import { useParams } from 'next/navigation';
-import { useSocket } from '@/hooks/useWebSocketGame';
-import { updateGame } from 'server/gamesStore';
+import { useParams, useRouter } from 'next/navigation';
+import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
 
 export default function MultiGamePage() {
 
+    const router = useRouter();
     const { gameID } = useParams<{ gameID: string }>();
     const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
     const [playerNameInput, setPlayerNameInput] = useState('');
-    const { gameUpdate, postGame, joinGame } = useSocket(gameID)
+    const gameSocket: GameSocket = useGameSocket(gameID)
 
     useEffect(() => {
         const setupGame = async () => {
             if (localPlayerID) {
                 if (game) {
-                    await postGame(game);
-                    console.log("before")
+                    await gameSocket.postGame(game);
                 }
-                await joinGame(gameID, localPlayerID)
+                await gameSocket.joinGame(gameID, localPlayerID)
             }
         }
         setupGame()
     }, [localPlayerID, gameID])
 
     useEffect(() => {
-        if (gameUpdate) {
-            setGame(gameUpdate);
+        if (gameSocket.gameUpdate) {
+            setGame(gameSocket.gameUpdate);
         }
-    }, [gameUpdate])
+    }, [gameSocket.gameUpdate])
 
     if (!localPlayerID) {
         return (
@@ -75,7 +73,7 @@ export default function MultiGamePage() {
         startGame,
         handleGuess,
         handleNextRound,
-    } = useMultiGame(game, localPlayerID, setGame);
+    } = useMultiGame(game, localPlayerID, gameSocket);
 
     const gameComponentProps: GameComponentProps = {
         game,
@@ -93,38 +91,8 @@ export default function MultiGamePage() {
 
         case GameStatus.RESULTS:
             return <ResultsComponent playerResults={getGameResult(game, localPlayerID)} />
+            
+        case GameStatus.FINISHED:
+            router.push('/')
     }
-}
-
-async function joinGame(gameID: string, localPlayerID: string) {
-    if (!gameID) return;
-
-    const response = await fetch(`/api/game/join`, {
-        method: "PUT",
-        body: JSON.stringify({
-            gameID: gameID,
-            playerID: localPlayerID,
-        }),
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Le joueur n'a pas pu être ajouté. Erreur HTTP: ${response.status}`);
-    }
-
-
-}
-
-async function getGame(gameID: string): Promise<Game> {
-    const response = await fetch(`/api/game/${gameID}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Le joueur n'a pas pu être ajouté. Erreur HTTP: ${response.status}`);
-    }
-
-    const game: any = response.json();
-    return game as Game;
 }
