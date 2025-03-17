@@ -2,7 +2,6 @@
 
 import OverlayComponent from "@/components/guess/OverlayComponent";
 import useGuess from "@/hooks/useGuess";
-import { Result } from "@/types/Results";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import CountdownBeforeGameComponent from "./CountdownBeforeGameComponent";
@@ -26,7 +25,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
-    const [isCountdownBeforeGameFinished, setisCountdownBeforeGameFinished] = useState(false);
+    const [isCountdownBeforeGameFinished, setIsCountdownBeforeGameFinished] = useState(false);
 
     // Map properties
     const mapProps = {
@@ -39,8 +38,9 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     };
 
     useEffect(() => {
+        console.log('reset preguess in useEffect')
         resetPreGuess()
-    }, [game.currentRound?.guessObject])
+    }, [game.currentRound?.guessObject.name])
 
     return (
         <div>
@@ -52,12 +52,13 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
             </div>
 
             {!isCountdownBeforeGameFinished && (
-                <CountdownBeforeGameComponent onCountdownEnd={() => setisCountdownBeforeGameFinished(true)} />
+                <CountdownBeforeGameComponent onCountdownEnd={() => setIsCountdownBeforeGameFinished(true)} />
             )}
 
             {isCountdownBeforeGameFinished && (
                 <div className="z-10">
                     <OverlayComponent
+                        localPlayerID={localPlayerID}
                         preGuess={preGuess}
                         game={game}
                         handleGuess={handleGuess}

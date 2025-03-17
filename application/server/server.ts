@@ -137,7 +137,7 @@ io.on('connection', (socket) => {
             const { playerID, gameID } = playerSockets.get(socket.id); // Récupérer le playerID
             if (playerID) {
                 if (!playerSockets.get(playerID)) {
-                    throw new Error(`Le joueue ${playerID} n'est pas dans la liste des sockets connectés`)
+                    throw new Error(`Le joueur ${playerID} n'est pas dans la liste des sockets connectés`)
                 }
                 disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
                 playerSockets.delete(socket.id); // Nettoyer la Map

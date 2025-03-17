@@ -19,6 +19,7 @@ export default function MenuComponent() {
     const [timer, setTimer] = useState(20);
     const [nbOfObjects, setNbOfObjects] = useState(3)
     const [category, setCategory] = useState('all');
+    const [code, setCode] = useState<string>()
 
     const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setCategory(event.target.value);
@@ -48,7 +49,7 @@ export default function MenuComponent() {
             </div>
 
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
-                <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%]">
+                <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%] pointer-events-auto">
                     <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-32 md:max-h-48' />
                     <p className="text-base md:text-lg text-center ">Trouvez le lieu de naissance des personnalités</p>
 
@@ -70,6 +71,25 @@ export default function MenuComponent() {
                             <b>MULTI</b>
                         </Button>
                         <CategorySelector handleCategory={handleCategory} />
+                    </div>
+
+                    <div className="flex flex-row gap-2 items-center w-full mt-4">
+                        <input
+                            type="text"
+                            placeholder="Code de la partie"
+                            className="border border-gray-300 rounded px-4 py-2 w-full"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                        />
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+                            onClick={() => router.push(`/game/multi/${code}`)}
+                            disabled={!code}
+                        >
+                            Rejoindre
+                        </Button>
                     </div>
                 </Box>
             </div>
