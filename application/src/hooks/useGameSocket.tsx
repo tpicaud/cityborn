@@ -60,8 +60,9 @@ export const useGameSocket = (gameId: string) => {
                 return;
             }
 
-            socket.emit('joinGame', gameID, playerID, (response: { success: boolean, message?: string }) => {
+            socket.emit('joinGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: any }) => {
                 if (response.success) {
+                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -78,8 +79,9 @@ export const useGameSocket = (gameId: string) => {
                 return;
             }
 
-            socket.emit('startGame', gameID, playerID, (response: { success: boolean, message?: string }) => {
+            socket.emit('startGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: any }) => {
                 if (response.success) {
+                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -96,8 +98,9 @@ export const useGameSocket = (gameId: string) => {
                 return;
             }
 
-            socket.emit('handleGuess', gameID, playerID, guess, (response: { success: boolean, message?: string }) => {
+            socket.emit('handleGuess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: any }) => {
                 if (response.success) {
+                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -114,8 +117,9 @@ export const useGameSocket = (gameId: string) => {
                 return;
             }
 
-            socket.emit('nextRound', gameID, playerID, (response: { success: boolean, message?: string }) => {
+            socket.emit('handleNextRound', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: any }) => {
                 if (response.success) {
+                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -132,7 +136,7 @@ export const useGameSocket = (gameId: string) => {
                 return;
             }
 
-            socket.emit('endGame', gameID, playerID, (response: { success: boolean, message?: string }) => {
+            socket.emit('endGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {

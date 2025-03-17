@@ -25,10 +25,14 @@ export default function MultiGamePage() {
     useEffect(() => {
         const setupGame = async () => {
             if (localPlayerID) {
-                if (game) {
-                    await gameSocket.postGame(game);
+                try {
+                    if (game) {
+                        await gameSocket.postGame(game);
+                    }
+                    await gameSocket.joinGame(gameID, localPlayerID)
+                } catch (error) {
+                    console.error(`Erreur lors de la connexion à la partie: ${error}`);
                 }
-                await gameSocket.joinGame(gameID, localPlayerID)
             }
         }
         setupGame()
@@ -91,7 +95,7 @@ export default function MultiGamePage() {
 
         case GameStatus.RESULTS:
             return <ResultsComponent playerResults={getGameResult(game, localPlayerID)} />
-            
+
         case GameStatus.FINISHED:
             router.push('/')
     }
