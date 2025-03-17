@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { addGame, getAllGames, getGame, removeGame, updateGame } from "./gamesStore.ts";
+import { addGame, getGame, removeGame, updateGame } from "./gamesStore.ts";
 
 export async function postGame(socket: Socket, game: any) {
     try {
@@ -46,11 +46,13 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
         }
         game.players.push(newPlayer)
 
+        // Update game and send to the room
         updateGame(game)
         const updatedGame = getGame(gameID);
         await socket.join(gameID)
-        socket.emit('updatedGame', updatedGame)
         socket.to(gameID).emit('updatedGame', updatedGame);
+
+        return updatedGame;
 
     } catch (error) {
         if (error instanceof Error) {
@@ -103,11 +105,13 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
         game.status = 'In_progress';
         game.currentRound = firstRound;
 
-        //update game
+        // Update game and send to the room
         updateGame(game)
         const updatedGame = getGame(gameID)
-        socket.emit('updatedGame', updatedGame)
         socket.to(gameID).emit('updatedGame', updatedGame);
+
+        return updatedGame;
+
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible démarrer la partie ${playerID}: ${error.message}`);
@@ -145,6 +149,7 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
             throw new Error("Aucun round actif.");
         }
 
+        // Update game and send to the room
         try {
             // Mettre à jour le guess du joueur dans currentRound.playersGuesses
             game.currentRound.playersGuesses[playerID] = guess;
@@ -156,14 +161,16 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
             }
 
             //update game
-            updateGame(game)
+            updateGame(game);
         } catch {
             throw new Error(`Erreur lors de la modification dans la base de données`)
         }
 
         const updatedGame = getGame(gameID)
-        socket.emit('updatedGame', updatedGame)
         socket.to(gameID).emit('updatedGame', updatedGame);
+
+        return updatedGame;
+
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible d'enregistrer le guess de ${playerID} dans la partie ${gameID}: ${error.message}`);
@@ -231,12 +238,14 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
             }
         });
 
-        //update game
+        // Update game and send to the room
         updateGame(game)
 
         const updatedGame = getGame(gameID)
-        socket.emit('updatedGame', updatedGame)
         socket.to(gameID).emit('updatedGame', updatedGame);
+
+        return updatedGame;
+
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible passer au round suivant: ${error.message}`);
@@ -261,6 +270,10 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
         }
 
         removeGame(gameID);
+
+        // To change later
+        return game;
+        
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);

@@ -31,10 +31,13 @@ io.on('connection', (socket) => {
             callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors de l'enregistrement du jeu :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
 
     // Rejoindre une partie
@@ -43,15 +46,18 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            await joinGame(socket, gameID, playerID);
+            const updatedGame = await joinGame(socket, gameID, playerID);
             playerSockets.set(socket.id, { playerID, gameID });
-            callback?.({ success: true });
+            callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors de la tentative de rejoindre la partie :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
     // // Lancer une partie
     socket.on('startGame', async (gameID, playerID, callback) => {
@@ -59,14 +65,17 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            await startGame(socket, gameID, playerID);
-            callback?.({ success: true });
+            const updatedGame = await startGame(socket, gameID, playerID);
+            callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors du démarrage de la partie :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
     // // Enregistrer un guess
     socket.on('handleGuess', async (gameID, playerID, guess, callback) => {
@@ -74,14 +83,17 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID || guess === undefined) {
                 throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
             }
-            await handleGuess(socket, gameID, playerID, guess);
-            callback?.({ success: true });
+            const updatedGame = await handleGuess(socket, gameID, playerID, guess);
+            callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors du traitement du guess :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
     // // Aller au round suivant
     socket.on('handleNextRound', async (gameID, playerID, callback) => {
@@ -89,14 +101,17 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            await handleNextRound(socket, gameID, playerID);
-            callback?.({ success: true });
+            const updatedGame = await handleNextRound(socket, gameID, playerID);
+            callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors du passage au tour suivant :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
     // // Terminer la partie
     socket.on('endGame', async (gameID, playerID, callback) => {
@@ -104,25 +119,31 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            await endGame(socket, gameID, playerID);
-            callback?.({ success: true });
+            const updatedGame = await endGame(socket, gameID, playerID);
+            callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors de la fin de la partie :", error);
-            callback?.({ success: false, message: error || "Une erreur inconnue s'est produite." });
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
         }
     });
-    
+
 
     // Événement pour déconnexion
     socket.on('disconnect', () => {
         try {
             const { playerID, gameID } = playerSockets.get(socket.id); // Récupérer le playerID
             if (playerID) {
+                if (!playerSockets.get(playerID)) {
+                    throw new Error(`Le joueue ${playerID} n'est pas dans la liste des sockets connectés`)
+                }
                 disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
                 playerSockets.delete(socket.id); // Nettoyer la Map
             }
         } catch (error) {
-            console.log('Erreur lors de la déconnexion', error)
+            console.error('Erreur lors de la déconnexion', error)
         }
         console.log('Client déconnecté');
     });
