@@ -31,10 +31,10 @@ export default function MenuComponent() {
         const { target: { value } } = event;
 
         const selectedCategories = typeof value === 'string' ? value.split(',') : value;
+
         setCategories(
             selectedCategories
         );
-        console.log(categories)
     };
 
     const handlePlay = (gameMode: GameMode) => {
