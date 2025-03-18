@@ -56,7 +56,7 @@ export const SoloGameComponent = ({ props }: { props: GameComponentProps }) => {
             />
             <div>
                 {game.currentRound.status === RoundStatus.SHOWING_RESULTS && (
-                    <div className='absolute right-0'>
+                    <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
                         <NextButton />
                     </div>
                 )}
