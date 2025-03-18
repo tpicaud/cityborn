@@ -1,7 +1,7 @@
 'use client';
 
 import { MultiGameComponent } from '@/components/game/MultiGameComponent';
-import LoadingComponent from '@/components/LoadingComponent';
+import LoadingComponent from '@/components/utils/LoadingComponent';
 import ResultsComponent from '@/components/game/ResultsComponent';
 import { useGameContext } from '@/contexts/GameContext';
 import { GameStatus } from '@/enums/GameStatus';
@@ -10,23 +10,36 @@ import { GameComponentProps } from '@/types/GameComponentProps';
 import { getGameResult } from '@/utils/getGameResult';
 import { useEffect, useState } from 'react';
 import { LobbyComponent } from '@/components/game/LobbyComponent';
-import { Card, CardContent, TextField, Button } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
+import { DialogInput } from '@/components/utils/DialogInput';
 
 export default function MultiGamePage() {
 
     const router = useRouter();
     const { gameID } = useParams<{ gameID: string }>();
     const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
-    const [playerNameInput, setPlayerNameInput] = useState('');
-    const gameSocket: GameSocket = useGameSocket(gameID)
+    const gameSocket: GameSocket = useGameSocket(gameID);
+
+    useEffect(() => {
+        const fetchGame = async (gameID: string): Promise<void> => {
+            if (gameSocket.isInitialized) {
+                try {
+                    const game = await gameSocket.fetchGame(gameID)
+                    setGame(game)
+                } catch (error) {
+                    console.error(`Erreur lors de la récupération de la partie: ${error}`);
+                }
+            }
+        }
+        fetchGame(gameID);
+    }, [gameSocket.isInitialized])
 
     useEffect(() => {
         const setupGame = async () => {
             if (localPlayerID) {
                 try {
-                    if (game) {
+                    if (game && game.hostID === '') {
                         await gameSocket.postGame(game);
                     }
                     await gameSocket.joinGame(gameID, localPlayerID)
@@ -37,7 +50,7 @@ export default function MultiGamePage() {
             }
         }
         setupGame()
-    }, [localPlayerID, gameID])
+    }, [localPlayerID, gameID]);
 
     useEffect(() => {
         if (gameSocket.gameUpdate) {
@@ -45,33 +58,26 @@ export default function MultiGamePage() {
         }
     }, [gameSocket.gameUpdate])
 
+    if (!game) {
+        return <LoadingComponent message='Connexion à la partie' />
+    }
+
+    const handlePlay = (input: string) => {
+        if (!game.players.some(player => player.id === input)) {
+            setLocalPlayerID(input);
+        }
+    };
+
     if (!localPlayerID) {
         return (
-            <Card style={{ maxWidth: 400, margin: "auto", padding: 20, textAlign: "center" }}>
-                <CardContent>
-                    <TextField
-                        fullWidth
-                        label="Votre nom"
-                        variant="outlined"
-                        value={playerNameInput}
-                        onChange={(e) => setPlayerNameInput(e.target.value)}
-                    />
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        style={{ marginTop: 10 }}
-                        disabled={playerNameInput.trim() === ''}
-                        onClick={() => setLocalPlayerID(playerNameInput)}
-                    >
-                        Jouer
-                    </Button>
-                </CardContent>
-            </Card>
+            <div className="flex flex-row justify-center items-center mt-16">
+                <DialogInput message='Entrez votre pseudo' handleClick={handlePlay} label='Votre pseudo' />
+            </div>
         );
     }
 
     if (!game) {
-        return <LoadingComponent />
+        return <LoadingComponent message='Connexion à la partie' />
     }
 
     const {
@@ -82,7 +88,7 @@ export default function MultiGamePage() {
 
     const gameComponentProps: GameComponentProps = {
         game,
-        localPlayerID,
+        localPlayerID: localPlayerID!,
         handleGuess,
         handleNextRound,
     }
@@ -95,7 +101,7 @@ export default function MultiGamePage() {
             return <MultiGameComponent props={gameComponentProps} />
 
         case GameStatus.RESULTS:
-            return <ResultsComponent playerResults={getGameResult(game, localPlayerID)} />
+            return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:
             router.push('/')

@@ -13,10 +13,9 @@ export function useSoloGame(
     setGame: React.Dispatch<React.SetStateAction<Game | null>>
 ): IUseGame {
 
-    const [currentIndex, setCurrentIndex] = useState(0);
 
     const startGame = () => {
-        const firstObject = getNextObject();
+        const firstObject = game.guessObjects[0];
         if (firstObject) {
             setGame((prevGame) => {
                 if (!prevGame) {
@@ -37,20 +36,6 @@ export function useSoloGame(
             throw new Error('Cannot start game because no guess objects are available');
         }
     };
-
-    const joinGame = () => {
-        setGame((prevGame) => {
-            if (!prevGame) return prevGame;
-
-            return {
-                ...prevGame,
-                players: [{
-                    id: localPlayerID,
-                    results: []
-                }]
-            }
-        })
-    }
 
     const handleGuess = (guess: Guess) => {
         setGame((prevGame) => {
@@ -99,7 +84,6 @@ export function useSoloGame(
 
         // Go to next guessObject
         const nextObject = getNextObject();
-        console.log(nextObject);
 
         if (nextObject) {
             setGame((prevGame) => {
@@ -122,9 +106,18 @@ export function useSoloGame(
     const getNextObject = (): GuessObject | null => {
         if (!game) return null;
 
-        if (currentIndex < game.guessObjects.length) {
-            const nextObject = game.guessObjects[currentIndex];
-            setCurrentIndex((prevIndex) => prevIndex + 1);
+        // get current index
+        const currentIndex = game.currentRound
+            ? game.guessObjects.findIndex((obj: any) => obj.name === game.currentRound?.guessObject.name)
+            : -1;
+
+        // Vérifier que l'objet est dans la liste
+        if (currentIndex === -1) {
+            throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
+        }
+
+        if (currentIndex + 1 < game.guessObjects.length) {
+            const nextObject = game.guessObjects[currentIndex + 1];
             return nextObject;
         } else {
             setGame((prevGame) => {
@@ -139,14 +132,9 @@ export function useSoloGame(
         }
     };
 
-    useEffect(() => {
-        startGame();
-    }, []);
-
     return {
-        joinGame,
+        startGame,
         handleNextRound,
-        handleGuess,
-        startGame
+        handleGuess
     }
 }

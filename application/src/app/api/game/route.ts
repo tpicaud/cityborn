@@ -7,6 +7,7 @@ import { Categories } from "@/enums/Categories";
 import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import { GameMode } from "@/enums/GameMode";
+import { tennis_dictionnary } from "../custom_dictionnary";
 
 export async function GET(request: Request) {
   try {
@@ -168,9 +169,9 @@ function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): G
   // Création de la nouvelle game
   const newGame: Game = {
     id: uniqueNamesGenerator({
-      dictionaries: [adjectives, colors, animals],
+      dictionaries: [tennis_dictionnary, tennis_dictionnary],
       separator: '-',
-      length: 3
+      length: 2
     }),
     mode: GameMode.MULTI,
     hostID: '',
@@ -188,9 +189,9 @@ function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Ga
   // Création de la nouvelle game
   const newGame: Game = {
     id: uniqueNamesGenerator({
-      dictionaries: [adjectives, colors, animals],
+      dictionaries: [tennis_dictionnary, tennis_dictionnary],
       separator: '-',
-      length: 3
+      length: 2
     }),
     mode: GameMode.SOLO,
     hostID: '',

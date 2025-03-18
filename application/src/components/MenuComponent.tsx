@@ -1,11 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic';
-import { Box, Button, FormControl, InputLabel, NativeSelect } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, NativeSelect, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { GameMode } from '@/enums/GameMode';
+import { io } from 'socket.io-client';
+import { resolve } from 'path';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -20,6 +22,8 @@ export default function MenuComponent() {
     const [nbOfObjects, setNbOfObjects] = useState(3)
     const [category, setCategory] = useState('all');
     const [code, setCode] = useState<string>()
+    const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
+
 
     const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setCategory(event.target.value);
@@ -35,6 +39,31 @@ export default function MenuComponent() {
 
         router.push(`/game?${queryParams}`);
     };
+
+    const handleJoin = async () => {
+
+        const gameExists = async (gameID: string): Promise<boolean> => {
+            return new Promise((resolve) => {
+                const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL);
+
+                socket.emit('fetchGame', gameID, (response: { success: boolean }) => {
+                    resolve(response.success); // Retourne true si succès, false sinon
+                });
+
+                socket.on("disconnect", () => {
+                    socket.close();
+                });
+            });
+        };
+
+
+        if (code && await gameExists(code)) {
+            router.push(`/game/multi/${code}`);
+        } else {
+            console.log('in')
+            setJoinErrorMessage("La partie est introuvable")
+        }
+    }
 
     return (
         <div className="relative h-screen">
@@ -85,12 +114,18 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
-                            onClick={() => router.push(`/game/multi/${code}`)}
+                            onClick={() => handleJoin()}
                             disabled={!code}
                         >
                             Rejoindre
                         </Button>
+
                     </div>
+                    {joinErrorMessage && (
+                        <Typography color="error" style={{ marginTop: "8px" }}>
+                            {joinErrorMessage}
+                        </Typography>
+                    )}
                 </Box>
             </div>
         </div>

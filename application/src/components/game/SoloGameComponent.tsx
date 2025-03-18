@@ -4,7 +4,7 @@ import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { RoundStatus } from "@/enums/RoundStatus";
-import LoadingComponent from "../LoadingComponent";
+import LoadingComponent from "@/components/utils/LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";
 
 export const SoloGameComponent = ({ props }: { props: GameComponentProps }) => {

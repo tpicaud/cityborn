@@ -7,7 +7,7 @@ import { GameMode } from '@/enums/GameMode';
 import { Categories } from '@/enums/Categories';
 import Game from '@/types/Game';
 import GameConfig from '@/types/GameConfig';
-import LoadingComponent from '@/components/LoadingComponent';
+import LoadingComponent from '@/components/utils/LoadingComponent';
 
 export default function GamePage() {
   const router = useRouter();
