@@ -1,13 +1,15 @@
 'use client'
 
 import dynamic from 'next/dynamic';
-import { Box, Button, FormControl, InputLabel, NativeSelect, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Chip, FormControl, InputLabel, ListItemIcon, ListItemText, MenuItem, NativeSelect, OutlinedInput, TextField, Typography } from "@mui/material";
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { GameMode } from '@/enums/GameMode';
 import { io } from 'socket.io-client';
-import { resolve } from 'path';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Categories } from '@/enums/Categories';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -20,13 +22,19 @@ export default function MenuComponent() {
     // Game Config variables
     const [timer, setTimer] = useState(20);
     const [nbOfObjects, setNbOfObjects] = useState(3)
-    const [category, setCategory] = useState('all');
+    const [categories, setCategories] = useState<string[]>([Categories.TOUTES]);
     const [code, setCode] = useState<string>()
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
 
 
-    const handleCategory = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setCategory(event.target.value);
+    const handleCategories = (event: SelectChangeEvent<string[]>) => {
+        const { target: { value } } = event;
+
+        const selectedCategories = typeof value === 'string' ? value.split(',') : value;
+        setCategories(
+            selectedCategories
+        );
+        console.log(categories)
     };
 
     const handlePlay = (gameMode: GameMode) => {
@@ -34,14 +42,13 @@ export default function MenuComponent() {
             gameMode: gameMode,
             timer: timer.toString(),
             nbOfObjects: nbOfObjects.toString(),
-            category,
+            categories: categories.toString()
         }).toString();
 
         router.push(`/game?${queryParams}`);
     };
 
     const handleJoin = async () => {
-
         const gameExists = async (gameID: string): Promise<boolean> => {
             return new Promise((resolve) => {
                 const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL);
@@ -55,7 +62,6 @@ export default function MenuComponent() {
                 });
             });
         };
-
 
         if (code && await gameExists(code)) {
             router.push(`/game/multi/${code}`);
@@ -82,6 +88,26 @@ export default function MenuComponent() {
                     <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-32 md:max-h-48' />
                     <p className="text-base md:text-lg text-center ">Trouvez le lieu de naissance des personnalités</p>
 
+                    <div className="flex flex-row gap-2 items-center w-full mt-4">
+                        <input
+                            type="text"
+                            placeholder="Code"
+                            className="border border-gray-300 rounded px-4 py-2 w-full"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                        />
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+                            onClick={() => handleJoin()}
+                            disabled={!code}
+                        >
+                            Rejoindre
+                        </Button>
+
+                    </div>
+
                     <div className='flex flex-row gap-2 justify-center pointer-events-auto'>
                         <Button
                             variant="contained"
@@ -99,28 +125,109 @@ export default function MenuComponent() {
                         >
                             <b>MULTI</b>
                         </Button>
-                        <CategorySelector handleCategory={handleCategory} />
                     </div>
 
-                    <div className="flex flex-row gap-2 items-center w-full mt-4">
-                        <input
-                            type="text"
-                            placeholder="Code de la partie"
-                            className="border border-gray-300 rounded px-4 py-2 w-full"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
-                            onClick={() => handleJoin()}
-                            disabled={!code}
+                    <div className='max-w-full'>
+                        <Accordion
+                            sx={{
+                                borderTop: '1px solid #ccc',  // Bordure grise
+                                backgroundColor: 'transparent',  // Fond transparent
+                                boxShadow: 'none',  // Pas d'ombre
+                                '&:before': {
+                                    display: 'none',  // Enlève la ligne avant l'accordion
+                                },
+                            }}
                         >
-                            Rejoindre
-                        </Button>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel1-content"
+                                id="panel1-header"
+                                sx={{
+                                    backgroundColor: 'transparent',  // Fond transparent pour l'en-tête
+                                    border: 'none',
+                                    paddingBottom: 0,
+                                    marginBottom: 0
+                                }}
+                            >
+                                <Typography component="span">Configuration de la partie</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails
+                                sx={{
+                                    backgroundColor: 'transparent',
+                                    paddingTop: 0,
+                                    marginTop: 0
+                                }}
+                            >
+                                <div className='w-full flex flex-col gap-3'>
+                                    {/* <FormControl sx={{ width: '100%' }}>
+                                        <InputLabel id="categories">Categories</InputLabel>
+                                        <Select
+                                            id="category-selector"
+                                            multiple
+                                            value={categories}
+                                            onChange={handleCategories}
+                                            input={<OutlinedInput id="select-multiple-chip" label="Categories" />}
+                                            renderValue={(selected) => (
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                    {selected.map((value) => (
+                                                        <Chip key={value} label={value} />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        >
+                                            {Object.values(Categories).map((category) => (
+                                                <MenuItem key={category} value={category}>
+                                                    {category}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl> */}
 
+                                    <FormControl sx={{ width: '100%' }}>
+                                        <InputLabel id="categories-input">Categories</InputLabel>
+                                        <Select
+                                            labelId="categories-input"
+                                            id="categories-input"
+                                            multiple
+                                            value={categories}
+                                            onChange={handleCategories}
+                                            input={<OutlinedInput label="Categories" />}
+                                            renderValue={(selected) => selected.join(', ')}
+                                        >
+                                            {Object.values(Categories).map((category) => (
+                                                <MenuItem key={category} value={category}>
+                                                    <Checkbox checked={categories.includes(category)} />
+                                                    <ListItemText primary={category} />
+                                                </MenuItem>
+                                            ))}
+
+                                        </Select>
+                                    </FormControl>
+
+                                    <div className='w-full flex flex-row gap-x-2'>
+                                        <TextField
+                                            type="number"
+                                            label="Personnalités"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={nbOfObjects}
+                                            onChange={(e) => setNbOfObjects(e.target.value ? Number(e.target.value) : 6)}
+                                        />
+
+                                        <TextField
+                                            type="number"
+                                            label="Timer"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={timer}
+                                            onChange={(e) => setTimer(e.target.value ? Number(e.target.value) : 20)}
+                                        />
+                                    </div>
+                                </div>
+                            </AccordionDetails>
+                        </Accordion>
                     </div>
+
                     {joinErrorMessage && (
                         <Typography color="error" style={{ marginTop: "8px" }}>
                             {joinErrorMessage}
@@ -130,30 +237,4 @@ export default function MenuComponent() {
             </div>
         </div>
     );
-}
-
-const CategorySelector = ({ handleCategory }: { handleCategory: (event: React.ChangeEvent<HTMLSelectElement>) => void }) => {
-
-    return (
-        <FormControl fullWidth>
-            <InputLabel variant="standard" htmlFor="uncontrolled-native">
-                Catégorie
-            </InputLabel>
-            <NativeSelect
-                defaultValue={'all'}
-                inputProps={{
-                    name: 'Catégorie',
-                    id: 'uncontrolled-native',
-                }}
-                onChange={handleCategory}
-            >
-                <option value={'all'}>Toutes</option>
-                <option value={'Sport'}>Sport</option>
-                <option value={'Cinema/Humour'}>Cinema/Humour</option>
-                <option value={'Musique'}>Musique</option>
-                <option value={'Politique'}>Politique</option>
-                <option value={'Autre domaine'}>Autre domaine</option>
-            </NativeSelect>
-        </FormControl>
-    )
 }

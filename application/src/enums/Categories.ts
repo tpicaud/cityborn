@@ -1,5 +1,5 @@
 export enum Categories {
-    TOUTES = 'all',
+    TOUTES = 'Toutes',
     SPORT = 'Sport',
     CINEMA_HUMOUR = 'Cinema/Humour',
     MUSIQUE = 'Musique',
