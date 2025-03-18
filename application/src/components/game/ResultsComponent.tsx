@@ -75,7 +75,7 @@ const ResultsComponent = ({
 
 
     return (
-        <div className="h-full w-full my-6 mx-2 overflow-y-auto">
+        <div className="h-full w-full overflow-y-auto">
             <div className="w-full h-full flex flex-col justify-center items-center gap-6">
                 <div className='flex flex-col justify-center items-center gap-2 p-6'>
                     <h1 className="font-bold flex flex-row items-end">
@@ -90,8 +90,7 @@ const ResultsComponent = ({
                     {playersResults.size === 1 ? (
                         // Si un seul joueur, afficher une liste
                         Array.from(playersResults.entries()).map(([player, playerResults]) => (
-                            <div key={player} className="w-full max-w-4xl p-4 border border-gray-200 rounded-lg shadow-lg">
-                                <h3 className="font-bold text-xl">{calculateTotalPoints(playerResults)} pts</h3>
+                            <div key={player} className="w-full max-w-[90%] p-4 border border-gray-200 rounded-lg shadow-lg">
                                 <TableContainer component={Paper} className="shadow-lg mt-4">
                                     <Table>
                                         <TableHead>

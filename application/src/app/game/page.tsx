@@ -78,7 +78,7 @@ function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
   const timer: number = parseInt(searchParams.get('timer') || '20', 10);
   const nbOfObjects: number = parseInt(searchParams.get('nbOfObjects') || '20', 10);
   const categories: Categories[] = searchParams
-    .get('category')
+    .get('categories')
     ?.split(',')
     .filter((cat) => validCategories.includes(cat as Categories))
     .map((cat) => cat as Categories) || [Categories.TOUTES];

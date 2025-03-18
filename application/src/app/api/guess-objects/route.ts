@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         // Construire la pipeline
         const pipeline = []
 
-        if (category !== 'all') {
+        if (category !== 'Toutes') {
             pipeline.push({ $match: { category } });
         }
 
