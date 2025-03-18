@@ -39,3 +39,4 @@
 | 13/03/2025 | 6h | Début de la mise en place des web socket |
 | 14/03/2025 | 8h | Websockets |
 | 17/03/2025 | 5h | Connecter les web sockets à l'interface |
+| 18/03/2025 | 6h | Ajout de la configuration de la partie dans le menu |
