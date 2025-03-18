@@ -7,15 +7,13 @@ import { io, Socket } from "socket.io-client";
 
 export const useGameSocket = (gameId: string) => {
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [gameUpdate, setGameUpdate] = useState<Game>()
+    const [gameUpdate, setGameUpdate] = useState<Game>();
+    const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
-        const socketInstance = io("http://localhost:3001"); // Connexion au serveur WebSocket externe
+        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL); // Connexion au serveur WebSocket externe
         setSocket(socketInstance);
-
-        socketInstance.on('error', (message: string) => {
-            console.log('error', message);
-        });
+        setIsInitialized(true)
 
         socketInstance.on('updatedGame', (updatedGame) => {
             console.log('updatedGame', updatedGame);
@@ -29,10 +27,30 @@ export const useGameSocket = (gameId: string) => {
 
         return () => {
             socketInstance.off("updatedGame");
-            socketInstance.off("error");
             socketInstance.disconnect(); // Nettoyage lors de la déconnexion du composant
         };
     }, [gameId]);
+
+    // Fetch la partie
+    const fetchGame = (gameID: string): Promise<Game> => {
+        return new Promise((resolve, reject) => {
+            if (!socket) {
+                reject(new Error("Socket non initialisée"));
+                return;
+            }
+
+            console.log('in fetchGame')
+            socket.emit('fetchGame', gameID, (response: { success: boolean, data?: any }) => {
+                if (response.success) {
+                    console.log('data', response.data)
+                    const game = response.data as Game
+                    resolve(game);
+                } else {
+                    reject(new Error(`Impossible de récupérer la partie`));
+                }
+            });
+        });
+    };
 
     // Poster la partie sur le serveur WebSocket
     const postGame = (game: Game): Promise<void> => {
@@ -146,11 +164,13 @@ export const useGameSocket = (gameId: string) => {
         });
     }
 
-    return { gameUpdate, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
+    return { isInitialized, gameUpdate, fetchGame, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
 };
 
 export type GameSocket = {
+    isInitialized: boolean;
     gameUpdate: Game | undefined;
+    fetchGame: (gameID: string) => Promise<Game>;
     postGame: (game: Game) => Promise<void>;
     joinGame: (gameID: string, playerID: string) => Promise<void>;
     startGame: (gameID: string, playerID: string) => Promise<void>;

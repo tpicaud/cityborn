@@ -4,7 +4,7 @@ import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { RoundStatus } from "@/enums/RoundStatus";
-import LoadingComponent from "../LoadingComponent";
+import LoadingComponent from "@/components/utils/LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";
 
 export const MultiGameComponent = ({ props }: { props: GameComponentProps }) => {
@@ -57,7 +57,7 @@ export const MultiGameComponent = ({ props }: { props: GameComponentProps }) => 
             />
             <div>
                 {game.currentRound.status === RoundStatus.SHOWING_RESULTS && (
-                    <div className='absolute right-0'>
+                    <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
                         <NextButton />
                     </div>
                 )}

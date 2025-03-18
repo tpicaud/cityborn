@@ -1,9 +1,17 @@
 import Game from "@/types/Game";
-import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, TextField, IconButton } from "@mui/material";
+import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, TextField, IconButton, Dialog, DialogContent } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
-export const LobbyComponent = ({ localPlayerID, game, startGame }: { localPlayerID: string, game: Game; startGame: () => void }) => {
+export const LobbyComponent = ({
+    localPlayerID,
+    game,
+    startGame
+}: {
+    localPlayerID: string | null,
+    game: Game;
+    startGame: () => void
+}) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -13,75 +21,72 @@ export const LobbyComponent = ({ localPlayerID, game, startGame }: { localPlayer
     };
 
     return (
-        <Card sx={{ maxWidth: 400, margin: "auto", mt: 4, p: 2 }}>
-            <CardContent>
-                {/* Champ pour afficher et copier l'ID du jeu */}
-                <Typography variant="subtitle1" gutterBottom>
-                    Code de la partie :
-                </Typography>
-                <TextField
-                    fullWidth
-                    value={game.id}
-                    variant="outlined"
-                    slotProps={{
-                        input: {
-                            readOnly: true,
-                            endAdornment: (
-                                <IconButton onClick={handleCopy}>
-                                    <ContentCopyIcon />
-                                </IconButton>
-                            ),
-                        }
-                    }}
-                />
-
-                {copied && (
-                    <Typography variant="caption" color="success.main">
-                        Copié !
+            <Card sx={{ maxWidth: 400, margin: "auto", mt: 4, p: 2 }}>
+                <CardContent>
+                    {/* Champ pour afficher et copier l'ID du jeu */}
+                    <Typography variant="subtitle1" gutterBottom>
+                        Code de la partie :
                     </Typography>
-                )}
+                    <TextField
+                        fullWidth
+                        value={game.id}
+                        variant="outlined"
+                        slotProps={{
+                            input: {
+                                readOnly: true,
+                                endAdornment: (
+                                    <IconButton onClick={handleCopy}>
+                                        <ContentCopyIcon />
+                                    </IconButton>
+                                ),
+                            }
+                        }}
+                    />
 
-                {/* Titre du lobby */}
-                <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-                    Lobby - Multijoueur
-                </Typography>
-                <Typography variant="subtitle1" color="textSecondary">
-                    Joueurs connectés : {game.players.length}
-                </Typography>
+                    {copied && (
+                        <Typography variant="caption" color="success.main">
+                            Copié !
+                        </Typography>
+                    )}
 
-                {/* Liste des joueurs */}
-                <List>
-                    {game.players
-                        .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1)) // Trier les joueurs
-                        .map((player) => (
-                            <ListItem key={player.id} divider>
-                            <ListItemText
-                                primary={
-                                    player.id === game.hostID 
-                                        ? `Joueur: ${player.id} (Host)` 
-                                        : `Joueur: ${player.id}`
-                                }
-                                secondary={player.connected ? "Connecté" : "Déconnecté"}
-                                sx={{
-                                    color: player.connected ? "text.primary" : "text.disabled", // Applique gris si déconnecté
-                                }}
-                            />
-                        </ListItem>
-                        ))}
-                </List>
+                    {/* Titre du lobby */}
+                    <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                        Lobby - Multijoueur
+                    </Typography>
 
-                {/* Bouton pour démarrer la partie */}
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    disabled={game.players.length < 2 || game.hostID !== localPlayerID}
-                    onClick={startGame}
-                >
-                    Démarrer la partie
-                </Button>
-            </CardContent>
-        </Card>
+                    {/* Liste des joueurs */}
+                    <List>
+                        {game.players
+                            .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1)) // Trier les joueurs
+                            .map((player) => (
+                                <ListItem key={player.id} divider>
+                                    <ListItemText
+                                        primary={
+                                            player.id === game.hostID
+                                                ? `${player.id} (Host)`
+                                                : `${player.id}`
+                                        }
+                                        secondary={player.connected ? "Connecté" : "Déconnecté"}
+                                        sx={{
+                                            color: player.connected ? "text.primary" : "text.disabled", // Applique gris si déconnecté
+                                        }}
+                                    />
+                                </ListItem>
+                            ))}
+                    </List>
+
+                    {/* Bouton pour démarrer la partie */}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        sx={{ mt: 2 }}
+                        disabled={game.players.length < 2 || game.hostID !== localPlayerID}
+                        onClick={startGame}
+                    >
+                        Démarrer la partie
+                    </Button>
+                </CardContent>
+            </Card>
     );
 };

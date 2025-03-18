@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, startGame } from "./gameFunctions.ts";
+import { getGame } from "./gamesStore.ts";
 
 const app = express();
 const server = http.createServer(app);
@@ -19,7 +20,23 @@ export const io = new Server(server, {
 
 // Gérer les connexions WebSocket
 io.on('connection', (socket) => {
-    console.log(`Le client ${socket.id} est connecté`);
+    console.log(`Client ${socket.id} connecté`)
+
+    // Récupérer une partie
+    socket.on('fetchGame', async (gameID, callback) => {
+        try {
+            if (!gameID) {
+                throw new Error("Paramètre invalide : un objet 'gameID' est requis.");
+            }
+            const game = getGame(gameID);
+            if (!game) {
+                throw new Error("Partie introuvable")
+            }
+            callback?.({ success: true, data: game });
+        } catch (error) {
+            callback?.({ success: false });
+        }
+    });
 
     // Poster une partie
     socket.on('postGame', async (game, callback) => {
@@ -134,21 +151,20 @@ io.on('connection', (socket) => {
     // Événement pour déconnexion
     socket.on('disconnect', () => {
         try {
-            const { playerID, gameID } = playerSockets.get(socket.id); // Récupérer le playerID
-            if (playerID) {
-                if (!playerSockets.get(playerID)) {
-                    throw new Error(`Le joueur ${playerID} n'est pas dans la liste des sockets connectés`)
-                }
-                disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
-                playerSockets.delete(socket.id); // Nettoyer la Map
+            if (!playerSockets.has(socket.id)) {
+                throw new Error(`Le socket ${socket.id} n'est pas dans la liste des sockets connectés`)
             }
+
+            const { playerID, gameID } = playerSockets.get(socket.id);
+            disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
+            playerSockets.delete(socket.id);
         } catch (error) {
             console.error('Erreur lors de la déconnexion', error)
         }
-        console.log('Client déconnecté');
+        console.log(`Client ${socket.id} déconnecté`);
     });
 });
 
 server.listen(3001, () => {
-    console.log('Serveur en écoute sur le port 3000');
+    console.log('Serveur en écoute sur le port 3001');
 });

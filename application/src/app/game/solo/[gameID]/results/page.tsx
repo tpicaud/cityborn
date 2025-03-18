@@ -1,6 +1,6 @@
 'use client';
 
-import LoadingComponent from "@/components/LoadingComponent";
+import LoadingComponent from "@/components/utils/LoadingComponent";
 import ResultsComponent from "@/components/game/ResultsComponent";
 import { useGameContext } from "@/contexts/GameContext";
 import Game from "@/types/Game";

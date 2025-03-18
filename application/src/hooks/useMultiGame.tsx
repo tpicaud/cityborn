@@ -4,10 +4,13 @@ import Guess from "@/types/Guess";
 import { GameSocket } from "./useGameSocket";
 
 export function useMultiGame(
-    game: Game, localPlayerID: string, gameSocket: GameSocket): IUseGame {
+    game: Game,
+    localPlayerID: string | null,
+    gameSocket: GameSocket
+): IUseGame {
 
     const startGame = async () => {
-        if (!game) return;
+        if (!game || !localPlayerID) return;
         try {
             await gameSocket.startGame(game.id, localPlayerID)
         } catch (error) {
@@ -17,7 +20,7 @@ export function useMultiGame(
 
     // Enregistrer un guess
     const handleGuess = async (guess: Guess) => {
-        if (!game || !game.currentRound) return;
+        if (!game || !game.currentRound || !localPlayerID) return;
         try {
             await gameSocket.handleGuess(game.id, localPlayerID, guess)
         } catch (error) {
@@ -27,7 +30,7 @@ export function useMultiGame(
 
     // Passer au round suivant (seulement l'hôte)
     const handleNextRound = async () => {
-        if (!game || !game.currentRound) return;
+        if (!game || !game.currentRound || !localPlayerID) return;
         try {
             await gameSocket.handleNextRound(game.id, localPlayerID)
         } catch (error) {
