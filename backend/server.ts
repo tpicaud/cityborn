@@ -12,7 +12,7 @@ const playerSockets = new Map();
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new Server(server, {
     cors: {
-        origin: '*',
+        origin: 'https://cityborn.vercel.app',
         methods: ['GET', 'POST'],
     },
 });
