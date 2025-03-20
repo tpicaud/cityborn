@@ -20,7 +20,6 @@ export const io = new Server(server, {
 
 // Gérer les connexions WebSocket
 io.on('connection', (socket) => {
-    console.log(`Client ${socket.id} connecté`)
 
     // Récupérer une partie
     socket.on('fetchGame', async (gameID, callback) => {
@@ -65,6 +64,8 @@ io.on('connection', (socket) => {
             }
             const updatedGame = await joinGame(socket, gameID, playerID);
             playerSockets.set(socket.id, { playerID, gameID });
+
+            console.log(`${playerID} a rejoint la game ${gameID}`);
             callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors de la tentative de rejoindre la partie :", error);
@@ -154,7 +155,9 @@ io.on('connection', (socket) => {
             if (playerSockets.has(socket.id)) {
                 const { playerID, gameID } = playerSockets.get(socket.id);
                 disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
+
                 playerSockets.delete(socket.id);
+                console.log(`${playerID} s'est déconnecté de la game ${gameID}`);
             }
         } catch (error) {
             console.error(`Erreur lors de la déconnexion de ${socket.id}`, error)
