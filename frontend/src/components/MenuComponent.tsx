@@ -21,7 +21,7 @@ export default function MenuComponent() {
 
     // Game Config variables
     const [timer, setTimer] = useState(20);
-    const [nbOfObjects, setNbOfObjects] = useState(3)
+    const [nbOfObjects, setNbOfObjects] = useState(6)
     const [categories, setCategories] = useState<string[]>([Categories.TOUTES]);
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
