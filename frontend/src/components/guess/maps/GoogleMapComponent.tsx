@@ -108,7 +108,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
             <OtherPlayersGuesses currentRound={currentRound} localPlayerID={localPlayerID} />
           </>
         )}
-        <ResetMap guessObject={currentRound.guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+        <ResetMap guessObjectName={currentRound.guessObject.name} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
 
       </Map>
     </APIProvider>
@@ -225,7 +225,7 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer 
   return null; // No visual render, just adding a line to the map
 };
 
-const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number }> = ({ guessObject, center, zoom }) => {
+const ResetMap: React.FC<{ guessObjectName: string, center: Coord, zoom: number }> = ({ guessObjectName, center, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -238,7 +238,7 @@ const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number
         map.data.remove(feature);
       });
     }
-  }, [guessObject]);
+  }, [guessObjectName]);
 
   return null; // No visual render, just resetting the map
 }
