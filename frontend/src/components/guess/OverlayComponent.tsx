@@ -89,7 +89,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     useEffect(() => {
         setTimerEnded(false)
-    }, [game.currentRound])
+    }, [game.currentRound?.guessObject.name])
 
     useEffect(() => {
         if (timerEnded) {

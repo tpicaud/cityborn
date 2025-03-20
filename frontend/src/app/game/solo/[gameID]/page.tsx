@@ -19,9 +19,7 @@ export default function SoloGamePage() {
 
     useEffect(() => {
         setLocalPlayerID('guest');
-    }, [localPlayerID])
 
-    useEffect(() => {
         if (!localPlayerID || !game) return;
 
         const setupGame = () => {
