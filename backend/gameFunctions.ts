@@ -302,17 +302,10 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
             );
         }
 
-        const connectedPlayers = game.players.filter((player: any) => player.connected);
-        
-        if (game.players.length === 0 || connectedPlayers.length === 0) {
-            removeGame(gameID)
-            console.log(`Game ${gameID} removed. Current games playing: ${getAllGames().length}`)
-        } else {
-            updateGame(game);
-            const updatedGame = getGame(gameID);
-            socket.leave(gameID)
-            socket.to(gameID).emit('updatedGame', updatedGame);
-        }
+        updateGame(game);
+        const updatedGame = getGame(gameID);
+        socket.leave(gameID)
+        socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
         throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
     }

@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, startGame } from "./gameFunctions.ts";
-import { getGame } from "./gamesStore.ts";
+import { getAllGames, getGame, removeGame } from "./gamesStore.ts";
 
 const app = express();
 const server = http.createServer(app);
@@ -156,9 +156,19 @@ io.on('connection', (socket) => {
                 const { playerID, gameID } = playerSockets.get(socket.id);
                 disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
 
+                // Retirer le socket du joueur
                 playerSockets.delete(socket.id);
                 console.log(`${playerID} s'est déconnecté de la game ${gameID}`);
+
+                // Supprimer la partie si elle est vide
+                const game = getGame(gameID)
+                const connectedPlayers = game.players.filter((player: any) => player.connected);
+                if (game.players.length === 0 || connectedPlayers.length === 0) {
+                    removeGame(gameID)
+                    console.log(`Game ${gameID} removed. Current games playing: ${getAllGames().length}`)
+                }
             }
+
         } catch (error) {
             console.error(`Erreur lors de la déconnexion de ${socket.id}`, error)
         }
