@@ -1,7 +1,7 @@
 'use client';
 
+import { GameComponent } from '@/components/game/GameComponent';
 import ResultsComponent from '@/components/game/ResultsComponent';
-import { SoloGameComponent } from '@/components/game/SoloGameComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useGameContext } from '@/contexts/GameContext';
 import { GameStatus } from '@/enums/GameStatus';
@@ -70,7 +70,7 @@ export default function SoloGamePage() {
             <LoadingComponent message='Démarrage de la partie' />
 
         case GameStatus.IN_PROGRESS:
-            return <SoloGameComponent props={gameComponentProps} />
+            return <GameComponent props={gameComponentProps} />
 
         case GameStatus.RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />

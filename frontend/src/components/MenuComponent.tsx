@@ -165,30 +165,6 @@ export default function MenuComponent() {
                                 }}
                             >
                                 <div className='w-full flex flex-col gap-3'>
-                                    {/* <FormControl sx={{ width: '100%' }}>
-                                        <InputLabel id="categories">Categories</InputLabel>
-                                        <Select
-                                            id="category-selector"
-                                            multiple
-                                            value={categories}
-                                            onChange={handleCategories}
-                                            input={<OutlinedInput id="select-multiple-chip" label="Categories" />}
-                                            renderValue={(selected) => (
-                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                                    {selected.map((value) => (
-                                                        <Chip key={value} label={value} />
-                                                    ))}
-                                                </Box>
-                                            )}
-                                        >
-                                            {Object.values(Categories).map((category) => (
-                                                <MenuItem key={category} value={category}>
-                                                    {category}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl> */}
-
                                     <FormControl sx={{ width: '100%' }}>
                                         <InputLabel id="categories-input">Categories</InputLabel>
                                         <Select

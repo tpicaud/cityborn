@@ -9,6 +9,7 @@ import Guess from "@/types/Guess";
 import GuessObject from "@/types/GuessObject";
 import { RoundStatus } from "@/enums/RoundStatus";
 import Round from "@/types/Round";
+import * as turf from '@turf/turf';
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -282,34 +283,42 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
   }
 }
 
-const hasWin = (guessedLatLng: google.maps.LatLng, guessObject: GuessObject): boolean => {
-
+const hasWin = (point: google.maps.LatLng, guessObject: GuessObject): boolean => {
   try {
-    const areas = guessObject.answer.coordinates.value.boundaries.geometry.coordinates;
-
-    for (const area of areas) {
-
-      // Transform coordinates from GeoJSON to Google Maps LatLng format
-      let polygonPath;
-      if (areas.length !== 1) {
-        polygonPath = area[0].map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
-      } else {
-        polygonPath = area.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
-
-      }
-
-      const polygon = new google.maps.Polygon({
-        paths: polygonPath
-      });
-
-      if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
-        return true;
-      }
-    }
-    return false
+    const geoJson = guessObject.answer.coordinates.value.boundaries
+    const turfPoint = turf.point([point.lng(), point.lat()]);
+    return turf.booleanPointInPolygon(turfPoint, geoJson);
   } catch {
-    return false;
+    return false
   }
+
+
+  // try {
+  //   const areas = guessObject.answer.coordinates.value.boundaries.geometry.coordinates;
+
+  //   for (const area of areas) {
+
+  //     // Transform coordinates from GeoJSON to Google Maps LatLng format
+  //     let polygonPath;
+  //     if (areas.length !== 1) {
+  //       polygonPath = area[0].map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
+  //     } else {
+  //       polygonPath = area.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
+
+  //     }
+
+  //     const polygon = new google.maps.Polygon({
+  //       paths: polygonPath
+  //     });
+
+  //     if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false
+  // } catch {
+  //   return false;
+  // }
 }
 
 const isGeoJSON = (guessObject: GuessObject): boolean => {
