@@ -73,7 +73,6 @@ export default function MenuComponent() {
         if (code && await gameExists(code)) {
             router.push(`/game/multi/${code}`);
         } else {
-            console.log('in')
             setJoinErrorMessage("La partie est introuvable")
         }
     }
