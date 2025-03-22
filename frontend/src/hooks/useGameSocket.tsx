@@ -11,7 +11,9 @@ export const useGameSocket = (gameId: string) => {
     const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
-        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL); // Connexion au serveur WebSocket externe
+        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+            transports: ["websocket"]
+        }); // Connexion au serveur WebSocket externe
         setSocket(socketInstance);
         setIsInitialized(true);
 
