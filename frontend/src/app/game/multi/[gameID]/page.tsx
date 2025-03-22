@@ -1,6 +1,5 @@
 'use client';
 
-import { MultiGameComponent } from '@/components/game/MultiGameComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import ResultsComponent from '@/components/game/ResultsComponent';
 import { useGameContext } from '@/contexts/GameContext';
@@ -13,6 +12,7 @@ import { LobbyComponent } from '@/components/game/LobbyComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
 import { DialogInput } from '@/components/others/DialogInput';
+import { GameComponent } from '@/components/game/GameComponent';
 
 export default function MultiGamePage() {
 
@@ -93,7 +93,7 @@ export default function MultiGamePage() {
             return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
 
         case GameStatus.IN_PROGRESS:
-            return <MultiGameComponent props={gameComponentProps} />
+            return <GameComponent props={gameComponentProps} />
 
         case GameStatus.RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />

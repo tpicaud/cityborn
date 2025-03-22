@@ -194,7 +194,7 @@ function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Ga
       length: 2
     }),
     mode: GameMode.SOLO,
-    hostID: '',
+    hostID: 'guest',
     status: GameStatus.LOBBY,
     gameConfig,
     players: [],
