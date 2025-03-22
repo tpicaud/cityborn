@@ -25,8 +25,7 @@ export default function MultiGamePage() {
         const fetchGame = async (gameID: string): Promise<void> => {
             if (gameSocket.isInitialized) {
                 try {
-                    const game = await gameSocket.fetchGame(gameID)
-                    setGame(game)
+                    await gameSocket.fetchGame(gameID)
                 } catch (error) {
                     console.error(`Erreur lors de la récupération de la partie: ${error}`);
                 }
