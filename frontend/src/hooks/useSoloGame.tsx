@@ -100,8 +100,6 @@ export function useSoloGame(
                     },
                 }
             });
-
-            console.log("next round handled");
         }
     };
 

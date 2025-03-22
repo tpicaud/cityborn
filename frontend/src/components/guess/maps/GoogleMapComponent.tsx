@@ -68,7 +68,6 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
       const lat = event.detail.latLng.lat;
       const lng = event.detail.latLng.lng;
 
-      console.log('get distance')
       const distance = (lat !== 0 && lng !== 0) ? getDistanceTo(lat, lng) : -1;
       const points = calculatePoints(distance);
 
@@ -78,7 +77,6 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         points,
         win: (distance === 0) ? true : false
       };
-      console.log('before handle preguess')
       handlePreGuess(newGuess);
     }
   };
