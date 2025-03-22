@@ -111,7 +111,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                     <GuessButton
                         preGuess={preGuess}
                         disabled={
-                            (game.currentRound!.status !== RoundStatus.GUESSING) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
+                            (!preGuess || game.currentRound!.status !== RoundStatus.GUESSING) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
                         }
                         handleGuess={handleGuess} />
                 </div>
