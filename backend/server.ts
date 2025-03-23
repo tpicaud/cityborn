@@ -154,7 +154,7 @@ io.on('connection', (socket) => {
         try {
             if (playerSockets.has(socket.id)) {
                 const { playerID, gameID } = playerSockets.get(socket.id);
-                disconnectPlayer(socket, playerID, gameID); // Retirer le joueur de la partie
+                disconnectPlayer(socket, playerID, gameID);
 
                 // Retirer le socket du joueur
                 playerSockets.delete(socket.id);
@@ -163,6 +163,7 @@ io.on('connection', (socket) => {
                 // Supprimer la partie si elle est vide
                 const game = getGame(gameID)
                 const connectedPlayers = game.players.filter((player: any) => player.connected);
+                
                 if (game.players.length === 0 || connectedPlayers.length === 0) {
                     removeGame(gameID)
                     console.log(`Game ${gameID} removed. Current games playing: ${getAllGames().length}`)

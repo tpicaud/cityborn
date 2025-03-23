@@ -28,7 +28,7 @@ export default function SoloGamePage() {
 
                 return {
                     ...prevGame,
-                    status: GameStatus.IN_PROGRESS,
+                    status: GameStatus.IN_GAME,
                     players: [
                         ...prevGame.players,
                         {
@@ -66,13 +66,13 @@ export default function SoloGamePage() {
     }
 
     switch (game.status) {
-        case GameStatus.LOBBY:
+        case GameStatus.IN_LOBBY:
             <LoadingComponent message='Démarrage de la partie' />
 
-        case GameStatus.IN_PROGRESS:
+        case GameStatus.IN_GAME:
             return <GameComponent props={gameComponentProps} />
 
-        case GameStatus.RESULTS:
+        case GameStatus.IN_RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:

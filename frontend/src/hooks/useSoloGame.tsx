@@ -25,7 +25,7 @@ export function useSoloGame(
 
                 return {
                     ...prevGame,
-                    status: GameStatus.IN_PROGRESS,
+                    status: GameStatus.IN_GAME,
                     currentRound: {
                         status: RoundStatus.GUESSING,
                         guessObject: firstObject,
@@ -125,7 +125,7 @@ export function useSoloGame(
 
                 return {
                     ...prevGame,
-                    status: GameStatus.RESULTS
+                    status: GameStatus.IN_RESULTS
                 };
             });
             return null;

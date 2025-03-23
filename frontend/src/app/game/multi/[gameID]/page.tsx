@@ -89,13 +89,13 @@ export default function MultiGamePage() {
     }
 
     switch (game.status) {
-        case GameStatus.LOBBY:
+        case GameStatus.IN_LOBBY:
             return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
 
-        case GameStatus.IN_PROGRESS:
+        case GameStatus.IN_GAME:
             return <GameComponent props={gameComponentProps} />
 
-        case GameStatus.RESULTS:
+        case GameStatus.IN_RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:
