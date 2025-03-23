@@ -1,5 +1,5 @@
 export enum RoundStatus {
-    GUESSING = 'Guessing',
+    GUESSING = 'GUESSING',
     HAS_GUESSED = 'Has_guessed',
-    SHOWING_RESULTS = 'Showing_results'
+    SHOWING_RESULTS = 'SHOWING_RESULTS'
 }

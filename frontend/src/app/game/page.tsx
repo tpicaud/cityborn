@@ -76,7 +76,7 @@ function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
       : GameMode.SOLO;
 
   const timer: number = parseInt(searchParams.get('timer') || '20', 10);
-  const nbOfObjects: number = parseInt(searchParams.get('nbOfObjects') || '20', 10);
+  const nbOfObjects: number = parseInt(searchParams.get('nbOfObjects') || '6', 10);
   const categories: Categories[] = searchParams
     .get('categories')
     ?.split(',')

@@ -66,7 +66,7 @@ const ResultsComponent = ({
         return () => {
             isMounted = false;
         };
-    }, [playersResults, localPlayerID]); // Ajout de localPlayerID
+    }, [localPlayerID]); // Ajout de localPlayerID
 
 
     if (!sentence || !localPlayerResults) {

@@ -11,7 +11,9 @@ export const useGameSocket = (gameId: string) => {
     const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
-        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL); // Connexion au serveur WebSocket externe
+        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+            transports: ["websocket"]
+        }); // Connexion au serveur WebSocket externe
         setSocket(socketInstance);
         setIsInitialized(true);
 
@@ -31,7 +33,7 @@ export const useGameSocket = (gameId: string) => {
     }, [gameId]);
 
     // Fetch la partie
-    const fetchGame = (gameID: string): Promise<Game> => {
+    const fetchGame = (gameID: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
                 reject(new Error("Socket non initialisée"));
@@ -41,8 +43,8 @@ export const useGameSocket = (gameId: string) => {
             socket.emit('fetchGame', gameID, (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
-                    const game = response.game
-                    resolve(game);
+                    setGameUpdate(response.game)
+                    resolve();
                 } else {
                     reject(new Error(`Impossible de récupérer la partie`));
                 }
@@ -168,7 +170,7 @@ export const useGameSocket = (gameId: string) => {
 export type GameSocket = {
     isInitialized: boolean;
     gameUpdate: Game | undefined;
-    fetchGame: (gameID: string) => Promise<Game>;
+    fetchGame: (gameID: string) => Promise<void>;
     postGame: (game: Game) => Promise<void>;
     joinGame: (gameID: string, playerID: string) => Promise<void>;
     startGame: (gameID: string, playerID: string) => Promise<void>;
