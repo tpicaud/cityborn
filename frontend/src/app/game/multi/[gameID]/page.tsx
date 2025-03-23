@@ -1,6 +1,5 @@
 'use client';
 
-import { MultiGameComponent } from '@/components/game/MultiGameComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import ResultsComponent from '@/components/game/ResultsComponent';
 import { useGameContext } from '@/contexts/GameContext';
@@ -13,6 +12,7 @@ import { LobbyComponent } from '@/components/game/LobbyComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
 import { DialogInput } from '@/components/others/DialogInput';
+import { GameComponent } from '@/components/game/GameComponent';
 
 export default function MultiGamePage() {
 
@@ -25,8 +25,7 @@ export default function MultiGamePage() {
         const fetchGame = async (gameID: string): Promise<void> => {
             if (gameSocket.isInitialized) {
                 try {
-                    const game = await gameSocket.fetchGame(gameID)
-                    setGame(game)
+                    await gameSocket.fetchGame(gameID)
                 } catch (error) {
                     console.error(`Erreur lors de la récupération de la partie: ${error}`);
                 }
@@ -90,13 +89,13 @@ export default function MultiGamePage() {
     }
 
     switch (game.status) {
-        case GameStatus.LOBBY:
+        case GameStatus.IN_LOBBY:
             return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
 
-        case GameStatus.IN_PROGRESS:
-            return <MultiGameComponent props={gameComponentProps} />
+        case GameStatus.IN_GAME:
+            return <GameComponent props={gameComponentProps} />
 
-        case GameStatus.RESULTS:
+        case GameStatus.IN_RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:

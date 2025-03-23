@@ -89,7 +89,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     useEffect(() => {
         setTimerEnded(false)
-    }, [game.currentRound])
+    }, [game.currentRound?.guessObject.name])
 
     useEffect(() => {
         if (timerEnded) {
@@ -102,7 +102,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
             <GuessObjectComponent guessObject={game.currentRound!.guessObject} />
             <div className="absolute w-[30%] min-w-36 m-4">
                 {(game.currentRound!.status === RoundStatus.GUESSING) && (
-                    <CountdownComponent totalTime={20} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
+                    <CountdownComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
@@ -111,7 +111,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                     <GuessButton
                         preGuess={preGuess}
                         disabled={
-                            (game.currentRound!.status !== RoundStatus.GUESSING) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
+                            (!preGuess || game.currentRound!.status !== RoundStatus.GUESSING) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
                         }
                         handleGuess={handleGuess} />
                 </div>

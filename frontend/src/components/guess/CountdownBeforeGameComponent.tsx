@@ -19,7 +19,7 @@ const CountdownComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd,
         } else {
             onCountdownEnd();
         }
-    }, [countdown, onCountdownEnd]);
+    }, [countdown]);
 
     return (
         <Backdrop open={true} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>

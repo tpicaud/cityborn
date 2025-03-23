@@ -1,7 +1,7 @@
 'use client';
 
+import { GameComponent } from '@/components/game/GameComponent';
 import ResultsComponent from '@/components/game/ResultsComponent';
-import { SoloGameComponent } from '@/components/game/SoloGameComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useGameContext } from '@/contexts/GameContext';
 import { GameStatus } from '@/enums/GameStatus';
@@ -19,9 +19,7 @@ export default function SoloGamePage() {
 
     useEffect(() => {
         setLocalPlayerID('guest');
-    }, [localPlayerID])
 
-    useEffect(() => {
         if (!localPlayerID || !game) return;
 
         const setupGame = () => {
@@ -30,7 +28,7 @@ export default function SoloGamePage() {
 
                 return {
                     ...prevGame,
-                    status: GameStatus.IN_PROGRESS,
+                    status: GameStatus.IN_GAME,
                     players: [
                         ...prevGame.players,
                         {
@@ -68,13 +66,13 @@ export default function SoloGamePage() {
     }
 
     switch (game.status) {
-        case GameStatus.LOBBY:
+        case GameStatus.IN_LOBBY:
             <LoadingComponent message='Démarrage de la partie' />
 
-        case GameStatus.IN_PROGRESS:
-            return <SoloGameComponent props={gameComponentProps} />
+        case GameStatus.IN_GAME:
+            return <GameComponent props={gameComponentProps} />
 
-        case GameStatus.RESULTS:
+        case GameStatus.IN_RESULTS:
             return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:

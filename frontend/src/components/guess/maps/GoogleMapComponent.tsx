@@ -9,6 +9,7 @@ import Guess from "@/types/Guess";
 import GuessObject from "@/types/GuessObject";
 import { RoundStatus } from "@/enums/RoundStatus";
 import Round from "@/types/Round";
+import * as turf from '@turf/turf';
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -53,11 +54,8 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
-    if (isGeoJSON(currentRound.guessObject)) {
-      const polygon = getPolyfromGeoJSON(currentRound.guessObject);
-      if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
-        return 0;
-      }
+    if (isGeoJSON(currentRound.guessObject) && hasWin(guessedLatLng, currentRound.guessObject)) {
+      return 0;
     }
 
     const answer: Coord = getCenterOfGuessObject(currentRound.guessObject)
@@ -71,7 +69,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
       const lat = event.detail.latLng.lat;
       const lng = event.detail.latLng.lng;
 
-      const distance = getDistanceTo(lat, lng);
+      const distance = (lat !== 0 && lng !== 0) ? getDistanceTo(lat, lng) : -1;
       const points = calculatePoints(distance);
 
       const newGuess: Guess = {
@@ -80,7 +78,6 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         points,
         win: (distance === 0) ? true : false
       };
-
       handlePreGuess(newGuess);
     }
   };
@@ -98,7 +95,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         }}
       >
         {/* Pre-guess advanced marker */}
-        {preGuess && (currentRound.status === RoundStatus.GUESSING) && <AdvancedMarker position={preGuess.coordinates} />}
+        {preGuess && (preGuess.distance !== -1) && (currentRound.status === RoundStatus.GUESSING) && <AdvancedMarker position={preGuess.coordinates} />}
 
         {/* Confirmed guess advanced marker */}
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
@@ -108,7 +105,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
             <OtherPlayersGuesses currentRound={currentRound} localPlayerID={localPlayerID} />
           </>
         )}
-        <ResetMap guessObject={currentRound.guessObject} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+        <ResetMap guessObjectName={currentRound.guessObject.name} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
 
       </Map>
     </APIProvider>
@@ -225,7 +222,7 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer 
   return null; // No visual render, just adding a line to the map
 };
 
-const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number }> = ({ guessObject, center, zoom }) => {
+const ResetMap: React.FC<{ guessObjectName: string, center: Coord, zoom: number }> = ({ guessObjectName, center, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -238,7 +235,7 @@ const ResetMap: React.FC<{ guessObject: GuessObject, center: Coord, zoom: number
         map.data.remove(feature);
       });
     }
-  }, [guessObject]);
+  }, [guessObjectName]);
 
   return null; // No visual render, just resetting the map
 }
@@ -276,8 +273,6 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
       </AdvancedMarker>
     )
   }
-
-  return null;
 }
 
 const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
@@ -288,17 +283,42 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
   }
 }
 
-const getPolyfromGeoJSON = (guessObject: GuessObject): google.maps.Polygon => {
-  const coordinates = guessObject.answer.coordinates.value.boundaries.geometry.coordinates[0];
+const hasWin = (point: google.maps.LatLng, guessObject: GuessObject): boolean => {
+  try {
+    const geoJson = guessObject.answer.coordinates.value.boundaries
+    const turfPoint = turf.point([point.lng(), point.lat()]);
+    return turf.booleanPointInPolygon(turfPoint, geoJson);
+  } catch {
+    return false
+  }
 
-  // Transform coordinates from GeoJSON to Google Maps LatLng format
-  const polygonPath = coordinates.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
 
-  const polygon = new google.maps.Polygon({
-    paths: polygonPath
-  });
+  // try {
+  //   const areas = guessObject.answer.coordinates.value.boundaries.geometry.coordinates;
 
-  return polygon;
+  //   for (const area of areas) {
+
+  //     // Transform coordinates from GeoJSON to Google Maps LatLng format
+  //     let polygonPath;
+  //     if (areas.length !== 1) {
+  //       polygonPath = area[0].map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
+  //     } else {
+  //       polygonPath = area.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
+
+  //     }
+
+  //     const polygon = new google.maps.Polygon({
+  //       paths: polygonPath
+  //     });
+
+  //     if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false
+  // } catch {
+  //   return false;
+  // }
 }
 
 const isGeoJSON = (guessObject: GuessObject): boolean => {
