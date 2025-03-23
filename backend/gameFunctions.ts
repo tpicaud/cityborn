@@ -35,7 +35,7 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
         }
 
         // Check si la partie est déjà lancé
-        if (game.status != 'Lobby') {
+        if (game.status != 'IN_LOBBY') {
             throw new Error("La partie est déjà lancée.");
         }
 
@@ -79,7 +79,7 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
         }
 
         // Check si la partie est démarrable
-        if (game.status !== 'Lobby') {
+        if (game.status !== 'IN_LOBBY') {
             throw new Error("La partie a déjà démarré.");
         }
 
@@ -98,12 +98,12 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
 
         // Création du premier round
         const firstRound = {
-            status: 'Guessing',
+            status: 'GUESSING',
             guessObject: firstObject,
             playersGuesses: {},
         };
 
-        game.status = 'In_progress';
+        game.status = 'IN_GAME';
         game.currentRound = firstRound;
 
         // Update game and send to the room
@@ -160,7 +160,7 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
                 // Vérifier si tout le monde à guess
                 const connectedPlayers = game.players.filter((player: any) => player.connected);
                 if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
-                    game.currentRound.status = 'Showing_results'
+                    game.currentRound.status = 'SHOWING_RESULTS'
                 }
 
                 //update game
@@ -233,11 +233,11 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
 
         // Go to next guess object
         if (currentIndex + 1 >= game.guessObjects.length) {
-            game.status = 'Results'
+            game.status = 'IN_RESULTS'
             game.currentRound = undefined
         } else {
             game.currentRound = {
-                status: 'Guessing',
+                status: 'GUESSING',
                 guessObject: game.guessObjects[currentIndex + 1],
                 playersGuesses: {},
             }
@@ -294,14 +294,46 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
 
         if (!game) return;
 
-        if (game.status === 'Lobby') {
-            game.players = game.players.filter((p: any) => p.id !== playerID);
-        } else {
-            game.players = game.players.map((p: any) =>
-                p.id === playerID ? { ...p, connected: false } : p
-            );
+        switch (game.status) {
+            case 'IN_LOBBY':
+                game.players = game.players.filter((p: any) => p.id !== playerID);
+                break;
+
+            case 'IN_GAME':
+                // Changer l'état du joueur
+                game.players = game.players.map((p: any) =>
+                    p.id === playerID ? { ...p, connected: false } : p
+                );
+
+                // Update la partie si nécessaire
+                if (game.currentRound) {
+                    switch (game.currentRound) {
+                        case 'GUESSING':
+                            // Vérifier si tout le monde à guess
+                            const connectedPlayers = game.players.filter((player: any) => player.connected);
+                            if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
+                                game.currentRound.status = 'SHOWING_RESULTS '
+                            }
+                            break;
+                        case 'RESULTS':
+                            break;
+                    }
+                }
+                break;
+
+            case 'IN_RESULTS':
+                //game.players = game.players.filter((p: any) => p.id !== playerID);
+                break;
+
         }
 
+        // Change host if necessary
+        if (playerID === game.hostID) {
+            const connectedPlayers = game.players.filter((player: any) => player.connected);
+            game.hostID = connectedPlayers[0];
+        }
+
+        // Update Game and send it
         updateGame(game);
         const updatedGame = getGame(gameID);
         socket.leave(gameID)
