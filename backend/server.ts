@@ -148,6 +148,10 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Joueur plus sur l'appli
+    socket.on('keep-alive', () => {
+        // TODO Gérer les joueurs afk
+    });
 
     // Événement pour déconnexion
     socket.on('disconnect', () => {
