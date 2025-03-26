@@ -25,10 +25,44 @@ export const useGameSocket = (gameId: string) => {
                 console.log('Update de game reçu non valide')
             }
         });
+        // Maintenir la connexion quand la page est en arrière plan
+        let keepAliveInterval: NodeJS.Timeout;
+        let disconnectTimeout: NodeJS.Timeout;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+
+                // Lancement du keep-alive
+                keepAliveInterval = setInterval(() => {
+                    if (socketInstance && socketInstance.connected) {
+                        socketInstance.emit('keep-alive', { gameId });
+                        console.log('Keep-alive envoyé');
+                    }
+                }, 2000); // Every 2 seconds
+
+                // Deconnexion après 2 min d'inactivité
+                disconnectTimeout = setTimeout(() => {
+                    console.log("Timeout de déconnexion atteint. Déconnexion...");
+                    socketInstance.disconnect(); // Déconnexion après 2 minutes
+                    setSocket(null); // Optionnel : nettoyer l'état du socket
+                }, 120000); // 2 minutes = 120000 ms
+            } else {
+                // Si la page redevient visible, arrêter l'envoi des keep-alive
+                clearInterval(keepAliveInterval);
+                clearTimeout(disconnectTimeout)
+            }
+        };
+
+        // Ajouter les événements de visibilité
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
 
         return () => {
             socketInstance.off("updatedGame");
             socketInstance.disconnect(); // Nettoyage lors de la déconnexion du composant
+            clearInterval(keepAliveInterval); // Arrêter le keep-alive
+            clearTimeout(disconnectTimeout); // Annuler le timeout de déconnexion
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [gameId]);
 
