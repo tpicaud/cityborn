@@ -38,7 +38,7 @@ export const useGameSocket = (gameId: string) => {
                         socketInstance.emit('keep-alive', { gameId });
                         console.log('Keep-alive envoyé');
                     }
-                }, 2000); // Every 2 seconds
+                }, 500); // Every 2 seconds
 
                 // Deconnexion après 2 min d'inactivité
                 disconnectTimeout = setTimeout(() => {
