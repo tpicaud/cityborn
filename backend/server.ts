@@ -1,13 +1,16 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, startGame } from "./gameFunctions.ts";
+import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, reconnect, startGame } from "./gameFunctions.ts";
 import { getAllGames, getGame, removeGame } from "./gamesStore.ts";
+import { isGameEmpty } from "./utils.ts";
 
 const app = express();
 const server = http.createServer(app);
 
 const playerSockets = new Map();
+
+const DISCONNECT_TIMEOUT = 60000
 
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new Server(server, {
@@ -148,32 +151,47 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Gestion de la reconnexion d’un joueur avant la fin du timeout
+    socket.on("reconnect", async (gameID, playerID, callback) => {
+        try {
+            if (!gameID || !playerID) {
+                throw new Error("Paramètres invalides : gameID et playerID sont requis.");
+            }
+
+            const game = reconnect(socket, gameID, playerID);
+           
+            callback?.({ success: true, game: game });
+        } catch (error) {
+            console.error("Erreur lors du passage au tour suivant :", error);
+            callback?.({
+                success: false,
+                message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+            });
+        }
+    });
+
 
     // Événement pour déconnexion
     socket.on('disconnect', () => {
+        console.log('in disconnect')
         try {
             if (playerSockets.has(socket.id)) {
+
                 const { playerID, gameID } = playerSockets.get(socket.id);
-                disconnectPlayer(socket, playerID, gameID);
 
                 // Retirer le socket du joueur
+                socket.leave(gameID)
                 playerSockets.delete(socket.id);
+                console.log(`Socket ${socket.id} déconnecté`);
+
+                // Déconnecter le joueur de la partie
+                disconnectPlayer(socket, playerID, gameID);
                 console.log(`${playerID} s'est déconnecté de la game ${gameID}`);
 
-                // Supprimer la partie si elle est vide
-                const game = getGame(gameID)
-                const connectedPlayers = game.players.filter((player: any) => player.connected);
-                
-                if (game.players.length === 0 || connectedPlayers.length === 0) {
-                    removeGame(gameID)
-                    console.log(`Game ${gameID} removed. Current games playing: ${getAllGames().length}`)
-                }
             }
-
         } catch (error) {
             console.error(`Erreur lors de la déconnexion de ${socket.id}`, error)
         }
-        console.log(`Client ${socket.id} déconnecté`);
     });
 });
 

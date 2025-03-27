@@ -19,7 +19,7 @@ export default function MultiGamePage() {
     const router = useRouter();
     const { gameID } = useParams<{ gameID: string }>();
     const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
-    const gameSocket: GameSocket = useGameSocket(gameID);
+    const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
 
     useEffect(() => {
         const fetchGame = async (gameID: string): Promise<void> => {
