@@ -269,12 +269,46 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
             throw new Error("Partie introuvable.");
         }
 
-        // Vérifier que le host
+        // Vérifier le host
         if (game.hostID !== playerID) {
             throw new Error("Le joueur n'est pas le host de la partie.");
         }
 
         removeGame(gameID);
+
+        // To change later
+        return game;
+
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
+        } else {
+            throw new Error(`Erreur lors de la suppression de la partie ${gameID}: ${error}`);
+        }
+    }
+}
+
+export function reconnect(socket: Socket, gameID: string, playerID: string) {
+    try {
+        // Récupération du jeu dans la base de données
+        const game = getGame(gameID)
+
+        if (!game) {
+            throw new Error("Partie introuvable.");
+        }
+
+        if (!game.players.some(player => player.id === playerID)) {
+            throw new Error("Joueur introuvable dans la partie")
+        }
+
+        game.players.map(
+            player => player.id === playerID ?
+                {
+                    ...player,
+                    connected: true
+                } 
+                : player
+        )
 
         // To change later
         return game;
@@ -336,7 +370,6 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
         // Update Game and send it
         updateGame(game);
         const updatedGame = getGame(gameID);
-        socket.leave(gameID)
         socket.to(gameID).emit('updatedGame', updatedGame);
     } catch (error) {
         throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
