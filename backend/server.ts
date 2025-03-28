@@ -2,8 +2,7 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, reconnect, startGame } from "./gameFunctions.ts";
-import { getAllGames, getGame, removeGame } from "./gamesStore.ts";
-import { isGameEmpty } from "./utils.ts";
+import { getGame } from "./gamesStore.ts";
 
 const app = express();
 const server = http.createServer(app);
