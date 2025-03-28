@@ -22,10 +22,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
-                console.log("Onglet actif, tentative de reconnexion...");
                 connectSocket();
-            } else {
-                socket?.disconnect()
             }
         };
 
@@ -36,10 +33,14 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     }, [])
 
     useEffect(() => {
-
         const reconnectToGame = async () => {
-            if (socket && localPlayerID) {
-                await reconnect(gameId, localPlayerID)
+            if (socket && socket.connected && localPlayerID) {
+                console.log('reconnexion')
+                try {
+                    await reconnect(gameId, localPlayerID)
+                } catch (error){
+                    throw new Error(`Erreur lors de la reconnexion: ${error}`)
+                }
             }
         }
         reconnectToGame()
@@ -48,8 +49,9 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
     // Connexion au serveur
     const connectSocket = () => {
-        if (socket) return; // Évite les doubles connexions
+        if (socket?.connected) return; // Évite les doubles connexions
 
+        console.log('Connexion au serveur')
         const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
             transports: ["websocket"],
         });
@@ -65,37 +67,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 console.log("Update de game reçu non valide");
             }
         });
-        // Maintenir la connexion quand la page est en arrière plan
-        let keepAliveInterval: NodeJS.Timeout;
-        let disconnectTimeout: NodeJS.Timeout;
-
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-
-                // Lancement du keep-alive
-                keepAliveInterval = setInterval(() => {
-                    if (socketInstance && socketInstance.connected) {
-                        socketInstance.emit('keep-alive', { gameId });
-                        console.log('Keep-alive envoyé');
-                    }
-                }, 500); // Every 2 seconds
-
-                // Deconnexion après 2 min d'inactivité
-                disconnectTimeout = setTimeout(() => {
-                    console.log("Timeout de déconnexion atteint. Déconnexion...");
-                    socketInstance.disconnect(); // Déconnexion après 2 minutes
-                    setSocket(null); // Optionnel : nettoyer l'état du socket
-                }, 120000); // 2 minutes = 120000 ms
-            } else {
-                // Si la page redevient visible, arrêter l'envoi des keep-alive
-                clearInterval(keepAliveInterval);
-                clearTimeout(disconnectTimeout)
-            }
-        };
-
-        // Ajouter les événements de visibilité
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
 
         socketInstance.on("connect", () => console.log("WebSocket connecté"));
         socketInstance.on("disconnect", () => console.log("WebSocket déconnecté"));
