@@ -53,6 +53,7 @@ export default function MultiGamePage() {
 
     useEffect(() => {
         if (gameSocket.gameUpdate) {
+            console.log("updatedGame", gameSocket.gameUpdate);
             setGame(gameSocket.gameUpdate);
         }
     }, [gameSocket.gameUpdate])
