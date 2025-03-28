@@ -9,8 +9,6 @@ const server = http.createServer(app);
 
 const playerSockets = new Map();
 
-const DISCONNECT_TIMEOUT = 60000
-
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new Server(server, {
     cors: {
