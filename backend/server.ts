@@ -12,7 +12,7 @@ const playerSockets = new Map();
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new SocketIOServer(server, {
     cors: {
-        origin: 'https://cityborn.vercel.app',
+        origin: '*',
         methods: ['GET', 'POST'],
     }
 });
@@ -20,6 +20,9 @@ export const io = new SocketIOServer(server, {
 
 // Gérer les connexions WebSocket
 io.on('connection', (socket) => {
+    if (socket.recovered) {
+        console.log(`Socket ${socket.id} has recovered`);
+    }
     console.log('socket connected: ', socket.id)
 
     // Récupérer une partie
