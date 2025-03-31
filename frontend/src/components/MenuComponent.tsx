@@ -51,7 +51,9 @@ export default function MenuComponent() {
     const handleJoin = async () => {
         const gameExists = async (gameID: string): Promise<boolean> => {
             return new Promise((resolve) => {
-                const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL);
+                const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+                    transports: ['websocket']
+                });
 
                 socket.emit('fetchGame', gameID, (response: { success: boolean }) => {
                     resolve(response.success);
