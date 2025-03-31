@@ -48,14 +48,14 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             if (document.visibilityState === "visible" && !newSocket.connected) {
                 console.log("Page visible, tentative de reconnexion...");
                 newSocket.connect();
-                newSocket.once("connect", async () => {
-                    console.log('Socket reconnecté, tentative de reconnexion à la partie')
-                    try {
-                        await reconnectToGame();
-                    } catch (error) {
-                        throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
-                    }
-                })
+                // newSocket.once("connect", async () => {
+                //     console.log('Socket reconnecté, tentative de reconnexion à la partie')
+                //     try {
+                //         await reconnectToGame();
+                //     } catch (error) {
+                //         throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
+                //     }
+                // })
             }
         };
 
@@ -68,6 +68,16 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             newSocket.disconnect();
         };
     }, [gameId]);
+
+    useEffect(() => {
+        if (localPlayerID) {
+            try {
+                reconnectToGame()
+            } catch (error) {
+                throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
+            }
+        }
+    }, [socket])
 
     // Fetch la partie
     const reconnectToGame = (): Promise<void> => {
