@@ -14,26 +14,18 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     useEffect(() => {
         const newSocket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
             transports: ['websocket'],
-            reconnection: true, // Assurez-vous que la reconnexion est activée
-            reconnectionAttempts: Infinity, // Nombre infini de tentatives de reconnexion
-            reconnectionDelay: 1000, // Temps entre les tentatives (en ms)
-            timeout: 10000, // Temps d'attente maximal pour une tentative de connexion
+            reconnection: false
         });
 
         setSocket(newSocket)
 
         newSocket.on("connect", async () => {
+
             console.log("Socket connected!");
             setIsConnected(true);
 
-            if (localPlayerID) {
-                try {
-                    await reconnectToGame();
-                } catch (error) {
-                    console.error(`Erreur lors de la reconnexion à la partie: ${error}`);
-                    setIsConnected(false)
-                }
-            } else {
+            if (newSocket.recovered) {
+                console.log(`Socket ${newSocket.id} has recovered !`);
             }
         });
 
@@ -51,6 +43,23 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             }
         });
 
+        // Fonction pour essayer de reconnecter le socket si la page redevient visible
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === "visible" && !newSocket.connected) {
+                console.log("Page visible, tentative de reconnexion...");
+                newSocket.connect();
+                newSocket.once("connect", async () => {
+                    console.log('Socket reconnecté, tentative de reconnexion à la partie')
+                    try {
+                        await reconnectToGame();
+                    } catch (error) {
+                        throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
+                    }
+                })
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
         return () => {
             newSocket.off("updatedGame");
