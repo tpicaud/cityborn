@@ -6,6 +6,7 @@ import Round from "./Round";
 
 export default interface Game {
     id: string;
+    lastActivity: number;
     mode: string
     hostID: string;
     status: GameStatus;
