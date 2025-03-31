@@ -342,7 +342,7 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
         if (playerID === game.hostID) {
             const connectedPlayers = game.players.filter((player: any) => player.connected);
             if (connectedPlayers.length > 0) {
-                game.hostID = connectedPlayers[0];
+                game.hostID = connectedPlayers[0].id;
             } else {
                 game.hostID = '';
             }

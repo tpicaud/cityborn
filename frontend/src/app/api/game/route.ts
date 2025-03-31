@@ -173,6 +173,7 @@ function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): G
       separator: '-',
       length: 2
     }),
+    lastActivity: Date.now(),
     mode: GameMode.MULTI,
     hostID: '',
     status: GameStatus.IN_LOBBY,
@@ -193,6 +194,7 @@ function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Ga
       separator: '-',
       length: 2
     }),
+    lastActivity: Date.now(),
     mode: GameMode.SOLO,
     hostID: 'guest',
     status: GameStatus.IN_LOBBY,
