@@ -39,4 +39,5 @@ export function getAllGames() {
 setInterval(() => {
     const now = Date.now();
     games = games.filter(game => now - game.lastActivity < INACTIVITY_LIMIT);
+    console.log('Games database cleared')
 }, 60 * 1000); // Vérification toutes les minutes
