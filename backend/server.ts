@@ -12,7 +12,7 @@ const playerSockets = new Map();
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new SocketIOServer(server, {
     cors: {
-        origin: '*',
+        origin: 'https://cityborn.vercel.app',
         methods: ['GET', 'POST'],
     }
 });
@@ -154,6 +154,7 @@ io.on('connection', (socket) => {
 
     // Gestion de la reconnexion d’un joueur avant la fin du timeout
     socket.on("reconnect_player", async (gameID, playerID, callback) => {
+        console.log('try reconnecting player')
         try {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
