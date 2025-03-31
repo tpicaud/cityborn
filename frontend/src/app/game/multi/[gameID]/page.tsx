@@ -23,16 +23,17 @@ export default function MultiGamePage() {
 
     useEffect(() => {
         const fetchGame = async (gameID: string): Promise<void> => {
-            if (gameSocket.isInitialized) {
+            if (gameSocket.isConnected && !game) {
                 try {
                     await gameSocket.fetchGame(gameID)
                 } catch (error) {
-                    console.error(`Erreur lors de la récupération de la partie: ${error}`);
+                    console.log(`Erreur lors de la récupération de la partie: ${error}`);
                 }
             }
         }
-        fetchGame(gameID);
-    }, [gameSocket.isInitialized])
+            fetchGame(gameID);
+    }, [gameSocket.isConnected])
+
 
     useEffect(() => {
         const setupGame = async () => {
@@ -70,16 +71,20 @@ export default function MultiGamePage() {
         }
     };
 
-    if (!game) {
-        return <LoadingComponent message='Connexion à la partie' />
-    }
-
     if (!localPlayerID) {
         return (
             <div className="flex flex-row justify-center items-center mt-16">
                 <DialogInput message='Entrez votre pseudo' handleClick={handlePlay} label='Votre pseudo' />
             </div>
         );
+    }
+
+    if (!game && localPlayerID) {
+        return <LoadingComponent message='Connexion à la partie' />
+    }
+
+    if (!game) {
+        return <div>Erreur lors de la récupération de la partie</div>
     }
 
     const gameComponentProps: GameComponentProps = {
