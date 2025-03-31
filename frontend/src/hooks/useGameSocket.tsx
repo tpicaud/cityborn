@@ -13,6 +13,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
     useEffect(() => {
         const newSocket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+            transports: ['websocket'],
             reconnection: true, // Assurez-vous que la reconnexion est activée
             reconnectionAttempts: Infinity, // Nombre infini de tentatives de reconnexion
             reconnectionDelay: 1000, // Temps entre les tentatives (en ms)
