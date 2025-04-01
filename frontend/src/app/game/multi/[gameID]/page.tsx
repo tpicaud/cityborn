@@ -41,8 +41,10 @@ export default function MultiGamePage() {
         const setupGame = async () => {
             if (localPlayerID) {
                 try {
-                    if (game && game.hostID === '') {
-                        await gameSocket.postGame(game);
+                    try {
+                        await gameSocket.fetchGame(gameID)
+                    } catch {
+                        if (game) await gameSocket.postGame(game);
                     }
                     await gameSocket.joinGame(gameID, localPlayerID)
                 } catch (error) {
