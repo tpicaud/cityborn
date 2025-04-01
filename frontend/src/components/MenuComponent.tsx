@@ -76,8 +76,11 @@ export default function MenuComponent() {
         try {
             if (code) {
                 const gameExist = await gameExists(code)
-                gameExist ? router.push(`/game/multi/${code}`) : setJoinErrorMessage('La partie est introuvable')
-
+                if (gameExist) {
+                    router.push(`/game/multi/${code}`)
+                } else {
+                    setJoinErrorMessage('La partie est introuvable')
+                }
             } else {
                 setJoinErrorMessage('Veuillez entrer un code');
             }
@@ -120,6 +123,7 @@ export default function MenuComponent() {
                                 setLoadingJoin(true);
                                 await handleJoin();
                                 setLoadingJoin(false);
+                                console.log(loadingJoin)
                             }}
                             disabled={!code}
                         >
