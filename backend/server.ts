@@ -165,6 +165,7 @@ io.on('connection', (socket) => {
             }
 
             const game = await reconnect(socket, gameID, playerID);
+            playerSockets.set(socket.id, { playerID, gameID });
 
             console.log(`Reconnexion de ${playerID} réussie`)
             callback?.({ success: true, game: game });
