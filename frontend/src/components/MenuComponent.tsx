@@ -25,6 +25,7 @@ export default function MenuComponent() {
     const [categories, setCategories] = useState<string[]>([Categories.TOUTES]);
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
+    const [loadingJoin, setLoadingJoin] = useState(false);
 
 
     const handleCategories = (event: SelectChangeEvent<string[]>) => {
@@ -64,7 +65,7 @@ export default function MenuComponent() {
                     resolve(false);
                     socket.disconnect();
                 });
-        
+
                 setTimeout(() => {
                     resolve(false);
                     socket.disconnect();
@@ -72,11 +73,18 @@ export default function MenuComponent() {
             });
         };
 
-        if (code && await gameExists(code)) {
-            router.push(`/game/multi/${code}`);
-        } else {
-            setJoinErrorMessage("La partie est introuvable")
+        try {
+            if (code) {
+                const gameExist = await gameExists(code)
+                gameExist ? router.push(`/game/multi/${code}`) : setJoinErrorMessage('La partie est introuvable')
+
+            } else {
+                setJoinErrorMessage('Veuillez entrer un code');
+            }
+        } catch {
+            setJoinErrorMessage("Partie introuvable");
         }
+
     }
 
     return (
@@ -108,7 +116,11 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
-                            onClick={() => handleJoin()}
+                            onClick={async () => {
+                                setLoadingJoin(true);
+                                await handleJoin();
+                                setLoadingJoin(false);
+                            }}
                             disabled={!code}
                         >
                             Rejoindre

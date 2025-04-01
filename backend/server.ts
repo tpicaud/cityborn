@@ -40,6 +40,7 @@ io.on('connection', (socket) => {
             }
             callback?.({ success: true, game: game });
         } catch (error) {
+            console.log(error)
             callback?.({ success: false });
         }
     });
