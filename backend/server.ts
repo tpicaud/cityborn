@@ -3,6 +3,9 @@ import http from "http";
 import express from "express";
 import { disconnectPlayer, endGame, handleGuess, handleNextRound, joinGame, postGame, reconnect, startGame } from "./gameFunctions.ts";
 import { getGame } from "./gamesStore.ts";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
@@ -12,7 +15,7 @@ const playerSockets = new Map();
 // Créer une instance de Socket.IO et l'attacher au serveur HTTP
 export const io = new SocketIOServer(server, {
     cors: {
-        origin: 'https://cityborn.vercel.app',
+        origin: process.env.CORS_ORIGIN,
         methods: ['GET', 'POST'],
     }
 });
@@ -154,13 +157,15 @@ io.on('connection', (socket) => {
 
     // Gestion de la reconnexion d’un joueur avant la fin du timeout
     socket.on("reconnect_player", async (gameID, playerID, callback) => {
-        console.log('try reconnecting player')
+        console.log(`Reconnexion du joueur ${playerID}...`)
         try {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
 
             const game = await reconnect(socket, gameID, playerID);
+
+            console.log(`Reconnexion de ${playerID} réussie`)
             callback?.({ success: true, game: game });
         } catch (error) {
             console.error("Erreur lors du passage au tour suivant :", error);
@@ -178,7 +183,7 @@ io.on('connection', (socket) => {
 
     // Événement pour déconnexion
     socket.on('disconnect', () => {
-        console.log('socket disconnected: ', socket.id)
+        console.log(`socket ${socket.id} déconnecté`);
         try {
             if (playerSockets.has(socket.id)) {
 
@@ -191,7 +196,6 @@ io.on('connection', (socket) => {
                 // Retirer le socket du joueur
                 socket.leave(gameID)
                 playerSockets.delete(socket.id);
-                console.log(`Socket ${socket.id} déconnecté`);
             }
         } catch (error) {
             console.error(`Erreur lors de la déconnexion de ${socket.id}`, error)
