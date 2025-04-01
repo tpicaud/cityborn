@@ -33,7 +33,7 @@ export default function MultiGamePage() {
                 }
             }
         }
-            fetchGame(gameID);
+        fetchGame(gameID);
     }, [gameSocket.isConnected])
 
 
