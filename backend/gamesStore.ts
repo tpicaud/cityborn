@@ -2,7 +2,19 @@
 let games: any[] = [];
 
 // Seuil d'inactivité d'une partie
-const INACTIVITY_LIMIT = 10 * 60 * 1000; // 5 minutes en millisecondes
+const INACTIVITY_LIMIT = 1 * 60 * 1000; // 5 minutes en millisecondes
+
+// Nettoyage des parties inactives
+setInterval(() => {
+    const now = Date.now();
+    const removedGames = games.filter(game => now - game.lastActivity >= INACTIVITY_LIMIT);
+    games = games.filter(game => now - game.lastActivity < INACTIVITY_LIMIT);
+    
+    if (removedGames.length > 0) {
+        console.log('Removed inactive games:', removedGames.map(game => game.id));
+    }
+    console.log('Current active games:', games.length);
+}, 60 * 1000); // Vérification toutes les minutes
 
 
 // Ajouter une partie
@@ -33,10 +45,3 @@ export function updateGame(updatedGame: any) {
 export function getAllGames() {
     return games;
 }
-
-
-// Nettoyage des parties inactives
-setInterval(() => {
-    const now = Date.now();
-    games = games.filter(game => now - game.lastActivity < INACTIVITY_LIMIT);
-}, 60 * 1000); // Vérification toutes les minutes
