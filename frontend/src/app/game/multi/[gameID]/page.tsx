@@ -7,7 +7,7 @@ import { GameStatus } from '@/enums/GameStatus';
 import { useMultiGame } from '@/hooks/useMultiGame';
 import { GameComponentProps } from '@/types/GameComponentProps';
 import { getGameResult } from '@/utils/getGameResult';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { LobbyComponent } from '@/components/game/LobbyComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
@@ -20,31 +20,37 @@ export default function MultiGamePage() {
     const { gameID } = useParams<{ gameID: string }>();
     const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
     const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
+    const [errorMessage, setErrorMessage] = useState<string>()
 
     useEffect(() => {
         const fetchGame = async (gameID: string): Promise<void> => {
-            if (gameSocket.isInitialized) {
+            if (gameSocket.isConnected && !game) {
                 try {
                     await gameSocket.fetchGame(gameID)
                 } catch (error) {
-                    console.error(`Erreur lors de la récupération de la partie: ${error}`);
+                    console.log(`Erreur lors de la récupération de la partie: ${error}`);
+                    setErrorMessage('Erreur lors du chergement de la partie')
                 }
             }
         }
         fetchGame(gameID);
-    }, [gameSocket.isInitialized])
+    }, [gameSocket.isConnected])
+
 
     useEffect(() => {
         const setupGame = async () => {
             if (localPlayerID) {
                 try {
-                    if (game && game.hostID === '') {
-                        await gameSocket.postGame(game);
+                    try {
+                        await gameSocket.fetchGame(gameID)
+                    } catch {
+                        if (game) await gameSocket.postGame(game);
                     }
                     await gameSocket.joinGame(gameID, localPlayerID)
                 } catch (error) {
                     setLocalPlayerID(null)
                     console.error(`Erreur lors de la connexion à la partie: ${error}`);
+                    setErrorMessage('Erreur lors de la connexion à la partie')
                 }
             }
         }
@@ -53,6 +59,7 @@ export default function MultiGamePage() {
 
     useEffect(() => {
         if (gameSocket.gameUpdate) {
+            console.log("Game updated", gameSocket.gameUpdate);
             setGame(gameSocket.gameUpdate);
         }
     }, [gameSocket.gameUpdate])
@@ -69,8 +76,12 @@ export default function MultiGamePage() {
         }
     };
 
+    if (errorMessage) {
+        return <div>{errorMessage}</div>
+    }
+
     if (!game) {
-        return <LoadingComponent message='Connexion à la partie' />
+        return <LoadingComponent message='Chargement de la partie' />
     }
 
     if (!localPlayerID) {
@@ -79,6 +90,14 @@ export default function MultiGamePage() {
                 <DialogInput message='Entrez votre pseudo' handleClick={handlePlay} label='Votre pseudo' />
             </div>
         );
+    }
+
+    if (!game && localPlayerID) {
+        return <LoadingComponent message='Connexion à la partie' />
+    }
+
+    if (!game) {
+        return <div>Erreur lors de la récupération de la partie</div>
     }
 
     const gameComponentProps: GameComponentProps = {

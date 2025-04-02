@@ -8,57 +8,69 @@ import { io, Socket } from "socket.io-client";
 export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [gameUpdate, setGameUpdate] = useState<Game>();
-    const [isInitialized, setIsInitialized] = useState(false)
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        const socketInstance = connectSocket();
 
-        return () => {
-            socketInstance?.off("updatedGame");
-            socketInstance?.disconnect(); // Nettoyage lors de la déconnexion du composant
-        };
-    }, [gameId]);
+        if (isConnected) return;
 
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
-                console.log("Onglet actif, tentative de reconnexion...");
-                connectSocket();
-            } else {
-                socket?.disconnect()
+        const reconnectInterval = setInterval(() => {
+            const newSocket = connectSocket();
+
+            // Cleanup du timeout en cas de démontage du composant ou de reconnexion réussie
+            return () => {
+                clearInterval(reconnectInterval);
+                newSocket.off("updatedGame");
+                newSocket.off("connect");
+                newSocket.off("disconnect");
+                newSocket.disconnect();
             }
-        };
+        }, 2000); // Attendre 3 secondes avant de réessayer
 
-        document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => {
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            clearInterval(reconnectInterval); // S'assurer de nettoyer l'intervalle
         };
-    }, [])
+    }, [isConnected]);
 
+    // Reconnexion à la partie à chaque nouveau socket
     useEffect(() => {
-
-        const reconnectToGame = async () => {
-            if (socket && localPlayerID) {
-                await reconnect(gameId, localPlayerID)
+        if (localPlayerID && isConnected) {
+            try {
+                console.log('🔄 Tentative de reconnexion à la partie')
+                reconnectToGame()
+            } catch (error) {
+                throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
             }
         }
-        reconnectToGame()
-    }, [socket]);
+    }, [socket])
 
-
-    // Connexion au serveur
+    // Fonction de connexion socket
     const connectSocket = () => {
-        if (socket) return; // Évite les doubles connexions
-
-        const socketInstance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
-            transports: ["websocket"],
+        const newSocket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+            transports: ['websocket'],
+            reconnection: false,
         });
 
-        setSocket(socketInstance);
-        setIsInitialized(true);
 
-        socketInstance.on("updatedGame", (updatedGame) => {
-            console.log("updatedGame", updatedGame);
+        newSocket.on("connect", () => {
+            console.log("Socket connecté au serveur !");
+            setIsConnected(true);
+            setSocket(newSocket);
+
+            // setTimeout(() => {
+            //     if (newSocket.io.engine) {
+            //         // close the low-level connection and trigger a reconnection
+            //         newSocket.io.engine.close();
+            //     }
+            // }, 10000);
+        });
+
+        newSocket.on("disconnect", () => {
+            console.log("Socket déconnecté !");
+            setIsConnected(false);
+        });
+
+        newSocket.on("updatedGame", (updatedGame) => {
             try {
                 setGameUpdate(updatedGame);
             } catch {
@@ -66,21 +78,20 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             }
         });
 
-        socketInstance.on("connect", () => console.log("WebSocket connecté"));
-        socketInstance.on("disconnect", () => console.log("WebSocket déconnecté"));
-
-        return socketInstance;
+        return newSocket;
     };
 
-    // Recconexion
-    const reconnect = (gameID: string, playerID: string): Promise<void> => {
+    // Fetch la partie
+    const reconnectToGame = (): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
                 reject(new Error("Socket non initialisée"));
                 return;
             }
 
-            socket.emit("reconnect", gameID, playerID, (response: { success: boolean, game?: Game }) => {
+            const playerID = localPlayerID;
+            const gameID = gameId;
+            socket.emit('reconnect_player', gameID, playerID, (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
                     setGameUpdate(response.game)
@@ -224,11 +235,11 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
         });
     }
 
-    return { isInitialized, gameUpdate, fetchGame, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
+    return { isConnected, gameUpdate, fetchGame, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
 };
 
 export type GameSocket = {
-    isInitialized: boolean;
+    isConnected: boolean;
     gameUpdate: Game | undefined;
     fetchGame: (gameID: string) => Promise<void>;
     postGame: (game: Game) => Promise<void>;

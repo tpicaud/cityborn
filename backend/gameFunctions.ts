@@ -218,8 +218,8 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
 
             const newResult = {
                 guessObject: game.currentRound.guessObject,
-                distance: game.currentRound.playersGuesses[player.id].distance,
-                points: game.currentRound.playersGuesses[player.id].points
+                distance: player.connected ? game.currentRound.playersGuesses[player.id].distance : -1,
+                points: player.connected ? game.currentRound.playersGuesses[player.id].points : 0
             }
 
             return {
@@ -288,7 +288,7 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
     }
 }
 
-export function reconnect(socket: Socket, gameID: string, playerID: string) {
+export async function reconnect(socket: Socket, gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
         const game = getGame(gameID)
@@ -301,18 +301,26 @@ export function reconnect(socket: Socket, gameID: string, playerID: string) {
             throw new Error("Joueur introuvable dans la partie")
         }
 
-        game.players.map(
+        if (game.hostID === '') {
+            game.hostID = playerID
+        } 
+        game.players = game.players.map(
             player => player.id === playerID ?
                 {
                     ...player,
                     connected: true
-                } 
+                }
                 : player
         )
 
-        // To change later
-        return game;
+        await socket.join(gameID)
 
+        // Update game and send to the room
+        updateGame(game);
+        const updatedGame = getGame(gameID)
+        socket.to(gameID).emit('updatedGame', updatedGame);
+
+        return updatedGame;
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
@@ -328,43 +336,34 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
 
         if (!game) return;
 
-        switch (game.status) {
-            case 'IN_LOBBY':
-                game.players = game.players.filter((p: any) => p.id !== playerID);
-                break;
+        // Changer l'état du joueur
+        game.players = game.players.map((p: any) =>
+            p.id === playerID ? { ...p, connected: false } : p
+        );
 
-            case 'IN_GAME':
-                // Changer l'état du joueur
-                game.players = game.players.map((p: any) =>
-                    p.id === playerID ? { ...p, connected: false } : p
-                );
-
-                // Update la partie si nécessaire
-                if (game.currentRound) {
-                    switch (game.currentRound) {
-                        case 'GUESSING':
-                            // Vérifier si tout le monde à guess
-                            const connectedPlayers = game.players.filter((player: any) => player.connected);
-                            if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
-                                game.currentRound.status = 'SHOWING_RESULTS '
-                            }
-                            break;
-                        case 'RESULTS':
-                            break;
-                    }
-                }
-                break;
-
-            case 'IN_RESULTS':
-                //game.players = game.players.filter((p: any) => p.id !== playerID);
-                break;
-
-        }
-
-        // Change host if necessary
+        // Changer le host
         if (playerID === game.hostID) {
             const connectedPlayers = game.players.filter((player: any) => player.connected);
-            game.hostID = connectedPlayers[0];
+            if (connectedPlayers.length > 0) {
+                game.hostID = connectedPlayers[0].id;
+            } else {
+                game.hostID = '';
+            }
+        }
+
+        // Update l'état de la game si nécessaire
+        if (game.status === 'IN_GAME' && game.currentRound) {
+            switch (game.currentRound) {
+                case 'GUESSING':
+                    // Vérifier si tout le monde à guess
+                    const connectedPlayers = game.players.filter((player: any) => player.connected);
+                    if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
+                        game.currentRound.status = 'SHOWING_RESULTS '
+                    }
+                    break;
+                case 'RESULTS':
+                    break;
+            }
         }
 
         // Update Game and send it
