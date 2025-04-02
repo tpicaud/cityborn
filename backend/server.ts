@@ -26,7 +26,7 @@ io.on('connection', (socket) => {
     if (socket.recovered) {
         console.log(`Socket ${socket.id} has recovered`);
     }
-    console.log('socket connected: ', socket.id)
+    console.log('socket connected: ', socket.id);
 
     // Récupérer une partie
     socket.on('fetchGame', async (gameID, callback) => {
@@ -36,11 +36,11 @@ io.on('connection', (socket) => {
             }
             const game = getGame(gameID);
             if (!game) {
-                throw new Error("Partie introuvable")
+                throw new Error(`Partie ${gameID} introuvable`)
             }
             callback?.({ success: true, game: game });
         } catch (error) {
-            console.log(error)
+            console.log(error.message)
             callback?.({ success: false });
         }
     });
