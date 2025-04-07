@@ -7,10 +7,11 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
-    "dev": "ts-node server.ts",
-    "start": "ts-node server.ts"
+    "dev": "node --loader ts-node/esm -r dotenv/config server.ts",
+    "start": "node --loader ts-node/esm -r dotenv/config server.ts"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
   },

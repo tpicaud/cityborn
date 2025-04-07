@@ -9,40 +9,68 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [gameUpdate, setGameUpdate] = useState<Game>();
     const [isConnected, setIsConnected] = useState(false);
-    //const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
+
+        if (isConnected) return;
+
+        const reconnectInterval = setInterval(() => {
+            const newSocket = connectSocket();
+
+            // Cleanup du timeout en cas de démontage du composant ou de reconnexion réussie
+            return () => {
+                clearInterval(reconnectInterval);
+                newSocket.off("updatedGame");
+                newSocket.off("connect");
+                newSocket.off("disconnect");
+                newSocket.disconnect();
+            }
+        }, 2000); // Attendre 3 secondes avant de réessayer
+
+        return () => {
+            clearInterval(reconnectInterval); // S'assurer de nettoyer l'intervalle
+        };
+    }, [isConnected]);
+
+    // Reconnexion à la partie à chaque nouveau socket
+    useEffect(() => {
+        if (localPlayerID && isConnected) {
+            try {
+                console.log('🔄 Tentative de reconnexion à la partie')
+                reconnectToGame()
+            } catch (error) {
+                throw new Error(`Erreur lors de la reconnexion à la partie: ${error}`)
+            }
+        }
+    }, [socket])
+
+    // Fonction de connexion socket
+    const connectSocket = () => {
         const newSocket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
-            reconnection: true, // Assurez-vous que la reconnexion est activée
-            reconnectionAttempts: Infinity, // Nombre infini de tentatives de reconnexion
-            reconnectionDelay: 1000, // Temps entre les tentatives (en ms)
-            timeout: 10000, // Temps d'attente maximal pour une tentative de connexion
+            transports: ['websocket'],
+            reconnection: false,
         });
 
-        setSocket(newSocket)
 
-        newSocket.on("connect", async () => {
-            console.log("Socket connected!");
+        newSocket.on("connect", () => {
+            console.log("Socket connecté au serveur !");
             setIsConnected(true);
+            setSocket(newSocket);
 
-            if (localPlayerID) {
-                try {
-                    await reconnectToGame();
-                } catch (error) {
-                    console.error(`Erreur lors de la reconnexion à la partie: ${error}`);
-                    setIsConnected(false)
-                }
-            } else {
-            }
+            // setTimeout(() => {
+            //     if (newSocket.io.engine) {
+            //         // close the low-level connection and trigger a reconnection
+            //         newSocket.io.engine.close();
+            //     }
+            // }, 10000);
         });
 
         newSocket.on("disconnect", () => {
-            console.log("Socket disconnected!");
-            setIsConnected(false); // L'utilisateur est déconnecté
+            console.log("Socket déconnecté !");
+            setIsConnected(false);
         });
 
         newSocket.on("updatedGame", (updatedGame) => {
-            console.log("updatedGame", updatedGame);
             try {
                 setGameUpdate(updatedGame);
             } catch {
@@ -50,14 +78,8 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             }
         });
 
-
-        return () => {
-            newSocket.off("updatedGame");
-            newSocket.off("connect");
-            newSocket.off("disconnect");
-            newSocket.disconnect();
-        };
-    }, [gameId]);
+        return newSocket;
+    };
 
     // Fetch la partie
     const reconnectToGame = (): Promise<void> => {
