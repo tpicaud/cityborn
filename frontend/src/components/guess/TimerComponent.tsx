@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
 
-interface CountdownComponentProps {
+interface TimerComponentProps {
   totalTime: number;
   endMessage: string;
   setTimerEnded: Dispatch<SetStateAction<boolean>>;
 }
 
-const CountdownComponent: React.FC<CountdownComponentProps> = ({ totalTime, endMessage, setTimerEnded }) => {
+const TimerComponent: React.FC<TimerComponentProps> = ({ totalTime, endMessage, setTimerEnded }) => {
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const startTime = useRef(Date.now());
 
@@ -52,4 +52,4 @@ const CountdownComponent: React.FC<CountdownComponentProps> = ({ totalTime, endM
   );
 };
 
-export default CountdownComponent;
+export default TimerComponent;

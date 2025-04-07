@@ -4,9 +4,10 @@ import OverlayComponent from "@/components/guess/OverlayComponent";
 import useGuess from "@/hooks/useGuess";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import CountdownBeforeGameComponent from "./CountdownBeforeGameComponent";
+import RoundCountdownComponent from "./RoundCountdown";
 import Guess from "@/types/Guess";
 import Game from "@/types/Game";
+import { RoundStatus } from "@/enums/RoundStatus";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 
@@ -25,7 +26,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
-    const [isCountdownBeforeGameFinished, setIsCountdownBeforeGameFinished] = useState(false);
+    const [isRoundCountdownFinished, setIsRoundCountdownFinished] = useState(false);
 
     // Map properties
     const mapProps = {
@@ -41,6 +42,12 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
         resetPreGuess()
     }, [game.currentRound?.guessObject.name])
 
+    useEffect(() => {
+        if (game.currentRound?.status === RoundStatus.GUESSING) {
+            setIsRoundCountdownFinished(false)
+        }
+    }, [game.currentRound?.status])
+
     return (
         <div>
             <div className="fixed w-full h-full z-0">
@@ -50,11 +57,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                 />
             </div>
 
-            {!isCountdownBeforeGameFinished && (
-                <CountdownBeforeGameComponent onCountdownEnd={() => setIsCountdownBeforeGameFinished(true)} />
+            {!isRoundCountdownFinished && (
+                <RoundCountdownComponent onCountdownEnd={() => setIsRoundCountdownFinished(true)} />
             )}
 
-            {isCountdownBeforeGameFinished && (
+            {isRoundCountdownFinished && (
                 <div className="z-10">
                     <OverlayComponent
                         localPlayerID={localPlayerID}
