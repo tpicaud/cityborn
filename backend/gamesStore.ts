@@ -2,7 +2,7 @@
 let games: any[] = [];
 
 // Seuil d'inactivité d'une partie
-const INACTIVITY_LIMIT = 10 * 60 * 1000; // 5 minutes en millisecondes
+const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes en millisecondes
 
 // Nettoyage des parties inactives
 setInterval(() => {
@@ -11,7 +11,7 @@ setInterval(() => {
     games = games.filter(game => now - game.lastActivity < INACTIVITY_LIMIT);
     console.log('Games actives: ', games.length)
 }, 60 * 1000); // Vérification toutes les minutes
-
+  
 
 // Ajouter une partie
 export function addGame(game: any) {
