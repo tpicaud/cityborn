@@ -41,3 +41,6 @@
 | 17/03/2025 | 5h | Connecter les web sockets à l'interface |
 | 18/03/2025 | 6h | Ajout de la configuration de la partie dans le menu |
 | 21/03/2025 | 7h | Push du mode multijoueur en prod |
+| 23/03/2025 | 6h | Tentative correction bug multi |
+| 25/03/2025 | 6h | Tentative correction bug multi |
+| 01/03/2025 | 6h | Tentative correction bug multi |

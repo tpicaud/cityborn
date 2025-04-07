@@ -6,10 +6,14 @@ const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes en millisecondes
 
 // Nettoyage des parties inactives
 setInterval(() => {
-    console.log('Suppression des games inactives...')
     const now = Date.now();
+    const removedGames = games.filter(game => now - game.lastActivity >= INACTIVITY_LIMIT);
     games = games.filter(game => now - game.lastActivity < INACTIVITY_LIMIT);
-    console.log('Games actives: ', games.length)
+    
+    if (removedGames.length > 0) {
+        console.log('Removed inactive games:', removedGames.map(game => game.id));
+    }
+    console.log('Current active games:', games.length);
 }, 60 * 1000); // Vérification toutes les minutes
   
 

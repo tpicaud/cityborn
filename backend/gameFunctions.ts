@@ -301,7 +301,10 @@ export async function reconnect(socket: Socket, gameID: string, playerID: string
             throw new Error("Joueur introuvable dans la partie")
         }
 
-        game.players.map(
+        if (game.hostID === '') {
+            game.hostID = playerID
+        } 
+        game.players = game.players.map(
             player => player.id === playerID ?
                 {
                     ...player,
