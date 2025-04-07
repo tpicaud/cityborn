@@ -1,7 +1,7 @@
 import Guess from "@/types/Guess";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
-import CountdownComponent from "./CountdownComponent";
+import TimerComponent from "./TimerComponent";
 import Round from "@/types/Round";
 import { RoundStatus } from "@/enums/RoundStatus";
 import Game from "@/types/Game";
@@ -102,7 +102,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
             <GuessObjectComponent guessObject={game.currentRound!.guessObject} />
             <div className="absolute w-[30%] min-w-36 m-4">
                 {(game.currentRound!.status === RoundStatus.GUESSING) && (
-                    <CountdownComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
+                    <TimerComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">

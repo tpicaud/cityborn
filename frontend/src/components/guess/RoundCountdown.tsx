@@ -1,12 +1,12 @@
 import { Backdrop, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 
-interface CountdownComponentProps {
+interface TimerComponentProps {
     onCountdownEnd: () => void;
     initialCount?: number; // Default value 3
 }
 
-const CountdownComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd, initialCount = 3 }) => {
+const TimerComponent: React.FC<TimerComponentProps> = ({ onCountdownEnd, initialCount = 3 }) => {
     const [countdown, setCountdown] = useState(initialCount);
 
     useEffect(() => {
@@ -34,4 +34,4 @@ const CountdownComponent: React.FC<CountdownComponentProps> = ({ onCountdownEnd,
     );
 };
 
-export default CountdownComponent;
+export default TimerComponent;
