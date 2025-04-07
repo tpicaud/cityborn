@@ -1,5 +1,5 @@
 import Guess from "@/types/Guess";
-import { Box, Button, Chip } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
 import Round from "@/types/Round";
