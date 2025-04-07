@@ -1,5 +1,5 @@
 import Guess from "@/types/Guess";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Chip } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
 import Round from "@/types/Round";
@@ -47,10 +47,26 @@ function GuessResult({
     return (currentRound.playersGuesses && currentRound.status === RoundStatus.SHOWING_RESULTS) && (
         <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
             {/* Box for points */}
-            <Box className="p-2 text-xl md:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm w-36">
+            <Box className="flex flex-col py-2 px-4 text-xl md:text-xl lg:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm">
                 <p><b>{currentRound.playersGuesses[localPlayerID].points}</b> pts</p>
+                {Object.keys(currentRound.playersGuesses).length > 1 && (
+                    <>
+                        <hr className="my-1 border-green-600 w-[70%] self-center" />
+                        <div className="flex flex-wrap justify-center mt-2 gap-1 text-sm w-full">
+                            {Object.entries(currentRound.playersGuesses).map(([playerID, guess]) => {
+                                if (playerID === localPlayerID) return null; // skip self
+
+                                return (
+                                    <div key={playerID} className="px-1 text-green-700 text-xs md:text-base ">
+                                        <b>{playerID}</b>: {guess.points}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </Box>
-            <Box className="p-2 text-xs md:text-base text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
+            <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
                 <p><b>{currentRound.guessObject.name}</b> est né à <b>{currentRound.guessObject.answer.place_name}</b></p>
                 {currentRound.playersGuesses[localPlayerID].distance !== -1 ? (
                     currentRound.playersGuesses[localPlayerID].distance === 0 ? (
@@ -106,15 +122,22 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-                <GuessResult currentRound={game.currentRound!} localPlayerID={localPlayerID} />
-                <div className="relative w-full flex justify-center items-center">
-                    <GuessButton
-                        preGuess={preGuess}
-                        disabled={
-                            (!preGuess || game.currentRound!.status !== RoundStatus.GUESSING) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
-                        }
-                        handleGuess={handleGuess} />
-                </div>
+
+                {game.currentRound!.status === RoundStatus.GUESSING && (
+                    <div className="relative w-full flex justify-center items-center">
+                        <GuessButton
+                            preGuess={preGuess}
+                            disabled={
+                                (!preGuess) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
+                            }
+                            handleGuess={handleGuess} />
+                    </div>
+                )}
+
+                {game.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
+                    <GuessResult currentRound={game.currentRound!} localPlayerID={localPlayerID} />
+                )}
+
             </div>
         </div>
     );

@@ -2,7 +2,7 @@
 
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Button, Chip } from "@mui/material";
 import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";
@@ -25,7 +25,7 @@ export const GameComponent = ({ props }: { props: GameComponentProps }) => {
             <Button
                 variant="contained"
                 color="error"
-                disabled={ game.hostID !== localPlayerID }
+                disabled={game.hostID !== localPlayerID}
                 onClick={() => {
                     handleNextRound();
                 }}
@@ -55,13 +55,20 @@ export const GameComponent = ({ props }: { props: GameComponentProps }) => {
                 handleGuess={handleGuess}
                 handleNextRound={handleNextRound}
             />
-            <div>
-                {game.currentRound.status === RoundStatus.SHOWING_RESULTS && (
-                    <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
-                        <NextButton />
+            {game.currentRound && (
+                <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
+                    <div className="flex flex-col gap-2">
+                        {game.currentRound.status === RoundStatus.SHOWING_RESULTS && (
+                            <NextButton />
+                        )}
+                        <div className='bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold'>
+                            {game.guessObjects.findIndex(obj => obj.name === game.currentRound?.guessObject.name) + 1}
+                            /
+                            {game.guessObjects.length}
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}*
         </div>
     );
 };
