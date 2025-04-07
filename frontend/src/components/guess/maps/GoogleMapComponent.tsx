@@ -124,14 +124,17 @@ const OtherPlayersGuesses: React.FC<{ currentRound: Round, localPlayerID: string
     <>
       {guesses.map((guess, index) => (
         (guess.distance !== -1) &&
-        <AdvancedMarker
-          key={index}
-          position={guess.coordinates}
-          anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
-        >
-          <img src={'/img/player.png'} alt="players Marker" width={28} height={28} />
-        </AdvancedMarker>
+        <>
+          <AdvancedMarker
+            key={index}
+            position={guess.coordinates}
+            anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
+          >
+            <img src={'/img/player.png'} alt="players Marker" width={28} height={28} />
+          </AdvancedMarker>
 
+        <LineBetween guess={guess.coordinates} answer={getCenterOfGuessObject(currentRound.guessObject)} isLocalPlayer={false}  />
+        </>
       ))}
     </>
   );
@@ -148,7 +151,7 @@ const LocalPlayerGuess: React.FC<{ currentRound: Round, localPlayerID: string }>
           <AdvancedMarker position={guess.coordinates} />
           <ZoomToBounds answer={getCenterOfGuessObject(currentRound.guessObject)} guess={guess.coordinates} />
           {!guess.win && (
-            <LineBetween answer={getCenterOfGuessObject(currentRound.guessObject)} guess={guess.coordinates} />
+              <LineBetween  guess={guess.coordinates} answer={getCenterOfGuessObject(currentRound.guessObject)} isLocalPlayer={true} />
           )}
         </>
       ) : (
@@ -185,7 +188,7 @@ const ZoomToBounds: React.FC<{ answer: Coord, guess?: Coord, }> = ({ answer, gue
   return null; // No visual render, just zooming to bounds
 };
 
-const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer }) => {
+const LineBetween: React.FC<{ guess: Coord, answer: Coord, isLocalPlayer: boolean }> = ({ guess, answer, isLocalPlayer }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -196,12 +199,13 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord }> = ({ guess, answer 
         { lat: answer.lat, lng: answer.lng },
       ],
       geodesic: true,
-      strokeColor: '#0000FF',
+      strokeColor: isLocalPlayer ? '#0000FF' : '#616161',
       strokeOpacity: 0,
       icons: [{
         icon: {
           path: 'M 0,-1 0,1',
           strokeOpacity: 1,
+          strokeWeight: isLocalPlayer ? 5 : 2,
           scale: 4
         },
         offset: '20',
@@ -291,34 +295,6 @@ const hasWin = (point: google.maps.LatLng, guessObject: GuessObject): boolean =>
   } catch {
     return false
   }
-
-
-  // try {
-  //   const areas = guessObject.answer.coordinates.value.boundaries.geometry.coordinates;
-
-  //   for (const area of areas) {
-
-  //     // Transform coordinates from GeoJSON to Google Maps LatLng format
-  //     let polygonPath;
-  //     if (areas.length !== 1) {
-  //       polygonPath = area[0].map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
-  //     } else {
-  //       polygonPath = area.map(([lng, lat]: [number, number]) => new google.maps.LatLng(lat, lng));
-
-  //     }
-
-  //     const polygon = new google.maps.Polygon({
-  //       paths: polygonPath
-  //     });
-
-  //     if (google.maps.geometry.poly.containsLocation(guessedLatLng, polygon)) {
-  //       return true;
-  //     }
-  //   }
-  //   return false
-  // } catch {
-  //   return false;
-  // }
 }
 
 const isGeoJSON = (guessObject: GuessObject): boolean => {
