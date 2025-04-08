@@ -1,13 +1,29 @@
 import { Socket } from "socket.io";
-import { addGame, getAllGames, getGame, removeGame, updateGame } from "./gamesStore.ts";
+import { addGame, getGame, removeGame, updateGame } from "./redisGameStore.ts";
+import { io } from "./server.ts";
 
-export async function postGame(socket: Socket, game: any) {
+export async function fetchGame(gameID: string) {
     try {
-        if (getGame(game.id)) {
+        const game = await getGame(gameID);
+        if (!game) {
+            throw new Error(`Partie ${gameID} introuvable`)
+        }
+        return game
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Impossible récupérer la partie ${gameID}: ${error.message}`);
+        } else {
+            throw new Error(`Erreur lors de la récupération de la partie ${gameID}: ${error}`);
+        }
+    }
+}
+
+export async function postGame(game: any) {
+    try {
+        if (await getGame(game.id)) {
             throw new Error(`La partie ${game.id} existe déjà.`);
         }
-        addGame(game)
-        console.log(`Game ${game.id} posted. Current games playing: ${getAllGames().length}`)
+        await addGame(game);
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible créer la partie ${game.id}: ${error.message}`);
@@ -21,7 +37,7 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
     try {
 
         // Récupération du jeu dans la base de données
-        const game: any | undefined = getGame(gameID)
+        const game: any | undefined = await getGame(gameID)
 
         if (!game) {
             throw new Error("Partie introuvable.");
@@ -48,12 +64,11 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
         game.players.push(newPlayer)
 
         // Update game and send to the room
-        updateGame(game)
-        const updatedGame = getGame(gameID);
+        await updateGame(game)
         await socket.join(gameID)
-        socket.to(gameID).emit('updatedGame', updatedGame);
+        io.to(gameID).emit('game:update', game);
 
-        return updatedGame;
+        return game;
 
     } catch (error) {
         if (error instanceof Error) {
@@ -66,7 +81,7 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
 
 export async function startGame(socket: Socket, gameID: string, playerID: string) {
     try {
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         // Check si la partie existe
         if (!game) {
@@ -107,11 +122,10 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
         game.currentRound = firstRound;
 
         // Update game and send to the room
-        updateGame(game)
-        const updatedGame = getGame(gameID)
-        socket.to(gameID).emit('updatedGame', updatedGame);
+        await updateGame(game)
+        io.to(gameID).emit('game:update', game);
 
-        return updatedGame;
+        return game;
 
     } catch (error) {
         if (error instanceof Error) {
@@ -122,11 +136,11 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
     }
 }
 
-export function handleGuess(socket: Socket, gameID: string, playerID: string, guess: any) {
+export async function handleGuess(socket: Socket, gameID: string, playerID: string, guess: any) {
     try {
 
         // Récupération du jeu dans la base de données
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         // Check si la partie existe
         if (!game) {
@@ -164,15 +178,14 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
                 }
 
                 //update game
-                updateGame(game);
+                await updateGame(game);
             } catch {
                 throw new Error(`Erreur lors de la modification dans la base de données`)
             }
 
-            const updatedGame = getGame(gameID)
-            socket.to(gameID).emit('updatedGame', updatedGame);
+            io.to(gameID).emit('game:update', game);
 
-            return updatedGame;
+            return game;
         }
 
     } catch (error) {
@@ -184,10 +197,10 @@ export function handleGuess(socket: Socket, gameID: string, playerID: string, gu
     }
 }
 
-export function handleNextRound(socket: Socket, gameID: string, playerID: string) {
+export async function handleNextRound(socket: Socket, gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         if (!game) {
             throw new Error("Partie introuvable.");
@@ -244,12 +257,10 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
         }
 
         // Update game and send to the room
-        updateGame(game);
+        await updateGame(game);
+        io.to(gameID).emit('game:update', game);
 
-        const updatedGame = getGame(gameID)
-        socket.to(gameID).emit('updatedGame', updatedGame);
-
-        return updatedGame;
+        return game;
 
     } catch (error) {
         if (error instanceof Error) {
@@ -260,10 +271,10 @@ export function handleNextRound(socket: Socket, gameID: string, playerID: string
     }
 }
 
-export function endGame(socket: Socket, gameID: string, playerID: string) {
+export async function endGame(gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         if (!game) {
             throw new Error("Partie introuvable.");
@@ -274,7 +285,7 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
             throw new Error("Le joueur n'est pas le host de la partie.");
         }
 
-        removeGame(gameID);
+        await removeGame(gameID);
 
         // To change later
         return game;
@@ -291,7 +302,7 @@ export function endGame(socket: Socket, gameID: string, playerID: string) {
 export async function reconnect(socket: Socket, gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         if (!game) {
             throw new Error("Partie introuvable.");
@@ -316,11 +327,10 @@ export async function reconnect(socket: Socket, gameID: string, playerID: string
         await socket.join(gameID)
 
         // Update game and send to the room
-        updateGame(game);
-        const updatedGame = getGame(gameID)
-        socket.to(gameID).emit('updatedGame', updatedGame);
+        await updateGame(game);
+        io.to(gameID).emit('game:update', game);
 
-        return updatedGame;
+        return game;
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
@@ -330,9 +340,9 @@ export async function reconnect(socket: Socket, gameID: string, playerID: string
     }
 }
 
-export function disconnectPlayer(socket: Socket, playerID: string, gameID: string) {
+export async function disconnectPlayer(socket: Socket, playerID: string, gameID: string) {
     try {
-        const game = getGame(gameID)
+        const game = await getGame(gameID)
 
         if (!game) return;
 
@@ -367,9 +377,8 @@ export function disconnectPlayer(socket: Socket, playerID: string, gameID: strin
         }
 
         // Update Game and send it
-        updateGame(game);
-        const updatedGame = getGame(gameID);
-        socket.to(gameID).emit('updatedGame', updatedGame);
+        await updateGame(game);
+        io.to(gameID).emit('game:update', game);
     } catch (error) {
         throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
     }

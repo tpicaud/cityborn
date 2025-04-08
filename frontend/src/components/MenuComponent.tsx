@@ -56,7 +56,7 @@ export default function MenuComponent() {
                     transports: ['websocket']
                 });
 
-                socket.emit('fetchGame', gameID, (response: { success: boolean }) => {
+                socket.emit('game:fetch', gameID, (response: { success: boolean }) => {
                     resolve(response.success);
                     socket.disconnect()
                 });
