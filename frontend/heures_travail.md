@@ -43,4 +43,5 @@
 | 21/03/2025 | 7h | Push du mode multijoueur en prod |
 | 23/03/2025 | 6h | Tentative correction bug multi |
 | 25/03/2025 | 6h | Tentative correction bug multi |
-| 01/03/2025 | 6h | Tentative correction bug multi |
+| 01/04/2025 | 6h | Tentative correction bug multi |
+| 03/04/2025 | 5h | Correction des problème backend fly io |
