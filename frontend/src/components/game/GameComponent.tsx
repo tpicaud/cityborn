@@ -2,7 +2,7 @@
 
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
-import { Button, Chip } from "@mui/material";
+import { Button } from "@mui/material";
 import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { GameComponentProps } from "@/types/GameComponentProps";

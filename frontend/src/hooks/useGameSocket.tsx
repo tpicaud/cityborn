@@ -56,13 +56,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             console.log("Socket connecté au serveur !");
             setIsConnected(true);
             setSocket(newSocket);
-
-            // setTimeout(() => {
-            //     if (newSocket.io.engine) {
-            //         // close the low-level connection and trigger a reconnection
-            //         newSocket.io.engine.close();
-            //     }
-            // }, 10000);
         });
 
         newSocket.on("disconnect", () => {
@@ -70,7 +63,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             setIsConnected(false);
         });
 
-        newSocket.on("updatedGame", (updatedGame) => {
+        newSocket.on("game:update", (updatedGame) => {
             try {
                 setGameUpdate(updatedGame);
             } catch {
@@ -80,6 +73,29 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
         return newSocket;
     };
+
+    //////////////////////
+    /// Players events ///
+    //////////////////////
+
+    // Rejoindre la partie
+    const joinGame = (gameID: string, playerID: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            if (!socket) {
+                reject(new Error("Socket non initialisée"));
+                return;
+            }
+
+            socket.emit('player:join', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
+                if (response.success) {
+                    setGameUpdate(response.updatedGame)
+                    resolve();
+                } else {
+                    reject(new Error(response.message || "Erreur inconnue"));
+                }
+            });
+        });
+    }
 
     // Fetch la partie
     const reconnectToGame = (): Promise<void> => {
@@ -91,7 +107,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             const playerID = localPlayerID;
             const gameID = gameId;
-            socket.emit('reconnect_player', gameID, playerID, (response: { success: boolean, game?: Game }) => {
+            socket.emit('player:reconnect', gameID, playerID, (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
                     setGameUpdate(response.game)
@@ -103,6 +119,10 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
         });
     };
 
+    ////////////////////
+    /// Games events ///
+    ////////////////////
+
     // Fetch la partie
     const fetchGame = (gameID: string): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -111,7 +131,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('fetchGame', gameID, (response: { success: boolean, game?: Game }) => {
+            socket.emit('game:fetch', gameID, (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
                     setGameUpdate(response.game)
@@ -131,7 +151,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('postGame', game, (response: { success: boolean, message?: string }) => {
+            socket.emit('game:post', game, (response: { success: boolean, message?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -141,25 +161,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
         });
     };
 
-    // Rejoindre la partie
-    const joinGame = (gameID: string, playerID: string): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            if (!socket) {
-                reject(new Error("Socket non initialisée"));
-                return;
-            }
-
-            socket.emit('joinGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
-                if (response.success) {
-                    setGameUpdate(response.updatedGame)
-                    resolve();
-                } else {
-                    reject(new Error(response.message || "Erreur inconnue"));
-                }
-            });
-        });
-    }
-
     // Démarrer la partie
     const startGame = (gameID: string, playerID: string): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -168,7 +169,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('startGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
+            socket.emit('game:start', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
                     setGameUpdate(response.updatedGame)
                     resolve();
@@ -187,7 +188,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('handleGuess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
+            socket.emit('game:guess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
                     setGameUpdate(response.updatedGame)
                     resolve();
@@ -206,7 +207,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('handleNextRound', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
+            socket.emit('game:nextRound', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
                     setGameUpdate(response.updatedGame)
                     resolve();
@@ -225,7 +226,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('endGame', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
+            socket.emit('game:end', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
                     resolve();
                 } else {
