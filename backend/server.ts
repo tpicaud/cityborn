@@ -1,10 +1,10 @@
 import { Server as SocketIOServer } from "socket.io";
 import { disconnectPlayer, endGame, fetchGame, handleGuess, handleNextRound, joinGame, postGame, reconnect, startGame } from "./gameService.ts";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
 import http from "http";
 import express from "express";
 import dotenv from "dotenv";
+import Redis from "ioredis";
 
 dotenv.config();
 
@@ -21,12 +21,15 @@ export const io = new SocketIOServer(server, {
     }
 });
 
-// Redis clients (1 pub, 1 sub)
-const pubClient = createClient({ url: process.env.UPSTASH_REDIS_CONNECTION_URL });
-const subClient = pubClient.duplicate();
+// Redis instance
+export const redis = new Redis(process.env.UPSTASH_REDIS_URL!);
 
-await pubClient.connect();
-await subClient.connect();
+// Redis clients (1 pub, 1 sub)
+const pubClient = redis
+const subClient = redis.duplicate();
+
+//await pubClient.connect();
+//await subClient.connect();
 
 io.adapter(createAdapter(pubClient, subClient));
 
