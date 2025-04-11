@@ -84,6 +84,10 @@ export default function MultiGamePage() {
         return <LoadingComponent message='Chargement de la partie' />
     }
 
+    if (!gameSocket.isConnected) {
+        return <LoadingComponent message='Connexion au serveur' />
+    }
+
     if (!localPlayerID) {
         return (
             <div className="flex flex-row justify-center items-center mt-16">
