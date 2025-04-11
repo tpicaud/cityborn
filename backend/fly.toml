@@ -1,5 +1,4 @@
-
-# fly.toml app configuration file generated for cityborn-backend on 2025-04-07T16:34:00+02:00
+# fly.toml app configuration file generated for cityborn-backend on 2025-04-08T17:20:10+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,19 +8,16 @@ primary_region = 'cdg'
 
 [build]
 
-[env]
-  CORS_ORIGIN = 'https://cityborn.vercel.app'
-
 [http_service]
   internal_port = 3001
   force_https = true
-  auto_stop_machines = 'off'
+  auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
   processes = ['app']
 
 [[vm]]
   size = 'shared-cpu-1x'
 
-[deployment]
-  machines = 1
+[env]
+  CORS_ORIGIN = 'https://cityborn.vercel.app'
