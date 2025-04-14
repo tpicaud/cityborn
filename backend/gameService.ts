@@ -104,12 +104,12 @@ export async function startGame(gameID: string, playerID: string) {
         }
 
         // Sélection du premier objet à deviner
-        const firstObjectIndex = 0;
+        const firstObjectId = game.guessObjectsIds[0];
 
         // Création du premier round
         const firstRound = {
             status: 'GUESSING',
-            guessObjectIndex: firstObjectIndex,
+            guessObjectId: firstObjectId,
             playersGuesses: {},
         };
 
@@ -207,12 +207,12 @@ export async function handleNextRound(gameID: string, playerID: string) {
         }
 
         // Vérification que la partie a encore des rounds à jouer
-        if (!game.guessObjects || game.guessObjects.length === 0) {
+        if (!game.guessObjectsIds || game.guessObjectsIds.length === 0) {
             throw new Error("Aucun objet à deviner disponible.");
         }
 
         // Trouver l'index du currentRound
-        const currentIndex = game.currentRound?.guessObjectIndex;
+        const currentIndex = game.guessObjectsIds.findIndex((id: string) => id === game.currentRound.guessObjectId);
 
         // Vérifier que l'objet est dans la liste
         if (currentIndex === undefined) {
@@ -223,7 +223,7 @@ export async function handleNextRound(gameID: string, playerID: string) {
         game.players = game.players.map((player: any) => {
 
             const newResult = {
-                guessObjectName: game.guessObjects[game.currentRound.guessObjectIndex].name,
+                guessObjectId: game.currentRound.guessObjectId,
                 distance: player.connected ? game.currentRound.playersGuesses[player.id].distance : -1,
                 points: player.connected ? game.currentRound.playersGuesses[player.id].points : 0
             }
@@ -238,13 +238,13 @@ export async function handleNextRound(gameID: string, playerID: string) {
         });
 
         // Go to next guess object
-        if (currentIndex + 1 >= game.guessObjects.length) {
+        if (currentIndex + 1 >= game.guessObjectsIds.length) {
             game.status = 'IN_RESULTS'
             game.currentRound = undefined
         } else {
             game.currentRound = {
                 status: 'GUESSING',
-                guessObjectIndex: currentIndex + 1,
+                guessObjectId: game.guessObjectsIds[currentIndex + 1],
                 playersGuesses: {},
             }
         }

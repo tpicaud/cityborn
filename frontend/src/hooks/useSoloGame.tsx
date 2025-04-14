@@ -15,8 +15,8 @@ export function useSoloGame(
     const startGame = () => {
         if (!game) return;
 
-        const firstObjectIndex = 0;
-        if (game.guessObjects[firstObjectIndex]) {
+        const firstObjectId = game.guessObjectsIds[0];
+        if (firstObjectId) {
             setGame((prevGame) => {
                 if (!prevGame) {
                     throw new Error('Cannot start game because game is not initialized');
@@ -27,7 +27,7 @@ export function useSoloGame(
                     status: GameStatus.IN_GAME,
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObjectIndex: firstObjectIndex,
+                        guessObjectId: firstObjectId,
                         playersGuesses: {},
                     },
                 };
@@ -67,7 +67,7 @@ export function useSoloGame(
                 ...prevGame,
                 players: game.players.map(player => {
                     const newResult: Result = {
-                        guessObjectName: game.guessObjects[game.currentRound!.guessObjectIndex].name,
+                        guessObjectId: game.currentRound!.guessObjectId,
                         distance: game.currentRound!.playersGuesses![player.id].distance,
                         points: game.currentRound!.playersGuesses![player.id].points
                     }
@@ -84,7 +84,7 @@ export function useSoloGame(
         })
 
         // Go to next guessObject
-        const nextObjectIndex = getNextObjectIndex();
+        const nextObjectIndex = getNextObjectId();
 
         if (nextObjectIndex) {
             setGame((prevGame) => {
@@ -94,7 +94,7 @@ export function useSoloGame(
                     ...prevGame,
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObjectIndex: nextObjectIndex,
+                        guessObjectId: nextObjectIndex,
                         playersGuesses: {},
                     },
                 }
@@ -102,11 +102,11 @@ export function useSoloGame(
         }
     };
 
-    const getNextObjectIndex = (): number | null => {
+    const getNextObjectId = (): string | null => {
         if (!game) return null;
 
         // get current index
-        const currentIndex = game.currentRound?.guessObjectIndex ;
+        const currentIndex = game.guessObjectsIds.findIndex(id => game.currentRound?.guessObjectId === id);
 
         // Vérifier que l'objet est dans la liste
         if (currentIndex === undefined) {
@@ -114,7 +114,7 @@ export function useSoloGame(
         }
 
         if (currentIndex + 1 < game.guessObjects.length) {
-            return currentIndex + 1;
+            return game.guessObjectsIds[currentIndex + 1];
         } else {
             setGame((prevGame) => {
                 if (!prevGame) return prevGame;

@@ -3,6 +3,6 @@ import Guess from "./Guess";
 
 export default interface Round {
     status: RoundStatus
-    guessObjectIndex: number;
+    guessObjectId: string;
     playersGuesses?: Record<string,Guess>;
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import Game from "@/types/Game";
+import Game, { LightGame } from "@/types/Game";
 import Guess from "@/types/Guess";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [gameUpdate, setGameUpdate] = useState<Game>();
+    const [gameUpdate, setGameUpdate] = useState<LightGame>();
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
@@ -63,9 +63,10 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             setIsConnected(false);
         });
 
-        newSocket.on("game:update", (updatedLightGame) => {
+        newSocket.on("game:update", (game) => {
             try {
-                setGameUpdate(prev => prev ? { ...prev, updatedLightGame } : undefined);
+                console.log("Game updated");
+                setGameUpdate(game);
             } catch {
                 console.log("Update de game reçu non valide");
             }
@@ -144,12 +145,14 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     };
 
     // Poster la partie sur le serveur WebSocket
-    const postGame = (game: Game): Promise<void> => {
+    const postGame = (fullGame: Game): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
                 reject(new Error("Socket non initialisée"));
                 return;
             }
+            // Separate guess objects from game
+            const { guessObjects, ...game } = fullGame;
 
             socket.emit('game:post', game, (response: { success: boolean, message?: string }) => {
                 if (response.success) {

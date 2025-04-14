@@ -9,44 +9,6 @@ import { connectToDatabase } from "@/utils/connectToDatabase";
 import { GameMode } from "@/enums/GameMode";
 import { tennis_dictionnary } from "../custom_dictionnary";
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get("id");
-
-    if (!gameId) {
-      return NextResponse.json(
-        { message: "L'identifiant de la game est requis." },
-        { status: 400 }
-      );
-    }
-
-    // Connexion à la base de données
-    const client = await connectToDatabase();
-    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
-    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
-
-    // Rechercher la game par son id
-    const game = await collection.findOne({ id: gameId });
-
-    if (!game) {
-      return NextResponse.json(
-        { message: "Aucune game trouvée avec cet identifiant." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(game, { status: 200 });
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la game:", error);
-    return NextResponse.json(
-      { message: "Erreur lors de la récupération de la game." },
-      { status: 500 }
-    );
-  }
-}
-
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -83,49 +45,6 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get("id");
-
-    if (!gameId) {
-      return NextResponse.json(
-        { message: "L'identifiant de la game est requis." },
-        { status: 400 }
-      );
-    }
-
-    // Connexion à la base de données
-    const client = await connectToDatabase();
-    const db = client.db(process.env.NEXT_PUBLIC_GAMES_DB);
-    const collection = db.collection(process.env.NEXT_PUBLIC_GAMES_COLLECTION!);
-
-    console.log(gameId);
-
-    // Suppression de la game
-    const result = await collection.deleteOne({ id: gameId });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { message: "Aucune game trouvée avec cet identifiant." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      { message: `Game ${gameId} supprimée avec succès.` },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Erreur lors de la suppression de la game:", error);
-    return NextResponse.json(
-      { message: "Erreur lors de la suppression de la game." },
-      { status: 500 }
-    );
-  }
-}
-
-
 // Auxiliary functions
 
 async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]> {
@@ -146,6 +65,7 @@ async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]>
     const guessObjects: GuessObject[] = randomCelebrities
       .filter(doc => doc.name && doc.category && doc.description && doc.image)
       .map(doc => ({
+        id: doc._id.toString(),
         name: doc.name,
         category: doc.category,
         description: doc.description,
@@ -180,6 +100,7 @@ function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): G
     gameConfig,
     players: [],
     currentRound: undefined,
+    guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
     guessObjects: guessObjects,
   };
 
@@ -201,6 +122,7 @@ function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Ga
     gameConfig,
     players: [],
     currentRound: undefined,
+    guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
     guessObjects: guessObjects,
   };
 
