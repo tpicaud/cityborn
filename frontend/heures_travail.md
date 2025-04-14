@@ -46,3 +46,4 @@
 | 01/04/2025 | 6h | Tentative correction bug multi |
 | 03/04/2025 | 5h | Correction des problème backend fly io |
 | 10/04/2025 | 8h | Implémentation Redis |
+| 12/04/2025 | 8h | Optimisation des temps de chargement |
