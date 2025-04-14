@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 // Configuration de la connexion MongoDB
 const uri = process.env.NEXT_PUBLIC_MONGODB_URI || ""; // Assurez-vous que cette variable d'environnement est définie
@@ -41,6 +41,47 @@ export async function GET(request: Request) {
         );
     } finally {
         // Fermer la connexion MongoDB
+        await client.close();
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const { guessObjectsIds } = body;
+
+        if (!Array.isArray(guessObjectsIds)) {
+            return NextResponse.json(
+                { message: "'guessObjectsIds' doit être un tableau." },
+                { status: 400 }
+            );
+        }
+
+        // Connexion à la base de données
+        await client.connect();
+        const db = client.db(dbName);
+        const collection = db.collection(collectionName);
+
+        // Récupérer les objets correspondant aux IDs
+        const guessObjects = await collection
+            .find({ _id: { $in: guessObjectsIds.map((id: string) => new ObjectId(id)) } })
+            .toArray();
+
+        // Transformer `_id` => `id`
+        const formattedObjects = guessObjects.map(obj => ({
+            ...obj,
+            id: obj._id.toString(),
+            _id: undefined, // facultatif : on peut le supprimer si tu ne veux pas le garder
+        }));
+
+        return NextResponse.json(formattedObjects);
+    } catch (error) {
+        console.error("Erreur lors de la récupération des guessObjects :", error);
+        return NextResponse.json(
+            { message: "Erreur lors de la récupération des guessObjects." },
+            { status: 500 }
+        );
+    } finally {
         await client.close();
     }
 }

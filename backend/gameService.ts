@@ -79,7 +79,7 @@ export async function joinGame(socket: Socket, gameID: string, playerID: string)
     }
 }
 
-export async function startGame(socket: Socket, gameID: string, playerID: string) {
+export async function startGame(gameID: string, playerID: string) {
     try {
         const game = await getGame(gameID)
 
@@ -98,23 +98,18 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
             throw new Error("La partie a déjà démarré.");
         }
 
-        // Vérifier s'il y a des objets à deviner
-        if (!game.guessObjects || game.guessObjects.length === 0) {
-            throw new Error("Aucun objets à guess.");
-        }
-
         // Vérifier si des joueurs sont présent dans le lobby
         if (game.players.length === 0) {
             throw new Error("Aucun joueur dans le lobby.");
         }
 
         // Sélection du premier objet à deviner
-        const firstObject = game.guessObjects[0];
+        const firstObjectId = game.guessObjectsIds[0];
 
         // Création du premier round
         const firstRound = {
             status: 'GUESSING',
-            guessObject: firstObject,
+            guessObjectId: firstObjectId,
             playersGuesses: {},
         };
 
@@ -136,11 +131,13 @@ export async function startGame(socket: Socket, gameID: string, playerID: string
     }
 }
 
-export async function handleGuess(socket: Socket, gameID: string, playerID: string, guess: any) {
+export async function handleGuess(gameID: string, playerID: string, guess: any) {
     try {
 
         // Récupération du jeu dans la base de données
-        const game = await getGame(gameID)
+        const start = Date.now()
+        const game = await getGame(gameID);
+        console.log('Latency retriving game:', Date.now() - start)
 
         // Check si la partie existe
         if (!game) {
@@ -178,7 +175,9 @@ export async function handleGuess(socket: Socket, gameID: string, playerID: stri
                 }
 
                 //update game
+                const start2 = Date.now()
                 await updateGame(game);
+                console.log('Latency updating game:', Date.now() - start2)
             } catch {
                 throw new Error(`Erreur lors de la modification dans la base de données`)
             }
@@ -197,7 +196,7 @@ export async function handleGuess(socket: Socket, gameID: string, playerID: stri
     }
 }
 
-export async function handleNextRound(socket: Socket, gameID: string, playerID: string) {
+export async function handleNextRound(gameID: string, playerID: string) {
     try {
         // Récupération du jeu dans la base de données
         const game = await getGame(gameID)
@@ -212,17 +211,15 @@ export async function handleNextRound(socket: Socket, gameID: string, playerID: 
         }
 
         // Vérification que la partie a encore des rounds à jouer
-        if (!game.guessObjects || game.guessObjects.length === 0) {
+        if (!game.guessObjectsIds || game.guessObjectsIds.length === 0) {
             throw new Error("Aucun objet à deviner disponible.");
         }
 
         // Trouver l'index du currentRound
-        const currentIndex = game.currentRound
-            ? game.guessObjects.findIndex((obj: any) => obj.name === game.currentRound?.guessObject.name)
-            : -1;
+        const currentIndex = game.guessObjectsIds.findIndex((id: string) => id === game.currentRound.guessObjectId);
 
         // Vérifier que l'objet est dans la liste
-        if (currentIndex === -1) {
+        if (currentIndex === undefined) {
             throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
         }
 
@@ -230,7 +227,7 @@ export async function handleNextRound(socket: Socket, gameID: string, playerID: 
         game.players = game.players.map((player: any) => {
 
             const newResult = {
-                guessObject: game.currentRound.guessObject,
+                guessObjectId: game.currentRound.guessObjectId,
                 distance: player.connected ? game.currentRound.playersGuesses[player.id].distance : -1,
                 points: player.connected ? game.currentRound.playersGuesses[player.id].points : 0
             }
@@ -245,13 +242,13 @@ export async function handleNextRound(socket: Socket, gameID: string, playerID: 
         });
 
         // Go to next guess object
-        if (currentIndex + 1 >= game.guessObjects.length) {
+        if (currentIndex + 1 >= game.guessObjectsIds.length) {
             game.status = 'IN_RESULTS'
             game.currentRound = undefined
         } else {
             game.currentRound = {
                 status: 'GUESSING',
-                guessObject: game.guessObjects[currentIndex + 1],
+                guessObjectId: game.guessObjectsIds[currentIndex + 1],
                 playersGuesses: {},
             }
         }
@@ -340,7 +337,7 @@ export async function reconnect(socket: Socket, gameID: string, playerID: string
     }
 }
 
-export async function disconnectPlayer(socket: Socket, playerID: string, gameID: string) {
+export async function disconnectPlayer(playerID: string, gameID: string) {
     try {
         const game = await getGame(gameID)
 

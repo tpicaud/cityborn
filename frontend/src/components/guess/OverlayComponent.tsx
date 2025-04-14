@@ -6,6 +6,7 @@ import Round from "@/types/Round";
 import { RoundStatus } from "@/enums/RoundStatus";
 import Game from "@/types/Game";
 import { useEffect, useState } from "react";
+import GuessObject from "@/types/GuessObject";
 
 function GuessButton({
     preGuess,
@@ -39,9 +40,11 @@ function GuessButton({
 
 function GuessResult({
     currentRound,
+    guessObject,
     localPlayerID
 }: {
     currentRound: Round,
+    guessObject: GuessObject,
     localPlayerID: string
 }) {
     return (currentRound.playersGuesses && currentRound.status === RoundStatus.SHOWING_RESULTS) && (
@@ -67,7 +70,7 @@ function GuessResult({
                 )}
             </Box>
             <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
-                <p><b>{currentRound.guessObject.name}</b> est né à <b>{currentRound.guessObject.answer.place_name}</b></p>
+                <p><b>{guessObject.name}</b> est né à <b>{guessObject.answer.place_name}</b></p>
                 {currentRound.playersGuesses[localPlayerID].distance !== -1 ? (
                     currentRound.playersGuesses[localPlayerID].distance === 0 ? (
                         <p><b>Bien joué ! Tu as deviné !</b></p>
@@ -105,7 +108,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     useEffect(() => {
         setTimerEnded(false)
-    }, [game.currentRound?.guessObject.name])
+    }, [game.currentRound?.guessObjectId])
 
     useEffect(() => {
         if (timerEnded) {
@@ -115,7 +118,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     return (
         <div>
-            <GuessObjectComponent guessObject={game.currentRound!.guessObject} />
+            <GuessObjectComponent guessObject={game.guessObjects.find(guessObject => game.currentRound!.guessObjectId === guessObject.id)!} />
             <div className="absolute w-[30%] min-w-36 m-4">
                 {(game.currentRound!.status === RoundStatus.GUESSING) && (
                     <TimerComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
@@ -134,8 +137,12 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                     </div>
                 )}
 
-                {game.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
-                    <GuessResult currentRound={game.currentRound!} localPlayerID={localPlayerID} />
+                {game.currentRound && game.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
+                    <GuessResult
+                        currentRound={game.currentRound!}
+                        guessObject={game.guessObjects.find(guessObject => game.currentRound!.guessObjectId === guessObject.id)!}
+                        localPlayerID={localPlayerID}
+                    />
                 )}
 
             </div>

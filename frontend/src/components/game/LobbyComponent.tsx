@@ -81,7 +81,7 @@ export const LobbyComponent = ({
                         color="primary"
                         fullWidth
                         sx={{ mt: 2 }}
-                        disabled={game.players.length < 2 || game.hostID !== localPlayerID}
+                        disabled={game.hostID !== localPlayerID}
                         onClick={startGame}
                     >
                         Démarrer la partie

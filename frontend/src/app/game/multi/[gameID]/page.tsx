@@ -60,9 +60,13 @@ export default function MultiGamePage() {
     useEffect(() => {
         if (gameSocket.gameUpdate) {
             console.log("Game updated", gameSocket.gameUpdate);
-            setGame(gameSocket.gameUpdate);
+            setGame({ ...game, ...gameSocket.gameUpdate });
         }
     }, [gameSocket.gameUpdate])
+
+    useEffect(() => {
+        console.log('Current Game:', game);
+    }, [game]);
 
     const {
         startGame,
@@ -80,8 +84,12 @@ export default function MultiGamePage() {
         return <div>{errorMessage}</div>
     }
 
-    if (!game) {
+    if (!game || !gameSocket.isConnected) {
         return <LoadingComponent message='Chargement de la partie' />
+    }
+
+    if (!gameSocket.isConnected) {
+        return <LoadingComponent message='Connexion au serveur' />
     }
 
     if (!localPlayerID) {
@@ -115,7 +123,7 @@ export default function MultiGamePage() {
             return <GameComponent props={gameComponentProps} />
 
         case GameStatus.IN_RESULTS:
-            return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
+            return <ResultsComponent game={game} playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:
             router.push('/')

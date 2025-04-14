@@ -1,4 +1,5 @@
 export default interface GuessObject {
+    id: string;
     name: string;
     category: string
     description: string;
