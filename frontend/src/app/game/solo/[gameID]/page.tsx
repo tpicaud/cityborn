@@ -39,7 +39,7 @@ export default function SoloGamePage() {
                     ],
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObject: prevGame.guessObjects[0],
+                        guessObjectId: prevGame.guessObjects[0].id,
                         playersGuesses: {},
                     },
                 };
@@ -73,7 +73,7 @@ export default function SoloGamePage() {
             return <GameComponent props={gameComponentProps} />
 
         case GameStatus.IN_RESULTS:
-            return <ResultsComponent playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
+            return <ResultsComponent game={game} playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
 
         case GameStatus.FINISHED:
             router.push('/');

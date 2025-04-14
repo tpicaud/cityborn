@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
             playerSockets.set(socket.id, { playerID, gameID });
 
             console.log(`${playerID} a rejoint la game ${gameID}`);
-            callback?.({ success: true, updatedGame: updatedGame });
+            callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors de la tentative de rejoindre la partie :", error);
             callback?.({
@@ -125,8 +125,8 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            const updatedGame = await startGame(socket, gameID, playerID);
-            callback?.({ success: true, updatedGame: updatedGame });
+            const updatedGame = await startGame(gameID, playerID);
+            callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors du démarrage de la partie :", error);
             callback?.({
@@ -140,11 +140,13 @@ io.on('connection', (socket) => {
     // Enregistrer un guess
     socket.on('game:guess', async (gameID, playerID, guess, callback) => {
         try {
+            const start = Date.now()
             if (!gameID || !playerID || guess === undefined) {
                 throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
             }
-            const updatedGame = await handleGuess(socket, gameID, playerID, guess);
-            callback?.({ success: true, updatedGame: updatedGame });
+            const updatedGame = await handleGuess(gameID, playerID, guess);
+            console.log("Latency handle guess :", Date.now() - start)
+            callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors du traitement du guess :", error);
             callback?.({
@@ -161,8 +163,8 @@ io.on('connection', (socket) => {
             if (!gameID || !playerID) {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
-            const updatedGame = await handleNextRound(socket, gameID, playerID);
-            callback?.({ success: true, updatedGame: updatedGame });
+            const updatedGame = await handleNextRound(gameID, playerID);
+            callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors du passage au tour suivant :", error);
             callback?.({
@@ -180,7 +182,7 @@ io.on('connection', (socket) => {
                 throw new Error("Paramètres invalides : gameID et playerID sont requis.");
             }
             const updatedGame = await endGame(gameID, playerID);
-            callback?.({ success: true, updatedGame: updatedGame });
+            callback?.({ success: true });
         } catch (error) {
             console.error("Erreur lors de la fin de la partie :", error);
             callback?.({
@@ -199,7 +201,7 @@ io.on('connection', (socket) => {
                 const { playerID, gameID } = playerSockets.get(socket.id);
 
                 // Déconnecter le joueur de la partie
-                disconnectPlayer(socket, playerID, gameID);
+                disconnectPlayer(playerID, gameID);
                 console.log(`${playerID} s'est déconnecté de la game ${gameID}`);
 
                 // Retirer le socket du joueur

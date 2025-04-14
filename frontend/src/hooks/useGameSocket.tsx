@@ -63,9 +63,9 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             setIsConnected(false);
         });
 
-        newSocket.on("game:update", (updatedGame) => {
+        newSocket.on("game:update", (game) => {
             try {
-                setGameUpdate(updatedGame);
+                setGameUpdate(game);
             } catch {
                 console.log("Update de game reçu non valide");
             }
@@ -131,10 +131,28 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('game:fetch', gameID, (response: { success: boolean, game?: Game }) => {
+            const fetchGuessObjects = async (guessObjectsIds: string[]) => {
+                const response = await fetch('/api/guess-objects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ guessObjectsIds }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la création de la partie');
+                }
+
+                return await response.json();
+            }
+
+            socket.emit('game:fetch', gameID, async (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
-                    setGameUpdate(response.game)
+                    const game = response.game;
+                    const guessObjects = await fetchGuessObjects(response.game.guessObjectsIds)
+                    setGameUpdate({ ...game, guessObjects: guessObjects })
                     resolve();
                 } else {
                     reject(new Error(`Impossible de récupérer la partie`));
@@ -144,12 +162,16 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     };
 
     // Poster la partie sur le serveur WebSocket
-    const postGame = (game: Game): Promise<void> => {
+    const postGame = (fullGame: Game): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
                 reject(new Error("Socket non initialisée"));
                 return;
             }
+            // Separate guess objects from game
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { guessObjects: _, ...game } = fullGame;
+
 
             socket.emit('game:post', game, (response: { success: boolean, message?: string }) => {
                 if (response.success) {
@@ -171,7 +193,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             socket.emit('game:start', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -188,9 +209,11 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
+            const start = Date.now()
+            console.log("Sending guess:", start)
             socket.emit('game:guess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
+                    console.log("Latency: ", Date.now() - start)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -209,7 +232,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             socket.emit('game:nextRound', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
