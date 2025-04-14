@@ -60,9 +60,13 @@ export default function MultiGamePage() {
     useEffect(() => {
         if (gameSocket.gameUpdate) {
             console.log("Game updated", gameSocket.gameUpdate);
-            setGame(prev => prev ? { ...prev, ...gameSocket.gameUpdate } : prev);
+            setGame({ ...game, ...gameSocket.gameUpdate });
         }
     }, [gameSocket.gameUpdate])
+
+    useEffect(() => {
+        console.log('Current Game:', game);
+    }, [game]);
 
     const {
         startGame,

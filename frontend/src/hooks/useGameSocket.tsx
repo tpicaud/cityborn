@@ -1,13 +1,13 @@
 "use client";
 
-import Game, { LightGame } from "@/types/Game";
+import Game from "@/types/Game";
 import Guess from "@/types/Guess";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [gameUpdate, setGameUpdate] = useState<LightGame>();
+    const [gameUpdate, setGameUpdate] = useState<Game>();
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
@@ -65,7 +65,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
         newSocket.on("game:update", (game) => {
             try {
-                console.log("Game updated");
                 setGameUpdate(game);
             } catch {
                 console.log("Update de game reçu non valide");
@@ -132,10 +131,28 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
-            socket.emit('game:fetch', gameID, (response: { success: boolean, game?: Game }) => {
+            const fetchGuessObjects = async (guessObjectsIds: string[]) => {
+                const response = await fetch('/api/guess-objects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ guessObjectsIds }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la création de la partie');
+                }
+
+                return await response.json();
+            }
+
+            socket.emit('game:fetch', gameID, async (response: { success: boolean, game?: Game }) => {
                 console.log(response)
                 if (response.success && response.game) {
-                    setGameUpdate(response.game)
+                    const game = response.game;
+                    const guessObjects = await fetchGuessObjects(response.game.guessObjectsIds)
+                    setGameUpdate({ ...game, guessObjects: guessObjects })
                     resolve();
                 } else {
                     reject(new Error(`Impossible de récupérer la partie`));
@@ -152,7 +169,9 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
             // Separate guess objects from game
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { guessObjects: _, ...game } = fullGame;
+
 
             socket.emit('game:post', game, (response: { success: boolean, message?: string }) => {
                 if (response.success) {
