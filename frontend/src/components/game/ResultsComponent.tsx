@@ -103,7 +103,7 @@ const ResultsComponent = ({
                                         <TableBody>
                                             {playerResults.results.map((result, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell>{result.guessObject.name}</TableCell>
+                                                    <TableCell>{result.guessObjectName}</TableCell>
                                                     <TableCell>
                                                         {result.distance !== -1 ? (
                                                             <p>{result.distance.toFixed(2)}</p>
@@ -141,7 +141,7 @@ const ResultsComponent = ({
                                             <TableBody>
                                                 {playerResults.results.map((result, index) => (
                                                     <TableRow key={index}>
-                                                        <TableCell>{result.guessObject.name}</TableCell>
+                                                        <TableCell>{result.guessObjectName}</TableCell>
                                                         <TableCell>
                                                             {result.distance !== -1 ? (
                                                                 <p>{result.distance.toFixed(2)}</p>

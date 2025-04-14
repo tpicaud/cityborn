@@ -63,9 +63,9 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
             setIsConnected(false);
         });
 
-        newSocket.on("game:update", (updatedGame) => {
+        newSocket.on("game:update", (updatedLightGame) => {
             try {
-                setGameUpdate(updatedGame);
+                setGameUpdate(prev => prev ? { ...prev, updatedLightGame } : undefined);
             } catch {
                 console.log("Update de game reçu non valide");
             }
@@ -171,7 +171,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             socket.emit('game:start', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -190,7 +189,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             socket.emit('game:guess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
@@ -209,7 +207,6 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
 
             socket.emit('game:nextRound', gameID, playerID, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
-                    setGameUpdate(response.updatedGame)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));

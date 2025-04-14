@@ -2,7 +2,6 @@ import Game from "@/types/Game";
 import IUseGame from "./IUseGame";
 import Guess from "@/types/Guess";
 import { RoundStatus } from "@/enums/RoundStatus";
-import GuessObject from "@/types/GuessObject";
 import { Result } from "@/types/Results";
 import { GameStatus } from "@/enums/GameStatus";
 
@@ -16,8 +15,8 @@ export function useSoloGame(
     const startGame = () => {
         if (!game) return;
 
-        const firstObject = game.guessObjects[0];
-        if (firstObject) {
+        const firstObjectIndex = 0;
+        if (game.guessObjects[firstObjectIndex]) {
             setGame((prevGame) => {
                 if (!prevGame) {
                     throw new Error('Cannot start game because game is not initialized');
@@ -28,7 +27,7 @@ export function useSoloGame(
                     status: GameStatus.IN_GAME,
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObject: firstObject,
+                        guessObjectIndex: firstObjectIndex,
                         playersGuesses: {},
                     },
                 };
@@ -68,7 +67,7 @@ export function useSoloGame(
                 ...prevGame,
                 players: game.players.map(player => {
                     const newResult: Result = {
-                        guessObject: game.currentRound!.guessObject,
+                        guessObjectName: game.guessObjects[game.currentRound!.guessObjectIndex].name,
                         distance: game.currentRound!.playersGuesses![player.id].distance,
                         points: game.currentRound!.playersGuesses![player.id].points
                     }
@@ -85,9 +84,9 @@ export function useSoloGame(
         })
 
         // Go to next guessObject
-        const nextObject = getNextObject();
+        const nextObjectIndex = getNextObjectIndex();
 
-        if (nextObject) {
+        if (nextObjectIndex) {
             setGame((prevGame) => {
                 if (!prevGame) return prevGame;
 
@@ -95,7 +94,7 @@ export function useSoloGame(
                     ...prevGame,
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObject: nextObject,
+                        guessObjectIndex: nextObjectIndex,
                         playersGuesses: {},
                     },
                 }
@@ -103,22 +102,19 @@ export function useSoloGame(
         }
     };
 
-    const getNextObject = (): GuessObject | null => {
+    const getNextObjectIndex = (): number | null => {
         if (!game) return null;
 
         // get current index
-        const currentIndex = game.currentRound
-            ? game.guessObjects.findIndex((obj) => obj.name === game.currentRound?.guessObject.name)
-            : -1;
+        const currentIndex = game.currentRound?.guessObjectIndex ;
 
         // Vérifier que l'objet est dans la liste
-        if (currentIndex === -1) {
+        if (currentIndex === undefined) {
             throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
         }
 
         if (currentIndex + 1 < game.guessObjects.length) {
-            const nextObject = game.guessObjects[currentIndex + 1];
-            return nextObject;
+            return currentIndex + 1;
         } else {
             setGame((prevGame) => {
                 if (!prevGame) return prevGame;

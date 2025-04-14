@@ -39,11 +39,8 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     };
 
     useEffect(() => {
-        resetPreGuess()
-    }, [game.currentRound?.guessObject.name])
-
-    useEffect(() => {
         if (game.currentRound?.status === RoundStatus.GUESSING) {
+            resetPreGuess()
             setIsRoundCountdownFinished(false)
         }
     }, [game.currentRound?.status])

@@ -62,7 +62,7 @@ export const GameComponent = ({ props }: { props: GameComponentProps }) => {
                             <NextButton />
                         )}
                         <div className='bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold'>
-                            {game.guessObjects.findIndex(obj => obj.name === game.currentRound?.guessObject.name) + 1}
+                            {game.currentRound.guessObjectIndex + 1}
                             /
                             {game.guessObjects.length}
                         </div>
