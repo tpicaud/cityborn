@@ -39,7 +39,7 @@ export default function SoloGamePage() {
                     ],
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObject: prevGame.guessObjects[0],
+                        guessObjectIndex: 0,
                         playersGuesses: {},
                     },
                 };

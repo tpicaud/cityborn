@@ -1,5 +1,3 @@
-import GuessObject from "./GuessObject"
-
 interface GameResults {
     playerResults: PlayerResults[]
 }
@@ -9,7 +7,7 @@ interface PlayerResults {
 }
 
 interface Result {
-    guessObject: GuessObject,
+    guessObjectName: string,
     distance: number,
     points: number
 }
