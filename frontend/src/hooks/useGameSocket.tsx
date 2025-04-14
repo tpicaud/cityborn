@@ -190,8 +190,11 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
 
+            const start = Date.now()
+            console.log("Sending guess:", start)
             socket.emit('game:guess', gameID, playerID, guess, (response: { success: boolean, message?: string, updatedGame?: Game }) => {
                 if (response.success) {
+                    console.log("Latency: ", Date.now() - start)
                     resolve();
                 } else {
                     reject(new Error(response.message || "Erreur inconnue"));
