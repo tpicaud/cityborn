@@ -38,6 +38,16 @@ const ResultsComponent = ({
             }
         });
 
+        // change ids by name for all players results
+        playersResults.forEach((playerResults) => {
+            playerResults.results.forEach((result) => {
+                const guessObject = game.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
+                if (guessObject) {
+                    result.guessObjectId = guessObject.name;
+                }
+            });
+        });
+
         setLocalPlayerResults(currentPlayerResults);
 
         const getScoreType = (totalPoints: number) => {
