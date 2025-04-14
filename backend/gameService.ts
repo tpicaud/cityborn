@@ -140,7 +140,9 @@ export async function handleGuess(socket: Socket, gameID: string, playerID: stri
     try {
 
         // Récupération du jeu dans la base de données
-        const game = await getGame(gameID)
+        const start = Date.now()
+        const game = await getGame(gameID);
+        console.log('Latency retriving game:', Date.now() - start)
 
         // Check si la partie existe
         if (!game) {
@@ -178,7 +180,9 @@ export async function handleGuess(socket: Socket, gameID: string, playerID: stri
                 }
 
                 //update game
+                const start2 = Date.now()
                 await updateGame(game);
+                console.log('Latency updating game:', Date.now() - start2)
             } catch {
                 throw new Error(`Erreur lors de la modification dans la base de données`)
             }

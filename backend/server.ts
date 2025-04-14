@@ -141,12 +141,11 @@ io.on('connection', (socket) => {
     socket.on('game:guess', async (gameID, playerID, guess, callback) => {
         try {
             const start = Date.now()
-            console.log("Received guess:", start)
             if (!gameID || !playerID || guess === undefined) {
                 throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
             }
             const updatedGame = await handleGuess(socket, gameID, playerID, guess);
-            console.log("Latency :", Date.now() - start)
+            console.log("Latency handle guess :", Date.now() - start)
             callback?.({ success: true, updatedGame: updatedGame });
         } catch (error) {
             console.error("Erreur lors du traitement du guess :", error);
