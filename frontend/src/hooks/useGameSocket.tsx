@@ -152,7 +152,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
                 return;
             }
             // Separate guess objects from game
-            const { guessObjects, ...game } = fullGame;
+            const { guessObjects: _, ...game } = fullGame;
 
             socket.emit('game:post', game, (response: { success: boolean, message?: string }) => {
                 if (response.success) {
