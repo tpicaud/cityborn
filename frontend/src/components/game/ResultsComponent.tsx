@@ -9,11 +9,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import Game from '@/types/Game';
 
 const ResultsComponent = ({
+    game,
     playersResults,
     localPlayerID
 }: {
+    game: Game, 
     playersResults: Map<string, PlayerResults>,
     localPlayerID: string
 }) => {
@@ -26,6 +29,14 @@ const ResultsComponent = ({
     useEffect(() => {
         const currentPlayerResults = playersResults.get(localPlayerID);
         if (!currentPlayerResults) return;
+
+        // change ids by name in results
+        currentPlayerResults.results.forEach((result) => {
+            const guessObject = game.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
+            if (guessObject) {
+                result.guessObjectId = guessObject.name;
+            }
+        });
 
         setLocalPlayerResults(currentPlayerResults);
 
@@ -103,7 +114,7 @@ const ResultsComponent = ({
                                         <TableBody>
                                             {playerResults.results.map((result, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell>{result.guessObjectName}</TableCell>
+                                                    <TableCell>{result.guessObjectId}</TableCell>
                                                     <TableCell>
                                                         {result.distance !== -1 ? (
                                                             <p>{result.distance.toFixed(2)}</p>
@@ -141,7 +152,7 @@ const ResultsComponent = ({
                                             <TableBody>
                                                 {playerResults.results.map((result, index) => (
                                                     <TableRow key={index}>
-                                                        <TableCell>{result.guessObjectName}</TableCell>
+                                                        <TableCell>{result.guessObjectId}</TableCell>
                                                         <TableCell>
                                                             {result.distance !== -1 ? (
                                                                 <p>{result.distance.toFixed(2)}</p>

@@ -29,6 +29,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 }) => {
 
   const currentRound = game.currentRound!
+  const guessObject = game.guessObjects.find((obj) => obj.id === currentRound.guessObjectId)!;
 
   const mapOptions = {
     mapId: 'e475de68d18cf73',
@@ -54,11 +55,11 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
-    if (isGeoJSON(game.guessObjects[currentRound.guessObjectIndex]) && hasWin(guessedLatLng, game.guessObjects[currentRound.guessObjectIndex])) {
+    if (isGeoJSON(guessObject!) && hasWin(guessedLatLng, guessObject!)) {
       return 0;
     }
 
-    const answer: Coord = getCenterOfGuessObject(game.guessObjects[currentRound.guessObjectIndex])
+    const answer: Coord = getCenterOfGuessObject(guessObject!);
     const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
     return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
@@ -100,12 +101,12 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         {/* Confirmed guess advanced marker */}
         {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
           <>
-            <AnswerDisplay guessObject={game.guessObjects[currentRound.guessObjectIndex]} />
-            <LocalPlayerGuess currentRound={currentRound} guessObject={game.guessObjects[currentRound.guessObjectIndex]} localPlayerID={localPlayerID} />
-            <OtherPlayersGuesses currentRound={currentRound} guessObject={game.guessObjects[currentRound.guessObjectIndex]} localPlayerID={localPlayerID} />
+            <AnswerDisplay guessObject={guessObject} />
+            <LocalPlayerGuess currentRound={currentRound} guessObject={guessObject} localPlayerID={localPlayerID} />
+            <OtherPlayersGuesses currentRound={currentRound} guessObject={guessObject} localPlayerID={localPlayerID} />
           </>
         )}
-        <ResetMap guessObjectIndex={currentRound.guessObjectIndex} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
+        <ResetMap guessObjectId={currentRound.guessObjectId} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
 
       </Map>
     </APIProvider>
@@ -226,7 +227,7 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord, isLocalPlayer: boolea
   return null; // No visual render, just adding a line to the map
 };
 
-const ResetMap: React.FC<{ guessObjectIndex: number, center: Coord, zoom: number }> = ({ guessObjectIndex, center, zoom }) => {
+const ResetMap: React.FC<{ guessObjectId: string, center: Coord, zoom: number }> = ({ guessObjectId, center, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -239,7 +240,7 @@ const ResetMap: React.FC<{ guessObjectIndex: number, center: Coord, zoom: number
         map.data.remove(feature);
       });
     }
-  }, [guessObjectIndex]);
+  }, [guessObjectId]);
 
   return null; // No visual render, just resetting the map
 }

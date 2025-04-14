@@ -7,7 +7,7 @@ interface PlayerResults {
 }
 
 interface Result {
-    guessObjectName: string,
+    guessObjectId: string,
     distance: number,
     points: number
 }

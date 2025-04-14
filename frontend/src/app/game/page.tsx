@@ -46,10 +46,6 @@ export default function GamePage() {
 }
 
 async function createNewGame(gameMode: GameMode, gameConfig: GameConfig): Promise<Game> {
-  console.log('creating game with params', {
-    gameMode,
-    gameConfig
-  })
   const response = await fetch('/api/game', {
     method: 'POST',
     headers: {
@@ -62,7 +58,7 @@ async function createNewGame(gameMode: GameMode, gameConfig: GameConfig): Promis
     throw new Error('Erreur lors de la création de la partie');
   }
 
-  return response.json();
+  return await response.json();
 }
 
 function parseNewGameParams(searchParams: ReadonlyURLSearchParams) {
