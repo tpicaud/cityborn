@@ -21,3 +21,4 @@ primary_region = 'cdg'
 
 [env]
   CORS_ORIGIN = 'https://cityborn.vercel.app'
+  NODE_ENV = 'prod'

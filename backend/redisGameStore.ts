@@ -14,7 +14,9 @@ const GAME_COUNT_KEY = 'metrics:total_games_created';
 export async function addGame(game: Game) {
   game.lastActivity = Date.now();
   await redis.set(`${GAME_KEY_PREFIX}${game.id}`, JSON.stringify(game), 'EX', GAME_TTL);
-  await redis.incr(GAME_COUNT_KEY);
+  if (process.env.NODE_ENV === 'prod') {
+    await redis.incr(GAME_COUNT_KEY);
+  }
 }
 
 // Récupérer une partie
