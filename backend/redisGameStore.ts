@@ -8,11 +8,13 @@ type Game = {
 
 const GAME_KEY_PREFIX = 'game:';
 const GAME_TTL = 600; // secondes (10 minutes)
+const GAME_COUNT_KEY = 'metrics:total_games_created';
 
 // Ajouter une partie
 export async function addGame(game: Game) {
   game.lastActivity = Date.now();
   await redis.set(`${GAME_KEY_PREFIX}${game.id}`, JSON.stringify(game), 'EX', GAME_TTL);
+  await redis.incr(GAME_COUNT_KEY);
 }
 
 // Récupérer une partie
