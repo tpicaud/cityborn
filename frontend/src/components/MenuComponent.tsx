@@ -20,8 +20,8 @@ export default function MenuComponent() {
     const router = useRouter();
 
     // Game Config variables
-    const [timer, setTimer] = useState(20);
-    const [nbOfObjects, setNbOfObjects] = useState(6)
+    const [timer, setTimer] = useState('20');
+    const [nbOfObjects, setNbOfObjects] = useState('6')
     const [categories, setCategories] = useState<string[]>([Categories.TOUTES]);
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
@@ -211,7 +211,15 @@ export default function MenuComponent() {
                                             variant="outlined"
                                             fullWidth
                                             value={nbOfObjects}
-                                            onChange={(e) => setNbOfObjects(e.target.value ? Number(e.target.value) : 6)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setNbOfObjects(value === '' ? '' : value.toString());
+                                            }}
+                                            onBlur={() => {
+                                                if (nbOfObjects === '' || nbOfObjects === null) {
+                                                    setNbOfObjects('6');
+                                                }
+                                            }}
                                         />
 
                                         <TextField
@@ -219,8 +227,16 @@ export default function MenuComponent() {
                                             label="Timer"
                                             variant="outlined"
                                             fullWidth
-                                            value={timer}
-                                            onChange={(e) => setTimer(e.target.value ? Number(e.target.value) : 20)}
+                                            value={timer === null ? '' : timer}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setTimer(value === '' ? '' : value.toString());
+                                            }}
+                                            onBlur={() => {
+                                                if (timer === 'null') {
+                                                    setTimer('20');
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </div>
