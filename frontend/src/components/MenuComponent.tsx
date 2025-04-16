@@ -92,7 +92,7 @@ export default function MenuComponent() {
 
     return (
         <div className="relative h-screen">
-            <div className="absolute inset-0">
+            {/* <div className="absolute inset-0">
                 <MapContainer center={[0, 0]} zoom={3} zoomControl={false} className="h-full w-full z-0">
                     <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -100,7 +100,7 @@ export default function MenuComponent() {
                     />
                 </MapContainer>
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
-            </div>
+            </div> */}
 
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
                 <Box className="flex flex-col items-center gap-4 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%] pointer-events-auto">
@@ -127,7 +127,7 @@ export default function MenuComponent() {
                             }}
                             disabled={!code}
                         >
-                            Rejoindre
+                            <p className='px-3'>Rejoindre</p>
                         </Button>
 
                     </div>
