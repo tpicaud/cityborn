@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.cityborn.app',
   appName: 'cityborn',
-  webDir: 'dist',
+  webDir: '.next/static',
   server: {
     url: 'https://cityborn.vercel.app',
     cleartext: true,
