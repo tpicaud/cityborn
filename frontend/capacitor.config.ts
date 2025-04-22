@@ -8,6 +8,11 @@ const config: CapacitorConfig = {
     url: 'https://cityborn.vercel.app',
     cleartext: true,
   },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+    }
+  }
 };
 
 export default config;
