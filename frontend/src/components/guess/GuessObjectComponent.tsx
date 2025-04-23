@@ -5,7 +5,7 @@ import CardMedia from "@mui/material/CardMedia";
 
 export default function GuessObjectComponent({ guessObject }: Readonly<{ guessObject: GuessObject }>) {
   return (
-      <Card className="absolute top-0 right-0 m-5 w-[10%] min-w-[6em]">
+      <Card className="absolute top-0 right-0 my-14 mx-5 w-[10%] min-w-[6em]">
         <CardMedia
           component="img"
           image={guessObject.image}
