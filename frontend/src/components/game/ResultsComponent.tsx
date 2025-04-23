@@ -96,7 +96,7 @@ const ResultsComponent = ({
 
 
     return (
-        <div className="h-full w-full my-2 overflow-y-auto">
+        <div className="h-full w-full my-14 overflow-y-auto">
             <div className="w-full h-full flex flex-col justify-center items-center gap-2">
                 <div className='flex flex-col justify-center items-center gap-2'>
                     <h1 className="font-bold flex flex-row items-end">

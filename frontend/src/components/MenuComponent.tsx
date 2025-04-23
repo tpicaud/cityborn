@@ -127,7 +127,7 @@ export default function MenuComponent() {
                             }}
                             disabled={!code}
                         >
-                            Rejoindre
+                            <p className='px-3'>Rejoindre</p>
                         </Button>
 
                     </div>
