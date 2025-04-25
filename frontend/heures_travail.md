@@ -49,3 +49,5 @@
 | 12/04/2025 | 8h | Optimisation des temps de chargement |
 | 15/04/2025 | 6h | Développement appli ios |
 | 17/04/2025 | 4h | Développement appli ios |
+| 22/04/2025 | 3h | Finalisation et review appli ios |
+| 25/04/2025 | 5h | Ouverture appli ios aux tests + mise à jour appli android |
