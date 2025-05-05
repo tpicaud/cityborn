@@ -1,25 +1,23 @@
-import Game from "@/types/Game";
 import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, TextField, IconButton } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useState } from "react";
+import { Session } from "@/types/Session";
+import GameConfig from "@/types/GameConfig";
 
-export const LobbyComponent = ({
-    localPlayerID,
-    game,
-    startGame
-}: {
-    localPlayerID: string | null,
-    game: Game;
+export const LobbyComponent = ({ localPlayerID, session, updateConfig, startGame }: {
+    localPlayerID: string | undefined;
+    session: Session;
+    updateConfig: (newConfid: GameConfig) => void,
     startGame: () => void
 }) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(game.id);
+        navigator.clipboard.writeText(session.id);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000); // Réinitialise le message après 2 secondes
     };
-
+    
     return (
             <Card sx={{ maxWidth: 400, margin: "auto", mt: 4, p: 2 }}>
                 <CardContent>
@@ -29,7 +27,7 @@ export const LobbyComponent = ({
                     </Typography>
                     <TextField
                         fullWidth
-                        value={game.id}
+                        value={session.id}
                         variant="outlined"
                         slotProps={{
                             input: {
@@ -56,13 +54,13 @@ export const LobbyComponent = ({
 
                     {/* Liste des joueurs */}
                     <List>
-                        {game.players
+                        {session.players
                             .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1)) // Trier les joueurs
                             .map((player) => (
                                 <ListItem key={player.id} divider>
                                     <ListItemText
                                         primary={
-                                            player.id === game.hostID
+                                            player.id === session.hostID
                                                 ? `${player.id} (Host)`
                                                 : `${player.id}`
                                         }
@@ -81,7 +79,7 @@ export const LobbyComponent = ({
                         color="primary"
                         fullWidth
                         sx={{ mt: 2 }}
-                        disabled={game.hostID !== localPlayerID}
+                        disabled={session.hostID !== localPlayerID}
                         onClick={startGame}
                     >
                         Démarrer la partie

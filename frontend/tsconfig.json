@@ -24,6 +24,6 @@
       "@types/*": ["src/types/*"] // Permet d'utiliser des alias pour importer les types
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/game/solo/[gameID]/results"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/session/solo/[gameID]/results"],
   "exclude": ["node_modules"]
 }

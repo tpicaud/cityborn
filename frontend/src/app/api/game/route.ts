@@ -8,6 +8,7 @@ import { uniqueNamesGenerator } from "unique-names-generator";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import { GameMode } from "@/enums/GameMode";
 import { tennis_dictionnary } from "../custom_dictionnary";
+import { PlayerResults } from "@/types/Results";
 
 export async function POST(request: Request) {
   try {
@@ -93,12 +94,9 @@ function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): G
       separator: '-',
       length: 2
     }),
-    lastActivity: Date.now(),
-    mode: GameMode.MULTI,
-    hostID: '',
-    status: GameStatus.IN_LOBBY,
+    status: GameStatus.IN_GAME,
     gameConfig,
-    players: [],
+    results: new Map<string, PlayerResults>(),
     currentRound: undefined,
     guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
     guessObjects: guessObjects,
@@ -115,12 +113,9 @@ function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Ga
       separator: '-',
       length: 2
     }),
-    lastActivity: Date.now(),
-    mode: GameMode.SOLO,
-    hostID: 'guest',
-    status: GameStatus.IN_LOBBY,
+    status: GameStatus.IN_GAME,
     gameConfig,
-    players: [],
+    results: new Map<string, PlayerResults>(),
     currentRound: undefined,
     guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
     guessObjects: guessObjects,

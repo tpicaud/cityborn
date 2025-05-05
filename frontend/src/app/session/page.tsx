@@ -27,7 +27,7 @@ export default function GamePage() {
 
         setGame(newGame)
 
-        router.push(`/game/${gameMode}/${newGame.id}`);
+        router.push(`/session/${gameMode}/${newGame.id}`);
 
       } catch {
         setError('Erreur lors de la création de la partie');

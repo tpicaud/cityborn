@@ -13,16 +13,15 @@ import Game from '@/types/Game';
 
 const ResultsComponent = ({
     game,
-    playersResults,
     localPlayerID
 }: {
     game: Game, 
-    playersResults: Map<string, PlayerResults>,
     localPlayerID: string
 }) => {
 
     const router = useRouter();
 
+    const playersResults = game.results;
     const [sentence, setSentence] = useState<{ message: string, sub_message_1: string, sub_message_2: string }>();
     const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>()
 

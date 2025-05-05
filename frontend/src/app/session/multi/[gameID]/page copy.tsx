@@ -1,29 +1,34 @@
 'use client';
 
 import LoadingComponent from '@/components/others/LoadingComponent';
-import ResultsComponent from '@/components/game/ResultsComponent';
+import ResultsComponent from '@/components/Session/ResultsComponent';
 import { useGameContext } from '@/contexts/GameContext';
 import { GameStatus } from '@/enums/GameStatus';
-import { useMultiGame } from '@/hooks/useMultiGame';
+import { useMultiSession } from '@/hooks/useMultiSession';
 import { GameComponentProps } from '@/types/GameComponentProps';
 import { getGameResult } from '@/utils/getGameResult';
 import { useEffect, useState } from 'react';
-import { LobbyComponent } from '@/components/game/LobbyComponent';
+import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
 import { DialogInput } from '@/components/others/DialogInput';
-import { GameComponent } from '@/components/game/GameComponent';
+import { GameComponent } from '@/components/Session/GameComponent';
+import { SessionStatus } from '@/enums/SessionStatus';
+import { Session } from '@/types/Session';
 
-export default function MultiGamePage() {
+export default function MultiSessionPage() {
 
     const router = useRouter();
     const { gameID } = useParams<{ gameID: string }>();
-    const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
-    const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
+    
     const [errorMessage, setErrorMessage] = useState<string>()
+    const [localPlayerID, setLocalPlayerID] = useState<string>();
+    const [session, setSession] = useState<Session>()
+
+    const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
 
     useEffect(() => {
-        const fetchGame = async (gameID: string): Promise<void> => {
+        const fetchSession = async (gameID: string): Promise<void> => {
             if (gameSocket.isConnected && !game) {
                 try {
                     await gameSocket.fetchGame(gameID)
@@ -72,7 +77,7 @@ export default function MultiGamePage() {
         startGame,
         handleGuess,
         handleNextRound,
-    } = useMultiGame(game, localPlayerID, gameSocket);
+    } = useMultiSession(game, localPlayerID, gameSocket);
 
     const handlePlay = (input: string) => {
         if (game && !game.players.some(player => player.id === input)) {
@@ -116,7 +121,7 @@ export default function MultiGamePage() {
     }
 
     switch (game.status) {
-        case GameStatus.IN_LOBBY:
+        case SessionStatus.IN_LOBBY:
             return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
 
         case GameStatus.IN_GAME:
