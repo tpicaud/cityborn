@@ -9,7 +9,7 @@ export default interface Game {
     status: GameStatus;
     gameConfig: GameConfig
     currentRound: Round | undefined;
-    results: Map<string, PlayerResults>
+    results: Record<string, PlayerResults>
     guessObjectsIds: string[];
 
     // Heavy params

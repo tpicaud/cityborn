@@ -115,10 +115,8 @@ export function useSoloSession(
             
             if (!playersGuesses) return prevGame;
             
-            console.log(prevGame.results)
-            console.log("Is prevGame.results a Map?", prevGame.results instanceof Map);
-            const updatedResults = new Map(prevGame.results);
-            console.log(updatedResults)
+            // Utilisation d'un Record à la place d'une Map
+            const updatedResults = { ...prevGame.results };  // Copier l'objet pour ne pas muter l'état original
         
             for (const [playerID, guess] of Object.entries(playersGuesses)) {
                 const newResult: Result = {
@@ -127,16 +125,20 @@ export function useSoloSession(
                     points: guess.points,
                 };
         
-                const playerResults = updatedResults.get(playerID) ?? { results: [] };
-                playerResults.results.push(newResult);
-                updatedResults.set(playerID, playerResults)
+                // Accéder ou créer le playerResults pour chaque joueur
+                if (!updatedResults[playerID]) {
+                    updatedResults[playerID] = { results: [] };  // Initialisation si non existant
+                }
+        
+                updatedResults[playerID].results.push(newResult);  // Ajouter le nouveau résultat
             }
         
             return {
                 ...prevGame,
-                results: updatedResults,
+                results: updatedResults,  // Retourner les résultats mis à jour
             };
         });
+        
         
 
         // Go to next guessObject
