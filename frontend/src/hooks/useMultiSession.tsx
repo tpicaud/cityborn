@@ -1,13 +1,13 @@
 import Game from "@/types/Game";
-import IUseGame from "./IUseGame";
+import IUseSession from "./IUseSession";
 import Guess from "@/types/Guess";
 import { GameSocket } from "./useGameSocket";
 
-export function useMultiGame(
+export function useMultiSession(
     game: Game | null,
     localPlayerID: string | null,
     gameSocket: GameSocket
-): IUseGame {
+): IUseSession {
 
     const startGame = async () => {
         if (!game || !localPlayerID) return;

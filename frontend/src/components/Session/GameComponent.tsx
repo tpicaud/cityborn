@@ -5,18 +5,19 @@ import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "@/components/others/LoadingComponent";
-import { GameComponentProps } from "@/types/GameComponentProps";
+import Game from "@/types/Game";
+import Guess from "@/types/Guess";
+import { Session } from "@/types/Session";
+import { GameStatus } from "@/enums/GameStatus";
+import ResultsComponent from "./ResultsComponent";
 
-export const GameComponent = ({ props }: { props: GameComponentProps }) => {
-
-    const {
-        game,
-        localPlayerID,
-        handleGuess,
-        handleNextRound,
-    } = props
-
-
+export const GameComponent = ({ localPlayerID, game, session, handleGuess, handleNextRound }: {
+    localPlayerID: string,
+    game: Game,
+    session: Session,
+    handleGuess: (guess: Guess) => void,
+    handleNextRound: () => void,
+}) => {
 
     const NextButton: React.FC = () => {
         if (!game?.currentRound) return null; // On s'assure que currentRound est défini
@@ -25,7 +26,7 @@ export const GameComponent = ({ props }: { props: GameComponentProps }) => {
             <Button
                 variant="contained"
                 color="error"
-                disabled={game.hostID !== localPlayerID}
+                disabled={session.hostID !== localPlayerID}
                 onClick={() => {
                     handleNextRound();
                 }}
@@ -47,6 +48,10 @@ export const GameComponent = ({ props }: { props: GameComponentProps }) => {
 
     if (!game?.currentRound) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
 
+    switch (game.status) {
+        case GameStatus.IN_RESULTS:
+            return <ResultsComponent game={game} localPlayerID={localPlayerID} />
+    }
     return (
         <div>
             <GuessComponent

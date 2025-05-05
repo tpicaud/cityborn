@@ -46,7 +46,7 @@ export default function MenuComponent() {
             categories: categories.toString()
         }).toString();
 
-        router.push(`/game?${queryParams}`);
+        router.push(`/session/solo`);
     };
 
     const handleJoin = async () => {
