@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Game from '@/types/Game';
+import { getGameResult } from '@/utils/getGameResult';
 
 const ResultsComponent = ({
     game,
@@ -21,7 +22,7 @@ const ResultsComponent = ({
 
     const router = useRouter();
 
-    const playersResults = game.results;
+    const playersResults = getGameResult(game);
     const [sentence, setSentence] = useState<{ message: string, sub_message_1: string, sub_message_2: string }>();
     const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>()
 
