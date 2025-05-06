@@ -21,7 +21,7 @@ export const GameComponent = ({ localPlayerID, game, session, handleGuess, handl
 }) => {
 
     const NextButton: React.FC = () => {
-        if (!game?.currentRound) return null; // On s'assure que currentRound est défini
+        if (!game?.currentRound) return null;
 
         return (
             <Button

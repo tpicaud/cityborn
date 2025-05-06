@@ -9,6 +9,7 @@ import GameConfig from "@/types/GameConfig";
 import { GameMode } from "@/enums/GameMode";
 import { useEffect, useState } from "react";
 import { SessionStatus } from "@/enums/SessionStatus";
+import { createGame } from "@/utils/SessionService";
 
 export function useSoloSession(
     session: Session | undefined,
@@ -19,6 +20,10 @@ export function useSoloSession(
 ): IUseSession {
 
     const [inGame, setInGame] = useState(false);
+
+    useEffect(() => {
+        console.log(session?.gameConfig)
+    }, [session?.gameConfig])
 
     useEffect(() => {
         if (session) {
@@ -34,7 +39,7 @@ export function useSoloSession(
         }
     }, [inGame])
 
-    const updateConfig = (newConfig: GameConfig) => {
+    const updateGameConfig = (newConfig: Partial<GameConfig>) => {
         if (!session) return;
 
         setSession((prevSession) => {
@@ -43,7 +48,7 @@ export function useSoloSession(
             }
             return {
                 ...prevSession,
-                gameConfig: newConfig
+                gameConfig: { ...prevSession.gameConfig, ...newConfig }
             }
         })
     }
@@ -53,29 +58,15 @@ export function useSoloSession(
 
         try {
             // Fetch game
-            const response = await fetch('/api/game', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ gameMode: GameMode.SOLO, gameConfig: session.gameConfig }),
-            });
-            if (!response.ok) {
-                throw new Error('Erreur lors de la création de la partie');
-            }
-            const game: Game = await response.json();
+            const game = await createGame(session.gameConfig);
 
             // Start game
-            setGame((prevGame) => {
-                if (!game) return;
-
-                return {
-                    ...game,
-                    currentRound: {
-                        status: RoundStatus.GUESSING,
-                        guessObjectId: game.guessObjectsIds[0],
-                        playersGuesses: {},
-                    }
+            setGame({
+                ...game,
+                currentRound: {
+                    status: RoundStatus.GUESSING,
+                    guessObjectId: game.guessObjectsIds[0],
+                    playersGuesses: {},
                 }
             })
 
@@ -110,35 +101,35 @@ export function useSoloSession(
         // Record result of the round
         setGame((prevGame) => {
             if (!prevGame || !prevGame.currentRound) return prevGame;
-        
+
             const { guessObjectId, playersGuesses } = prevGame.currentRound;
-            
+
             if (!playersGuesses) return prevGame;
-            
+
             // Utilisation d'un Record à la place d'une Map
             const updatedResults = { ...prevGame.results };  // Copier l'objet pour ne pas muter l'état original
-        
+
             for (const [playerID, guess] of Object.entries(playersGuesses)) {
                 const newResult: Result = {
                     guessObjectId,
                     distance: guess.distance,
                     points: guess.points,
                 };
-        
+
                 // Accéder ou créer le playerResults pour chaque joueur
                 if (!updatedResults[playerID]) {
                     updatedResults[playerID] = { results: [] };  // Initialisation si non existant
                 }
-        
+
                 updatedResults[playerID].results.push(newResult);  // Ajouter le nouveau résultat
             }
-        
+
             return {
                 ...prevGame,
                 results: updatedResults,  // Retourner les résultats mis à jour
             };
-        });        
-        
+        });
+
 
         // Go to next guessObject
         const nextObjectIndex = getNextObjectId();
@@ -191,7 +182,7 @@ export function useSoloSession(
     }
 
     return {
-        updateConfig,
+        updateGameConfig,
         startGame,
         handleNextRound,
         handleGuess,

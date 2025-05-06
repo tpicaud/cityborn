@@ -6,18 +6,16 @@ import GuessObject from "@/types/GuessObject";
 import { Categories } from "@/enums/Categories";
 import { uniqueNamesGenerator } from "unique-names-generator";
 import { connectToDatabase } from "@/utils/connectToDatabase";
-import { GameMode } from "@/enums/GameMode";
 import { tennis_dictionnary } from "../custom_dictionnary";
-import { PlayerResults } from "@/types/Results";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { gameMode, gameConfig } = body;
+    const { gameConfig } = body;
 
-    if (!gameMode || !gameConfig) {
+    if (!gameConfig) {
       return NextResponse.json(
-        { message: "gameMode, gameConfig et playerID sont requis." },
+        { message: "gameConfig est requis." },
         { status: 400 }
       );
     }
@@ -25,17 +23,8 @@ export async function POST(request: Request) {
     // Fetch guessObjects
     const guessObjects = await fetchGuessObjects(gameConfig);
 
-    switch (gameMode) {
-
-      case GameMode.MULTI:
-        const newMultiGame: Game = createMultiGame(gameConfig, guessObjects);
-        //await collection.insertOne(newMultiGame);
-        return NextResponse.json(newMultiGame, { status: 201 });
-
-      case GameMode.SOLO:
-        const newSoloGame: Game = createSoloGame(gameConfig, guessObjects);
-        return NextResponse.json(newSoloGame, { status: 201 });
-    }
+    const newGame: Game = createGame(gameConfig, guessObjects);
+    return NextResponse.json(newGame, { status: 201 });
 
   } catch (error) {
     console.error("Erreur lors de la création de la game:", error);
@@ -86,7 +75,7 @@ async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]>
 }
 
 
-function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
+function createGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
   // Création de la nouvelle game
   const newGame: Game = {
     id: uniqueNamesGenerator({
@@ -104,23 +93,3 @@ function createMultiGame(gameConfig: GameConfig, guessObjects: GuessObject[]): G
 
   return newGame
 }
-
-function createSoloGame(gameConfig: GameConfig, guessObjects: GuessObject[]): Game {
-  // Création de la nouvelle game
-  const newGame: Game = {
-    id: uniqueNamesGenerator({
-      dictionaries: [tennis_dictionnary, tennis_dictionnary],
-      separator: '-',
-      length: 2
-    }),
-    status: GameStatus.IN_GAME,
-    gameConfig,
-    results: {},
-    currentRound: undefined,
-    guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
-    guessObjects: guessObjects,
-  };
-
-  return newGame
-}
-

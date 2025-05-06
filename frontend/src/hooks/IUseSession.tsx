@@ -2,7 +2,7 @@ import GameConfig from "@/types/GameConfig";
 import Guess from "@/types/Guess";
 
 export default interface IUseSession {
-    updateConfig: (newConfig: GameConfig) => void
+    updateGameConfig: (newConfig: Partial<GameConfig>) => void
     startGame: () => Promise<void>;
     handleGuess: (guess: Guess) => void;
     handleNextRound: () => void;
