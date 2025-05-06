@@ -10,6 +10,7 @@ import { GameMode } from '@/enums/GameMode';
 import { io } from 'socket.io-client';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Categories } from '@/enums/Categories';
+import { createSession } from '@/utils/SessionService';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -19,35 +20,18 @@ export default function MenuComponent() {
 
     const router = useRouter();
 
-    // Game Config variables
-    const [timer, setTimer] = useState('20');
-    const [nbOfObjects, setNbOfObjects] = useState('6')
-    const [categories, setCategories] = useState<string[]>([Categories.TOUTES]);
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
     const [loadingJoin, setLoadingJoin] = useState(false);
 
-
-    const handleCategories = (event: SelectChangeEvent<string[]>) => {
-        const { target: { value } } = event;
-
-        const selectedCategories = typeof value === 'string' ? value.split(',') : value;
-
-        setCategories(
-            selectedCategories
-        );
-    };
-
-    const handlePlay = (gameMode: GameMode) => {
-        const queryParams = new URLSearchParams({
-            gameMode: gameMode,
-            timer: timer.toString(),
-            nbOfObjects: nbOfObjects.toString(),
-            categories: categories.toString()
-        }).toString();
-
+    const handleSoloPlay = () => {
         router.push(`/session/solo`);
     };
+
+    const handleMultiPlay = async () => {
+        const session = await createSession(GameMode.MULTI);
+        router.push(`/session/multi/${session.id}`)
+    }
 
     const handleJoin = async () => {
         const gameExists = async (gameID: string): Promise<boolean> => {
@@ -137,7 +121,7 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
-                            onClick={() => handlePlay(GameMode.SOLO)}
+                            onClick={handleSoloPlay}
                         >
                             <b>SOLO</b>
                         </Button>
@@ -145,103 +129,10 @@ export default function MenuComponent() {
                             variant="contained"
                             color="primary"
                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
-                            onClick={() => handlePlay(GameMode.MULTI)}
+                            onClick={handleMultiPlay}
                         >
                             <b>MULTI</b>
                         </Button>
-                    </div>
-
-                    <div className='max-w-full'>
-                        <Accordion
-                            sx={{
-                                borderTop: '1px solid #ccc',  // Bordure grise
-                                backgroundColor: 'transparent',  // Fond transparent
-                                boxShadow: 'none',  // Pas d'ombre
-                                '&:before': {
-                                    display: 'none',  // Enlève la ligne avant l'accordion
-                                },
-                            }}
-                        >
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                                sx={{
-                                    backgroundColor: 'transparent',  // Fond transparent pour l'en-tête
-                                    border: 'none',
-                                    paddingBottom: 0,
-                                    marginBottom: 0
-                                }}
-                            >
-                                <Typography component="span">Configuration de la partie</Typography>
-                            </AccordionSummary>
-                            <AccordionDetails
-                                sx={{
-                                    backgroundColor: 'transparent',
-                                    paddingTop: 0,
-                                    marginTop: 0
-                                }}
-                            >
-                                <div className='w-full flex flex-col gap-3'>
-                                    <FormControl sx={{ width: '100%' }}>
-                                        <InputLabel id="categories-input">Categories</InputLabel>
-                                        <Select
-                                            labelId="categories-input"
-                                            id="categories-input"
-                                            multiple
-                                            value={categories}
-                                            onChange={handleCategories}
-                                            input={<OutlinedInput label="Categories" />}
-                                            renderValue={(selected) => selected.join(', ')}
-                                        >
-                                            {Object.values(Categories).map((category) => (
-                                                <MenuItem key={category} value={category}>
-                                                    <Checkbox checked={categories.includes(category)} />
-                                                    <ListItemText primary={category} />
-                                                </MenuItem>
-                                            ))}
-
-                                        </Select>
-                                    </FormControl>
-
-                                    <div className='w-full flex flex-row gap-x-2'>
-                                        <TextField
-                                            type="number"
-                                            label="Personnalités"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={nbOfObjects}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setNbOfObjects(value === '' ? '' : value.toString());
-                                            }}
-                                            onBlur={() => {
-                                                if (nbOfObjects === '' || nbOfObjects === null) {
-                                                    setNbOfObjects('6');
-                                                }
-                                            }}
-                                        />
-
-                                        <TextField
-                                            type="number"
-                                            label="Timer"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={timer === null ? '' : timer}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setTimer(value === '' ? '' : value.toString());
-                                            }}
-                                            onBlur={() => {
-                                                if (timer === 'null') {
-                                                    setTimer('20');
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </AccordionDetails>
-                        </Accordion>
                     </div>
 
                     {joinErrorMessage && (
