@@ -137,8 +137,7 @@ export function useSoloSession(
                 ...prevGame,
                 results: updatedResults,  // Retourner les résultats mis à jour
             };
-        });
-        
+        });        
         
 
         // Go to next guessObject
