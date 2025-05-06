@@ -15,7 +15,6 @@ export default function SoloGamePage() {
 
     const localPlayerID = 'guest';
     const [session, setSession] = useState<Session>();
-    const [game, setGame] = useState<Game>();
 
     const {
         updateGameConfig,
@@ -23,7 +22,7 @@ export default function SoloGamePage() {
         handleGuess,
         handleNextRound,
         endGame
-    } = useSoloSession(session, game, localPlayerID, setSession, setGame);
+    } = useSoloSession(session, localPlayerID, setSession);
 
     // Fetch new session
     useEffect(() => {
@@ -43,6 +42,6 @@ export default function SoloGamePage() {
             return <LobbyComponent localPlayerID={localPlayerID} session={session} updateGameConfig={updateGameConfig} startGame={startGame} />
 
         case SessionStatus.IN_GAME:
-            return <GameComponent localPlayerID={localPlayerID} game={game!} session={session} handleGuess={handleGuess} handleNextRound={handleNextRound} endGame={endGame} />
+            return <GameComponent localPlayerID={localPlayerID} game={session.currentGame!} session={session} handleGuess={handleGuess} handleNextRound={handleNextRound} endGame={endGame} />
     }
 }
