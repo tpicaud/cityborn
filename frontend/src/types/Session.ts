@@ -11,5 +11,6 @@ export interface Session {
     lastActivity: number;
     players: Player[];
     gameConfig: GameConfig;
-    status: SessionStatus
+    status: SessionStatus;
+    currentGame?: Game
 }

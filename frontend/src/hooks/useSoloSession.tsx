@@ -2,29 +2,26 @@ import Game from "@/types/Game";
 import IUseSession from "./IUseSession";
 import Guess from "@/types/Guess";
 import { RoundStatus } from "@/enums/RoundStatus";
-import { PlayerResults, Result } from "@/types/Results";
+import { Result } from "@/types/Results";
 import { GameStatus } from "@/enums/GameStatus";
 import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
-import { GameMode } from "@/enums/GameMode";
 import { useEffect, useState } from "react";
 import { SessionStatus } from "@/enums/SessionStatus";
 import { createGame } from "@/utils/SessionService";
 
 export function useSoloSession(
     session: Session | undefined,
-    game: Game | undefined,
     localPlayerID: string | undefined,
     setSession: React.Dispatch<React.SetStateAction<Session | undefined>>,
-    setGame: React.Dispatch<React.SetStateAction<Game | undefined>>,
 ): IUseSession {
 
+    const [game, setGame] = useState<Game>();
     const [inGame, setInGame] = useState(false);
 
-    useEffect(() => {
-        console.log(session?.gameConfig)
-    }, [session?.gameConfig])
-
+    ////////////////
+    // useEffects //
+    ////////////////
     useEffect(() => {
         if (session) {
             setSession((prevSession) => {
@@ -39,6 +36,21 @@ export function useSoloSession(
         }
     }, [inGame])
 
+    useEffect(() => {
+        setSession((prevSession) => {
+            if (prevSession) {
+                return {
+                    ...prevSession,
+                    currentGame: game
+                }
+            }
+        })
+    }, [game])
+
+
+    ///////////////
+    // Functions //
+    ///////////////
     const updateGameConfig = (newConfig: Partial<GameConfig>) => {
         if (!session) return;
 
