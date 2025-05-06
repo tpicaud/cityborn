@@ -20,7 +20,8 @@ export default function SoloGamePage() {
         updateConfig,
         startGame,
         handleGuess,
-        handleNextRound
+        handleNextRound,
+        endGame
     } = useSoloSession(session, game, localPlayerID, setSession, setGame);
 
     // Fetch new session
@@ -57,7 +58,7 @@ export default function SoloGamePage() {
             return <LobbyComponent localPlayerID={localPlayerID} session={session} updateConfig={updateConfig} startGame={startGame} />
 
         case SessionStatus.IN_GAME:
-            return <GameComponent localPlayerID={localPlayerID} game={game!} session={session} handleGuess={handleGuess} handleNextRound={handleNextRound} />
+            return <GameComponent localPlayerID={localPlayerID} game={game!} session={session} handleGuess={handleGuess} handleNextRound={handleNextRound} endGame={endGame} />
 
     }
 }

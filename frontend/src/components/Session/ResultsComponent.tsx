@@ -14,10 +14,12 @@ import { getGameResult } from '@/utils/getGameResult';
 
 const ResultsComponent = ({
     game,
-    localPlayerID
+    localPlayerID,
+    endGame
 }: {
-    game: Game, 
-    localPlayerID: string
+    game: Game,
+    localPlayerID: string,
+    endGame: () => void
 }) => {
 
     const router = useRouter();
@@ -106,7 +108,7 @@ const ResultsComponent = ({
                     <h2 className='text-center text-base md:text-xl'>{sentence.sub_message_1}{sentence.message}</h2>
                     <h2 className='text-center text-xl'>{sentence.sub_message_2}</h2>
                 </div>
-    
+
                 <div className='w-full h-full flex flex-col justify-center items-center'>
                     {playersResults.size === 1 ? (
                         // Si un seul joueur, afficher une liste
@@ -143,50 +145,61 @@ const ResultsComponent = ({
                     ) : (
                         // Si plusieurs joueurs, afficher l'accordéon
                         Array.from(playersResults.entries())
-                        .sort(([, aResults], [, bResults]) => calculateTotalPoints(bResults) - calculateTotalPoints(aResults))
-                        .map(([player, playerResults]) => (
-                            <Accordion key={player} className="max-w-4xl w-[80%]">
-                                <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
-                                    <h3 className="font-bold">{player} - {calculateTotalPoints(playerResults)} pts</h3>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <TableContainer component={Paper} className="shadow-lg">
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell><p className="font-bold">Nom</p></TableCell>
-                                                    <TableCell><p className="font-bold">Distance (km)</p></TableCell>
-                                                    <TableCell><p className="font-bold">Points</p></TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {playerResults.results.map((result, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>{result.guessObjectId}</TableCell>
-                                                        <TableCell>
-                                                            {result.distance !== -1 ? (
-                                                                <p>{result.distance.toFixed(2)}</p>
-                                                            ) : (
-                                                                <p>Pas de guess</p>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>{result.points}</TableCell>
+                            .sort(([, aResults], [, bResults]) => calculateTotalPoints(bResults) - calculateTotalPoints(aResults))
+                            .map(([player, playerResults]) => (
+                                <Accordion key={player} className="max-w-4xl w-[80%]">
+                                    <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
+                                        <h3 className="font-bold">{player} - {calculateTotalPoints(playerResults)} pts</h3>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <TableContainer component={Paper} className="shadow-lg">
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell><p className="font-bold">Nom</p></TableCell>
+                                                        <TableCell><p className="font-bold">Distance (km)</p></TableCell>
+                                                        <TableCell><p className="font-bold">Points</p></TableCell>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </AccordionDetails>
-                            </Accordion>
-                        ))
+                                                </TableHead>
+                                                <TableBody>
+                                                    {playerResults.results.map((result, index) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell>{result.guessObjectId}</TableCell>
+                                                            <TableCell>
+                                                                {result.distance !== -1 ? (
+                                                                    <p>{result.distance.toFixed(2)}</p>
+                                                                ) : (
+                                                                    <p>Pas de guess</p>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>{result.points}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </AccordionDetails>
+                                </Accordion>
+                            ))
                     )}
                 </div>
-    
+
                 <div className='flex flex-row justify-center w-full gap-3'>
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => router.push('/')}
+                        onClick={endGame}
+                        className="w-24"
+                    >
+                        Lobby 
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            router.push('/');
+                            endGame();
+                        }}
                         className="w-24"
                     >
                         Menu
@@ -195,7 +208,7 @@ const ResultsComponent = ({
             </div>
         </div>
     );
-    
+
 }
 
 export default ResultsComponent;
