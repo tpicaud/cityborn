@@ -52,3 +52,4 @@
 | 22/04/2025 | 3h | Finalisation et review appli ios |
 | 25/04/2025 | 5h | Ouverture appli ios aux tests + mise à jour appli android |
 | 05/05/2025 | 9h | Début du refactoring pour les sessions |
+| 06/05/5025 | 4h | Refactoring session solo |
