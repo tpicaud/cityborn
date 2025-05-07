@@ -6,7 +6,6 @@ import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameMode } from '@/enums/GameMode';
 import { SessionStatus } from '@/enums/SessionStatus';
 import { useSoloSession } from '@/hooks/useSoloSession';
-import Game from '@/types/Game';
 import { Session } from '@/types/Session';
 import { createSession } from '@/utils/SessionService';
 import { useEffect, useState } from 'react';
@@ -16,14 +15,6 @@ export default function SoloGamePage() {
     const localPlayerID = 'guest';
     const [session, setSession] = useState<Session>();
 
-    const {
-        updateGameConfig,
-        startGame,
-        handleGuess,
-        handleNextRound,
-        endGame
-    } = useSoloSession(session, localPlayerID, setSession);
-
     // Fetch new session
     useEffect(() => {
         const fetchSession = async () => {
@@ -32,6 +23,14 @@ export default function SoloGamePage() {
         }
         fetchSession();
     }, []);
+
+    const {
+        updateGameConfig,
+        startGame,
+        handleGuess,
+        handleNextRound,
+        endGame
+    } = useSoloSession(session, localPlayerID, setSession);
 
     if (!session) {
         return <LoadingComponent message='Chargement de la partie' />
