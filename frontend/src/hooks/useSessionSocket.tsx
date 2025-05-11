@@ -2,10 +2,11 @@
 
 import Game from "@/types/Game";
 import Guess from "@/types/Guess";
+import { Session } from "@/types/Session";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
+export const useSessionSocket = (gameId: string, localPlayerID: string | undefined) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [gameUpdate, setGameUpdate] = useState<Game>();
     const [isConnected, setIsConnected] = useState(false);
@@ -79,7 +80,7 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
     //////////////////////
 
     // Rejoindre la partie
-    const joinGame = (gameID: string, playerID: string): Promise<void> => {
+    const joinSession = (gameID: string, playerID: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (!socket) {
                 reject(new Error("Socket non initialisée"));
@@ -258,17 +259,17 @@ export const useGameSocket = (gameId: string, localPlayerID: string | null) => {
         });
     }
 
-    return { isConnected, gameUpdate, fetchGame, postGame, joinGame, startGame, handleGuess, handleNextRound, endGame } as GameSocket;
+    return { isConnected, sessionUpdate, fetchSession, joinSession, postGame, startGame, handleGuess, handleNextRound, endGame } as SessionSocket;
 };
 
-export type GameSocket = {
+export type SessionSocket = {
     isConnected: boolean;
-    gameUpdate: Game | undefined;
-    fetchGame: (gameID: string) => Promise<void>;
+    sessionUpdate: Session | undefined;
+    fetchSession: (sessionID: string) => Promise<void>;
+    joinSession: (sessionID: string, playerID: string) => Promise<void>;
     postGame: (game: Game) => Promise<void>;
-    joinGame: (gameID: string, playerID: string) => Promise<void>;
-    startGame: (gameID: string, playerID: string) => Promise<void>;
-    handleGuess: (gameID: string, playerID: string, guess: Guess) => Promise<void>;
+    startGame: (sessionID: string, playerID: string, game: Game) => Promise<void>;
+    handleGuess: (sessionID: string, playerID: string, guess: Guess) => Promise<void>;
     handleNextRound: (gameID: string, playerID: string) => Promise<void>;
     endGame: (gameID: string, playerID: string) => Promise<void>;
 };

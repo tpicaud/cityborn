@@ -15,7 +15,7 @@ export default function SoloGamePage() {
     const localPlayerID = 'guest';
     const [session, setSession] = useState<Session>();
 
-    // Fetch new session
+    // Create new session
     useEffect(() => {
         const fetchSession = async () => {
             const session = await createSession(GameMode.SOLO);

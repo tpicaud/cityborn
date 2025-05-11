@@ -2,7 +2,6 @@
 
 import LoadingComponent from '@/components/others/LoadingComponent';
 import ResultsComponent from '@/components/Session/ResultsComponent';
-import { useGameContext } from '@/contexts/GameContext';
 import { GameStatus } from '@/enums/GameStatus';
 import { useMultiSession } from '@/hooks/useMultiSession';
 import { GameComponentProps } from '@/types/GameComponentProps';
@@ -19,7 +18,6 @@ export default function MultiGamePage() {
 
     const router = useRouter();
     const { gameID } = useParams<{ gameID: string }>();
-    const { game, localPlayerID, setGame, setLocalPlayerID } = useGameContext();
     const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
     const [errorMessage, setErrorMessage] = useState<string>()
 
