@@ -1,6 +1,6 @@
 export default interface Player {
-    id: string
-    connected?: boolean
-    sessionId?: string,
-    gameId?: string,
+    id: string;
+    inGame: boolean;
+    connected?: boolean;
+    sessionId?: string;
 }

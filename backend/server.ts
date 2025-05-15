@@ -1,11 +1,16 @@
 import { Server as SocketIOServer } from "socket.io";
-import { GameService } from "./services/gameService.ts";
 import { createAdapter } from "@socket.io/redis-adapter";
 import http from "http";
 import express from "express";
 import dotenv from "dotenv";
 import Redis from "ioredis";
-import { setupSessionSocket } from "./sockets/sessionSocket.ts";
+import { setupWSHandler } from "./handlers/wsHandler.ts";
+import { SessionStore } from "./stores/sessionStore.ts";
+import { GameStore } from "./stores/gameStore.ts";
+import { SocketStore } from "./stores/socketStore.ts";
+import { GameService } from "./services/gameService.ts";
+import { SessionService } from "./services/sessionService.ts";
+import { SocketService } from "./services/socketService.ts";
 
 dotenv.config();
 
@@ -27,7 +32,17 @@ const subClient = redis.duplicate();
 
 io.adapter(createAdapter(pubClient, subClient));
 
-setupSessionSocket(io);
+// Stores
+const socketStore = new SocketStore();
+const sessionStore = new SessionStore();
+const gameStore = new GameStore();
+
+// Services
+const socketService = new SocketService(socketStore);
+const gameService = new GameService(gameStore);
+const sessionService = new SessionService(sessionStore, gameService);
+
+setupWSHandler(io);
 
 server.listen(3001, () => {
     console.log('Serveur en écoute sur le port 3001');
