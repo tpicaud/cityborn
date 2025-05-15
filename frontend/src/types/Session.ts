@@ -10,4 +10,5 @@ export interface Session {
     status: SessionStatus;
     gameConfig: GameConfig;
     players: Player[];
+    currentGameId?: string;
 }

@@ -1,13 +1,9 @@
 import { Server as SocketIOServer } from "socket.io";
 import { GameService } from "../services/gameService";
-import { PlayerService } from "../services/playerService";
 import { SessionService } from "../services/sessionService";
 
-export function setupSessionSocket(io: SocketIOServer) {
+export function setupWSHandler(io: SocketIOServer) {
 
-    const playerService = new PlayerService();
-    const sessionService = new SessionService(playerService);
-    const gameService = new GameService(playerService);
 
     // Gérer les connexions WebSocket
     io.on('connection', (socket) => {
@@ -25,8 +21,7 @@ export function setupSessionSocket(io: SocketIOServer) {
                     throw new Error("Paramètres invalides : gameID et playerID sont requis.");
                 }
 
-                const game = await reconnect(socket, gameID, playerID);
-                playerSockets.set(socket.id, { playerID, gameID });
+                const game = await this.playerService.reconnect(socket, gameID, playerID);
 
                 console.log(`Reconnexion de ${playerID} réussie`)
                 callback?.({ success: true, game: game });
@@ -65,51 +60,7 @@ export function setupSessionSocket(io: SocketIOServer) {
         /// Session events //
         /////////////////////
 
-        // Rejoindre une partie
-        socket.on('session:join', async (sessionID, playerID, callback) => {
-            try {
-                if (!sessionID || !playerID) {
-                    throw new Error("Paramètres invalides : gameID et playerID sont requis.");
-                }
-                const updatedGame = await joinGame(socket, sessionID, playerID);
-                playerSockets.set(socket.id, { playerID, sessionID });
-
-                console.log(`${playerID} a rejoint la game ${gameID}`);
-                callback?.({ success: true });
-            } catch (error) {
-                console.error("Erreur lors de la tentative de rejoindre la partie :", error);
-                callback?.({
-                    success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
-                });
-            }
-        });
-
-        socket.on('session:updateGameConfig', async (gameID, playerID, gameConfig, callback) => {
-            try {
-                if (!gameID) {
-                    throw new Error("Paramètre invalide : un objet 'gameID' est requis.");
-                }
-                const game = await updateGameConfig(sessionID, gameConfig);
-                callback?.({ success: true });
-            } catch (error) {
-                console.log(error.message)
-                callback?.({ success: false });
-            }
-        });
-
-        socket.on('session:startGame', async (sessionID, playerID, callback) => {
-            try {
-                if (!sessionID) {
-                    throw new Error("Paramètre invalide : un objet 'gameID' est requis.");
-                }
-                const game = await startGame(sessionID, playerID);
-                callback?.({ success: true });
-            } catch (error) {
-                console.log(error.message)
-                callback?.({ success: false });
-            }
-        });
+        
 
 
 
@@ -117,42 +68,6 @@ export function setupSessionSocket(io: SocketIOServer) {
         /// Games events ///
         ////////////////////
 
-        // Enregistrer un guess
-        socket.on('game:guess', async (gameID, playerID, guess, callback) => {
-            try {
-                const start = Date.now()
-                if (!gameID || !playerID || guess === undefined) {
-                    throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
-                }
-                await handleGuess(gameID, playerID, guess);
-                console.log("Latency handle guess :", Date.now() - start)
-                callback?.({ success: true });
-            } catch (error) {
-                console.error("Erreur lors du traitement du guess :", error);
-                callback?.({
-                    success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
-                });
-            }
-        });
-
-
-        // Aller au round suivant
-        socket.on('game:nextRound', async (gameID, playerID, callback) => {
-            try {
-                if (!gameID || !playerID) {
-                    throw new Error("Paramètres invalides : gameID et playerID sont requis.");
-                }
-                const updatedGame = await handleNextRound(gameID, playerID);
-                callback?.({ success: true });
-            } catch (error) {
-                console.error("Erreur lors du passage au tour suivant :", error);
-                callback?.({
-                    success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
-                });
-            }
-        });
 
 
         ////////////////////////////////////////

@@ -35,6 +35,10 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET(request: Request) {
+  // TODO GET the game and fetch guess objects
+}
+
 // Auxiliary functions
 
 async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]> {
