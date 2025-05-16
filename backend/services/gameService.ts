@@ -1,5 +1,4 @@
 import { Socket } from "socket.io";
-import { io } from "../server.ts";
 import { GameStore } from "../stores/gameStore.ts";
 
 export class GameService {
@@ -7,14 +6,10 @@ export class GameService {
     private gameStore: GameStore;
 
     constructor(gameStore: GameStore) {
-        this.gameStore = this.gameStore;
+        this.gameStore = gameStore;
     }
 
-    /////////////
-    // Methods //
-    /////////////
-
-    async getGame(gameID: string): Promise<any> {
+    async getGame(gameID: string) {
         try {
             const game = await this.gameStore.getGame(gameID);
             if (!game) {
@@ -29,19 +24,27 @@ export class GameService {
     async join(gameID: string, playerID: string) {
         try {
             // Récupération du jeu dans la base de données
-            const game = await this.gameStore.getGame(gameID);
+            let game = await this.gameStore.getGame(gameID);
 
             // Check si la partie existe
             if (!game) throw new Error("Partie introuvable.");
 
             // Vérifier si playerID existe dans la liste des joueurs
-            const playerExists = game.players.some((player: any) => player.id === playerID);
-            if (playerExists) throw new Error("Le joueur existe déjà dans la partie.");
+            const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
+            if (playerIndex === -1) throw new Error("Le joueur n'est pas invité dans la partie.");
 
             // Ajouter le joueur à la partie
-            const newPlayer = { id: playerID, results: [], connected: true };
-            game.players.push(newPlayer);
+            game.players[playerIndex].connected = true;
 
+            await this.gameStore.saveGame(game)
+
+            // Check si tous les joueurs ont join
+            const disconnectPlayers = game.player.some(player => !player.connected);
+            if (!disconnectPlayers) {
+                game = await this.startGame(game);
+            }
+
+            return game;
         } catch (error) {
             throw new Error(`Erreur lors de la connexion de ${playerID} dans la partie ${gameID}: ${error}`);
         }
@@ -51,14 +54,15 @@ export class GameService {
         return await this.disconnectPlayer(gameID, playerID);
     }
 
-    async createGameFromSession(session: any): Promise<any> {
+    async createGameFromSession(session: any) {
         try {
+            const playersID = session.players.map(player => player.id);
             const response = await fetch('/api/game', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ gameConfig: session.gameConfig }),
+                body: JSON.stringify({ gameConfig: session.gameConfig, playersID }),
             });
             const game = await response.json();
 
@@ -66,7 +70,7 @@ export class GameService {
             game.hostID = session.hostID;
 
             // Store in redis
-            await this.gameStore.addGame(game);
+            await this.gameStore.saveGame(game);
 
             return game;
         } catch (e) {
@@ -74,13 +78,34 @@ export class GameService {
         }
     }
 
+    private async startGame(game: any) {
+        try {
+            // Sélection du premier objet à deviner
+            const firstObjectId = game.guessObjectsIds[0];
+
+            // Création du premier round
+            const firstRound = {
+                status: 'GUESSING',
+                guessObjectId: firstObjectId,
+                playersGuesses: {},
+            };
+
+            game.status = 'IN_GAME';
+            game.currentRound = firstRound;
+
+            await this.gameStore.saveGame(game)
+
+            return game;
+        } catch (error) {
+            throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
+        }
+    }
+
     async handleGuess(gameID: string, playerID: string, guess: any) {
         try {
 
             // Récupération du jeu dans la base de données
-            const start = Date.now()
             const game = await this.gameStore.getGame(gameID);
-            console.log('Latency retriving game:', Date.now() - start)
 
             // Check si la partie existe
             if (!game) {
@@ -100,49 +125,32 @@ export class GameService {
             }
 
             // Vérifier si un round est actif
-            if (!game.currentRound) {
+            if (!game.state.currentRound) {
                 throw new Error("Aucun round actif.");
             }
 
-            if (!game.currentRound.playersGuesses[playerID]) {
+            if (!game.state.currentRound.playersGuesses[playerID]) {
+                // Mettre à jour le guess du joueur dans currentRound.playersGuesses
+                game.state.currentRound.playersGuesses[playerID] = guess;
 
-                // Update game and send to the room
-                try {
-                    // Mettre à jour le guess du joueur dans currentRound.playersGuesses
-                    game.currentRound.playersGuesses[playerID] = guess;
-
-                    // Vérifier si tout le monde à guess
-                    const connectedPlayers = game.players.filter((player: any) => player.connected);
-                    if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
-                        game.currentRound.status = 'SHOWING_RESULTS'
-                    }
-
-                    //update game
-                    const start2 = Date.now()
-                    await this.gameStore.updateGame(game);
-                    console.log('Latency updating game:', Date.now() - start2)
-                } catch {
-                    throw new Error(`Erreur lors de la modification dans la base de données`)
+                // Vérifier si tout le monde à guess
+                const connectedPlayers = game.players.filter((player: any) => player.connected);
+                if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
+                    game.state.currentRound.status = 'SHOWING_RESULTS'
                 }
 
-                io.to(gameID).emit('game:update', game);
-
-                return game;
+                await this.gameStore.saveGame(game);
             }
-
+            return game;
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible d'enregistrer le guess de ${playerID} dans la partie ${gameID}: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors de l'enregistrement du guess de ${playerID} dans la partie ${gameID}: ${error}`);
-            }
+            throw new Error(`Erreur lors de l'enregistrement du guess de ${playerID} dans la partie ${gameID}: ${error}`);
         }
     }
 
     async handleNextRound(gameID: string, playerID: string) {
         try {
             // Récupération du jeu dans la base de données
-            const game = await this.gameStore.getGame(gameID)
+            const game = await this.gameStore.getGame(gameID);
 
             if (!game) {
                 throw new Error("Partie introuvable.");
@@ -153,196 +161,49 @@ export class GameService {
                 throw new Error("Le joueur n'est pas le host de la partie.");
             }
 
-            // Vérification que la partie a encore des rounds à jouer
-            if (!game.guessObjectsIds || game.guessObjectsIds.length === 0) {
-                throw new Error("Aucun objet à deviner disponible.");
-            }
-
             // Trouver l'index du currentRound
-            const currentIndex = game.guessObjectsIds.findIndex((id: string) => id === game.currentRound.guessObjectId);
+            const currentIndex = game.state.guessObjectsIds.findIndex((id: string) => id === game.currentRound.guessObjectId);
 
             // Vérifier que l'objet est dans la liste
             if (currentIndex === undefined) {
                 throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
             }
 
-            // Register results
-            game.players = game.players.map((player: any) => {
+            // Register result
+            game.players.forEach((player: any) => {
+                const guess = game.state.currentRound?.playersGuesses[player.id];
+                const playerResults = game.state.results[player.id];
 
                 const newResult = {
-                    guessObjectId: game.currentRound.guessObjectId,
-                    distance: player.connected ? game.currentRound.playersGuesses[player.id].distance : -1,
-                    points: player.connected ? game.currentRound.playersGuesses[player.id].points : 0
-                }
+                    guessObjectId: game.state.currentRound?.guessObjectId ?? '',
+                    distance: guess ? guess.distance : -1,
+                    points: guess ? guess.points : 0
+                };
 
-                return {
-                    ...player,
-                    results: [
-                        ...player.results,
-                        newResult
-                    ].filter(result => result !== null) // Filtrer les valeurs nulles
-                }
+                game.state.results[player.id] = playerResults ? playerResults.results.push(newResult) : { results: [newResult] };
             });
 
             // Go to next guess object
-            if (currentIndex + 1 >= game.guessObjectsIds.length) {
+            if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
                 game.status = 'IN_RESULTS'
-                game.currentRound = undefined
+                game.state.currentRound = undefined
             } else {
                 game.currentRound = {
                     status: 'GUESSING',
-                    guessObjectId: game.guessObjectsIds[currentIndex + 1],
+                    guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
                     playersGuesses: {},
                 }
             }
 
             // Update game and send to the room
-            await this.gameStore.updateGame(game);
-            io.to(gameID).emit('game:update', game);
+            await this.gameStore.saveGame(game);
 
             return game;
-
         } catch (error) {
             if (error instanceof Error) {
                 throw new Error(`Impossible passer au round suivant: ${error.message}`);
             } else {
                 throw new Error(`Erreur lors du passage au round suivant dans la partie ${gameID}: ${error}`);
-            }
-        }
-    }
-
-    async disconnectPlayer(gameID: string, playerID: string, newHostID?: string) {
-        throw new Error("Not implemented");
-    }
-
-    async reconnectPlayer(gameID: string, playerID: string) {
-        throw new Error("Not implemented");
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //
-
-
-    async postGame(game: any) {
-        try {
-            if (await this.gameStore.getGame(game.id)) {
-                throw new Error(`La partie ${game.id} existe déjà.`);
-            }
-            await this.gameStore.addGame(game);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible créer la partie ${game.id}: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors de la création de la partie ${game.id}: ${error}`);
-            }
-        }
-    }
-
-    async joinGame(socket: Socket, gameID: string, playerID: string) {
-        try {
-
-            // Récupération du jeu dans la base de données
-            const game: any | undefined = await this.gameStore.getGame(gameID)
-
-            if (!game) {
-                throw new Error("Partie introuvable.");
-            }
-
-            // Check si l'id du joueur est déjà dans la partie
-            const playerExists = game.players.some((player: any) => player.id === playerID);
-
-            if (playerExists) {
-                throw new Error("Le joueur est déjà dans la partie.");
-            }
-
-            // Check si la partie est déjà lancé
-            if (game.status != 'IN_LOBBY') {
-                throw new Error("La partie est déjà lancée.");
-            }
-
-            // Créer un nouveau joueur
-            const newPlayer: any = { id: playerID, results: [], connected: true };
-
-            if (game.players.length === 0) {
-                game.hostID = playerID
-            }
-            game.players.push(newPlayer)
-
-            // Update game and send to the room
-            await this.gameStore.updateGame(game)
-            await socket.join(gameID)
-            io.to(gameID).emit('game:update', game);
-
-            return game;
-
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible de rejoindre la partie: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors de la connexion de ${playerID} à la partie ${gameID}: ${error}`);
-            }
-        }
-    }
-
-    async startGame(gameID: string, playerID: string) {
-        try {
-            const game = await this.gameStore.getGame(gameID)
-
-            // Check si la partie existe
-            if (!game) {
-                throw new Error("Partie introuvable.");
-            }
-
-            // Vérifier que le host
-            if (game.hostID !== playerID) {
-                throw new Error("Le joueur n'est pas le host de la partie.");
-            }
-
-            // Check si la partie est démarrable
-            if (game.status !== 'IN_LOBBY') {
-                throw new Error("La partie a déjà démarré.");
-            }
-
-            // Vérifier si des joueurs sont présent dans le lobby
-            if (game.players.length === 0) {
-                throw new Error("Aucun joueur dans le lobby.");
-            }
-
-            // Sélection du premier objet à deviner
-            const firstObjectId = game.guessObjectsIds[0];
-
-            // Création du premier round
-            const firstRound = {
-                status: 'GUESSING',
-                guessObjectId: firstObjectId,
-                playersGuesses: {},
-            };
-
-            game.status = 'IN_GAME';
-            game.currentRound = firstRound;
-
-            // Update game and send to the room
-            await this.gameStore.updateGame(game)
-            io.to(gameID).emit('game:update', game);
-
-            return game;
-
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible démarrer la partie ${playerID}: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors du démarrage de la partie ${gameID}: ${error}`);
             }
         }
     }
@@ -361,7 +222,7 @@ export class GameService {
                 throw new Error("Le joueur n'est pas le host de la partie.");
             }
 
-            await this.gameStore.removeGame(gameID);
+            await this.gameStore.deleteGame(gameID);
 
             // To change later
             return game;
@@ -375,89 +236,44 @@ export class GameService {
         }
     }
 
-    async reconnect(socket: Socket, gameID: string, playerID: string) {
+    async disconnectPlayer(gameID: string, playerID: string, newHostID?: string) {
         try {
             // Récupération du jeu dans la base de données
-            const game = await this.gameStore.getGame(gameID)
+            const game = await this.gameStore.getGame(gameID);
 
-            if (!game) {
-                throw new Error("Partie introuvable.");
+            // Check si la partie existe
+            if (!game) throw new Error("Partie introuvable.");
+
+            // Vérifier si playerID existe dans la liste des joueurs
+            const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
+            if (playerIndex === -1) throw new Error("Le joueur n'est pas dans la partie.");
+
+            // Déconnecter le joueur
+            game.players[playerIndex].connected = false;
+
+            // Update l'état de la game si nécessaire
+            if (game.status === 'IN_GAME' && game.state.currentRound) {
+                switch (game.currentRound) {
+                    case 'GUESSING':
+                        // Vérifier si tout le monde à guess
+                        const connectedPlayers = game.players.filter((player: any) => player.connected);
+                        if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
+                            game.state.currentRound.status = 'SHOWING_RESULTS'
+                        }
+                        break;
+                    case 'RESULTS':
+                        break;
+                }
             }
-
-            if (!game.players.some(player => player.id === playerID)) {
-                throw new Error("Joueur introuvable dans la partie")
-            }
-
-            if (game.hostID === '') {
-                game.hostID = playerID
-            }
-            game.players = game.players.map(
-                player => player.id === playerID ?
-                    {
-                        ...player,
-                        connected: true
-                    }
-                    : player
-            )
-
-            await socket.join(gameID)
-
-            // Update game and send to the room
-            await this.gameStore.updateGame(game);
-            io.to(gameID).emit('game:update', game);
 
             return game;
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors de la suppression de la partie ${gameID}: ${error}`);
-            }
+            throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
         }
     }
 
-    // async disconnectPlayer(playerID: string, gameID: string) {
-    //     try {
-    //         const game = await this.gameStore.getGame(gameID)
-
-    //         if (!game) return;
-
-    //         // Changer l'état du joueur
-    //         game.players = game.players.map((p: any) =>
-    //             p.id === playerID ? { ...p, connected: false } : p
-    //         );
-
-    //         // Changer le host
-    //         if (playerID === game.hostID) {
-    //             const connectedPlayers = game.players.filter((player: any) => player.connected);
-    //             if (connectedPlayers.length > 0) {
-    //                 game.hostID = connectedPlayers[0].id;
-    //             } else {
-    //                 game.hostID = '';
-    //             }
-    //         }
-
-    //         // Update l'état de la game si nécessaire
-    //         if (game.status === 'IN_GAME' && game.currentRound) {
-    //             switch (game.currentRound) {
-    //                 case 'GUESSING':
-    //                     // Vérifier si tout le monde à guess
-    //                     const connectedPlayers = game.players.filter((player: any) => player.connected);
-    //                     if (Object.keys(game.currentRound.playersGuesses).length === connectedPlayers.length) {
-    //                         game.currentRound.status = 'SHOWING_RESULTS '
-    //                     }
-    //                     break;
-    //                 case 'RESULTS':
-    //                     break;
-    //             }
-    //         }
-
-    //         // Update Game and send it
-    //         await this.gameStore.updateGame(game);
-    //         io.to(gameID).emit('game:update', game);
-    //     } catch (error) {
-    //         throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
-    //     }
-    // }
+    async reconnectPlayer(gameID: string, playerID: string) {
+        return await this.join(gameID, playerID);
+    }
 }
 
