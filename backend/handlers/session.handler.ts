@@ -1,14 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { SessionService } from "../services/sessionService";
-import { SocketService } from "../services/socketService";
 
 export class SessionHandler {
 
-    private socketService: SocketService;
     private sessionService: SessionService;
 
-    constructor(socketService: SocketService, sessionService: SessionService) {
-        this.socketService = socketService;
+    constructor(sessionService: SessionService) {
         this.sessionService = sessionService;
     }
 
@@ -43,7 +40,7 @@ export class SessionHandler {
                     throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
                 }
 
-                const session = await this.sessionService.leave(sessionID, playerID);
+                const session = await this.sessionService.leave(socket.id, sessionID, playerID);
 
                 await socket.leave(sessionID);
                 io.to(sessionID).emit('session:update', session);
@@ -105,5 +102,21 @@ export class SessionHandler {
                 callback?.({ success: false });
             }
         });
+
+        socket.on('disconnect', async () => {
+            try {
+                const  { session, game } = await this.sessionService.disconnectBySocket(socket.id);
+
+                await socket.leave(session.id);
+                io.to(session.id).emit('session:update', session);
+
+                if (session.currentGameId) io.to(session.currentGameId).emit('game:update', game)
+
+                console.log(`Socket ${socket.id} déconnecté`);
+            } catch (error) {
+                console.log(`Erreur lors de la déconnexion du socket ${socket.id}: ${error.message}`);
+            }
+
+        })
     }
 }
