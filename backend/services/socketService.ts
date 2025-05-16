@@ -8,7 +8,7 @@ export class SocketService {
         this.socketStore = socketStore;
     }
 
-    async setSocket(socketID: string, playerID: string, sessionID: string) {
+    async register(socketID: string, playerID: string, sessionID: string) {
         try {
             await this.socketStore.set(socketID, playerID, sessionID);
         } catch (error) {
@@ -17,6 +17,10 @@ export class SocketService {
     }
 
     async getSocket(playerID: string, sessionID: string) {
+        
+    }
+
+    async deleteSocket(playerID: string, sessionID: string) {
         
     }
     // async connect(playerID: string, socketID: string) {

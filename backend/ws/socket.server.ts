@@ -2,7 +2,6 @@
 import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
-import { setupWSHandler } from "../handlers/wsHandler.ts";
 import { SessionStore } from "../stores/sessionStore.ts";
 import { GameStore } from "../stores/gameStore.ts";
 import { SocketStore } from "../stores/socketStore.ts";
@@ -22,20 +21,20 @@ export function setupWebSocketServer(httpServer: any) {
     });
 
     // Redis adapter
-    const redis = new Redis(process.env.UPSTASH_REDIS_URL!);
+    const redis: Redis = new Redis(process.env.UPSTASH_REDIS_URL!);
     const pubClient = redis;
     const subClient = redis.duplicate();
     io.adapter(createAdapter(pubClient, subClient));
 
     // Stores
-    const socketStore = new SocketStore();
-    const sessionStore = new SessionStore();
-    const gameStore = new GameStore();
+    const socketStore = new SocketStore(redis);
+    const sessionStore = new SessionStore(redis);
+    const gameStore = new GameStore(redis);
 
     // Services
     const socketService = new SocketService(socketStore);
     const gameService = new GameService(gameStore);
-    const sessionService = new SessionService(sessionStore, gameService);
+    const sessionService = new SessionService(sessionStore, socketService, gameService);
 
     // Handlers
     const sessionHandler = new SessionHandler(socketService, sessionService);
@@ -46,5 +45,6 @@ export function setupWebSocketServer(httpServer: any) {
 
         // Setup WebSocket handlers
         sessionHandler.register(socket, io);
+        gameHandler.register(socket, io);
     });
 }

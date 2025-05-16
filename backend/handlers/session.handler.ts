@@ -20,7 +20,8 @@ export class SessionHandler {
                     throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
                 }
 
-                const session = await this.sessionService.join(sessionID, playerID);
+                const session = await this.sessionService.join(socket.id, sessionID, playerID);
+
                 await socket.join(sessionID)
                 io.to(sessionID).emit('session:update', session);
 
@@ -43,7 +44,8 @@ export class SessionHandler {
                 }
 
                 const session = await this.sessionService.leave(sessionID, playerID);
-                await socket.leave(sessionID)
+
+                await socket.leave(sessionID);
                 io.to(sessionID).emit('session:update', session);
 
                 console.log(`${playerID} a rejoint la session ${sessionID}`);
@@ -93,7 +95,9 @@ export class SessionHandler {
                     throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
                 }
 
-                const { game, socketIDs } = await this.sessionService.startGame(sessionID, playerID);
+                const game = await this.sessionService.startGame(sessionID, playerID);
+
+                io.to(sessionID).emit('session:startGame', game.id);
 
                 callback?.({ success: true });
             } catch (error) {
