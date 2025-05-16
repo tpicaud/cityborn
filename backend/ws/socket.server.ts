@@ -4,12 +4,12 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 import { SessionStore } from "../stores/sessionStore.ts";
 import { GameStore } from "../stores/gameStore.ts";
-import { SocketStore } from "../stores/socketStore.ts";
 import { GameService } from "../services/gameService.ts";
 import { SessionService } from "../services/sessionService.ts";
-import { SocketService } from "../services/socketService.ts";
 import { SessionHandler } from "../handlers/session.handler.ts";
 import { GameHandler } from "../handlers/game.handler.ts";
+import { PlayerService } from "../services/playerService.ts";
+import { PlayerStore } from "../stores/socketStore.ts";
 
 export function setupWebSocketServer(httpServer: any) {
 
@@ -27,17 +27,17 @@ export function setupWebSocketServer(httpServer: any) {
     io.adapter(createAdapter(pubClient, subClient));
 
     // Stores
-    const socketStore = new SocketStore(redis);
+    const socketStore = new PlayerStore(redis);
     const sessionStore = new SessionStore(redis);
     const gameStore = new GameStore(redis);
 
     // Services
-    const socketService = new SocketService(socketStore);
+    const socketService = new PlayerService(socketStore);
     const gameService = new GameService(gameStore);
     const sessionService = new SessionService(sessionStore, socketService, gameService);
 
     // Handlers
-    const sessionHandler = new SessionHandler(socketService, sessionService);
+    const sessionHandler = new SessionHandler(sessionService);
     const gameHandler = new GameHandler(gameService);
 
     io.on('connection', (socket) => {
