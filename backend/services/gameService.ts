@@ -1,12 +1,14 @@
-import { Socket } from "socket.io";
 import { GameStore } from "../stores/gameStore.ts";
+import { PlayerService } from "./playerService.ts";
 
 export class GameService {
 
     private gameStore: GameStore;
+    private playerService: PlayerService;
 
     constructor(gameStore: GameStore) {
         this.gameStore = gameStore;
+        this.playerService = this.playerService;
     }
 
     async getGame(gameID: string) {
@@ -21,7 +23,7 @@ export class GameService {
         }
     }
 
-    async join(gameID: string, playerID: string) {
+    async join(socketID: string, gameID: string, playerID: string) {
         try {
             // Récupération du jeu dans la base de données
             let game = await this.gameStore.getGame(gameID);
@@ -32,6 +34,9 @@ export class GameService {
             // Vérifier si playerID existe dans la liste des joueurs
             const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
             if (playerIndex === -1) throw new Error("Le joueur n'est pas invité dans la partie.");
+
+            // Vérifier que le joueur n'est pas déjà dans la partie
+            if (game.players[playerIndex].connected === true) throw new Error(`Le joueur est déjà dans la partie`);
 
             // Ajouter le joueur à la partie
             game.players[playerIndex].connected = true;
@@ -50,58 +55,11 @@ export class GameService {
         }
     }
 
-    async leave(gameID: string, playerID: string) {
-        return await this.disconnectPlayer(gameID, playerID);
+    async leave(socketID: string) {
+        return await this.disconnectPlayer(socketID);
     }
 
-    async createGameFromSession(session: any) {
-        try {
-            const playersID = session.players.map(player => player.id);
-            const response = await fetch('/api/game', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ gameConfig: session.gameConfig, playersID }),
-            });
-            const game = await response.json();
-
-            // Set host
-            game.hostID = session.hostID;
-
-            // Store in redis
-            await this.gameStore.saveGame(game);
-
-            return game;
-        } catch (e) {
-            throw new Error(`Error creating new game for session ${session.id}`);
-        }
-    }
-
-    private async startGame(game: any) {
-        try {
-            // Sélection du premier objet à deviner
-            const firstObjectId = game.guessObjectsIds[0];
-
-            // Création du premier round
-            const firstRound = {
-                status: 'GUESSING',
-                guessObjectId: firstObjectId,
-                playersGuesses: {},
-            };
-
-            game.status = 'IN_GAME';
-            game.currentRound = firstRound;
-
-            await this.gameStore.saveGame(game)
-
-            return game;
-        } catch (error) {
-            throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
-        }
-    }
-
-    async handleGuess(gameID: string, playerID: string, guess: any) {
+    async handleGuess(socketID: string, guess: any) {
         try {
 
             // Récupération du jeu dans la base de données
@@ -147,7 +105,7 @@ export class GameService {
         }
     }
 
-    async handleNextRound(gameID: string, playerID: string) {
+    async handleNextRound(socketID: string) {
         try {
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID);
@@ -208,7 +166,7 @@ export class GameService {
         }
     }
 
-    async endGame(gameID: string, playerID: string) {
+    async endGame(socketID: string) {
         try {
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID)
@@ -233,6 +191,59 @@ export class GameService {
             } else {
                 throw new Error(`Erreur lors de la suppression de la partie ${gameID}: ${error}`);
             }
+        }
+    }
+
+    // private functions
+    private async startGame(game: any) {
+        try {
+            // Sélection du premier objet à deviner
+            const firstObjectId = game.guessObjectsIds[0];
+
+            // Création du premier round
+            const firstRound = {
+                status: 'GUESSING',
+                guessObjectId: firstObjectId,
+                playersGuesses: {},
+            };
+
+            game.status = 'IN_GAME';
+            game.currentRound = firstRound;
+
+            await this.gameStore.saveGame(game)
+
+            return game;
+        } catch (error) {
+            throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
+        }
+    }
+
+
+    ///////////////////////////////////
+    // Call from SessionService only //
+    ///////////////////////////////////
+
+    async createGameFromSession(session: any) {
+        try {
+            const playersID = session.players.map(player => player.id);
+            const response = await fetch('/api/game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ gameConfig: session.gameConfig, playersID }),
+            });
+            const game = await response.json();
+
+            // Set host
+            game.hostID = session.hostID;
+
+            // Store in redis
+            await this.gameStore.saveGame(game);
+
+            return game;
+        } catch (e) {
+            throw new Error(`Error creating new game for session ${session.id}`);
         }
     }
 

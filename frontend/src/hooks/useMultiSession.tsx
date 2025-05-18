@@ -1,92 +1,101 @@
 import IUseSession from "./IUseSession";
 import Guess from "@/types/Guess";
-import { SessionSocket } from "./useSessionSocket";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Game from "@/types/Game";
+import { useSocket } from "./useSocket";
 import { Session } from "@/types/Session";
+import GameConfig from "@/types/GameConfig";
 
 export function useMultiSession(
-    sessionSocket: SessionSocket,
     localPlayerID: string | undefined,
-    session: Session | undefined,
-    setSession: React.Dispatch<React.SetStateAction<Session | undefined>>,
 ): IUseSession {
 
+    const [session, setSession] = useState<Session>();
+    const { connected, emit, on, off, socket } = useSocket();
 
-    ////////////////
-    // useEffects //
-    ////////////////
-    useEffect(() => {
-        setSession((prevSession) => {
-            if (prevSession) {
-                return {
-                    ...prevSession,
-                    currentGame: sessionSocket.gameUpdate
+
+    ///////////////////////
+    // Session functions //
+    ///////////////////////
+    const join = async () => {
+        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+
+        const playerID = localPlayerID;
+        const sessionID = session?.id;
+        return new Promise<void>((resolve, reject) => {
+            emit('session:join', sessionID, playerID, (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
                 }
-            }
-        })
-    }, [sessionSocket.gameUpdate])
-
-
-    ///////////////
-    // Functions //
-    ///////////////
-    const updateGameConfig = async () => {
-        if (!session || !localPlayerID) return;
-
-        try {
-            await sessionSocket.startGame(session.id, localPlayerID)
-        } catch (error) {
-            console.error(`Erreur lors du démarrage de la partie: ${error}`);
-        }
+            });
+        });
     }
 
-    const startGame = async (game: Game) => {
-        if (!session || !localPlayerID) return;
+    const leave = async () => {
+        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
 
-        try {
-            await sessionSocket.startGame(session.id, localPlayerID)
-        } catch (error) {
-            console.error(`Erreur lors du démarrage de la partie: ${error}`);
-        }
+        return new Promise<void>((resolve, reject) => {
+            emit('session:leave', (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
     }
 
-    // Enregistrer un guess
-    const handleGuess = async (guess: Guess) => {
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
-        try {
-            await sessionSocket.handleGuess(session.id, localPlayerID, guess)
-        } catch (error) {
-            console.error(`Erreur lors de l'enregistrement du guess: ${error}`);
-        }
+    const updateHost = async (newHostID: string) => {
+        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+
+        return new Promise<void>((resolve, reject) => {
+            emit('session:updateHost', newHostID, (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
+    }
+
+    const updateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+
+        return new Promise<void>((resolve, reject) => {
+            emit('session:updateGameConfig', [localPlayerID, gameConfig], (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
     };
 
-    // Passer au round suivant (seulement l'hôte)
-    const handleNextRound = async () => {
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
-        try {
-            await sessionSocket.handleNextRound(session.id, localPlayerID)
-        } catch (error) {
-            console.error(`Erreur lors du passage au round suivant: ${error}`);
-        }
-    };
 
-    // Terminer la partie
-    const endGame = async () => {
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
-        try {
-            await sessionSocket.handleNextRound(session.id, localPlayerID)
-        } catch (error) {
-            console.error(`Erreur lors du passage au round suivant: ${error}`);
-        }
-    };
+    const startGame = async () => {
+        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+
+        return new Promise<void>((resolve, reject) => {
+            emit('session:startGame', (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
+    }
 
     return {
+        join,
+        leave,
+        updateHost,
         updateGameConfig,
-        startGame,
-        handleNextRound,
-        handleGuess,
-        endGame
+        startGame
     };
 }
 

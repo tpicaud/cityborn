@@ -11,7 +11,7 @@ import { Session } from '@/types/Session';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function MultiGamePage() {
+export default function MultiSessionPage() {
 
     const [localPlayerID, setLocalPlayerID] = useState<string>();
     const [session, setSession] = useState<Session>();

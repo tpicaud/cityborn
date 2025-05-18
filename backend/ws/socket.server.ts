@@ -1,4 +1,3 @@
-// src/ws/socket.server.ts
 import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
@@ -32,9 +31,9 @@ export function setupWebSocketServer(httpServer: any) {
     const gameStore = new GameStore(redis);
 
     // Services
-    const socketService = new PlayerService(socketStore);
-    const gameService = new GameService(gameStore);
-    const sessionService = new SessionService(sessionStore, socketService, gameService);
+    const playerService = new PlayerService(socketStore);
+    const gameService = new GameService(gameStore, playerService);
+    const sessionService = new SessionService(sessionStore, playerService, gameService);
 
     // Handlers
     const sessionHandler = new SessionHandler(sessionService);

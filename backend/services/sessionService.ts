@@ -42,8 +42,12 @@ export class SessionService {
         }
     }
 
-    async leave(socketID: string, sessionID: string, playerID: string) {
+    async leave(socketID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
@@ -76,12 +80,16 @@ export class SessionService {
 
             return { session, game };
         } catch (error) {
-            throw new Error(`Erreur lors de la déconnexion de ${playerID}`);
+            throw new Error(`Erreur lors de la déconnexion du socket ${socketID}`);
         }
     }
 
-    async updateHost(sessionID: string, playerID: string, newHostID: string) {
+    async updateHost(socketID: string, newHostID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
@@ -106,8 +114,12 @@ export class SessionService {
         }
     }
 
-    async updateGameConfig(sessionID: string, gameConfig: any, playerID: string) {
+    async updateGameConfig(socketID: string, gameConfig: any) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
@@ -125,8 +137,12 @@ export class SessionService {
         }
     }
 
-    async startGame(sessionID: string, playerID: string) {
+    async startGame(socketID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
@@ -148,15 +164,14 @@ export class SessionService {
             session.status = "IN_GAME";
 
             await this.sessionStore.saveSession(session);
-            return session;
+            return { session, gameID: game.id };
         } catch (error) {
             throw new Error(`Erreur lors du démarrage de la partie: ${error}`);
         }
     }
 
-    async disconnectBySocket(socketID: string) {
-        const { sessionID, playerID } = await this.playerService.getPlayer(socketID);
-        return await this.leave(socketID, sessionID, playerID);
+    async disconnectPlayer(socketID: string) {
+        return await this.leave(socketID);
     }
 
     async reconnectPlayer(sessionID: string, playerID: string) {
@@ -165,7 +180,7 @@ export class SessionService {
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
 
-            // Check si l'id du joueur est dans la partie
+            // Check si l'id du joueur est dans la session
             const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
             if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
 
@@ -173,13 +188,17 @@ export class SessionService {
             session.players[playerIndex].connected = true;
 
             // Notifier la game
+            let game = undefined;
             if (session.currentGameId) {
-                const game = await this.gameService.getGame(session.currentGameId);
-                if (!game) throw new Error("Session introuvable.");
-                await this.gameService.reconnectPlayer(game.id, playerID);
+                game = await this.gameService.getGame(session.currentGameId);
+
+                if (game.players.some(player => player.id === playerID)) {
+                    game = await this.gameService.reconnectPlayer(game.id, playerID);
+                }
             }
 
             await this.sessionStore.saveSession(session);
+            return { session, game }
         } catch (error) {
             throw new Error(`Erreur lors de la reconnexion de ${playerID}`);
         }
