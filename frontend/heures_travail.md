@@ -55,3 +55,5 @@
 | 06/05/5025 | 4h | Refactoring session solo |
 | 09/05/2025 | 5h | Début refactoring session multi |
 | 10/05/2025 | 3h | Continuation refactoring session multi |
+| 16/05/2025 | 4h | Continuation du refactoring backend session |
+| 18/05/2025 | 2h | Continuation du refactoring backend session |
