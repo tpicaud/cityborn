@@ -17,10 +17,10 @@ export class GameHandler {
                     throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
                 }
                 
-                const updatedGame = await this.gameService.join(gameID, playerID);
+                const game = await this.gameService.join(gameID, playerID);
 
                 await socket.join(gameID)
-                io.to(gameID).emit('game:update', updatedGame);
+                io.to(game.id).emit('game:update', game);
 
                 console.log(`${playerID} a rejoint la session ${gameID}`);
                 callback?.({ success: true });
@@ -33,40 +33,16 @@ export class GameHandler {
             }
         });
 
-        // Leave game
-        socket.on('game:leave', async (gameID, playerID, callback) => {
-            try {
-                if (!gameID || !playerID) {
-                    throw new Error("Paramètres invalides : gameID et playerID sont requis.");
-                }
-
-                const updatedGame = await this.gameService.leave(gameID, playerID);
-
-                await socket.leave(gameID);
-                io.to(gameID).emit('game:update', updatedGame);
-
-                console.log(`${playerID} a rejoint la game ${gameID}`);
-                callback?.({ success: true });
-            } catch (error) {
-                console.error("Erreur lors de la tentative de rejoindre la partie :", error);
-                callback?.({
-                    success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
-                });
-            }
-        });
-
-
         // Enregistrer un guess
-        socket.on('game:guess', async (gameID, playerID, guess, callback) => {
+        socket.on('game:guess', async (guess, callback) => {
             try {
-                if (!gameID || !playerID || guess === undefined) {
-                    throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
+                if (!guess) {
+                    throw new Error("Paramètres invalides : guess est requis.");
                 }
 
-                const updatedGame = await this.gameService.handleGuess(gameID, playerID, guess);
+                const game = await this.gameService.handleGuess(socket.id, guess);
 
-                io.to(gameID).emit('game:update', updatedGame);
+                io.to(game.id).emit('game:update', game);
                 callback?.({ success: true });
             } catch (error) {
                 console.error("Erreur lors du traitement du guess :", error);
@@ -79,15 +55,11 @@ export class GameHandler {
 
 
         // Aller au round suivant
-        socket.on('game:nextRound', async (gameID, playerID, callback) => {
+        socket.on('game:nextRound', async (callback) => {
             try {
-                if (!gameID || !playerID) {
-                    throw new Error("Paramètres invalides : gameID et playerID sont requis.");
-                }
+                const game = await this.gameService.handleNextRound(socket.id);
 
-                const updatedGame = await this.gameService.handleNextRound(gameID, playerID);
-
-                io.to(gameID).emit('game:update', updatedGame);
+                io.to(game.id).emit('game:update', game);
                 callback?.({ success: true });
             } catch (error) {
                 console.error("Erreur lors du passage au tour suivant :", error);
@@ -99,13 +71,9 @@ export class GameHandler {
         });
 
         // Terminer la partie
-        socket.on('game:end', async (gameID, playerID, callback) => {
+        socket.on('game:end', async (callback) => {
             try {
-                if (!gameID || !playerID) {
-                    throw new Error("Paramètres invalides : gameID et playerID sont requis.");
-                }
-                
-                await this.gameService.endGame(gameID, playerID);
+                await this.gameService.endGame(socket.id);
                 
                 callback?.({ success: true });
             } catch (error) {

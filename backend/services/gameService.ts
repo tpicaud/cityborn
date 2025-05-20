@@ -6,25 +6,25 @@ export class GameService {
     private gameStore: GameStore;
     private playerService: PlayerService;
 
-    constructor(gameStore: GameStore) {
+    constructor(gameStore: GameStore, playerService: PlayerService) {
         this.gameStore = gameStore;
-        this.playerService = this.playerService;
+        this.playerService = playerService;
     }
 
     async getGame(gameID: string) {
         try {
-            const game = await this.gameStore.getGame(gameID);
-            if (!game) {
-                throw new Error("Partie introuvable.");
-            }
-            return game;
+            return await this.gameStore.getGame(gameID);
         } catch (error) {
             throw new Error(`Erreur lors de la récupération de la partie ${gameID}: ${error}`);
         }
     }
 
-    async join(socketID: string, gameID: string, playerID: string) {
+    async join(socketID: string, gameID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             let game = await this.gameStore.getGame(gameID);
 
@@ -38,9 +38,13 @@ export class GameService {
             // Vérifier que le joueur n'est pas déjà dans la partie
             if (game.players[playerIndex].connected === true) throw new Error(`Le joueur est déjà dans la partie`);
 
+            // Update player
+            await this.playerService.register(socketID, playerID, sessionID, gameID);
+
             // Ajouter le joueur à la partie
             game.players[playerIndex].connected = true;
 
+            // Save game
             await this.gameStore.saveGame(game)
 
             // Check si tous les joueurs ont join
@@ -51,16 +55,15 @@ export class GameService {
 
             return game;
         } catch (error) {
-            throw new Error(`Erreur lors de la connexion de ${playerID} dans la partie ${gameID}: ${error}`);
+            throw new Error(`Erreur lors de la connexion du socket ${socketID} dans la partie ${gameID}: ${error}`);
         }
-    }
-
-    async leave(socketID: string) {
-        return await this.disconnectPlayer(socketID);
     }
 
     async handleGuess(socketID: string, guess: any) {
         try {
+            // Récupération du joueur
+            const { playerID, gameID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
 
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID);
@@ -101,12 +104,16 @@ export class GameService {
             }
             return game;
         } catch (error) {
-            throw new Error(`Erreur lors de l'enregistrement du guess de ${playerID} dans la partie ${gameID}: ${error}`);
+            throw new Error(`Erreur lors de l'enregistrement du guess de ${socketID}: ${error}`);
         }
     }
 
     async handleNextRound(socketID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID, gameID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID);
 
@@ -158,16 +165,16 @@ export class GameService {
 
             return game;
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible passer au round suivant: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors du passage au round suivant dans la partie ${gameID}: ${error}`);
-            }
+            throw new Error(`Erreur lors du passage au round suivant dans la partie: ${error}`);
         }
     }
 
     async endGame(socketID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID, gameID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID)
 
@@ -186,12 +193,12 @@ export class GameService {
             return game;
 
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Impossible supprimer la partie ${gameID}: ${error.message}`);
-            } else {
-                throw new Error(`Erreur lors de la suppression de la partie ${gameID}: ${error}`);
-            }
+            throw new Error(`Erreur lors de la suppression de la partie par le socket ${socketID}: ${error}`);
         }
+    }
+
+    async reconnectPlayer(gameID: string, playerID: string) {
+        return await this.join(gameID, playerID);
     }
 
     // private functions
@@ -217,7 +224,6 @@ export class GameService {
             throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
         }
     }
-
 
     ///////////////////////////////////
     // Call from SessionService only //
@@ -247,8 +253,12 @@ export class GameService {
         }
     }
 
-    async disconnectPlayer(gameID: string, playerID: string, newHostID?: string) {
+    async disconnectPlayer(socketID: string, newHostID: string) {
         try {
+            // Récupération du joueur
+            const { playerID, sessionID, gameID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
+
             // Récupération du jeu dans la base de données
             const game = await this.gameStore.getGame(gameID);
 
@@ -261,6 +271,9 @@ export class GameService {
 
             // Déconnecter le joueur
             game.players[playerIndex].connected = false;
+
+            // Update host
+            if (newHostID) game.hostID = newHostID;
 
             // Update l'état de la game si nécessaire
             if (game.status === 'IN_GAME' && game.state.currentRound) {
@@ -279,12 +292,8 @@ export class GameService {
 
             return game;
         } catch (error) {
-            throw new Error(`Erreur lors de la déconnexion de ${playerID} dans la partie ${gameID}: ${error}`);
+            throw new Error(`Erreur lors de la deconnexion du socket ${socketID} dans la partie`);
         }
-    }
-
-    async reconnectPlayer(gameID: string, playerID: string) {
-        return await this.join(gameID, playerID);
     }
 }
 

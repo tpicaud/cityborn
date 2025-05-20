@@ -1,4 +1,4 @@
-import { PlayerStore } from "../stores/socketStore";
+import { PlayerStore } from "../stores/playerStore";
 
 export class PlayerService {
 
@@ -8,9 +8,9 @@ export class PlayerService {
         this.playerStore = socketStore;
     }
 
-    async register(socketID: string, playerID: string, sessionID: string) {
+    async register(socketID: string, playerID: string, sessionID: string, gameID?: string) {
         try {
-            await this.playerStore.set(socketID, playerID, sessionID);
+            await this.playerStore.set(socketID, playerID, sessionID, gameID);
         } catch (error) {
             throw new Error(`Erreur lors de l'enregistrement du socket du socket ${socketID}`);
         }
