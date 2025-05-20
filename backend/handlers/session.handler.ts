@@ -31,30 +31,6 @@ export class SessionHandler {
             }
         });
 
-        // Quitter une session
-        socket.on('session:leave', async (callback) => {
-            try {
-                const { session, game } = await this.sessionService.leave(socket.id);
-
-                await socket.leave(session.id);
-                io.to(session.id).emit('session:update', session);
-
-                if (game) {
-                    await socket.leave(game.id);
-                    io.to(game.id).emit('session:update', game);
-                }
-
-                console.log(`Le socket ${socket.id} a quitté la session ${session.id}`);
-                callback?.({ success: true });
-            } catch (error) {
-                console.error("Erreur lors de la tentative de quitter la partie :", error);
-                callback?.({
-                    success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
-                });
-            }
-        });
-
         socket.on('session:updateHost', async (newHostID, callback) => {
             try {
                 if (!newHostID) throw new Error("Paramètres invalides : newHostID est requis.");
@@ -105,6 +81,26 @@ export class SessionHandler {
             }
         });
 
+        socket.on('session:reconnect', async (sessionID, playerID, callback) => {
+            try {
+                if (!sessionID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
+
+                const { session, isInGame } = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID);
+
+                await socket.join(sessionID)
+                io.to(sessionID).emit('session:update', session);
+
+                console.log(`${playerID} a rejoint la session ${sessionID}`);
+                callback?.({ success: true, isInGame });
+            } catch (error) {
+                console.error("Erreur lors de la tentative de rejoindre la partie :", error);
+                callback?.({
+                    success: false,
+                    message: error.message || "Une erreur inconnue s'est produite."
+                });
+            }
+        });
+
         socket.on('disconnect', async () => {
             try {
                 const { session, game } = await this.sessionService.disconnectPlayer(socket.id);
@@ -112,13 +108,15 @@ export class SessionHandler {
                 await socket.leave(session.id);
                 io.to(session.id).emit('session:update', session);
 
-                if (session.currentGameId) io.to(session.currentGameId).emit('game:update', game)
+                if (game) {
+                    await socket.leave(game.id);
+                    io.to(session.currentGameId).emit('game:update', game)
+                }
 
                 console.log(`Socket ${socket.id} déconnecté`);
             } catch (error) {
                 console.log(`Erreur lors de la déconnexion du socket ${socket.id}: ${error.message}`);
             }
-
         })
     }
 }

@@ -42,48 +42,6 @@ export class SessionService {
         }
     }
 
-    async leave(socketID: string) {
-        try {
-            // Récupération du joueur
-            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
-            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
-
-            // Récupération du jeu dans la base de données
-            const session: any | undefined = await this.sessionStore.getSession(sessionID)
-            if (!session) throw new Error("Session introuvable.");
-
-            // Check si l'id du joueur est dans la partie
-            const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
-            if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
-
-            // Déconnection du joueur
-            session.players[playerIndex].connected = false;
-
-            // Suppression du socket
-            await this.playerService.deletePlayer(socketID);
-
-            // Update host
-            const isHost = playerID === session.hostID
-            if (isHost) {
-                const connectedPlayers = session.players.filter((player: any) => session.status === 'IN_GAME' ? player.connected && player.inGame : player.connected);
-                if (connectedPlayers.length > 0) {
-                    session.hostID = connectedPlayers[0].id;
-                } else {
-                    session.hostID = '';
-                }
-            }
-
-            // Notifier la game
-            const game = session.currentGameId ? await this.gameService.disconnectPlayer(session.currentGameId, playerID, isHost ? session.hostID : undefined) : undefined;
-
-            await this.sessionStore.saveSession(session);
-
-            return { session, game };
-        } catch (error) {
-            throw new Error(`Erreur lors de la déconnexion du socket ${socketID}`);
-        }
-    }
-
     async updateHost(socketID: string, newHostID: string) {
         try {
             // Récupération du joueur
@@ -153,12 +111,7 @@ export class SessionService {
             // Créer une nouvelle partie
             const game = await this.gameService.createGameFromSession(session);
 
-            // Ajouter les joueurs à la partie
-            for (const player of session.players) {
-                if (player.connected) {
-                    await this.gameService.join(game.id, player.id);
-                }
-            }
+
 
             // Update session
             session.status = "IN_GAME";
@@ -170,11 +123,7 @@ export class SessionService {
         }
     }
 
-    async disconnectPlayer(socketID: string) {
-        return await this.leave(socketID);
-    }
-
-    async reconnectPlayer(sessionID: string, playerID: string) {
+    async reconnectPlayer(socketID: string, sessionID: string, playerID: string) {
         try {
             // Récupération du jeu dans la base de données
             const session: any | undefined = await this.sessionStore.getSession(sessionID)
@@ -184,24 +133,76 @@ export class SessionService {
             const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
             if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
 
-            // Déconnection du joueur
+            // Register new player socket
+            await this.playerService.register(socketID, playerID, sessionID);
+
+            // Reconnexion du joueur
             session.players[playerIndex].connected = true;
 
-            // Notifier la game
-            let game = undefined;
-            if (session.currentGameId) {
-                game = await this.gameService.getGame(session.currentGameId);
-
-                if (game.players.some(player => player.id === playerID)) {
-                    game = await this.gameService.reconnectPlayer(game.id, playerID);
-                }
-            }
+            // Check s'il est en game
+            const isInGame = await this.isInGame(session, playerID);
 
             await this.sessionStore.saveSession(session);
-            return { session, game }
+            return { session, isInGame }
         } catch (error) {
             throw new Error(`Erreur lors de la reconnexion de ${playerID}`);
         }
+    }
+
+
+    ///////////////////
+    // Games updates //
+    ///////////////////
+    async disconnectPlayer(socketID: string) {
+        try {
+            // Récupération du joueur
+            const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+
+            // Récupération du jeu dans la base de données
+            const session: any | undefined = await this.sessionStore.getSession(sessionID)
+            if (!session) throw new Error("Session introuvable.");
+
+            // Check si l'id du joueur est dans la partie
+            const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
+            if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
+
+            // Déconnection du joueur
+            session.players[playerIndex].connected = false;
+
+            // Update host
+            const isHost = playerID === session.hostID
+            if (isHost) {
+                const connectedPlayers = session.players.filter((player: any) => session.status === 'IN_GAME' ? player.connected && player.inGame : player.connected);
+                if (connectedPlayers.length > 0) {
+                    session.hostID = connectedPlayers[0].id;
+                } else {
+                    session.hostID = '';
+                }
+            }
+
+            // Notifier la game
+            let game = undefined
+            if (await this.isInGame(session.currentGameId, playerID)) {
+                game = session.currentGameId ? await this.gameService.disconnectPlayer(socketID, isHost ? session.hostID : undefined) : undefined;
+            }
+
+            // Update states
+            await this.playerService.deletePlayer(socketID);
+            await this.sessionStore.saveSession(session);
+
+            return { session, game };
+        } catch (error) {
+            throw new Error(`Erreur lors de la déconnexion du socket ${socketID}`);
+        }
+    }
+
+
+
+    // Private function
+    private async isInGame(gameID: string, playerID: string) {
+        const game = await this.gameService.getGame(gameID);
+        return game.players.some(player => player.id === playerID);
     }
 
     // async getPlayerSocket(sessionID: string, playerID) {
