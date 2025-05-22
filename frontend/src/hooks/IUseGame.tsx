@@ -3,6 +3,7 @@ import Guess from "@/types/Guess";
 
 export interface IUseGame {
     game: Game | undefined;
+    isHost: boolean;
     guess: (guess: Guess) => void;
     nextRound: () => void;
     end: () => void;

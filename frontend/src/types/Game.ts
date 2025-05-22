@@ -8,7 +8,7 @@ import { GamePlayer } from "./Player";
 
 export default interface Game {
     id: string;
-    hostId: string;
+    hostID: string;
     mode: GameMode;
     status: GameStatus;
     gameConfig: GameConfig;
