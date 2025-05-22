@@ -1,44 +1,70 @@
-import IUseSession from "./IUseSession";
-import Guess from "@/types/Guess";
-import { useState } from "react";
-import Game from "@/types/Game";
+import { IUseMultiSession } from "./IUseSession";
+import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
+import * as apiService from "@/services/apiService";
 
-export function useMultiSession(
-    localPlayerID: string | undefined,
-): IUseSession {
+export function useMultiSession(sessionID: string): IUseMultiSession {
 
     const [session, setSession] = useState<Session>();
-    const { connected, emit, on, off, socket } = useSocket();
+    const [connected, setConnected] = useState(false);
+    const { socket, emit, on, off } = useSocket();
+
+    /////////////////
+    // useEffects //
+    ////////////////
+
+    // Fetch session
+    useEffect(() => {
+        const fetchSession = async () => {
+            try {
+                const session: Session = await apiService.fetchSession(sessionID);
+                setSession(session);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        fetchSession();
+    }, [])
+
+    // Manage disconnection
+    useEffect(() => {
+        if (!socket?.connected) {
+            setConnected(false);
+        }
+    }, [socket?.connected]);
+
+    // Handle socket listener
+    useEffect(() => {
+
+        // handle events
+        const handleSessionUpdate = (session: Session) => {
+            setSession(session);
+        };
+
+        // handle messages
+        on('session:update', handleSessionUpdate);
+
+        return () => {
+            // Nettoyage
+            off('session:update', handleSessionUpdate);
+        };
+    }, [on, off]);
 
 
-    ///////////////////////
-    // Session functions //
-    ///////////////////////
-    const join = async () => {
-        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+    ///////////////////
+    // Session emits //
+    ///////////////////
 
-        const playerID = localPlayerID;
-        const sessionID = session?.id;
+    const join = async (playerID: string) => {
+        if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
+
+        const sessionID = session.id;
         return new Promise<void>((resolve, reject) => {
             emit('session:join', sessionID, playerID, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
-                    resolve();
-                } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
-                }
-            });
-        });
-    }
-
-    const leave = async () => {
-        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
-
-        return new Promise<void>((resolve, reject) => {
-            emit('session:leave', (response: { success: boolean; error?: string }) => {
-                if (response.success) {
+                    setConnected(true);
                     resolve();
                 } else {
                     reject(new Error(response.error || "Erreur inconnue"));
@@ -48,7 +74,7 @@ export function useMultiSession(
     }
 
     const updateHost = async (newHostID: string) => {
-        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+        if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
             emit('session:updateHost', newHostID, (response: { success: boolean; error?: string }) => {
@@ -62,10 +88,10 @@ export function useMultiSession(
     }
 
     const updateGameConfig = async (gameConfig: Partial<GameConfig>) => {
-        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+        if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateGameConfig', [localPlayerID, gameConfig], (response: { success: boolean; error?: string }) => {
+            emit('session:updateGameConfig', [gameConfig], (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -75,9 +101,22 @@ export function useMultiSession(
         });
     };
 
+    const kickPlayer = async (playerToKick: string) => {
+        if (!session) throw new Error('Joueur ou session non initialisé');
+
+        return new Promise<void>((resolve, reject) => {
+            emit('session:kickPlayer', [playerToKick], (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
+    };
 
     const startGame = async () => {
-        if (!session || !localPlayerID) throw new Error('Joueur ou session non initialisé');
+        if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
             emit('session:startGame', (response: { success: boolean; error?: string }) => {
@@ -90,12 +129,59 @@ export function useMultiSession(
         });
     }
 
+    const reconnect = async (playerID: string): Promise<{ isInGame: boolean }> => {
+        if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
+        try {
+            // Wait for socket to reconnect to server
+            await waitForConnection(() => connected, 10000);
+
+            // Reconnect to session
+            const sessionID = session.id;
+            return new Promise<{ isInGame: boolean }>((resolve, reject) => {
+                emit('session:reconnect', sessionID, playerID, (response: { success: boolean; isInGame: boolean; error?: string }) => {
+                    if (response.success) {
+                        setConnected(true);
+                        resolve({ isInGame: response.isInGame });
+                    } else {
+                        reject(new Error(response.error || "Erreur inconnue"));
+                    }
+                });
+            });
+        } catch (error) {
+            throw new Error(`Non connecté au serveur`)
+        }
+
+    }
+
+
+    // Utils functions
+    function waitForConnection(checkFn: () => boolean, timeout = 5000, interval = 100): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+
+            const check = () => {
+                if (checkFn()) {
+                    resolve();
+                } else if (Date.now() - startTime > timeout) {
+                    reject(new Error("Connexion socket non établie dans le temps imparti"));
+                } else {
+                    setTimeout(check, interval);
+                }
+            };
+
+            check();
+        });
+    };
+
     return {
+        session,
+        connected,
         join,
-        leave,
         updateHost,
         updateGameConfig,
-        startGame
+        kickPlayer,
+        startGame,
+        reconnect
     };
 }
 
