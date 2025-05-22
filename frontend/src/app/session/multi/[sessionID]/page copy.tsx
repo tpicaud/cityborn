@@ -5,42 +5,145 @@ import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import { DialogInput } from '@/components/others/DialogInput';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { SessionStatus } from '@/enums/SessionStatus';
+import { useMultiGame } from '@/hooks/useMultiGame';
 import { useMultiSession } from '@/hooks/useMultiSession';
-import { SessionSocket, useSessionSocket } from '@/hooks/useSessionSocket';
-import { Session } from '@/types/Session';
+import GameConfig from '@/types/GameConfig';
+import Guess from '@/types/Guess';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function MultiSessionPage() {
 
-    const [localPlayerID, setLocalPlayerID] = useState<string>();
-    const [session, setSession] = useState<Session>();
     const { sessionID } = useParams<{ sessionID: string }>();
-    const sessionSocket: SessionSocket = useSessionSocket(sessionID, localPlayerID);
+    const [localPlayerID, setLocalPlayerID] = useState<string>();
+    const multiSession = useMultiSession(sessionID);
+    const multiGame = useMultiGame();
 
-    // Fetch new session
+
+    ////////////////
+    // useEffects //
+    ////////////////
+
+    // Automatic reconnect
     useEffect(() => {
-        const fetchSession = async () => {
-            if (localPlayerID && sessionSocket.isConnected) {
-                await sessionSocket.joinSession(sessionID, localPlayerID);
+        const autoReconnect = async () => {
+            try {
+                if (localPlayerID && !multiSession.connected) {
+                    const isInGame = await multiSession.reconnect(localPlayerID);
+                    if (isInGame) await multiGame.reconnect(localPlayerID);
+                }
+            } catch (error) {
+                console.log(`Erreur lors de la reconnexion automatique: ${error}`);
             }
         }
-        fetchSession();
-    }, [localPlayerID, sessionSocket.isConnected]);
+        autoReconnect();
+    }, [localPlayerID, multiSession.connected]);
 
-    const {
-        updateGameConfig,
-        startGame,
-        handleGuess,
-        handleNextRound,
-        endGame
-    } = useMultiSession(sessionSocket, localPlayerID, session, setSession);
 
-    const handleJoin = (input: string) => {
-        if (session && !session.players.some(player => player.id === input)) {
-            setLocalPlayerID(input);
+    //////////////////////////
+    // Session interactions //
+    //////////////////////////
+
+    const handleJoinSession = async (playerID: string) => {
+        try {
+            await multiSession.join(playerID);
+            setLocalPlayerID(playerID);
+        } catch (error) {
+            console.log(`Echec de la connexion à la session: ${error}`);
         }
     };
+
+    const handleUpdateHost = async (newHostID: string) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.updateHost(newHostID)
+        } catch (error) {
+            console.log(`Echec lors de la mise à jour du host: ${error}`);
+        }
+    }
+
+    const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.updateGameConfig(gameConfig);
+        } catch (error) {
+            console.log(`Echec lors de la mise à jour de la configuration de la partie: ${error}`);
+        }
+    }
+
+    const handleKickPlayer = async (playerToKick: string) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.kickPlayer(playerToKick);
+        } catch (error) {
+            console.log(`Echec lors de la suppression du joueur de la session: ${error}`);
+        }
+    }
+
+    const handleStartGame = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.startGame();
+        } catch (error) {
+            console.log(`Echec lors du démarrage de la partie: ${error}`);
+        }
+    }
+
+    const handleReconnectionToSession = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            const isInGame = await multiSession.reconnect(localPlayerID);
+        } catch (error) {
+            console.log(`Erreur lors de la reconnexion à la session: ${error}`);
+        }
+
+    };
+
+
+    ///////////////////////
+    // Game interactions //
+    ///////////////////////
+
+    const handleGuess = async (guess: Guess) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.guess(guess);
+        } catch (error) {
+            console.log(`Echec lors de l'enregistrement du guess: ${error}`);
+        }
+    }
+
+    const handleNextRound = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.nextRound();
+        } catch (error) {
+            console.log(`Echec lors du passage au round suivant: ${error}`);
+        }
+    }
+
+    const handleEnd = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.end();
+        } catch (error) {
+            console.log(`Echec lors de la finalisation de la partie: ${error}`);
+        }
+    }
+
+    const handleReconnectionToGame = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.reconnect(localPlayerID);
+        } catch (error) {
+            console.log(`Erreur lors de la reconnexion à la partie`);
+        }
+    };
+
+
+    ///////////////
+    // Rendering //
+    ///////////////
 
     if (!localPlayerID) {
         return (

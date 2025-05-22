@@ -1,30 +1,79 @@
-import IUseSession from "./IUseSession";
-import Guess from "@/types/Guess";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
-import { Session } from "@/types/Session";
-import GameConfig from "@/types/GameConfig";
+import { IUseMultiGame } from "./IUseGame";
 import Game from "@/types/Game";
+import Guess from "@/types/Guess";
+import * as apiService from "@/services/apiService";
 
-export function useMultiGame(
-    localPlayerID: string | undefined,
-): IUseGame {
+export function useMultiGame(): IUseMultiGame {
 
     const [game, setGame] = useState<Game>();
-    const { connected, emit, on, off, socket } = useSocket();
+    const [connected, setConnected] = useState(false);
+    const { socket, emit, on, off } = useSocket();
+
+    /////////////////
+    // useEffects //
+    ////////////////
+
+    // Manage disconnection
+    useEffect(() => {
+        if (!socket?.connected) {
+            setConnected(false);
+        }
+    }, [socket?.connected]);
 
 
-    ////////////////////
-    // Game functions //
-    ////////////////////
-    const join = async () => {
-        if (!game || !localPlayerID) throw new Error('Joueur ou game non initialisé');
+    // Handle socket listener
+    useEffect(() => {
 
-        const playerID = localPlayerID;
-        const gameID = game.id;
+        // handle events
+        const handleStartGame = async (gameID: string) => {
+            try {
+                const game: Game = await apiService.fetchGame(gameID);
+                setGame(game);
+                join(gameID);
+            } catch (error) {
+                console.log(`Erreur lors de la connexion à la partie: ${error}`);
+            }
+        }
+
+        const handleGameUpdate = (game: Game) => {
+            setGame(prev => {
+                const prevGuessObjects = prev?.state?.guessObjects ?? [];
+
+                return {
+                    ...game,
+                    state: {
+                        ...game.state,
+                        guessObjects: prevGuessObjects
+                    }
+                };
+            });
+        };
+
+
+        // handle messages
+        on('game:update', handleGameUpdate);
+
+        return () => {
+            // Nettoyage
+            off('game:update', handleGameUpdate);
+            off('game:startGame', handleStartGame);
+        };
+    }, [on, off]);
+
+
+    ////////////////
+    // Game emits //
+    ////////////////
+
+    const join = async (gameID: string) => {
+        if (!game) throw new Error('Joueur ou game non initialisé');
+
         return new Promise<void>((resolve, reject) => {
-            emit('game:join', gameID, playerID, (response: { success: boolean; error?: string }) => {
+            emit('game:join', gameID, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
+                    setConnected(true);
                     resolve();
                 } else {
                     reject(new Error(response.error || "Erreur inconnue"));
@@ -33,24 +82,9 @@ export function useMultiGame(
         });
     }
 
-    const leave = async () => {
-        if (!game || !localPlayerID) throw new Error('Joueur ou game non initialisé');
+    const guess = async (guess: Guess) => {
+        if (!game) throw new Error('Joueur ou game non initialisé');
 
-        return new Promise<void>((resolve, reject) => {
-            emit('game:leave', (response: { success: boolean; error?: string }) => {
-                if (response.success) {
-                    resolve();
-                } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
-                }
-            });
-        });
-    }
-
-    const handleGuess = async (guess: Guess) => {
-        if (!game || !localPlayerID) throw new Error('Joueur ou game non initialisé');
-
-        const playerID = localPlayerID;
         return new Promise<void>((resolve, reject) => {
             emit('game:guess', guess, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
@@ -60,39 +94,88 @@ export function useMultiGame(
                 }
             });
         });
+    }
 
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
-        try {
-            await sessionSocket.handleGuess(session.id, localPlayerID, guess)
-        } catch (error) {
-            console.error(`Erreur lors de l'enregistrement du guess: ${error}`);
-        }
-    };
+    const nextRound = async () => {
+        if (!game) throw new Error('Joueur ou game non initialisé');
 
-    const handleNextRound = async () => {
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
-        try {
-            await sessionSocket.handleNextRound(session.id, localPlayerID)
-        } catch (error) {
-            console.error(`Erreur lors du passage au round suivant: ${error}`);
-        }
-    };
+        return new Promise<void>((resolve, reject) => {
+            emit('game:nextRound', (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
+    }
 
-    const endGame = async () => {
-        if (!session?.currentGame || !session?.currentGame.currentRound || !localPlayerID) return;
+    const end = async () => {
+        if (!game) throw new Error('Joueur ou game non initialisé');
+
+        return new Promise<void>((resolve, reject) => {
+            emit('game:end', (response: { success: boolean; error?: string }) => {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(new Error(response.error || "Erreur inconnue"));
+                }
+            });
+        });
+    }
+
+    const reconnect = async (playerID: string) => {
+        if (!game) throw new Error('Joueur ou game non initialisé');
         try {
-            await sessionSocket.handleNextRound(session.id, localPlayerID)
+            // Wait for socket to reconnect to server
+            await waitForConnection(() => connected, 10000);
+
+            // Reconnect to game
+            const gameID = game.id;
+            return new Promise<void>((resolve, reject) => {
+                emit('game:reconnect', gameID, playerID, (response: { success: boolean; error?: string }) => {
+                    if (response.success) {
+                        setConnected(true);
+                        resolve();
+                    } else {
+                        reject(new Error(response.error || "Erreur inconnue"));
+                    }
+                });
+            });
         } catch (error) {
-            console.error(`Erreur lors du passage au round suivant: ${error}`);
+            throw new Error(`Non connecté au serveur`)
         }
+
+    }
+
+
+    // Utils functions
+    function waitForConnection(checkFn: () => boolean, timeout = 5000, interval = 100): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+
+            const check = () => {
+                if (checkFn()) {
+                    resolve();
+                } else if (Date.now() - startTime > timeout) {
+                    reject(new Error("Connexion socket non établie dans le temps imparti"));
+                } else {
+                    setTimeout(check, interval);
+                }
+            };
+
+            check();
+        });
     };
 
     return {
-        updateGameConfig,
-        startGame,
-        handleNextRound,
-        handleGuess,
-        endGame
+        game,
+        connected,
+        join,
+        guess,
+        nextRound,
+        end,
+        reconnect
     };
 }
 
