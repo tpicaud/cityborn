@@ -5,10 +5,11 @@ import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
 import * as apiService from "@/services/apiService";
 
-export function useMultiSession(sessionID: string): IUseMultiSession {
+export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseMultiSession {
 
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
+    const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
 
     /////////////////
@@ -27,6 +28,13 @@ export function useMultiSession(sessionID: string): IUseMultiSession {
         }
         fetchSession();
     }, [])
+
+    // Manage host
+    useEffect(() => {
+        if (session) {
+            setIsHost(session?.hostID === localPlayerID);
+        }
+    }, [localPlayerID, session?.hostID])
 
     // Manage disconnection
     useEffect(() => {
@@ -176,6 +184,7 @@ export function useMultiSession(sessionID: string): IUseMultiSession {
     return {
         session,
         connected,
+        isHost,
         join,
         updateHost,
         updateGameConfig,

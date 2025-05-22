@@ -16,8 +16,8 @@ export default function MultiSessionPage() {
 
     const { sessionID } = useParams<{ sessionID: string }>();
     const [localPlayerID, setLocalPlayerID] = useState<string>();
-    const multiSession = useMultiSession(sessionID);
-    const multiGame = useMultiGame();
+    const multiSession = useMultiSession(localPlayerID, sessionID);
+    const multiGame = useMultiGame(localPlayerID);
 
 
     ////////////////
@@ -145,23 +145,36 @@ export default function MultiSessionPage() {
     // Rendering //
     ///////////////
 
+    // si pas de session, chargement
+    if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
+
+    // si pas de localPlayerID, afficher dialog
     if (!localPlayerID) {
         return (
             <div className="flex flex-row justify-center items-center mt-16">
-                <DialogInput message='Entrez votre pseudo' handleClick={handleJoin} label='Votre pseudo' />
+                <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
             </div>
         );
     }
 
-    if (!session) {
-        return <LoadingComponent message='Chargement de la partie' />
+    // Si game, display game
+    if (multiGame.game) {
+        return <GameComponent
+            localPlayerID={localPlayerID}
+            isHost={multiGame.isHost}
+            game={multiGame.game}
+            handleGuess={handleGuess}
+            handleNextRound={handleNextRound}
+            handleEnd={handleEnd} />
     }
 
-    switch (session.status) {
-        case SessionStatus.IN_LOBBY:
-            return <LobbyComponent localPlayerID={localPlayerID} session={session} updateGameConfig={updateGameConfig} startGame={startGame} />
-
-        case SessionStatus.IN_GAME:
-            return <GameComponent localPlayerID={localPlayerID} game={session.currentGame!} session={session} handleGuess={handleGuess} handleNextRound={handleNextRound} endGame={endGame} />
-    }
+    // display lobby
+    return <LobbyComponent
+        localPlayerID={localPlayerID}
+        isHost={multiSession.isHost}
+        session={multiSession.session}
+        updateHost={handleUpdateHost}
+        handleUpdateGameConfig={handleUpdateGameConfig}
+        handleKickPlayer={handleKickPlayer}
+        handleStartGame={handleStartGame} />
 }

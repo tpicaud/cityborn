@@ -5,10 +5,11 @@ import Game from "@/types/Game";
 import Guess from "@/types/Guess";
 import * as apiService from "@/services/apiService";
 
-export function useMultiGame(): IUseMultiGame {
+export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
 
     const [game, setGame] = useState<Game>();
     const [connected, setConnected] = useState(false);
+    const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
 
     /////////////////
@@ -21,6 +22,13 @@ export function useMultiGame(): IUseMultiGame {
             setConnected(false);
         }
     }, [socket?.connected]);
+
+    // Manage host
+    useEffect(() => {
+        if (game) {
+            setIsHost(game?.hostID === localPlayerID);
+        }
+    }, [localPlayerID, game?.hostID])
 
 
     // Handle socket listener
@@ -171,6 +179,7 @@ export function useMultiGame(): IUseMultiGame {
     return {
         game,
         connected,
+        isHost,
         join,
         guess,
         nextRound,
