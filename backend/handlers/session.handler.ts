@@ -69,7 +69,7 @@ export class SessionHandler {
             try {
                 const { session, gameID } = await this.sessionService.startGame(socket.id);
 
-                io.to(session.id).emit('session:startGame', gameID);
+                io.to(session.id).emit('game:startGame', gameID);
 
                 callback?.({ success: true });
             } catch (error) {
