@@ -84,5 +84,21 @@ export class GameHandler {
                 });
             }
         });
+
+        // Reconnexion à la partie
+        socket.on('game:reconnect', async (gameID, callback) => {
+            try {
+                const game = await this.gameService.reconnectPlayer(socket.id, gameID);
+                
+                io.to(game.id).emit('game:update', game);
+                callback?.({ success: true });
+            } catch (error) {
+                console.error("Erreur lors de la fin de la partie :", error);
+                callback?.({
+                    success: false,
+                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                });
+            }
+        });
     }
 }

@@ -23,7 +23,7 @@ export class GameService {
         try {
             // Récupération du joueur
             const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
-            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}`);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}. Rejoingnez d'abord la session.`);
 
             // Récupération du jeu dans la base de données
             let game = await this.gameStore.getGame(gameID);
@@ -197,11 +197,12 @@ export class GameService {
         }
     }
 
-    async reconnectPlayer(gameID: string, playerID: string) {
-        return await this.join(gameID, playerID);
+    async reconnectPlayer(socketID: string, gameID: string) {
+        return await this.join(socketID, gameID);
     }
 
-    // private functions
+    ////////////////////////////////////////
+
     private async startGame(game: any) {
         try {
             // Sélection du premier objet à deviner
