@@ -151,7 +151,7 @@ export class SessionService {
 
 
     ///////////////////
-    // Games updates //
+    // Game updates //
     ///////////////////
     async disconnectPlayer(socketID: string) {
         try {
@@ -167,7 +167,7 @@ export class SessionService {
             const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
             if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
 
-            // Déconnection du joueur
+            // Déconnexion du joueur
             session.players[playerIndex].connected = false;
 
             // Update host
