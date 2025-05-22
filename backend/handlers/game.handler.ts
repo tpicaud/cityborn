@@ -11,18 +11,18 @@ export class GameHandler {
     register(socket: Socket, io: Server) {
 
         // Join game
-        socket.on('game:join', async (gameID, playerID, callback) => {
+        socket.on('game:join', async (gameID, callback) => {
             try {
-                if (!gameID || !playerID === undefined) {
-                    throw new Error("Paramètres invalides : gameID, playerID et guess sont requis.");
+                if (!gameID === undefined) {
+                    throw new Error("Paramètres invalides : gameID est requis.");
                 }
                 
-                const game = await this.gameService.join(gameID, playerID);
+                const game = await this.gameService.join(socket.id, gameID);
 
-                await socket.join(gameID)
+                await socket.join(gameID);
                 io.to(game.id).emit('game:update', game);
 
-                console.log(`${playerID} a rejoint la session ${gameID}`);
+                console.log(`${socket.id} a rejoint la game ${gameID}`);
                 callback?.({ success: true });
             } catch (error) {
                 console.error("Erreur lors du traitement du guess :", error);
