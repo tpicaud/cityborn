@@ -15,11 +15,11 @@ import { getGameResult } from '@/utils/getGameResult';
 const ResultsComponent = ({
     game,
     localPlayerID,
-    endGame
+    handleEnd
 }: {
     game: Game,
     localPlayerID: string,
-    endGame: () => void
+    handleEnd: () => void
 }) => {
 
     const router = useRouter();
@@ -34,7 +34,7 @@ const ResultsComponent = ({
 
         // change ids by name in results
         currentPlayerResults.results.forEach((result) => {
-            const guessObject = game.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
+            const guessObject = game.state.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
             if (guessObject) {
                 result.guessObjectId = guessObject.name;
             }
@@ -43,7 +43,7 @@ const ResultsComponent = ({
         // change ids by name for all players results
         playersResults.forEach((playerResults) => {
             playerResults.results.forEach((result) => {
-                const guessObject = game.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
+                const guessObject = game.state.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
                 if (guessObject) {
                     result.guessObjectId = guessObject.name;
                 }
@@ -188,7 +188,7 @@ const ResultsComponent = ({
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={endGame}
+                        onClick={handleEnd}
                         className="w-24"
                     >
                         Lobby 
@@ -198,7 +198,7 @@ const ResultsComponent = ({
                         color="primary"
                         onClick={() => {
                             router.push('/');
-                            endGame();
+                            handleEnd();
                         }}
                         className="w-24"
                     >

@@ -1,130 +1,180 @@
 'use client';
 
-import LoadingComponent from '@/components/others/LoadingComponent';
-import ResultsComponent from '@/components/Session/ResultsComponent';
-import { GameStatus } from '@/enums/GameStatus';
-import { useMultiSession } from '@/hooks/useMultiSession';
-import { GameComponentProps } from '@/types/GameComponentProps';
-import { getGameResult } from '@/utils/getGameResult';
-import { useEffect, useState } from 'react';
-import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { useParams, useRouter } from 'next/navigation';
-import { GameSocket, useGameSocket } from '@/hooks/useGameSocket';
-import { DialogInput } from '@/components/others/DialogInput';
 import { GameComponent } from '@/components/Session/GameComponent';
-import { SessionStatus } from '@/enums/SessionStatus';
+import { LobbyComponent } from '@/components/Session/LobbyComponent';
+import { DialogInput } from '@/components/others/DialogInput';
+import LoadingComponent from '@/components/others/LoadingComponent';
+import { useMultiGame } from '@/hooks/useMultiGame';
+import { useMultiSession } from '@/hooks/useMultiSession';
+import GameConfig from '@/types/GameConfig';
+import Guess from '@/types/Guess';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function MultiGamePage() {
+export default function MultiSessionPage() {
 
-    const router = useRouter();
-    const { gameID } = useParams<{ gameID: string }>();
-    const gameSocket: GameSocket = useGameSocket(gameID, localPlayerID);
-    const [errorMessage, setErrorMessage] = useState<string>()
+    const { sessionID } = useParams<{ sessionID: string }>();
+    const [localPlayerID, setLocalPlayerID] = useState<string>();
+    const multiSession = useMultiSession(localPlayerID, sessionID);
+    const multiGame = useMultiGame(localPlayerID);
 
+
+    ////////////////
+    // useEffects //
+    ////////////////
+
+    // Automatic reconnect
     useEffect(() => {
-        const fetchGame = async (gameID: string): Promise<void> => {
-            if (gameSocket.isConnected && !game) {
-                try {
-                    await gameSocket.fetchGame(gameID)
-                } catch (error) {
-                    console.log(`Erreur lors de la récupération de la partie: ${error}`);
-                    setErrorMessage('Erreur lors du chergement de la partie')
+        const autoReconnect = async () => {
+            try {
+                if (localPlayerID && !multiSession.connected) {
+                    const isInGame = await multiSession.reconnect(localPlayerID);
+                    if (isInGame) await multiGame.reconnect(localPlayerID);
                 }
+            } catch (error) {
+                console.log(`Erreur lors de la reconnexion automatique: ${error}`);
             }
         }
-        fetchGame(gameID);
-    }, [gameSocket.isConnected])
+        autoReconnect();
+    }, [localPlayerID, multiSession.connected]);
 
 
-    useEffect(() => {
-        const setupGame = async () => {
-            if (localPlayerID) {
-                try {
-                    try {
-                        await gameSocket.fetchGame(gameID)
-                    } catch {
-                        if (game) await gameSocket.postGame(game);
-                    }
-                    await gameSocket.joinGame(gameID, localPlayerID)
-                } catch (error) {
-                    setLocalPlayerID(null)
-                    console.error(`Erreur lors de la connexion à la partie: ${error}`);
-                    setErrorMessage('Erreur lors de la connexion à la partie')
-                }
-            }
-        }
-        setupGame()
-    }, [localPlayerID, gameID]);
+    //////////////////////////
+    // Session interactions //
+    //////////////////////////
 
-    useEffect(() => {
-        if (gameSocket.gameUpdate) {
-            console.log("Game updated", gameSocket.gameUpdate);
-            setGame({ ...game, ...gameSocket.gameUpdate });
-        }
-    }, [gameSocket.gameUpdate])
-
-    useEffect(() => {
-        console.log('Current Game:', game);
-    }, [game]);
-
-    const {
-        startGame,
-        handleGuess,
-        handleNextRound,
-    } = useMultiSession(game, localPlayerID, gameSocket);
-
-    const handlePlay = (input: string) => {
-        if (game && !game.players.some(player => player.id === input)) {
-            setLocalPlayerID(input);
+    const handleJoinSession = async (playerID: string) => {
+        try {
+            await multiSession.join(playerID);
+            setLocalPlayerID(playerID);
+        } catch (error) {
+            console.log(`Echec de la connexion à la session: ${error}`);
         }
     };
 
-    if (errorMessage) {
-        return <div>{errorMessage}</div>
+    const handleUpdateHost = async (newHostID: string) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.updateHost(newHostID)
+        } catch (error) {
+            console.log(`Echec lors de la mise à jour du host: ${error}`);
+        }
     }
 
-    if (!game || !gameSocket.isConnected) {
-        return <LoadingComponent message='Chargement de la partie' />
+    const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.updateGameConfig(gameConfig);
+        } catch (error) {
+            console.log(`Echec lors de la mise à jour de la configuration de la partie: ${error}`);
+        }
     }
 
-    if (!gameSocket.isConnected) {
-        return <LoadingComponent message='Connexion au serveur' />
+    const handleKickPlayer = async (playerToKick: string) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.kickPlayer(playerToKick);
+        } catch (error) {
+            console.log(`Echec lors de la suppression du joueur de la session: ${error}`);
+        }
     }
 
+    const handleStartGame = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.startGame();
+        } catch (error) {
+            console.log(`Echec lors du démarrage de la partie: ${error}`);
+        }
+    }
+
+    const handleReconnectToSession = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            const isInGame = await multiSession.reconnect(localPlayerID);
+        } catch (error) {
+            console.log(`Erreur lors de la reconnexion à la session: ${error}`);
+        }
+
+    };
+
+
+    ///////////////////////
+    // Game interactions //
+    ///////////////////////
+
+    const handleGuess = async (guess: Guess) => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.guess(guess);
+        } catch (error) {
+            console.log(`Echec lors de l'enregistrement du guess: ${error}`);
+        }
+    }
+
+    const handleNextRound = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.nextRound();
+        } catch (error) {
+            console.log(`Echec lors du passage au round suivant: ${error}`);
+        }
+    }
+
+    const handleEnd = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.end();
+        } catch (error) {
+            console.log(`Echec lors de la finalisation de la partie: ${error}`);
+        }
+    }
+
+    const handleReconnectToGame = async () => {
+        try {
+            if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiGame.reconnect(localPlayerID);
+        } catch (error) {
+            console.log(`Erreur lors de la reconnexion à la partie`);
+        }
+    };
+
+
+    ///////////////
+    // Rendering //
+    ///////////////
+
+    // si pas de session, chargement
+    if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
+
+    // si pas de localPlayerID, afficher dialog
     if (!localPlayerID) {
         return (
             <div className="flex flex-row justify-center items-center mt-16">
-                <DialogInput message='Entrez votre pseudo' handleClick={handlePlay} label='Votre pseudo' />
+                <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
             </div>
         );
     }
 
-    if (!game && localPlayerID) {
-        return <LoadingComponent message='Connexion à la partie' />
+    // Si game, display game
+    if (multiGame.game) {
+        return <GameComponent
+            localPlayerID={localPlayerID}
+            isHost={multiGame.isHost}
+            game={multiGame.game}
+            handleGuess={handleGuess}
+            handleNextRound={handleNextRound}
+            handleEnd={handleEnd} />
+    } else {
+        // display lobby
+        return <LobbyComponent
+            localPlayerID={localPlayerID}
+            isHost={multiSession.isHost}
+            session={multiSession.session}
+            handleUpdateHost={handleUpdateHost}
+            handleUpdateGameConfig={handleUpdateGameConfig}
+            handleKickPlayer={handleKickPlayer}
+            handleStartGame={handleStartGame} />
     }
 
-    if (!game) {
-        return <div>Erreur lors de la récupération de la partie</div>
-    }
-
-    const gameComponentProps: GameComponentProps = {
-        game,
-        localPlayerID: localPlayerID!,
-        handleGuess,
-        handleNextRound,
-    }
-
-    switch (game.status) {
-        case SessionStatus.IN_LOBBY:
-            return <LobbyComponent localPlayerID={localPlayerID} game={game} startGame={startGame} />
-
-        case GameStatus.IN_GAME:
-            return <GameComponent props={gameComponentProps} />
-
-        case GameStatus.IN_RESULTS:
-            return <ResultsComponent game={game} playersResults={getGameResult(game)} localPlayerID={localPlayerID} />
-
-        case GameStatus.FINISHED:
-            router.push('/')
-    }
 }

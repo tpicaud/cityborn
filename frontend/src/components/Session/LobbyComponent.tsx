@@ -6,11 +6,14 @@ import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
 import { Categories } from "@/enums/Categories";
 
-export const LobbyComponent = ({ localPlayerID, session, updateGameConfig, startGame }: {
+export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {
     localPlayerID: string | undefined;
     session: Session;
-    updateGameConfig: (newConfid: Partial<GameConfig>) => void,
-    startGame: () => void
+    isHost: boolean;
+    handleUpdateHost: (newHostID: string) => void;
+    handleKickPlayer: (playerToKick: string) => void;
+    handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => void;
+    handleStartGame: () => Promise<void>;
 }) => {
     const [copied, setCopied] = useState(false);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
@@ -115,7 +118,7 @@ export const LobbyComponent = ({ localPlayerID, session, updateGameConfig, start
                                         id="categories-input"
                                         multiple
                                         value={session.gameConfig.categories}
-                                        onChange={(e) => updateGameConfig({ categories: e.target.value as Categories[] })}
+                                        onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
                                         input={<OutlinedInput label="Categories" />}
                                         renderValue={(selected) => (selected as string[]).join(', ')}
                                     >
@@ -141,10 +144,10 @@ export const LobbyComponent = ({ localPlayerID, session, updateGameConfig, start
                                         onBlur={() => {
                                             const parsed = parseInt(tempNbOfObjects, 10);
                                             if (isNaN(parsed) || parsed <= 0) {
-                                                updateGameConfig({ nbOfObjects: 6 });
+                                                handleUpdateGameConfig({ nbOfObjects: 6 });
                                                 setTempNbOfObjects('6'); // on remet aussi le champ visuel à jour
                                             } else {
-                                                updateGameConfig({ nbOfObjects: parsed });
+                                                handleUpdateGameConfig({ nbOfObjects: parsed });
                                             }
                                         }}
                                     />
@@ -162,10 +165,10 @@ export const LobbyComponent = ({ localPlayerID, session, updateGameConfig, start
                                         onBlur={() => {
                                             const parsed = parseInt(tempTimer, 10);
                                             if (isNaN(parsed) || parsed <= 0) {
-                                                updateGameConfig({ timer: 20 });
+                                                handleUpdateGameConfig({ timer: 20 });
                                                 setTempTimer('20');
                                             } else {
-                                                updateGameConfig({ timer: parsed });
+                                                handleUpdateGameConfig({ timer: parsed });
                                             }
                                         }}
                                     />
@@ -184,7 +187,7 @@ export const LobbyComponent = ({ localPlayerID, session, updateGameConfig, start
                     fullWidth
                     sx={{ mt: 2 }}
                     disabled={session.hostID !== localPlayerID}
-                    onClick={startGame}
+                    onClick={handleStartGame}
                 >
                     Démarrer la partie
                 </Button>
