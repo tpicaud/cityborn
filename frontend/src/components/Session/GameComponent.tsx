@@ -11,23 +11,23 @@ import { Session } from "@/types/Session";
 import { GameStatus } from "@/enums/GameStatus";
 import ResultsComponent from "./ResultsComponent";
 
-export const GameComponent = ({ localPlayerID, game, session, handleGuess, handleNextRound, endGame }: {
+export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd }: {
     localPlayerID: string,
+    isHost: boolean;
     game: Game,
-    session: Session,
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
-    endGame: () => void,
+    handleEnd: () => void,
 }) => {
 
     const NextButton: React.FC = () => {
-        if (!game?.currentRound) return null;
+        if (!game.state.currentRound) return null;
 
         return (
             <Button
                 variant="contained"
                 color="error"
-                disabled={session.hostID !== localPlayerID}
+                disabled={isHost}
                 onClick={() => {
                     handleNextRound();
                 }}
@@ -47,11 +47,11 @@ export const GameComponent = ({ localPlayerID, game, session, handleGuess, handl
         );
     };
 
-    if (!game?.currentRound) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
+    if (!game.state.currentRound) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
 
     switch (game.status) {
         case GameStatus.IN_RESULTS:
-            return <ResultsComponent game={game} localPlayerID={localPlayerID} endGame={endGame} />
+            return <ResultsComponent game={game} localPlayerID={localPlayerID} handleEnd={handleEnd} />
 
         case GameStatus.IN_GAME:
             return (
@@ -62,16 +62,16 @@ export const GameComponent = ({ localPlayerID, game, session, handleGuess, handl
                         handleGuess={handleGuess}
                         handleNextRound={handleNextRound}
                     />
-                    {game.currentRound && (
+                    {game.state.currentRound && (
                         <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
                             <div className="flex flex-col gap-2">
-                                {game.currentRound.status === RoundStatus.SHOWING_RESULTS && (
+                                {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
                                     <NextButton />
                                 )}
                                 <div className='bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold'>
-                                    {game.guessObjectsIds.findIndex(id => (game.currentRound!.guessObjectId === id)) + 1}
+                                    {game.state.guessObjectsIds.findIndex(id => (game.state.currentRound!.guessObjectId === id)) + 1}
                                     /
-                                    {game.guessObjects.length}
+                                    {game.state.guessObjects.length}
                                 </div>
                             </div>
                         </div>
