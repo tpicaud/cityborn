@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 		const session: Session = await createSession(gameMode);
 
 		// Store in redis
-		redis.set(session.id, session)
+		await redis.set(session.id, session)
 
 		return NextResponse.json(session.id, { status: 201 });
 	} catch (error) {
@@ -52,7 +52,7 @@ async function createSession(gameMode: GameMode): Promise<Session> {
 			timer: 20,
 			nbOfObjects: 6
 		},
-		players: gameMode === GameMode.SOLO ? [{ id: 'guest', inGame: true, connected: true, sessionID: sessionID }] : [],
+		players: gameMode === GameMode.SOLO ? [{ id: 'guest', inGame: false, connected: true, sessionID: sessionID }] : [],
 	};
 
 	return newSession
