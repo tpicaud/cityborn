@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 		const guessObjects2 = await fetchGuessObjects(gameConfig);
 
 		// Create game
-		const players: GamePlayer[] = playersID.map(playerID => ({ id: playerID, inGame: true, connected: false }));
+		const players: GamePlayer[] = playersID.map(playerID => ({ id: playerID, connected: false }));
 		const newGame: Game = createGame(gameConfig, hostID, gameMode, players, guessObjects2);
 
 		// Store game in redis

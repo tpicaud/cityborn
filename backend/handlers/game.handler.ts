@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { GameService } from "../services/gameService";
+import { GameService } from "../services/gameService.ts";
 
 export class GameHandler {
     private gameService: GameService;
