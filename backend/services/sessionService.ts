@@ -1,6 +1,6 @@
-import { SessionStore } from "../stores/sessionStore";
-import { GameService } from "./gameService";
-import { PlayerService } from "./playerService";
+import { SessionStore } from "../stores/sessionStore.ts";
+import { GameService } from "./gameService.ts";
+import { PlayerService } from "./playerService.ts";
 
 export class SessionService {
     private sessionStore: SessionStore;

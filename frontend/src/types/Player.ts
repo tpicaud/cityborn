@@ -1,6 +1,5 @@
 export interface Player {
     id: string;
-    inGame: boolean;
 }
 
 export interface SessionPlayer extends Player {

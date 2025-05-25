@@ -17,8 +17,8 @@ export async function createSession(gameMode: GameMode): Promise<string> {
             body: JSON.stringify({ gameMode }),
         });
         
-        const sessionID: string = await response.json();
-        return sessionID;
+        const data = await response.json();
+        return data.sessionID;
     } catch (error) {
         throw new Error(`Erreur lors de la création de la session ${error}`);
     }

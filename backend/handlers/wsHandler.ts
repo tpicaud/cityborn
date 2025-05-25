@@ -1,6 +1,6 @@
 import { Server as SocketIOServer } from "socket.io";
-import { GameService } from "../services/gameService";
-import { SessionService } from "../services/sessionService";
+import { GameService } from "../services/gameService.ts";
+import { SessionService } from "../services/sessionService.ts";
 
 export function setupWSHandler(io: SocketIOServer) {
 

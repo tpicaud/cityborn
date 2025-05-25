@@ -8,7 +8,7 @@ import { SessionService } from "../services/sessionService.ts";
 import { SessionHandler } from "../handlers/session.handler.ts";
 import { GameHandler } from "../handlers/game.handler.ts";
 import { PlayerService } from "../services/playerService.ts";
-import { PlayerStore } from "../stores/socketStore.ts";
+import { PlayerStore } from "../stores/playerStore.ts";
 
 export function setupWebSocketServer(httpServer: any) {
 

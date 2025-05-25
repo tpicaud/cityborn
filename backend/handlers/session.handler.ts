@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { SessionService } from "../services/sessionService";
+import { SessionService } from "../services/sessionService.ts";
 
 export class SessionHandler {
 

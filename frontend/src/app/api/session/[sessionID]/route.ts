@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { redis } from "../../lib/redis";
 import { Session } from "@/types/Session";
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { params }: { params: { sessionID: string } }) {
     try {
-        const { searchParams } = new URL(request.url);
-        const sessionID = searchParams.get("sessionID");
+        const sessionID = params.sessionID;
 
         if (!sessionID) {
             return NextResponse.json(
