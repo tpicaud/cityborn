@@ -59,3 +59,4 @@
 | 18/05/2025 | 2h | Continuation du refactoring backend session |
 | 20/05/2025 | 2h | Finalisation refactoring backend |
 | 21/05/2025 | 5h | Refactoring front pour les session |
+| 26/05/2025 | 8h | Test et bug fix des sessions |
