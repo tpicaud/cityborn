@@ -111,15 +111,14 @@ export class SessionService {
             // Créer une nouvelle partie
             const game = await this.gameService.createGameFromSession(session);
 
-
-
             // Update session
             session.status = "IN_GAME";
+            session.currentGameId = game.id;
 
             await this.sessionStore.saveSession(session);
             return { session, gameID: game.id };
         } catch (error) {
-            throw new Error(`Erreur lors du démarrage de la partie: ${error}`);
+            throw new Error(`Erreur lors du démarrage de la partie: ${error.message}`);
         }
     }
 
@@ -173,7 +172,10 @@ export class SessionService {
             // Update host
             const isHost = playerID === session.hostID
             if (isHost) {
-                const connectedPlayers = session.players.filter((player: any) => session.status === 'IN_GAME' ? player.connected && player.inGame : player.connected);
+                const currentGame = session.currentGameId ? await this.gameService.getGame(session.currentGameId) : null;
+                const players = currentGame ? currentGame.players : session.players
+
+                const connectedPlayers = players.filter((player: any) => player.connected);
                 if (connectedPlayers.length > 0) {
                     session.hostID = connectedPlayers[0].id;
                 } else {
@@ -183,7 +185,7 @@ export class SessionService {
 
             // Notifier la game
             let game = undefined
-            if (await this.isInGame(session.currentGameId, playerID)) {
+            if (session.currentGameId && await this.isInGame(session.currentGameId, playerID)) {
                 game = session.currentGameId ? await this.gameService.disconnectPlayer(socketID, isHost ? session.hostID : undefined) : undefined;
             }
 
@@ -193,7 +195,7 @@ export class SessionService {
 
             return { session, game };
         } catch (error) {
-            throw new Error(`Erreur lors de la déconnexion du socket ${socketID}`);
+            throw new Error(error.message);
         }
     }
 
@@ -204,32 +206,4 @@ export class SessionService {
         const game = await this.gameService.getGame(gameID);
         return game.players.some(player => player.id === playerID);
     }
-
-    // async getPlayerSocket(sessionID: string, playerID) {
-    //     try {
-    //         // Récupération du jeu dans la base de données
-    //         const session: any | undefined = await this.sessionStore.getSession(sessionID)
-    //         if (!session) throw new Error("Session introuvable.");
-
-    //         // Check si l'id du joueur est dans la partie
-    //         const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
-    //         if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
-
-    //         return await this.playerService.getSocket(playerID, sessionID);
-    //     } catch (error) {
-    //         throw new Error(`Erreur lors de la récupération des soclkets de la session ${sessionID}`);
-    //     }
-    // }
-
-    // async getAllSockets(sessionID: string) {
-    //     try {
-    //         // Récupération du jeu dans la base de données
-    //         const session: any | undefined = await this.sessionStore.getSession(sessionID)
-    //         if (!session) throw new Error("Session introuvable.");
-
-    //         return session.players.map(async (player) => player.connected && await this.playerService.getSocket(player.id, sessionID));
-    //     } catch (error) {
-    //         throw new Error(`Erreur lors de la récupération des soclkets de la session ${sessionID}`);
-    //     }
-    // }
 }

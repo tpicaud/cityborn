@@ -27,7 +27,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
             <Button
                 variant="contained"
                 color="error"
-                disabled={isHost}
+                disabled={!isHost}
                 onClick={() => {
                     handleNextRound();
                 }}
@@ -47,7 +47,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
         );
     };
 
-    if (!game.state.currentRound) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
+    if (!game.state.currentRound && game.status === GameStatus.IN_GAME) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
 
     switch (game.status) {
         case GameStatus.IN_RESULTS:

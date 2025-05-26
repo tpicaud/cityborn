@@ -26,7 +26,7 @@ export class SessionHandler {
                 console.error("Erreur lors de la tentative de rejoindre la partie :", error);
                 callback?.({
                     success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
+                    error: error.message || "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -43,7 +43,7 @@ export class SessionHandler {
                 console.log(error.message)
                 callback?.({
                     success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
+                    error: error.message || "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -60,7 +60,7 @@ export class SessionHandler {
                 console.log(error.message)
                 callback?.({
                     success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
+                    error: error.message || "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -76,7 +76,7 @@ export class SessionHandler {
                 console.log(error.message)
                 callback?.({
                     success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
+                    error: error.message || "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -96,7 +96,7 @@ export class SessionHandler {
                 console.error("Erreur lors de la tentative de rejoindre la partie :", error);
                 callback?.({
                     success: false,
-                    message: error.message || "Une erreur inconnue s'est produite."
+                    error: error.message || "Une erreur inconnue s'est produite."
                 });
             }
         });

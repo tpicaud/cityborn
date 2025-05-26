@@ -16,17 +16,12 @@ export class SessionStore {
     async saveSession(session: any) {
         const key = this.key(session.id);
         const value = JSON.stringify(session);
-
-        if (session.currentGameId) {
-            await this.redis.set(key, value); // Pas de TTL car game en cours
-        } else {
-            await this.redis.set(key, value, 'EX', this.SESSION_TTL); // TTL appliqué sinon
-        }
+        await this.redis.set(key, value, 'EX', this.SESSION_TTL);
     }
 
     async getSession(sessionID: string) {
         const data = await this.redis.get(this.key(sessionID));
-		return data ? JSON.parse(data) : null;
+        return data ? JSON.parse(data) : null;
     }
 
     async deleteSession(sessionID: string) {

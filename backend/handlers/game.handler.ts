@@ -28,7 +28,7 @@ export class GameHandler {
                 console.error("Erreur lors du traitement du guess :", error);
                 callback?.({
                     success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                    error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -48,7 +48,7 @@ export class GameHandler {
                 console.error("Erreur lors du traitement du guess :", error);
                 callback?.({
                     success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                    error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -65,7 +65,7 @@ export class GameHandler {
                 console.error("Erreur lors du passage au tour suivant :", error);
                 callback?.({
                     success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                    error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -80,7 +80,7 @@ export class GameHandler {
                 console.error("Erreur lors de la fin de la partie :", error);
                 callback?.({
                     success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                    error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
                 });
             }
         });
@@ -96,7 +96,7 @@ export class GameHandler {
                 console.error("Erreur lors de la fin de la partie :", error);
                 callback?.({
                     success: false,
-                    message: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+                    error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
                 });
             }
         });

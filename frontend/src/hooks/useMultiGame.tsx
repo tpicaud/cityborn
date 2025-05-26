@@ -39,13 +39,14 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
             try {
                 const game: Game = await apiService.fetchGame(gameID);
                 setGame(game);
-                join(gameID);
+                await join(gameID);
             } catch (error) {
                 console.log(`Erreur lors de la connexion à la partie: ${error}`);
             }
         }
 
         const handleGameUpdate = (game: Game) => {
+            console.log("Game updated:", game);
             setGame(prev => {
                 const prevGuessObjects = prev?.state?.guessObjects ?? [];
 
@@ -62,6 +63,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
 
         // handle messages
         on('game:update', handleGameUpdate);
+        on('game:startGame', handleStartGame)
 
         return () => {
             // Nettoyage
@@ -76,8 +78,6 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
     ////////////////
 
     const join = async (gameID: string) => {
-        if (!game) throw new Error('Joueur ou game non initialisé');
-
         return new Promise<void>((resolve, reject) => {
             emit('game:join', gameID, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
