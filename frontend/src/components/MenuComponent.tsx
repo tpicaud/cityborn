@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { GameMode } from '@/enums/GameMode';
-import { io } from 'socket.io-client';
 import * as apiService from '@/services/apiService';
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });

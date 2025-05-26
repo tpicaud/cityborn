@@ -16,7 +16,7 @@ export async function createSession(gameMode: GameMode): Promise<string> {
             },
             body: JSON.stringify({ gameMode }),
         });
-        
+
         const data = await response.json();
         return data.sessionID;
     } catch (error) {
@@ -56,11 +56,20 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
 //////////////////
 
 export async function fetchGame(gameID: string): Promise<Game> {
+    if (!gameID) {
+        throw new Error("gameID est requis pour récupérer la partie.");
+    }
+
     try {
-        const response = await fetch(`/api/game/${gameID}`);
-        const game: Game = await response.json();
-        return game;
+		const response = await fetch(`/api/game?gameID=${encodeURIComponent(gameID)}`);
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.game as Game;
     } catch (error) {
-        throw new Error(`Erreur lors de la récupération de la session: ${error}`);
+        throw new Error(`Erreur lors de la récupération de la partie: ${error}`);
     }
 }

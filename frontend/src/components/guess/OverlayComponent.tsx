@@ -108,7 +108,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     useEffect(() => {
         setTimerEnded(false)
-    }, [game.currentRound?.guessObjectId])
+    }, [game.state.currentRound?.guessObjectId])
 
     useEffect(() => {
         if (timerEnded) {
@@ -118,29 +118,29 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     return (
         <div>
-            <GuessObjectComponent guessObject={game.guessObjects.find(guessObject => game.currentRound!.guessObjectId === guessObject.id)!} />
+            <GuessObjectComponent guessObject={game.state.guessObjects.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!} />
             <div className="absolute w-[27%] mx-6 my-14">
-                {(game.currentRound!.status === RoundStatus.GUESSING) && (
+                {(game.state.currentRound!.status === RoundStatus.GUESSING) && (
                     <TimerComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
 
-                {game.currentRound!.status === RoundStatus.GUESSING && (
+                {game.state.currentRound!.status === RoundStatus.GUESSING && (
                     <div className="relative w-full flex justify-center items-center">
                         <GuessButton
                             preGuess={preGuess}
                             disabled={
-                                (!preGuess) || (game.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
+                                (!preGuess) || (game.state.currentRound?.playersGuesses?.[localPlayerID] !== undefined)
                             }
                             handleGuess={handleGuess} />
                     </div>
                 )}
 
-                {game.currentRound && game.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
+                {game.state.currentRound && game.state.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
                     <GuessResult
-                        currentRound={game.currentRound!}
-                        guessObject={game.guessObjects.find(guessObject => game.currentRound!.guessObjectId === guessObject.id)!}
+                        currentRound={game.state.currentRound!}
+                        guessObject={game.state.guessObjects.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!}
                         localPlayerID={localPlayerID}
                     />
                 )}

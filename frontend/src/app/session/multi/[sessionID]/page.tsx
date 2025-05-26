@@ -36,7 +36,7 @@ export default function MultiSessionPage() {
             }
         }
         autoReconnect();
-    }, [localPlayerID, multiSession.connected]);
+    }, [multiSession.connected]);
 
 
     //////////////////////////

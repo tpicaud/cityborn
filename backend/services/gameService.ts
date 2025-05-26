@@ -48,7 +48,7 @@ export class GameService {
             await this.gameStore.saveGame(game)
 
             // Check si tous les joueurs ont join
-            const disconnectPlayers = game.player.some(player => !player.connected);
+            const disconnectPlayers = game.players.some(player => !player.connected);
             if (!disconnectPlayers) {
                 game = await this.startGame(game);
             }
@@ -127,7 +127,7 @@ export class GameService {
             }
 
             // Trouver l'index du currentRound
-            const currentIndex = game.state.guessObjectsIds.findIndex((id: string) => id === game.currentRound.guessObjectId);
+            const currentIndex = game.state.guessObjectsIds.findIndex((id: string) => id === game.state.currentRound.guessObjectId);
 
             // Vérifier que l'objet est dans la liste
             if (currentIndex === undefined) {
@@ -145,15 +145,20 @@ export class GameService {
                     points: guess ? guess.points : 0
                 };
 
-                game.state.results[player.id] = playerResults ? playerResults.results.push(newResult) : { results: [newResult] };
+                if (playerResults && playerResults.results) {
+                    playerResults.results.push(newResult);
+                } else {
+                    game.state.results[player.id] = { results: [newResult] };
+                }
             });
+
 
             // Go to next guess object
             if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
                 game.status = 'IN_RESULTS'
                 game.state.currentRound = undefined
             } else {
-                game.currentRound = {
+                game.state.currentRound = {
                     status: 'GUESSING',
                     guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
                     playersGuesses: {},
@@ -206,7 +211,7 @@ export class GameService {
     private async startGame(game: any) {
         try {
             // Sélection du premier objet à deviner
-            const firstObjectId = game.guessObjectsIds[0];
+            const firstObjectId = game.state.guessObjectsIds[0];
 
             // Création du premier round
             const firstRound = {
@@ -216,7 +221,7 @@ export class GameService {
             };
 
             game.status = 'IN_GAME';
-            game.currentRound = firstRound;
+            game.state.currentRound = firstRound;
 
             await this.gameStore.saveGame(game)
 
@@ -233,24 +238,22 @@ export class GameService {
     async createGameFromSession(session: any) {
         try {
             const playersID = session.players.map(player => player.id);
-            const response = await fetch('/api/game', {
+            const response = await fetch(`${process.env.API_REST_URL}/api/game`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ gameConfig: session.gameConfig, playersID }),
+                body: JSON.stringify({ gameConfig: session.gameConfig, hostID: session.hostID, gameMode: session.gameMode, playersID }),
             });
-            const game = await response.json();
+            const data = await response.json();
+            const game = data.game;
 
             // Set host
             game.hostID = session.hostID;
 
-            // Store in redis
-            await this.gameStore.saveGame(game);
-
             return game;
-        } catch (e) {
-            throw new Error(`Error creating new game for session ${session.id}`);
+        } catch (error) {
+            throw new Error(`Error creating new game for session ${session.id}: ${error}`);
         }
     }
 
