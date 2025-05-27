@@ -16,7 +16,7 @@ export class GameStore {
 		this.redis = redis;
 	}
 
-	private key(gameID: string) {
+	key(gameID: string) {
 		return `game:${gameID}`;
 	}
 

@@ -5,7 +5,8 @@ export interface IUseSession {
     session: Session | undefined;
     isHost: boolean;
     updateGameConfig: (gameConfig: Partial<GameConfig>) => void;
-    startGame: () => Promise<void>;
+    startGame: () => void;
+    endGame:() => void
 }
 
 export interface IUseMultiSession extends IUseSession {

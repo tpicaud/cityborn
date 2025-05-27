@@ -1,14 +1,18 @@
 import { GameStore } from "../stores/gameStore.ts";
+import { LockService } from "./lockService.ts";
 import { PlayerService } from "./playerService.ts";
 
 export class GameService {
 
     private gameStore: GameStore;
     private playerService: PlayerService;
+    private lockService: LockService;
+    private LOCK_TTL = 2000;
 
-    constructor(gameStore: GameStore, playerService: PlayerService) {
+    constructor(gameStore: GameStore, playerService: PlayerService, lockService: LockService) {
         this.gameStore = gameStore;
         this.playerService = playerService;
+        this.lockService = lockService;
     }
 
     async getGame(gameID: string) {
@@ -25,35 +29,38 @@ export class GameService {
             const { playerID, sessionID } = await this.playerService.getPlayer(socketID);
             if (!playerID || !sessionID) throw new Error(`Aucun joueur associé au socket ${socketID}. Rejoingnez d'abord la session.`);
 
-            // Récupération du jeu dans la base de données
-            let game = await this.gameStore.getGame(gameID);
+            return await this.lockService.withLock(this.gameStore.key(gameID), this.LOCK_TTL, async () => {
 
-            // Check si la partie existe
-            if (!game) throw new Error("Partie introuvable.");
+                // Récupération du jeu dans la base de données
+                let game = await this.gameStore.getGame(gameID);
 
-            // Vérifier si playerID existe dans la liste des joueurs
-            const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
-            if (playerIndex === -1) throw new Error("Le joueur n'est pas invité dans la partie.");
+                // Check si la partie existe
+                if (!game) throw new Error("Partie introuvable.");
 
-            // Vérifier que le joueur n'est pas déjà dans la partie
-            if (game.players[playerIndex].connected === true) throw new Error(`Le joueur est déjà dans la partie`);
+                // Vérifier si playerID existe dans la liste des joueurs
+                const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
+                if (playerIndex === -1) throw new Error("Le joueur n'est pas invité dans la partie.");
 
-            // Update player
-            await this.playerService.register(socketID, playerID, sessionID, gameID);
+                // Vérifier que le joueur n'est pas déjà dans la partie
+                if (game.players[playerIndex].connected === true) throw new Error(`Le joueur est déjà dans la partie`);
 
-            // Ajouter le joueur à la partie
-            game.players[playerIndex].connected = true;
+                // Update player
+                await this.playerService.register(socketID, playerID, sessionID, gameID);
 
-            // Save game
-            await this.gameStore.saveGame(game)
+                // Ajouter le joueur à la partie
+                game.players[playerIndex].connected = true;
 
-            // Check si tous les joueurs ont join
-            const disconnectPlayers = game.players.some(player => !player.connected);
-            if (!disconnectPlayers) {
-                game = await this.startGame(game);
-            }
+                // Save game
+                await this.gameStore.saveGame(game)
 
-            return game;
+                // Check si tous les joueurs ont join
+                const disconnectPlayers = game.players.some(player => !player.connected);
+                if (!disconnectPlayers) {
+                    game = await this.startGame(game);
+                }
+
+                return game;
+            });
         } catch (error) {
             throw new Error(`Erreur lors de la connexion du socket ${socketID} dans la partie ${gameID}: ${error}`);
         }
@@ -65,44 +72,47 @@ export class GameService {
             const { playerID, gameID } = await this.playerService.getPlayer(socketID);
             if (!playerID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
 
-            // Récupération du jeu dans la base de données
-            const game = await this.gameStore.getGame(gameID);
 
-            // Check si la partie existe
-            if (!game) {
-                throw new Error("Partie introuvable.");
-            }
+            return await this.lockService.withLock(this.gameStore.key(gameID), this.LOCK_TTL, async () => {
+                // Récupération du jeu dans la base de données
+                const game = await this.gameStore.getGame(gameID);
 
-            // Vérifier si playerID existe dans la liste des joueurs (game.players)
-            const playerExists = game.players.some((player: any) => player.id === playerID);
-            if (!playerExists) {
-                throw new Error("Le joueur n'est pas dans la partie.");
-            }
-
-            // Vérifier si playerID est connecté
-            const playerConnected = game.players.some((player: any) => player.id === playerID && player.connected);
-            if (!playerConnected) {
-                throw new Error("Le joueur est déconnecté.");
-            }
-
-            // Vérifier si un round est actif
-            if (!game.state.currentRound) {
-                throw new Error("Aucun round actif.");
-            }
-
-            if (!game.state.currentRound.playersGuesses[playerID]) {
-                // Mettre à jour le guess du joueur dans currentRound.playersGuesses
-                game.state.currentRound.playersGuesses[playerID] = guess;
-
-                // Vérifier si tout le monde à guess
-                const connectedPlayers = game.players.filter((player: any) => player.connected);
-                if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
-                    game.state.currentRound.status = 'SHOWING_RESULTS'
+                // Check si la partie existe
+                if (!game) {
+                    throw new Error("Partie introuvable.");
                 }
 
-                await this.gameStore.saveGame(game);
-            }
-            return game;
+                // Vérifier si playerID existe dans la liste des joueurs (game.players)
+                const playerExists = game.players.some((player: any) => player.id === playerID);
+                if (!playerExists) {
+                    throw new Error("Le joueur n'est pas dans la partie.");
+                }
+
+                // Vérifier si playerID est connecté
+                const playerConnected = game.players.some((player: any) => player.id === playerID && player.connected);
+                if (!playerConnected) {
+                    throw new Error("Le joueur est déconnecté.");
+                }
+
+                // Vérifier si un round est actif
+                if (!game.state.currentRound) {
+                    throw new Error("Aucun round actif.");
+                }
+
+                if (!game.state.currentRound.playersGuesses[playerID]) {
+                    // Mettre à jour le guess du joueur dans currentRound.playersGuesses
+                    game.state.currentRound.playersGuesses[playerID] = guess;
+
+                    // Vérifier si tout le monde à guess
+                    const connectedPlayers = game.players.filter((player: any) => player.connected);
+                    if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
+                        game.state.currentRound.status = 'SHOWING_RESULTS'
+                    }
+
+                    await this.gameStore.saveGame(game);
+                }
+                return game;
+            });
         } catch (error) {
             throw new Error(`Erreur lors de l'enregistrement du guess de ${socketID}: ${error}`);
         }
@@ -263,38 +273,42 @@ export class GameService {
             const { playerID, sessionID, gameID } = await this.playerService.getPlayer(socketID);
             if (!playerID || !sessionID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
 
-            // Récupération du jeu dans la base de données
-            const game = await this.gameStore.getGame(gameID);
+            return await this.lockService.withLock(this.gameStore.key(gameID), this.LOCK_TTL, async () => {
 
-            // Check si la partie existe
-            if (!game) throw new Error("Partie introuvable.");
+                // Récupération du jeu dans la base de données
+                const game = await this.gameStore.getGame(gameID);
 
-            // Vérifier si playerID existe dans la liste des joueurs
-            const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
-            if (playerIndex === -1) throw new Error("Le joueur n'est pas dans la partie.");
+                // Check si la partie existe
+                if (!game) throw new Error("Partie introuvable.");
 
-            // Déconnecter le joueur
-            game.players[playerIndex].connected = false;
+                // Vérifier si playerID existe dans la liste des joueurs
+                const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
+                if (playerIndex === -1) throw new Error("Le joueur n'est pas dans la partie.");
 
-            // Update host
-            if (newHostID) game.hostID = newHostID;
+                // Déconnecter le joueur
+                game.players[playerIndex].connected = false;
 
-            // Update l'état de la game si nécessaire
-            if (game.status === 'IN_GAME' && game.state.currentRound) {
-                switch (game.currentRound) {
-                    case 'GUESSING':
-                        // Vérifier si tout le monde à guess
-                        const connectedPlayers = game.players.filter((player: any) => player.connected);
-                        if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
-                            game.state.currentRound.status = 'SHOWING_RESULTS'
-                        }
-                        break;
-                    case 'RESULTS':
-                        break;
+                // Update host
+                if (newHostID) game.hostID = newHostID;
+
+                // Update l'état de la game si nécessaire
+                if (game.status === 'IN_GAME' && game.state.currentRound) {
+                    switch (game.currentRound) {
+                        case 'GUESSING':
+                            // Vérifier si tout le monde à guess
+                            const connectedPlayers = game.players.filter((player: any) => player.connected);
+                            if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
+                                game.state.currentRound.status = 'SHOWING_RESULTS'
+                            }
+                            break;
+                        case 'RESULTS':
+                            game.status = 'FINISHED';
+                            break;
+                    }
                 }
-            }
 
-            return game;
+                return game;
+            });
         } catch (error) {
             throw new Error(`Erreur lors de la deconnexion du socket ${socketID} dans la partie`);
         }

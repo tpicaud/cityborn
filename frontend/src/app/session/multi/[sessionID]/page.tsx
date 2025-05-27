@@ -124,6 +124,7 @@ export default function MultiSessionPage() {
     const handleEnd = async () => {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.endGame();
             await multiGame.end();
         } catch (error) {
             console.log(`Echec lors de la finalisation de la partie: ${error}`);
