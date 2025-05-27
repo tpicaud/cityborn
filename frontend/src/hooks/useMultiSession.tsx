@@ -137,6 +137,22 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         });
     }
 
+    const endGame = async () => {
+        if (!session) throw new Error('Joueur ou session non initialisé');
+
+        if (isHost) {
+            return new Promise<void>((resolve, reject) => {
+                emit('session:endGame', (response: { success: boolean; error?: string }) => {
+                    if (response.success) {
+                        resolve();
+                    } else {
+                        reject(new Error(response.error || "Erreur inconnue"));
+                    }
+                });
+            });
+        }
+    }
+
     const reconnect = async (playerID: string): Promise<{ isInGame: boolean }> => {
         if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
         try {
@@ -190,6 +206,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         updateGameConfig,
         kickPlayer,
         startGame,
+        endGame,
         reconnect
     };
 }

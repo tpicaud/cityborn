@@ -20,6 +20,7 @@ export class PlayerStore {
             data.gameID = gameID;
         }
         await this.redis.hset(this.key(socketID), data);
+        await this.redis.expire(this.key(socketID), this.PLAYER_TTL);
     }
 
 
@@ -39,7 +40,7 @@ export class PlayerStore {
         }
 
         // reset ttl
-        await this.resetTTL(data.playerID, data.sessionID, data.gameID);
+        await this.resetTTL(socketID, data.sessionID, data.gameID);
 
         return result;
     }

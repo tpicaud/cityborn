@@ -81,6 +81,22 @@ export class SessionHandler {
             }
         });
 
+        socket.on('session:endGame', async (callback) => {
+            try {
+                const session = await this.sessionService.endGame(socket.id);
+                                
+                io.to(session.id).emit('session:update', session);
+
+                callback?.({ success: true });
+            } catch (error) {
+                console.log(error.message)
+                callback?.({
+                    success: false,
+                    error: error.message || "Une erreur inconnue s'est produite."
+                });
+            }
+        });
+
         socket.on('session:reconnect', async (sessionID, playerID, callback) => {
             try {
                 if (!sessionID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
