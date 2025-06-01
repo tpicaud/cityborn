@@ -307,6 +307,7 @@ export class GameService {
                     }
                 }
 
+                await this.gameStore.saveGame(game);
                 return game;
             });
         } catch (error) {

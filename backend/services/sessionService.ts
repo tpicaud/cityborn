@@ -93,7 +93,7 @@ export class SessionService {
             if (session.hostID !== playerID) throw new Error(`Le joueur n'est pas le host de la session`);
 
             // Update gameConfig
-            session.gamecConfig = gameConfig;
+            session.gameConfig = gameConfig;
 
             await this.sessionStore.saveSession(session);
             return session;
@@ -215,7 +215,7 @@ export class SessionService {
                     const currentGame = session.currentGameId ? await this.gameService.getGame(session.currentGameId) : null;
                     const players = currentGame ? currentGame.players : session.players;
 
-                    const connectedPlayers = players.filter((player: any) => player.connected);
+                    const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
                     if (connectedPlayers.length > 0) {
                         session.hostID = connectedPlayers[0].id;
                     } else {

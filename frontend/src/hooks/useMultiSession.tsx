@@ -96,11 +96,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         });
     }
 
-    const updateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+    const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
         if (!session) throw new Error('Joueur ou session non initialisé');
 
+        const gameConfig = { ...session.gameConfig, ...partialGameConfig }
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateGameConfig', [gameConfig], (response: { success: boolean; error?: string }) => {
+            emit('session:updateGameConfig', gameConfig, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -114,7 +115,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('session:kickPlayer', [playerToKick], (response: { success: boolean; error?: string }) => {
+            emit('session:kickPlayer', playerToKick, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
