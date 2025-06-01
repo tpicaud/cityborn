@@ -48,6 +48,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         // handle events
         const handleSessionUpdate = (session: Session) => {
+            console.log('Session update: ', session);
             setSession(session);
         };
 
@@ -141,12 +142,13 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         if (isHost) {
-            return new Promise<void>((resolve, reject) => {
+            return new Promise<void>((resolve) => {
                 emit('session:endGame', (response: { success: boolean; error?: string }) => {
                     if (response.success) {
                         resolve();
                     } else {
-                        reject(new Error(response.error || "Erreur inconnue"));
+                        console.log(response.error || "Erreur inconnue");
+                        resolve();
                     }
                 });
             });
