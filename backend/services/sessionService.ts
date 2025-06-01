@@ -153,7 +153,7 @@ export class SessionService {
             await this.sessionStore.saveSession(session);
             return session;
         } catch (error) {
-            throw new Error(`Erreur lors du démarrage de la partie: ${error.message}`);
+            throw new Error(`Erreur lors de la fin de partie: ${error.message}`);
         }
     }
 

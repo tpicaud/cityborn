@@ -93,7 +93,7 @@ export class GameHandler {
                 io.to(game.id).emit('game:update', game);
                 callback?.({ success: true });
             } catch (error) {
-                console.error("Erreur lors de la fin de la partie :", error);
+                console.error("Erreur lors de la reconnexion à la partie :", error);
                 callback?.({
                     success: false,
                     error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
