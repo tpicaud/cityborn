@@ -24,8 +24,8 @@ export default function MenuComponent() {
     };
 
     const handleMultiPlay = async () => {
-        const sessionID = await apiService.createSession(GameMode.MULTI);
-        router.push(`/session/multi/${sessionID}`)
+        const session = await apiService.createSession(GameMode.MULTI);
+        router.push(`/session/multi/${session.id}`)
     }
 
     const handleJoin = async () => {

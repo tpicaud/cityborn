@@ -8,11 +8,3 @@ export interface IUseSession {
     startGame: () => void;
     endGame:() => void
 }
-
-export interface IUseMultiSession extends IUseSession {
-    connected: boolean;
-    join: (playerID: string) => void;
-    updateHost: (newHostID: string) => void;
-    kickPlayer: (playerToKick: string) => void;
-    reconnect: (playerID: string) => Promise<{ isInGame: boolean }>;
-}
