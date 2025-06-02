@@ -1,11 +1,18 @@
-import { IUseMultiSession } from "./IUseSession";
+import { IUseSession } from "./IUseSession";
 import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
 import * as apiService from "@/services/apiService";
 
-export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseMultiSession {
+export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
+    // Extends interface
+    connected: boolean;
+    join: (playerID: string) => void;
+    updateHost: (newHostID: string) => void;
+    kickPlayer: (playerToKick: string) => void;
+    reconnect: (playerID: string) => Promise<{ isInGame: boolean }>;
+} {
 
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);

@@ -1,77 +1,16 @@
-import { NextResponse } from "next/server";
+import { Categories } from "@/enums/Categories";
+import { GameMode } from "@/enums/GameMode";
 import { GameStatus } from "@/enums/GameStatus";
 import Game from "@/types/Game";
 import GameConfig from "@/types/GameConfig";
 import GuessObject from "@/types/GuessObject";
-import { Categories } from "@/enums/Categories";
-import { uniqueNamesGenerator } from "unique-names-generator";
+import { Player } from "@/types/Player";
 import { connectToDatabase } from "@/utils/connectToDatabase";
-import { tennis_dictionnary } from "../custom_dictionnary";
-import { GamePlayer } from "@/types/Player";
-import { redis } from "../lib/redis";
-import { GameMode } from "@/enums/GameMode";
 import { ObjectId } from "mongodb";
+import { uniqueNamesGenerator } from "unique-names-generator";
+import { tennis_dictionnary } from "../custom_dictionnary";
 
-export async function POST(request: Request) {
-	try {
-		const body = await request.json();
-		const { gameConfig, hostID, gameMode, playersID }: { gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[] } = body;
-
-		if (!gameConfig) {
-			return NextResponse.json(
-				{ message: "gameConfig est requis." },
-				{ status: 400 }
-			);
-		}
-
-		// Fetch guessObjects
-		const guessObjects2 = await fetchGuessObjects(gameConfig);
-
-		// Create game
-		const players: GamePlayer[] = playersID.map(playerID => ({ id: playerID, connected: false }));
-		const newGame: Game = createGame(gameConfig, hostID, gameMode, players, guessObjects2);
-
-		// Store game in redis
-		const { guessObjects, ...lightState } = newGame.state;
-		const lightGame = { ...newGame, state: lightState };
-		await redis.set(`game:${newGame.id}`, lightGame), { ex: 600 };
-
-		return NextResponse.json({ game: newGame }, { status: 201 });
-
-	} catch (error) {
-		console.error("Erreur lors de la création de la game:", error);
-		return NextResponse.json(
-			{ message: "Erreur lors de la création de la game." },
-			{ status: 500 }
-		);
-	}
-}
-
-export async function GET(request: Request, { params }: { params: { gameID: string } }) {
-	try {
-		const { searchParams } = new URL(request.url);
-		const gameID = searchParams.get("gameID");
-		
-		const lightGame: any = await redis.get(`game:${gameID}`);
-		if (!lightGame) throw new Error(`Game ${gameID} introuvable`);
-
-		const guessObjects: GuessObject[] = await fetchGuessObjectsFromIds(lightGame.state.guessObjectsIds);
-
-		const game: Game = { ...lightGame, state: { ...lightGame.state, guessObjects } }
-
-		return NextResponse.json({ game }, { status: 201 });
-	} catch (error) {
-		console.error("Erreur lors de la récupération de la game:", error);
-		return NextResponse.json(
-			{ message: "Erreur lors de la récupération de la game." },
-			{ status: 500 }
-		);
-	}
-}
-
-// Auxiliary functions
-
-async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]> {
+export async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]> {
 	try {
 		const client = await connectToDatabase();
 		const db = client.db(process.env.NEXT_PUBLIC_CELEBRITIES_DB);
@@ -108,7 +47,7 @@ async function fetchGuessObjects(gameConfig: GameConfig): Promise<GuessObject[]>
 	}
 }
 
-async function fetchGuessObjectsFromIds(guessObjectsIds: string[]): Promise<GuessObject[]> {
+export async function fetchGuessObjectsFromIds(guessObjectsIds: string[]): Promise<GuessObject[]> {
 	try {
 		const client = await connectToDatabase();
 		const db = client.db(process.env.NEXT_PUBLIC_CELEBRITIES_DB);
@@ -143,7 +82,7 @@ async function fetchGuessObjectsFromIds(guessObjectsIds: string[]): Promise<Gues
 	}
 }
 
-function createGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, players: GamePlayer[], guessObjects: GuessObject[]): Game {
+export function createGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, players: Player[], guessObjects: GuessObject[]): Game {
 	// Création de la nouvelle game
 	const newGame: Game = {
 		id: uniqueNamesGenerator({

@@ -5,15 +5,16 @@ import { useState } from "react";
 import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
 import { Categories } from "@/enums/Categories";
+import { OnlinePlayer } from "@/types/Player";
 
 export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {
     localPlayerID: string | undefined;
     session: Session;
     isHost: boolean;
-    handleUpdateHost: (newHostID: string) => void;
-    handleKickPlayer: (playerToKick: string) => void;
     handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => void;
     handleStartGame: () => Promise<void>;
+    handleUpdateHost?: (newHostID: string) => void;
+    handleKickPlayer?: (playerToKick: string) => void;
 }) => {
     const [copied, setCopied] = useState(false);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
@@ -61,24 +62,38 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
 
                 {/* Liste des joueurs */}
                 <List>
-                    {session.players
-                        .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1)) // Trier les joueurs
-                        .map((player) => (
-                            <ListItem key={player.id} divider>
-                                <ListItemText
-                                    primary={
-                                        player.id === session.hostID
-                                            ? `${player.id} (Host)`
-                                            : `${player.id}`
-                                    }
-                                    secondary={player.connected ? "Connecté" : "Déconnecté"}
-                                    sx={{
-                                        color: player.connected ? "text.primary" : "text.disabled", // Applique gris si déconnecté
-                                    }}
-                                />
-                            </ListItem>
-                        ))}
+                    {(session.players.every(p => "connected" in p)
+                        ? // Tous sont des OnlinePlayer → trier + statut
+                        (session.players as OnlinePlayer[])
+                            .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1))
+                        : // Sinon, pas de tri
+                        session.players
+                    ).map((player) => (
+                        <ListItem key={player.id} divider>
+                            <ListItemText
+                                primary={
+                                    player.id === session.hostID
+                                        ? `${player.id} (Host)`
+                                        : `${player.id}`
+                                }
+                                secondary={
+                                    "connected" in player
+                                        ? (player as OnlinePlayer).connected
+                                            ? "Connecté"
+                                            : "Déconnecté"
+                                        : undefined
+                                }
+                                sx={{
+                                    color:
+                                        "connected" in player && !(player as OnlinePlayer).connected
+                                            ? "text.disabled"
+                                            : "text.primary",
+                                }}
+                            />
+                        </ListItem>
+                    ))}
                 </List>
+
                 <div className='max-w-full'>
                     <Accordion
                         sx={{

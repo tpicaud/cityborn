@@ -2,9 +2,12 @@ export interface Player {
     id: string;
 }
 
+export interface OnlinePlayer extends Player{
+    connected: boolean
+}
+
 export interface SessionPlayer extends Player {
-    connected: boolean;
-    sessionID: string;
+    connected?: boolean;
 }
 
 export interface GamePlayer extends Player {
