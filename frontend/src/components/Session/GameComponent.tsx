@@ -7,7 +7,6 @@ import { RoundStatus } from "@/enums/RoundStatus";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import Game from "@/types/Game";
 import Guess from "@/types/Guess";
-import { Session } from "@/types/Session";
 import { GameStatus } from "@/enums/GameStatus";
 import ResultsComponent from "./ResultsComponent";
 import { useEffect } from "react";

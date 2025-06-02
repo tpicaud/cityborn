@@ -12,7 +12,7 @@ export default function SoloGamePage() {
 
     const localPlayerID = 'guest';
     const soloGame = useSoloGame(localPlayerID);
-    const soloSession = useSoloSession(localPlayerID, soloGame.startGame);
+    const soloSession = useSoloSession(soloGame.startGame);
 
     //////////////////////////
     // Session interactions //

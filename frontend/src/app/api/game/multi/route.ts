@@ -27,6 +27,7 @@ export async function POST(request: Request) {
 		const newGame: Game = createGame(gameConfig, hostID, gameMode, players, guessObjects2);
 
 		// Store game in redis
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { guessObjects, ...lightState } = newGame.state;
 		const lightGame = { ...newGame, state: lightState };
 		await redis.set(`game:${newGame.id}`, lightGame), { ex: 600 };
@@ -42,11 +43,12 @@ export async function POST(request: Request) {
 	}
 }
 
-export async function GET(request: Request, { params }: { params: { gameID: string } }) {
+export async function GET(request: Request) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const gameID = searchParams.get("gameID");
 		
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const lightGame: any = await redis.get(`game:${gameID}`);
 		if (!lightGame) throw new Error(`Game ${gameID} introuvable`);
 

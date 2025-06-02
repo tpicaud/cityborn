@@ -1,4 +1,3 @@
-import { GameMode } from "@/enums/GameMode";
 import { GameStatus } from "@/enums/GameStatus";
 import { RoundStatus } from "@/enums/RoundStatus";
 import Game from "@/types/Game";
@@ -38,7 +37,7 @@ export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
                 }
             })
         } catch (error) {
-            throw new Error('Error starting game')
+            throw new Error(`Error starting game: ${error}`);
         }
     };
 
