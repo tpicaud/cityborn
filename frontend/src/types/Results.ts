@@ -1,7 +1,3 @@
-interface GameResults {
-    playerResults: PlayerResults[]
-}
-
 interface PlayerResults {
     results: Result[]
 }
@@ -12,4 +8,4 @@ interface Result {
     points: number
 }
 
-export type { GameResults, PlayerResults, Result }
+export type { PlayerResults, Result }

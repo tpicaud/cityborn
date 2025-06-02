@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.cityborn.app',
+  appId: 'com.app.cityborn',
   appName: 'cityborn',
   webDir: '.next/static',
   server: {

@@ -1,7 +1,12 @@
-import { Result } from "@/types/Results"
+export interface Player {
+    id: string;
+}
 
-export default interface Player {
-    id: string
-    results: Result[]
-    connected?: boolean
+export interface SessionPlayer extends Player {
+    connected: boolean;
+    sessionID: string;
+}
+
+export interface GamePlayer extends Player {
+    connected: boolean;
 }

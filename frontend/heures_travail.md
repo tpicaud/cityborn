@@ -49,3 +49,15 @@
 | 12/04/2025 | 8h | Optimisation des temps de chargement |
 | 15/04/2025 | 6h | Développement appli ios |
 | 17/04/2025 | 4h | Développement appli ios |
+| 22/04/2025 | 3h | Finalisation et review appli ios |
+| 25/04/2025 | 5h | Ouverture appli ios aux tests + mise à jour appli android |
+| 05/05/2025 | 9h | Début du refactoring pour les sessions |
+| 06/05/5025 | 4h | Refactoring session solo |
+| 09/05/2025 | 5h | Début refactoring session multi |
+| 10/05/2025 | 3h | Continuation refactoring session multi |
+| 16/05/2025 | 4h | Continuation du refactoring backend session |
+| 18/05/2025 | 2h | Continuation du refactoring backend session |
+| 20/05/2025 | 2h | Finalisation refactoring backend |
+| 21/05/2025 | 5h | Refactoring front pour les session |
+| 26/05/2025 | 8h | Test et bug fix des sessions |
+| 01/06/2025 | 2h | Création staging pour test pre-production |
