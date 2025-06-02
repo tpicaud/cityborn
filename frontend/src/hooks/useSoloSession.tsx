@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import * as apiService from "@/services/apiService";
 import { GameMode } from "@/enums/GameMode";
 
-export function useSoloSession(localPlayerID: string = 'guest', initiateStartGame: (gameConfig: GameConfig) => Promise<void>): IUseSession {
+export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Promise<void>): IUseSession {
 
     const [session, setSession] = useState<Session>();
 
@@ -50,8 +50,8 @@ export function useSoloSession(localPlayerID: string = 'guest', initiateStartGam
 
         try {
             await initiateStartGame(session.gameConfig);
-        } catch (error) {
-            throw new Error('Erreur lors du lancement de la partie')
+        } catch {
+            throw new Error(`Erreur lors du lancement de la partie`)
         }
     };
 

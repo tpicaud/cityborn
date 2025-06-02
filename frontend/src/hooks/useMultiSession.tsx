@@ -182,7 +182,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
                 });
             });
         } catch (error) {
-            throw new Error(`Non connecté au serveur`)
+            throw new Error(`Non connecté au serveur: ${error}`)
         }
 
     }

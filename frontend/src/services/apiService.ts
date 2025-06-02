@@ -2,7 +2,6 @@ import { GameMode } from "@/enums/GameMode";
 import Game from "@/types/Game";
 import GameConfig from "@/types/GameConfig";
 import GuessObject from "@/types/GuessObject";
-import { Player } from "@/types/Player";
 import { Session } from "@/types/Session";
 
 //////////////////////

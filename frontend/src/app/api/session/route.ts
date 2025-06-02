@@ -52,7 +52,7 @@ async function createSession(gameMode: GameMode): Promise<Session> {
 			timer: 20,
 			nbOfObjects: 6
 		},
-		players: gameMode === GameMode.SOLO ? [{ id: 'guest', connected: true, sessionID: sessionID }] : [],
+		players: gameMode === GameMode.SOLO ? [{ id: 'guest' }] : [],
 	};
 
 	return newSession
