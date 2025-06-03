@@ -1,5 +1,6 @@
 import { GameMode } from "@/enums/GameMode";
 import Game from "@/types/Game";
+import GameConfig from "@/types/GameConfig";
 import GuessObject from "@/types/GuessObject";
 import { Session } from "@/types/Session";
 
@@ -7,7 +8,7 @@ import { Session } from "@/types/Session";
 // Sessions service //
 //////////////////////
 
-export async function createSession(gameMode: GameMode): Promise<string> {
+export async function createSession(gameMode: GameMode): Promise<Session> {
     try {
         const response = await fetch(`/api/session`, {
             method: 'POST',
@@ -18,7 +19,7 @@ export async function createSession(gameMode: GameMode): Promise<string> {
         });
 
         const data = await response.json();
-        return data.sessionID;
+        return data.session;
     } catch (error) {
         throw new Error(`Erreur lors de la création de la session ${error}`);
     }
@@ -55,13 +56,33 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
 // Game service //
 //////////////////
 
-export async function fetchGame(gameID: string): Promise<Game> {
-    if (!gameID) {
-        throw new Error("gameID est requis pour récupérer la partie.");
-    }
-
+export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     try {
-		const response = await fetch(`/api/game?gameID=${encodeURIComponent(gameID)}`);
+        const response = await fetch(`/api/game/solo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ gameConfig, hostID }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.game as Game;
+    } catch (error) {
+        throw new Error(`Erreur lors de la création de la partie: ${error}`);
+    }
+}
+
+
+
+
+export async function fetchGame(gameID: string): Promise<Game> {
+    try {
+        const response = await fetch(`/api/game/multi?gameID=${encodeURIComponent(gameID)}`);
 
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);

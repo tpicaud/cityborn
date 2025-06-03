@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 		// Store in redis
 		await redis.set(`session:${session.id}`, JSON.stringify(session), { ex: 600 })
 
-		return NextResponse.json({ sessionID: session.id }, { status: 201 });
+		return NextResponse.json({ session: session }, { status: 201 });
 	} catch (error) {
 		console.error("Erreur lors de la création de la game:", error);
 		return NextResponse.json(
@@ -52,7 +52,7 @@ async function createSession(gameMode: GameMode): Promise<Session> {
 			timer: 20,
 			nbOfObjects: 6
 		},
-		players: gameMode === GameMode.SOLO ? [{ id: 'guest', connected: true, sessionID: sessionID }] : [],
+		players: gameMode === GameMode.SOLO ? [{ id: 'guest' }] : [],
 	};
 
 	return newSession
