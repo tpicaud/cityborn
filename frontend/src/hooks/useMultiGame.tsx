@@ -142,7 +142,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
                 });
             });
         } catch (error) {
-            throw new Error(`Non connecté au serveur`)
+            throw new Error(`Non connecté au serveur: ${error}`)
         }
 
     }
