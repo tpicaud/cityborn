@@ -7,6 +7,7 @@ import GameConfig from "@/types/GameConfig";
 import { Categories } from "@/enums/Categories";
 import { OnlinePlayer } from "@/types/Player";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {
     localPlayerID: string | undefined;
     session: Session;
