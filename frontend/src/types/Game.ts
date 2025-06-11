@@ -1,33 +1,26 @@
 import GameConfig from "./GameConfig";
 import GuessObject from "./GuessObject";
-import Player from "./Player";
 import { GameStatus } from "@/enums/GameStatus";
 import Round from "./Round";
+import { PlayerResults } from "./Results";
+import { GameMode } from "@/enums/GameMode";
+import { Player } from "./Player";
 
-// export default interface Game {
-//     id: string;
-//     lastActivity: number;
-//     mode: string
-//     hostID: string;
-//     status: GameStatus;
-//     gameConfig: GameConfig
-//     players: Player[];
-//     currentRound: Round | undefined;
-//     guessObjects: GuessObject[];
-// }
-
-export interface LightGame {
+export default interface Game {
     id: string;
-    lastActivity: number;
-    mode: string
     hostID: string;
+    mode: GameMode;
     status: GameStatus;
-    gameConfig: GameConfig
+    gameConfig: GameConfig;
     players: Player[];
-    currentRound: Round | undefined;
-    guessObjectsIds: string[];
+    state: GameState;
 }
 
-export default interface Game extends LightGame {
+interface GameState {
+    guessObjectsIds: string[];
+    currentRound: Round | undefined;
+    results: Record<string, PlayerResults>
+
+    // Heavy params
     guessObjects: GuessObject[];
 }

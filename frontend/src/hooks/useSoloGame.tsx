@@ -1,87 +1,107 @@
-import Game from "@/types/Game";
-import IUseGame from "./IUseGame";
-import Guess from "@/types/Guess";
-import { RoundStatus } from "@/enums/RoundStatus";
-import { Result } from "@/types/Results";
 import { GameStatus } from "@/enums/GameStatus";
+import { RoundStatus } from "@/enums/RoundStatus";
+import Game from "@/types/Game";
+import Guess from "@/types/Guess";
+import { useEffect, useState } from "react";
+import GameConfig from "@/types/GameConfig";
+import * as apiService from "@/services/apiService";
+import { IUseGame } from "./IUseGame";
+import { Result } from "@/types/Results";
 
-export function useSoloGame(
-    game: Game | null,
-    localPlayerID: string | null,
-    setGame: React.Dispatch<React.SetStateAction<Game | null>>
-): IUseGame {
+export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
+    startGame: (gameConfig: GameConfig) => Promise<void>
+} {
 
+    const [game, setGame] = useState<Game>();
 
-    const startGame = () => {
-        if (!game) return;
+    useEffect(() => {
+        console.log(game);
+    }, [game])
 
-        const firstObjectId = game.guessObjectsIds[0];
-        if (firstObjectId) {
-            setGame((prevGame) => {
-                if (!prevGame) {
-                    throw new Error('Cannot start game because game is not initialized');
-                }
+    const startGame = async (gameConfig: GameConfig) => {
+        try {
+            // Create  new game
+            const game = await apiService.createSoloGame(gameConfig, localPlayerID);
 
-                return {
-                    ...prevGame,
-                    status: GameStatus.IN_GAME,
+            // Start game
+            setGame({
+                ...game,
+                status: GameStatus.IN_GAME,
+                state: {
+                    ...game.state,
                     currentRound: {
                         status: RoundStatus.GUESSING,
-                        guessObjectId: firstObjectId,
+                        guessObjectId: game.state.guessObjectsIds[0],
                         playersGuesses: {},
-                    },
-                };
-            });
-        } else {
-            throw new Error('Cannot start game because no guess objects are available');
+                    }
+                }
+            })
+        } catch (error) {
+            throw new Error(`Error starting game: ${error}`);
         }
     };
 
-    const handleGuess = (guess: Guess) => {
+
+    const guess = (guess: Guess) => {
         setGame((prevGame) => {
-            if (!prevGame || !prevGame.currentRound || !localPlayerID) return prevGame;
+            if (!prevGame || !prevGame.state.currentRound || !localPlayerID) return prevGame;
+            console.log('register guess')
 
             return {
                 ...prevGame,
-                currentRound: {
-                    ...prevGame.currentRound,
-                    status: RoundStatus.SHOWING_RESULTS,
-                    playersGuesses: {
-                        ...prevGame.currentRound.playersGuesses,
-                        [localPlayerID]: guess,
+                state: {
+                    ...prevGame.state,
+                    currentRound: {
+                        ...prevGame.state.currentRound,
+                        status: RoundStatus.SHOWING_RESULTS,
+                        playersGuesses: {
+                            [localPlayerID]: guess,
+                        },
                     },
-                },
+                }
             };
         });
     };
 
 
-    const handleNextRound = () => {
+    const nextRound = () => {
         if (!game) return;
 
         // Record result of the round
         setGame((prevGame) => {
-            if (!prevGame) return prevGame;
+            if (!prevGame || !prevGame.state.currentRound) return prevGame;
+
+            const { guessObjectId, playersGuesses } = prevGame.state.currentRound;
+
+            if (!playersGuesses) return prevGame;
+
+            // Utilisation d'un Record à la place d'une Map
+            const updatedResults = { ...prevGame.state.results };  // Copier l'objet pour ne pas muter l'état original
+
+            for (const [playerID, guess] of Object.entries(playersGuesses)) {
+                const newResult: Result = {
+                    guessObjectId,
+                    distance: guess.distance,
+                    points: guess.points,
+                };
+
+                // Accéder ou créer le playerResults pour chaque joueur
+                if (!updatedResults[playerID]) {
+                    updatedResults[playerID] = { results: [] };  // Initialisation si non existant
+                }
+
+                updatedResults[playerID].results.push(newResult);  // Ajouter le nouveau résultat
+            }
 
             return {
                 ...prevGame,
-                players: game.players.map(player => {
-                    const newResult: Result = {
-                        guessObjectId: game.currentRound!.guessObjectId,
-                        distance: game.currentRound!.playersGuesses![player.id].distance,
-                        points: game.currentRound!.playersGuesses![player.id].points
-                    }
+                state: {
+                    ...prevGame.state,
+                    results: updatedResults,  // Retourner les résultats mis à jour
+                }
+            };
+        });
 
-                    return {
-                        ...player,
-                        results: [
-                            ...player.results,
-                            newResult
-                        ].filter(result => result !== null) // Filtrer les valeurs nulles
-                    }
-                })
-            }
-        })
 
         // Go to next guessObject
         const nextObjectIndex = getNextObjectId();
@@ -92,11 +112,14 @@ export function useSoloGame(
 
                 return {
                     ...prevGame,
-                    currentRound: {
-                        status: RoundStatus.GUESSING,
-                        guessObjectId: nextObjectIndex,
-                        playersGuesses: {},
-                    },
+                    state: {
+                        ...prevGame.state,
+                        currentRound: {
+                            status: RoundStatus.GUESSING,
+                            guessObjectId: nextObjectIndex,
+                            playersGuesses: {},
+                        }
+                    }
                 }
             });
         }
@@ -106,15 +129,15 @@ export function useSoloGame(
         if (!game) return null;
 
         // get current index
-        const currentIndex = game.guessObjectsIds.findIndex(id => game.currentRound?.guessObjectId === id);
+        const currentIndex = game.state.guessObjectsIds.findIndex(id => game.state.currentRound?.guessObjectId === id);
 
         // Vérifier que l'objet est dans la liste
         if (currentIndex === undefined) {
             throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
         }
 
-        if (currentIndex + 1 < game.guessObjects.length) {
-            return game.guessObjectsIds[currentIndex + 1];
+        if (currentIndex + 1 < game.state.guessObjects.length) {
+            return game.state.guessObjectsIds[currentIndex + 1];
         } else {
             setGame((prevGame) => {
                 if (!prevGame) return prevGame;
@@ -128,9 +151,16 @@ export function useSoloGame(
         }
     };
 
+    const end = () => {
+        setGame(undefined);
+    }
+
     return {
+        game,
+        isHost: true,
         startGame,
-        handleNextRound,
-        handleGuess
+        guess,
+        nextRound,
+        end
     }
 }
