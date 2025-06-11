@@ -105,9 +105,10 @@ export class GameService {
 
                     // Vérifier si tout le monde à guess
                     const connectedPlayers = game.players.filter((player: any) => player.connected);
-                    if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
-                        game.state.currentRound.status = 'SHOWING_RESULTS'
-                    }
+                    const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
+                        game.state.currentRound.playersGuesses.hasOwnProperty(player.id)
+                    );
+                    if (allConnectedPlayersGuessed) game.state.currentRound.status = 'SHOWING_RESULTS'
 
                     await this.gameStore.saveGame(game);
                 }
@@ -293,13 +294,15 @@ export class GameService {
 
                 // Update l'état de la game si nécessaire
                 if (game.status === 'IN_GAME' && game.state.currentRound) {
-                    switch (game.currentRound) {
+                    switch (game.state.currentRound.status) {
                         case 'GUESSING':
                             // Vérifier si tout le monde à guess
                             const connectedPlayers = game.players.filter((player: any) => player.connected);
-                            if (Object.keys(game.state.currentRound.playersGuesses).length === connectedPlayers.length) {
-                                game.state.currentRound.status = 'SHOWING_RESULTS'
-                            }
+                            const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
+                                game.state.currentRound.playersGuesses.hasOwnProperty(player.id)
+                            );
+
+                            if (allConnectedPlayersGuessed) game.state.currentRound.status = 'SHOWING_RESULTS';
                             break;
                         case 'RESULTS':
                             game.status = 'FINISHED';
