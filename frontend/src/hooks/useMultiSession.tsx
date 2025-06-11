@@ -1,11 +1,18 @@
-import { IUseMultiSession } from "./IUseSession";
+import { IUseSession } from "./IUseSession";
 import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Session } from "@/types/Session";
 import GameConfig from "@/types/GameConfig";
 import * as apiService from "@/services/apiService";
 
-export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseMultiSession {
+export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
+    // Extends interface
+    connected: boolean;
+    join: (playerID: string) => void;
+    updateHost: (newHostID: string) => void;
+    kickPlayer: (playerToKick: string) => void;
+    reconnect: (playerID: string) => Promise<{ isInGame: boolean }>;
+} {
 
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
@@ -48,6 +55,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         // handle events
         const handleSessionUpdate = (session: Session) => {
+            console.log('Session update: ', session);
             setSession(session);
         };
 
@@ -95,11 +103,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         });
     }
 
-    const updateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+    const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
         if (!session) throw new Error('Joueur ou session non initialisé');
 
+        const gameConfig = { ...session.gameConfig, ...partialGameConfig }
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateGameConfig', [gameConfig], (response: { success: boolean; error?: string }) => {
+            emit('session:updateGameConfig', gameConfig, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -113,7 +122,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('session:kickPlayer', [playerToKick], (response: { success: boolean; error?: string }) => {
+            emit('session:kickPlayer', playerToKick, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -137,6 +146,23 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         });
     }
 
+    const endGame = async () => {
+        if (!session) throw new Error('Joueur ou session non initialisé');
+
+        if (isHost) {
+            return new Promise<void>((resolve) => {
+                emit('session:endGame', (response: { success: boolean; error?: string }) => {
+                    if (response.success) {
+                        resolve();
+                    } else {
+                        console.log(response.error || "Erreur inconnue");
+                        resolve();
+                    }
+                });
+            });
+        }
+    }
+
     const reconnect = async (playerID: string): Promise<{ isInGame: boolean }> => {
         if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
         try {
@@ -156,7 +182,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
                 });
             });
         } catch (error) {
-            throw new Error(`Non connecté au serveur`)
+            throw new Error(`Non connecté au serveur: ${error}`)
         }
 
     }
@@ -190,6 +216,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         updateGameConfig,
         kickPlayer,
         startGame,
+        endGame,
         reconnect
     };
 }

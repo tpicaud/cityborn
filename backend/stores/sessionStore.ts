@@ -9,7 +9,7 @@ export class SessionStore {
         this.redis = redis;
     }
 
-    private key(sessionID: string) {
+    key(sessionID: string) {
         return `session:${sessionID}`;
     }
 

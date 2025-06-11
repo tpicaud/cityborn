@@ -4,6 +4,12 @@ import { MongoClient } from "mongodb";
 // Configuration de la connexion MongoDB
 const uri = process.env.NEXT_PUBLIC_MONGODB_URI || ""; // Assurez-vous que cette variable d'environnement est définie
 const client = new MongoClient(uri);
+let clientPromise: Promise<MongoClient> | null = null;
+
+if (!clientPromise) {
+  clientPromise = client.connect();
+}
+
 
 // Nom de la base de données et de la collection
 const dbName = "sentencesDB";
@@ -16,7 +22,9 @@ export async function GET(request: Request) {
 
     try {
         // Connexion à la base de données
-        await client.connect();
+        const client = await clientPromise;
+        if (!client) throw new Error(`Impossible de se connecter à la base de données`);
+
         const db = client.db(dbName);
         const collection = db.collection(collectionName);
 
@@ -34,8 +42,5 @@ export async function GET(request: Request) {
             { message: "Erreur lors de la récupération de la phrase." },
             { status: 500 }
         );
-    } finally {
-        // Fermer la connexion MongoDB
-        await client.close();
     }
 }

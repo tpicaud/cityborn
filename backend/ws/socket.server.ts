@@ -9,6 +9,7 @@ import { SessionHandler } from "../handlers/session.handler.ts";
 import { GameHandler } from "../handlers/game.handler.ts";
 import { PlayerService } from "../services/playerService.ts";
 import { PlayerStore } from "../stores/playerStore.ts";
+import { LockService } from "../services/lockService.ts";
 
 export function setupWebSocketServer(httpServer: any) {
 
@@ -31,9 +32,10 @@ export function setupWebSocketServer(httpServer: any) {
     const gameStore = new GameStore(redis);
 
     // Services
+    const lockService = new LockService(redis);
     const playerService = new PlayerService(socketStore);
-    const gameService = new GameService(gameStore, playerService);
-    const sessionService = new SessionService(sessionStore, playerService, gameService);
+    const gameService = new GameService(gameStore, playerService, lockService);
+    const sessionService = new SessionService(sessionStore, playerService, gameService, lockService);
 
     // Handlers
     const sessionHandler = new SessionHandler(sessionService);

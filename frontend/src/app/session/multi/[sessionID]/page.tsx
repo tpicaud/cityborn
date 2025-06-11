@@ -88,15 +88,15 @@ export default function MultiSessionPage() {
         }
     }
 
-    const handleReconnectToSession = async () => {
-        try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            const isInGame = await multiSession.reconnect(localPlayerID);
-        } catch (error) {
-            console.log(`Erreur lors de la reconnexion à la session: ${error}`);
-        }
-
-    };
+    // const handleReconnectToSession = async () => {
+    //     try {
+    //         if (!localPlayerID) throw new Error('Nom du joueur non défini');
+    //         const isInGame = await multiSession.reconnect(localPlayerID);
+    //         if (isInGame) await multiGame.reconnect(localPlayerID);
+    //     } catch (error) {
+    //         console.log(`Erreur lors de la reconnexion à la session: ${error}`);
+    //     }
+    // };
 
 
     ///////////////////////
@@ -124,20 +124,21 @@ export default function MultiSessionPage() {
     const handleEnd = async () => {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
+            await multiSession.endGame();
             await multiGame.end();
         } catch (error) {
             console.log(`Echec lors de la finalisation de la partie: ${error}`);
         }
     }
 
-    const handleReconnectToGame = async () => {
-        try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await multiGame.reconnect(localPlayerID);
-        } catch (error) {
-            console.log(`Erreur lors de la reconnexion à la partie`);
-        }
-    };
+    // const handleReconnectToGame = async () => {
+    //     try {
+    //         if (!localPlayerID) throw new Error('Nom du joueur non défini');
+    //         await multiGame.reconnect(localPlayerID);
+    //     } catch (error) {
+    //         console.log(`Erreur lors de la reconnexion à la partie`);
+    //     }
+    // };
 
 
     ///////////////
