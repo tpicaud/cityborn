@@ -120,16 +120,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
 
     const end = async () => {
         if (!game) throw new Error('Joueur ou game non initialisé');
-
-        return new Promise<void>((resolve, reject) => {
-            emit('game:end', (response: { success: boolean; error?: string }) => {
-                if (response.success) {
-                    resolve();
-                } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
-                }
-            });
-        });
+        setGame(undefined);
     }
 
     const reconnect = async (playerID: string) => {
@@ -151,7 +142,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
                 });
             });
         } catch (error) {
-            throw new Error(`Non connecté au serveur`)
+            throw new Error(`Non connecté au serveur: ${error}`)
         }
 
     }

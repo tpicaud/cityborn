@@ -4,7 +4,7 @@ import { GameStatus } from "@/enums/GameStatus";
 import Round from "./Round";
 import { PlayerResults } from "./Results";
 import { GameMode } from "@/enums/GameMode";
-import { GamePlayer } from "./Player";
+import { Player } from "./Player";
 
 export default interface Game {
     id: string;
@@ -12,7 +12,7 @@ export default interface Game {
     mode: GameMode;
     status: GameStatus;
     gameConfig: GameConfig;
-    players: GamePlayer[];
+    players: Player[];
     state: GameState;
 }
 
