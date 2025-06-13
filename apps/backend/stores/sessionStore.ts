@@ -1,3 +1,4 @@
+import { Session } from "@cityborn/types";
 import Redis from "ioredis";
 
 export class SessionStore {
@@ -13,7 +14,7 @@ export class SessionStore {
         return `session:${sessionID}`;
     }
 
-    async saveSession(session: any) {
+    async saveSession(session: Session) {
         const key = this.key(session.id);
         const value = JSON.stringify(session);
         await this.redis.set(key, value, 'EX', this.SESSION_TTL);

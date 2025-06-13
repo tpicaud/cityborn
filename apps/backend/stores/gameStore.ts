@@ -1,10 +1,11 @@
+import { Game } from '@cityborn/types';
 import Redis from 'ioredis';
 
-type Game = {
-	id: string;
-	lastActivity: number;
-	[key: string]: any;
-};
+// type Game = {
+// 	id: string;
+// 	lastActivity: number;
+// 	[key: string]: any;
+// };
 
 // Ajouter une partie
 export class GameStore {
