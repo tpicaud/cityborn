@@ -1,9 +1,9 @@
 import { GameConfig } from "./GameConfig";
 import { GuessObject } from "./GuessObject";
-import { GameStatus } from "@/enums/GameStatus";
+import { GameStatus } from "../enums/GameStatus";
 import { Round } from "./Round";
 import { PlayerResults } from "./Results";
-import { GameMode } from "@/enums/GameMode";
+import { GameMode } from "../enums/GameMode";
 import { Player } from "./Player";
 
 export interface Game {

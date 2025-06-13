@@ -9,3 +9,8 @@ export type * from './types/Player';
 export type * from './types/Results';
 export type * from './types/Round';
 export type * from './types/Session';
+export * from './enums/Categories';
+export * from './enums/GameMode.ts';
+export * from './enums/GameStatus.ts';
+export * from './enums/RoundStatus.ts';
+export * from './enums/SessionStatus.ts';

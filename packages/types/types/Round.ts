@@ -1,4 +1,4 @@
-import { RoundStatus } from "@/enums/RoundStatus";
+import { RoundStatus } from "../enums/RoundStatus";
 import { Guess } from "./Guess";
 
 export interface Round {

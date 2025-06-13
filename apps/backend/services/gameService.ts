@@ -1,3 +1,4 @@
+import { GameStatus, OnlinePlayer, RoundStatus } from "@cityborn/types";
 import { GameStore } from "../stores/gameStore.ts";
 import { LockService } from "./lockService.ts";
 import { PlayerService } from "./playerService.ts";
@@ -38,23 +39,23 @@ export class GameService {
                 if (!game) throw new Error("Partie introuvable.");
 
                 // Vérifier si playerID existe dans la liste des joueurs
-                const playerIndex = game.players.findIndex((player: any) => player.id === playerID);
+                const playerIndex = game.players.findIndex((player: OnlinePlayer) => player.id === playerID);
                 if (playerIndex === -1) throw new Error("Le joueur n'est pas invité dans la partie.");
 
                 // Vérifier que le joueur n'est pas déjà dans la partie
-                if (game.players[playerIndex].connected === true) throw new Error(`Le joueur est déjà dans la partie`);
+                if ((game.players as OnlinePlayer[])[playerIndex].connected! === true) throw new Error(`Le joueur est déjà dans la partie`);
 
                 // Update player
                 await this.playerService.register(socketID, playerID, sessionID, gameID);
 
                 // Ajouter le joueur à la partie
-                game.players[playerIndex].connected = true;
+                (game.players as OnlinePlayer[])[playerIndex].connected = true;
 
                 // Save game
                 await this.gameStore.saveGame(game)
 
                 // Check si tous les joueurs ont join
-                const disconnectPlayers = game.players.some(player => !player.connected);
+                const disconnectPlayers = (game.players as OnlinePlayer[]).some(player => !player.connected);
                 if (!disconnectPlayers) {
                     game = await this.startGame(game);
                 }
@@ -108,7 +109,7 @@ export class GameService {
                     const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
                         game.state.currentRound.playersGuesses.hasOwnProperty(player.id)
                     );
-                    if (allConnectedPlayersGuessed) game.state.currentRound.status = 'SHOWING_RESULTS'
+                    if (allConnectedPlayersGuessed) game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
 
                     await this.gameStore.saveGame(game);
                 }
@@ -166,11 +167,11 @@ export class GameService {
 
             // Go to next guess object
             if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
-                game.status = 'IN_RESULTS'
+                game.status = GameStatus.IN_RESULTS;
                 game.state.currentRound = undefined
             } else {
                 game.state.currentRound = {
-                    status: 'GUESSING',
+                    status: RoundStatus.GUESSING,
                     guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
                     playersGuesses: {},
                 }
@@ -287,7 +288,7 @@ export class GameService {
                 if (playerIndex === -1) throw new Error("Le joueur n'est pas dans la partie.");
 
                 // Déconnecter le joueur
-                game.players[playerIndex].connected = false;
+                (game.players[playerIndex] as OnlinePlayer).connected = false;
 
                 // Update host
                 if (newHostID) game.hostID = newHostID;
@@ -295,17 +296,17 @@ export class GameService {
                 // Update l'état de la game si nécessaire
                 if (game.status === 'IN_GAME' && game.state.currentRound) {
                     switch (game.state.currentRound.status) {
-                        case 'GUESSING':
+                        case RoundStatus.GUESSING:
                             // Vérifier si tout le monde à guess
                             const connectedPlayers = game.players.filter((player: any) => player.connected);
                             const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
                                 game.state.currentRound.playersGuesses.hasOwnProperty(player.id)
                             );
 
-                            if (allConnectedPlayersGuessed) game.state.currentRound.status = 'SHOWING_RESULTS';
+                            if (allConnectedPlayersGuessed) game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
                             break;
-                        case 'RESULTS':
-                            game.status = 'FINISHED';
+                        case RoundStatus.SHOWING_RESULTS:
+                            game.status = GameStatus.FINISHED;
                             break;
                     }
                 }
