@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { customAlphabet } from 'nanoid';
 import { Categories } from "@/enums/Categories";
 import { GameMode } from "@/enums/GameMode";
-import { Session } from "@/types/Session";
+import { Session } from "@cityborn/types";
 import { SessionStatus } from "@/enums/SessionStatus";
 import { redis } from "../lib/redis";
 

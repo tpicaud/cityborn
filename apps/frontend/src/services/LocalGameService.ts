@@ -1,4 +1,4 @@
-import GuessObject from "@/types/GuessObject";
+import { GuessObject } from "@cityborn/types";
 
 const getLocalObjectList = async (category: string): Promise<GuessObject[]> => {
     const objects: GuessObject[] = [];

@@ -1,8 +1,8 @@
 import { IUseSession } from "./IUseSession";
 import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
-import { Session } from "@/types/Session";
-import GameConfig from "@/types/GameConfig";
+import { Session } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
 import * as apiService from "@/services/apiService";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {

@@ -1,12 +1,12 @@
-import GameConfig from "./GameConfig";
-import GuessObject from "./GuessObject";
+import { GameConfig } from "./GameConfig";
+import { GuessObject } from "./GuessObject";
 import { GameStatus } from "@/enums/GameStatus";
-import Round from "./Round";
+import { Round } from "./Round";
 import { PlayerResults } from "./Results";
 import { GameMode } from "@/enums/GameMode";
 import { Player } from "./Player";
 
-export default interface Game {
+export interface Game {
     id: string;
     hostID: string;
     mode: GameMode;

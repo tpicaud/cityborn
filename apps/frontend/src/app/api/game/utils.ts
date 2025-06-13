@@ -1,10 +1,10 @@
 import { Categories } from "@/enums/Categories";
 import { GameMode } from "@/enums/GameMode";
 import { GameStatus } from "@/enums/GameStatus";
-import Game from "@/types/Game";
-import GameConfig from "@/types/GameConfig";
-import GuessObject from "@/types/GuessObject";
-import { Player } from "@/types/Player";
+import { Game } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
+import { GuessObject } from "@cityborn/types";
+import { Player } from "@cityborn/types";
 import { connectToDatabase } from "@/utils/connectToDatabase";
 import { ObjectId } from "mongodb";
 import { uniqueNamesGenerator } from "unique-names-generator";

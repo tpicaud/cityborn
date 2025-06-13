@@ -1,5 +1,5 @@
-import Game from "@/types/Game";
-import Guess from "@/types/Guess";
+import { Game } from "@cityborn/types";
+import { Guess } from "@cityborn/types";
 
 export interface IUseGame {
     game: Game | undefined;

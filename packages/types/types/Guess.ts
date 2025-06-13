@@ -1,10 +1,8 @@
-import Coord from "./Coord";
+import { Coord } from "./Coord";
 
-interface Guess {
+export interface Guess {
     coordinates: Coord;
     distance: number;
     points: number;
     win: boolean;
 }
-
-export default Guess;

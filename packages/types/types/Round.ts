@@ -1,7 +1,7 @@
 import { RoundStatus } from "@/enums/RoundStatus";
-import Guess from "./Guess";
+import { Guess } from "./Guess";
 
-export default interface Round {
+export interface Round {
     status: RoundStatus
     guessObjectId: string;
     playersGuesses?: Record<string,Guess>;

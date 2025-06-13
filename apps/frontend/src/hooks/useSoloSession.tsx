@@ -1,6 +1,6 @@
 import { IUseSession } from "./IUseSession";
-import { Session } from "@/types/Session";
-import GameConfig from "@/types/GameConfig";
+import { Session } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as apiService from "@/services/apiService";
 import { GameMode } from "@/enums/GameMode";

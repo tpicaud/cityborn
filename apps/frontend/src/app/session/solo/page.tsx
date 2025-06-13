@@ -5,8 +5,8 @@ import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useSoloGame } from '@/hooks/useSoloGame';
 import { useSoloSession } from '@/hooks/useSoloSession';
-import GameConfig from '@/types/GameConfig';
-import Guess from '@/types/Guess';
+import { GameConfig, Guess } from '@cityborn/types';
+
 
 export default function SoloGamePage() {
 

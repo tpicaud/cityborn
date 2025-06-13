@@ -1,4 +1,4 @@
-export default interface GuessObject {
+export interface GuessObject {
     id: string;
     name: string;
     category: string

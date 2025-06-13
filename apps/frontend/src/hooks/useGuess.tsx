@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Guess from "@/types/Guess";
+import { Guess } from "@cityborn/types";
 
 const useGuess = (handleGuess: (guess: Guess) => void) => {
     const [preGuess, setPreGuess] = useState<Guess>();

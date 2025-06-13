@@ -1,5 +1,5 @@
 import { SessionStatus } from "@/enums/SessionStatus";
-import GameConfig from "./GameConfig";
+import { GameConfig } from "./GameConfig";
 import { Player } from "./Player";
 import { GameMode } from "@/enums/GameMode";
 

@@ -6,8 +6,8 @@ import { DialogInput } from '@/components/others/DialogInput';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useMultiGame } from '@/hooks/useMultiGame';
 import { useMultiSession } from '@/hooks/useMultiSession';
-import GameConfig from '@/types/GameConfig';
-import Guess from '@/types/Guess';
+import { GameConfig } from '@cityborn/types';
+import { Guess } from '@cityborn/types';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
