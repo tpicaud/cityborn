@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import Game from "@/types/Game";
-import GameConfig from "@/types/GameConfig";
-import { Player } from "@/types/Player";
+import { Game } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
+import { Player } from "@cityborn/types";
 import { GameMode } from "@/enums/GameMode";
 import { createGame, fetchGuessObjects } from "../utils";
 

@@ -1,8 +1,8 @@
-import Coord from "@/types/Coord";
-import Guess from "@/types/Guess";
-import Game from "./Game";
+import { Coord } from "./Coord";
+import { Guess } from "./Guess";
+import { Game } from "./Game";
 
-interface MapProps {
+export interface MapProps {
     center: Coord;
     zoom: number,
     preGuess: Guess | undefined;
@@ -10,5 +10,3 @@ interface MapProps {
     localPlayerID: string,
     handlePreGuess: (value: Guess) => void;
 }
-
-export default MapProps;

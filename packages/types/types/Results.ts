@@ -1,11 +1,9 @@
-interface PlayerResults {
+export interface PlayerResults {
     results: Result[]
 }
 
-interface Result {
+export interface Result {
     guessObjectId: string,
     distance: number,
     points: number
 }
-
-export type { PlayerResults, Result }

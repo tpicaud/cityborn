@@ -3,12 +3,12 @@
 import React, { useEffect } from "react";
 import { AdvancedMarker, AdvancedMarkerAnchorPoint, APIProvider, Map, MapMouseEvent, useMap } from "@vis.gl/react-google-maps";
 import { calculatePoints } from "@/utils/calculateScore";
-import MapProps from "@/types/MapProps";
-import Coord from "@/types/Coord";
-import Guess from "@/types/Guess";
-import GuessObject from "@/types/GuessObject";
+import { MapProps } from "@cityborn/types";
+import { Coord } from "@cityborn/types";
+import { Guess } from "@cityborn/types";
+import { GuessObject } from "@cityborn/types";
 import { RoundStatus } from "@/enums/RoundStatus";
-import Round from "@/types/Round";
+import { Round } from "@cityborn/types";
 import * as turf from '@turf/turf';
 
 type GoogleMapProps = {

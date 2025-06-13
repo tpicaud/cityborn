@@ -5,8 +5,8 @@ import useGuess from "@/hooks/useGuess";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import RoundCountdownComponent from "./RoundCountdown";
-import Guess from "@/types/Guess";
-import Game from "@/types/Game";
+import { Guess } from "@cityborn/types";
+import { Game } from "@cityborn/types";
 import { RoundStatus } from "@/enums/RoundStatus";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });

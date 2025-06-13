@@ -1,7 +1,7 @@
 'use client';
 
 import { getEndSentence } from '@/services/LocalGameService';
-import { PlayerResults } from '@/types/Results';
+import { PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { Button } from '@mui/material';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import Game from '@/types/Game';
+import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
 
 const ResultsComponent = ({

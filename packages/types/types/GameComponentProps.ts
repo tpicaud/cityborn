@@ -1,5 +1,5 @@
-import Game from "./Game";
-import Guess from "./Guess";
+import { Game } from "./Game";
+import { Guess } from "./Guess";
 
 export interface GameComponentProps {
     game: Game,

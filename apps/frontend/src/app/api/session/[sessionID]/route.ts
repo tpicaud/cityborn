@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { redis } from "../../lib/redis";
-import { Session } from "@/types/Session";
+import { Session } from "@cityborn/types";
 
 export async function GET(request: Request, { params }: { params: { sessionID: string } }) {
     try {

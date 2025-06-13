@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
-import Game from "@/types/Game";
-import Guess from "@/types/Guess";
+import { Game } from "@cityborn/types";
+import { Guess } from "@cityborn/types";
 import * as apiService from "@/services/apiService";
 
 export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {

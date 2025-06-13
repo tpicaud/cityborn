@@ -1,12 +1,12 @@
-import Guess from "@/types/Guess";
+import { Guess } from "@cityborn/types";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
-import Round from "@/types/Round";
+import { Round } from "@cityborn/types";
 import { RoundStatus } from "@/enums/RoundStatus";
-import Game from "@/types/Game";
+import { Game } from "@cityborn/types";
 import { useEffect, useState } from "react";
-import GuessObject from "@/types/GuessObject";
+import { GuessObject } from "@cityborn/types";
 
 function GuessButton({
     preGuess,

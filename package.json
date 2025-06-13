@@ -5,6 +5,7 @@
   "private": true,
   "author": "Tom Picaud",
   "homepage": "https://github.com/tpicaud/cityborn#readme",
+  "packageManager": "npm@11.0.0",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

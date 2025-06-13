@@ -1,5 +1,5 @@
-import GameConfig from "@/types/GameConfig";
-import { Session } from "@/types/Session";
+import { GameConfig } from "@cityborn/types";
+import { Session } from "@cityborn/types";
 
 export interface IUseSession {
     session: Session | undefined;

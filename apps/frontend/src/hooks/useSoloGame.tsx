@@ -1,12 +1,12 @@
 import { GameStatus } from "@/enums/GameStatus";
 import { RoundStatus } from "@/enums/RoundStatus";
-import Game from "@/types/Game";
-import Guess from "@/types/Guess";
+import { Game } from "@cityborn/types";
+import { Guess } from "@cityborn/types";
 import { useEffect, useState } from "react";
-import GameConfig from "@/types/GameConfig";
+import { GameConfig } from "@cityborn/types";
 import * as apiService from "@/services/apiService";
 import { IUseGame } from "./IUseGame";
-import { Result } from "@/types/Results";
+import { Result } from "@cityborn/types";
 
 export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
     startGame: (gameConfig: GameConfig) => Promise<void>

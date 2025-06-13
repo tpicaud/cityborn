@@ -1,4 +1,4 @@
-import { PlayerResults } from "@/types/Results";
+import { PlayerResults } from "@cityborn/types";
 
 // Calculates points based on distance
 const calculatePoints = (distance: number) => {

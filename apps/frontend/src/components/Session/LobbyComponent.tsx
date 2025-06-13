@@ -2,10 +2,10 @@ import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, Te
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
-import { Session } from "@/types/Session";
-import GameConfig from "@/types/GameConfig";
+import { Session } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
 import { Categories } from "@/enums/Categories";
-import { OnlinePlayer } from "@/types/Player";
+import { OnlinePlayer } from "@cityborn/types";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {

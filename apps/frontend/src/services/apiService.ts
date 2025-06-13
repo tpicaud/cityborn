@@ -1,8 +1,8 @@
 import { GameMode } from "@/enums/GameMode";
-import Game from "@/types/Game";
-import GameConfig from "@/types/GameConfig";
-import GuessObject from "@/types/GuessObject";
-import { Session } from "@/types/Session";
+import { Game } from "@cityborn/types";
+import { GameConfig } from "@cityborn/types";
+import { GuessObject } from "@cityborn/types";
+import { Session } from "@cityborn/types";
 
 //////////////////////
 // Sessions service //
