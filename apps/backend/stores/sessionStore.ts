@@ -1,4 +1,4 @@
-import { Session } from "@cityborn/types";
+import type { Session } from "@cityborn/types";
 import Redis from "ioredis";
 
 export class SessionStore {

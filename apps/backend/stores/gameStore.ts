@@ -1,4 +1,4 @@
-import { Game } from '@cityborn/types';
+import type { Game } from '@cityborn/types';
 import Redis from 'ioredis';
 
 // type Game = {
