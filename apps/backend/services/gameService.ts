@@ -1,4 +1,4 @@
-import { GameStatus, OnlinePlayer, RoundStatus } from "@cityborn/types";
+import { GameStatus, type OnlinePlayer, RoundStatus } from "@cityborn/types";
 import { GameStore } from "../stores/gameStore.ts";
 import { LockService } from "./lockService.ts";
 import { PlayerService } from "./playerService.ts";

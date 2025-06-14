@@ -1,7 +1,7 @@
-import { SessionStatus } from "../enums/SessionStatus";
-import { GameConfig } from "./GameConfig";
-import { Player } from "./Player";
-import { GameMode } from "../enums/GameMode";
+import { SessionStatus } from "../enums/SessionStatus.js";
+import { GameConfig } from "./GameConfig.js";
+import { Player } from "./Player.js";
+import { GameMode } from "../enums/GameMode.js";
 
 export interface Session {
     id: string;

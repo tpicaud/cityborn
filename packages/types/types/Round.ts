@@ -1,5 +1,5 @@
-import { RoundStatus } from "../enums/RoundStatus";
-import { Guess } from "./Guess";
+import { RoundStatus } from "../enums/RoundStatus.js";
+import { Guess } from "./Guess.js";
 
 export interface Round {
     status: RoundStatus
