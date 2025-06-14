@@ -3,7 +3,7 @@ import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
 import { Round } from "@cityborn/types";
-import { RoundStatus } from "@/enums/RoundStatus";
+import { RoundStatus } from "@cityborn/types";
 import { Game } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import { GuessObject } from "@cityborn/types";

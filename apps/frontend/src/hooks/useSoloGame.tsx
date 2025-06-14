@@ -1,5 +1,5 @@
-import { GameStatus } from "@/enums/GameStatus";
-import { RoundStatus } from "@/enums/RoundStatus";
+import { GameStatus } from "@cityborn/types";
+import { RoundStatus } from "@cityborn/types";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { useEffect, useState } from "react";

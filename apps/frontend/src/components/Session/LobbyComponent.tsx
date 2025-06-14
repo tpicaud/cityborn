@@ -4,7 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
 import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
-import { Categories } from "@/enums/Categories";
+import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

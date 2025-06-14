@@ -7,7 +7,7 @@ import { MapProps } from "@cityborn/types";
 import { Coord } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { GuessObject } from "@cityborn/types";
-import { RoundStatus } from "@/enums/RoundStatus";
+import { RoundStatus } from "@cityborn/types";
 import { Round } from "@cityborn/types";
 import * as turf from '@turf/turf';
 

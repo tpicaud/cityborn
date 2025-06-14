@@ -5,7 +5,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
-import { GameMode } from '@/enums/GameMode';
+import { GameMode } from '@cityborn/types';
 import * as apiService from '@/services/apiService';
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
