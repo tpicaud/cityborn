@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { customAlphabet } from 'nanoid';
-import { Categories } from "@/enums/Categories";
-import { GameMode } from "@/enums/GameMode";
+import { Categories } from "@cityborn/types";
+import { GameMode } from "@cityborn/types";
 import { Session } from "@cityborn/types";
-import { SessionStatus } from "@/enums/SessionStatus";
+import { SessionStatus } from "@cityborn/types";
 import { redis } from "../lib/redis";
 
 const generateID = customAlphabet('0123456789', 6); // 6 chiffres uniquement

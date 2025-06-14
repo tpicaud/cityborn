@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import RoundCountdownComponent from "./RoundCountdown";
 import { Guess } from "@cityborn/types";
 import { Game } from "@cityborn/types";
-import { RoundStatus } from "@/enums/RoundStatus";
+import { RoundStatus } from "@cityborn/types";
 
 const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleMapComponent'), { ssr: false });
 

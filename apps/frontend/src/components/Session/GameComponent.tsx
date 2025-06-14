@@ -3,11 +3,11 @@
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Button } from "@mui/material";
-import { RoundStatus } from "@/enums/RoundStatus";
+import { RoundStatus } from "@cityborn/types";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
-import { GameStatus } from "@/enums/GameStatus";
+import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 import { useEffect } from "react";
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Game } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { Player } from "@cityborn/types";
-import { GameMode } from "@/enums/GameMode";
+import { GameMode } from "@cityborn/types";
 import { createGame, fetchGuessObjects } from "../utils";
 
 export async function POST(request: Request) {

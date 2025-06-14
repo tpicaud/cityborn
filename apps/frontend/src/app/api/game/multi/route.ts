@@ -4,7 +4,7 @@ import { GameConfig } from "@cityborn/types";
 import { GuessObject } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
 import { redis } from "../../lib/redis";
-import { GameMode } from "@/enums/GameMode";
+import { GameMode } from "@cityborn/types";
 import { createGame, fetchGuessObjects, fetchGuessObjectsFromIds } from "../utils";
 
 export async function POST(request: Request) {

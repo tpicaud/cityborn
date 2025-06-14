@@ -1,4 +1,4 @@
-import { GameMode } from "@/enums/GameMode";
+import { GameMode } from "@cityborn/types";
 import { Game } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { GuessObject } from "@cityborn/types";

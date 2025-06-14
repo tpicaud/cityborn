@@ -1,4 +1,4 @@
-import { Categories } from "@/enums/Categories";
+import { Categories } from "../enums/Categories";
 
 export interface GameConfig {
     categories: Categories[];
