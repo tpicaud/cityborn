@@ -306,7 +306,6 @@ export class GameService {
                             if (allConnectedPlayersGuessed) game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
                             break;
                         case RoundStatus.SHOWING_RESULTS:
-                            game.status = GameStatus.FINISHED;
                             break;
                     }
                 }
