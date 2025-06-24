@@ -11,7 +11,7 @@
     "start": "ts-node server.ts"
   },
   "dependencies": {
-    "@cityborn/types": "*",
+    "@cityborn/types": "workspace:*",
     "@socket.io/redis-adapter": "^8.3.0",
     "@upstash/redis": "^1.34.7",
     "dotenv": "^16.4.7",
