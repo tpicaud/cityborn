@@ -182,7 +182,11 @@ importers:
         specifier: ^5
         version: 5.8.3
 
-  packages/types: {}
+  packages/types:
+    dependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 

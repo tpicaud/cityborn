@@ -1,5 +1,5 @@
 {
-  "name": "cityborn-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Backend for Cityborn frontend",
   "license": "ISC",
@@ -7,6 +7,7 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
+    "build": "tsc",
     "dev": "ts-node server.ts",
     "start": "ts-node server.ts"
   },
