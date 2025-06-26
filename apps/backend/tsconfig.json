@@ -1,13 +1,11 @@
 {
-    "compilerOptions": {
-      "target": "es2020",
-      "module": "ESNext", 
-      "moduleResolution": "node",
-      "esModuleInterop": true,
-      "allowImportingTsExtensions": true,
-      "allowSyntheticDefaultImports": true,
-      "noEmit": true
-    },
-    "type": "module",
-  }
-  
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "ESNext",
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+  },
+  "type": "module",
+}
