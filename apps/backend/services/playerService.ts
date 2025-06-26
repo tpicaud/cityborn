@@ -1,4 +1,4 @@
-import { PlayerStore } from "../stores/playerStore.ts";
+import { PlayerStore } from "../stores/playerStore.js";
 
 export class PlayerService {
 

@@ -1,48 +1,38 @@
-FROM node:23-alpine
+# Étape 1 : Builder le projet avec Turbo depuis la racine
+FROM node:23-alpine AS builder
+
+WORKDIR /repo
+
+# Installer pnpm
+RUN corepack enable && corepack prepare pnpm@10.12.3 --activate
+
+# Copier les fichiers nécessaires pour l'installation et le build
+COPY . .
+
+# Installer les dépendances de tout le monorepo (avec le cache partagé)
+RUN pnpm install --no-frozen-lockfile
+
+# Builder uniquement le backend
+RUN pnpm turbo run build --filter=backend...
+
+# Étape 2 : Image finale, uniquement avec les fichiers nécessaires à l’exécution
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY ./dist ./dist
-COPY ./package.json ./
-COPY ./node_modules ./node_modules
+# Installer pnpm
+RUN corepack enable && corepack prepare pnpm@10.12.3 --activate
+
+# Copier package.json du backend pour réinstaller les deps prod
+COPY apps/backend/package.json ./
+COPY pnpm-lock.yaml ./
+
+# Installer seulement les deps runtime
+RUN pnpm install --prod --no-frozen-lockfile
+
+# Copier le build du backend depuis l’étape builder
+COPY --from=builder /repo/dist/apps/backend ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
-
-
-# # --- 1. Build Stage ---
-# FROM node:23-alpine AS builder
-
-# # Set workdir
-# WORKDIR /app
-
-# # Install turbo globally (optional, si build local)
-# RUN npm install -g turbo
-
-# # Copy package files
-# COPY . .
-
-# # Install dependencies via turbo (dans le monorepo)
-# RUN corepack enable && turbo prune --scope=backend --docker
-
-# # Re-install dependencies for pruned project
-# WORKDIR /app/out
-
-# RUN npm install
-
-# # Build backend app
-# RUN npm run build --workspace=backend
-
-# # --- 2. Runtime Stage ---
-# FROM node:23-alpine AS runner
-
-# WORKDIR /app
-
-# # Copy only necessary files from builder
-# COPY --from=builder /app/out/apps/backend/dist ./dist
-# COPY --from=builder /app/out/apps/backend/package.json ./
-# COPY --from=builder /app/out/node_modules ./node_modules
-
-# # Run backend (adaptable selon le framework)
-# CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]

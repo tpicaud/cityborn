@@ -1,7 +1,7 @@
-import { SessionStore } from "../stores/sessionStore.ts";
-import { GameService } from "./gameService.ts";
-import { LockService } from "./lockService.ts";
-import { PlayerService } from "./playerService.ts";
+import { SessionStore } from "../stores/sessionStore.js";
+import { GameService } from "./gameService.js";
+import { LockService } from "./lockService.js";
+import { PlayerService } from "./playerService.js";
 
 export class SessionService {
     private sessionStore: SessionStore;

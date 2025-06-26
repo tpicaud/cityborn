@@ -1,2 +1,3 @@
-# flyctl launch added from .gitignore
+# flyctl launch added from .gi tignore
+node_modules
 fly.toml
