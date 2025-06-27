@@ -1,3 +1,7 @@
-# flyctl launch added from .gi tignore
 node_modules
+*/node_modules
+
 fly.toml
+.turbo
+docs
+db_script
