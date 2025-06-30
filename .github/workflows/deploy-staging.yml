@@ -17,15 +17,13 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to Fly.io
-        uses: superfly/flyctl-actions@1.1
-        with:
-          args: "auth token"
+        uses: superfly/flyctl-actions/setup-flyctl@master
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Build Docker image
         run: |
-          TAG=cityborn-backend:v$(date +%Y%m%d)-${GITHUB_SHA::7}
+          TAG=cityborn-backend-staging:v$(date +%Y%m%d)-${GITHUB_SHA::7}
           echo "Docker image tag: $TAG"
           docker build -f ./apps/backend/Dockerfile -t $TAG .
           echo "TAG=$TAG" >> $GITHUB_ENV
