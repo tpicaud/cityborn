@@ -1,5 +1,5 @@
 {
-  "name": "cityborn-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Backend for Cityborn frontend",
   "license": "ISC",
@@ -7,11 +7,12 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
+    "build": "tsc",
     "dev": "ts-node server.ts",
     "start": "ts-node server.ts"
   },
   "dependencies": {
-    "@cityborn/types": "*",
+    "@cityborn/types": "workspace:*",
     "@socket.io/redis-adapter": "^8.3.0",
     "@upstash/redis": "^1.34.7",
     "dotenv": "^16.4.7",

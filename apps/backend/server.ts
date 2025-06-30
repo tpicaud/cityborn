@@ -1,7 +1,7 @@
 import http from "http";
 import express from "express";
 import dotenv from "dotenv";
-import { setupWebSocketServer } from "./ws/socket.server.ts";
+import { setupWebSocketServer } from "./ws/socket.server.js";
 
 dotenv.config();
 
