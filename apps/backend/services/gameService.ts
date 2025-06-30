@@ -1,7 +1,7 @@
 import { GameStatus, type OnlinePlayer, RoundStatus } from "@cityborn/types";
-import { GameStore } from "../stores/gameStore.ts";
-import { LockService } from "./lockService.ts";
-import { PlayerService } from "./playerService.ts";
+import { GameStore } from "../stores/gameStore.js";
+import { LockService } from "./lockService.js";
+import { PlayerService } from "./playerService.js";
 
 export class GameService {
 

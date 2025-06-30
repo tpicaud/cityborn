@@ -1,15 +1,15 @@
 import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
-import { SessionStore } from "../stores/sessionStore.ts";
-import { GameStore } from "../stores/gameStore.ts";
-import { GameService } from "../services/gameService.ts";
-import { SessionService } from "../services/sessionService.ts";
-import { SessionHandler } from "../handlers/session.handler.ts";
-import { GameHandler } from "../handlers/game.handler.ts";
-import { PlayerService } from "../services/playerService.ts";
-import { PlayerStore } from "../stores/playerStore.ts";
-import { LockService } from "../services/lockService.ts";
+import { SessionStore } from "../stores/sessionStore.js";
+import { GameStore } from "../stores/gameStore.js";
+import { GameService } from "../services/gameService.js";
+import { SessionService } from "../services/sessionService.js";
+import { SessionHandler } from "../handlers/session.handler.js";
+import { GameHandler } from "../handlers/game.handler.js";
+import { PlayerService } from "../services/playerService.js";
+import { PlayerStore } from "../stores/playerStore.js";
+import { LockService } from "../services/lockService.js";
 
 export function setupWebSocketServer(httpServer: any) {
 
