@@ -31,7 +31,7 @@ jobs:
       - name: Tag docker image
         run: |
           FLYIO_TAG=registry.fly.io/${{ env.TAG }}
-          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "FLYIO_TAG=$FLYIO_TAG" >> $GITHUB_ENV
           docker tag ${{ env.TAG }} ${{ env.FLYIO_TAG }}
 
       - name: Push Docker image to Fly.io Registry
