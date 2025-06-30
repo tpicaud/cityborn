@@ -31,7 +31,7 @@ jobs:
       - name: Push Docker image to Fly.io Registry
         run: |
           flyctl auth docker
-          docker push ${{ env.TAG }}
+          docker push registry.fly.io/${{ env.TAG }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
