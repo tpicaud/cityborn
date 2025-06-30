@@ -1,0 +1,14 @@
+# Ignore all node_modules folders
+**/node_modules
+
+# Ignore useless docs
+db_scripts
+docs
+
+# IDE / OS / Logs
+.DS_Store
+*.log
+
+# Optional: ignore test output or build artifacts
+dist
+build
