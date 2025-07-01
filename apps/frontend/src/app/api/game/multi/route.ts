@@ -9,14 +9,6 @@ import { createGame, fetchGuessObjects, fetchGuessObjectsFromIds } from "../util
 
 export async function POST(request: Request) {
 	try {
-		console.log('call from backend')
-		const auth = request.headers.get('authorization');
-		if (auth !== `Bearer ${process.env.INTERNAL_API_SECRET}`) {
-			console.log(`Unauthorized. Auth: ${auth}, API_secret: ${process.env.INTERNAL_API_SECRET}`)
-			return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-		}
-
-
 		const body = await request.json();
 		const { gameConfig, hostID, gameMode, playersID }: { gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[] } = body;
 
