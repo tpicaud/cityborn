@@ -12,6 +12,7 @@ export async function POST(request: Request) {
 
 		const auth = request.headers.get('authorization');
 		if (auth !== `Bearer ${process.env.INTERNAL_API_SECRET}`) {
+			console.log(`Unauthorized. Auth: ${auth}, API_secret: ${process.env.INTERNAL_API_SECRET}`)
 			return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 		}
 
