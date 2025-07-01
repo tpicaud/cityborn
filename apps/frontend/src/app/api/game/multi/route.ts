@@ -9,7 +9,7 @@ import { createGame, fetchGuessObjects, fetchGuessObjectsFromIds } from "../util
 
 export async function POST(request: Request) {
 	try {
-
+		console.log('call from backend')
 		const auth = request.headers.get('authorization');
 		if (auth !== `Bearer ${process.env.INTERNAL_API_SECRET}`) {
 			console.log(`Unauthorized. Auth: ${auth}, API_secret: ${process.env.INTERNAL_API_SECRET}`)
