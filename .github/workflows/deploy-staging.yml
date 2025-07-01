@@ -32,17 +32,17 @@ jobs:
         run: |
           FLYIO_TAG=registry.fly.io/${{ env.TAG }}
           echo "FLYIO_TAG=$FLYIO_TAG" >> $GITHUB_ENV
-          docker tag ${{ env.TAG }} ${{ env.FLYIO_TAG }}
+          docker tag $TAG $FLYIO_TAG
 
       - name: Push Docker image to Fly.io Registry
         run: |
           flyctl auth docker
-          docker push ${{ env.FLYIO_TAG }}
+          docker push $FLYIO_TAG
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Deploy Fly.io using pushed image
         run: |
-          flyctl deploy --image registry${{ env.TAG }} --config ./fly.toml
+          flyctl deploy --image $FLYIO_TAG --config ./apps/backend/fly.staging.toml
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
