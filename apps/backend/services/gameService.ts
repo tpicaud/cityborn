@@ -250,6 +250,7 @@ export class GameService {
     async createGameFromSession(session: any) {
         try {
             const playersID = session.players.map(player => player.id);
+            console.log(process.env.INTERNAL_API_SECRET);
             const response = await fetch(`${process.env.API_REST_URL}/game/multi`, {
                 method: 'POST',
                 headers: {
