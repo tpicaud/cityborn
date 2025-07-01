@@ -254,6 +254,8 @@ export class GameService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Origin': 'https://cityborn-backend-staging.fly.io',
+                    'User-Agent': 'FlyioBackend/1.0'
                 },
                 body: JSON.stringify({
                     gameConfig: session.gameConfig,
