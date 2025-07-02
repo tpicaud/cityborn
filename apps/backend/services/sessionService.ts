@@ -1,3 +1,4 @@
+import { OnlinePlayer, Session } from "@cityborn/types";
 import { SessionStore } from "../stores/sessionStore.js";
 import { GameService } from "./gameService.js";
 import { LockService } from "./lockService.js";
@@ -162,27 +163,33 @@ export class SessionService {
             return await this.lockService.withLock(this.sessionStore.key(sessionID), this.LOCK_TTL, async () => {
 
                 // Récupération du jeu dans la base de données
-                const session: any | undefined = await this.sessionStore.getSession(sessionID)
+                const session: Session | undefined = await this.sessionStore.getSession(sessionID);
                 if (!session) throw new Error("Session introuvable.");
 
+                // Get players
+                const players = session.players as OnlinePlayer[];
+
                 // Check si l'id du joueur est dans la session
-                const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
+                const playerIndex = players.findIndex((player: any) => player.id === playerID);
                 if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
 
                 // Register new player socket
                 await this.playerService.register(socketID, playerID, sessionID);
 
                 // Reconnexion du joueur
-                session.players[playerIndex].connected = true;
+                players[playerIndex].connected = true;
+
+                // Check host
+                if (session.hostID === '') session.hostID = playerID;
 
                 // Check s'il est en game
-                const isInGame = await this.isInGame(session, playerID);
+                const isInGame = session.currentGameId ? await this.isInGame(session.currentGameId, playerID): false;
 
                 await this.sessionStore.saveSession(session);
                 return { session, isInGame };
             });
         } catch (error) {
-            throw new Error(`Erreur lors de la reconnexion de ${playerID}`);
+            throw new Error(`Erreur lors de la reconnexion de ${playerID}: ${error}`);
         }
     }
 
