@@ -26,6 +26,7 @@ export default function MultiSessionPage() {
     // Automatic reconnect
     useEffect(() => {
         const autoReconnect = async () => {
+            console.log('Connection state in session: ', multiSession.connected)
             try {
                 if (localPlayerID && !multiSession.connected) {
                     const isInGame = await multiSession.reconnect(localPlayerID);
