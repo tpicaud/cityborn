@@ -167,7 +167,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
         try {
             // Wait for socket to reconnect to server
-            await waitForConnection(() => connected, 10000);
+            await waitForConnection(() => socket.connected, 10 * 1000);
 
             // Reconnect to session
             const sessionID = session.id;
