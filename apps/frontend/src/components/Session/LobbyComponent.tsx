@@ -2,7 +2,7 @@ import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, Te
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
-import { Session } from "@cityborn/types";
+import { GameMode, Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
@@ -30,35 +30,39 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
     return (
         <Card sx={{ maxWidth: 400, margin: "auto", mt: 4, p: 2 }}>
             <CardContent>
-                {/* Champ pour afficher et copier l'ID du jeu */}
-                <Typography variant="subtitle1" gutterBottom>
-                    Code de la partie :
-                </Typography>
-                <TextField
-                    fullWidth
-                    value={session.id}
-                    variant="outlined"
-                    slotProps={{
-                        input: {
-                            readOnly: true,
-                            endAdornment: (
-                                <IconButton onClick={handleCopy}>
-                                    <ContentCopyIcon />
-                                </IconButton>
-                            ),
-                        }
-                    }}
-                />
+                {session.mode === GameMode.MULTI && (
+                    <>
+                        {/* Champ pour afficher et copier l'ID du jeu */}
+                        < Typography variant="subtitle1" gutterBottom>
+                            Code de la partie :
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            value={session.id}
+                            variant="outlined"
+                            slotProps={{
+                                input: {
+                                    readOnly: true,
+                                    endAdornment: (
+                                        <IconButton onClick={handleCopy}>
+                                            <ContentCopyIcon />
+                                        </IconButton>
+                                    ),
+                                }
+                            }}
+                        />
 
-                {copied && (
-                    <Typography variant="caption" color="success.main">
-                        Copié !
-                    </Typography>
+                        {copied && (
+                            <Typography variant="caption" color="success.main">
+                                Copié !
+                            </Typography>
+                        )}
+                    </>
                 )}
 
                 {/* Titre du lobby */}
                 <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-                    Lobby - Multijoueur
+                    Lobby - {session.mode}
                 </Typography>
 
                 {/* Liste des joueurs */}
@@ -209,6 +213,6 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     Démarrer la partie
                 </Button>
             </CardContent>
-        </Card>
+        </Card >
     );
 };

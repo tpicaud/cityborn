@@ -106,7 +106,7 @@ export class SessionHandler {
                 await socket.join(sessionID)
                 io.to(sessionID).emit('session:update', session);
 
-                console.log(`${playerID} a rejoint la session ${sessionID}`);
+                console.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
                 callback?.({ success: true, isInGame });
             } catch (error) {
                 console.error("Erreur lors de la tentative de rejoindre la partie :", error);
