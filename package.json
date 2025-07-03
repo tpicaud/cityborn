@@ -7,10 +7,15 @@
   "homepage": "https://github.com/tpicaud/cityborn#readme",
   "packageManager": "pnpm@10.12.3",
   "scripts": {
-    "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint",
-    "start": "turbo run start"
+    "build:backend": "turbo run build --filter=backend",
+    "build:frontend": "turbo run build --filter=frontend",
+    "dev": "turbo run dev",
+    "dev:backend": "turbo run dev --filter=backend",
+    "dev:frontend": "turbo run dev --filter=frontend",
+    "start": "turbo run start",
+    "start:backend": "turbo run start --filter=backend",
+    "start:frontend": "turbo run start --filter=frontend"
   },
   "devDependencies": {
     "turbo": "^2.5.4"

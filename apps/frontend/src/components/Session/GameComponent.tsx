@@ -10,13 +10,14 @@ import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 
-export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd }: {
+export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd, handlePlayAgain }: {
     localPlayerID: string,
     isHost: boolean;
     game: Game,
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
     handleEnd: () => void,
+    handlePlayAgain: () => void
 }) => {
 
     const NextButton: React.FC = () => {
@@ -50,7 +51,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
 
     switch (game.status) {
         case GameStatus.IN_RESULTS:
-            return <ResultsComponent game={game} localPlayerID={localPlayerID} handleEnd={handleEnd} />
+            return <ResultsComponent game={game} localPlayerID={localPlayerID} handleEnd={handleEnd} handlePlayAgain={handlePlayAgain} />
 
         case GameStatus.IN_GAME:
             return (

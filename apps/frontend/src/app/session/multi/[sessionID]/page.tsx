@@ -167,7 +167,8 @@ export default function MultiSessionPage() {
             game={multiGame.game}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
-            handleEnd={handleEnd} />
+            handleEnd={handleEnd}
+            handlePlayAgain={handleStartGame} />
     } else {
         // display lobby
         return <LobbyComponent

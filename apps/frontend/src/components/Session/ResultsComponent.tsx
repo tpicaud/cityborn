@@ -1,7 +1,7 @@
 'use client';
 
 import { getEndSentence } from '@/services/LocalGameService';
-import { PlayerResults } from '@cityborn/types';
+import { GuessObject, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { Button } from '@mui/material';
@@ -15,11 +15,13 @@ import { getGameResult } from '@/utils/getGameResult';
 const ResultsComponent = ({
     game,
     localPlayerID,
-    handleEnd
+    handleEnd,
+    handlePlayAgain
 }: {
     game: Game,
     localPlayerID: string,
-    handleEnd: () => void
+    handleEnd: () => void,
+    handlePlayAgain: () => void
 }) => {
 
     const router = useRouter();
@@ -32,65 +34,65 @@ const ResultsComponent = ({
         const currentPlayerResults = playersResults.get(localPlayerID);
         if (!currentPlayerResults) return;
 
-        // change ids by name in results
-        currentPlayerResults.results.forEach((result) => {
-            const guessObject = game.state.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
-            if (guessObject) {
-                result.guessObjectId = guessObject.name;
+        // Remplacement des IDs dans tous les résultats
+        replaceIdsWithNames(playersResults, game.state.guessObjects);
+
+        setLocalPlayerResults(currentPlayerResults);
+
+        let isMounted = true;
+        generateEndSentence(currentPlayerResults).then(sentence => {
+            if (isMounted) {
+                setSentence(sentence);
             }
         });
 
-        // change ids by name for all players results
-        playersResults.forEach((playerResults) => {
+        return () => {
+            isMounted = false;
+        };
+    }, [localPlayerID, game.id]);
+
+
+    function replaceIdsWithNames(resultsMap: Map<string, PlayerResults>, guessObjects: GuessObject[]) {
+        resultsMap.forEach((playerResults) => {
             playerResults.results.forEach((result) => {
-                const guessObject = game.state.guessObjects.find((guessObject) => guessObject.id === result.guessObjectId);
+                const guessObject = guessObjects.find(obj => obj.id === result.guessObjectId);
                 if (guessObject) {
                     result.guessObjectId = guessObject.name;
                 }
             });
         });
+    }
 
-        setLocalPlayerResults(currentPlayerResults);
-
-        const getScoreType = (totalPoints: number) => {
-            if (totalPoints < 3000) return 'Mauvais';
-            if (totalPoints < 5000) return 'Moyen';
+    async function generateEndSentence(playerResults: PlayerResults): Promise<{ message: string, sub_message_1: string, sub_message_2: string }> {
+        const totalPoints = calculateTotalPoints(playerResults);
+        const getScoreType = (points: number) => {
+            if (points < 3000) return 'Mauvais';
+            if (points < 5000) return 'Moyen';
             return 'Bon';
         };
 
-        let isMounted = true;
+        const scoreType = getScoreType(totalPoints);
+        const message = await getEndSentence(scoreType);
 
-        const fetchSentence = async () => {
-            const totalPoints = calculateTotalPoints(currentPlayerResults);
-            if (totalPoints > 0) {
-                const score_type = getScoreType(totalPoints);
-                const sentence = await getEndSentence(score_type);
+        let sub_message_1 = '';
+        let sub_message_2 = '';
 
-                let sub_message_1 = '';
-                let sub_message_2 = '';
+        if (scoreType === 'Mauvais') {
+            sub_message_1 = 'Bon... ';
+            sub_message_2 = 'Essaie encore !';
+        } else if (scoreType === 'Bon') {
+            sub_message_1 = 'Félicitation ! ';
+        } else if (scoreType === 'Moyen') {
+            sub_message_2 = 'Essaie encore !';
+        }
 
-                if (score_type === 'Mauvais') {
-                    sub_message_1 = 'Bon... ';
-                    sub_message_2 = 'Essaie encore !';
-                } else if (score_type === 'Bon') {
-                    sub_message_1 = 'Félicitation ! ';
-                } else if (score_type === 'Moyen') {
-                    sub_message_2 = 'Essaie encore !';
-                }
+        return { message, sub_message_1, sub_message_2 };
+    }
 
-                if (isMounted) {
-                    setSentence({ message: sentence, sub_message_1, sub_message_2 });
-                }
-            }
-        };
 
-        fetchSentence();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [localPlayerID]); // Ajout de localPlayerID
-
+    useEffect(() => {
+        console.log(sentence, localPlayerResults);
+    }, [sentence, localPlayerResults])
 
     if (!sentence || !localPlayerResults) {
         return <LoadingComponent message='Chargement des résultats' />
@@ -184,26 +186,36 @@ const ResultsComponent = ({
                     )}
                 </div>
 
-                <div className='flex flex-row justify-center w-full gap-3'>
+                <div className='flex flex-col justify-center items-center w-full gap-3'>
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={handleEnd}
+                        onClick={handlePlayAgain}
                         className="w-24"
                     >
-                        Lobby 
+                        Rejouer
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            router.push('/');
-                            handleEnd();
-                        }}
-                        className="w-24"
-                    >
-                        Menu
-                    </Button>
+                    <div className='flex flex-row justify-center w-full gap-3'>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleEnd}
+                            className="w-24"
+                        >
+                            Lobby
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => {
+                                router.push('/');
+                                handleEnd();
+                            }}
+                            className="w-24"
+                        >
+                            Menu
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
