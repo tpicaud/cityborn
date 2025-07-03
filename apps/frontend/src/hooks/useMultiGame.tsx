@@ -4,8 +4,11 @@ import { IUseMultiGame } from "./IUseGame";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import * as apiService from "@/services/apiService";
+import { Socket } from "socket.io-client";
 
-export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
+export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame & {
+    socket: Socket;
+} {
 
     const [game, setGame] = useState<Game>();
     const [connected, setConnected] = useState(false);
@@ -171,6 +174,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
     return {
         game,
         connected,
+        socket,
         isHost,
         join,
         guess,

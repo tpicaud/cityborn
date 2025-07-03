@@ -4,10 +4,12 @@ import { useSocket } from "./useSocket";
 import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import * as apiService from "@/services/apiService";
+import { Socket } from "socket.io-client";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
     // Extends interface
     connected: boolean;
+    socket: Socket;
     join: (playerID: string) => void;
     updateHost: (newHostID: string) => void;
     kickPlayer: (playerToKick: string) => void;
@@ -211,6 +213,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     return {
         session,
         connected,
+        socket,
         isHost,
         join,
         updateHost,

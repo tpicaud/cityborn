@@ -27,7 +27,7 @@ export default function MultiSessionPage() {
     useEffect(() => {
         const autoReconnect = async () => {
             try {
-                if (localPlayerID && !multiSession.connected) {
+                if (localPlayerID && !multiSession.connected && multiSession.socket.connected) {
                     const isInGame = await multiSession.reconnect(localPlayerID);
                     if (isInGame) {
                         await multiGame.reconnect(localPlayerID);
@@ -38,7 +38,7 @@ export default function MultiSessionPage() {
             }
         }
         autoReconnect();
-    }, [multiSession.connected]);
+    }, [multiSession.connected, multiSession.socket.connected]);
 
 
     //////////////////////////
