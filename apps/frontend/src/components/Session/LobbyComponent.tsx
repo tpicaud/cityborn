@@ -66,7 +66,8 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                 </Typography>
 
                 {/* Liste des joueurs */}
-                <List>
+                { session.mode !== GameMode.SOLO && (
+                    <List>
                     {(session.players.every(p => "connected" in p)
                         ? // Tous sont des OnlinePlayer → trier + statut
                         (session.players as OnlinePlayer[])
@@ -98,9 +99,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         </ListItem>
                     ))}
                 </List>
+                )}
 
                 <div className='max-w-full'>
                     <Accordion
+                        defaultExpanded={session.mode === GameMode.SOLO}
                         sx={{
                             borderTop: '1px solid #ccc',  // Bordure grise
                             backgroundColor: 'transparent',  // Fond transparent

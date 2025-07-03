@@ -84,7 +84,8 @@ export default function SoloGamePage() {
             game={soloGame.game}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
-            handleEnd={handleEnd} />
+            handleEnd={handleEnd}
+            handlePlayAgain={handleStartGame} />
     } else {
         // display lobby
         return <LobbyComponent
