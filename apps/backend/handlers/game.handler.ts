@@ -16,7 +16,7 @@ export class GameHandler {
                 if (!gameID === undefined) {
                     throw new Error("Paramètres invalides : gameID est requis.");
                 }
-                
+
                 const game = await this.gameService.join(socket.id, gameID);
 
                 await socket.join(gameID);
@@ -74,7 +74,7 @@ export class GameHandler {
         socket.on('game:end', async (callback) => {
             try {
                 await this.gameService.endGame(socket.id);
-                
+
                 callback?.({ success: true });
             } catch (error) {
                 console.error("Erreur lors de la fin de la partie :", error);
@@ -86,11 +86,16 @@ export class GameHandler {
         });
 
         // Reconnexion à la partie
-        socket.on('game:reconnect', async (gameID, callback) => {
+        socket.on('game:reconnect', async (gameID, playerID, callback) => {
             try {
+                if (!gameID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
+
                 const game = await this.gameService.reconnectPlayer(socket.id, gameID);
-                
+
+                await socket.join(gameID);
                 io.to(game.id).emit('game:update', game);
+
+                console.log(`${playerID} s'est reconnecté à la partie ${gameID}`);
                 callback?.({ success: true });
             } catch (error) {
                 console.error("Erreur lors de la reconnexion à la partie :", error);

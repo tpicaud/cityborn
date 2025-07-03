@@ -170,6 +170,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             await waitForConnection(() => socket.connected, 10 * 1000);
 
             // Reconnect to session
+            console.log('Reconnecting player to session...')
             const sessionID = session.id;
             return new Promise<{ isInGame: boolean }>((resolve, reject) => {
                 emit('session:reconnect', sessionID, playerID, (response: { success: boolean; isInGame: boolean; error?: string }) => {

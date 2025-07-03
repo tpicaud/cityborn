@@ -127,9 +127,10 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame {
         if (!game) throw new Error('Joueur ou game non initialisé');
         try {
             // Wait for socket to reconnect to server
-            await waitForConnection(() => connected, 10000);
+            await waitForConnection(() => socket.connected, 10000);
 
             // Reconnect to game
+            console.log('Reconnecting player to game...')
             const gameID = game.id;
             return new Promise<void>((resolve, reject) => {
                 emit('game:reconnect', gameID, playerID, (response: { success: boolean; error?: string }) => {
