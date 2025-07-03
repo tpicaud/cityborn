@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const gameID = searchParams.get("gameID");
-		
+
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const lightGame: any = await redis.get(`game:${gameID}`);
 		if (!lightGame) throw new Error(`Game ${gameID} introuvable`);

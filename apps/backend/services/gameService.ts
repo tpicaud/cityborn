@@ -255,8 +255,20 @@ export class GameService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ gameConfig: session.gameConfig, hostID: session.hostID, gameMode: session.gameMode, playersID }),
+                body: JSON.stringify({
+                    gameConfig: session.gameConfig,
+                    hostID: session.hostID,
+                    gameMode: session.gameMode,
+                    playersID,
+                }),
             });
+
+            // Vérifie si la réponse est OK
+            if (!response.ok) {
+                const errorText = await response.text(); // Récupère le corps brut même s'il n'est pas JSON
+                throw new Error(`HTTP ${response.status} - ${response.statusText}: ${errorText}`);
+            }
+
             const data = await response.json();
             const game = data.game;
 
@@ -265,9 +277,10 @@ export class GameService {
 
             return game;
         } catch (error) {
-            throw new Error(`Error creating new game for session ${session.id}: ${error}`);
+            throw new Error(`Erreur lors de la création de la partie pour la session ${session.id}: ${error}`);
         }
     }
+
 
     async disconnectPlayer(socketID: string, newHostID: string) {
         try {
