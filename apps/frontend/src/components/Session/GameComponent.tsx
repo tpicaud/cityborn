@@ -9,7 +9,6 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
-import { useEffect } from "react";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd }: {
     localPlayerID: string,
@@ -19,10 +18,6 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
     handleNextRound: () => void,
     handleEnd: () => void,
 }) => {
-
-    useEffect(() => {
-        console.log('game update in page');
-    }, [game])
 
     const NextButton: React.FC = () => {
         if (!game.state.currentRound) return null;
