@@ -28,7 +28,7 @@ export default function MultiSessionPage() {
         const autoReconnect = async () => {
             try {
                 if (localPlayerID && !multiSession.connected && multiSession.socket.connected) {
-                    const isInGame = await multiSession.reconnect(localPlayerID);
+                    const { isInGame } = await multiSession.reconnect(localPlayerID);
                     if (isInGame) {
                         await multiGame.reconnect(localPlayerID);
                     }
