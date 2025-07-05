@@ -168,10 +168,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     const reconnect = async (playerID: string): Promise<{ isInGame: boolean }> => {
         if (!session || !playerID) throw new Error('Joueur ou session non initialisé');
         try {
-            // Wait for socket to reconnect to server
-            await waitForConnection(() => socket.connected, 10 * 1000);
-
-            // Reconnect to session
             console.log('Reconnecting player to session...')
             const sessionID = session.id;
             return new Promise<{isInGame: boolean }>((resolve, reject) => {
@@ -189,26 +185,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         }
 
     }
-
-
-    // Utils functions
-    function waitForConnection(checkFn: () => boolean, timeout = 5000, interval = 100): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const startTime = Date.now();
-
-            const check = () => {
-                if (checkFn()) {
-                    resolve();
-                } else if (Date.now() - startTime > timeout) {
-                    reject(new Error("Connexion socket non établie dans le temps imparti"));
-                } else {
-                    setTimeout(check, interval);
-                }
-            };
-
-            check();
-        });
-    };
 
     return {
         session,

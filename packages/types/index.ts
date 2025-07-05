@@ -9,6 +9,8 @@ export * from './types/Player.js';
 export * from './types/Results.js';
 export * from './types/Round.js';
 export type * from './types/Session.js';
+export * from './types/defaults.js';
+
 export * from './enums/Categories.js';
 export * from './enums/GameMode.js';
 export * from './enums/GameStatus.js';

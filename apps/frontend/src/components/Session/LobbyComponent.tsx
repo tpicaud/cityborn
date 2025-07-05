@@ -6,6 +6,7 @@ import { GameMode, Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
+import { useRouter } from "next/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {
@@ -20,6 +21,8 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
     const [copied, setCopied] = useState(false);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
     const [tempTimer, setTempTimer] = useState<string>(session.gameConfig.timer.toString());
+    const router = useRouter();
+
 
     const handleCopy = () => {
         navigator.clipboard.writeText(session.id);
@@ -66,39 +69,39 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                 </Typography>
 
                 {/* Liste des joueurs */}
-                { session.mode !== GameMode.SOLO && (
+                {session.mode !== GameMode.SOLO && (
                     <List>
-                    {(session.players.every(p => "connected" in p)
-                        ? // Tous sont des OnlinePlayer → trier + statut
-                        (session.players as OnlinePlayer[])
-                            .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1))
-                        : // Sinon, pas de tri
-                        session.players
-                    ).map((player) => (
-                        <ListItem key={player.id} divider>
-                            <ListItemText
-                                primary={
-                                    player.id === session.hostID
-                                        ? `${player.id} (Host)`
-                                        : `${player.id}`
-                                }
-                                secondary={
-                                    "connected" in player
-                                        ? (player as OnlinePlayer).connected
-                                            ? "Connecté"
-                                            : "Déconnecté"
-                                        : undefined
-                                }
-                                sx={{
-                                    color:
-                                        "connected" in player && !(player as OnlinePlayer).connected
-                                            ? "text.disabled"
-                                            : "text.primary",
-                                }}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
+                        {(session.players.every(p => "connected" in p)
+                            ? // Tous sont des OnlinePlayer → trier + statut
+                            (session.players as OnlinePlayer[])
+                                .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1))
+                            : // Sinon, pas de tri
+                            session.players
+                        ).map((player) => (
+                            <ListItem key={player.id} divider>
+                                <ListItemText
+                                    primary={
+                                        player.id === session.hostID
+                                            ? `${player.id} (Host)`
+                                            : `${player.id}`
+                                    }
+                                    secondary={
+                                        "connected" in player
+                                            ? (player as OnlinePlayer).connected
+                                                ? "Connecté"
+                                                : "Déconnecté"
+                                            : undefined
+                                    }
+                                    sx={{
+                                        color:
+                                            "connected" in player && !(player as OnlinePlayer).connected
+                                                ? "text.disabled"
+                                                : "text.primary",
+                                    }}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
                 )}
 
                 <div className='max-w-full'>
@@ -214,6 +217,18 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     onClick={handleStartGame}
                 >
                     Démarrer la partie
+                </Button>
+
+                {/* Menu */}
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                    disabled={session.hostID !== localPlayerID}
+                    onClick={() => router.push('/')}
+                >
+                    Menu
                 </Button>
             </CardContent>
         </Card >

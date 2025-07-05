@@ -64,3 +64,7 @@
 | 02/06/2025 | 3h | Fix session pour le mode solo |
 | 11/06/2025 | 5h | Migration vers monorepo |
 | 14/06/2025 | 5h | Finalisation de la migration monorepo |
+| 21/06/2025 | 6h | Environnement pre-production front |
+| 26/06/2025 | 6h | Environnement pre-production backend|
+| 01/07/2025 | 2h | Automatisation du déploiement pre-production |
+| 05/07/2025 | 2h | Fix bugs reconnexion en partie |

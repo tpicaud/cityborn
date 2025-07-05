@@ -129,10 +129,6 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     const reconnect = async (playerID: string) => {
         if (!game) throw new Error('Joueur ou game non initialisé');
         try {
-            // Wait for socket to reconnect to server
-            await waitForConnection(() => socket.connected, 10000);
-
-            // Reconnect to game
             console.log('Reconnecting player to game...')
             const gameID = game.id;
             return new Promise<void>((resolve, reject) => {
@@ -150,26 +146,6 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         }
 
     }
-
-
-    // Utils functions
-    function waitForConnection(checkFn: () => boolean, timeout = 5000, interval = 100): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const startTime = Date.now();
-
-            const check = () => {
-                if (checkFn()) {
-                    resolve();
-                } else if (Date.now() - startTime > timeout) {
-                    reject(new Error("Connexion socket non établie dans le temps imparti"));
-                } else {
-                    setTimeout(check, interval);
-                }
-            };
-
-            check();
-        });
-    };
 
     return {
         game,

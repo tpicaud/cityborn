@@ -92,7 +92,7 @@ export function createGame(gameConfig: GameConfig, hostID: string, gameMode: Gam
 		}),
 		hostID: hostID,
 		mode: gameMode,
-		status: GameStatus.IN_GAME,
+		status: GameStatus.STARTING,
 		gameConfig,
 		players: players,
 		state: {
