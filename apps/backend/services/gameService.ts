@@ -1,4 +1,4 @@
-import { GameStatus, type OnlinePlayer, RoundStatus } from "@cityborn/types";
+import { defaultGuess, GameMode, GameStatus, Guess, type OnlinePlayer, RoundStatus } from "@cityborn/types";
 import { GameStore } from "../stores/gameStore.js";
 import { LockService } from "./lockService.js";
 import { PlayerService } from "./playerService.js";
@@ -56,7 +56,7 @@ export class GameService {
 
                 // Check si tous les joueurs ont join
                 const disconnectPlayers = (game.players as OnlinePlayer[]).some(player => !player.connected);
-                if (!disconnectPlayers) {
+                if (!disconnectPlayers && game.status === GameStatus.STARTING) {
                     game = await this.startGame(game);
                 }
 
@@ -109,7 +109,17 @@ export class GameService {
                     const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
                         game.state.currentRound.playersGuesses.hasOwnProperty(player.id)
                     );
-                    if (allConnectedPlayersGuessed) game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
+                    if (allConnectedPlayersGuessed) {
+                        // Add null guesses
+                        for (const player of game.players) {
+                            if (!game.state.currentRound.playersGuesses[player.id]) {
+                                game.state.currentRound.playersGuesses[player.id] = defaultGuess;
+                            }
+                        }
+
+                        // Update game status
+                        game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
+                    }
 
                     await this.gameStore.saveGame(game);
                 }
