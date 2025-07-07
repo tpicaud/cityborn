@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - staging
-    paths:
-      - 'apps/frontend/**'
-      - 'packages/types/**'
+    # paths:
+    #   - 'apps/frontend/**'
+    #   - 'packages/types/**'
 
 jobs:
   deploy:
