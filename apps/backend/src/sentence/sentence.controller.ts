@@ -1,4 +1,4 @@
-import { Controller, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { SentenceService } from './sentence.service';
 
 @Controller('sentence')
@@ -7,6 +7,6 @@ export class SentenceController {
 
     @Get()
     async getSentence(@Param('score_type') score_type: string) {
-        return await this.sentenceService
+        return await this.sentenceService.findRandomOne(score_type);
     }
 }
