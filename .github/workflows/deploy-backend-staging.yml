@@ -1,4 +1,4 @@
-name: Build and Deploy Backend on Fly.io
+name: Deploy Backend on Fly.io
 
 on:
   push:
