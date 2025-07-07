@@ -1,3 +1,4 @@
 export interface Sentence {
-    text: string
+    sentence: string,
+    score_type: string
 }
