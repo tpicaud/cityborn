@@ -6,6 +6,7 @@ on:
       - staging
     paths:
       - 'apps/backend/**'
+      - 'packages/types/**'
 
 jobs:
   build_and_deploy:
