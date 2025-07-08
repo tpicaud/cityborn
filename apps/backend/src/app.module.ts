@@ -7,6 +7,7 @@ import { SentenceModule } from './sentence/sentence.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
 import { RedisModule } from './redis/redis.module';
 import { GameModule } from './game/game.module';
+import { IdModule } from './id/id.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { GameModule } from './game/game.module';
     SentenceModule,
     GuessObjectModule,
     RedisModule,
-    GameModule
+    GameModule,
+    IdModule
   ],
   controllers: [AppController],
   providers: [AppService],

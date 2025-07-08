@@ -1,14 +1,19 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { RedisService } from 'src/redis/redis.service';
 import { CreateGameDto } from './dto/create-game.dto';
-import { Game, GameConfig, GameMode, GuessObject } from '@cityborn/types';
+import { Game, GameConfig, GameMode, GameStatus, GuessObject, Player } from '@cityborn/types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { IdService } from 'src/id/id.service';
 
 @Injectable()
 export class GameService {
     private readonly prefix = 'game:';
 
-    constructor(private readonly redisService: RedisService, private readonly guessObjectModule: GuessObjectService) { }
+    constructor(
+        private readonly redisService: RedisService,
+        private readonly guessObjectModule: GuessObjectService,
+        private readonly idService: IdService
+    ) { }
 
     private getKey(id: string): string {
         return `${this.prefix}${id}`;
@@ -29,7 +34,7 @@ export class GameService {
                     break;
 
                 case GameMode.MULTI:
-                    newGame = this.createMultiGame(gameConfig, hostID, gameMode, fetchedGuessObjects);
+                    newGame = this.createMultiGame(gameConfig, hostID, gameMode, playersID, fetchedGuessObjects);
                     break;
 
                 default:
@@ -58,11 +63,49 @@ export class GameService {
         }
     }
 
-    private createSoloGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, fetchedGuessObjects: GuessObject[]): Game {
+    private createSoloGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, guessObjects: GuessObject[]): Game {
+        const players: Player[] = [{
+            id: hostID
+        }]
 
+        const newSoloGame: Game = {
+            id: this.idService.generateSoloGameId(),
+            hostID: hostID,
+            mode: gameMode,
+            status: GameStatus.STARTING,
+            gameConfig,
+            players: players,
+            state: {
+                guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
+                currentRound: undefined,
+                results: {},
+                guessObjects: guessObjects,
+            }
+        }
+
+        return newSoloGame;
     }
 
-    private createMultiGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, fetchedGuessObjects: GuessObject[]): Game {
+    private createMultiGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[], guessObjects: GuessObject[]): Game {
+        const players: Player[] = playersID.map((playerID) => {
+            return { id: playerID, connected: false }
+        });
 
+        const newMultiGame: Game = {
+            id: this.idService.generateMultiGameId(),
+            hostID: hostID,
+            mode: gameMode,
+            status: GameStatus.STARTING,
+            gameConfig,
+            players: players,
+            state: {
+                guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
+                currentRound: undefined,
+                results: {},
+                guessObjects: guessObjects,
+            }
+        }
+
+        return newMultiGame;
     }
 }
