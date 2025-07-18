@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GameController } from './game.controller';
 import { GameService } from './game.service';
-import { RedisModule } from 'src/redis/redis.module';
+import { RedisHTTPModule } from 'src/redisHTTP/redisHTTP.module';
 import { GuessObjectModule } from 'src/guess-object/guess-object.module';
-import { IdService } from 'src/id/id.service';
+import { IdModule } from 'src/id/id.module';
 
 @Module({
-  imports: [RedisModule, GuessObjectModule, IdService],
+  imports: [RedisHTTPModule, GuessObjectModule, IdModule],
   controllers: [GameController],
-  providers: [GameService]
+  providers: [GameService],
+  exports: [GameService]
 })
 export class GameModule {}

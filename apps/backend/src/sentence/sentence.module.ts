@@ -11,6 +11,7 @@ import { Sentence, SentenceSchema } from './sentence.schema';
     ])
   ],
   controllers: [SentenceController],
-  providers: [SentenceService]
+  providers: [SentenceService],
+  exports: [SentenceService]
 })
 export class SentenceModule {}

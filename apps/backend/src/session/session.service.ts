@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Categories, GameMode, Session, SessionStatus } from '@cityborn/types';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisHTTPService } from 'src/redisHTTP/redisHTTP.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { customAlphabet } from 'nanoid';
 
@@ -10,7 +10,7 @@ const generateID = customAlphabet('0123456789', 6);
 export class SessionService {
     private readonly prefix = 'session:';
 
-    constructor(private readonly redisService: RedisService) { }
+    constructor(private readonly redisService: RedisHTTPService) { }
 
     private getKey(id: string): string {
         return `${this.prefix}${id}`;
