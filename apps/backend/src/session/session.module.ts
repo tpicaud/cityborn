@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { SessionController } from './session.controller';
 import { SessionService } from './session.service';
-import { RedisModule } from 'src/redis/redis.module';
+import { RedisHTTPModule } from 'src/redisHTTP/redisHTTP.module';
+import { SessionGateway } from './session.gateway';
 
 @Module({
-  imports: [RedisModule],
+  imports: [RedisHTTPModule],
   controllers: [SessionController],
-  providers: [SessionService]
+  providers: [SessionService, SessionGateway],
+  exports: [SessionService]
 })
 export class SessionModule {}

@@ -11,6 +11,7 @@ import { GuessObject, GuessObjectSchema } from './guess-object.schema';
     ])
   ],
   controllers: [GuessObjectController],
-  providers: [GuessObjectService]
+  providers: [GuessObjectService],
+  exports: [GuessObjectService]
 })
 export class GuessObjectModule {}

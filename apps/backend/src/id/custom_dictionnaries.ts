@@ -1,4 +1,4 @@
-export const tennis_dictionnary = [
+export const tennis_dictionary = [
     "federer", "nadal", "djokovic", "sampras", "agassi", "laver", "borg", "connors", 
     "mcenroe", "lendl", "becker", "edberg", "wilander", "kuerten", "courier", 
     "roddick", "murray", "wawrinka", "hewitt", "safin", "ivanisevic", 

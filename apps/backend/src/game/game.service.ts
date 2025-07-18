@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisHTTPService } from 'src/redisHTTP/redisHTTP.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { Game, GameConfig, GameMode, GameStatus, GuessObject, Player } from '@cityborn/types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
@@ -10,8 +10,8 @@ export class GameService {
     private readonly prefix = 'game:';
 
     constructor(
-        private readonly redisService: RedisService,
-        private readonly guessObjectModule: GuessObjectService,
+        private readonly redisHTTPService: RedisHTTPService,
+        private readonly guessObjectService: GuessObjectService,
         private readonly idService: IdService
     ) { }
 
@@ -24,17 +24,17 @@ export class GameService {
 
         try {
             // Fetch guess objects
-            const fetchedGuessObjects = await this.guessObjectModule.findByGameConfig(gameConfig);
+            const fetchedGuessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
 
             let newGame: Game;
 
             switch (gameMode) {
                 case GameMode.SOLO:
-                    newGame = this.createSoloGame(gameConfig, hostID, gameMode, fetchedGuessObjects);
+                    newGame = await this.createSoloGame(gameConfig, hostID, gameMode, fetchedGuessObjects);
                     break;
 
                 case GameMode.MULTI:
-                    newGame = this.createMultiGame(gameConfig, hostID, gameMode, playersID, fetchedGuessObjects);
+                    newGame = await this.createMultiGame(gameConfig, hostID, gameMode, playersID, fetchedGuessObjects);
                     break;
 
                 default:
@@ -51,7 +51,7 @@ export class GameService {
 
     async getById(gameId: string): Promise<Game> {
         try {
-            const game = await this.redisService.getHTTP<Game>(this.getKey(gameId));
+            const game = await this.redisHTTPService.getHTTP<Game>(this.getKey(gameId));
 
             if (!game) {
                 throw new NotFoundException(`Session with ID "${gameId}" not found.`);
@@ -63,13 +63,13 @@ export class GameService {
         }
     }
 
-    private createSoloGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, guessObjects: GuessObject[]): Game {
+    private async createSoloGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = [{
             id: hostID
         }]
 
         const newSoloGame: Game = {
-            id: this.idService.generateSoloGameId(),
+            id: await this.idService.generateSoloGameID(),
             hostID: hostID,
             mode: gameMode,
             status: GameStatus.STARTING,
@@ -86,13 +86,13 @@ export class GameService {
         return newSoloGame;
     }
 
-    private createMultiGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[], guessObjects: GuessObject[]): Game {
+    private async createMultiGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[], guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = playersID.map((playerID) => {
             return { id: playerID, connected: false }
         });
 
         const newMultiGame: Game = {
-            id: this.idService.generateMultiGameId(),
+            id: await this.idService.generateMultiGameID(),
             hostID: hostID,
             mode: gameMode,
             status: GameStatus.STARTING,

@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Redis } from '@upstash/redis'
 
 @Injectable()
-export class RedisService {
+export class RedisHTTPService {
     private readonly redisHTTPClient: Redis
+    private readonly redisClient: Redis
 
     constructor() {
         this.redisHTTPClient = new Redis({
-            url: process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL,
-            token: process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN,
+            url: process.env.UPSTASH_REDIS_REST_URL,
+            token: process.env.UPSTASH_REDIS_REST_TOKEN,
         });
     }
 

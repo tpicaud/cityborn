@@ -80,7 +80,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         const sessionID = session.id;
         return new Promise<void>((resolve, reject) => {
-            emit('session:join', sessionID, playerID, (response: { success: boolean; error?: string }) => {
+            emit('session:join', { sessionID, playerID}, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();

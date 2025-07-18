@@ -1,16 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { tennis_dictionnary } from './custom_dictionnaries';
+import { tennis_dictionary } from './custom_dictionnaries';
+import { uniqueNamesGenerator } from "unique-names-generator";
+import { GameService } from 'src/game/game.service';
+import { RedisHTTPService } from 'src/redisHTTP/redisHTTP.service';
 
 @Injectable()
 export class IdService {
 
+    constructor(
+        private readonly redisHTTPService: RedisHTTPService
+    ) { }
+
     /**
  * Génère un ID unique pour une game.
  */
-    generateGameId(): string {
-        return uniqueNamesGenerator({
-            dictionaries: [tennisDictionary, tennisDictionary, tennisDictionary],
-            separator: '-',
-        });
+    generateSoloGameID(): string {
+        try {
+            return uniqueNamesGenerator({
+                dictionaries: [tennis_dictionary, tennis_dictionary, tennis_dictionary],
+                separator: '-',
+            });
+        } catch (error) {
+            throw new Error(`Error generating id: ${error}`);
+        }
+    }
+
+    async generateMultiGameID(): Promise<string> {
+        const MAX_ATTEMPTS = 3;
+
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            try {
+                const candidateId = uniqueNamesGenerator({
+                    dictionaries: [tennis_dictionary, tennis_dictionary, tennis_dictionary],
+                    separator: '-',
+                });
+
+                const game = await this.redisHTTPService.getHTTP(`game:${candidateId}`) ?? undefined;
+                if (!game) return candidateId;
+            } catch (error) {
+                throw new Error(`Error during ID generation attempt ${attempt + 1}: ${error}`);
+            }
+        }
+        throw new Error('Failed to generate a unique game ID after 3 attempts');
     }
 }
