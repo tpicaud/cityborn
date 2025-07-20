@@ -9,6 +9,9 @@ import { RedisHTTPModule } from './redisHTTP/redisHTTP.module';
 import { GameModule } from './game/game.module';
 import { IdModule } from './id/id.module';
 import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from './redis/redis.module';
+import { LockModule } from './lock/lock.module';
+import { PlayerModule } from './player/player.module';
 
 @Module({
   imports: [
@@ -23,7 +26,10 @@ import { ConfigModule } from '@nestjs/config';
     GuessObjectModule,
     RedisHTTPModule,
     GameModule,
-    IdModule
+    IdModule,
+    RedisModule,
+    LockModule,
+    PlayerModule
   ],
   controllers: [AppController],
   providers: [AppService],

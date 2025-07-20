@@ -14,7 +14,7 @@ export class RedisHTTPService {
     }
 
     async getHTTP<T = any>(key: string): Promise<T | null> {
-        return this.redisHTTPClient.get<T>(key);
+        return await this.redisHTTPClient.get<T>(key);
     }
 
     async setHTTP<T = any>(key: string, value: T, ttlSeconds?: number): Promise<void> {
