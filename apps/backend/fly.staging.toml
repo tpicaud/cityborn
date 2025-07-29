@@ -20,5 +20,5 @@ primary_region = 'cdg'
   size = 'shared-cpu-1x'
 
 [env]
-  CORS_ORIGIN = 'https://cityborn.tpicaud.xyz'
+  CORS_ORIGIN = 'https://www.staging.cityborn.app'
   NODE_ENV = 'staging'
