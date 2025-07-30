@@ -203,7 +203,7 @@ export class SessionService {
             if (session.hostID !== playerID) throw new Error(`Le joueur n'est pas le host de la session`);
 
             //Check si la partie est terminée
-            const game = await this.gameService.getGame(session.currentGameId);
+            const game = await this.gameService.get(session.currentGameId);
             if (!game) throw new Error("Aucune partie en cours.");
 
             // Update session
@@ -275,7 +275,7 @@ export class SessionService {
                 // Update host
                 const isHost = playerID === session.hostID
                 if (isHost) {
-                    const currentGame = session.currentGameId ? await this.gameService.getGame(session.currentGameId) : null;
+                    const currentGame = session.currentGameId ? await this.gameService.get(session.currentGameId) : null;
                     const players = currentGame ? currentGame.players : session.players;
 
                     const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
@@ -359,7 +359,7 @@ export class SessionService {
 
     // Private function
     private async isInGame(gameID: string, playerID: string) {
-        const game = await this.gameService.getGame(gameID);
+        const game = await this.gameService.get(gameID);
         return game.players.some(player => player.id === playerID);
     }
 }
