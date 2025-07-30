@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { IdService } from './id.service';
-import { RedisHTTPModule } from 'src/redisHTTP/redisHTTP.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
-  imports: [RedisHTTPModule],
+  imports: [RedisModule],
   providers: [IdService],
   exports: [IdService]
 })

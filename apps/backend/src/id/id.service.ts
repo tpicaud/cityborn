@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { tennis_dictionary } from './custom_dictionnaries';
 import { uniqueNamesGenerator } from "unique-names-generator";
-import { GameService } from 'src/game/game.service';
-import { RedisHTTPService } from 'src/redisHTTP/redisHTTP.service';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class IdService {
 
     constructor(
-        private readonly redisHTTPService: RedisHTTPService
+        private readonly redisService: RedisService
     ) { }
 
     /**
@@ -35,7 +34,7 @@ export class IdService {
                     separator: '-',
                 });
 
-                const game = await this.redisHTTPService.getHTTP(`game:${candidateId}`) ?? undefined;
+                const game = await this.redisService.get(`game:${candidateId}`) ?? undefined;
                 if (!game) return candidateId;
             } catch (error) {
                 throw new Error(`Error during ID generation attempt ${attempt + 1}: ${error}`);

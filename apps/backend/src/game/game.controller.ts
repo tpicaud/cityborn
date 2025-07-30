@@ -13,6 +13,6 @@ export class GameController {
     
         @Get()
         async getGame(@Query('gameId') gameId: string) {
-            return await this.gameService.getById(gameId);
+            return await this.gameService.get(gameId);
         }
 }
