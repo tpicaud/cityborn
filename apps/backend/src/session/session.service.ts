@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Categories, Game, GameMode, OnlinePlayer, Session, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { customAlphabet } from 'nanoid';
@@ -13,7 +13,7 @@ const generateID = customAlphabet('0123456789', 6);
 export class SessionService {
     private readonly prefix = 'session:';
     private readonly LOCK_TTL = 2000;
-
+    private readonly logger = new Logger(SessionService.name);
 
     constructor(
         private readonly redisService: RedisService,
@@ -33,9 +33,10 @@ export class SessionService {
 
     async create(dto: CreateSessionDto): Promise<Session> {
         const { gameMode } = dto
-        const sessionID: string = await this.generateUniqueSessionID();
 
         try {
+            const sessionID: string = await this.generateUniqueSessionID();
+
             const newSession: Session = {
                 id: sessionID,
                 hostID: gameMode === GameMode.SOLO ? 'guest' : '',
@@ -52,7 +53,7 @@ export class SessionService {
             await this.saveSession(newSession);
             return newSession;
         } catch (error) {
-            console.error('Error creating session:', error);
+            this.logger.error('Error creating session:', error.stack);
             throw new InternalServerErrorException('Unable to create session');
         }
     }
@@ -222,7 +223,7 @@ export class SessionService {
             return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
                 // Récupération du jeu dans la base de données
-                const session: Session | undefined = await this.getSession(sessionID);
+                const session: Session | null = await this.getSession(sessionID);
                 if (!session) throw new Error("Session introuvable.");
 
                 // Get players
@@ -262,7 +263,7 @@ export class SessionService {
             return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
                 // Récupération du jeu dans la base de données
-                const session: any | undefined = await this.getSession(sessionID)
+                const session: Session | null = await this.getSession(sessionID)
                 if (!session) throw new Error("Session introuvable.");
 
                 // Check si l'id du joueur est dans la partie
@@ -270,7 +271,7 @@ export class SessionService {
                 if (playerIndex === -1) throw new Error(`Le joueur ${playerID} n'est pas dans la session`);
 
                 // Déconnexion du joueur
-                session.players[playerIndex].connected = false;
+                (session.players[playerIndex] as OnlinePlayer).connected = false;
 
                 // Update host
                 const isHost = playerID === session.hostID
@@ -289,9 +290,9 @@ export class SessionService {
                 // Notifier la game
                 let game: Game | undefined = undefined;
                 if (session.currentGameId && await this.isInGame(session.currentGameId, playerID)) {
-                    game = session.currentGameId ? await this.gameService.disconnectPlayer(socketID, isHost ? session.hostID : undefined) : undefined;
+                    game = session.currentGameId ? await this.gameService.disconnectPlayer(socketID, isHost ? session.hostID : '') : undefined;
                     if (game && game.status === 'FINISHED') {
-                        session.status = 'IN_LOBBY';
+                        session.status = SessionStatus.IN_LOBBY;
                         session.currentGameId = undefined;
                     }
                 }
@@ -311,11 +312,9 @@ export class SessionService {
     // Store //
     ///////////
 
-    private async getSession(sessionID: string): Promise<Session> {
+    private async getSession(sessionID: string): Promise<Session | null> {
         try {
-            const session = await this.redisService.getJSON<Session>(this.getKey(sessionID));
-            if (!session) throw new Error(`Session ${sessionID} not found`);
-            return session;
+            return await this.redisService.getJSON<Session>(this.getKey(sessionID));
         } catch (error) {
             throw new Error(`Error getting session: ${error.message}`);
         }

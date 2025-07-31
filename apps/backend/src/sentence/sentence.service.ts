@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class SentenceService {
-    constructor(@InjectModel(Sentence.name) private sentenceModel: Model<SentenceDocument>) {}
+    constructor(@InjectModel(Sentence.name, 'sentences') private sentenceModel: Model<SentenceDocument>) {}
 
     async findRandomOne(score_type: string): Promise<Sentence> {
         if (!score_type) {

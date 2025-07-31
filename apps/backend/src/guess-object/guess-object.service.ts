@@ -6,7 +6,7 @@ import { Categories, GameConfig } from '@cityborn/types';
 
 @Injectable()
 export class GuessObjectService {
-    constructor(@InjectModel(GuessObject.name) private guessObjectModel: Model<GuessObjectDocument>) { }
+    constructor(@InjectModel(GuessObject.name, 'guessObjects') private guessObjectModel: Model<GuessObjectDocument>) { }
 
     async findSome(guessObjectsIds: string[]): Promise<GuessObject[]> {
         if (!guessObjectsIds || guessObjectsIds.length === 0) {
@@ -32,6 +32,8 @@ export class GuessObjectService {
     }
 
     async findByGameConfig(gameConfig: GameConfig): Promise<GuessObject[]> {
+        console.log('Model collection name:', this.guessObjectModel.collection.name);
+
         try {
             const pipeline: any[] = [];
 
@@ -54,7 +56,7 @@ export class GuessObjectService {
             });
 
             const rawObjects = await this.guessObjectModel.aggregate(pipeline).exec();
-
+        
             // Optionnel : filtrer ceux qui n'ont pas les champs obligatoires
             const guessObjects = rawObjects
                 .filter(doc => doc.name && doc.category && doc.description && doc.image)
@@ -77,7 +79,7 @@ export class GuessObjectService {
 
             return guessObjects;
         } catch (error) {
-            console.error('Erreur lors de la récupération des GuessObjects :', error);
+            console.error('Erreur lors de la récupération des GuessObjects :', error.message);
             throw new Error('Erreur lors de la récupération des GuessObjects');
         }
     }

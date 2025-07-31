@@ -156,7 +156,7 @@ export class SessionGateway {
 			await socket.leave(session.id);
 			this.io.to(session.id).emit('session:update', session);
 
-			if (game) {
+			if (game && session && session.currentGameId) {
 				await socket.leave(game.id);
 				this.io.to(session.currentGameId).emit('game:update', game)
 			}

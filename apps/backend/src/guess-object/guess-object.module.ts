@@ -7,8 +7,8 @@ import { GuessObject, GuessObjectSchema } from './guess-object.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: GuessObject.name, schema: GuessObjectSchema }
-    ])
+      { name: GuessObject.name, schema: GuessObjectSchema, collection: 'celebrities' }
+    ], 'guessObjects')
   ],
   controllers: [GuessObjectController],
   providers: [GuessObjectService],

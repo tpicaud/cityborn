@@ -8,7 +8,7 @@ export class SessionController {
 
     @Post()
     async createSession(@Body() createSessionDto: CreateSessionDto) {
-        return this.sessionService.create(createSessionDto)
+        return await this.sessionService.create(createSessionDto)
     }
 
     @Get()
