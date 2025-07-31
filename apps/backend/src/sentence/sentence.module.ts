@@ -7,8 +7,8 @@ import { Sentence, SentenceSchema } from './sentence.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Sentence.name, schema: SentenceSchema }
-    ])
+      { name: Sentence.name, schema: SentenceSchema, collection: 'sentences' },
+    ], 'sentences')
   ],
   controllers: [SentenceController],
   providers: [SentenceService],

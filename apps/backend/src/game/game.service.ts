@@ -1,5 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { RedisHTTPService } from 'src/redisHTTP/redisHTTP.service';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { defaultGuess, Game, GameConfig, GameMode, GameStatus, GuessObject, OnlinePlayer, Player, Round, RoundStatus, Session } from '@cityborn/types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
@@ -12,6 +11,8 @@ import { RedisService } from 'src/redis/redis.service';
 export class GameService {
     private readonly prefix = 'game:';
     private readonly LOCK_TTL = 2000
+    private readonly logger = new Logger(GameService.name);
+
 
     constructor(
         private readonly redisService: RedisService,
@@ -30,6 +31,7 @@ export class GameService {
 
         try {
             // Fetch guess objects
+            this.logger.log(gameConfig);
             const fetchedGuessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
 
             let newGame: Game;
@@ -49,8 +51,8 @@ export class GameService {
 
             return newGame;
         } catch (error) {
-            console.error('Error while creating game:', error);
-            throw new Error('An error occurred while creating the game.');
+            //this.logger.error('Error while creating game:', error.message);
+            throw new Error(`An error occurred while creating the game.: ${error.message}`);
         }
     }
 

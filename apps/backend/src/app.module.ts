@@ -19,7 +19,15 @@ import { PlayerModule } from './player/player.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost/nest'),
+    MongooseModule.forRoot(process.env.MONGODB_GUESS_OBJECTS_URI || 'mongodb://localhost/nest', {
+      connectionName: 'guessObjects'
+    }),
+    MongooseModule.forRoot(process.env.MONGODB_SENTENCES_URI || 'mongodb://localhost/nest', {
+      connectionName: 'sentences'
+    }),
+    MongooseModule.forRoot(process.env.MONGODB_GAMES_URI || 'mongodb://localhost/nest', {
+      connectionName: 'games'
+    }),
     SentenceModule,
     SessionModule,
     SentenceModule,

@@ -8,7 +8,7 @@ export class GameController {
 
         @Post()
         async createGame(@Body() createGameDto: CreateGameDto) {
-            return this.gameService.create(createGameDto)
+            return await this.gameService.create(createGameDto)
         }
     
         @Get()

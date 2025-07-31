@@ -2,6 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { GuessObject as GuessObjectType } from '@cityborn/types';
 
+const guessObjectCollection = process.env.GUESS_OBJECTS_COLLECTION
+
 export type GuessObjectDocument = GuessObject & Document;
 
 @Schema({ _id: false })
