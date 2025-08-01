@@ -50,7 +50,7 @@ export class SessionService {
                 players: gameMode === GameMode.SOLO ? [{ id: 'guest' }] : [],
             };
 
-            await this.saveSession(newSession);
+            if (gameMode === GameMode.MULTI) await this.saveSession(newSession);
             return newSession;
         } catch (error) {
             this.logger.error('Error creating session:', error.stack);
