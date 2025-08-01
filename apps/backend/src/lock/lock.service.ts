@@ -18,6 +18,10 @@ export class LockService implements OnModuleDestroy {
         });
     }
 
+    private resourceKey(resource: string): string {
+        return `lock:${resource}`;
+    }
+
     /**
      * Exécute une fonction avec un verrou Redis sur une ressource.
      */
@@ -26,7 +30,8 @@ export class LockService implements OnModuleDestroy {
         ttl: number,
         callback: () => Promise<T>,
     ): Promise<T> {
-        const lock = await this.redlock.acquire([resource], ttl);
+        const resourceKey = this.resourceKey(resource);
+        const lock = await this.redlock.acquire([resourceKey], ttl);
 
         try {
             return await callback();

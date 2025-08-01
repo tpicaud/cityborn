@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
+import { Logger } from '@nestjs/common';
 
 interface WSResponse {
 	success: boolean,
@@ -10,6 +11,10 @@ interface WSResponse {
 
 @WebSocketGateway()
 export class SessionGateway {
+
+
+	private readonly logger = new Logger(SessionGateway.name);
+	
 
 	constructor(private readonly sessionService: SessionService) { }
 
@@ -30,10 +35,10 @@ export class SessionGateway {
 			await socket.join(sessionID)
 			this.io.to(sessionID).emit('session:update', session);
 
-			console.log(`${playerID} a rejoint la session ${sessionID}`);
+			this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors de la tentative de rejoindre la partie :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -54,7 +59,7 @@ export class SessionGateway {
 
 			return { success: true };
 		} catch (error) {
-			console.log(error.message)
+			this.logger.error(error.message)
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -75,7 +80,7 @@ export class SessionGateway {
 
 			return { success: true };
 		} catch (error) {
-			console.log(error.message)
+			this.logger.error(error.message)
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -94,7 +99,7 @@ export class SessionGateway {
 
 			return { success: true };
 		} catch (error) {
-			console.log(error.message)
+			this.logger.error(error.message)
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -113,7 +118,7 @@ export class SessionGateway {
 
 			return { success: true };
 		} catch (error) {
-			console.log(error.message)
+			this.logger.error(error.message)
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -135,10 +140,10 @@ export class SessionGateway {
 			await socket.join(sessionID)
 			this.io.to(sessionID).emit('session:update', session);
 
-			console.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
+			this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
 			return { success: true, isInGame };
 		} catch (error) {
-			console.error("Erreur lors de la tentative de rejoindre la partie :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error.message || "Une erreur inconnue s'est produite."
@@ -161,9 +166,9 @@ export class SessionGateway {
 				this.io.to(session.currentGameId).emit('game:update', game)
 			}
 
-			console.log(`Socket ${socket.id} déconnecté`);
+			this.logger.log(`Socket ${socket.id} déconnecté`);
 		} catch (error) {
-			console.log(`Erreur lors de la déconnexion du socket ${socket.id}: ${error.message}`);
+			this.logger.error(error.message);
 		}
 	}
 }

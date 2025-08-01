@@ -345,7 +345,7 @@ export class GameService {
         return newSoloGame;
     }
 
-    private async createMultiGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, playersID: string[], guessObjects: GuessObject[]): Promise<Game> {
+    private async createMultiGame(gameConfig: GameConfig, hostID: string, playersID: string[], guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = playersID.map((playerID) => {
             return { id: playerID, connected: false }
         });
@@ -353,7 +353,7 @@ export class GameService {
         const newMultiGame: Game = {
             id: await this.idService.generateMultiGameID(),
             hostID: hostID,
-            mode: gameMode,
+            mode: GameMode.MULTI,
             status: GameStatus.STARTING,
             gameConfig,
             players: players,
@@ -414,7 +414,12 @@ export class GameService {
             }
 
             const data = await response.json();
-            const game = data.game;
+            
+            const game = this.createMultiGame(
+                session.gameConfig,
+                session.hostID,
+                session.players.map(player => player.id),
+            )
 
             // Set host
             game.hostID = session.hostID;

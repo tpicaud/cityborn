@@ -4,7 +4,7 @@ import { GameConfig } from "@cityborn/types";
 import { GuessObject } from "@cityborn/types";
 import { Session } from "@cityborn/types";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
+const REST_BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
 
 //////////////////////
 // Sessions service //
@@ -12,7 +12,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
 
 export async function createSession(gameMode: GameMode): Promise<Session> {
     try {
-        const response = await fetch(`${BACKEND_URL}/session`, {
+        const response = await fetch(`${REST_BACKEND_URL}/session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
 
 export async function fetchSession(sessionID: string): Promise<Session> {
     try {
-        const response = await fetch(`${BACKEND_URL}/session/${sessionID}`);
+        const response = await fetch(`${REST_BACKEND_URL}/session?sessionId=${sessionID}`);
         const session: Session = await response.json();
         return session;
     } catch (error) {
@@ -44,7 +44,7 @@ export async function fetchSession(sessionID: string): Promise<Session> {
 }
 
 export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
-    const response = await fetch(`${BACKEND_URL}/guess-objects`, {
+    const response = await fetch(`${REST_BACKEND_URL}/guess-objects`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
 
 export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     try {
-        const response = await fetch(`${BACKEND_URL}/game`, {
+        const response = await fetch(`${REST_BACKEND_URL}/game`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -85,12 +85,9 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     }
 }
 
-
-
-
 export async function fetchGame(gameID: string): Promise<Game> {
     try {
-        const response = await fetch(`${BACKEND_URL}/game/multi?gameID=${encodeURIComponent(gameID)}`);
+        const response = await fetch(`${REST_BACKEND_URL}/game/multi?gameID=${encodeURIComponent(gameID)}`);
 
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);
