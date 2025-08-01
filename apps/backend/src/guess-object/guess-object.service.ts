@@ -32,8 +32,6 @@ export class GuessObjectService {
     }
 
     async findByGameConfig(gameConfig: GameConfig): Promise<GuessObject[]> {
-        console.log('Model collection name:', this.guessObjectModel.collection.name);
-
         try {
             const pipeline: any[] = [];
 

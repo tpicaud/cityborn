@@ -54,8 +54,8 @@ export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Pr
 
         try {
             await initiateStartGame(session.gameConfig);
-        } catch {
-            throw new Error(`Erreur lors du lancement de la partie`)
+        } catch (error) {
+            throw new Error(`Erreur lors du lancement de la partie: ${error}`)
         }
     };
 
