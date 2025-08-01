@@ -37,16 +37,18 @@ export class GameService {
 
             switch (gameMode) {
                 case GameMode.SOLO:
-                    newGame = await this.createSoloGame(gameConfig, hostID, gameMode, fetchedGuessObjects);
+                    newGame = await this.createSoloGame(gameConfig, hostID, fetchedGuessObjects);
                     break;
 
                 case GameMode.MULTI:
-                    newGame = await this.createMultiGame(gameConfig, hostID, gameMode, playersID, fetchedGuessObjects);
+                    newGame = await this.createMultiGame(gameConfig, hostID, playersID, fetchedGuessObjects);
                     break;
 
                 default:
                     throw new Error(`Unsupported game mode: ${gameMode}`);
             }
+
+            if (newGame.mode === GameMode.MULTI) await this.saveGame(newGame);
 
             return newGame;
         } catch (error) {
@@ -78,7 +80,7 @@ export class GameService {
             if (!player) throw new Error(`No player associated with socket ${socketID}`);
 
             const { playerID, sessionID } = player;
-            if (!playerID || !gameID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
+            if (!playerID || !sessionID) throw new Error(`Aucun joueur valide associé au socket ${socketID}`);
 
 
             return await this.lockService.withLock(this.getKey(gameID), this.LOCK_TTL, async () => {
@@ -114,7 +116,7 @@ export class GameService {
                 return game;
             });
         } catch (error) {
-            throw new Error(`Erreur lors de la connexion du socket ${socketID} dans la partie ${gameID}: ${error}`);
+            throw new Error(`Erreur lors de la connexion du socket ${socketID} dans la partie ${gameID}: ${error.message}`);
         }
     }
 
@@ -322,7 +324,7 @@ export class GameService {
     // Auxiliary functions //
     /////////////////////////
 
-    private async createSoloGame(gameConfig: GameConfig, hostID: string, gameMode: GameMode, guessObjects: GuessObject[]): Promise<Game> {
+    private async createSoloGame(gameConfig: GameConfig, hostID: string, guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = [{
             id: hostID
         }]
@@ -330,7 +332,7 @@ export class GameService {
         const newSoloGame: Game = {
             id: await this.idService.generateSoloGameID(),
             hostID: hostID,
-            mode: gameMode,
+            mode: GameMode.SOLO,
             status: GameStatus.STARTING,
             gameConfig,
             players: players,
@@ -388,45 +390,6 @@ export class GameService {
             return game;
         } catch (error) {
             throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
-        }
-    }
-
-    async createGameFromSession(session: Session) {
-        try {
-            const playersID = session.players.map(player => player.id);
-            const response = await fetch(`${process.env.API_REST_URL}/game/multi`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    gameConfig: session.gameConfig,
-                    hostID: session.hostID,
-                    gameMode: session.mode,
-                    playersID,
-                }),
-            });
-
-            // Vérifie si la réponse est OK
-            if (!response.ok) {
-                const errorText = await response.text(); // Récupère le corps brut même s'il n'est pas JSON
-                throw new Error(`HTTP ${response.status} - ${response.statusText}: ${errorText}`);
-            }
-
-            const data = await response.json();
-            
-            const game = this.createMultiGame(
-                session.gameConfig,
-                session.hostID,
-                session.players.map(player => player.id),
-            )
-
-            // Set host
-            game.hostID = session.hostID;
-
-            return game;
-        } catch (error) {
-            throw new Error(`Erreur lors de la création de la partie pour la session ${session.id}: ${error}`);
         }
     }
 

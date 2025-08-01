@@ -168,17 +168,22 @@ export class SessionService {
 
 
             // Récupération du jeu dans la base de données
-            const session: any | undefined = await this.getSession(sessionID)
+            const session: Session | null = await this.getSession(sessionID)
             if (!session) throw new Error("Session introuvable.");
 
             // Check si le joueur est le host
             if (session.hostID !== playerID) throw new Error(`Le joueur n'est pas le host de la session`);
 
             // Créer une nouvelle partie
-            const game = await this.gameService.createGameFromSession(session);
+            const game = await this.gameService.create({
+                gameMode: session.mode,
+                hostID: session.hostID,
+                playersID: session.players.map(player => player.id),
+                gameConfig: session.gameConfig
+            });
 
             // Update session
-            session.status = "IN_GAME";
+            session.status = SessionStatus.IN_GAME;
             session.currentGameId = game.id;
 
             await this.saveSession(session);

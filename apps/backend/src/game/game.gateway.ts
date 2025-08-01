@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { Guess } from '@cityborn/types';
+import { Logger } from '@nestjs/common';
 
 interface WSResponse {
 	success: boolean,
@@ -10,6 +11,8 @@ interface WSResponse {
 
 @WebSocketGateway()
 export class GameGateway {
+
+	private readonly logger = new Logger(GameGateway.name);
 
 	constructor(private readonly gameService: GameService) { }
 
@@ -31,10 +34,10 @@ export class GameGateway {
 			await socket.join(gameID);
 			this.io.to(game.id).emit('game:update', game);
 
-			console.log(`${socket.id} a rejoint la game ${gameID}`);
+			this.logger.log(`${socket.id} a rejoint la game ${gameID}`);
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors du traitement du guess :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
@@ -57,7 +60,7 @@ export class GameGateway {
 			this.io.to(game.id).emit('game:update', game);
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors du traitement du guess :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
@@ -75,7 +78,7 @@ export class GameGateway {
 			this.io.to(game.id).emit('game:update', game);
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors du passage au tour suivant :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
@@ -92,7 +95,7 @@ export class GameGateway {
 
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors de la fin de la partie :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
@@ -114,10 +117,10 @@ export class GameGateway {
 			await socket.join(gameID);
 			this.io.to(game.id).emit('game:update', game);
 
-			console.log(`${playerID} s'est reconnecté à la partie ${gameID}`);
+			this.logger.log(`${playerID} s'est reconnecté à la partie ${gameID}`);
 			return { success: true };
 		} catch (error) {
-			console.error("Erreur lors de la reconnexion à la partie :", error);
+			this.logger.error(error.message);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."

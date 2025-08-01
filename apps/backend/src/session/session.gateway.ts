@@ -12,9 +12,7 @@ interface WSResponse {
 @WebSocketGateway()
 export class SessionGateway {
 
-
 	private readonly logger = new Logger(SessionGateway.name);
-	
 
 	constructor(private readonly sessionService: SessionService) { }
 
