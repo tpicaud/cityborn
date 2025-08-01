@@ -1,9 +1,0 @@
-export const tennis_dictionnary = [
-    "federer", "nadal", "djokovic", "sampras", "agassi", "laver", "borg", "connors", 
-    "mcenroe", "lendl", "becker", "edberg", "wilander", "kuerten", "courier", 
-    "roddick", "murray", "wawrinka", "hewitt", "safin", "ivanisevic", 
-    "alcaraz", "medvedev", "zverev", "williams", "williams", "graf", "navratilova", 
-    "evert", "court", "king", "seles", "henin", "clijsters", "sharapova", "davenport", 
-    "capriati", "hingis", "osaka", "swiatek", "barty", "halep", "kerber", "azarenka", 
-    "muguruza", "wozniacki", "mauresmo", "rybakina"
-];

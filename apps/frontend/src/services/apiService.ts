@@ -85,9 +85,9 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     }
 }
 
-export async function fetchGame(gameID: string): Promise<Game> {
+export async function fetchGame(gameId: string): Promise<Game> {
     try {
-        const response = await fetch(`${REST_BACKEND_URL}/game/multi?gameID=${encodeURIComponent(gameID)}`);
+        const response = await fetch(`${REST_BACKEND_URL}/game?gameId=${gameId}`);
 
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);
