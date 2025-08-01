@@ -31,7 +31,6 @@ export class GameService {
 
         try {
             // Fetch guess objects
-            this.logger.log(gameConfig);
             const fetchedGuessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
 
             let newGame: Game;

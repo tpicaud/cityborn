@@ -78,8 +78,8 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
             throw new Error(`Erreur HTTP: ${response.status}`);
         }
 
-        const data = await response.json();
-        return data.game as Game;
+        const game = await response.json();
+        return game as Game;
     } catch (error) {
         throw new Error(`Erreur lors de la création de la partie: ${error}`);
     }
