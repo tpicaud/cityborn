@@ -68,3 +68,7 @@
 | 26/06/2025 | 6h | Environnement pre-production backend|
 | 01/07/2025 | 2h | Automatisation du déploiement pre-production |
 | 05/07/2025 | 2h | Fix bugs reconnexion en partie |
+| 20/07/2025 | 5h | Migration backend |
+| 21/07/2025 | 4h | Migration backend |
+| 01/08/2025 | 3h | Migration backend |
+| 02/08/2025 | 1h | Migration backend |
