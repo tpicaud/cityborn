@@ -22,5 +22,5 @@ interface GameState {
     results: Record<string, PlayerResults>
 
     // Heavy params
-    guessObjects: GuessObject[];
+    guessObjects?: GuessObject[];
 }

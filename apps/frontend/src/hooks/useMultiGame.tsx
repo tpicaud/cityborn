@@ -40,7 +40,10 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         // handle events
         const handleStartGame = async (gameID: string) => {
             try {
+                // Fetch game
                 const game: Game = await apiService.fetchGame(gameID);
+                
+                // Set and join
                 setGame(game);
                 await join(gameID);
             } catch (error) {
