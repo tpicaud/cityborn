@@ -26,9 +26,7 @@ export class Answer {
 }
 
 @Schema()
-export class GuessObject implements GuessObjectType {
-    @Prop({ required: true })
-    id: string;
+export class GuessObject {
 
     @Prop({ required: true })
     name: string;

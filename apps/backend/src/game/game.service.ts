@@ -31,24 +31,24 @@ export class GameService {
 
         try {
             // Fetch guess objects
-            const fetchedGuessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
+            const fetchedGuessObjectsIds = await this.guessObjectService.findByGameConfig(gameConfig);
 
             let newGame: Game;
 
             switch (gameMode) {
                 case GameMode.SOLO:
-                    newGame = await this.createSoloGame(gameConfig, hostID, fetchedGuessObjects);
+                    newGame = await this.createSoloGame(gameConfig, hostID, fetchedGuessObjectsIds);
                     break;
 
                 case GameMode.MULTI:
-                    newGame = await this.createMultiGame(gameConfig, hostID, playersID, fetchedGuessObjects);
+                    newGame = await this.createMultiGame(gameConfig, hostID, playersID, fetchedGuessObjectsIds);
                     break;
 
                 default:
                     throw new Error(`Unsupported game mode: ${gameMode}`);
             }
 
-            if (newGame.mode === GameMode.MULTI) await this.saveGame(newGame);
+            if (newGame.mode === GameMode.MULTI) await this.saveGame(this.getLightGame(newGame));
 
             return newGame;
         } catch (error) {
@@ -62,13 +62,13 @@ export class GameService {
         try {
             const game = await this.getGame(gameId);
 
-            if (!game) {
-                throw new NotFoundException(`Session with ID "${gameId}" not found.`);
-            }
+            if (!game) throw new NotFoundException(`Session with ID "${gameId}" not found.`);
+
+            game.state.guessObjects = await this.guessObjectService.findSome(game.state.guessObjectsIds);
 
             return game;
         } catch (error) {
-            throw new InternalServerErrorException('Failed to retrieve session from Redis.');
+            throw new Error(`Failed to retrieve game: ${error.message}`);
         }
     }
 
@@ -289,110 +289,6 @@ export class GameService {
         return await this.join(socketID, gameID);
     }
 
-
-    ///////////
-    // Store //
-    ///////////
-
-    private async getGame(gameID: string): Promise<Game> {
-        try {
-            const game = await this.redisService.getJSON<Game>(this.getKey(gameID));
-            if (!game) throw new Error(`Game ${gameID} not found`);
-            return game;
-        } catch (error) {
-            throw new Error(`Error getting game: ${error.message}`);
-        }
-    }
-
-    private async saveGame(game: Game): Promise<void> {
-        try {
-            await this.redisService.setJSON(this.getKey(game.id), game);
-        } catch (error) {
-            throw new Error(`Error setting game ${game.id}: ${error.message}`);
-        }
-    }
-
-    private async deleteGame(gameID: string): Promise<void> {
-        try {
-            await this.redisService.del(this.getKey(gameID));
-        } catch (error) {
-            throw new Error(`Error deleting game: ${gameID}: ${error.message}`);
-        }
-    }
-
-    /////////////////////////
-    // Auxiliary functions //
-    /////////////////////////
-
-    private async createSoloGame(gameConfig: GameConfig, hostID: string, guessObjects: GuessObject[]): Promise<Game> {
-        const players: Player[] = [{
-            id: hostID
-        }]
-
-        const newSoloGame: Game = {
-            id: await this.idService.generateSoloGameID(),
-            hostID: hostID,
-            mode: GameMode.SOLO,
-            status: GameStatus.STARTING,
-            gameConfig,
-            players: players,
-            state: {
-                guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
-                currentRound: undefined,
-                results: {},
-                guessObjects: guessObjects,
-            }
-        }
-
-        return newSoloGame;
-    }
-
-    private async createMultiGame(gameConfig: GameConfig, hostID: string, playersID: string[], guessObjects: GuessObject[]): Promise<Game> {
-        const players: Player[] = playersID.map((playerID) => {
-            return { id: playerID, connected: false }
-        });
-
-        const newMultiGame: Game = {
-            id: await this.idService.generateMultiGameID(),
-            hostID: hostID,
-            mode: GameMode.MULTI,
-            status: GameStatus.STARTING,
-            gameConfig,
-            players: players,
-            state: {
-                guessObjectsIds: guessObjects.map(guessObject => guessObject.id),
-                currentRound: undefined,
-                results: {},
-                guessObjects: guessObjects,
-            }
-        }
-
-        return newMultiGame;
-    }
-
-    private async startGame(game: Game) {
-        try {
-            // Sélection du premier objet à deviner
-            const firstObjectId = game.state.guessObjectsIds[0];
-
-            // Création du premier round
-            const firstRound: Round = {
-                status: RoundStatus.GUESSING,
-                guessObjectId: firstObjectId,
-                playersGuesses: {},
-            };
-
-            game.status = GameStatus.IN_GAME;
-            game.state.currentRound = firstRound;
-
-            await this.saveGame(game)
-
-            return game;
-        } catch (error) {
-            throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
-        }
-    }
-
     async disconnectPlayer(socketID: string, newHostID: string) {
         try {
             // Récupération du joueur
@@ -444,4 +340,120 @@ export class GameService {
             throw new Error(`Erreur lors de la deconnexion du socket ${socketID} dans la partie`);
         }
     }
+
+
+    ///////////
+    // Store //
+    ///////////
+
+    private async getGame(gameID: string): Promise<Game> {
+        try {
+            const game = await this.redisService.getJSON<Game>(this.getKey(gameID));
+            if (!game) throw new Error(`Game ${gameID} not found`);
+            return game;
+        } catch (error) {
+            throw new Error(`Error getting game: ${error.message}`);
+        }
+    }
+
+    private async saveGame(game: Game): Promise<void> {
+        try {
+            await this.redisService.setJSON(this.getKey(game.id), game);
+        } catch (error) {
+            throw new Error(`Error setting game ${game.id}: ${error.message}`);
+        }
+    }
+
+    private async deleteGame(gameID: string): Promise<void> {
+        try {
+            await this.redisService.del(this.getKey(gameID));
+        } catch (error) {
+            throw new Error(`Error deleting game: ${gameID}: ${error.message}`);
+        }
+    }
+
+    /////////////////////////
+    // Auxiliary functions //
+    /////////////////////////
+
+    private async createSoloGame(gameConfig: GameConfig, hostID: string, guessObjectsIds: string[]): Promise<Game> {
+        const players: Player[] = [{
+            id: hostID
+        }]
+
+        const newSoloGame: Game = {
+            id: await this.idService.generateSoloGameID(),
+            hostID: hostID,
+            mode: GameMode.SOLO,
+            status: GameStatus.STARTING,
+            gameConfig,
+            players: players,
+            state: {
+                guessObjectsIds: guessObjectsIds,
+                currentRound: undefined,
+                results: {},
+            }
+        }
+
+        return newSoloGame;
+    }
+
+    private async createMultiGame(gameConfig: GameConfig, hostID: string, playersID: string[], guessObjectsIds: string[]): Promise<Game> {
+        const players: Player[] = playersID.map((playerID) => {
+            return { id: playerID, connected: false }
+        });
+
+        const newMultiGame: Game = {
+            id: await this.idService.generateMultiGameID(),
+            hostID: hostID,
+            mode: GameMode.MULTI,
+            status: GameStatus.STARTING,
+            gameConfig,
+            players: players,
+            state: {
+                guessObjectsIds: guessObjectsIds,
+                currentRound: undefined,
+                results: {},
+            }
+        }
+
+        return newMultiGame;
+    }
+
+    private async startGame(game: Game) {
+        try {
+            // Sélection du premier objet à deviner
+            const firstObjectId = game.state.guessObjectsIds[0];
+
+            // Création du premier round
+            const firstRound: Round = {
+                status: RoundStatus.GUESSING,
+                guessObjectId: firstObjectId,
+                playersGuesses: {},
+            };
+
+            game.status = GameStatus.IN_GAME;
+            game.state.currentRound = firstRound;
+
+            await this.saveGame(game)
+
+            return game;
+        } catch (error) {
+            throw new Error(`Erreur lors du démarrage de la partie ${game.id}: ${error}`);
+        }
+    }
+
+    private getLightGame(game: Game): Game {
+        const { guessObjects, ...restState } = game.state;
+
+        const lightGame: Game = {
+            ...game,
+            state: {
+                ...restState,
+            },
+        };
+
+        return lightGame;
+    }
+
 }

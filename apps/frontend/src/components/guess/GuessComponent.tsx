@@ -25,6 +25,10 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     handleNextRound,
 }) => {
 
+    useEffect(() => {
+        console.log('Game updated in GuessComponent', game)
+    }, [game])
+
     const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
     const [isRoundCountdownFinished, setIsRoundCountdownFinished] = useState(false);
 
