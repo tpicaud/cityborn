@@ -94,7 +94,7 @@ export async function fetchGame(gameId: string): Promise<Game> {
         }
 
         const data = await response.json();
-        return data.game as Game;
+        return data as Game;
     } catch (error) {
         throw new Error(`Erreur lors de la récupération de la partie: ${error}`);
     }

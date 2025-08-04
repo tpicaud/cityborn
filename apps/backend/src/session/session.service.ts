@@ -12,6 +12,7 @@ const generateID = customAlphabet('0123456789', 6);
 @Injectable()
 export class SessionService {
     private readonly prefix = 'session:';
+    private readonly TTL = 30 * 60 * 1000;
     private readonly LOCK_TTL = 2000;
     private readonly logger = new Logger(SessionService.name);
 
@@ -186,7 +187,7 @@ export class SessionService {
             session.status = SessionStatus.IN_GAME;
             session.currentGameId = game.id;
 
-            await this.saveSession(session);
+            await this.saveSession(session, 12 * 60 * 60 * 1000);
             return { session, gameID: game.id };
         } catch (error) {
             throw new Error(`Erreur lors du démarrage de la partie: ${error.message}`);
@@ -325,9 +326,9 @@ export class SessionService {
         }
     }
 
-    private async saveSession(session: Session): Promise<void> {
+    private async saveSession(session: Session, ttl: number = this.TTL): Promise<void> {
         try {
-            await this.redisService.setJSON(this.getKey(session.id), session);
+            await this.redisService.setJSON(this.getKey(session.id), session, ttl);
         } catch (error) {
             throw new Error(`Error setting session ${session.id}: ${error.message}`);
         }

@@ -10,7 +10,8 @@ import { RedisService } from 'src/redis/redis.service';
 @Injectable()
 export class GameService {
     private readonly prefix = 'game:';
-    private readonly LOCK_TTL = 2000
+    private readonly TTL = 30 * 60 * 1000
+    private readonly LOCK_TTL = 2000;
     private readonly logger = new Logger(GameService.name);
 
 
@@ -356,9 +357,9 @@ export class GameService {
         }
     }
 
-    private async saveGame(game: Game): Promise<void> {
+    private async saveGame(game: Game, ttl: number = this.TTL): Promise<void> {
         try {
-            await this.redisService.setJSON(this.getKey(game.id), game);
+            await this.redisService.setJSON(this.getKey(game.id), game, ttl);
         } catch (error) {
             throw new Error(`Error setting game ${game.id}: ${error.message}`);
         }
