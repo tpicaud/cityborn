@@ -122,7 +122,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
     return (
         <div>
-            <GuessObjectComponent guessObject={game.state.guessObjects.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!} />
+            <GuessObjectComponent guessObject={game.state.guessObjects!.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!} />
             <div className="absolute w-[27%] mx-6 my-14">
                 {(game.state.currentRound!.status === RoundStatus.GUESSING) && (
                     <TimerComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
@@ -144,7 +144,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
                 {game.state.currentRound && game.state.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
                     <GuessResult
                         currentRound={game.state.currentRound!}
-                        guessObject={game.state.guessObjects.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!}
+                        guessObject={game.state.guessObjects!.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!}
                         localPlayerID={localPlayerID}
                     />
                 )}

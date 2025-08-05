@@ -10,6 +10,7 @@ import { RedisService } from 'src/redis/redis.service';
 @Injectable()
 export class GameService {
     private readonly prefix = 'game:';
+    private readonly idLength: 6;
     private readonly TTL = 30 * 60 * 1000
     private readonly LOCK_TTL = 2000;
     private readonly logger = new Logger(GameService.name);
@@ -32,17 +33,17 @@ export class GameService {
 
         try {
             // Fetch guess objects
-            const fetchedGuessObjectsIds = await this.guessObjectService.findByGameConfig(gameConfig);
+            const fetchedGuessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
 
             let newGame: Game;
 
             switch (gameMode) {
                 case GameMode.SOLO:
-                    newGame = await this.createSoloGame(gameConfig, hostID, fetchedGuessObjectsIds);
+                    newGame = await this.createSoloGame(gameConfig, hostID, fetchedGuessObjects);
                     break;
 
                 case GameMode.MULTI:
-                    newGame = await this.createMultiGame(gameConfig, hostID, playersID, fetchedGuessObjectsIds);
+                    newGame = await this.createMultiGame(gameConfig, hostID, playersID, fetchedGuessObjects);
                     break;
 
                 default:
@@ -347,11 +348,9 @@ export class GameService {
     // Store //
     ///////////
 
-    private async getGame(gameID: string): Promise<Game> {
+    private async getGame(gameID: string): Promise<Game | null> {
         try {
-            const game = await this.redisService.getJSON<Game>(this.getKey(gameID));
-            if (!game) throw new Error(`Game ${gameID} not found`);
-            return game;
+            return await this.redisService.getJSON<Game>(this.getKey(gameID));
         } catch (error) {
             throw new Error(`Error getting game: ${error.message}`);
         }
@@ -377,44 +376,46 @@ export class GameService {
     // Auxiliary functions //
     /////////////////////////
 
-    private async createSoloGame(gameConfig: GameConfig, hostID: string, guessObjectsIds: string[]): Promise<Game> {
+    private async createSoloGame(gameConfig: GameConfig, hostID: string, guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = [{
             id: hostID
         }]
 
         const newSoloGame: Game = {
-            id: await this.idService.generateSoloGameID(),
+            id: await this.generateGameId(),
             hostID: hostID,
             mode: GameMode.SOLO,
             status: GameStatus.STARTING,
             gameConfig,
             players: players,
             state: {
-                guessObjectsIds: guessObjectsIds,
+                guessObjectsIds: guessObjects.map(obj => obj.id),
                 currentRound: undefined,
                 results: {},
+                guessObjects
             }
         }
 
         return newSoloGame;
     }
 
-    private async createMultiGame(gameConfig: GameConfig, hostID: string, playersID: string[], guessObjectsIds: string[]): Promise<Game> {
+    private async createMultiGame(gameConfig: GameConfig, hostID: string, playersID: string[], guessObjects: GuessObject[]): Promise<Game> {
         const players: Player[] = playersID.map((playerID) => {
             return { id: playerID, connected: false }
         });
 
         const newMultiGame: Game = {
-            id: await this.idService.generateMultiGameID(),
+            id: await this.generateGameId(),
             hostID: hostID,
             mode: GameMode.MULTI,
             status: GameStatus.STARTING,
             gameConfig,
             players: players,
             state: {
-                guessObjectsIds: guessObjectsIds,
+                guessObjectsIds: guessObjects.map(obj => obj.id),
                 currentRound: undefined,
                 results: {},
+                guessObjects
             }
         }
 
@@ -457,4 +458,18 @@ export class GameService {
         return lightGame;
     }
 
+    async generateGameId(): Promise<string> {
+        try {
+            const MAX_ATTEMPTS = 3;
+
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                const candidateId = this.idService.generateUniqueNamesId();
+                if (!(await this.getGame(candidateId))) return candidateId.toString();
+            }
+
+            throw new Error('Max attempts reached')
+        } catch (error) {
+            throw new Error(`Error generating game id: ${error.message}`);
+        }
+    }
 }

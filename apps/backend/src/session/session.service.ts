@@ -1,13 +1,11 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Categories, Game, GameMode, OnlinePlayer, Session, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
-import { customAlphabet } from 'nanoid';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
 import { GameService } from 'src/game/game.service';
-
-const generateID = customAlphabet('0123456789', 6);
+import { IdService } from 'src/id/id.service';
 
 @Injectable()
 export class SessionService {
@@ -20,7 +18,8 @@ export class SessionService {
         private readonly redisService: RedisService,
         private readonly lockService: LockService,
         private readonly playerService: PlayerService,
-        private readonly gameService: GameService
+        private readonly gameService: GameService,
+        private readonly idService: IdService
     ) { }
 
     private getKey(id: string): string {
@@ -343,20 +342,16 @@ export class SessionService {
     }
 
     // Auxiliary
-    private async generateUniqueSessionID(maxAttempts = 5): Promise<string> {
+    private async generateUniqueSessionID(): Promise<string> {
         try {
-            let attempts = 0;
+            const MAX_ATTEMPTS = 3;
 
-            while (attempts < maxAttempts) {
-                const sessionID = generateID();
-                const exists = await this.getSession(sessionID);
-
-                if (!exists) return sessionID;
-
-                attempts++;
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                const candidateId = this.idService.generateNanoId();
+                if (!(await this.getSession(candidateId))) return candidateId.toString();
             }
 
-            throw new InternalServerErrorException('Max attempt reached');
+            throw new Error('Max attempt reached');
         } catch (error) {
             throw new Error(`Error generating unique ID: ${error.message}`);
         }
