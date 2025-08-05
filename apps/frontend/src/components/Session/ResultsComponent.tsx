@@ -35,7 +35,7 @@ const ResultsComponent = ({
         if (!currentPlayerResults) return;
 
         // Remplacement des IDs dans tous les résultats
-        replaceIdsWithNames(playersResults, game.state.guessObjects);
+        replaceIdsWithNames(playersResults, game.state.guessObjects!);
 
         setLocalPlayerResults(currentPlayerResults);
 

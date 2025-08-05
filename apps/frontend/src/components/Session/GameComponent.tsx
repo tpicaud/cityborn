@@ -9,6 +9,7 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
+import { useEffect } from "react";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd, handlePlayAgain }: {
     localPlayerID: string,
@@ -19,6 +20,10 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
     handleEnd: () => void,
     handlePlayAgain: () => void
 }) => {
+
+    useEffect(() => {
+        console.log('Game updated in GameComponent', game)
+    }, [game])
 
     const NextButton: React.FC = () => {
         if (!game.state.currentRound) return null;
@@ -71,7 +76,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
                                 <div className='bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold'>
                                     {game.state.guessObjectsIds.findIndex(id => (game.state.currentRound!.guessObjectId === id)) + 1}
                                     /
-                                    {game.state.guessObjects.length}
+                                    {game.state.guessObjectsIds!.length}
                                 </div>
                             </div>
                         </div>

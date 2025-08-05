@@ -80,7 +80,8 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         const sessionID = session.id;
         return new Promise<void>((resolve, reject) => {
-            emit('session:join', sessionID, playerID, (response: { success: boolean; error?: string }) => {
+            const body = { sessionID, playerID };
+            emit('session:join', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
@@ -95,7 +96,8 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateHost', newHostID, (response: { success: boolean; error?: string }) => {
+            const body = { newHostID };
+            emit('session:updateHost', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -109,8 +111,9 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         const gameConfig = { ...session.gameConfig, ...partialGameConfig }
+        const body = { gameConfig };
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateGameConfig', gameConfig, (response: { success: boolean; error?: string }) => {
+            emit('session:updateGameConfig', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -123,8 +126,9 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     const kickPlayer = async (playerToKick: string) => {
         if (!session) throw new Error('Joueur ou session non initialisé');
 
+        const body = { playerToKick };
         return new Promise<void>((resolve, reject) => {
-            emit('session:kickPlayer', playerToKick, (response: { success: boolean; error?: string }) => {
+            emit('session:kickPlayer', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -170,8 +174,9 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         try {
             console.log('Reconnecting player to session...')
             const sessionID = session.id;
-            return new Promise<{isInGame: boolean }>((resolve, reject) => {
-                emit('session:reconnect', sessionID, playerID, (response: { success: boolean; isInGame: boolean; error?: string }) => {
+            return new Promise<{ isInGame: boolean }>((resolve, reject) => {
+                const body = { sessionID, playerID };
+                emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: string }) => {
                     if (response.success) {
                         setConnected(true);
                         resolve({ isInGame: response.isInGame });

@@ -29,7 +29,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 }) => {
 
   const currentRound = game.state.currentRound!
-  const guessObject = game.state.guessObjects.find((obj) => obj.id === currentRound.guessObjectId)!;
+  const guessObject = game.state.guessObjects!.find((obj) => obj.id === currentRound.guessObjectId)!;
 
   const mapOptions = {
     mapId: 'e475de68d18cf73',
