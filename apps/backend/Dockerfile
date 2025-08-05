@@ -23,7 +23,7 @@ FROM deps AS builder
 COPY . .
 
 # Build le back
-RUN pnpm turbo run build --filter=backend
+RUN pnpm turbo run build --filter=cityborn-backend
 
 # Étape 3 — Image finale pour l'app (runtime only)
 FROM node:23-alpine AS runner
