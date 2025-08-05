@@ -9,7 +9,6 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
-import { useEffect } from "react";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd, handlePlayAgain }: {
     localPlayerID: string,
