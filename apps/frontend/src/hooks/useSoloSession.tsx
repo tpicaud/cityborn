@@ -19,12 +19,16 @@ export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Pr
             try {
                 const session: Session = await apiService.createSession(GameMode.SOLO);
                 setSession(session);
-            } catch (error) {
-                console.log(error);
+            } catch (error: any) {
+                console.error(error.message);
             }
         }
         fetchSession();
     }, [])
+
+    useEffect(() => {
+        console.log(session)
+    }, [session])
 
 
     ///////////////////////
@@ -50,8 +54,8 @@ export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Pr
 
         try {
             await initiateStartGame(session.gameConfig);
-        } catch {
-            throw new Error(`Erreur lors du lancement de la partie`)
+        } catch (error) {
+            throw new Error(`Erreur lors du lancement de la partie: ${error}`)
         }
     };
 

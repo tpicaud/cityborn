@@ -1,0 +1,17 @@
+import { Module } from '@nestjs/common';
+import { GuessObjectController } from './guess-object.controller';
+import { GuessObjectService } from './guess-object.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { GuessObject, GuessObjectSchema } from './guess-object.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: GuessObject.name, schema: GuessObjectSchema, collection: 'celebrities' }
+    ], 'guessObjects')
+  ],
+  controllers: [GuessObjectController],
+  providers: [GuessObjectService],
+  exports: [GuessObjectService]
+})
+export class GuessObjectModule {}

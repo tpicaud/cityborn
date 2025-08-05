@@ -22,8 +22,7 @@ FROM deps AS builder
 
 COPY . .
 
-# Construire l'app ciblée (on passera le filtre en build arg)
-ARG FILTER
+# Build le back
 RUN pnpm turbo run build --filter=backend
 
 # Étape 3 — Image finale pour l'app (runtime only)
@@ -38,8 +37,7 @@ COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/package.json ./
 
 # Expose le port que ton app utilise
-EXPOSE 3000
+EXPOSE 4000
 
 # Démarrage : à ajuster selon app
 CMD ["node", "apps/backend/dist/server.js"]
-

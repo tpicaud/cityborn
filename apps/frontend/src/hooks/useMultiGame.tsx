@@ -40,7 +40,10 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         // handle events
         const handleStartGame = async (gameID: string) => {
             try {
+                // Fetch game
                 const game: Game = await apiService.fetchGame(gameID);
+                console.log(game.state)
+                // Set and join
                 setGame(game);
                 await join(gameID);
             } catch (error) {
@@ -82,7 +85,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     const join = async (gameID: string) => {
         return new Promise<void>((resolve, reject) => {
-            emit('game:join', gameID, (response: { success: boolean; error?: string }) => {
+            const body = { gameID };
+            emit('game:join', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
@@ -97,7 +101,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         if (!game) throw new Error('Joueur ou game non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('game:guess', guess, (response: { success: boolean; error?: string }) => {
+            const body = { guess };
+            emit('game:guess', body, (response: { success: boolean; error?: string }) => {
                 if (response.success) {
                     resolve();
                 } else {
@@ -132,7 +137,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
             console.log('Reconnecting player to game...')
             const gameID = game.id;
             return new Promise<void>((resolve, reject) => {
-                emit('game:reconnect', gameID, playerID, (response: { success: boolean; error?: string }) => {
+                const body = { gameID, playerID };
+                emit('game:reconnect', body, (response: { success: boolean; error?: string }) => {
                     if (response.success) {
                         setConnected(true);
                         resolve();
