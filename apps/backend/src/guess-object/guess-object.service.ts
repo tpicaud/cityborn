@@ -50,7 +50,7 @@ export class GuessObjectService {
         }
     }
 
-    async findByGameConfig(gameConfig: GameConfig): Promise<string[]> {
+    async findByGameConfig(gameConfig: GameConfig): Promise<GuessObject[]> {
         try {
             const pipeline: any[] = [];
 
@@ -94,7 +94,7 @@ export class GuessObjectService {
                 throw new NotFoundException('Aucun GuessObject trouvé avec la configuration fournie');
             }
 
-            return guessObjects.map(guessObject => guessObject.id);
+            return guessObjects;
         } catch (error) {
             console.error('Erreur lors de la récupération des GuessObjects :', error.message);
             throw new Error('Erreur lors de la récupération des GuessObjects');

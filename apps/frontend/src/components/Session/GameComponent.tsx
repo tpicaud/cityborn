@@ -76,7 +76,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
                                 <div className='bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold'>
                                     {game.state.guessObjectsIds.findIndex(id => (game.state.currentRound!.guessObjectId === id)) + 1}
                                     /
-                                    {game.state.guessObjects.length}
+                                    {game.state.guessObjectsIds!.length}
                                 </div>
                             </div>
                         </div>

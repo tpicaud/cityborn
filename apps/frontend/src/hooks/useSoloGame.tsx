@@ -136,7 +136,7 @@ export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
             throw new Error("L'objet à deviner ne fais pas partie de la liste de la partie");
         }
 
-        if (currentIndex + 1 < game.state.guessObjects.length) {
+        if (currentIndex + 1 < game.state.guessObjectsIds.length) {
             return game.state.guessObjectsIds[currentIndex + 1];
         } else {
             setGame((prevGame) => {
