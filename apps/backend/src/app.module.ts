@@ -5,7 +5,6 @@ import { SessionModule } from './session/session.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SentenceModule } from './sentence/sentence.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
-import { RedisHTTPModule } from './redisHTTP/redisHTTP.module';
 import { GameModule } from './game/game.module';
 import { IdModule } from './id/id.module';
 import { ConfigModule } from '@nestjs/config';
@@ -32,7 +31,6 @@ import { PlayerModule } from './player/player.module';
     SessionModule,
     SentenceModule,
     GuessObjectModule,
-    RedisHTTPModule,
     GameModule,
     IdModule,
     RedisModule,
