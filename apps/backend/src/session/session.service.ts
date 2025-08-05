@@ -178,7 +178,7 @@ export class SessionService {
             const game = await this.gameService.create({
                 gameMode: session.mode,
                 hostID: session.hostID,
-                playersID: session.players.map(player => player.id),
+                playersID: (session.players as OnlinePlayer[]).filter(player => player.connected).map(player => player.id),
                 gameConfig: session.gameConfig
             });
 
