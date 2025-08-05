@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
@@ -10,7 +10,7 @@ interface WSResponse {
 }
 
 @WebSocketGateway()
-export class SessionGateway {
+export class SessionGateway implements OnGatewayDisconnect {
 
 	private readonly logger = new Logger(SessionGateway.name);
 
@@ -165,6 +165,14 @@ export class SessionGateway {
 			}
 
 			this.logger.log(`Socket ${socket.id} déconnecté`);
+		} catch (error) {
+			this.logger.error(error.message);
+		}
+	}
+
+	async handleDisconnect(@ConnectedSocket() socket: Socket) {
+		try {
+			await this.disconnect(socket);
 		} catch (error) {
 			this.logger.error(error.message);
 		}
