@@ -42,7 +42,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
             try {
                 // Fetch game
                 const game: Game = await apiService.fetchGame(gameID);
-                console.log(game.state)
+
                 // Set and join
                 setGame(game);
                 await join(gameID);
