@@ -28,16 +28,16 @@ RUN pnpm turbo run build --filter=cityborn-backend
 # Étape 3 — Image finale pour l'app (runtime only)
 FROM node:23-alpine AS runner
 
-WORKDIR /app
+WORKDIR /app/apps/backend
 
 # Copier les fichiers nécessaires au runtime
 COPY --from=builder /app/apps /app/apps
 COPY --from=builder /app/packages /app/packages
 COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package.json ./package.json
 
 # Expose le port que ton app utilise
 EXPOSE 4000
 
 # Démarrage : à ajuster selon app
-CMD ["node", "apps/backend/dist/server.js"]
+CMD ["node", "dist/main"]
