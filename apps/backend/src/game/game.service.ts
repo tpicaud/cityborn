@@ -11,7 +11,7 @@ import { RedisService } from 'src/redis/redis.service';
 export class GameService {
     private readonly prefix = 'game:';
     private readonly idLength: 6;
-    private readonly TTL = 30 * 60 * 1000
+    private readonly TTL = 30 * 60; // seconds
     private readonly LOCK_TTL = 2000;
     private readonly logger = new Logger(GameService.name);
 

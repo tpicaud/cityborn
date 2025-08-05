@@ -10,7 +10,7 @@ import { IdService } from 'src/id/id.service';
 @Injectable()
 export class SessionService {
     private readonly prefix = 'session:';
-    private readonly TTL = 30 * 60 * 1000;
+    private readonly TTL = 30 * 60; // seconds
     private readonly LOCK_TTL = 2000;
     private readonly logger = new Logger(SessionService.name);
 
@@ -186,7 +186,7 @@ export class SessionService {
             session.status = SessionStatus.IN_GAME;
             session.currentGameId = game.id;
 
-            await this.saveSession(session, 12 * 60 * 60 * 1000);
+            await this.saveSession(session, 12 * 60 * 60); // TTL in seconds
             return { session, gameID: game.id };
         } catch (error) {
             throw new Error(`Erreur lors du démarrage de la partie: ${error.message}`);
