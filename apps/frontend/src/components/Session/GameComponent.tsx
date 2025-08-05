@@ -21,10 +21,6 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
     handlePlayAgain: () => void
 }) => {
 
-    useEffect(() => {
-        console.log('Game updated in GameComponent', game)
-    }, [game])
-
     const NextButton: React.FC = () => {
         if (!game.state.currentRound) return null;
 
