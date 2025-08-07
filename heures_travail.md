@@ -72,3 +72,4 @@
 | 21/07/2025 | 4h | Migration backend |
 | 01/08/2025 | 3h | Migration backend |
 | 02/08/2025 | 1h | Migration backend |
+| 05/08/2025 | 4h | Finalisation et mise en prod/pre-prod de la migration |
