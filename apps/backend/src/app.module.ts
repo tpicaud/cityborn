@@ -11,6 +11,11 @@ import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from './redis/redis.module';
 import { LockModule } from './lock/lock.module';
 import { PlayerModule } from './player/player.module';
+import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { JwtModule } from './jwt/jwt.module';
+import { UsersModule } from './users/users.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -35,7 +40,12 @@ import { PlayerModule } from './player/player.module';
     IdModule,
     RedisModule,
     LockModule,
-    PlayerModule
+    PlayerModule,
+    AuthModule,
+    PrismaModule,
+    JwtModule,
+    UsersModule,
+    UserModule
   ],
   controllers: [AppController],
   providers: [AppService],

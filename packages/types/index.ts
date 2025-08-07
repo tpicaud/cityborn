@@ -11,6 +11,7 @@ export * from './types/Round.js';
 export type * from './types/Session.js';
 export * from './types/defaults.js';
 export * from './types/Sentence.js';
+export * from './types/User.js';
 
 export * from './enums/Categories.js';
 export * from './enums/GameMode.js';
