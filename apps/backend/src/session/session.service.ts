@@ -54,7 +54,7 @@ export class SessionService {
             return newSession;
         } catch (error) {
             this.logger.error('Error creating session:', error.stack);
-            throw new InternalServerErrorException('Unable to create session');
+            throw new Error(`Error creating session: ${error.message}`);
         }
     }
 
