@@ -20,7 +20,7 @@ export class AuthService {
         const { email, username, password } = dto;
 
         // Validate identifiers
-        await this.userService.validateIdentifiers(email, username);
+        await this.userService.validateIdentifiers(username, email);
 
         // Hash password
         const hash = await bcrypt.hash(password, 10);
@@ -55,7 +55,7 @@ export class AuthService {
         if (!user) throw new UnauthorizedException(`Invalid credentials`);
 
         // Validate password
-        const isPasswordValid = bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) throw new UnauthorizedException(`Invalid password`);
 
         // Create JWT

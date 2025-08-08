@@ -1,3 +1,4 @@
 node_modules
 dist
 .turbo
+apps/backend/prisma/dev.db
