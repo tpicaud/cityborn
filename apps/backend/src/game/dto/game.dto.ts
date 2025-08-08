@@ -4,31 +4,22 @@ import { IsArray, IsBoolean, IsEnum, IsNumber, IsObject, IsOptional, IsString, V
 import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto";
 import { PlayerDto } from "src/player/dto/player.dto";
 
-export class GameDto implements Game {
+export class ResultDto implements Result {
     @IsString()
-    id: string;
+    guessObjectId: string;
 
-    @IsString()
-    hostID: string;
+    @IsNumber()
+    distance: number;
 
-    @IsEnum(GameMode)
-    mode: GameMode;
+    @IsNumber()
+    points: number;
+}
 
-    @IsEnum(GameStatus)
-    status: GameStatus;
-
-    @ValidateNested()
-    @Type(() => GameConfigDto)
-    gameConfig: GameConfigDto;
-
+export class PlayerResultsDto implements PlayerResults {
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => PlayerDto)
-    players: PlayerDto[];
-
-    @ValidateNested()
-    @Type(() => GameStateDto)
-    state: GameStateDto;
+    @Type(() => ResultDto)
+    results: ResultDto[];
 }
 
 export class GameConfigDto implements GameConfig {
@@ -41,43 +32,6 @@ export class GameConfigDto implements GameConfig {
 
     @IsNumber()
     nbOfObjects: number;
-}
-
-export class GameStateDto implements GameState {
-    @IsArray()
-    @IsString({ each: true })
-    guessObjectsIds: string[];
-
-    @IsOptional()
-    @Type(() => RoundDto)
-    currentRound: RoundDto | undefined;
-
-    @IsOptional()
-    @IsObject()
-    @ValidateNested({ each: true })
-    @Type(() => PlayerResultsDto)
-    results: Record<string, PlayerResultsDto>;
-
-    @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => GuessObjectDto)
-    guessObjects?: GuessObjectDto[] | undefined;
-}
-
-export class RoundDto implements Round {
-    @IsEnum(RoundStatus)
-    status: RoundStatus;
-
-    @IsString()
-    guessObjectId: string;
-
-    @IsOptional()
-    @IsObject()
-    @ValidateNested({ each: true })
-    @Type(() => GuessDto)
-    playersGuesses?: Record<string, GuessDto> | undefined;
-
 }
 
 export class CoordDto implements Coord {
@@ -103,21 +57,66 @@ export class GuessDto implements Guess {
     win: boolean;
 }
 
-export class PlayerResultsDto implements PlayerResults {
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ResultDto)
-    results: ResultDto[];
-}
+export class RoundDto implements Round {
+    @IsEnum(RoundStatus)
+    status: RoundStatus;
 
-
-export class ResultDto implements Result {
     @IsString()
     guessObjectId: string;
 
-    @IsNumber()
-    distance: number;
+    @IsOptional()
+    @IsObject()
+    @ValidateNested({ each: true })
+    @Type(() => GuessDto)
+    playersGuesses?: Record<string, GuessDto> | undefined;
 
-    @IsNumber()
-    points: number;
+}
+
+export class GameStateDto implements GameState {
+    @IsArray()
+    @IsString({ each: true })
+    guessObjectsIds: string[];
+
+    @IsOptional()
+    @Type(() => RoundDto)
+    currentRound: RoundDto | undefined;
+
+    @IsOptional()
+    @IsObject()
+    @ValidateNested({ each: true })
+    @Type(() => PlayerResultsDto)
+    results: Record<string, PlayerResultsDto>;
+
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => GuessObjectDto)
+    guessObjects?: GuessObjectDto[] | undefined;
+}
+
+export class GameDto implements Game {
+    @IsString()
+    id: string;
+
+    @IsString()
+    hostID: string;
+
+    @IsEnum(GameMode)
+    mode: GameMode;
+
+    @IsEnum(GameStatus)
+    status: GameStatus;
+
+    @ValidateNested()
+    @Type(() => GameConfigDto)
+    gameConfig: GameConfigDto;
+
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => PlayerDto)
+    players: PlayerDto[];
+
+    @ValidateNested()
+    @Type(() => GameStateDto)
+    state: GameStateDto;
 }
