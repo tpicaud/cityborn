@@ -2,6 +2,7 @@
 import { IsEnum, IsObject, IsString, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { GameMode, GameConfig } from '@cityborn/types';
+import { GameConfigDto } from './game.dto';
 
 export class CreateGameDto {
   @IsEnum(GameMode)
@@ -15,6 +16,6 @@ export class CreateGameDto {
   playersID: string[];
 
   @IsObject()
-  @Type(() => Object) // utile si tu comptes imbriquer + valider gameConfig
-  gameConfig: GameConfig;
+  @Type(() => GameConfigDto) // utile si tu comptes imbriquer + valider gameConfig
+  gameConfig: GameConfigDto;
 }
