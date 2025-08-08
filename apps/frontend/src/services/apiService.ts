@@ -26,7 +26,9 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
             throw new Error(`Erreur HTTP ${response.status}: ${message}`);
         }
 
-        const session: Session = await response.json();
+        const data = await response.json();
+        const session: Session = data.session;
+        
         return session;
     } catch (error: any) {
         throw new Error(`Erreur lors de la création de la session ${error.message}`);
@@ -36,7 +38,10 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
 export async function fetchSession(sessionID: string): Promise<Session> {
     try {
         const response = await fetch(`${REST_BACKEND_URL}/session?sessionId=${sessionID}`);
-        const session: Session = await response.json();
+
+        const data = await response.json();
+        const session: Session = data.session;
+
         return session;
     } catch (error) {
         throw new Error(`Erreur lors de la récupération de la session: ${error}`);
@@ -56,7 +61,10 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
         throw new Error('Erreur lors de la récupération des guess objects');
     }
 
-    return await response.json();
+    const data = await response.json();
+    const guessObjects: GuessObject[] = data.guessObjects;
+
+    return guessObjects;
 }
 
 
@@ -78,8 +86,10 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
             throw new Error(`Erreur HTTP: ${response.status}`);
         }
 
-        const game = await response.json();
-        return game as Game;
+        const data = await response.json();
+        const game: Game = data.game;
+
+        return game;
     } catch (error) {
         throw new Error(`Erreur lors de la création de la partie: ${error}`);
     }
@@ -94,8 +104,22 @@ export async function fetchGame(gameId: string): Promise<Game> {
         }
 
         const data = await response.json();
-        return data as Game;
+        const game: Game = data.game;
+
+        return game;
     } catch (error) {
         throw new Error(`Erreur lors de la récupération de la partie: ${error}`);
     }
+}
+
+export const getEndSentence = async (score_type: string): Promise<string> => {
+    try {
+        const response = await fetch(`${REST_BACKEND_URL}/sentence?score_type=${encodeURIComponent(score_type)}`);
+        const data = await response.json();
+        
+        return data.sentence;
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la phrase: ', error);
+    }
+    return '';
 }

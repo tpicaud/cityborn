@@ -8,5 +8,5 @@ export class AuthResponseDto {
     access_token: string;
 
     @Type(() => PublicUserDto)
-    user: PublicUser
+    user: PublicUserDto;
 }
