@@ -5,27 +5,27 @@ import { GameConfigDto } from "src/game/dto/game.dto";
 import { PlayerDto } from "src/player/dto/player.dto";
 
 export class SessionDto implements Session {
-  @IsString()
-  id: string;
+    @IsString()
+    id: string;
 
-  @IsString()
-  hostID: string;
+    @IsString()
+    hostID: string;
 
-  @IsEnum(GameMode)
-  mode: GameMode;
+    @IsEnum(GameMode)
+    mode: GameMode;
 
-  @IsEnum(SessionStatus)
-  status: SessionStatus;
+    @IsEnum(SessionStatus)
+    status: SessionStatus;
 
-  @ValidateNested()
-  @Type(() => GameConfigDto)
-  gameConfig: GameConfigDto;
+    @ValidateNested()
+    @Type(() => GameConfigDto)
+    gameConfig: GameConfigDto;
 
-  @IsArray()
-  @Type(() => PlayerDto)
-  players: PlayerDto[];
+    @IsArray()
+    @Type(() => PlayerDto)
+    players: PlayerDto[];
 
-  @IsOptional()
-  @IsString()
-  currentGameId?: string;
+    @IsOptional()
+    @IsString()
+    currentGameId?: string;
 }

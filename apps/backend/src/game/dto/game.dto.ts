@@ -1,4 +1,4 @@
-import { Categories, Game, GameConfig, GameMode, GameState, GameStatus, Guess, GuessObject, Player, PlayerResults, Result, Round, RoundStatus } from "@cityborn/types";
+import { Categories, Coord, Game, GameConfig, GameMode, GameState, GameStatus, Guess, GuessObject, Player, PlayerResults, Result, Round, RoundStatus } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto";
@@ -21,7 +21,8 @@ export class GameDto implements Game {
     @Type(() => GameConfigDto)
     gameConfig: GameConfigDto;
 
-    @ValidateNested()
+    @IsArray()
+    @ValidateNested({ each: true })
     @Type(() => PlayerDto)
     players: PlayerDto[];
 
@@ -79,12 +80,7 @@ export class RoundDto implements Round {
 
 }
 
-export interface Coord {
-    lat: number;
-    lng: number;
-}
-
-export class CoordDto {
+export class CoordDto implements Coord {
     @IsNumber()
     lat: number;
 
@@ -115,7 +111,7 @@ export class PlayerResultsDto implements PlayerResults {
 }
 
 
-class ResultDto implements Result {
+export class ResultDto implements Result {
     @IsString()
     guessObjectId: string;
 
