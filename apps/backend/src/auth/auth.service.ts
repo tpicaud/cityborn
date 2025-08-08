@@ -4,7 +4,6 @@ import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { PublicUser } from '@cityborn/types';
 import { AuthResponseDto } from './dto/auth.response.dto';
 
 @Injectable()

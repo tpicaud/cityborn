@@ -13,8 +13,6 @@ import { LockModule } from './lock/lock.module';
 import { PlayerModule } from './player/player.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { JwtModule } from './jwt/jwt.module';
-import { UsersModule } from './users/users.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -43,8 +41,6 @@ import { UserModule } from './user/user.module';
     PlayerModule,
     AuthModule,
     PrismaModule,
-    JwtModule,
-    UsersModule,
     UserModule
   ],
   controllers: [AppController],

@@ -12,8 +12,8 @@ export class PublicUserDto implements PublicUser {
   email: string;
 
   @IsDateString()
-  createdAt: string;
+  createdAt?: string;
 
   @IsDateString()
-  updatedAt: string;
+  updatedAt?: string;
 }
