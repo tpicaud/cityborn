@@ -117,7 +117,7 @@ export const getEndSentence = async (score_type: string): Promise<string> => {
         const response = await fetch(`${REST_BACKEND_URL}/sentence?score_type=${encodeURIComponent(score_type)}`);
         const data = await response.json();
         
-        return data.sentence;
+        return data.sentence.sentence || '';
     } catch (error) {
         console.error('Erreur lors de la récupération de la phrase: ', error);
     }
