@@ -8,6 +8,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 export class GameController {
     constructor(private readonly gameService: GameService) { }
 
+    @UseGuards(AuthGuard)
     @Post()
     async createGame(@Body() createGameDto: CreateGameDto): Promise<GameResponseDto> {
         return {
@@ -15,6 +16,7 @@ export class GameController {
         }
     }
 
+    @UseGuards(AuthGuard)
     @Get()
     async getGame(@Query('gameId') gameId: string): Promise<GameResponseDto> {
         return {

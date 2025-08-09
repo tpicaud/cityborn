@@ -1,7 +1,7 @@
-import { User } from '@prisma/client'; // ou ton entity User
+import { User as PrismaUser} from '@prisma/client';
 import { PublicUser } from '@cityborn/types';
 
-export function toPublicUser(user: User): PublicUser {
+export function toPublicUser(user: PrismaUser): PublicUser {
   return {
     id: user.id,
     username: user.username,
