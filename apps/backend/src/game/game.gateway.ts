@@ -4,6 +4,8 @@ import { GameService } from './game.service';
 import { Guess } from '@cityborn/types';
 import { Logger, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthenticatedGateway } from 'src/auth/auth.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 interface WSResponse {
 	success: boolean,
@@ -11,11 +13,16 @@ interface WSResponse {
 }
 
 @WebSocketGateway()
-export class GameGateway {
+export class GameGateway extends AuthenticatedGateway {
 
 	private readonly logger = new Logger(GameGateway.name);
 
-	constructor(private readonly gameService: GameService) { }
+	constructor(
+		private readonly gameService: GameService,
+		jwtService: JwtService
+	) {
+		super(jwtService);
+	 }
 
 	@WebSocketServer()
 	io: Server;

@@ -4,6 +4,8 @@ import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
 import { Logger, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthenticatedGateway } from 'src/auth/auth.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 interface WSResponse {
 	success: boolean,
@@ -11,16 +13,21 @@ interface WSResponse {
 }
 
 @WebSocketGateway()
-export class SessionGateway implements OnGatewayDisconnect {
+export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect  {
 
 	private readonly logger = new Logger(SessionGateway.name);
 
-	constructor(private readonly sessionService: SessionService) { }
+	constructor(
+		private readonly sessionService: SessionService,
+		jwtService: JwtService
+	) {
+		super(jwtService)
+	 }
 
 	@WebSocketServer()
 	io: Server;
 
-	@UseGuards(AuthGuard)
+	//@UseGuards(AuthGuard)
 	@SubscribeMessage('session:join')
 	async handleJoin(
 		@ConnectedSocket() socket: Socket,
@@ -46,7 +53,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:updateHost')
 	async updateHost(
 		@ConnectedSocket() socket: Socket,
@@ -68,7 +74,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:updateGameConfig')
 	async updateGameConfig(
 		@ConnectedSocket() socket: Socket,
@@ -90,7 +95,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:startGame')
 	async startGame(
 		@ConnectedSocket() socket: Socket,
@@ -110,7 +114,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:endGame')
 	async endGame(
 		@ConnectedSocket() socket: Socket,
@@ -130,7 +133,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:reconnect')
 	async reconnect(
 		@ConnectedSocket() socket: Socket,
@@ -156,7 +158,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:disonnect')
 	async disconnect(
 		@ConnectedSocket() socket: Socket,
@@ -178,7 +179,6 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	async handleDisconnect(@ConnectedSocket() socket: Socket) {
 		try {
 			await this.disconnect(socket);
