@@ -2,7 +2,8 @@ import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, We
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 interface WSResponse {
 	success: boolean,
@@ -19,6 +20,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 	@WebSocketServer()
 	io: Server;
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:join')
 	async handleJoin(
 		@ConnectedSocket() socket: Socket,
@@ -44,6 +46,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:updateHost')
 	async updateHost(
 		@ConnectedSocket() socket: Socket,
@@ -65,6 +68,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:updateGameConfig')
 	async updateGameConfig(
 		@ConnectedSocket() socket: Socket,
@@ -86,6 +90,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:startGame')
 	async startGame(
 		@ConnectedSocket() socket: Socket,
@@ -105,6 +110,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:endGame')
 	async endGame(
 		@ConnectedSocket() socket: Socket,
@@ -124,6 +130,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:reconnect')
 	async reconnect(
 		@ConnectedSocket() socket: Socket,
@@ -149,6 +156,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('session:disonnect')
 	async disconnect(
 		@ConnectedSocket() socket: Socket,
@@ -170,6 +178,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	async handleDisconnect(@ConnectedSocket() socket: Socket) {
 		try {
 			await this.disconnect(socket);

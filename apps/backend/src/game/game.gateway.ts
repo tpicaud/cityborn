@@ -2,7 +2,8 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { Guess } from '@cityborn/types';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 interface WSResponse {
 	success: boolean,
@@ -19,6 +20,7 @@ export class GameGateway {
 	@WebSocketServer()
 	io: Server;
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:join')
 	async handleJoin(
 		@ConnectedSocket() socket: Socket,
@@ -45,6 +47,7 @@ export class GameGateway {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:guess')
 	async handleGuess(
 		@ConnectedSocket() socket: Socket,
@@ -68,6 +71,7 @@ export class GameGateway {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:nextRound')
 	async handleNextRound(
 		@ConnectedSocket() socket: Socket
@@ -86,6 +90,7 @@ export class GameGateway {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:end')
 	async handleEnd(
 		@ConnectedSocket() socket: Socket
@@ -103,6 +108,7 @@ export class GameGateway {
 		}
 	}
 
+	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:reconnect')
 	async handleReconnect(
 		@ConnectedSocket() socket: Socket,
