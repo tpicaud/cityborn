@@ -59,11 +59,16 @@ export class AuthService {
         if (!isPasswordValid) throw new UnauthorizedException(`Invalid password`);
 
         // Create JWT
-        const token = await this.generateJWT(user.id, user.username, user.email);
+        try {
+            const token = await this.generateJWT(user.id, user.username, user.email);
 
-        return {
-            access_token: token,
-            user: this.userService.getPublicUser(user)
+            return {
+                access_token: token,
+                user: this.userService.getPublicUser(user)
+            }
+        } catch (error) {
+            this.logger.error(`Error generating token: ${error.message}`);
+            throw new InternalServerErrorException(`Error generating token: ${error.message}`);
         }
     }
 
