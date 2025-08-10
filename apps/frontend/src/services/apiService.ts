@@ -3,62 +3,53 @@ import { Game } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { GuessObject } from "@cityborn/types";
 import { Session } from "@cityborn/types";
-import { cookies } from "next/headers";
 
 const REST_BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
+
+async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) },
+        ...options,
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const message = (data && data.message) || response.statusText;
+        throw new Error(`Erreur HTTP ${response.status}: ${message}`);
+    }
+
+    return data;
+}
 
 //////////////////
 // Auth service //
 //////////////////
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
-    const response = await fetch(`/api/auth/sign-up`, {
+    await apiFetch<void>(`/api/auth/sign-up`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
     });
-
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
-        const message = errorBody?.message || response.statusText;
-        throw new Error(`Erreur HTTP ${response.status}: ${message}`);
-    }
 }
 
 export async function signIn(identifier: string, password: string): Promise<void> {
-    const response = await fetch(`/api/auth/sign-in`, {
+    await apiFetch<void>(`/api/auth/sign-in`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password }),
     });
-
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
-        const message = errorBody?.message || response.statusText;
-        throw new Error(`Erreur HTTP ${response.status}: ${message}`);
-    }
 }
 
 export async function signOut(): Promise<void> {
-    const response = await fetch(`/api/auth/sign-out`, {
+    await apiFetch<void>(`/api/auth/sign-out`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
     });
-
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
-        const message = errorBody?.message || response.statusText;
-        throw new Error(`Erreur HTTP ${response.status}: ${message}`);
-    }
 }
 
 export async function getCurrentUser(): Promise<PublicUser | null> {
     try {
-        const response = await fetch('/api/auth/me');
-        const data = await response.json();
-        
+        const data = await apiFetch<any>('/api/auth/me');
         if (!data.user) return null;
-
         return data.user;
     } catch {
         return null;
