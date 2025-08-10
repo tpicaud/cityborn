@@ -11,28 +11,24 @@ const REST_BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
 //////////////////////
 
 export async function createSession(gameMode: GameMode): Promise<Session> {
-    try {
-        const response = await fetch(`${REST_BACKEND_URL}/session`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ gameMode }),
-        });
+    // Appelle simplement l'API route Next.js (pas directement le backend REST)
+    const response = await fetch('/api/session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameMode }),
+    });
 
-        if (!response.ok) {
-            const errorBody = await response.json().catch(() => null);
-            const message = errorBody?.message || response.statusText;
-            throw new Error(`Erreur HTTP ${response.status}: ${message}`);
-        }
-
-        const data = await response.json();
-        const session: Session = data.session;
-        
-        return session;
-    } catch (error: any) {
-        throw new Error(`Erreur lors de la création de la session ${error.message}`);
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        const message = errorBody?.message || response.statusText;
+        throw new Error(`Erreur lors de la création de la session: ${message}`);
     }
+
+    // Le corps de la réponse est la session directement (déjà formatée par l’API route)
+    const session: Session = await response.json();
+    return session;
 }
 
 export async function fetchSession(sessionID: string): Promise<Session> {
