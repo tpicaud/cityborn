@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     const cookieStore = cookies();
@@ -43,5 +44,5 @@ export async function POST(req: Request) {
         });
     }
 
-    return Response.json({ access_token: data.access_token });
+    return NextResponse.json({ access_token: data.access_token });
 }
