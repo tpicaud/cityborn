@@ -1,3 +1,5 @@
+'use client';
+
 import { Typography } from "@mui/material"
 import { SignInComponent } from "./SignInComponent"
 import { SignUpComponent } from "./SignUpComponent"
