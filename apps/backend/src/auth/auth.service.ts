@@ -5,6 +5,7 @@ import { SignInDto } from './dto/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthResponseDto } from './dto/auth.response.dto';
+import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +70,15 @@ export class AuthService {
         } catch (error) {
             this.logger.error(`Error generating token: ${error.message}`);
             throw new InternalServerErrorException(`Error generating token: ${error.message}`);
+        }
+    }
+
+    async getProfile(identifier: string): Promise<PublicUserResponseDto> {
+        const user = await this.userService.findByIdentifier(identifier);
+        if (!user) throw new UnauthorizedException(`User not found`);
+
+        return {
+            user: this.userService.getPublicUser(user)
         }
     }
 
