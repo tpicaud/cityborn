@@ -52,7 +52,7 @@ export async function signOut(): Promise<void> {
     }
 }
 
-export async function getCurrentUser(): Promise<PublicUser | null> {''
+export async function getCurrentUser(): Promise<PublicUser | null> {
     try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
