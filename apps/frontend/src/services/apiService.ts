@@ -7,24 +7,37 @@ import { Session } from "@cityborn/types";
 const REST_BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+
     const response = await fetch(url, {
         headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) },
         ...options,
     });
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = (data && data.message) || response.statusText;
-        throw new Error(`Erreur HTTP ${response.status}: ${message}`);
+    
+    let data: any;
+    try {
+        data = await response.json();
+    } catch {
+        data = null;
     }
 
-    return data;
+    if (!response.ok) {
+        throw new Error(data?.message || data?.error || response.statusText || 'Unknown error');
+    }
+
+    return data as T;
 }
+
 
 //////////////////
 // Auth service //
 //////////////////
+
+export async function getCurrentUser(): Promise<PublicUser | null> {
+    const data = await apiFetch<any>(`/api/auth/me`, { method: 'GET' });
+    console.log('api service : ', data);
+    if (!data.user) return null;
+    return data.user;
+}
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
     await apiFetch<void>(`/api/auth/sign-up`, {
@@ -44,16 +57,6 @@ export async function signOut(): Promise<void> {
     await apiFetch<void>(`/api/auth/sign-out`, {
         method: 'POST',
     });
-}
-
-export async function getCurrentUser(): Promise<PublicUser | null> {
-    try {
-        const data = await apiFetch<any>('/api/auth/me');
-        if (!data.user) return null;
-        return data.user;
-    } catch {
-        return null;
-    }
 }
 
 //////////////////////

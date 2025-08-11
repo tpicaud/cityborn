@@ -1,7 +1,8 @@
-import MenuComponent from '@/components/MenuComponent';
+'use client';
+
 import { Socket } from 'socket.io-client';
-import * as apiService from '@/services/apiService';
-import { AuthComponent } from '@/components/auth/AuthComponent';
+import AuthProvider from '@/contexts/AuthContext';
+import HomeComponent from '@/components/HomeComponent';
 
 declare global {
 	interface Window {
@@ -9,18 +10,12 @@ declare global {
 	}
 }
 
-export default async function Home() {
-
-	const user = await apiService.getCurrentUser();
-	console.log(user)
-
+export default function Home() {
 	return (
 		<main>
-			{user ? (
-				<MenuComponent />
-			) : (
-				<AuthComponent />
-			)}
+			<AuthProvider>
+				<HomeComponent />
+			</AuthProvider>
 		</main>
 	);
 }

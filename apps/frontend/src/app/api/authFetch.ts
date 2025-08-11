@@ -6,13 +6,14 @@ export async function authFetch(url: string, options = {}) {
 
     // Si pas de token, on refuse direct (ou on peut tenter un refresh)
     if (!token) {
-        return new Response('Unauthorized', { status: 401 });
+            return new Response(JSON.stringify({ message: 'Unauthorized', statusCode: 401 }), { status: 401, headers: { 'Content-Type': 'application/json' }});
     }
 
     let res = await fetch(url, {
         ...options,
         headers: {
             ...(options as any).headers,
+            Accept: 'application/json',
             Authorization: `Bearer ${token}`,
         },
     });
@@ -21,7 +22,7 @@ export async function authFetch(url: string, options = {}) {
         // Token expiré, on tente le refresh
         const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
         if (!refreshRes.ok) {
-            return new Response('Unauthorized', { status: 401 });
+            return new Response(JSON.stringify({ message: 'Unauthorized', statusCode: 401 }), { status: 401, headers: { 'Content-Type': 'application/json' }});
         }
         const refreshData = await refreshRes.json();
 
@@ -32,6 +33,7 @@ export async function authFetch(url: string, options = {}) {
             ...options,
             headers: {
                 ...(options as any).headers,
+                Accept: 'application/json',
                 Authorization: `Bearer ${token}`,
             },
         });

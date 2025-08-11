@@ -5,7 +5,6 @@ import * as apiService from '@/services/apiService';
 export const SignInComponent = () => {
     const [formValues, setFormValues] = React.useState({
         username: "",
-        email: "",
         password: ""
     });
 
@@ -43,17 +42,6 @@ export const SignInComponent = () => {
                     label="Username"
                     name="username"
                     value={formValues.username}
-                    onChange={handleChange}
-                    required
-                />
-            </FormControl>
-
-            <FormControl>
-                <TextField
-                    type="email"
-                    label="Email"
-                    name="email"
-                    value={formValues.email}
                     onChange={handleChange}
                     required
                 />
