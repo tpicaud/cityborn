@@ -37,7 +37,6 @@ export const SignInComponent = () => {
                 gap: 2,
                 maxWidth: 300,
                 mx: "auto",
-                mt: 4
             }}
         >
             <Typography variant="h5" align="center">
