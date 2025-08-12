@@ -4,7 +4,7 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import { GameConfig } from "@cityborn/types";
-import * as apiService from "@/services/apiService";
+import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { IUseGame } from "./IUseGame";
 import { Result } from "@cityborn/types";
 
@@ -21,7 +21,7 @@ export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
     const startGame = async (gameConfig: GameConfig) => {
         try {
             // Create  new game
-            const game = await apiService.createSoloGame(gameConfig, localPlayerID);
+            const game = await ApiServiceClient.createSoloGame(gameConfig, localPlayerID);
 
             // Start game
             setGame({

@@ -1,42 +1,37 @@
-import { useState, useEffect, useContext, createContext, ReactNode } from "react";
-import * as apiService from '@/services/apiService';
+'use client';
+
+import { useState, useEffect, useContext, createContext, ReactNode, useCallback } from "react";
+import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { PublicUser } from "@cityborn/types";
 
 interface AuthContextType {
     user: PublicUser | null;
     setUser: React.Dispatch<React.SetStateAction<PublicUser | null>>;
-    loading: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 // ✅ On exporte pour pouvoir l'utiliser ailleurs
-export const AuthContext = createContext<AuthContextType>({
-    user: null,
-    setUser: () => { },
-    loading: true,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<PublicUser | null>(null);
-    const [loading, setLoading] = useState(true);
+const AuthProvider = ({ initialValue, children }: { initialValue: PublicUser | null, children: ReactNode }) => {
+    const [user, setUser] = useState<PublicUser | null>(initialValue);
 
-    async function fetchUser() {
-        setLoading(true);
+    const refreshUser = useCallback(async () => {
         try {
-            const user = await apiService.getCurrentUser();
-            setUser(user);
+            const res = await fetch("/api/auth/me", { cache: "no-store" });
+            if (res.ok) {
+                const data = await res.json();
+                setUser(data.user ?? null);
+            } else {
+                setUser(null);
+            }
         } catch {
             setUser(null);
-        } finally {
-            setLoading(false);
         }
-    }
-
-    useEffect(() => {
-        fetchUser();
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loading }}>
+        <AuthContext.Provider value={{ user, setUser, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
@@ -44,7 +39,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 // ✅ Hook pratique pour accéder au contexte
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 }
 
 // ✅ Export du provider pour envelopper l’app

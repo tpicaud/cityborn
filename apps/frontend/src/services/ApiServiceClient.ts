@@ -1,62 +1,62 @@
-import { GameMode, PublicUser } from "@cityborn/types";
-import { Game } from "@cityborn/types";
-import { GameConfig } from "@cityborn/types";
-import { GuessObject } from "@cityborn/types";
-import { Session } from "@cityborn/types";
-
-const REST_BACKEND_URL = process.env.NEXT_PUBLIC_REST_BACKEND_URL!;
-
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-
-    const response = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) },
-        ...options,
-    });
-    
-    let data: any;
-    try {
-        data = await response.json();
-    } catch {
-        data = null;
-    }
-
-    if (!response.ok) {
-        throw new Error(data?.message || data?.error || response.statusText || 'Unknown error');
-    }
-
-    return data as T;
-}
-
+import { Game, GameConfig, GameMode, GuessObject, PublicUser, Session } from "@cityborn/types";
 
 //////////////////
 // Auth service //
 //////////////////
 
 export async function getCurrentUser(): Promise<PublicUser | null> {
-    const data = await apiFetch<any>(`/api/auth/me`, { method: 'GET' });
-    console.log('api service : ', data);
-    if (!data.user) return null;
-    return data.user;
+    const response = await fetch(`/api/auth/me`, { method: 'GET' });
+
+    const data = await response.json();
+    if (!data) throw new Error("Invalid server response");
+
+    if (!response.ok) {
+        throw new Error(data.message || "Failed to create session");
+    }
+
+    return data.user as PublicUser || null;
 }
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
-    await apiFetch<void>(`/api/auth/sign-up`, {
+    const response = await fetch(`/api/auth/sign-up`, {
         method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ username, email, password }),
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Failed to sign up");
+    }
 }
 
 export async function signIn(identifier: string, password: string): Promise<void> {
-    await apiFetch<void>(`/api/auth/sign-in`, {
+    const response = await fetch(`/api/auth/sign-in`, {
         method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ identifier, password }),
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Failed to sign in");
+    }
 }
 
 export async function signOut(): Promise<void> {
-    await apiFetch<void>(`/api/auth/sign-out`, {
-        method: 'POST',
-    });
+    const response = await fetch(`/api/auth/sign-out`, { method: 'POST' });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data?.message || "Failed to sign out");
+    }
 }
 
 //////////////////////
@@ -64,8 +64,7 @@ export async function signOut(): Promise<void> {
 //////////////////////
 
 export async function createSession(gameMode: GameMode): Promise<Session> {
-    // Appelle simplement l'API route Next.js (pas directement le backend REST)
-    const response = await fetch('/api/session', {
+    const response = await fetch(`/api/session`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -73,32 +72,37 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
         body: JSON.stringify({ gameMode }),
     });
 
+    const data = await response.json().catch(() => null);
+    if (!data) throw new Error("Invalid server response");
+
     if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
-        const message = errorBody?.message || response.statusText;
-        throw new Error(`Erreur lors de la création de la session: ${message}`);
+        throw new Error(data.message || "Failed to create session");
     }
 
-    // Le corps de la réponse est la session directement (déjà formatée par l’API route)
-    const session: Session = await response.json();
-    return session;
+    if (!data.session) throw new Error('No session returned from create session');
+    return data.session as Session;
 }
 
 export async function fetchSession(sessionID: string): Promise<Session> {
-    try {
-        const response = await fetch(`${REST_BACKEND_URL}/session?sessionId=${sessionID}`);
+    const response = await fetch(`/api/session/${sessionID}`, { method: 'GET' });
 
-        const data = await response.json();
-        const session: Session = data.session;
+    const data = await response.json().catch(() => null);
+    if (!data) throw new Error("Invalid server response");
 
-        return session;
-    } catch (error) {
-        throw new Error(`Erreur lors de la récupération de la session: ${error}`);
+    if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch session");
     }
+
+    if (!data.session) throw new Error('No session returned from fetch session');
+    return data.session as Session;
 }
 
 export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
-    const response = await fetch(`${REST_BACKEND_URL}/guess-objects`, {
+    const query = new URLSearchParams({
+        ids: guessObjectsIds.join(','),
+    });
+
+    const response = await fetch(`/api/guess-objects?${query.toString()}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -123,7 +127,7 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
 
 export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     try {
-        const response = await fetch(`${REST_BACKEND_URL}/game`, {
+        const response = await fetch(`/api/game`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -146,7 +150,7 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
 
 export async function fetchGame(gameId: string): Promise<Game> {
     try {
-        const response = await fetch(`${REST_BACKEND_URL}/game?gameId=${gameId}`);
+        const response = await fetch(`/api/game/${gameId}`);
 
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);
@@ -163,7 +167,7 @@ export async function fetchGame(gameId: string): Promise<Game> {
 
 export const getEndSentence = async (score_type: string): Promise<string> => {
     try {
-        const response = await fetch(`${REST_BACKEND_URL}/sentence?score_type=${encodeURIComponent(score_type)}`);
+        const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
         const data = await response.json();
 
         return data.sentence.sentence || '';

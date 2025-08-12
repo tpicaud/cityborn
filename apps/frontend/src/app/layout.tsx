@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import * as ApiServiceServer from "@/services/ApiServiceServer";
+import AuthProvider from "@/contexts/AuthContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,11 +20,22 @@ export const metadata: Metadata = {
   description: "Trouvez le lieu de naissances des personnalités",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  let user = null;
+  const hasToken = await ApiServiceServer.hasToken();
+  if (hasToken) {
+    try {
+      user = await ApiServiceServer.getCurrentUser();
+    } catch (error) {
+      console.error("Failed to fetch user:", error);
+    }
+  }
+
   return (
     <html lang="en">
       <head>
@@ -31,7 +44,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider initialValue={user}>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

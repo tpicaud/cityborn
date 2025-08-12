@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { GameResponseDto } from './dto/game.response.dto';
@@ -17,8 +17,8 @@ export class GameController {
     }
 
     @UseGuards(AuthGuard)
-    @Get()
-    async getGame(@Query('gameId') gameId: string): Promise<GameResponseDto> {
+    @Get(':gameId')
+    async getGame(@Param('gameId') gameId: string): Promise<GameResponseDto> {
         return {
             game: await this.gameService.get(gameId)
         }

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { GameMode } from '@cityborn/types';
-import * as apiService from '@/services/apiService';
+import * as ApiServiceClient from '@/services/ApiServiceClient';
+import { useAuth } from '@/contexts/AuthContext';
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 
@@ -14,6 +15,8 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 export default function MenuComponent() {
 
     const router = useRouter();
+
+    const { user } = useAuth();
 
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
@@ -24,14 +27,14 @@ export default function MenuComponent() {
     };
 
     const handleMultiPlay = async () => {
-        const session = await apiService.createSession(GameMode.MULTI);
+        const session = await ApiServiceClient.createSession(GameMode.MULTI);
         router.push(`/session/multi/${session.id}`)
     }
 
     const handleJoin = async () => {
         try {
             if (code) {
-                const session = await apiService.fetchSession(code);
+                const session = await ApiServiceClient.fetchSession(code);
                 if (!session) setJoinErrorMessage('La partie est introuvable')
 
                 router.push(`/session/multi/${code}`)

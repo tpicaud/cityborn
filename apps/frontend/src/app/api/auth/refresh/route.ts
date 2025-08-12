@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         return new Response('Unauthorized', { status: 401 });
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_REST_BACKEND_URL}/auth/refresh`, {
+    const res = await fetch(`${process.env.REST_BACKEND_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
