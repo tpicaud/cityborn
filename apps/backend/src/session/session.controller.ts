@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto } from './dto/session.response.dto';
@@ -8,7 +8,6 @@ import { AuthGuard } from 'src/auth/auth.guard';
 export class SessionController {
     constructor(private readonly sessionService: SessionService) { }
 
-
     @UseGuards(AuthGuard)
     @Post()
     async createSession(@Body() createSessionDto: CreateSessionDto): Promise<SessionResponseDto> {
@@ -16,12 +15,11 @@ export class SessionController {
             session: await this.sessionService.create(createSessionDto)
         }
     }
-
     @UseGuards(AuthGuard)
-    @Get()
-    async getSession(@Query('sessionId') sessionId: string): Promise<SessionResponseDto> {
+    @Get(':sessionId')
+    async getSession(@Param('sessionId') sessionId: string): Promise<SessionResponseDto> {
         return {
             session: await this.sessionService.getById(sessionId)
-        }
+        };
     }
 }

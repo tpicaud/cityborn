@@ -1,8 +1,14 @@
+'use client';
+
 import * as React from "react";
 import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
-import * as apiService from '@/services/apiService';
+import * as ApiServiceClient from '@/services/ApiServiceClient';
+import { useAuth } from "@/contexts/AuthContext";
 
 export const SignInComponent = () => {
+
+    const { refreshUser } = useAuth();
+
     const [formValues, setFormValues] = React.useState({
         username: "",
         password: ""
@@ -17,7 +23,8 @@ export const SignInComponent = () => {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
-        await apiService.signIn(formValues.username, formValues.password)
+        await ApiServiceClient.signIn(formValues.username, formValues.password);
+        await refreshUser();
     };
 
     return (

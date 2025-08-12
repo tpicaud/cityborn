@@ -1,13 +1,17 @@
-// app/api/auth/me/route.ts
-import { NextResponse } from "next/server";
-import { authFetch } from "../../authFetch";
+import { NextRequest, NextResponse } from "next/server";
+import { authFetch } from "../authFetch";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        const response = await authFetch(`${process.env.REST_BACKEND_URL}/auth/me`, {
+        const queryString = req.nextUrl.searchParams.get('score_type');
+
+        const response = await authFetch(`${process.env.REST_BACKEND_URL}/sentence?score_type=${queryString}`, {
             requestOptions: {
-                method: 'GET'
-            },
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
         });
 
         const data = await response.json();
@@ -17,8 +21,8 @@ export async function GET() {
             return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
         }
 
-        // If null, return null user
         return NextResponse.json(data, { status: 200 });
+
     } catch (error: any) {
         return NextResponse.json(
             { message: error.message || "Internal Server Error", statusCode: 500 },
@@ -26,4 +30,3 @@ export async function GET() {
         );
     }
 }
-
