@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refresh_token')?.value;
 
     if (!refreshToken) {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const data = await res.json();
 
     // Met à jour les cookies access_token (et refresh_token si tu en renvoies un nouveau)
-    cookies().set({
+    cookieStore.set({
         name: 'access_token',
         value: data.access_token,
         httpOnly: true,
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     });
 
     if (data.refresh_token) {
-        cookies().set({
+        cookieStore.set({
             name: 'refresh_token',
             value: data.refresh_token,
             httpOnly: true,

@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import * as cookie from 'cookie';
 
 export function extractTokenFromHTTPHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
@@ -6,5 +7,10 @@ export function extractTokenFromHTTPHeader(request: Request): string | undefined
 }
 
 export function extractTokenFromWsClient(client?: any): string | undefined {
-    return client.handshake?.query?.authorization ?? undefined;
+
+    const cookies = client.handshake.headers.cookie;
+    if (!cookies) return undefined;
+
+    const parsedCookies = cookie.parse(cookies);
+    return parsedCookies['access_token'];
 }

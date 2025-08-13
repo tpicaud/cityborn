@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { authFetch } from "../../authFetch";
 
-export async function GET({ params }: { params: { sessionId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { sessionId: string } }) {
     try {
-        const { sessionId } = params;
+        const sessionId = (await params).sessionId;
         if (!sessionId) {
             return NextResponse.json(
                 { message: "Parameter sessionId is required", statusCode: 400 },
@@ -10,11 +11,13 @@ export async function GET({ params }: { params: { sessionId: string } }) {
             );
         }
 
-        const response = await fetch(`${process.env.REST_BACKEND_URL}/session/${sessionId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        const response = await authFetch(`${process.env.REST_BACKEND_URL}/session/${sessionId}`, {
+            requestOptions: {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
         });
 
         const data = await response.json();
