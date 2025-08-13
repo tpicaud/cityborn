@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { SignInComponent } from "./auth/SignInComponent";
 import { SignUpComponent } from "./auth/SignUpComponent";
 import dynamic from "next/dynamic";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from "@/contexts/AuthContext";

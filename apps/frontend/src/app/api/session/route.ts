@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authFetch } from "../authFetch";
 
 export async function POST(req: Request) {

@@ -14,7 +14,7 @@ export async function authFetch(
     const options = requestOptions || {};
 
     const cookieStore = await cookies();
-    let token = cookieStore.get('access_token')?.value;
+    const token = cookieStore.get('access_token')?.value;
 
     // Si pas de token, on refuse direct (ou on peut tenter un refresh)
     if (!token && forceAuth) {
@@ -30,7 +30,7 @@ export async function authFetch(
 
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    let res = await fetch(url, {
+    const res = await fetch(url, {
         ...options,
         headers
     });

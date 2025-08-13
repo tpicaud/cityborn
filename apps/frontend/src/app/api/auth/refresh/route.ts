@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_req: Request) {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refresh_token')?.value;
 

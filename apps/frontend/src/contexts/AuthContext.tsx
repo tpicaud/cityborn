@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useContext, createContext, ReactNode, useCallback } from "react";
-import * as ApiServiceClient from '@/services/ApiServiceClient';
+import { useState, useContext, createContext, ReactNode, useCallback } from "react";
 import { PublicUser } from "@cityborn/types";
 
 interface AuthContextType {
