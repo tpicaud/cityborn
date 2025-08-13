@@ -40,7 +40,6 @@ export const SignUpComponent = () => {
             component="form"
             onSubmit={handleSubmit}
             sx={{
-                position: 'relative',
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
