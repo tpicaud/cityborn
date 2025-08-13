@@ -89,6 +89,16 @@ export default function MenuComponent({
 
             <div className="flex flex-col gap-2 items-center justify-center w-full">
 
+                <div className="flex flex-row gap-3 items-center w-full">
+                    <div className="flex-1 h-px bg-black rounded-full"></div>
+                    <Typography variant="h6">
+                        Jouer
+                    </Typography>
+                    <div className="flex-1 h-px bg-black rounded-full"></div>
+                </div>
+
+
+
                 <div className="flex flex-row gap-2 items-center justify-center w-full">
                     <input
                         type="text"
