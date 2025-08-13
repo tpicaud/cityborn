@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_req: Request) {
 
     const response = NextResponse.json({ success: true, message: 'Signed out successfully' });
     response.cookies.set({

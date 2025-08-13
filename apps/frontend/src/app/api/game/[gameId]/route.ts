@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFetch } from "../../authFetch";
 
-export async function GET(req: NextRequest, { params }: { params: { gameId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ gameId: string }> }) {
     try {
         const gameId = (await params).gameId;
         if (!gameId) {

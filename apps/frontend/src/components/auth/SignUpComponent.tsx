@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from "react";
-import { Box, FormControl, TextField, Button, Typography, IconButton } from "@mui/material";
+import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
 

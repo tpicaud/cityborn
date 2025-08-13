@@ -1,13 +1,8 @@
 'use server';
 
 import { authFetch } from "@/app/api/authFetch";
-import { GameMode, PublicUser } from "@cityborn/types";
-import { Game } from "@cityborn/types";
-import { GameConfig } from "@cityborn/types";
-import { GuessObject } from "@cityborn/types";
-import { Session } from "@cityborn/types";
+import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
-import { STATUS_CODES } from "node:http";
 
 const REST_BACKEND_URL = process.env.REST_BACKEND_URL;
 if (!REST_BACKEND_URL) {
