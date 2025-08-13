@@ -17,7 +17,8 @@ export async function GET(req: NextRequest, { params }: { params: { sessionId: s
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }
+            },
+            forceAuth: false
         });
 
         const data = await response.json();

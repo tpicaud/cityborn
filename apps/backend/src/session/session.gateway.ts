@@ -27,7 +27,6 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 	@WebSocketServer()
 	io: Server;
 
-	//@UseGuards(AuthGuard)
 	@SubscribeMessage('session:join')
 	async handleJoin(
 		@ConnectedSocket() socket: Socket,

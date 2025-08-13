@@ -192,6 +192,7 @@ const ResultsComponent = ({
                         color="primary"
                         onClick={handlePlayAgain}
                         className="w-24"
+                        disabled={localPlayerID !== game.hostID}
                     >
                         Rejouer
                     </Button>

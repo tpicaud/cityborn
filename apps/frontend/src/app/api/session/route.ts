@@ -9,7 +9,8 @@ export async function POST(req: Request) {
             requestOptions: {
                 method: 'POST',
                 body: JSON.stringify(body),
-            }
+            },
+            forceAuth: false
         });
 
         const data = await response.json();
