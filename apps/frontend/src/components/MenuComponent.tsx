@@ -1,12 +1,13 @@
 'use client'
 
-import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Snackbar, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { GameMode } from '@cityborn/types';
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function MenuComponent({
     setState,
@@ -124,7 +125,7 @@ export default function MenuComponent({
 
                 </div>
 
-                <div className='flex flex-row gap-2 justify-center pointer-events-auto'>
+                <div className='flex flex-row gap-2 justify-center'>
                     <Button
                         variant="contained"
                         color="primary"
@@ -150,20 +151,50 @@ export default function MenuComponent({
                 )}
             </div>
 
-            <Snackbar
+            <Dialog
                 open={openAlert}
-                autoHideDuration={3000}
                 onClose={() => setOpenAlert(false)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             >
-                <Alert
-                    onClose={() => setOpenAlert(false)}
-                    severity="warning"
-                    variant="filled"
+                <IconButton
+                    aria-label="close"
+                    onClick={() => setOpenAlert(false)}
+                    sx={{
+                        position: 'absolute',
+                        right: 0,
+                        color: (theme) => theme.palette.grey[500],
+                    }}
                 >
-                    Vous devez être connecté pour jouer en mode multi !
-                </Alert>
-            </Snackbar>
+                    <CloseIcon />
+                </IconButton>
+                <DialogTitle sx={{ mt: 2, mx: 3, paddingX: 2, paddingTop: 2 }}>
+
+                    <p>Vous devez être connecté pour jouer en mode multi !</p>
+                </DialogTitle>
+                <DialogContent>
+                    <div className="flex flex-row gap-2 items-center justify-center w-full">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+                            onClick={async () => {
+                                setState('sign-in');
+                            }}
+                        >
+                            <p className='px-3'>Se connecter</p>
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+                            onClick={async () => {
+                                setState('sign-up');
+                            }}
+                        >
+                            <p className='px-3'>S'inscrire</p>
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 }
