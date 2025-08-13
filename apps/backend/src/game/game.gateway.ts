@@ -27,7 +27,6 @@ export class GameGateway extends AuthenticatedGateway {
 	@WebSocketServer()
 	io: Server;
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:join')
 	async handleJoin(
 		@ConnectedSocket() socket: Socket,
@@ -54,7 +53,6 @@ export class GameGateway extends AuthenticatedGateway {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:guess')
 	async handleGuess(
 		@ConnectedSocket() socket: Socket,
@@ -78,7 +76,6 @@ export class GameGateway extends AuthenticatedGateway {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:nextRound')
 	async handleNextRound(
 		@ConnectedSocket() socket: Socket
@@ -97,7 +94,6 @@ export class GameGateway extends AuthenticatedGateway {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:end')
 	async handleEnd(
 		@ConnectedSocket() socket: Socket
@@ -115,7 +111,6 @@ export class GameGateway extends AuthenticatedGateway {
 		}
 	}
 
-	@UseGuards(AuthGuard)
 	@SubscribeMessage('game:reconnect')
 	async handleReconnect(
 		@ConnectedSocket() socket: Socket,

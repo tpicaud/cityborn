@@ -32,7 +32,7 @@ export class SessionService {
     /////////////
 
     async create(dto: CreateSessionDto): Promise<Session> {
-        const { gameMode } = dto
+        const { gameMode } = dto;
 
         try {
             const sessionID: string = await this.generateUniqueSessionID();

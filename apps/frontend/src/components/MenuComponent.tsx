@@ -25,11 +25,7 @@ export default function MenuComponent({
     const [openAlert, setOpenAlert] = useState(false);
 
     const handleSoloPlay = () => {
-        if (!user) {
-            setOpenAlert(true);
-        } else {
-            router.push(`/session/solo`);
-        }
+        router.push(`/session/solo`);
     };
 
     const handleMultiPlay = async () => {

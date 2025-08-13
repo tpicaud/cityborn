@@ -28,7 +28,7 @@ export async function authFetch(
         Accept: 'application/json',
     }
 
-    if (forceAuth) headers.Authorization = `Bearer ${token}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
 
     let res = await fetch(url, {
         ...options,

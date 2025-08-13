@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { Request } from 'express';
+import { extractTokenFromHTTPHeader } from './utils';
 
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
@@ -14,7 +15,8 @@ export class OptionalAuthGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<Request>();
-        const token = this.extractTokenFromHeader(request);
+        const token = extractTokenFromHTTPHeader(request);
+
 
         if (!token) {
             return true;
@@ -29,10 +31,5 @@ export class OptionalAuthGuard implements CanActivate {
             throw new UnauthorizedException();
         }
         return true;
-    }
-
-    private extractTokenFromHeader(request: Request): string | undefined {
-        const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined;
     }
 }
