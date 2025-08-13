@@ -11,7 +11,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     if (!data) throw new Error("Invalid server response");
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to create session");
+        throw new Error(`${response.status} : ${data.message}`);
     }
 
     return data.user as PublicUser || null;
@@ -29,7 +29,7 @@ export async function signUp(username: string, email: string, password: string):
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to sign up");
+        throw new Error(`${response.status} : ${data.message}`);
     }
 }
 
@@ -45,7 +45,7 @@ export async function signIn(identifier: string, password: string): Promise<void
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to sign in");
+        throw new Error(`${response.status} : ${data.message}`);
     }
 }
 
@@ -72,25 +72,23 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
         body: JSON.stringify({ gameMode }),
     });
 
-    const data = await response.json().catch(() => null);
-    if (!data) throw new Error("Invalid server response");
+    const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to create session");
+        throw new Error(`${response.status} : ${data.message}`);
     }
 
     if (!data.session) throw new Error('No session returned from create session');
     return data.session as Session;
 }
 
-export async function fetchSession(sessionID: string): Promise<Session> {
-    const response = await fetch(`/api/session/${sessionID}`, { method: 'GET' });
+export async function fetchSession(sessionId: string): Promise<Session> {
+    const response = await fetch(`/api/session/${sessionId}`, { method: 'GET' });
 
-    const data = await response.json().catch(() => null);
-    if (!data) throw new Error("Invalid server response");
+    const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch session");
+        throw new Error(`${response.status} : ${data.message}`);
     }
 
     if (!data.session) throw new Error('No session returned from fetch session');
@@ -110,11 +108,12 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
         body: JSON.stringify({ guessObjectsIds }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des guess objects');
+        throw new Error(`${response.status} : ${data.message}`);
     }
 
-    const data = await response.json();
     const guessObjects: GuessObject[] = data.guessObjects;
 
     return guessObjects;
@@ -135,11 +134,12 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
             body: JSON.stringify({ gameConfig, hostID, gameMode: GameMode.SOLO, playersID: [hostID] }),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
+            throw new Error(`${response.status} : ${data.message}`);
         }
 
-        const data = await response.json();
         const game: Game = data.game;
 
         return game;
@@ -152,11 +152,12 @@ export async function fetchGame(gameId: string): Promise<Game> {
     try {
         const response = await fetch(`/api/game/${gameId}`);
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
+            throw new Error(`${response.status} : ${data.message}`);
         }
 
-        const data = await response.json();
         const game: Game = data.game;
 
         return game;

@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { authFetch } from "../../authFetch";
 
-export async function GET({ params }: { params: { gameId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { gameId: string } }) {
     try {
-        const { gameId } = params;
+        const gameId = (await params).gameId;
         if (!gameId) {
             return NextResponse.json(
                 { message: "Parameter gameId is required", statusCode: 400 },
@@ -10,10 +11,12 @@ export async function GET({ params }: { params: { gameId: string } }) {
             );
         }
 
-        const response = await fetch(`${process.env.REST_BACKEND_URL}/game/${gameId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        const response = await authFetch(`${process.env.REST_BACKEND_URL}/game/${gameId}`, {
+            requestOptions: {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
         });
         const data = await response.json();

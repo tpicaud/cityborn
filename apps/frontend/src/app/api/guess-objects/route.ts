@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authFetch } from "../authFetch";
 
 export async function GET(req: NextRequest) {
     try {
         const queryString = req.nextUrl.searchParams.toString();
 
-        const response = await fetch(`${process.env.REST_BACKEND_URL}/guess-objects?${queryString}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        const response = await authFetch(`${process.env.REST_BACKEND_URL}/guess-objects?${queryString}`, {
+            requestOptions: {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
         });
 
         const data = await response.json();

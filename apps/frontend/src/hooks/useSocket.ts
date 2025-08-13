@@ -19,6 +19,10 @@ export const useSocket = () => {
             setConnected(false);
         });
 
+        socket.on("error", (data) => {
+            console.log(data.message);
+        });
+
         return () => {
             socket.disconnect();
         };

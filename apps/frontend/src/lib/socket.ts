@@ -9,6 +9,7 @@ export const getSocket = (): Socket => {
         socket = io(WEBSOCKET_URL, {
             transports: ["websocket"],
             autoConnect: true,
+            withCredentials: true,
         });
     }
     return socket;
