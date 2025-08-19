@@ -1,3 +1,5 @@
+'use client';
+
 import { Guess } from "@cityborn/types";
 import { Box, Button } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";

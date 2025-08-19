@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, Typography, List, ListItem, ListItemText, Button, TextField, IconButton, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';

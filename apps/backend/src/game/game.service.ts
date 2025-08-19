@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { defaultGuess, Game, GameConfig, GameMode, GameStatus, GuessObject, OnlinePlayer, Player, Round, RoundStatus, Session } from '@cityborn/types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
@@ -55,7 +55,7 @@ export class GameService {
             return newGame;
         } catch (error) {
             //this.logger.error('Error while creating game:', error.message);
-            throw new Error(`An error occurred while creating the game.: ${error.message}`);
+            throw new Error(`An error occurred while creating the game: ${error.message}`);
         }
     }
 
