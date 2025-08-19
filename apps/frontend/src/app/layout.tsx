@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import * as ApiServiceServer from "@/services/ApiServiceServer";
 import AuthProvider from "@/contexts/AuthContext";
+import { Roboto } from 'next/font/google';
+import Script from "next/script";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,6 +15,11 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
 });
 
 export const metadata: Metadata = {
@@ -40,12 +47,10 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        {/* Google Auth */}
-        <script src="https://accounts.google.com/gsi/client" async></script>
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${roboto.className} antialiased`}
       >
         <AuthProvider initialValue={user}>
           {children}

@@ -17,6 +17,12 @@ import CloseIcon from '@mui/icons-material/Close';
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 
+declare global {
+    interface Window {
+        google: any
+    }
+}
+
 export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
