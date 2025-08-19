@@ -10,7 +10,6 @@ import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
-import { getEndSentence } from '@/services/ApiServiceClient';
 
 const ResultsComponent = ({
     game,

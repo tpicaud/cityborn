@@ -2,7 +2,7 @@
 
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
-import { Backdrop, Button, Dialog } from "@mui/material";
+import { Backdrop, Button } from "@mui/material";
 import { RoundStatus } from "@cityborn/types";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { Game } from "@cityborn/types";
