@@ -40,6 +40,9 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* Google Auth */}
+        <script src="https://accounts.google.com/gsi/client" async></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

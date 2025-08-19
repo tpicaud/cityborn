@@ -5,6 +5,7 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { AuthGuard } from './auth.guard';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -18,6 +19,11 @@ export class AuthController {
     @Post('sign-in')
     async signIn(@Body() signInDto: SignInDto): Promise<AuthResponseDto> {
         return await this.authService.signIn(signInDto);
+    }
+
+    @Post('sign-in-with-google')
+    async signInWithGoogle(@Body() signInWithGoogleDto: SignInWithGoogleDto): Promise<AuthResponseDto> {
+        return await this.authService.signInWithGoogle(signInWithGoogleDto);
     }
 
     @Get('me')
