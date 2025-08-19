@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, Card, CardContent, TextField, Typography } from "@mui/material"
 import { useState } from "react"
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';

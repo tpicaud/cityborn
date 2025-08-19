@@ -1,6 +1,5 @@
 'use client';
 
-import { getEndSentence } from '@/services/LocalGameService';
 import { GuessObject, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
@@ -11,6 +10,7 @@ import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
+import { getEndSentence } from '@/services/ApiServiceClient';
 
 const ResultsComponent = ({
     game,

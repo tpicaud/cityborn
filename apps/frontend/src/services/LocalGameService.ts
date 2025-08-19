@@ -19,16 +19,4 @@ const getLocalObjectList = async (category: string): Promise<GuessObject[]> => {
     return objects;
 };
 
-const getEndSentence = async (score_type: string): Promise<string> => {
-    try {
-        const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
-        const data = await response.json();
-        
-        return data.sentence;
-    } catch (error) {
-        console.error('Erreur lors de la récupération de la phrase: ', error);
-    }
-    return '';
-}
-
-export { getLocalObjectList, getEndSentence };
+export { getLocalObjectList };

@@ -8,7 +8,8 @@ async function bootstrap() {
 
   const cors = process.env.CORS_ORIGIN ?? '*'
   app.enableCors({
-    origin: [cors]
+    origin: [cors],
+    credentials: true
   })
 
   app.useGlobalPipes(new ValidationPipe());
