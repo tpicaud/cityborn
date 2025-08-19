@@ -16,7 +16,7 @@ export interface Game {
     state: GameState;
 }
 
-interface GameState {
+export interface GameState {
     guessObjectsIds: string[];
     currentRound: Round | undefined;
     results: Record<string, PlayerResults>

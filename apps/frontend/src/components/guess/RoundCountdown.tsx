@@ -1,3 +1,5 @@
+'use client';
+
 import { Backdrop, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 

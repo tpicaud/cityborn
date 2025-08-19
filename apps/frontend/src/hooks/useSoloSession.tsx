@@ -2,7 +2,7 @@ import { IUseSession } from "./IUseSession";
 import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
-import * as apiService from "@/services/apiService";
+import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { GameMode } from "@cityborn/types";
 
 export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Promise<void>): IUseSession {
@@ -17,7 +17,7 @@ export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Pr
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const session: Session = await apiService.createSession(GameMode.SOLO);
+                const session: Session = await ApiServiceClient.createSession(GameMode.SOLO);
                 setSession(session);
             } catch (error: any) {
                 console.error(error.message);

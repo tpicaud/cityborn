@@ -72,3 +72,9 @@
 | 21/07/2025 | 4h | Migration backend |
 | 01/08/2025 | 3h | Migration backend |
 | 02/08/2025 | 1h | Migration backend |
+| 05/08/2025 | 4h | Finalisation et mise en prod/pre-prod de la migration |
+| 07/08/2025 | 5h | Authentification backend |
+| 08/08/2025 | 6h | Authentification backend |
+| 10/08/2025 | 6h | Authentification frontend |
+| 11/08/2025 | 4h | Authentification frontend |
+| 11/08/2025 | 3h | Authentification frontend visuel |

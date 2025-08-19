@@ -1,18 +1,28 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
+import { GameResponseDto } from './dto/game.response.dto';
+import { OptionalAuthGuard } from 'src/auth/optional-auth.guard';
+import { CurrentUser } from 'src/user/user.decorator';
+import { GameMode } from '@cityborn/types';
 
 @Controller('game')
 export class GameController {
-    constructor(private readonly gameService: GameService) {}
+    constructor(private readonly gameService: GameService) { }
 
-        @Post()
-        async createGame(@Body() createGameDto: CreateGameDto) {
-            return await this.gameService.create(createGameDto)
+    @UseGuards(OptionalAuthGuard)
+    @Post()
+    async createGame(@Body() createGameDto: CreateGameDto, @CurrentUser() user: any): Promise<GameResponseDto> {
+        if (!user && createGameDto.gameMode === GameMode.MULTI) throw new UnauthorizedException();
+        return {
+            game: await this.gameService.create(createGameDto)
         }
-    
-        @Get()
-        async getGame(@Query('gameId') gameId: string) {
-            return await this.gameService.get(gameId);
+    }
+
+    @Get(':gameId')
+    async getGame(@Param('gameId') gameId: string): Promise<GameResponseDto> {
+        return {
+            game: await this.gameService.get(gameId)
         }
+    }
 }

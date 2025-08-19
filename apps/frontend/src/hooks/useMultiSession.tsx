@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
-import * as apiService from "@/services/apiService";
+import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
@@ -29,7 +29,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const session: Session = await apiService.fetchSession(sessionID);
+                const session: Session = await ApiServiceClient.fetchSession(sessionID);
                 setSession(session);
             } catch (error) {
                 console.log(error);

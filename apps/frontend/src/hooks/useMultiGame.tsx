@@ -3,7 +3,7 @@ import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
-import * as apiService from "@/services/apiService";
+import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 
 export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame & {
@@ -41,7 +41,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         const handleStartGame = async (gameID: string) => {
             try {
                 // Fetch game
-                const game: Game = await apiService.fetchGame(gameID);
+                const game: Game = await ApiServiceClient.fetchGame(gameID);
 
                 // Set and join
                 setGame(game);
