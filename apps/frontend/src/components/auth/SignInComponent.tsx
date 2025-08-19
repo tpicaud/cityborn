@@ -4,10 +4,35 @@ import * as React from "react";
 import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 export const SignInComponent = () => {
 
     const { refreshUser } = useAuth();
+
+    /////////////////
+    // Google Auth //
+    /////////////////
+    useEffect(() => {
+        if (window.google) {
+            window.google.accounts.id.initialize({
+                client_id: "871572964929-4mjfe3pnprt0jokgd2vt4h5s8bah7bla.apps.googleusercontent.com",
+                callback: handleCredentialResponse,
+            });
+
+            window.google.accounts.id.renderButton(
+                document.getElementById("googleSignInDiv"),
+                { theme: "outline", size: "large" } // options du bouton
+            );
+        }
+    }, []);
+
+    const handleCredentialResponse = async (response: any) => {
+        console.log("JWT Google:", response.credential);
+        await ApiServiceClient.signInWithGoogle(response.credential);
+        await refreshUser();
+    };
+    /////////////////
 
     const [formValues, setFormValues] = React.useState({
         username: "",
@@ -67,6 +92,16 @@ export const SignInComponent = () => {
             <Button variant="contained" type="submit">
                 Sign In
             </Button>
+
+            <div className="flex flex-row gap-3 items-center w-full">
+                <div className="flex-1 h-px bg-black rounded-full"></div>
+                <Typography>
+                    OU
+                </Typography>
+                <div className="flex-1 h-px bg-black rounded-full"></div>
+            </div>
+
+            <div id="googleSignInDiv"></div>
         </Box>
     );
 };

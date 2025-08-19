@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
@@ -6,6 +6,9 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import { OAuth2Client } from 'google-auth-library';
+import { randomInt } from 'crypto';
+import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +17,8 @@ export class AuthService {
 
     constructor(
         private readonly userService: UserService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
     async signUp(dto: SignUpDto): Promise<AuthResponseDto> {
@@ -55,6 +59,9 @@ export class AuthService {
 
         if (!user) throw new UnauthorizedException(`Invalid credentials`);
 
+        // Check if vanilla account
+        if (!user.password) throw new UnauthorizedException('No classic account found. Try with a provider (e.g. Google)');
+
         // Validate password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) throw new UnauthorizedException(`Invalid password`);
@@ -73,6 +80,34 @@ export class AuthService {
         }
     }
 
+    async signInWithGoogle(dto: SignInWithGoogleDto): Promise<AuthResponseDto> {
+        const { idToken } = dto;
+
+        const { email, name } = await this.verifyGoogleToken(idToken);
+
+        // Vérifie si l’utilisateur existe déjà
+        let user = await this.userService.findByIdentifier(email);
+
+        if (!user) {
+            const uniqueUsername = await this.generateUniqueUsername(name);
+
+            user = await this.userService.createUser({
+                email,
+                username: uniqueUsername,
+                password: null
+            });
+        }
+
+        // Génére ton JWT habituel
+        const token = await this.generateJWT(user.id, user.username, user.email);
+
+        return {
+            access_token: token,
+            user: this.userService.getPublicUser(user),
+        };
+    }
+
+
     async getProfile(identifier: string): Promise<PublicUserResponseDto> {
         const user = await this.userService.findByIdentifier(identifier);
         if (!user) throw new UnauthorizedException(`User not found`);
@@ -90,5 +125,40 @@ export class AuthService {
             email
         }
         return await this.jwtService.signAsync(payload);
+    }
+
+    private async verifyGoogleToken(idToken: string) {
+        const ticket = await this.googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload) {
+            throw new UnauthorizedException('Invalid Google token');
+        }
+        console.log(payload);
+
+        if (!payload.email || !payload.name) throw new BadRequestException('Missing name or email');
+        return {
+            email: payload.email,
+            name: payload.name,
+        };
+    }
+
+    private async generateUniqueUsername(base: string): Promise<string> {
+        const sanitized = base.replace(/\s+/g, '').toLowerCase();
+
+        let username: string = sanitized;
+        let exists = true;
+
+        while (exists) {
+            const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
+            username = `${sanitized}${suffix}`;
+
+            exists = await this.userService.findByIdentifier(username) ? true : false;
+        }
+
+        return username;
     }
 }

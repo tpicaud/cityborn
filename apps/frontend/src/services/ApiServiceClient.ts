@@ -59,6 +59,22 @@ export async function signOut(): Promise<void> {
     }
 }
 
+export async function signInWithGoogle(idToken: string): Promise<void> {
+    const response = await fetch(`/api/auth/sign-in-with-google`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`${response.status} : ${data.message}`);
+    }
+}
+
 //////////////////////
 // Sessions service //
 //////////////////////
