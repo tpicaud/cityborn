@@ -4,6 +4,7 @@ import HomeComponent from '@/components/HomeComponent';
 declare global {
 	interface Window {
 		socket: Socket;
+		google: any
 	}
 }
 

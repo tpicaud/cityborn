@@ -16,7 +16,7 @@ export const SignInComponent = () => {
     useEffect(() => {
         if (window.google) {
             window.google.accounts.id.initialize({
-                client_id: "871572964929-4mjfe3pnprt0jokgd2vt4h5s8bah7bla.apps.googleusercontent.com",
+                client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
                 callback: handleCredentialResponse,
             });
 
@@ -28,7 +28,6 @@ export const SignInComponent = () => {
     }, []);
 
     const handleCredentialResponse = async (response: any) => {
-        console.log("JWT Google:", response.credential);
         await ApiServiceClient.signInWithGoogle(response.credential);
         await refreshUser();
     };
