@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { SignInComponent } from "./auth/SignInComponent";
 import { SignUpComponent } from "./auth/SignUpComponent";
 import dynamic from "next/dynamic";
-import { Box, IconButton } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from "@/contexts/AuthContext";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -19,6 +21,7 @@ export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
     const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up'>('menu');
+    const [openProfile, setOpenProfile] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -70,24 +73,69 @@ export default function HomeComponent() {
                                 <ArrowBackIcon />
                             </IconButton>
 
-                            <IconButton
-                                onClick={async () => {
-                                    await ApiServiceClient.signOut();
-                                    await refreshUser();
-                                    setState('menu');
-                                }}
-                                sx={{
-                                    visibility: user ? "visible" : "hidden"
-                                }}
-                            >
-                                <LogoutIcon />
-                            </IconButton>
+                            <div className="flex flex-row justify-end">
+                                <IconButton
+                                    onClick={async () => {
+                                        setOpenProfile(true);
+                                    }}
+                                    sx={{
+                                        visibility: user ? "visible" : "hidden"
+                                    }}
+                                >
+                                    <AccountCircleIcon />
+                                </IconButton>
+                                <IconButton
+                                    onClick={async () => {
+                                        await ApiServiceClient.signOut();
+                                        await refreshUser();
+                                        setState('menu');
+                                    }}
+                                    sx={{
+                                        visibility: user ? "visible" : "hidden"
+                                    }}
+                                >
+                                    <LogoutIcon />
+                                </IconButton>
+                            </div>
                         </div>
 
                     </div>
                     {content}
                 </Box>
             </div>
+
+            <Dialog
+                open={openProfile}
+                onClose={() => setOpenProfile(false)}
+            >
+                <IconButton
+                    aria-label="close"
+                    onClick={() => setOpenProfile(false)}
+                    sx={{
+                        position: 'absolute',
+                        right: 0,
+                        color: (theme) => theme.palette.grey[500],
+                    }}
+                >
+                    <CloseIcon />
+                </IconButton>
+                <DialogTitle className="text-center">
+
+                    <p>Profile</p>
+                </DialogTitle>
+                <DialogContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 justify-items-start gap-4 w-full">
+                        <div className="flex flex-col justify-items-start gap-0 w-full">
+                            <p className="font-bold">Nom d'utilisateur</p>
+                            <p>{user?.username}</p>
+                        </div>
+                        <div className="flex flex-col justify-items-start gap-0 w-full">
+                            <p className="font-bold">Email</p>
+                            <div>{user?.email}</div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

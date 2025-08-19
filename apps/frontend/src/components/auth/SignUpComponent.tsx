@@ -28,7 +28,6 @@ export const SignUpComponent = () => {
     }, []);
 
     const handleCredentialResponse = async (response: any) => {
-        console.log("JWT Google:", response.credential);
         await ApiServiceClient.signInWithGoogle(response.credential);
         await refreshUser();
     };

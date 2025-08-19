@@ -7,7 +7,6 @@ import { UserService } from 'src/user/user.service';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { OAuth2Client } from 'google-auth-library';
-import { randomInt } from 'crypto';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 
 @Injectable()
@@ -137,7 +136,6 @@ export class AuthService {
         if (!payload) {
             throw new UnauthorizedException('Invalid Google token');
         }
-        console.log(payload);
 
         if (!payload.email || !payload.name) throw new BadRequestException('Missing name or email');
         return {
