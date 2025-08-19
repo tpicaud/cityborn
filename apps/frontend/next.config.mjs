@@ -4,8 +4,6 @@ const nextConfig = {
 
     // CORS config
     async headers() {
-        //const allowedOrigin = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "*";
-
         return [
             {
                 source: "/api/:path*",

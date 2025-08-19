@@ -17,15 +17,18 @@ export const SignInComponent = () => {
         if (window.google) {
             window.google.accounts.id.initialize({
                 client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse,
+                callback: handleCredentialResponse
             });
-
             window.google.accounts.id.renderButton(
                 document.getElementById("googleSignInDiv"),
-                { theme: "outline", size: "large" } // options du bouton
+                {
+                    theme: "outline",
+                    size: "large",
+                    text: "signin_with",
+                }
             );
         }
-    }, []);
+    }, [window.google]);
 
     const handleCredentialResponse = async (response: any) => {
         await ApiServiceClient.signInWithGoogle(response.credential);
@@ -100,7 +103,9 @@ export const SignInComponent = () => {
                 <div className="flex-1 h-px bg-black rounded-full"></div>
             </div>
 
-            <div id="googleSignInDiv"></div>
+            <div className="flex justify-center items-center h-[44px] w-[244px]">
+                <div id="googleSignInDiv"></div>
+            </div>
         </Box>
     );
 };

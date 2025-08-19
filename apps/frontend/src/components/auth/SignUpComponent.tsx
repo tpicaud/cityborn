@@ -16,13 +16,16 @@ export const SignUpComponent = () => {
     useEffect(() => {
         if (window.google) {
             window.google.accounts.id.initialize({
-                client_id: "871572964929-4mjfe3pnprt0jokgd2vt4h5s8bah7bla.apps.googleusercontent.com",
-                callback: handleCredentialResponse,
+                client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
             });
-
             window.google.accounts.id.renderButton(
-                document.getElementById("googleSignUpDiv"),
-                { theme: "outline", size: "large" }
+                document.getElementById("googleSignInDiv"),
+                {
+                    theme: "outline",
+                    size: "large",
+                    text: "signin_with",
+                }
             );
         }
     }, []);
@@ -130,7 +133,9 @@ export const SignUpComponent = () => {
                 <div className="flex-1 h-px bg-black rounded-full"></div>
             </div>
 
-            <div id="googleSignUpDiv"></div>
+            <div className="flex justify-center items-center h-[44px] w-[244px]">
+                <div id="googleSignInDiv"></div>
+            </div>
         </Box>
     );
 };
