@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
@@ -8,6 +8,8 @@ import { AuthResponseDto } from './dto/auth.response.dto';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
+import { getJwtConstants } from './constants';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,7 @@ export class AuthService {
     constructor(
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
+        private readonly configService: ConfigService,
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
@@ -37,10 +40,12 @@ export class AuthService {
             });
 
             // Create JWT
-            const token = await this.generateJWT(user.id, user.username, user.email);
+            const access_token = await this.generateToken('access', user.id, user.username, user.email);
+            const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email);
 
             return {
-                access_token: token,
+                access_token,
+                refresh_token,
                 user: this.userService.getPublicUser(user)
             }
         } catch (error) {
@@ -65,17 +70,19 @@ export class AuthService {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) throw new UnauthorizedException(`Invalid password`);
 
-        // Create JWT
         try {
-            const token = await this.generateJWT(user.id, user.username, user.email);
+            // Create JWT
+            const access_token = await this.generateToken('access', user.id, user.username, user.email);
+            const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email);
 
             return {
-                access_token: token,
+                access_token,
+                refresh_token,
                 user: this.userService.getPublicUser(user)
             }
         } catch (error) {
-            this.logger.error(`Error generating token: ${error.message}`);
-            throw new InternalServerErrorException(`Error generating token: ${error.message}`);
+            this.logger.error(`Error generating tokens: ${error.message}`);
+            throw new InternalServerErrorException(`Error generating tokens: ${error.message}`);
         }
     }
 
@@ -97,15 +104,41 @@ export class AuthService {
             });
         }
 
-        // Génére ton JWT habituel
-        const token = await this.generateJWT(user.id, user.username, user.email);
+        try {
+            // Create JWT
+            const access_token = await this.generateToken('access', user.id, user.username, user.email);
+            const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email);
 
-        return {
-            access_token: token,
-            user: this.userService.getPublicUser(user),
-        };
+            return {
+                access_token,
+                refresh_token,
+                user: this.userService.getPublicUser(user)
+            }
+        } catch (error) {
+            this.logger.error(`Error generating tokens: ${error.message}`);
+            throw new InternalServerErrorException(`Error generating tokens: ${error.message}`);
+        }
     }
 
+    async refresh(identifier: string): Promise<AuthResponseDto> {
+        const user = await this.userService.findByIdentifier(identifier);
+        if (!user) throw new NotFoundException(`User does not exist`);
+
+        try {
+            // Create JWT
+            const access_token = await this.generateToken('access', user.id, user.username, user.email);
+            const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email);
+
+            return {
+                access_token,
+                refresh_token,
+                user: this.userService.getPublicUser(user)
+            }
+        } catch (error) {
+            this.logger.error(`Error generating tokens: ${error.message}`);
+            throw new InternalServerErrorException(`Error generating tokens: ${error.message}`);
+        }
+    }
 
     async getProfile(identifier: string): Promise<PublicUserResponseDto> {
         const user = await this.userService.findByIdentifier(identifier);
@@ -117,13 +150,26 @@ export class AuthService {
     }
 
     // Auxiliary
-    private async generateJWT(sub: number, username: string, email: string): Promise<string> {
+    private async generateToken(type: 'access' | 'refresh', sub: number, username: string, email: string): Promise<string> {
         const payload = {
             sub,
             username,
             email
         }
-        return await this.jwtService.signAsync(payload);
+
+        switch (type) {
+            case 'access':
+                return await this.jwtService.signAsync(payload, {
+                    secret: getJwtConstants(this.configService).jwt_access_secret,
+                    expiresIn: '15m'
+                });
+
+            case 'refresh':
+                return await this.jwtService.signAsync(payload, {
+                    secret: getJwtConstants(this.configService).jwt_refresh_secret,
+                    expiresIn: '7d'
+                });
+        }
     }
 
     private async verifyGoogleToken(idToken: string) {

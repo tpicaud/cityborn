@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authFetch } from "../authFetch";
+import { apiFetch } from "../apiFetch";
 
 export async function GET(req: NextRequest) {
     try {
         const queryString = req.nextUrl.searchParams.get('score_type');
 
-        const response = await authFetch(`${process.env.REST_BACKEND_URL}/sentence?score_type=${queryString}`, {
+        const response = await apiFetch(`/sentence?score_type=${queryString}`, {
             requestOptions: {
                 method: 'GET',
                 headers: {
