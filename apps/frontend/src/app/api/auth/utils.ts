@@ -50,6 +50,10 @@ export async function expireTokensInCookies() {
     });
 }
 
+export async function getAccessToken() {
+    return (await cookies()).get('access_token')?.value;
+}
+
 export async function getRefreshToken() {
     return (await cookies()).get('refresh_token')?.value;
 }

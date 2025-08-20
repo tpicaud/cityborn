@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getRefreshToken, storeTokensInCookies } from '../actions/cookies';
+import { getAccessToken, getRefreshToken, storeTokensInCookies } from './auth/utils';
 
 const baseUrl = process.env.REST_BACKEND_URL;
 
@@ -16,8 +15,7 @@ export async function apiFetch(
 ): Promise<Response> {
     const options = requestOptions || {};
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('access_token')?.value;
+    const access_token = await getAccessToken();
 
     // if (!token && forceAuth) {
     //     return NextResponse.json({ message: 'Unauthorized', statusCode: 401 }, { status: 401 });
@@ -30,7 +28,7 @@ export async function apiFetch(
         Accept: 'application/json',
     }
 
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (access_token) headers.Authorization = `Bearer ${access_token}`;
 
     let res = await fetch(baseUrl + endpoint, {
         ...options,
@@ -40,11 +38,15 @@ export async function apiFetch(
     if (res.status === 401) {
         // try refresh
         await refreshTokens();
+        const refreshed_access_token = await getAccessToken();
 
         // Retry with new tokens
         res = await fetch(baseUrl + endpoint, {
             ...options,
-            headers
+            headers: {
+                ...headers,
+                Authorization: `Bearer ${refreshed_access_token}`
+            }
         });
     }
 
@@ -52,8 +54,9 @@ export async function apiFetch(
 }
 
 async function refreshTokens() {
-    // Token expiré, on tente le refresh
+
     const refresh_token = await getRefreshToken();
+
     const refreshRes = await fetch(`${baseUrl}/auth/refresh`, { method: 'POST', headers: { Cookie: `refresh_token=${refresh_token}` } });
 
     const data = await refreshRes.json();

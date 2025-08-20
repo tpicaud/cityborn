@@ -1,6 +1,6 @@
 'use server';
 
-import { apiFetch } from "@/app/api/apiFetch";
+import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
@@ -20,17 +20,22 @@ export async function hasToken(): Promise<boolean> {
 }
 
 export async function getCurrentUser(): Promise<PublicUser | null> {
-    const response = await apiFetch(`/auth/me`, {
-        requestOptions: {
-            method: 'GET'
-        }
-    });
 
-    const data = await response.json().catch(() => null);
-    if (!data) throw new Error("Invalid server response");
+    const access_token = await getAccessToken();
+    const refresh_token = await getRefreshToken();
+
+    const response = await fetch(`http://localhost:3000/api/auth/me`, {
+        method: 'GET',
+        headers: {
+            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`
+        }
+    })
+
+    const data = await response.json();
+
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch current user");
+        throw new Error(data.message);
     }
 
     if (!data.user) return null;
