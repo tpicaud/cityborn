@@ -21,6 +21,12 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
+  // Logger simple de toutes les requêtes
+  // app.use((req, res, next) => {
+  //   console.log(`${req.method} ${req.url}`);
+  //   next();
+  // });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
