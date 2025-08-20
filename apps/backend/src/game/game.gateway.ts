@@ -2,10 +2,10 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { Guess } from '@cityborn/types';
-import { Logger, UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { Logger } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 interface WSResponse {
 	success: boolean,
@@ -19,9 +19,10 @@ export class GameGateway extends AuthenticatedGateway {
 
 	constructor(
 		private readonly gameService: GameService,
+		configService: ConfigService,
 		jwtService: JwtService
 	) {
-		super(jwtService);
+		super(jwtService, configService);
 	 }
 
 	@WebSocketServer()

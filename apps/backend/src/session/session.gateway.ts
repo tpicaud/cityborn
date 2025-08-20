@@ -2,10 +2,10 @@ import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, We
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
-import { Logger, UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { Logger } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 interface WSResponse {
 	success: boolean,
@@ -19,9 +19,10 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 
 	constructor(
 		private readonly sessionService: SessionService,
+		configService: ConfigService,
 		jwtService: JwtService
 	) {
-		super(jwtService)
+		super(jwtService, configService)
 	 }
 
 	@WebSocketServer()

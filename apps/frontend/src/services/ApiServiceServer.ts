@@ -1,6 +1,6 @@
 'use server';
 
-import { authFetch } from "@/app/api/authFetch";
+import { apiFetch } from "@/app/api/apiFetch";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
@@ -15,12 +15,12 @@ if (!REST_BACKEND_URL) {
 
 export async function hasToken(): Promise<boolean> {
     const cookieStore = await cookies();
-    const accessToken = cookieStore.get('access_token');
-    return !!accessToken;
+    const token = cookieStore.get('access_token') ?? cookieStore.get('refresh_token');
+    return !!token;
 }
 
 export async function getCurrentUser(): Promise<PublicUser | null> {
-    const response = await authFetch(`${REST_BACKEND_URL}/auth/me`, {
+    const response = await apiFetch(`/auth/me`, {
         requestOptions: {
             method: 'GET'
         }
@@ -38,7 +38,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
 }
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
-    const response = await fetch(`${REST_BACKEND_URL}/auth/sign-up`, {
+    const response = await fetch(`/auth/sign-up`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export async function signUp(username: string, email: string, password: string):
 }
 
 export async function signIn(identifier: string, password: string): Promise<void> {
-    const response = await fetch(`${REST_BACKEND_URL}/auth/sign-in`, {
+    const response = await fetch(`/auth/sign-in`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
