@@ -25,9 +25,9 @@ export class MailService {
         await this.transporter.sendMail({
             from: `"CityBorn" <${this.configService.get<string>('SMTP_USER')}>`,
             to: email,
-            subject: 'Vérification de votre email',
+            subject: 'Vérification de votre email CityBorn',
             html: `
-        <p>Merci de créer un compte.</p>
+        <p>Bienvenue chez CityBorn !</p>
         <p>Cliquez sur le lien ci-dessous pour vérifier votre email :</p>
         <a href="${url}">Vérifier mon email</a>
       `,
