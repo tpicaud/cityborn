@@ -11,6 +11,7 @@ import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -144,6 +145,11 @@ export class AuthService {
             this.logger.error(`Error generating tokens: ${error.message}`);
             throw new InternalServerErrorException(`Error generating tokens: ${error.message}`);
         }
+    }
+
+    async verifyEmail(dto: VerifyEmailDto): Promise<void> {
+        const { verification_token } = dto;
+        return await this.userService.verifyEmail(verification_token);
     }
 
     async getProfile(identifier: string): Promise<PublicUserResponseDto> {

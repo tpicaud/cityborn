@@ -87,8 +87,6 @@ export class UserService {
         await this.prisma.emailVerificationToken.delete({
             where: { id: record.id },
         });
-
-        return true;
     }
 
     getPublicUser(user: PrismaUser): PublicUser {
