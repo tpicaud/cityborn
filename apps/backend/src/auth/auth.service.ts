@@ -24,7 +24,7 @@ export class AuthService {
     ) { }
 
     async signUp(dto: SignUpDto): Promise<AuthResponseDto> {
-        const { email, username, password } = dto;
+        const { email, username, birthdate, password } = dto;
 
         // Validate identifiers
         await this.userService.validateIdentifiers(username, email);
@@ -36,6 +36,7 @@ export class AuthService {
             const user = await this.userService.createUser({
                 email,
                 username,
+                birthdate,
                 password: hash,
             });
 
@@ -100,7 +101,6 @@ export class AuthService {
             user = await this.userService.createUser({
                 email,
                 username: uniqueUsername,
-                password: null
             });
         }
 
