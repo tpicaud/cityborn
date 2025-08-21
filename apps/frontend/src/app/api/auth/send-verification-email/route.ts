@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiFetch } from '../../apiFetch';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
     try {
-        const body = await req.json();
-
-        const response = await apiFetch(`/auth/verify-email`, {
+        const response = await apiFetch(`/auth/send-verification-email`, {
             requestOptions: {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
             },
         });
 
@@ -20,7 +17,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json(
-            { message: "Email verified successfully" },
+            { message: "Verification email sent successfully" },
             { status: 200 }
         );
     } catch (error: any) {

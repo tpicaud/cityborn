@@ -5,6 +5,8 @@ export class PublicUser {
 
   email: string;
 
+  isVerified?: boolean;
+
   createdAt?: string;
 
   updatedAt?: string;

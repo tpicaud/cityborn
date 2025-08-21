@@ -12,7 +12,7 @@ export class UserService {
         private readonly prisma: PrismaService
     ) { }
 
-    async createUser(data: { email: string; username: string; password?: string, birthdate?: string }): Promise<PrismaUser> {
+    async createUser(data: { email: string; username: string; isVerified?: boolean, password?: string, birthdate?: string }): Promise<PrismaUser> {
         return this.prisma.user.create({ data });
     }
 
@@ -56,7 +56,7 @@ export class UserService {
     async createVerificationToken(user: PrismaUser): Promise<string> {
         const token = uuidv4();
         const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24); // expire dans 24h
+        expiresAt.setHours(expiresAt.getHours() + 24);
 
         await this.prisma.emailVerificationToken.create({
             data: {
