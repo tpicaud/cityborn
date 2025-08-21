@@ -73,7 +73,7 @@ export default function MenuComponent({
                             setState('sign-in');
                         }}
                     >
-                        <p className='px-3'>Se connecter</p>
+                        <p className='px-3'>Connexion</p>
                     </Button>
                     <Button
                         variant="contained"
@@ -83,7 +83,7 @@ export default function MenuComponent({
                             setState('sign-up');
                         }}
                     >
-                        <p className='px-3'>S'inscrire</p>
+                        <p className='px-3'>Inscription</p>
                     </Button>
                 </div>
             )}
