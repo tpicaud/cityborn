@@ -10,6 +10,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        private readonly mailService: MailService,
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
@@ -38,6 +40,10 @@ export class AuthService {
                 username,
                 password: hash,
             });
+
+            // Send verification email
+            const verification_token = await this.userService.createVerificationToken(user);
+            await this.mailService.sendVerificationEmail(email, verification_token);
 
             // Create JWT
             const access_token = await this.generateToken('access', user.id, user.username, user.email);
