@@ -2,10 +2,10 @@ import { Body, Controller, Get, Param, Post, UnauthorizedException, UseGuards } 
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto } from './dto/session.response.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { GameMode } from '@cityborn/types';
-import { OptionalAuthGuard } from 'src/auth/optional-auth.guard';
+import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 
 @Controller('session')
 export class SessionController {

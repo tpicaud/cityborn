@@ -1,6 +1,6 @@
 'use server';
 
-import { authFetch } from "@/app/api/authFetch";
+import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
@@ -15,22 +15,27 @@ if (!REST_BACKEND_URL) {
 
 export async function hasToken(): Promise<boolean> {
     const cookieStore = await cookies();
-    const accessToken = cookieStore.get('access_token');
-    return !!accessToken;
+    const token = cookieStore.get('access_token') ?? cookieStore.get('refresh_token');
+    return !!token;
 }
 
 export async function getCurrentUser(): Promise<PublicUser | null> {
-    const response = await authFetch(`${REST_BACKEND_URL}/auth/me`, {
-        requestOptions: {
-            method: 'GET'
-        }
-    });
 
-    const data = await response.json().catch(() => null);
-    if (!data) throw new Error("Invalid server response");
+    const access_token = await getAccessToken();
+    const refresh_token = await getRefreshToken();
+
+    const response = await fetch(`http://localhost:3000/api/auth/me`, {
+        method: 'GET',
+        headers: {
+            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`
+        }
+    })
+
+    const data = await response.json();
+
 
     if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch current user");
+        throw new Error(data.message);
     }
 
     if (!data.user) return null;
@@ -38,7 +43,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
 }
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
-    const response = await fetch(`${REST_BACKEND_URL}/auth/sign-up`, {
+    const response = await fetch(`/auth/sign-up`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -68,7 +73,7 @@ export async function signUp(username: string, email: string, password: string):
 }
 
 export async function signIn(identifier: string, password: string): Promise<void> {
-    const response = await fetch(`${REST_BACKEND_URL}/auth/sign-in`, {
+    const response = await fetch(`/auth/sign-in`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
