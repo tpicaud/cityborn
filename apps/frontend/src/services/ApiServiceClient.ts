@@ -17,13 +17,13 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     return data.user as PublicUser || null;
 }
 
-export async function signUp(username: string, email: string, password: string): Promise<void> {
+export async function signUp(username: string, email: string, birthdate: Date, password: string): Promise<void> {
     const response = await fetch(`/api/auth/sign-up`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, birthdate, password }),
     });
 
     const data = await response.json();
@@ -66,6 +66,37 @@ export async function signInWithGoogle(idToken: string): Promise<void> {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ idToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`${response.status} : ${data.message}`);
+    }
+}
+
+export async function sendVerificationEmail(): Promise<void> {
+        const response = await fetch(`/api/auth/send-verification-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`${response.status} : ${data.message}`);
+    }
+}
+
+export async function verifyEmail(verification_token: string): Promise<void> {
+        const response = await fetch(`/api/auth/verify-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verification_token }),
     });
 
     const data = await response.json();

@@ -28,6 +28,7 @@ export default function HomeComponent() {
     const { user, refreshUser } = useAuth();
     const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up'>('menu');
     const [openProfile, setOpenProfile] = useState(false);
+    const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -43,15 +44,15 @@ export default function HomeComponent() {
             break;
 
         case 'sign-up':
-            content = <SignUpComponent />
+            content = <SignUpComponent setSentVerificationEmail={setSentVerificationEmail} />
             break;
 
         case 'menu':
-            content = <MenuComponent setState={setState} />
+            content = <MenuComponent setState={setState} setSentVerificationEmail={setSentVerificationEmail} sentVerificationEmail={sentVerificationEmail} />
             break;
 
         default:
-            content = <MenuComponent setState={setState} />
+            content = <MenuComponent setState={setState} setSentVerificationEmail={setSentVerificationEmail} sentVerificationEmail={sentVerificationEmail} />
     }
 
     return (

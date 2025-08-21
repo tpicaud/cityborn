@@ -6,6 +6,7 @@ export function toPublicUser(user: PrismaUser): PublicUser {
     id: user.id,
     username: user.username,
     email: user.email,
+    isVerified: user.isVerified,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };

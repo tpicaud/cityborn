@@ -1,31 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiFetch } from '../../apiFetch';
-import { storeTokensInCookies } from '../utils';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
     try {
-        const body = await req.json();
-
-        const response = await apiFetch(`/auth/sign-in-with-google`, {
+        const response = await apiFetch(`/auth/send-verification-email`, {
             requestOptions: {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
             },
-            forceAuth: false
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-            const message = data.message || "Failed to fetch current user";
+            const data = await response.json();
+            const message = data.message;
             return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
         }
 
-        await storeTokensInCookies(data.access_token, data.refresh_token);
-
         return NextResponse.json(
-            { message: "Signed in successfully" },
+            { message: "Verification email sent successfully" },
             { status: 200 }
         );
     } catch (error: any) {

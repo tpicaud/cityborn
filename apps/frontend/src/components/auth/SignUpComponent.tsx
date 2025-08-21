@@ -2,11 +2,26 @@
 
 import * as React from "react";
 import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { LocalizationProvider } from "node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider";
 
-export const SignUpComponent = () => {
+interface FormValues {
+    username: string;
+    email: string;
+    birthdate: Date | null;  // ✅ corrige le type
+    password: string;
+    confirmPassword: string;
+}
+
+export const SignUpComponent = ({
+    setSentVerificationEmail
+}: {
+    setSentVerificationEmail: Dispatch<SetStateAction<boolean>>
+}) => {
 
     const { refreshUser } = useAuth();
 
@@ -24,7 +39,7 @@ export const SignUpComponent = () => {
                 {
                     theme: "outline",
                     size: "large",
-                    text: "signin_with",
+                    text: "signin_with"
                 }
             );
         }
@@ -36,11 +51,20 @@ export const SignUpComponent = () => {
     };
     /////////////////
 
-    const [formValues, setFormValues] = React.useState({
+    const [formValues, setFormValues] = React.useState<FormValues>({
         username: "",
         email: "",
+        birthdate: null,
         password: "",
         confirmPassword: ""
+    });
+
+    const [touched, setTouched] = React.useState({
+        username: false,
+        email: false,
+        birthdate: false,
+        password: false,
+        confirmPassword: false,
     });
 
     const handleChange = (e: any) => {
@@ -58,7 +82,13 @@ export const SignUpComponent = () => {
             return;
         }
 
-        await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.password);
+        if (!formValues.birthdate) {
+            alert("La date de naissance n'est pas rempli");
+            return;
+        }
+
+        await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
+        setSentVerificationEmail(true);
         await refreshUser();
     };
 
@@ -75,7 +105,7 @@ export const SignUpComponent = () => {
             }}
         >
             <Typography variant="h5" align="center">
-                Sign Up
+                Inscription
             </Typography>
 
             <FormControl>
@@ -84,7 +114,9 @@ export const SignUpComponent = () => {
                     name="username"
                     value={formValues.username}
                     onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, username: true }))}
                     required
+                    error={touched.username && !formValues.username}
                 />
             </FormControl>
 
@@ -95,9 +127,33 @@ export const SignUpComponent = () => {
                     name="email"
                     value={formValues.email}
                     onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
                     required
+                    error={touched.email && !formValues.email}
                 />
             </FormControl>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <FormControl>
+                    <DatePicker
+                        label="Date de naissance"
+                        value={formValues.birthdate}
+                        onChange={(newValue) =>
+                            setFormValues((prev) => ({ ...prev, birthdate: newValue }))
+                        }
+                        minDate={new Date('1900-01-01')}
+                        maxDate={new Date()}
+                        slotProps={{
+                            textField: {
+                                required: true,
+                                fullWidth: true,
+                                error: touched.birthdate && !formValues.birthdate,
+                                onBlur: () => setTouched(prev => ({ ...prev, birthdate: true }))
+                            },
+                        }}
+                    />
+                </FormControl>
+            </LocalizationProvider>
 
             <FormControl>
                 <TextField
@@ -106,7 +162,9 @@ export const SignUpComponent = () => {
                     name="password"
                     value={formValues.password}
                     onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                     required
+                    error={touched.password && !formValues.password}
                 />
             </FormControl>
 
@@ -117,12 +175,14 @@ export const SignUpComponent = () => {
                     name="confirmPassword"
                     value={formValues.confirmPassword}
                     onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, confirmPassword: true }))}
                     required
+                    error={touched.confirmPassword && !formValues.confirmPassword}
                 />
             </FormControl>
 
             <Button variant="contained" type="submit">
-                Sign Up
+                S'inscrire
             </Button>
 
             <div className="flex flex-row gap-3 items-center w-full">

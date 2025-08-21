@@ -3,9 +3,12 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { AuthResponseDto } from './dto/auth.response.dto';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard } from './guards/auth.guard';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
+import { RefreshGuard } from './guards/refresh.guard';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { CurrentUser } from 'src/user/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -24,6 +27,24 @@ export class AuthController {
     @Post('sign-in-with-google')
     async signInWithGoogle(@Body() signInWithGoogleDto: SignInWithGoogleDto): Promise<AuthResponseDto> {
         return await this.authService.signInWithGoogle(signInWithGoogleDto);
+    }
+
+    @Post('refresh')
+    @UseGuards(RefreshGuard)
+    async refresh(@Request() req): Promise<AuthResponseDto> {
+        const identifier = req.user.username || req.user.email;
+        return await this.authService.refresh(identifier);
+    }
+
+    @Post('send-verification-email')
+    @UseGuards(AuthGuard)
+    async sendVerificationEmail(@CurrentUser() user): Promise<void> {
+        return await this.authService.sendVerificationEmail(user);
+    }
+
+    @Post('verify-email')
+    async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<void> {
+        return await this.authService.verifyEmail(verifyEmailDto);
     }
 
     @Get('me')

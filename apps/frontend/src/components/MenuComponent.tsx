@@ -11,8 +11,12 @@ import CloseIcon from '@mui/icons-material/Close';
 
 export default function MenuComponent({
     setState,
+    setSentVerificationEmail,
+    sentVerificationEmail
 }: {
     setState: Dispatch<SetStateAction<"menu" | "sign-in" | "sign-up">>;
+    setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
+    sentVerificationEmail: boolean
 }) {
 
     const router = useRouter();
@@ -52,17 +56,41 @@ export default function MenuComponent({
         }
     }
 
+    const sendNewVerificationEmail = async () => {
+        ApiServiceClient.sendVerificationEmail();
+        setSentVerificationEmail(true);
+    }
+
     return (
         <div className='flex flex-col items-center gap-5'>
             <div className='flex flex-col gap-1 items-center w-full'>
                 <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-24 md:max-h-32' />
-                <p className="text-base md:text-lg text-center ">Trouvez le lieu de naissance des personnalités</p>
+                <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
 
             {user ? (
-                <Typography variant="h5">
-                    Bienvenue <b>{user.username}</b> !
-                </Typography>
+                <div className="flex flex-col items-center justify-center">
+                    <Typography variant="h5">
+                        Bienvenue <b>{user.username}</b> !
+                    </Typography>
+                    {!user.isVerified && (
+                        sentVerificationEmail ? (
+                            <p className="text-green-600">Email de vérification envoyé</p>
+                        ) : (
+                            <a
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    sendNewVerificationEmail();
+                                }}
+                                style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
+                            >
+                                Vérifie ton email
+                            </a>
+                        )
+                    )}
+
+                </div>
             ) : (
                 <div className="flex flex-row gap-2 items-center justify-center w-full">
                     <Button
@@ -73,7 +101,7 @@ export default function MenuComponent({
                             setState('sign-in');
                         }}
                     >
-                        <p className='px-3'>Se connecter</p>
+                        <p className='px-3'>Connexion</p>
                     </Button>
                     <Button
                         variant="contained"
@@ -83,7 +111,7 @@ export default function MenuComponent({
                             setState('sign-up');
                         }}
                     >
-                        <p className='px-3'>S'inscrire</p>
+                        <p className='px-3'>Inscription</p>
                     </Button>
                 </div>
             )}
@@ -97,8 +125,6 @@ export default function MenuComponent({
                     </Typography>
                     <div className="flex-1 h-px bg-black rounded-full"></div>
                 </div>
-
-
 
                 <div className="flex flex-row gap-2 items-center justify-center w-full">
                     <input
@@ -125,11 +151,11 @@ export default function MenuComponent({
 
                 </div>
 
-                <div className='flex flex-row gap-2 justify-center'>
+                <div className='flex flex-row gap-2 items-center justify-between w-full'>
                     <Button
                         variant="contained"
                         color="primary"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
                         onClick={handleSoloPlay}
                     >
                         <b>SOLO</b>
@@ -137,7 +163,7 @@ export default function MenuComponent({
                     <Button
                         variant="contained"
                         color="primary"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
                         onClick={handleMultiPlay}
                     >
                         <b>MULTI</b>

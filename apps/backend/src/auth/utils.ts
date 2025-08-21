@@ -6,7 +6,7 @@ export function extractTokenFromHTTPHeader(request: Request): string | undefined
     return type === 'Bearer' ? token : undefined;
 }
 
-export function extractTokenFromWsClient(client?: any): string | undefined {
+export function extractAccessTokenFromWsClient(client?: any): string | undefined {
 
     const cookies = client.handshake.headers.cookie;
     if (!cookies) return undefined;

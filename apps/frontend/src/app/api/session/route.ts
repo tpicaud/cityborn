@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { authFetch } from "../authFetch";
+import { apiFetch } from "../apiFetch";
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const response = await authFetch(`${process.env.REST_BACKEND_URL}/session`, {
+        const response = await apiFetch(`/session`, {
             requestOptions: {
                 method: 'POST',
                 body: JSON.stringify(body),
