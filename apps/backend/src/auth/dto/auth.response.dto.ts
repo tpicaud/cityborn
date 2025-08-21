@@ -7,6 +7,9 @@ export class AuthResponseDto {
     @IsString()
     access_token: string;
 
+    @IsString()
+    refresh_token: string;
+
     @Type(() => PublicUserDto)
     user: PublicUserDto;
 }

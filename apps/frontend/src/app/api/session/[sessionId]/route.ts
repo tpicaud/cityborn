@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authFetch } from "../../authFetch";
+import { apiFetch } from "../../apiFetch";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ ses
             );
         }
 
-        const response = await authFetch(`${process.env.REST_BACKEND_URL}/session/${sessionId}`, {
+        const response = await apiFetch(`/session/${sessionId}`, {
             requestOptions: {
                 method: 'GET',
                 headers: {

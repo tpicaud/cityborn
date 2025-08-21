@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, UnauthorizedException, UseGuards } 
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { GameResponseDto } from './dto/game.response.dto';
-import { OptionalAuthGuard } from 'src/auth/optional-auth.guard';
+import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { GameMode } from '@cityborn/types';
 

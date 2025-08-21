@@ -1,10 +1,10 @@
 // app/api/auth/me/route.ts
 import { NextResponse } from "next/server";
-import { authFetch } from "../../authFetch";
+import { apiFetch } from "../../apiFetch";
 
 export async function GET() {
     try {
-        const response = await authFetch(`${process.env.REST_BACKEND_URL}/auth/me`, {
+        const response = await apiFetch(`/auth/me`, {
             requestOptions: {
                 method: 'GET'
             },
