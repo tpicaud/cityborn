@@ -17,13 +17,13 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     return data.user as PublicUser || null;
 }
 
-export async function signUp(username: string, email: string, password: string): Promise<void> {
+export async function signUp(username: string, email: string, birthdate: Date, password: string): Promise<void> {
     const response = await fetch(`/api/auth/sign-up`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, birthdate, password }),
     });
 
     const data = await response.json();
