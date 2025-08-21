@@ -10,6 +10,9 @@ import { OAuth2Client } from 'google-auth-library';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
+import { MailService } from 'src/mail/mail.service';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { CurrentUser } from 'src/user/user.decorator';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        private readonly mailService: MailService,
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
@@ -39,6 +43,10 @@ export class AuthService {
                 birthdate,
                 password: hash,
             });
+
+            // Send verification email
+            const verification_token = await this.userService.createVerificationToken(user);
+            await this.mailService.sendVerificationEmail(email, verification_token);
 
             // Create JWT
             const access_token = await this.generateToken('access', user.id, user.username, user.email);
@@ -101,6 +109,7 @@ export class AuthService {
             user = await this.userService.createUser({
                 email,
                 username: uniqueUsername,
+                isVerified: true
             });
         }
 
@@ -140,6 +149,20 @@ export class AuthService {
         }
     }
 
+    async sendVerificationEmail(currentUser: any): Promise<void> {
+        const user = await this.userService.findByIdentifier(currentUser.email);
+        if (!user) throw new NotFoundException(`User does not exist`);
+
+        // Send verification email
+        const verification_token = await this.userService.createVerificationToken(user);
+        await this.mailService.sendVerificationEmail(user.email, verification_token);
+    }
+
+    async verifyEmail(dto: VerifyEmailDto): Promise<void> {
+        const { verification_token } = dto;
+        return await this.userService.verifyEmail(verification_token);
+    }
+
     async getProfile(identifier: string): Promise<PublicUserResponseDto> {
         const user = await this.userService.findByIdentifier(identifier);
         if (!user) throw new UnauthorizedException(`User not found`);
@@ -177,11 +200,10 @@ export class AuthService {
             idToken,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
-
         const payload = ticket.getPayload();
-        if (!payload) {
-            throw new UnauthorizedException('Invalid Google token');
-        }
+        if (!payload) throw new UnauthorizedException('Invalid Google token');
+
+        if (!payload.email_verified) throw new UnauthorizedException('Google account not verified');
 
         if (!payload.email || !payload.name) throw new BadRequestException('Missing name or email');
         return {
