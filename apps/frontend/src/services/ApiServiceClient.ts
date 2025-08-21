@@ -75,6 +75,21 @@ export async function signInWithGoogle(idToken: string): Promise<void> {
     }
 }
 
+export async function sendVerificationEmail(): Promise<void> {
+        const response = await fetch(`/api/auth/send-verification-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`${response.status} : ${data.message}`);
+    }
+}
+
 export async function verifyEmail(verification_token: string): Promise<void> {
         const response = await fetch(`/api/auth/verify-email`, {
         method: 'POST',

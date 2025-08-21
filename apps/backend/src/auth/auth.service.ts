@@ -12,6 +12,7 @@ import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { CurrentUser } from 'src/user/user.decorator';
 
 @Injectable()
 export class AuthService {
@@ -108,6 +109,7 @@ export class AuthService {
             user = await this.userService.createUser({
                 email,
                 username: uniqueUsername,
+                isVerified: true
             });
         }
 
@@ -145,6 +147,15 @@ export class AuthService {
             this.logger.error(`Error generating tokens: ${error.message}`);
             throw new InternalServerErrorException(`Error generating tokens: ${error.message}`);
         }
+    }
+
+    async sendVerificationEmail(currentUser: any): Promise<void> {
+        const user = await this.userService.findByIdentifier(currentUser.email);
+        if (!user) throw new NotFoundException(`User does not exist`);
+
+        // Send verification email
+        const verification_token = await this.userService.createVerificationToken(user);
+        await this.mailService.sendVerificationEmail(user.email, verification_token);
     }
 
     async verifyEmail(dto: VerifyEmailDto): Promise<void> {
@@ -189,11 +200,10 @@ export class AuthService {
             idToken,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
-
         const payload = ticket.getPayload();
-        if (!payload) {
-            throw new UnauthorizedException('Invalid Google token');
-        }
+        if (!payload) throw new UnauthorizedException('Invalid Google token');
+
+        if (!payload.email_verified) throw new UnauthorizedException('Google account not verified');
 
         if (!payload.email || !payload.name) throw new BadRequestException('Missing name or email');
         return {
