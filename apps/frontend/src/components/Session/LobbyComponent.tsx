@@ -49,12 +49,17 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
             </div>
 
             <div className="relative z-10 flex flex-col items-center justify-center bg-transparent h-full pointer-events-none">
-                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[50%] pointer-events-auto">
+                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[50%] min-w-80 max-h-[80%] pointer-events-auto">
+                    {/* Titre du lobby */}
+                    <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                        {session.mode.toUpperCase()}
+                    </Typography>
+
                     {session.mode === GameMode.MULTI && (
-                        <>
+                        <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
                             {/* Champ pour afficher et copier l'ID du jeu */}
                             < Typography variant="subtitle1" gutterBottom>
-                                Code de la partie :
+                                Code
                             </Typography>
                             <TextField
                                 fullWidth
@@ -77,17 +82,12 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                     Copié !
                                 </Typography>
                             )}
-                        </>
+                        </div>
                     )}
-
-                    {/* Titre du lobby */}
-                    <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-                        {session.mode.toUpperCase()}
-                    </Typography>
 
                     {/* Liste des joueurs */}
                     {session.mode !== GameMode.SOLO && (
-                        <List>
+                        <List className="w-full max-h-[30vh] overflow-auto">
                             {(session.players.every(p => "connected" in p)
                                 ? // Tous sont des OnlinePlayer → trier + statut
                                 (session.players as OnlinePlayer[])
