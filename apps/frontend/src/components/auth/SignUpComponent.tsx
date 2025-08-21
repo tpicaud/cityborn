@@ -6,7 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { LocalizationProvider } from "node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider";
 
 interface FormValues {
@@ -17,7 +17,11 @@ interface FormValues {
     confirmPassword: string;
 }
 
-export const SignUpComponent = () => {
+export const SignUpComponent = ({
+    setSentVerificationEmail
+}: {
+    setSentVerificationEmail: Dispatch<SetStateAction<boolean>>
+}) => {
 
     const { refreshUser } = useAuth();
 
@@ -84,6 +88,7 @@ export const SignUpComponent = () => {
         }
 
         await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
+        setSentVerificationEmail(true);
         await refreshUser();
     };
 

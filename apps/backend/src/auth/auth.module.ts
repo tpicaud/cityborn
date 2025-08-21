@@ -4,10 +4,12 @@ import { AuthService } from './auth.service';
 import { UserModule } from 'src/user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { GoogleClientProvider } from './providers/google-client.provider';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
     UserModule,
+    MailModule,
     JwtModule.register({ global: true })
   ],
   controllers: [AuthController],

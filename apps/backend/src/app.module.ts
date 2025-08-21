@@ -14,6 +14,7 @@ import { PlayerModule } from './player/player.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { UserModule } from './user/user.module';
     PlayerModule,
     AuthModule,
     PrismaModule,
-    UserModule
+    UserModule,
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService],
