@@ -12,7 +12,7 @@ export class UserService {
         private readonly prisma: PrismaService
     ) { }
 
-    async createUser(data: { email: string; username: string; password: string | null }): Promise<PrismaUser> {
+    async createUser(data: { email: string; username: string; password?: string, birthdate?: string }): Promise<PrismaUser> {
         return this.prisma.user.create({ data });
     }
 
