@@ -6,12 +6,13 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
-import { extractTokenFromHTTPHeader, extractTokenFromWsClient } from './utils';
+import { getJwtConstants } from '../constants';
+import { extractTokenFromHTTPHeader, extractAccessTokenFromWsClient } from '../utils';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-	constructor(private jwtService: JwtService) { }
+	constructor(private jwtService: JwtService, private readonly configService: ConfigService) { }
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		// Détection du type de contexte
@@ -24,12 +25,12 @@ export class AuthGuard implements CanActivate {
 			const request = context.switchToHttp().getRequest();
 			token = extractTokenFromHTTPHeader(request);
 			if (!token) throw new UnauthorizedException();
-			request['user'] = await this.validateToken(token);
+			request['user'] = await this.validateAccessToken(token);
 		}
 
 		if (isWs) {
 			const client = context.switchToWs().getClient();
-			token = extractTokenFromWsClient(client);
+			token = extractAccessTokenFromWsClient(client);
 
 			if (!token) {
 				client.emit('error', { message: 'Unauthorized : token missing' });
@@ -37,7 +38,7 @@ export class AuthGuard implements CanActivate {
 				return false;
 			}
 			try {
-				client.user = await this.jwtService.verifyAsync(token, { secret: jwtConstants.secret });
+				client.user = await this.validateAccessToken(token);
 			} catch {
 				client.emit('error', { message: 'Unauthorized: invalid token' });
 				client.disconnect();
@@ -48,9 +49,9 @@ export class AuthGuard implements CanActivate {
 		return true;
 	}
 
-	private async validateToken(token: string) {
+	private async validateAccessToken(token: string) {
 		try {
-			return await this.jwtService.verifyAsync(token, { secret: jwtConstants.secret });
+			return await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret });
 		} catch {
 			throw new UnauthorizedException();
 		}
