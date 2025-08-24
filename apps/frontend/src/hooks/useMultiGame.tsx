@@ -19,10 +19,6 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     // useEffects //
     ////////////////
 
-    useEffect(() => {
-        console.log(game);
-    }, [game])
-
     // Manage connection
     useEffect(() => {
         if (game && !connected) {
