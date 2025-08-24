@@ -19,6 +19,17 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     // useEffects //
     ////////////////
 
+    useEffect(() => {
+        console.log(game);
+    }, [game])
+
+    // Manage connection
+    useEffect(() => {
+        if (game && !connected) {
+            join(game.id);
+        }
+    }, [game]);
+
     // Manage disconnection
     useEffect(() => {
         if (!socket?.connected) {
@@ -43,23 +54,22 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
                 // Fetch game
                 const game: Game = await ApiServiceClient.fetchGame(gameID);
 
-                // Set and join
+                // Set game
                 setGame(game);
-                await join(gameID);
             } catch (error) {
                 console.log(`Erreur lors de la connexion à la partie: ${error}`);
             }
         }
 
-        const handleGameUpdate = (game: Game) => {
-            console.log("Game updated:", game);
+        const handleGameUpdate = (updatedGame: Game) => {
+            console.log("Game update:", updatedGame);
             setGame(prev => {
                 const prevGuessObjects = prev?.state?.guessObjects ?? [];
 
                 return {
-                    ...game,
+                    ...updatedGame,
                     state: {
-                        ...game.state,
+                        ...updatedGame.state,
                         guessObjects: prevGuessObjects
                     }
                 };

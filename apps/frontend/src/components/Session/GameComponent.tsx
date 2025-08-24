@@ -47,7 +47,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
         );
     };
 
-    if (!game.state.currentRound && game.status === GameStatus.IN_GAME) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
+    if ((!game.state.currentRound && game.status === GameStatus.IN_GAME) || game.status === GameStatus.STARTING) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
 
     return (
         <div>
