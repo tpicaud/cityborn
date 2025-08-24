@@ -1,6 +1,6 @@
 'use client';
 
-import MenuComponent from "./MenuComponent";
+import MenuComponent from "./menu/MenuComponent";
 import { useEffect, useState } from "react";
 import { SignInComponent } from "./auth/SignInComponent";
 import { SignUpComponent } from "./auth/SignUpComponent";

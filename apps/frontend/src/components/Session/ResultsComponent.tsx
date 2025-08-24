@@ -111,7 +111,7 @@ const ResultsComponent = ({
                         <h2 className='text-center text-xl'>{sentence.sub_message_2}</h2>
                     </div>
 
-                    <div className='w-full h-full flex flex-col justify-center items-center'>
+                    <div className='w-full max-h-[40vh] overflow-auto flex flex-col justify-start items-center'>
                         {playersResults.size === 1 ? (
                             // Si un seul joueur, afficher une liste
                             Array.from(playersResults.entries()).map(([player, playerResults]) => (
