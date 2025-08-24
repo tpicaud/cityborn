@@ -160,13 +160,13 @@ export default function MultiSessionPage() {
     if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
 
     // si pas de localPlayerID, afficher dialog
-    if (!localPlayerID) {
-        return (
-            <div className="flex flex-row justify-center items-center mt-16">
-                <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
-            </div>
-        );
-    }
+    // if (!localPlayerID) {
+    //     return (
+    //         <div className="flex flex-row justify-center items-center mt-16">
+    //             <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
+    //         </div>
+    //     );
+    // }
 
     // Si game, display game
     if (multiGame.game) {
@@ -187,7 +187,8 @@ export default function MultiSessionPage() {
             handleUpdateHost={handleUpdateHost}
             handleUpdateGameConfig={handleUpdateGameConfig}
             handleKickPlayer={handleKickPlayer}
-            handleStartGame={handleStartGame} />
+            handleStartGame={handleStartGame}
+            handleJoinSession={handleJoinSession}/>
     }
 
 }

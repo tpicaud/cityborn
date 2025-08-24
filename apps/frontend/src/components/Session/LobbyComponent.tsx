@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, List, ListItem, ListItemText, Button, TextField, IconButton, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box } from "@mui/material";
+import { Typography, List, ListItem, ListItemText, Button, TextField, IconButton, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
@@ -10,12 +10,14 @@ import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { DialogInput } from "../others/DialogInput";
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame }: {
+export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHost, handleUpdateGameConfig, handleKickPlayer, handleStartGame, handleJoinSession }: {
     localPlayerID: string | undefined;
     session: Session;
     isHost: boolean;
@@ -23,12 +25,13 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
     handleStartGame: () => Promise<void>;
     handleUpdateHost?: (newHostID: string) => void;
     handleKickPlayer?: (playerToKick: string) => void;
+    handleJoinSession: (playerID: string) => void;
 }) => {
     const [copied, setCopied] = useState(false);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
     const [tempTimer, setTempTimer] = useState<string>(session.gameConfig.timer.toString());
+    const [currentInput, setCurrentInput] = useState<string>('');
     const router = useRouter();
-
 
     const handleCopy = () => {
         navigator.clipboard.writeText(session.id);
@@ -247,6 +250,36 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     </Button>
                 </Box >
             </div>
+
+            <Dialog
+                open={!localPlayerID}
+            >
+                <DialogTitle>
+                    <p>Entrez votre pseudo</p>
+                </DialogTitle>
+                <DialogContent className="flex flex-col justify-center">
+                    <TextField
+                        fullWidth
+                        style={{ marginTop: 10 }}
+                        label={'Pseudo'}
+                        variant="outlined"
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        style={{ marginTop: 10 }}
+                        disabled={currentInput.trim() === ""}
+                        onClick={() => handleJoinSession(currentInput)}
+                    >
+                        <ArrowCircleRightIcon />
+                    </Button>
+                </DialogContent>
+            </Dialog>
+            {!localPlayerID && (
+                <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
+            )}
         </div >
     );
 };

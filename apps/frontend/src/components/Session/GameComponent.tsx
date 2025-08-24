@@ -11,7 +11,7 @@ import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd, handlePlayAgain }: {
-    localPlayerID: string,
+    localPlayerID: string | undefined,
     isHost: boolean;
     game: Game,
     handleGuess: (guess: Guess) => void,
@@ -48,7 +48,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
     };
 
     if ((!game.state.currentRound && game.status === GameStatus.IN_GAME) || game.status === GameStatus.STARTING) return <LoadingComponent />; // Gérer le cas où currentRound est undefined
-
+    if (!localPlayerID) return <p>La partie est déjà en cours</p>
     return (
         <div>
             <GuessComponent
@@ -76,7 +76,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
                 <div className="absolute h-full w-full">
                     <div className="flex flex-row w-full h-full items-center justify-center">
                         <Backdrop open={true}>
-                            <div className="w-[50%]">
+                            <div className="w-[80%]">
                                 <ResultsComponent game={game} localPlayerID={localPlayerID} handleEnd={handleEnd} handlePlayAgain={handlePlayAgain} />
                             </div>
                         </Backdrop>
