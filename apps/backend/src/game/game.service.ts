@@ -238,7 +238,7 @@ export class GameService {
             // Go to next guess object
             if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
                 game.status = GameStatus.IN_RESULTS;
-                game.state.currentRound = undefined
+                //game.state.currentRound = undefined
             } else {
                 game.state.currentRound = {
                     status: RoundStatus.GUESSING,
