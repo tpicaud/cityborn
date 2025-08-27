@@ -1,6 +1,6 @@
 'use client'
 
-import { Dialog, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { DialogContent, DialogTitle, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
@@ -11,6 +11,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
 import IconButton from "../ui/buttons/IconButton";
+import { ErrorDialog } from "../ui/dialogs/ErrorDialog";
+import { Dialog } from "../ui/dialogs/Dialog";
 
 export default function MenuComponent({
     setState,
@@ -29,33 +31,34 @@ export default function MenuComponent({
     const [code, setCode] = useState<string>('')
     const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
     const [loadingJoin, setLoadingJoin] = useState(false);
-    const [openAlert, setOpenAlert] = useState(false);
+    const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+
+    // Error handling
+    const [dialogErrorMessage, setDialogErrorMessage] = useState('');
 
     const handleSoloPlay = () => {
         router.push(`/session/solo`);
     };
 
     const handleMultiPlay = async () => {
-        if (!user) {
-            setOpenAlert(true);
-        } else {
-            const session = await ApiServiceClient.createSession(GameMode.MULTI);
-            router.push(`/session/multi/${session.id}`);
+        try {
+            if (!user) {
+                setOpenConnectionAlert(true);
+            } else {
+                const session = await ApiServiceClient.createSession(GameMode.MULTI);
+                router.push(`/session/multi/${session.id}`);
+            }
+        } catch (error: any) {
+            setDialogErrorMessage(error.message)
         }
     }
 
     const handleJoin = async () => {
         try {
-            if (code) {
-                const session = await ApiServiceClient.fetchSession(code);
-                if (!session) setJoinErrorMessage('La partie est introuvable')
-
-                router.push(`/session/multi/${code}`)
-            } else {
-                setJoinErrorMessage('La partie est introuvable')
-            }
-        } catch {
-            setJoinErrorMessage('Erreur lors de la connexion à la partie');
+            const session = await ApiServiceClient.fetchSession(code);
+            router.push(`/session/multi/${code}`)
+        } catch (error: any) {
+            setDialogErrorMessage(error.message)
         }
     }
 
@@ -141,12 +144,7 @@ export default function MenuComponent({
                         variant="contained"
                         color="primary"
                         className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
-                        onClick={async () => {
-                            setLoadingJoin(true);
-                            await handleJoin();
-                            setLoadingJoin(false);
-                            console.log(loadingJoin)
-                        }}
+                        onClick={handleJoin}
                         disabled={!code}
                     >
                         <p className='px-3'>Rejoindre</p>
@@ -181,20 +179,9 @@ export default function MenuComponent({
             </div>
 
             <Dialog
-                open={openAlert}
-                onClose={() => setOpenAlert(false)}
+                open={openConnectionAlert}
+                onClose={() => setOpenConnectionAlert(false)}
             >
-                <IconButton
-                    aria-label="close"
-                    onClick={() => setOpenAlert(false)}
-                    sx={{
-                        position: 'absolute',
-                        right: 0,
-                        color: (theme) => theme.palette.grey[500],
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
                 <DialogTitle sx={{ mt: 2, mx: 3, paddingX: 2, paddingTop: 2 }}>
 
                     <p>Vous devez être connecté pour jouer en mode multi !</p>
@@ -224,6 +211,8 @@ export default function MenuComponent({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ErrorDialog errorMessage={dialogErrorMessage} setErrorMessage={setDialogErrorMessage} />
         </div >
     );
 }

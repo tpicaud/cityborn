@@ -2,7 +2,7 @@ import { IconButton as MuiIconButton, IconButtonProps as MuiIconButtonProps } fr
 import { ReactNode } from "react";
 
 interface IconButtonProps extends MuiIconButtonProps {
-    onClick: () => Promise<void> | void;
+    onClick?: () => Promise<void> | void;
     children: ReactNode;
 }
 
