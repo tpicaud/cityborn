@@ -77,4 +77,5 @@
 | 08/08/2025 | 6h | Authentification backend |
 | 10/08/2025 | 6h | Authentification frontend |
 | 11/08/2025 | 4h | Authentification frontend |
-| 11/08/2025 | 3h | Authentification frontend visuel |
+| 12/08/2025 | 3h | Authentification frontend visuel |
+| 15/08/2025 | 3h | Base de données utilisateur cloud |
