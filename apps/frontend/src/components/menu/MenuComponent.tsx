@@ -7,12 +7,11 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { GameMode } from '@cityborn/types';
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
-import CloseIcon from '@mui/icons-material/Close';
 import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
-import IconButton from "../ui/buttons/IconButton";
 import { ErrorDialog } from "../ui/dialogs/ErrorDialog";
 import { Dialog } from "../ui/dialogs/Dialog";
+import { ApiError, getFriendlyErrorMessage } from '@cityborn/errors';
 
 export default function MenuComponent({
     setState,
@@ -58,7 +57,8 @@ export default function MenuComponent({
             const session = await ApiServiceClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
         } catch (error: any) {
-            setDialogErrorMessage(error.message)
+            const errorMessage = getFriendlyErrorMessage(error);
+            setDialogErrorMessage(errorMessage)
         }
     }
 
