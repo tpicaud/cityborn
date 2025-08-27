@@ -1,3 +1,4 @@
+import { ApiError, ErrorCode } from "@cityborn/errors";
 import { Game, GameConfig, GameMode, GuessObject, PublicUser, Session } from "@cityborn/types";
 
 //////////////////
@@ -135,10 +136,10 @@ export async function fetchSession(sessionId: string): Promise<Session> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        console.log(data)
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    if (!data.session) throw new Error('No session returned from fetch session');
     return data.session as Session;
 }
 

@@ -9,12 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cityborn/types": "workspace:*",
+    "@cityborn/errors": "workspace:*",
     "@capacitor/android": "^7.2.0",
     "@capacitor/cli": "^7.2.0",
     "@capacitor/core": "^7.2.0",
     "@capacitor/ios": "^7.2.0",
     "@capacitor/splash-screen": "^7.0.1",
-    "@cityborn/types": "workspace:*",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.3",
