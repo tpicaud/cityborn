@@ -5,13 +5,15 @@ import { useEffect, useState } from "react";
 import { SignInComponent } from "./auth/SignInComponent";
 import { SignUpComponent } from "./auth/SignUpComponent";
 import dynamic from "next/dynamic";
-import { Box, Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from "@/contexts/AuthContext";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CloseIcon from '@mui/icons-material/Close';
+import LoadingIconButton from "./ui/buttons/LoadingIconButton";
+import IconButton from "./ui/buttons/IconButton";
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -91,7 +93,7 @@ export default function HomeComponent() {
                                 >
                                     <AccountCircleIcon />
                                 </IconButton>
-                                <IconButton
+                                <LoadingIconButton
                                     onClick={async () => {
                                         await ApiServiceClient.signOut();
                                         await refreshUser();
@@ -102,7 +104,7 @@ export default function HomeComponent() {
                                     }}
                                 >
                                     <LogoutIcon />
-                                </IconButton>
+                                </LoadingIconButton>
                             </div>
                         </div>
 

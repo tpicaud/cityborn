@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
+import { Dialog, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
@@ -8,6 +8,9 @@ import { GameMode } from '@cityborn/types';
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
 import CloseIcon from '@mui/icons-material/Close';
+import Button from "../ui/buttons/Button";
+import LoadingButton from "../ui/buttons/LoadingButton";
+import IconButton from "../ui/buttons/IconButton";
 
 export default function MenuComponent({
     setState,
@@ -134,7 +137,7 @@ export default function MenuComponent({
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                     />
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
@@ -147,7 +150,7 @@ export default function MenuComponent({
                         disabled={!code}
                     >
                         <p className='px-3'>Rejoindre</p>
-                    </Button>
+                    </LoadingButton>
 
                 </div>
 
@@ -160,14 +163,14 @@ export default function MenuComponent({
                     >
                         <b>SOLO</b>
                     </Button>
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
                         onClick={handleMultiPlay}
                     >
                         <b>MULTI</b>
-                    </Button>
+                    </LoadingButton>
                 </div>
 
                 {joinErrorMessage && (

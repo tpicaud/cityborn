@@ -9,6 +9,7 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
+import LoadingButton from "../ui/buttons/LoadingButton";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEnd, handlePlayAgain }: {
     localPlayerID: string | undefined,
@@ -24,7 +25,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
         if (!game.state.currentRound) return null;
 
         return (
-            <Button
+            <LoadingButton
                 variant="contained"
                 color="error"
                 disabled={!isHost}
@@ -43,7 +44,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
                 }}
             >
                 <ArrowForward />
-            </Button>
+            </LoadingButton>
         );
     };
 
