@@ -136,7 +136,6 @@ export async function fetchSession(sessionId: string): Promise<Session> {
     const data = await response.json();
 
     if (!response.ok) {
-        console.log(data)
         throw new ApiError(data.code, data.message, data.statusCode);
     }
 
