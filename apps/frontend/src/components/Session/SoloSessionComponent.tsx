@@ -19,6 +19,8 @@ export default function SoloSessionComponent() {
     // Session interactions //
     //////////////////////////
 
+    const handleJoinSession = (playerId: string) => { }
+
     const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
@@ -94,6 +96,8 @@ export default function SoloSessionComponent() {
             isHost={soloSession.isHost}
             session={soloSession.session}
             handleUpdateGameConfig={handleUpdateGameConfig}
-            handleStartGame={handleStartGame} />
+            handleStartGame={handleStartGame}
+            handleJoinSession={handleJoinSession}
+        />
     }
 }

@@ -6,7 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { LocalizationProvider } from "node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider";
 
 interface FormValues {
@@ -24,6 +24,7 @@ export const SignUpComponent = ({
 }) => {
 
     const { refreshUser } = useAuth();
+    const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
 
     /////////////////
     // Google Auth //
@@ -75,21 +76,28 @@ export const SignUpComponent = ({
     };
 
     const handleSubmit = async (e: any) => {
-        e.preventDefault();
+        try {
+            setIsSignUpFormSubmitting(true);
 
-        if (formValues.password !== formValues.confirmPassword) {
-            alert("Les mots de passe ne correspondent pas !");
-            return;
+            e.preventDefault();
+
+            if (formValues.password !== formValues.confirmPassword) {
+                alert("Les mots de passe ne correspondent pas !");
+                return;
+            }
+            if (!formValues.birthdate) {
+                alert("La date de naissance n'est pas rempli");
+                return;
+            }
+
+            await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
+            setSentVerificationEmail(true);
+            await refreshUser();
+        } catch (error) {
+
+        } finally {
+            setIsSignUpFormSubmitting(false);
         }
-
-        if (!formValues.birthdate) {
-            alert("La date de naissance n'est pas rempli");
-            return;
-        }
-
-        await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
-        setSentVerificationEmail(true);
-        await refreshUser();
     };
 
     return (
@@ -181,7 +189,7 @@ export const SignUpComponent = ({
                 />
             </FormControl>
 
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" loading={isSignUpFormSubmitting}>
                 S'inscrire
             </Button>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Guess } from "@cityborn/types";
-import { Box, Button } from "@mui/material";
+import { Box } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
 import { Round } from "@cityborn/types";
@@ -9,6 +9,7 @@ import { RoundStatus } from "@cityborn/types";
 import { Game } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import { GuessObject } from "@cityborn/types";
+import LoadingButton from "../ui/buttons/LoadingButton";
 
 function GuessButton({
     preGuess,
@@ -20,7 +21,7 @@ function GuessButton({
     handleGuess: OverlayComponentProps['handleGuess'];
 }) {
     return (
-        <Button
+        <LoadingButton
             variant="contained"
             onClick={() => preGuess && handleGuess(preGuess)}
             disabled={disabled}
@@ -35,7 +36,7 @@ function GuessButton({
             }}
         >
             Guess
-        </Button>
+        </LoadingButton>
     );
 }
 

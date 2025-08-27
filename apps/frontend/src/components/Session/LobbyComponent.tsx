@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, List, ListItem, ListItemText, Button, TextField, IconButton, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { Typography, List, ListItem, ListItemText, TextField, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
@@ -12,6 +12,9 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { DialogInput } from "../others/DialogInput";
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+import IconButton from "../ui/buttons/IconButton";
+import LoadingButton from "../ui/buttons/LoadingButton";
+import Button from "../ui/buttons/Button";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -90,7 +93,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
 
                     {/* Liste des joueurs */}
                     {session.mode !== GameMode.SOLO && (
-                        <List className="w-full max-h-[30vh] overflow-auto">
+                        <List className="w-full min-h-[10vh] max-h-[30vh] overflow-auto">
                             {(session.players.every(p => "connected" in p)
                                 ? // Tous sont des OnlinePlayer → trier + statut
                                 (session.players as OnlinePlayer[])
@@ -228,7 +231,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     </div>
 
                     {/* Bouton pour démarrer la partie */}
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         fullWidth
@@ -236,7 +239,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         onClick={handleStartGame}
                     >
                         Démarrer la partie
-                    </Button>
+                    </LoadingButton>
 
                     {/* Menu */}
                     <Button
@@ -266,7 +269,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         value={currentInput}
                         onChange={(e) => setCurrentInput(e.target.value)}
                     />
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         style={{ marginTop: 10 }}
@@ -274,7 +277,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         onClick={() => handleJoinSession(currentInput)}
                     >
                         <ArrowCircleRightIcon />
-                    </Button>
+                    </LoadingButton>
                 </DialogContent>
             </Dialog>
             {!localPlayerID && (

@@ -3,13 +3,13 @@
 import { GuessObject, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
-import { Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
+import LoadingButton from '../ui/buttons/LoadingButton';
 
 const ResultsComponent = ({
     game,
@@ -187,34 +187,34 @@ const ResultsComponent = ({
                     </div>
 
                     <div className='flex flex-col justify-center items-center w-full gap-3'>
-                        <Button
+                        <LoadingButton
                             variant="contained"
                             color="primary"
                             onClick={handlePlayAgain}
                             className="w-24"
                         >
                             Rejouer
-                        </Button>
+                        </LoadingButton>
                         <div className='flex flex-row justify-center w-full gap-3'>
-                            <Button
+                            <LoadingButton
                                 variant="contained"
                                 color="primary"
                                 onClick={handleEnd}
                                 className="w-24"
                             >
                                 Lobby
-                            </Button>
-                            <Button
+                            </LoadingButton>
+                            <LoadingButton
                                 variant="contained"
                                 color="primary"
                                 onClick={() => {
-                                    router.push('/');
                                     handleEnd();
+                                    router.push('/');
                                 }}
                                 className="w-24"
                             >
                                 Menu
-                            </Button>
+                            </LoadingButton>
                         </div>
                     </div>
                 </div>
