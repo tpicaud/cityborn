@@ -2,12 +2,14 @@
 import { NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
 import { ErrorCode } from "@cityborn/errors";
-import { getAccessToken } from "../utils";
+import { getAccessToken, getRefreshToken } from "../utils";
 
 export async function GET() {
     try {
-        const access_token = getAccessToken()
-        if (!access_token) return NextResponse.json({}, { status: 200 });
+        const access_token = await getAccessToken();
+        const refresh_token = await getRefreshToken();
+        
+        if (!access_token && !refresh_token) return NextResponse.json({}, { status: 200 });
 
 
         const response = await apiFetch(`/auth/me`, {

@@ -57,7 +57,7 @@ export enum ErrorCode {
     REDIS_DELETE_FAILED = "REDIS_DELETE_FAILED",
 
     // Email
-    EMAIl_SEND_FAILED = "EMAIl_SEND_FAILED",
+    EMAIL_SEND_FAILED = "EMAIL_SEND_FAILED",
 
     // Default
     UNKNOWN_ERROR = "UNKNOWN_ERROR"
