@@ -84,3 +84,4 @@
 | 21/08/2025 | 3h | Vérification email |
 | 26/08/2025 | 3h | Amélioration UI/UX |
 | 27/08/2025 | 4h | Amélioration UI/UX |
+| 28/08/2025 | 8h | Gestion erreur back + nextjs-server |
