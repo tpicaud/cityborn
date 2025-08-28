@@ -18,37 +18,16 @@ export class AuthGuard implements CanActivate {
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		// Détection du type de contexte
 		const isHttp = context.getType() === 'http';
-		const isWs = context.getType() === 'ws';
 
 		let token: string | undefined;
 
 		if (isHttp) {
 			const request = context.switchToHttp().getRequest();
 			token = extractTokenFromHTTPHeader(request);
-			if (!token) throw new UnauthorizedException({ code: ErrorCode.USER_TOKEN_MISSING, message: 'Token missing' });
+			if (!token) throw new UnauthorizedException();
 
 			const user = await this.validateAccessToken(token);
-			if (!user.isVerified) throw new UnauthorizedException({ code: ErrorCode.USER_NOT_VERIFIED, message: 'User email not verified' });
-			
 			request['user'] = user;
-		}
-
-		if (isWs) {
-			const client = context.switchToWs().getClient();
-			token = extractAccessTokenFromWsClient(client);
-
-			if (!token) {
-				client.emit('error', { message: 'Unauthorized : token missing' });
-				client.disconnect();
-				return false;
-			}
-			try {
-				client.user = await this.validateAccessToken(token);
-			} catch {
-				client.emit('error', { message: 'Unauthorized: invalid token' });
-				client.disconnect();
-				return false;
-			}
 		}
 
 		return true;
@@ -58,7 +37,7 @@ export class AuthGuard implements CanActivate {
 		try {
 			return await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret });
 		} catch {
-			throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_TOKEN, message: 'Invalid token' });
+			throw new UnauthorizedException();
 		}
 	}
 }

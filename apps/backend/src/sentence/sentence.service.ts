@@ -2,15 +2,13 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Sentence, SentenceDocument } from './sentence.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class SentenceService {
     constructor(@InjectModel(Sentence.name, 'sentences') private sentenceModel: Model<SentenceDocument>) {}
 
     async findRandomOne(score_type: string): Promise<Sentence> {
-        if (!score_type) {
-            throw new BadRequestException('Missing query parameter: score_type');
-        }
 
         const result = await this.sentenceModel.aggregate([
             { $match: { score_type } },
@@ -18,7 +16,7 @@ export class SentenceService {
         ]);
 
         if (!result || result.length === 0) {
-            throw new NotFoundException(`No sentence found for score_type: ${score_type}`);
+            throw new NotFoundException({ code: ErrorCode.GAME_END_SENTENCE_NOT_FOUND, message: `No sentence found for score type: ${score_type}` });
         }
 
         return result[0];

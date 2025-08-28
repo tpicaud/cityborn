@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { GuessObject as GuessObjectSchema, GuessObjectDocument } from './guess-object.schema';
 import { Model } from 'mongoose';
 import { Categories, GameConfig, GuessObject } from '@cityborn/types';
+import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class GuessObjectService {
@@ -10,16 +11,12 @@ export class GuessObjectService {
 
     async findSome(guessObjectsIds: string[]): Promise<GuessObject[]> {
         try {
-            if (!guessObjectsIds || guessObjectsIds.length === 0) {
-                throw new BadRequestException('No guessObjectsIds provided');
-            }
-
             const rawGuessObjects = await this.guessObjectModel.find({
                 _id: { $in: guessObjectsIds }
             }).lean().exec();
 
             if (!rawGuessObjects || rawGuessObjects.length === 0) {
-                throw new NotFoundException('No GuessObjects found for the provided IDs');
+                throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: 'No GuessObjects found for the provided IDs' });
             }
 
             const guessObjects = rawGuessObjects
@@ -41,12 +38,12 @@ export class GuessObjectService {
             const foundIds = guessObjects.map(obj => obj.id);
             const notFoundIds = guessObjectsIds.filter(id => !foundIds.includes(id));
             if (notFoundIds.length > 0) {
-                throw new NotFoundException(`GuessObjects not found for IDs: ${notFoundIds.join(', ')}`);
+                throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: `No GuessObjects found for IDs ${notFoundIds}` });
             }
 
             return guessObjects;
         } catch (error) {
-            throw new Error(`Error retrieving guess objects: ${error.message}`);
+            throw new InternalServerErrorException({ code: ErrorCode.GUESS_OBJECTS_GET_FAILED, message: `Error retrieving guess objects from ids: ${error.message}` });
         }
     }
 
@@ -58,7 +55,7 @@ export class GuessObjectService {
             if (
                 gameConfig.categories &&
                 gameConfig.categories.length > 0 &&
-                !gameConfig.categories.includes(Categories.TOUTES) // Assure-toi que c'est bien le bon enum/string
+                !gameConfig.categories.includes(Categories.TOUTES)
             ) {
                 pipeline.push({
                     $match: {
@@ -91,14 +88,12 @@ export class GuessObjectService {
                 }));
 
             if (guessObjects.length === 0) {
-                throw new NotFoundException('Aucun GuessObject trouvé avec la configuration fournie');
+                throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: `No guess objects found for the provided gameConfig ${gameConfig}` });
             }
 
             return guessObjects;
         } catch (error) {
-            console.error('Erreur lors de la récupération des GuessObjects :', error.message);
-            throw new Error('Erreur lors de la récupération des GuessObjects');
+            throw new InternalServerErrorException({ code: ErrorCode.GUESS_OBJECTS_GET_FAILED, message: `Error retrieving guess objects from game config: ${error.message}` })
         }
     }
-
 }

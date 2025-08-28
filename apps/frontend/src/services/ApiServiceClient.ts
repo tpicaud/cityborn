@@ -12,7 +12,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     if (!data) throw new Error("Invalid server response");
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 
     return data.user as PublicUser || null;
@@ -30,7 +30,7 @@ export async function signUp(username: string, email: string, birthdate: Date, p
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
@@ -46,7 +46,7 @@ export async function signIn(identifier: string, password: string): Promise<void
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
@@ -56,7 +56,7 @@ export async function signOut(): Promise<void> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data?.message || "Failed to sign out");
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
@@ -72,12 +72,12 @@ export async function signInWithGoogle(idToken: string): Promise<void> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
 export async function sendVerificationEmail(): Promise<void> {
-        const response = await fetch(`/api/auth/send-verification-email`, {
+    const response = await fetch(`/api/auth/send-verification-email`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -87,12 +87,12 @@ export async function sendVerificationEmail(): Promise<void> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
 export async function verifyEmail(verification_token: string): Promise<void> {
-        const response = await fetch(`/api/auth/verify-email`, {
+    const response = await fetch(`/api/auth/verify-email`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export async function verifyEmail(verification_token: string): Promise<void> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 }
 
@@ -123,10 +123,9 @@ export async function createSession(gameMode: GameMode): Promise<Session> {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    if (!data.session) throw new Error('No session returned from create session');
     return data.session as Session;
 }
 
@@ -158,12 +157,10 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(`${response.status} : ${data.message}`);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    const guessObjects: GuessObject[] = data.guessObjects;
-
-    return guessObjects;
+    return data.guessObjects;
 }
 
 
@@ -172,55 +169,45 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
 //////////////////
 
 export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
-    try {
-        const response = await fetch(`/api/game`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ gameConfig, hostID, gameMode: GameMode.SOLO, playersID: [hostID] }),
-        });
+    const response = await fetch(`/api/game`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameConfig, hostID, gameMode: GameMode.SOLO, playersID: [hostID] }),
+    });
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(`${response.status} : ${data.message}`);
-        }
-
-        const game: Game = data.game;
-
-        return game;
-    } catch (error) {
-        throw new Error(`Erreur lors de la création de la partie: ${error}`);
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
+
+    const game: Game = data.game;
+
+    return game;
 }
 
 export async function fetchGame(gameId: string): Promise<Game> {
-    try {
-        const response = await fetch(`/api/game/${gameId}`);
+    const response = await fetch(`/api/game/${gameId}`);
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(`${response.status} : ${data.message}`);
-        }
-
-        const game: Game = data.game;
-
-        return game;
-    } catch (error) {
-        throw new Error(`Erreur lors de la récupération de la partie: ${error}`);
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
+
+    return data.game;
 }
 
 export const getEndSentence = async (score_type: string): Promise<string> => {
-    try {
-        const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
-        const data = await response.json();
+    const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
 
-        return data.sentence.sentence || '';
-    } catch (error) {
-        console.error('Erreur lors de la récupération de la phrase: ', error);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
-    return '';
+
+    return data.sentence.sentence ?? '';
 }
