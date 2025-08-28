@@ -9,6 +9,7 @@ import { getJwtConstants } from '../constants';
 import { Request } from 'express';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
@@ -18,19 +19,22 @@ export class OptionalAuthGuard implements CanActivate {
         const request = context.switchToHttp().getRequest<Request>();
         const token = extractTokenFromHTTPHeader(request);
 
-
         if (!token) {
             return true;
         }
 
-        try {
-            const payload = await this.jwtService.verifyAsync(token, {
-                secret: getJwtConstants(this.configService).jwt_access_secret,
-            });
-            request['user'] = payload;
-        } catch {
-            throw new UnauthorizedException();
-        }
+        const user = await this.validateAccessToken(token);
+        if (!user.isVerified) throw new UnauthorizedException({ code: ErrorCode.USER_NOT_VERIFIED, message: 'User email not verified' });
+
+        request['user'] = user;
         return true;
+    }
+
+    private async validateAccessToken(token: string) {
+        try {
+            return await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret });
+        } catch {
+            throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_TOKEN, message: 'Invalid token' });
+        }
     }
 }

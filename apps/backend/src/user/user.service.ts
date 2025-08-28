@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User as PrismaUser } from '@prisma/client';
 import { PublicUser } from '@cityborn/types';
 import { toPublicUser } from './user.mapper';
 import { v4 as uuidv4 } from 'uuid';
+import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class UserService {
@@ -41,11 +42,11 @@ export class UserService {
         if (!existingUser) return;
 
         if (existingUser.username === username) {
-            throw new ConflictException('Username already taken');
+            throw new ConflictException({ code: ErrorCode.USER_USERNAME_ALREADY_EXISTS, message: 'Username already exists' });
         }
 
         if (existingUser.email === email) {
-            throw new ConflictException('Email already in use');
+            throw new ConflictException({ code: ErrorCode.USER_EMAIL_ALREADY_TAKEN, message: 'Email already taken' });
         }
     }
 
@@ -76,8 +77,10 @@ export class UserService {
         });
 
         if (!record || record.expiresAt < new Date()) {
-            throw new Error('Token invalide ou expiré');
+            throw new UnauthorizedException({ code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN, message: 'Token expired' });
         }
+
+        if (record?.user.isVerified) return;
 
         await this.prisma.user.update({
             where: { id: record.userId },

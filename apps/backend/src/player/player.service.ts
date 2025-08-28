@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { ErrorCode } from '@cityborn/errors';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
@@ -18,12 +19,16 @@ export class PlayerService {
     }
 
     async save(socketID: string, playerID: string, sessionID: string, gameID?: string) {
-        const data: Record<string, string> = { playerID, sessionID };
-        if (gameID !== undefined) {
-            data.gameID = gameID;
+        try {
+            const data: Record<string, string> = { playerID, sessionID };
+            if (gameID !== undefined) {
+                data.gameID = gameID;
+            }
+            await this.redisService.redisClient.hset(this.getKey(socketID), data);
+            await this.redisService.redisClient.expire(this.getKey(socketID), this.PLAYER_TTL);
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.PLAYER_SAVE_FAILED, message: `Error saving player ${playerID}: ${error.message}` })
         }
-        await this.redisService.redisClient.hset(this.getKey(socketID), data);
-        await this.redisService.redisClient.expire(this.getKey(socketID), this.PLAYER_TTL);
     }
 
     async getPlayer(socketID: string): Promise<{ playerID: string; sessionID: string; gameID?: string } | null> {
@@ -43,16 +48,12 @@ export class PlayerService {
 
             return result;
         } catch (error) {
-            throw new Error(`Erreur lors de la récupération du joueur associé au socket ${socketID}`);
+            throw new InternalServerErrorException({ code: ErrorCode.PLAYER_GET_FAILED, message: `Error getting player from ${socketID}: ${error.message}` })
         }
     }
 
     async deletePlayer(socketID: string) {
-        try {
-            await this.redisService.del(this.getKey(socketID));
-        } catch (error) {
-            throw new Error(`Erreur lors de la suppression du joueur associé au socket ${socketID}`);
-        }
+        await this.redisService.del(this.getKey(socketID));
     }
 
     private async resetTTL(socketID: string, sessionID: string, gameID?: string): Promise<void> {
