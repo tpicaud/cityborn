@@ -17,10 +17,6 @@ export async function apiFetch(
 
     const access_token = await getAccessToken();
 
-    // if (!token && forceAuth) {
-    //     return NextResponse.json({ message: 'Unauthorized', statusCode: 401 }, { status: 401 });
-    // }
-
     // Build headers
     const headers: any = {
         ...(options.headers || {}),
@@ -57,12 +53,12 @@ async function refreshTokens() {
 
     const refresh_token = await getRefreshToken();
 
-    const refreshRes = await fetch(`${baseUrl}/auth/refresh`, { method: 'POST', headers: { Cookie: `refresh_token=${refresh_token}` } });
+    const response = await fetch(`${baseUrl}/auth/refresh`, { method: 'POST', headers: { Cookie: `refresh_token=${refresh_token}` } });
 
-    const data = await refreshRes.json();
+    const data = await response.json();
 
-    if (!refreshRes.ok) {
-        return NextResponse.json({ message: data.message, statusCode: 401 }, { status: 401 });
+    if (!response.ok) {
+        return NextResponse.json(data, { status: response.status });
     }
 
     await storeTokensInCookies(data.access_token, data.refresh_token);

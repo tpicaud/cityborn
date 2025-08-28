@@ -35,7 +35,7 @@ export class MailService {
       `,
             });
         } catch (error) {
-            throw new InternalServerErrorException({ code: ErrorCode.EMAIl_SEND_FAILED, message: `Error sending verification email: ${error.message}` })
+            throw new InternalServerErrorException({ code: ErrorCode.EMAIL_SEND_FAILED, message: `Error sending verification email: ${error.message}` })
         }
     }
 }

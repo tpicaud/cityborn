@@ -27,7 +27,8 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     const response = await fetch(`http://localhost:3000/api/auth/me`, {
         method: 'GET',
         headers: {
-            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`
+            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`,
+            cache: 'no-store'
         }
     })
 
