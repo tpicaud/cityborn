@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import { getAccessToken, getRefreshToken, storeTokensInCookies } from './auth/utils';
+import { getAccessToken, getRefreshToken, getTokensCookiesHeaders, storeTokensInCookies } from './auth/utils';
 
 const baseUrl = process.env.REST_BACKEND_URL;
 
@@ -33,10 +32,12 @@ export async function apiFetch(
 
     if (res.status === 401) {
         // try refresh
-        await refreshTokens();
-        const refreshed_access_token = await getAccessToken();
+        const tokens = await refreshTokens();
+
+        if (!tokens) return res;
 
         // Retry with new tokens
+        const { refreshed_access_token, refreshed_refresh_token } = tokens;
         res = await fetch(baseUrl + endpoint, {
             ...options,
             headers: {
@@ -44,6 +45,8 @@ export async function apiFetch(
                 Authorization: `Bearer ${refreshed_access_token}`
             }
         });
+
+        if (res.ok) await storeTokensInCookies(refreshed_access_token, refreshed_refresh_token);
     }
 
     return res;
@@ -58,8 +61,11 @@ async function refreshTokens() {
     const data = await response.json();
 
     if (!response.ok) {
-        return NextResponse.json(data, { status: response.status });
+        return;
     }
 
-    await storeTokensInCookies(data.access_token, data.refresh_token);
+    return {
+        refreshed_access_token: data.access_token,
+        refreshed_refresh_token: data.refresh_token
+    };
 }
