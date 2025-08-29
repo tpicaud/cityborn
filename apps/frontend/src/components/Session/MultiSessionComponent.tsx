@@ -2,7 +2,6 @@
 
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { DialogInput } from '@/components/others/DialogInput';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMultiGame } from '@/hooks/useMultiGame';
@@ -10,7 +9,7 @@ import { useMultiSession } from '@/hooks/useMultiSession';
 import { GameConfig } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function MultiSessionPage() {
 
@@ -19,6 +18,7 @@ export default function MultiSessionPage() {
     const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(user ? user.username : undefined);
     const multiSession = useMultiSession(localPlayerID, sessionID);
     const multiGame = useMultiGame(localPlayerID);
+    const hasJoinedSession = useRef(false);
 
 
     ////////////////
@@ -27,8 +27,9 @@ export default function MultiSessionPage() {
 
     // Auto connect to session
     useEffect(() => {
-        if (localPlayerID && !multiSession.connected) {
+        if (localPlayerID && !multiSession.connected && !hasJoinedSession.current) {
             handleJoinSession(localPlayerID);
+            hasJoinedSession.current = true;
         }
     }, [multiSession.session]);
 

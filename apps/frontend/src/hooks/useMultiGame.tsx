@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
 import { Game } from "@cityborn/types";
@@ -14,6 +14,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
+    const hasJoined = useRef(false);
 
     /////////////////
     // useEffects //
@@ -21,8 +22,9 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     // Manage connection
     useEffect(() => {
-        if (game && !connected) {
+        if (game && !connected && !hasJoined.current) {
             join(game.id);
+            hasJoined.current = true;
         }
     }, [game]);
 

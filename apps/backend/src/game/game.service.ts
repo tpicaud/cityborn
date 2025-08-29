@@ -81,7 +81,9 @@ export class GameService {
             if (playerIndex === -1) throw new UnauthorizedException({ code: ErrorCode.GAME_PLAYER_NOT_INVITED, message: `Player ${playerID} not invited in the game` });
 
             // Vérifier que le joueur n'est pas déjà dans la partie
-            if ((game.players as OnlinePlayer[])[playerIndex].connected! === true) throw new Error(`Le joueur est déjà dans la partie`);
+            if ((game.players as OnlinePlayer[])[playerIndex].connected! === true) {
+                throw new UnauthorizedException({ code: ErrorCode.GAME_PLAYER_ALREADY_IN_GAME, message: `Player ${playerID} is already in the game` });
+            }
 
             // Update player
             await this.playerService.save(socketID, playerID, sessionID, gameID);
