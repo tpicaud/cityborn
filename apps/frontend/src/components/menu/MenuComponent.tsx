@@ -11,7 +11,7 @@ import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
 import { ErrorDialog } from "../ui/dialogs/ErrorDialog";
 import { Dialog } from "../ui/dialogs/Dialog";
-import { ApiError, getFriendlyErrorMessage } from '@cityborn/errors';
+import { useError } from "@/contexts/ErrorContext";
 
 export default function MenuComponent({
     setState,
@@ -24,12 +24,10 @@ export default function MenuComponent({
 }) {
 
     const router = useRouter();
-
     const { user } = useAuth();
+    const { invokeError } = useError();
 
     const [code, setCode] = useState<string>('')
-    const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
-    const [loadingJoin, setLoadingJoin] = useState(false);
     const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
     // Error handling
@@ -57,8 +55,7 @@ export default function MenuComponent({
             const session = await ApiServiceClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
         } catch (error: any) {
-            const errorMessage = getFriendlyErrorMessage(error);
-            setDialogErrorMessage(errorMessage)
+            invokeError(error);
         }
     }
 
@@ -170,12 +167,6 @@ export default function MenuComponent({
                         <b>MULTI</b>
                     </LoadingButton>
                 </div>
-
-                {joinErrorMessage && (
-                    <Typography color="error" style={{ marginTop: "8px" }}>
-                        {joinErrorMessage}
-                    </Typography>
-                )}
             </div>
 
             <Dialog
