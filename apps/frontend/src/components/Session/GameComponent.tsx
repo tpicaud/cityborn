@@ -18,7 +18,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
     handleEnd: () => void,
-    handlePlayAgain: () => void
+    handlePlayAgain: () => Promise<void>
 }) => {
 
     const NextButton: React.FC = () => {

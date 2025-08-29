@@ -27,7 +27,9 @@ export default function MultiSessionPage() {
 
     // Auto connect to session
     useEffect(() => {
-        if (localPlayerID && !multiSession.connected && !hasJoinedSession.current) {
+        if (multiSession.session && localPlayerID && !multiSession.connected && !hasJoinedSession.current) {
+            console.log(localPlayerID)
+            console.log(multiSession.session);
             handleJoinSession(localPlayerID);
             hasJoinedSession.current = true;
         }
