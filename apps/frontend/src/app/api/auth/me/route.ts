@@ -8,13 +8,13 @@ export async function GET() {
     try {
         const access_token = await getAccessToken();
         const refresh_token = await getRefreshToken();
-        
-        if (!access_token && !refresh_token) return NextResponse.json({}, { status: 200 });
 
+        if (!access_token && !refresh_token) return NextResponse.json({}, { status: 200 });
 
         const response = await apiFetch(`/auth/me`, {
             requestOptions: {
-                method: 'GET'
+                method: 'GET',
+                cache: 'no-store'
             },
         });
 
