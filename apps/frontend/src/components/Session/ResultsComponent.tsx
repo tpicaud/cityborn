@@ -10,6 +10,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
 import LoadingButton from '../ui/buttons/LoadingButton';
+import * as ApiServiceClient from '@/services/ApiServiceClient';
 
 const ResultsComponent = ({
     game,
@@ -20,7 +21,7 @@ const ResultsComponent = ({
     game: Game,
     localPlayerID: string,
     handleEnd: () => void,
-    handlePlayAgain: () => void
+    handlePlayAgain: () => Promise<void>
 }) => {
 
     const router = useRouter();
@@ -71,7 +72,7 @@ const ResultsComponent = ({
         };
 
         const scoreType = getScoreType(totalPoints);
-        const message = ''// await getEndSentence(scoreType);
+        const message = await ApiServiceClient.getEndSentence(scoreType) ?? ''
 
         let sub_message_1 = '';
         let sub_message_2 = '';
@@ -190,7 +191,10 @@ const ResultsComponent = ({
                         <LoadingButton
                             variant="contained"
                             color="primary"
-                            onClick={handlePlayAgain}
+                            onClick={async () => {
+                                handleEnd();
+                                await handlePlayAgain();
+                            }}
                             className="w-24"
                         >
                             Rejouer
@@ -199,7 +203,9 @@ const ResultsComponent = ({
                             <LoadingButton
                                 variant="contained"
                                 color="primary"
-                                onClick={handleEnd}
+                                onClick={async () => {
+                                    handleEnd()
+                                }}
                                 className="w-24"
                             >
                                 Lobby
@@ -207,7 +213,7 @@ const ResultsComponent = ({
                             <LoadingButton
                                 variant="contained"
                                 color="primary"
-                                onClick={() => {
+                                onClick={async () => {
                                     handleEnd();
                                     router.push('/');
                                 }}

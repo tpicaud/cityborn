@@ -38,15 +38,16 @@ export default function MenuComponent({
     };
 
     const handleMultiPlay = async () => {
-        try {
-            if (!user) {
-                setOpenConnectionAlert(true);
-            } else {
+
+        if (!user) {
+            setOpenConnectionAlert(true);
+        } else {
+            try {
                 const session = await ApiServiceClient.createSession(GameMode.MULTI);
                 router.push(`/session/multi/${session.id}`);
+            } catch (error: any) {
+                invokeError(error);
             }
-        } catch (error: any) {
-            setDialogErrorMessage(error.message)
         }
     }
 
@@ -60,8 +61,10 @@ export default function MenuComponent({
     }
 
     const sendNewVerificationEmail = async () => {
-        ApiServiceClient.sendVerificationEmail();
-        setSentVerificationEmail(true);
+        try {
+            ApiServiceClient.sendVerificationEmail();
+            setSentVerificationEmail(true);
+        } catch { }
     }
 
     return (
@@ -202,8 +205,6 @@ export default function MenuComponent({
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <ErrorDialog errorMessage={dialogErrorMessage} setErrorMessage={setDialogErrorMessage} />
         </div >
     );
 }

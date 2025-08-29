@@ -6,10 +6,12 @@ import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Button from "../ui/buttons/Button";
+import { useError } from "@/contexts/ErrorContext";
 
 export const SignInComponent = () => {
 
     const { refreshUser } = useAuth();
+    const { invokeError } = useError();
     const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
     const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] = useState(false);
 
@@ -38,8 +40,8 @@ export const SignInComponent = () => {
             setIsGoogleSignInFormSubmitting(true);
             await ApiServiceClient.signInWithGoogle(response.credential);
             await refreshUser();
-        } catch (error) {
-
+        } catch (error: any) {
+            invokeError(error);
         } finally {
             setIsGoogleSignInFormSubmitting(false);
         }
@@ -64,8 +66,8 @@ export const SignInComponent = () => {
             e.preventDefault();
             await ApiServiceClient.signIn(formValues.username, formValues.password);
             await refreshUser();
-        } catch (error) {
-
+        } catch (error: any) {
+            invokeError(error);
         } finally {
             setIsSignInFormSubmitting(false);
         }

@@ -5,6 +5,7 @@ import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
+import { useError } from "@/contexts/ErrorContext";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
     // Extends interface
@@ -16,6 +17,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     reconnect: (playerID: string) => Promise<{ isInGame: boolean }>;
 } {
 
+    const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
@@ -31,8 +33,8 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             try {
                 const session: Session = await ApiServiceClient.fetchSession(sessionID);
                 setSession(session);
-            } catch (error) {
-                console.log(error);
+            } catch (error: any) {
+                invokeError(error)
             }
         }
         fetchSession();

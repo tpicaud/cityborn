@@ -8,6 +8,7 @@ import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { LocalizationProvider } from "node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider";
+import { useError } from "@/contexts/ErrorContext";
 
 interface FormValues {
     username: string;
@@ -24,6 +25,7 @@ export const SignUpComponent = ({
 }) => {
 
     const { refreshUser } = useAuth();
+    const { invokeError } = useError();
     const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
 
     /////////////////
@@ -47,8 +49,12 @@ export const SignUpComponent = ({
     }, []);
 
     const handleCredentialResponse = async (response: any) => {
-        await ApiServiceClient.signInWithGoogle(response.credential);
-        await refreshUser();
+        try {
+            await ApiServiceClient.signInWithGoogle(response.credential);
+            await refreshUser();
+        } catch (error: any) {
+            invokeError(error)
+        }
     };
     /////////////////
 
@@ -76,25 +82,26 @@ export const SignUpComponent = ({
     };
 
     const handleSubmit = async (e: any) => {
+
+        setIsSignUpFormSubmitting(true);
+
+        e.preventDefault();
+
+        if (formValues.password !== formValues.confirmPassword) {
+            alert("Les mots de passe ne correspondent pas !");
+            return;
+        }
+        if (!formValues.birthdate) {
+            alert("La date de naissance n'est pas rempli");
+            return;
+        }
+
         try {
-            setIsSignUpFormSubmitting(true);
-
-            e.preventDefault();
-
-            if (formValues.password !== formValues.confirmPassword) {
-                alert("Les mots de passe ne correspondent pas !");
-                return;
-            }
-            if (!formValues.birthdate) {
-                alert("La date de naissance n'est pas rempli");
-                return;
-            }
-
             await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
             setSentVerificationEmail(true);
             await refreshUser();
-        } catch (error) {
-
+        } catch (error: any) {
+            invokeError(error)
         } finally {
             setIsSignUpFormSubmitting(false);
         }

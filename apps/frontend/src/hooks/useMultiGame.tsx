@@ -5,11 +5,13 @@ import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
+import { useError } from "@/contexts/ErrorContext";
 
 export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame & {
     socket: Socket;
 } {
 
+    const { invokeError } = useError();
     const [game, setGame] = useState<Game>();
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
@@ -22,6 +24,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     // Manage connection
     useEffect(() => {
+        console.log(game, connected, hasJoined.current)
         if (game && !connected && !hasJoined.current) {
             join(game.id);
             hasJoined.current = true;
@@ -54,8 +57,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
                 // Set game
                 setGame(game);
-            } catch (error) {
-                console.log(`Erreur lors de la connexion à la partie: ${error}`);
+            } catch (error: any) {
+                invokeError(error);
             }
         }
 
@@ -136,6 +139,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     const end = async () => {
         if (!game) throw new Error('Joueur ou game non initialisé');
+        setConnected(false);
+        hasJoined.current = false;
         setGame(undefined);
     }
 

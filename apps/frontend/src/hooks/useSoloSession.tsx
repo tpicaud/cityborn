@@ -4,9 +4,11 @@ import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { GameMode } from "@cityborn/types";
+import { useError } from "@/contexts/ErrorContext";
 
 export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Promise<void>, localPlayerID: string): IUseSession {
 
+    const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
 
     ////////////////
@@ -21,7 +23,7 @@ export function useSoloSession(initiateStartGame: (gameConfig: GameConfig) => Pr
                 session.hostID = localPlayerID;
                 setSession(session);
             } catch (error: any) {
-                console.error(error.message);
+                invokeError(error)
             }
         }
         fetchSession();

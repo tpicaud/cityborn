@@ -14,6 +14,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import LoadingIconButton from "./ui/buttons/LoadingIconButton";
 import IconButton from "./ui/buttons/IconButton";
+import { useError } from "@/contexts/ErrorContext";
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -28,6 +29,7 @@ declare global {
 export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
+    const { invokeError } = useError();
     const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up'>('menu');
     const [openProfile, setOpenProfile] = useState(false);
     const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
@@ -95,9 +97,13 @@ export default function HomeComponent() {
                                 </IconButton>
                                 <LoadingIconButton
                                     onClick={async () => {
-                                        await ApiServiceClient.signOut();
-                                        await refreshUser();
-                                        setState('menu');
+                                        try {
+                                            await ApiServiceClient.signOut();
+                                            await refreshUser();
+                                            setState('menu');
+                                        } catch (error: any) {
+                                            invokeError(error)
+                                        }
                                     }}
                                     sx={{
                                         visibility: user ? "visible" : "hidden"
