@@ -2,10 +2,10 @@ import { Body, Controller, Get, Param, Post, UnauthorizedException, UseGuards } 
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto } from './dto/session.response.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { GameMode } from '@cityborn/types';
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
+import { ErrorCode } from '@cityborn/errors';
 
 @Controller('session')
 export class SessionController {
@@ -14,7 +14,7 @@ export class SessionController {
     @UseGuards(OptionalAuthGuard)
     @Post()
     async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user: any): Promise<SessionResponseDto> {
-        if (!user && createSessionDto.gameMode === GameMode.MULTI) throw new UnauthorizedException();
+        if (!user && createSessionDto.gameMode === GameMode.MULTI) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
         return {
             session: await this.sessionService.create(createSessionDto)
         }
