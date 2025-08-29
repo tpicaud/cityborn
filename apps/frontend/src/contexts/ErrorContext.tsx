@@ -1,6 +1,6 @@
 import { ErrorDialog } from "@/components/ui/dialogs/ErrorDialog";
 import { ApiError, getFriendlyErrorMessage } from "@cityborn/errors";
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 type ui_type = 'dialog';
 
@@ -25,9 +25,19 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <ErrorContext.Provider value={{invokeError}}>
+        <ErrorContext.Provider value={{ invokeError }}>
             {children}
-            <ErrorDialog errorMessage={errorMessage} setErrorMessage={setErrorMessage}/>
+            <ErrorDialog errorMessage={errorMessage} setErrorMessage={setErrorMessage} />
         </ErrorContext.Provider>
     )
 }
+
+export const useError = () => {
+    const context = useContext(ErrorContext);
+    if (!context) {
+        throw new Error("useError must be used within an ErrorProvider");
+    }
+    return context;
+};
+
+export default ErrorProvider;
