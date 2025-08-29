@@ -5,6 +5,7 @@ import { GameResponseDto } from './dto/game.response.dto';
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { GameMode } from '@cityborn/types';
+import { ErrorCode } from '@cityborn/errors';
 
 @Controller('game')
 export class GameController {
@@ -13,7 +14,7 @@ export class GameController {
     @UseGuards(OptionalAuthGuard)
     @Post()
     async createGame(@Body() createGameDto: CreateGameDto, @CurrentUser() user: any): Promise<GameResponseDto> {
-        if (!user && createGameDto.gameMode === GameMode.MULTI) throw new UnauthorizedException();
+        if (!user && createGameDto.gameMode === GameMode.MULTI) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
         return {
             game: await this.gameService.create(createGameDto)
         }
