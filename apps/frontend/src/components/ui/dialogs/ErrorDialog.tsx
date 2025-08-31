@@ -2,8 +2,6 @@ import { DialogContent, DialogTitle, Typography } from "@mui/material"
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Dialog } from "./Dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import IconButton from "../buttons/IconButton";
-import CloseIcon from '@mui/icons-material/Close';
 
 interface ErrorDialogProps {
     errorMessage: string;
@@ -29,18 +27,6 @@ export function ErrorDialog({ errorMessage, setErrorMessage }: ErrorDialogProps)
             <DialogTitle className="flex justify-center items-center">
                 <ErrorOutlineIcon color="error" />
             </DialogTitle>
-            {/* <IconButton
-                aria-label="close"
-                onClick={handleClose}
-                sx={(theme) => ({
-                    position: 'absolute',
-                    right: 8,
-                    top: 8,
-                    color: theme.palette.grey[500],
-                })}
-            >
-                <CloseIcon />
-            </IconButton> */}
             <DialogContent className="flex flex-col items-center justify-center">
                 {errorMessage}
             </DialogContent>
