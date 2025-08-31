@@ -6,6 +6,7 @@ import { GameConfig } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 import { useError } from "@/contexts/ErrorContext";
+import { ApiError } from "@cityborn/errors";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
     // Extends interface
@@ -83,12 +84,14 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         const sessionID = session.id;
         return new Promise<void>((resolve, reject) => {
             const body = { sessionID, playerID };
-            emit('session:join', body, (response: { success: boolean; error?: string }) => {
+            emit('session:join', body, (response: { success: boolean, error: any }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    const error = new ApiError(response.error.code, response.error.message, response.error.statusCode);
+                    invokeError(error);
+                    reject();
                 }
             });
         });

@@ -6,6 +6,7 @@ import { Guess } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 import { useError } from "@/contexts/ErrorContext";
+import { ApiError } from "@cityborn/errors";
 
 export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame & {
     socket: Socket;
@@ -80,7 +81,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
         // handle messages
         on('game:update', handleGameUpdate);
-        on('game:startGame', handleStartGame)
+        on('game:startGame', handleStartGame);
 
         return () => {
             // Nettoyage

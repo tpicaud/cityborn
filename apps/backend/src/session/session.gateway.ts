@@ -2,11 +2,12 @@ import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, We
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
-import { BadRequestException, Logger } from '@nestjs/common';
+import { BadRequestException, Logger, UseFilters } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
+import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 
 interface WSResponse {
 	success: boolean,
@@ -14,6 +15,7 @@ interface WSResponse {
 }
 
 @WebSocketGateway()
+@UseFilters(AllExceptionsFilter)
 export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect {
 
 	private readonly logger = new Logger(SessionGateway.name);
@@ -51,10 +53,9 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
 			return { success: true };
 		} catch (error) {
-			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
+				error
 			};
 		}
 	}

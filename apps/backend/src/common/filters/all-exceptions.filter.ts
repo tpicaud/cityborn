@@ -57,7 +57,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         response.status(payload.statusCode).json({
             ...payload,
-            timestamp: new Date().toISOString(),
+            //timestamp: new Date().toISOString(),
         });
     }
 
@@ -88,11 +88,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
             };
         }
 
-        this.logger.error(`WS Error: ${payload.code} - ${payload.message}`, exception.stack);
+        if (payload.code === ErrorCode.UNKNOWN_ERROR) {
+            this.logger.error(`WS Error: ${payload.code} - ${payload.message}`, exception.stack);
+        } else {
+            this.logger.warn(`WS Error: ${payload.code} - ${payload.message}`);
+        }
 
         client.emit('error', {
             ...payload,
-            timestamp: new Date().toISOString(),
+            //timestamp: new Date().toISOString(),
         });
     }
 }
