@@ -1,11 +1,12 @@
-import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
-import { Logger } from '@nestjs/common';
+import { BadRequestException, Logger } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '@cityborn/errors';
 
 interface WSResponse {
 	success: boolean,
@@ -13,7 +14,7 @@ interface WSResponse {
 }
 
 @WebSocketGateway()
-export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect  {
+export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect {
 
 	private readonly logger = new Logger(SessionGateway.name);
 
@@ -23,7 +24,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		jwtService: JwtService
 	) {
 		super(jwtService, configService)
-	 }
+	}
 
 	@WebSocketServer()
 	io: Server;
@@ -35,7 +36,12 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@MessageBody('playerID') playerID: string
 	): Promise<WSResponse> {
 		try {
-			if (!sessionID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
+			if (!sessionID || !playerID) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "Paramètres invalides : sessionID et playerID sont requis."
+				});
+			}
 
 			const session = await this.sessionService.join(socket.id, sessionID, playerID);
 
