@@ -16,6 +16,7 @@ export default function MultiSessionPage() {
     const { user } = useAuth();
     const { sessionID } = useParams<{ sessionID: string }>();
     const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(user ? user.username : undefined);
+    
     const multiSession = useMultiSession(localPlayerID, sessionID);
     const multiGame = useMultiGame(localPlayerID);
     const hasJoinedSession = useRef(false);
@@ -161,15 +162,6 @@ export default function MultiSessionPage() {
 
     // si pas de session, chargement
     if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
-
-    // si pas de localPlayerID, afficher dialog
-    // if (!localPlayerID) {
-    //     return (
-    //         <div className="flex flex-row justify-center items-center mt-16">
-    //             <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
-    //         </div>
-    //     );
-    // }
 
     // Si game, display game
     if (multiGame.game) {

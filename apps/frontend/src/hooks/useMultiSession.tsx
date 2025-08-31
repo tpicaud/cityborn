@@ -27,7 +27,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     // useEffects //
     ////////////////
 
-    // Fetch session
+    // Fetch session on init
     useEffect(() => {
         const fetchSession = async () => {
             try {
@@ -38,7 +38,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             }
         }
         fetchSession();
-    }, [])
+    }, []);
 
     // Manage host
     useEffect(() => {
