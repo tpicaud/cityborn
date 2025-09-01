@@ -25,7 +25,6 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     // Manage connection
     useEffect(() => {
-        console.log(!!game, connected, hasTriedJoined.current)
         if (game && !connected && !hasTriedJoined.current) {
             hasTriedJoined.current = true;
             join(game.id);
