@@ -1,8 +1,8 @@
-import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig } from '@cityborn/types';
-import { BadRequestException, Logger, UseFilters } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Logger, UseFilters } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +11,11 @@ import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 
 interface WSResponse {
 	success: boolean,
-	error?: string
+	error?: {
+		code: ErrorCode,
+		message: string,
+		statusCode: HttpStatus
+	}
 }
 
 @WebSocketGateway()
@@ -41,7 +45,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			if (!sessionID || !playerID) {
 				throw new BadRequestException({
 					code: ErrorCode.UNKNOWN_ERROR,
-					message: "Paramètres invalides : sessionID et playerID sont requis."
+					message: "sessionID et playerID required."
 				});
 			}
 
@@ -53,9 +57,14 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
 			return { success: true };
 		} catch (error) {
+			this.logger.error(error.message)
 			return {
 				success: false,
-				error
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -66,7 +75,12 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@MessageBody('newHostID') newHostID: string
 	): Promise<WSResponse> {
 		try {
-			if (!newHostID) throw new Error("Paramètres invalides : newHostID est requis.");
+			if (!newHostID) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "newHostID required."
+				});
+			}
 
 			const session = await this.sessionService.updateHost(socket.id, newHostID);
 			this.io.to(session.id).emit('session:update', session);
@@ -76,7 +90,11 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.error(error.message)
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -87,7 +105,12 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@MessageBody('gameConfig') gameConfig: GameConfig
 	): Promise<WSResponse> {
 		try {
-			if (!gameConfig) throw new Error("Paramètres invalides : gameConfig est requis.");
+			if (!gameConfig) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "gameConfig required."
+				});
+			}
 
 			const session = await this.sessionService.updateGameConfig(socket.id, gameConfig);
 			this.io.to(session.id).emit('session:update', session);
@@ -97,8 +120,12 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.error(error.message)
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
-			};
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
+			}
 		}
 	}
 
@@ -116,7 +143,11 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.error(error.message)
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -135,7 +166,11 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.error(error.message)
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -147,7 +182,12 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@MessageBody('playerID') playerID: string
 	): Promise<WSResponse & { isInGame?: boolean }> {
 		try {
-			if (!sessionID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
+			if (!sessionID || !playerID) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "sessionID and playerID required."
+				});
+			}
 
 			const { session, isInGame } = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID);
 
@@ -157,10 +197,14 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
 			return { success: true, isInGame };
 		} catch (error) {
-			this.logger.error(error.message);
+			this.logger.error(error.message)
 			return {
 				success: false,
-				error: error.message || "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}

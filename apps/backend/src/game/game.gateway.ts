@@ -2,14 +2,19 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { Guess } from '@cityborn/types';
-import { Logger } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Logger } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '@cityborn/errors';
 
 interface WSResponse {
 	success: boolean,
-	error?: string
+	error?: {
+		code: ErrorCode,
+		message: string,
+		statusCode: HttpStatus
+	}
 }
 
 @WebSocketGateway()
@@ -23,7 +28,7 @@ export class GameGateway extends AuthenticatedGateway {
 		jwtService: JwtService
 	) {
 		super(jwtService, configService);
-	 }
+	}
 
 	@WebSocketServer()
 	io: Server;
@@ -34,8 +39,11 @@ export class GameGateway extends AuthenticatedGateway {
 		@MessageBody('gameID') gameID: string,
 	): Promise<WSResponse> {
 		try {
-			if (!gameID === undefined) {
-				throw new Error("Paramètres invalides : gameID est requis.");
+			if (!gameID) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "gameID required."
+				});
 			}
 
 			const game = await this.gameService.join(socket.id, gameID);
@@ -49,7 +57,11 @@ export class GameGateway extends AuthenticatedGateway {
 			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -61,7 +73,10 @@ export class GameGateway extends AuthenticatedGateway {
 	): Promise<WSResponse> {
 		try {
 			if (!guess) {
-				throw new Error("Paramètres invalides : guess est requis.");
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "guess and playerID required."
+				});
 			}
 
 			const game = await this.gameService.handleGuess(socket.id, guess);
@@ -72,7 +87,11 @@ export class GameGateway extends AuthenticatedGateway {
 			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -90,7 +109,11 @@ export class GameGateway extends AuthenticatedGateway {
 			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -107,7 +130,11 @@ export class GameGateway extends AuthenticatedGateway {
 			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}
@@ -119,7 +146,12 @@ export class GameGateway extends AuthenticatedGateway {
 		@MessageBody('playerID') playerID: string
 	): Promise<WSResponse> {
 		try {
-			if (!gameID || !playerID) throw new Error("Paramètres invalides : sessionID et playerID sont requis.");
+			if (!gameID || !playerID) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "gameID and playerID required."
+				});
+			}
 
 			const game = await this.gameService.reconnectPlayer(socket.id, gameID);
 
@@ -132,7 +164,11 @@ export class GameGateway extends AuthenticatedGateway {
 			this.logger.error(error.message);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite."
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
 			};
 		}
 	}

@@ -84,14 +84,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         const sessionID = session.id;
         return new Promise<void>((resolve, reject) => {
             const body = { sessionID, playerID };
-            emit('session:join', body, (response: { success: boolean, error: any }) => {
+            emit('session:join', body, (response: { success: boolean, error?: any }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
                 } else {
-                    const error = new ApiError(response.error.code, response.error.message, response.error.statusCode);
-                    invokeError(error);
-                    reject();
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -102,11 +100,11 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         return new Promise<void>((resolve, reject) => {
             const body = { newHostID };
-            emit('session:updateHost', body, (response: { success: boolean; error?: string }) => {
+            emit('session:updateHost', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -118,11 +116,11 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         const gameConfig = { ...session.gameConfig, ...partialGameConfig }
         const body = { gameConfig };
         return new Promise<void>((resolve, reject) => {
-            emit('session:updateGameConfig', body, (response: { success: boolean; error?: string }) => {
+            emit('session:updateGameConfig', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -133,11 +131,11 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         const body = { playerToKick };
         return new Promise<void>((resolve, reject) => {
-            emit('session:kickPlayer', body, (response: { success: boolean; error?: string }) => {
+            emit('session:kickPlayer', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -147,11 +145,11 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('session:startGame', (response: { success: boolean; error?: string }) => {
+            emit('session:startGame', (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -161,13 +159,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         if (!session) throw new Error('Joueur ou session non initialisé');
 
         if (isHost) {
-            return new Promise<void>((resolve) => {
-                emit('session:endGame', (response: { success: boolean; error?: string }) => {
+            return new Promise<void>((resolve, reject) => {
+                emit('session:endGame', (response: { success: boolean; error?: any }) => {
                     if (response.success) {
                         resolve();
                     } else {
-                        console.log(response.error || "Erreur inconnue");
-                        resolve();
+                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
                 });
             });
@@ -181,12 +178,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             const sessionID = session.id;
             return new Promise<{ isInGame: boolean }>((resolve, reject) => {
                 const body = { sessionID, playerID };
-                emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: string }) => {
+                emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
                         resolve({ isInGame: response.isInGame });
                     } else {
-                        reject(new Error(response.error || "Erreur inconnue"));
+                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
                 });
             });

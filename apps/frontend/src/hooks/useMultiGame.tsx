@@ -98,12 +98,12 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     const join = async (gameID: string) => {
         return new Promise<void>((resolve, reject) => {
             const body = { gameID };
-            emit('game:join', body, (response: { success: boolean; error?: string }) => {
+            emit('game:join', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -114,11 +114,11 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
         return new Promise<void>((resolve, reject) => {
             const body = { guess };
-            emit('game:guess', body, (response: { success: boolean; error?: string }) => {
+            emit('game:guess', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -128,11 +128,11 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         if (!game) throw new Error('Joueur ou game non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('game:nextRound', (response: { success: boolean; error?: string }) => {
+            emit('game:nextRound', (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -152,12 +152,12 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
             const gameID = game.id;
             return new Promise<void>((resolve, reject) => {
                 const body = { gameID, playerID };
-                emit('game:reconnect', body, (response: { success: boolean; error?: string }) => {
+                emit('game:reconnect', body, (response: { success: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
                         resolve();
                     } else {
-                        reject(new Error(response.error || "Erreur inconnue"));
+                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
                 });
             });
