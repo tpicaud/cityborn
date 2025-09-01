@@ -13,7 +13,7 @@ import { Guess } from '@cityborn/types';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-export default function MultiSessionPage() {
+export default function MultiSessionComponent() {
 
     const { user } = useAuth();
     const { invokeError } = useError();
@@ -73,7 +73,6 @@ export default function MultiSessionPage() {
 
     const handleUpdateHost = async (newHostID: string) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.updateHost(newHostID)
         } catch (error: any) {
             invokeError(error);
@@ -82,7 +81,6 @@ export default function MultiSessionPage() {
 
     const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.updateGameConfig(gameConfig);
         } catch (error: any) {
             invokeError(error);
@@ -91,7 +89,6 @@ export default function MultiSessionPage() {
 
     const handleKickPlayer = async (playerToKick: string) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.kickPlayer(playerToKick);
         } catch (error: any) {
             invokeError(error);
@@ -100,7 +97,6 @@ export default function MultiSessionPage() {
 
     const handleStartGame = async () => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.startGame();
         } catch (error: any) {
             invokeError(error);
@@ -124,7 +120,6 @@ export default function MultiSessionPage() {
 
     const handleGuess = async (guess: Guess) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiGame.guess(guess);
         } catch (error: any) {
             invokeError(error);
@@ -133,20 +128,18 @@ export default function MultiSessionPage() {
 
     const handleNextRound = async () => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiGame.nextRound();
         } catch (error: any) {
             invokeError(error);
         }
     }
 
-    const handleEnd = async () => {
+    const handleEndGame = async () => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.endGame();
             await multiGame.end();
         } catch (error: any) {
-            invokeError(error);
+            //invokeError(error);
         }
     }
 
@@ -175,7 +168,7 @@ export default function MultiSessionPage() {
             game={multiGame.game}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
-            handleEnd={handleEnd}
+            handleEndGame={handleEndGame}
             handlePlayAgain={handleStartGame} />
     } else {
         // display lobby
@@ -189,5 +182,4 @@ export default function MultiSessionPage() {
             handleStartGame={handleStartGame}
             handleJoinSession={handleJoinSession} />
     }
-
 }

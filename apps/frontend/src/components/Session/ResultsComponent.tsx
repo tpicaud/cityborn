@@ -15,12 +15,12 @@ import * as ApiServiceClient from '@/services/ApiServiceClient';
 const ResultsComponent = ({
     game,
     localPlayerID,
-    handleEnd,
+    handleEndGame,
     handlePlayAgain
 }: {
     game: Game,
     localPlayerID: string,
-    handleEnd: () => void,
+    handleEndGame: () => Promise<void>,
     handlePlayAgain: () => Promise<void>
 }) => {
 
@@ -49,7 +49,7 @@ const ResultsComponent = ({
         return () => {
             isMounted = false;
         };
-    }, [localPlayerID, game.id]);
+    }, []);
 
 
     function replaceIdsWithNames(resultsMap: Map<string, PlayerResults>, guessObjects: GuessObject[]) {
@@ -192,9 +192,10 @@ const ResultsComponent = ({
                             variant="contained"
                             color="primary"
                             onClick={async () => {
-                                handleEnd();
+                                await handleEndGame();
                                 await handlePlayAgain();
                             }}
+                            disabled={game.hostID === localPlayerID}
                             className="w-24"
                         >
                             Rejouer
@@ -204,7 +205,7 @@ const ResultsComponent = ({
                                 variant="contained"
                                 color="primary"
                                 onClick={async () => {
-                                    handleEnd()
+                                    await handleEndGame()
                                 }}
                                 className="w-24"
                             >
@@ -214,7 +215,7 @@ const ResultsComponent = ({
                                 variant="contained"
                                 color="primary"
                                 onClick={async () => {
-                                    handleEnd();
+                                    await handleEndGame();
                                     router.push('/');
                                 }}
                                 className="w-24"

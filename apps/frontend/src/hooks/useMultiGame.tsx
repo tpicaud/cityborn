@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
-import { Game } from "@cityborn/types";
+import { Game, GameStatus } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
@@ -17,7 +17,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
-    const hasJoined = useRef(false);
+    const hasTriedJoined = useRef(false);
 
     /////////////////
     // useEffects //
@@ -25,10 +25,10 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
     // Manage connection
     useEffect(() => {
-        console.log(game, connected, hasJoined.current)
-        if (game && !connected && !hasJoined.current) {
+        console.log(!!game, connected, hasTriedJoined.current)
+        if (game && !connected && !hasTriedJoined.current) {
+            hasTriedJoined.current = true;
             join(game.id);
-            hasJoined.current = true;
         }
     }, [game]);
 
@@ -53,11 +53,14 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         // handle events
         const handleStartGame = async (gameID: string) => {
             try {
+                setConnected(false)
+                hasTriedJoined.current = false;
+
                 // Fetch game
-                const game: Game = await ApiServiceClient.fetchGame(gameID);
+                const new_game: Game = await ApiServiceClient.fetchGame(gameID);
 
                 // Set game
-                setGame(game);
+                setGame(new_game);
             } catch (error: any) {
                 invokeError(error);
             }
@@ -139,9 +142,8 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     }
 
     const end = async () => {
-        if (!game) throw new Error('Joueur ou game non initialisé');
         setConnected(false);
-        hasJoined.current = false;
+        hasTriedJoined.current = false;
         setGame(undefined);
     }
 
