@@ -61,7 +61,7 @@ export default function SoloSessionComponent() {
         }
     }
 
-    const handleEnd = async () => {
+    const handleEndGame = async () => {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await soloSession.endGame();
@@ -87,7 +87,7 @@ export default function SoloSessionComponent() {
             game={soloGame.game}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
-            handleEnd={handleEnd}
+            handleEndGame={handleEndGame}
             handlePlayAgain={handleStartGame} />
     } else {
         // display lobby
