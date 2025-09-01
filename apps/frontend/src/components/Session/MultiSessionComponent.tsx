@@ -4,8 +4,10 @@ import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useAuth } from '@/contexts/AuthContext';
+import { useError } from '@/contexts/ErrorContext';
 import { useMultiGame } from '@/hooks/useMultiGame';
 import { useMultiSession } from '@/hooks/useMultiSession';
+import { ApiError } from '@cityborn/errors';
 import { GameConfig } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
 import { useParams } from 'next/navigation';
@@ -14,9 +16,11 @@ import { useEffect, useRef, useState } from 'react';
 export default function MultiSessionPage() {
 
     const { user } = useAuth();
+    const { invokeError } = useError();
     const { sessionID } = useParams<{ sessionID: string }>();
+
     const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(user ? user.username : undefined);
-    
+
     const multiSession = useMultiSession(localPlayerID, sessionID);
     const multiGame = useMultiGame(localPlayerID);
     const hasJoinedSession = useRef(false);
@@ -62,8 +66,8 @@ export default function MultiSessionPage() {
         try {
             await multiSession.join(playerID);
             setLocalPlayerID(playerID);
-        } catch (error) {
-            console.log(`Echec de la connexion à la session: ${error}`);
+        } catch (error: any) {
+            invokeError(error as ApiError);
         }
     };
 
@@ -71,8 +75,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.updateHost(newHostID)
-        } catch (error) {
-            console.log(`Echec lors de la mise à jour du host: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -80,8 +84,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.updateGameConfig(gameConfig);
-        } catch (error) {
-            console.log(`Echec lors de la mise à jour de la configuration de la partie: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -89,8 +93,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.kickPlayer(playerToKick);
-        } catch (error) {
-            console.log(`Echec lors de la suppression du joueur de la session: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -98,8 +102,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.startGame();
-        } catch (error) {
-            console.log(`Echec lors du démarrage de la partie: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -122,8 +126,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiGame.guess(guess);
-        } catch (error) {
-            console.log(`Echec lors de l'enregistrement du guess: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -131,8 +135,8 @@ export default function MultiSessionPage() {
         try {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiGame.nextRound();
-        } catch (error) {
-            console.log(`Echec lors du passage au round suivant: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -141,8 +145,8 @@ export default function MultiSessionPage() {
             if (!localPlayerID) throw new Error('Nom du joueur non défini');
             await multiSession.endGame();
             await multiGame.end();
-        } catch (error) {
-            console.log(`Echec lors de la finalisation de la partie: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -183,7 +187,7 @@ export default function MultiSessionPage() {
             handleUpdateGameConfig={handleUpdateGameConfig}
             handleKickPlayer={handleKickPlayer}
             handleStartGame={handleStartGame}
-            handleJoinSession={handleJoinSession}/>
+            handleJoinSession={handleJoinSession} />
     }
 
 }
