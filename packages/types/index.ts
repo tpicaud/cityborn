@@ -14,7 +14,7 @@ export * from './types/Sentence.js';
 export * from './types/User.js';
 
 export * from './enums/Categories.js';
-export * from './enums/GameMode.js';
+export * from './enums/SessionMode.js';
 export * from './enums/GameStatus.js';
 export * from './enums/RoundStatus.js';
 export * from './enums/SessionStatus.js';

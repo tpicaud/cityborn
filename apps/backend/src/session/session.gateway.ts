@@ -1,7 +1,7 @@
 import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
-import { GameConfig } from '@cityborn/types';
+import { GameConfig, Guess } from '@cityborn/types';
 import { BadRequestException, HttpStatus, Logger, UseFilters } from '@nestjs/common';
 import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
@@ -34,6 +34,11 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 
 	@WebSocketServer()
 	io: Server;
+
+
+	///////////////////
+	// Session event //
+	///////////////////
 
 	@SubscribeMessage('session:join')
 	async handleJoin(
@@ -134,9 +139,9 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@ConnectedSocket() socket: Socket,
 	): Promise<WSResponse> {
 		try {
-			const { session, gameID } = await this.sessionService.startGame(socket.id);
+			const session = await this.sessionService.startGame(socket.id);
 
-			this.io.to(session.id).emit('game:startGame', gameID);
+			this.io.to(session.id).emit('session:update', session);
 
 			return { success: true };
 		} catch (error) {
@@ -175,6 +180,65 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		}
 	}
 
+	////////////////////////
+	// Current game event //
+	////////////////////////
+
+	@SubscribeMessage('session:guess')
+	async handleGuess(
+		@ConnectedSocket() socket: Socket,
+		@MessageBody('guess') guess: Guess,
+	): Promise<WSResponse> {
+		try {
+			if (!guess) {
+				throw new BadRequestException({
+					code: ErrorCode.UNKNOWN_ERROR,
+					message: "guess required."
+				});
+			}
+
+			const session = await this.sessionService.handleGuess(socket.id, guess);
+
+			this.io.to(session.id).emit('session:update', session);
+			return { success: true };
+		} catch (error) {
+			this.logger.error(error.message);
+			return {
+				success: false,
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
+			};
+		}
+	}
+
+	@SubscribeMessage('session:nextRound')
+	async handleNextRound(
+		@ConnectedSocket() socket: Socket
+	): Promise<WSResponse> {
+		try {
+			const session = await this.sessionService.handleNextRound(socket.id);
+
+			this.io.to(session.id).emit('session:update', session);
+			return { success: true };
+		} catch (error) {
+			this.logger.error(error.message);
+			return {
+				success: false,
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
+			};
+		}
+	}
+
+	//////////////////////
+	// Connection event //
+	//////////////////////
 	@SubscribeMessage('session:reconnect')
 	async reconnect(
 		@ConnectedSocket() socket: Socket,
@@ -189,13 +253,13 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 				});
 			}
 
-			const { session, isInGame } = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID);
+			const session = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID);
 
 			await socket.join(sessionID)
 			this.io.to(sessionID).emit('session:update', session);
 
 			this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
-			return { success: true, isInGame };
+			return { success: true };
 		} catch (error) {
 			this.logger.error(error.message)
 			return {
@@ -214,15 +278,10 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		@ConnectedSocket() socket: Socket,
 	): Promise<void> {
 		try {
-			const { session, game } = await this.sessionService.disconnectPlayer(socket.id);
+			const session = await this.sessionService.disconnectPlayer(socket.id);
 
 			await socket.leave(session.id);
 			this.io.to(session.id).emit('session:update', session);
-
-			if (game && session && session.currentGameId) {
-				await socket.leave(game.id);
-				this.io.to(session.currentGameId).emit('game:update', game)
-			}
 
 			this.logger.log(`Socket ${socket.id} déconnecté`);
 		} catch (error) {
