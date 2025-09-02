@@ -1,29 +1,36 @@
-import { DialogContent, DialogTitle, Typography } from "@mui/material"
+import { DialogContent, DialogTitle } from "@mui/material"
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Dialog } from "./Dialog";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 
 interface ErrorDialogProps {
     errorMessage: string;
-    setErrorMessage: Dispatch<SetStateAction<string>>;
+    open: boolean,
+    setOpen: Dispatch<SetStateAction<boolean>>,
+    onExited: () => void;
 };
 
-export function ErrorDialog({ errorMessage, setErrorMessage }: ErrorDialogProps) {
-    const [open, setOpen] = useState(false);
-
-    useEffect(() => {
-        if (errorMessage !== '') {
-            setOpen(true);
-        }
-    }, [errorMessage])
-
-    const handleClose = () => {
-        setOpen(false);
-        setErrorMessage('');
-    }
+export function ErrorDialog({ errorMessage, open, setOpen, onExited }: ErrorDialogProps) {
 
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog
+            open={open}
+            onClose={() => setOpen(false)}
+            slotProps={{
+                transition: {
+                    onExited,
+                },
+            }}
+            fullWidth
+            maxWidth="xs" // sm, md, lg, xl
+            sx={{
+                "& .MuiDialog-paper": {
+                    width: "90%",   // prend 90% de la largeur de l’écran
+                    maxWidth: 400,  // mais ne dépasse pas 400px
+                    height: "auto", // ou fixe si tu veux genre 300
+                    borderRadius: "1rem",
+                },
+            }}>
             <DialogTitle className="flex justify-center items-center">
                 <ErrorOutlineIcon color="error" />
             </DialogTitle>
