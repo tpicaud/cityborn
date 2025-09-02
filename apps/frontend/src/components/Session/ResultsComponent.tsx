@@ -1,6 +1,6 @@
 'use client';
 
-import { GameMode, GuessObject, PlayerResults } from '@cityborn/types';
+import { SessionMode, GuessObject, PlayerResults, Session } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
 import { useRouter } from 'next/navigation';
@@ -15,11 +15,15 @@ import * as ApiServiceClient from '@/services/ApiServiceClient';
 const ResultsComponent = ({
     game,
     localPlayerID,
+    isHost,
+    mode,
     handleEndGame,
     handlePlayAgain
 }: {
     game: Game,
     localPlayerID: string,
+    isHost: boolean,
+    mode: SessionMode,
     handleEndGame: () => Promise<void>,
     handlePlayAgain: () => Promise<void>
 }) => {
@@ -195,7 +199,7 @@ const ResultsComponent = ({
                                 await handleEndGame();
                                 await handlePlayAgain();
                             }}
-                            disabled={game.mode !== GameMode.SOLO && game.hostID !== localPlayerID}
+                            disabled={mode !== SessionMode.SOLO && isHost}
                             className="w-24"
                         >
                             Rejouer

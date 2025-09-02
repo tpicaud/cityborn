@@ -64,6 +64,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         })
     }
 
+    ////////////////////
+    // Game functions //
+    ////////////////////
+
     const startGame = async () => {
         if (!session) return;
 
