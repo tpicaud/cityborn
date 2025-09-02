@@ -1,8 +1,7 @@
-import { Categories, Coord, Game, GameConfig, SessionMode, GameState, GameStatus, Guess, GuessObject, Player, PlayerResults, Result, Round, RoundStatus } from "@cityborn/types";
+import { Coord, Game, GameState, GameStatus, Guess, PlayerResults, Result, Round, RoundStatus } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto";
-import { PlayerDto } from "src/player/dto/player.dto";
 
 export class ResultDto implements Result {
     @IsString()
@@ -20,18 +19,6 @@ export class PlayerResultsDto implements PlayerResults {
     @ValidateNested({ each: true })
     @Type(() => ResultDto)
     results: ResultDto[];
-}
-
-export class GameConfigDto implements GameConfig {
-    @IsArray()
-    @IsEnum(Categories, { each: true })
-    categories: Categories[];
-
-    @IsNumber()
-    timer: number;
-
-    @IsNumber()
-    nbOfObjects: number;
 }
 
 export class CoordDto implements Coord {
@@ -78,14 +65,14 @@ export class GameStateDto implements GameState {
     guessObjectsIds: string[];
 
     @IsOptional()
-    @Type(() => RoundDto)
-    currentRound: RoundDto | undefined;
-
-    @IsOptional()
     @IsObject()
     @ValidateNested({ each: true })
     @Type(() => PlayerResultsDto)
     results: Record<string, PlayerResultsDto>;
+
+    @IsOptional()
+    @Type(() => RoundDto)
+    currentRound?: RoundDto;
 
     @IsOptional()
     @IsArray()
@@ -98,23 +85,8 @@ export class GameDto implements Game {
     @IsString()
     id: string;
 
-    @IsString()
-    hostID: string;
-
-    @IsEnum(GameMode)
-    mode: GameMode;
-
     @IsEnum(GameStatus)
     status: GameStatus;
-
-    @ValidateNested()
-    @Type(() => GameConfigDto)
-    gameConfig: GameConfigDto;
-
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => PlayerDto)
-    players: PlayerDto[];
 
     @ValidateNested()
     @Type(() => GameStateDto)
