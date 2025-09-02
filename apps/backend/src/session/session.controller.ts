@@ -6,6 +6,8 @@ import { CurrentUser } from 'src/user/user.decorator';
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 import { ErrorCode } from '@cityborn/errors';
 import { SessionMode } from '@cityborn/types';
+import { CreateGameDto } from './dto/create-game.dto';
+import { GameResponseDto } from './dto/game.response.dto';
 
 @Controller('session')
 export class SessionController {
@@ -25,5 +27,13 @@ export class SessionController {
         return {
             session: await this.sessionService.getById(sessionId)
         };
+    }
+
+    @UseGuards(OptionalAuthGuard)
+    @Post('create-game')
+    async createGame(@Body() createGameDto: CreateGameDto): Promise<GameResponseDto> {
+        return {
+            game: await this.sessionService.createGame(createGameDto.gameConfig)
+        }
     }
 }

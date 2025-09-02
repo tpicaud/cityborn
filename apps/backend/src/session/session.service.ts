@@ -210,6 +210,22 @@ export class SessionService {
     // Current game method //
     /////////////////////////
 
+    async createGame(gameConfig: GameConfig): Promise<Game> {
+        const guessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
+        const guessObjectIds = guessObjects.map(obj => obj.id);
+        const game: Game = {
+            id: await this.generateUniqueGameID(),
+            status: GameStatus.STARTING,
+            state: {
+                guessObjectsIds: guessObjectIds,
+                results: {},
+                guessObjects: guessObjects
+            }
+        }
+
+        return game;
+    }
+
     async handleGuess(socketID: string, guess: any) {
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
@@ -423,22 +439,6 @@ export class SessionService {
     }
 
     // Private function
-    private async createGame(gameConfig: GameConfig): Promise<Game> {
-        const guessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
-        const guessObjectIds = guessObjects.map(obj => obj.id);
-        const game: Game = {
-            id: await this.generateUniqueGameID(),
-            status: GameStatus.STARTING,
-            state: {
-                guessObjectsIds: guessObjectIds,
-                results: {},
-                guessObjects: guessObjects
-            }
-        }
-
-        return game;
-    }
-
     private async generateUniqueSessionID(): Promise<string> {
         const MAX_ATTEMPTS = 3;
 

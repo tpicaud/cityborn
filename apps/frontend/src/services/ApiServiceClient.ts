@@ -1,5 +1,5 @@
 import { ApiError } from "@cityborn/errors";
-import { Game, GameConfig, GameMode, GuessObject, PublicUser, Session } from "@cityborn/types";
+import { Game, GameConfig, SessionMode, GuessObject, PublicUser, Session } from "@cityborn/types";
 
 //////////////////
 // Auth service //
@@ -111,13 +111,13 @@ export async function verifyEmail(verification_token: string): Promise<void> {
 // Sessions service //
 //////////////////////
 
-export async function createSession(gameMode: GameMode): Promise<Session> {
+export async function createSession(mode: SessionMode): Promise<Session> {
     const response = await fetch(`/api/session`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ gameMode }),
+        body: JSON.stringify({ mode }),
     });
 
     const data = await response.json();
@@ -163,18 +163,29 @@ export async function fetchGuessObjects(guessObjectsIds: string[]): Promise<Gues
     return data.guessObjects;
 }
 
+export const getEndSentence = async (score_type: string): Promise<string> => {
+    const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
+    }
+
+    return data.sentence.sentence ?? '';
+}
 
 //////////////////
 // Game service //
 //////////////////
 
-export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
-    const response = await fetch(`/api/game`, {
+export async function createSoloGame(gameConfig: GameConfig) {
+    const response = await fetch(`/api/session/create-game`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ gameConfig, hostID, gameMode: GameMode.SOLO, playersID: [hostID] }),
+        body: JSON.stringify({gameConfig}),
     });
 
     const data = await response.json();
@@ -188,26 +199,14 @@ export async function createSoloGame(gameConfig: GameConfig, hostID: string) {
     return game;
 }
 
-export async function fetchGame(gameId: string): Promise<Game> {
-    const response = await fetch(`/api/game/${gameId}`);
+// export async function fetchGame(gameId: string): Promise<Game> {
+//     const response = await fetch(`/api/game/${gameId}`);
 
-    const data = await response.json();
+//     const data = await response.json();
 
-    if (!response.ok) {
-        throw new ApiError(data.code, data.message, data.statusCode);
-    }
+//     if (!response.ok) {
+//         throw new ApiError(data.code, data.message, data.statusCode);
+//     }
 
-    return data.game;
-}
-
-export const getEndSentence = async (score_type: string): Promise<string> => {
-    const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new ApiError(data.code, data.message, data.statusCode);
-    }
-
-    return data.sentence.sentence ?? '';
-}
+//     return data.game;
+// }
