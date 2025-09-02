@@ -1,17 +1,20 @@
 'use client';
 
-import MenuComponent from "./MenuComponent";
+import MenuComponent from "./menu/MenuComponent";
 import { useEffect, useState } from "react";
 import { SignInComponent } from "./auth/SignInComponent";
 import { SignUpComponent } from "./auth/SignUpComponent";
 import dynamic from "next/dynamic";
-import { Box, Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from "@/contexts/AuthContext";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CloseIcon from '@mui/icons-material/Close';
+import LoadingIconButton from "./ui/buttons/LoadingIconButton";
+import IconButton from "./ui/buttons/IconButton";
+import { useError } from "@/contexts/ErrorContext";
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -26,6 +29,7 @@ declare global {
 export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
+    const { invokeError } = useError();
     const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up'>('menu');
     const [openProfile, setOpenProfile] = useState(false);
     const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
@@ -91,18 +95,22 @@ export default function HomeComponent() {
                                 >
                                     <AccountCircleIcon />
                                 </IconButton>
-                                <IconButton
+                                <LoadingIconButton
                                     onClick={async () => {
-                                        await ApiServiceClient.signOut();
-                                        await refreshUser();
-                                        setState('menu');
+                                        try {
+                                            await ApiServiceClient.signOut();
+                                            await refreshUser();
+                                            setState('menu');
+                                        } catch (error: any) {
+                                            invokeError(error)
+                                        }
                                     }}
                                     sx={{
                                         visibility: user ? "visible" : "hidden"
                                     }}
                                 >
                                     <LogoutIcon />
-                                </IconButton>
+                                </LoadingIconButton>
                             </div>
                         </div>
 

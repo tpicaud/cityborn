@@ -1,6 +1,7 @@
 'use server';
 
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
+import { ApiError } from "@cityborn/errors";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
@@ -24,18 +25,20 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     const access_token = await getAccessToken();
     const refresh_token = await getRefreshToken();
 
+    if (!access_token && !refresh_token) return null;
+
     const response = await fetch(`http://localhost:3000/api/auth/me`, {
         method: 'GET',
         headers: {
-            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`
-        }
-    })
+            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`,
+        },
+        cache: 'no-store'
+    });
 
     const data = await response.json();
 
-
     if (!response.ok) {
-        throw new Error(data.message);
+        throw new ApiError(data.code, data.message, data.statusCode);
     }
 
     if (!data.user) return null;

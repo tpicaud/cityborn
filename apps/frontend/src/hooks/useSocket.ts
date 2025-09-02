@@ -1,10 +1,14 @@
+import { useError } from "@/contexts/ErrorContext";
 import { getSocket } from "@/lib/socket";
+import { ApiError } from "@cityborn/errors";
 import { useEffect, useState, useCallback } from "react";
 import { Socket } from "socket.io-client";
 
 export const useSocket = () => {
     const socket: Socket = getSocket();
     const [connected, setConnected] = useState(false);
+
+    const { invokeError } = useError();
 
     // Connexion socket à l'initialisation
     useEffect(() => {
@@ -19,9 +23,11 @@ export const useSocket = () => {
             setConnected(false);
         });
 
-        socket.on("error", (data) => {
-            console.log(data.message);
-        });
+        // handle errors
+        on('error', (error: any) => {
+            const api_error = new ApiError(error.code, error.message, error.statusCode);
+            invokeError(api_error);
+        })
 
         return () => {
             socket.disconnect();

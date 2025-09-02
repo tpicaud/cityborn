@@ -1,27 +1,37 @@
 // app/api/auth/me/route.ts
 import { NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
+import { ErrorCode } from "@cityborn/errors";
+import { getAccessToken, getRefreshToken } from "../utils";
 
 export async function GET() {
     try {
+        const access_token = await getAccessToken();
+        const refresh_token = await getRefreshToken();
+
+        if (!access_token && !refresh_token) return NextResponse.json({}, { status: 200 });
+
         const response = await apiFetch(`/auth/me`, {
             requestOptions: {
-                method: 'GET'
+                method: 'GET',
+                cache: 'no-store'
             },
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            const message = data.message || "Failed to fetch current user";
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
-        // If null, return null user
         return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }

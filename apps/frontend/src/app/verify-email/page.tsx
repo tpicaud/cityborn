@@ -19,7 +19,7 @@ export default function VerifyEmail() {
                 try {
                     await ApiServiceClient.verifyEmail(verification_token);
                     setStatus('success');
-                } catch (err) {
+                } catch {
                     setStatus('error');
                 }
             }

@@ -12,25 +12,17 @@ export class IdService {
     * Generate nano ID
     */
     generateNanoId(size: number = 6): string {
-        try {
-            const nanoid = customAlphabet('0123456789', size);
-            return nanoid()
-        } catch (error) {
-            throw new Error(`Error generating id: ${error}`);
-        }
+        const nanoid = customAlphabet('0123456789', size);
+        return nanoid()
     }
 
     /**
     * Generate readable ID with names
     */
     generateUniqueNamesId(): string {
-        try {
-            return uniqueNamesGenerator({
-                dictionaries: [tennis_dictionary, tennis_dictionary, tennis_dictionary],
-                separator: '-',
-            });
-        } catch (error) {
-            throw new Error(`Error generating id: ${error}`);
-        }
+        return uniqueNamesGenerator({
+            dictionaries: [tennis_dictionary, tennis_dictionary, tennis_dictionary],
+            separator: '-',
+        });
     }
 }

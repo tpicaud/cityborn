@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getJwtConstants } from '../constants';
 import { extractTokenFromHTTPHeader, extractAccessTokenFromWsClient } from '../utils';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,8 +25,12 @@ export class AuthGuard implements CanActivate {
 		if (isHttp) {
 			const request = context.switchToHttp().getRequest();
 			token = extractTokenFromHTTPHeader(request);
-			if (!token) throw new UnauthorizedException();
-			request['user'] = await this.validateAccessToken(token);
+			if (!token) throw new UnauthorizedException({ code: ErrorCode.USER_TOKEN_MISSING, message: 'Token missing' });
+
+			const user = await this.validateAccessToken(token);
+			if (!user.isVerified) throw new UnauthorizedException({ code: ErrorCode.USER_NOT_VERIFIED, message: 'User email not verified' });
+			
+			request['user'] = user;
 		}
 
 		if (isWs) {
@@ -53,7 +58,7 @@ export class AuthGuard implements CanActivate {
 		try {
 			return await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret });
 		} catch {
-			throw new UnauthorizedException();
+			throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_TOKEN, message: 'Invalid token' });
 		}
 	}
 }

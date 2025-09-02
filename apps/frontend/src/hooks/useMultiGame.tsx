@@ -1,23 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
+import { useError } from "@/contexts/ErrorContext";
+import { ApiError } from "@cityborn/errors";
 
 export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame & {
     socket: Socket;
 } {
 
+    const { invokeError } = useError();
     const [game, setGame] = useState<Game>();
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
+    const hasTriedJoined = useRef(false);
 
     /////////////////
     // useEffects //
     ////////////////
+
+    // Manage connection
+    useEffect(() => {
+        if (game && !connected && !hasTriedJoined.current) {
+            hasTriedJoined.current = true;
+            join(game.id);
+        }
+    }, [game]);
 
     // Manage disconnection
     useEffect(() => {
@@ -40,26 +52,28 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         // handle events
         const handleStartGame = async (gameID: string) => {
             try {
-                // Fetch game
-                const game: Game = await ApiServiceClient.fetchGame(gameID);
+                setConnected(false)
+                hasTriedJoined.current = false;
 
-                // Set and join
-                setGame(game);
-                await join(gameID);
-            } catch (error) {
-                console.log(`Erreur lors de la connexion à la partie: ${error}`);
+                // Fetch game
+                const new_game: Game = await ApiServiceClient.fetchGame(gameID);
+
+                // Set game
+                setGame(new_game);
+            } catch (error: any) {
+                invokeError(error);
             }
         }
 
-        const handleGameUpdate = (game: Game) => {
-            console.log("Game updated:", game);
+        const handleGameUpdate = (updatedGame: Game) => {
+            console.log("Game update:", updatedGame);
             setGame(prev => {
                 const prevGuessObjects = prev?.state?.guessObjects ?? [];
 
                 return {
-                    ...game,
+                    ...updatedGame,
                     state: {
-                        ...game.state,
+                        ...updatedGame.state,
                         guessObjects: prevGuessObjects
                     }
                 };
@@ -69,7 +83,7 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
         // handle messages
         on('game:update', handleGameUpdate);
-        on('game:startGame', handleStartGame)
+        on('game:startGame', handleStartGame);
 
         return () => {
             // Nettoyage
@@ -86,12 +100,12 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
     const join = async (gameID: string) => {
         return new Promise<void>((resolve, reject) => {
             const body = { gameID };
-            emit('game:join', body, (response: { success: boolean; error?: string }) => {
+            emit('game:join', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     setConnected(true);
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -102,11 +116,11 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
 
         return new Promise<void>((resolve, reject) => {
             const body = { guess };
-            emit('game:guess', body, (response: { success: boolean; error?: string }) => {
+            emit('game:guess', body, (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
@@ -116,18 +130,19 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
         if (!game) throw new Error('Joueur ou game non initialisé');
 
         return new Promise<void>((resolve, reject) => {
-            emit('game:nextRound', (response: { success: boolean; error?: string }) => {
+            emit('game:nextRound', (response: { success: boolean; error?: any }) => {
                 if (response.success) {
                     resolve();
                 } else {
-                    reject(new Error(response.error || "Erreur inconnue"));
+                    reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                 }
             });
         });
     }
 
     const end = async () => {
-        if (!game) throw new Error('Joueur ou game non initialisé');
+        setConnected(false);
+        hasTriedJoined.current = false;
         setGame(undefined);
     }
 
@@ -138,12 +153,12 @@ export function useMultiGame(localPlayerID: string | undefined): IUseMultiGame &
             const gameID = game.id;
             return new Promise<void>((resolve, reject) => {
                 const body = { gameID, playerID };
-                emit('game:reconnect', body, (response: { success: boolean; error?: string }) => {
+                emit('game:reconnect', body, (response: { success: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
                         resolve();
                     } else {
-                        reject(new Error(response.error || "Erreur inconnue"));
+                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
                 });
             });

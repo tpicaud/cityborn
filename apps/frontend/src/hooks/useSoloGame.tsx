@@ -7,11 +7,13 @@ import { GameConfig } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { IUseGame } from "./IUseGame";
 import { Result } from "@cityborn/types";
+import { useError } from "@/contexts/ErrorContext";
 
 export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
     startGame: (gameConfig: GameConfig) => Promise<void>
 } {
 
+    const { invokeError } = useError();
     const [game, setGame] = useState<Game>();
 
     useEffect(() => {
@@ -36,8 +38,8 @@ export function useSoloGame(localPlayerID: string = 'guest'): IUseGame & {
                     }
                 }
             })
-        } catch (error) {
-            throw new Error(`Error starting game: ${error}`);
+        } catch (error: any) {
+            invokeError(error);
         }
     };
 

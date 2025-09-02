@@ -1,4 +1,5 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { ErrorCode } from '@cityborn/errors';
+import { Inject, Injectable, InternalServerErrorException, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -8,29 +9,49 @@ export class RedisService implements OnModuleDestroy {
     ) { }
 
     async set(key: string, value: string, ttlSeconds?: number) {
-        if (ttlSeconds) {
-            await this.redisClient.set(key, value, 'EX', ttlSeconds);
-        } else {
-            await this.redisClient.set(key, value);
+        try {
+            if (ttlSeconds) {
+                await this.redisClient.set(key, value, 'EX', ttlSeconds);
+            } else {
+                await this.redisClient.set(key, value);
+            }
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_SET_FAILED, message: `Error setting resource ${key}: ${error.message}` });
         }
     }
 
     async get(key: string): Promise<string | null> {
-        return await this.redisClient.get(key);
+        try {
+            return await this.redisClient.get(key);
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_GET_FAILED, message: `Error getting resource ${key}: ${error.message}` });
+        }
     }
 
     async setJSON<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
-        const serialized = JSON.stringify(value);
-        await this.set(key, serialized, ttlSeconds);
+        try {
+            const serialized = JSON.stringify(value);
+            await this.set(key, serialized, ttlSeconds);
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_SET_FAILED, message: `Error setting resource ${key}: ${error.message}` });
+        }
     }
 
     async getJSON<T>(key: string): Promise<T | null> {
-        const raw = await this.get(key);
-        return raw ? JSON.parse(raw) as T : null;
+        try {
+            const raw = await this.get(key);
+            return raw ? JSON.parse(raw) as T : null;
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_GET_FAILED, message: `Error getting resource ${key}: ${error.message}` });
+        }
     }
 
     async del(key: string): Promise<number> {
-        return this.redisClient.del(key);
+        try {
+            return this.redisClient.del(key);
+        } catch (error) {
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_DELETE_FAILED, message: `Error deleting resource ${key}: ${error.message}` });
+        }
     }
 
     async onModuleDestroy() {
