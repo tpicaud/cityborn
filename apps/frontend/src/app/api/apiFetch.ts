@@ -1,4 +1,4 @@
-import { getAccessToken, getRefreshToken, getTokensCookiesHeaders, storeTokensInCookies } from './auth/utils';
+import { getAccessToken, getRefreshToken, storeTokensInCookies } from './auth/utils';
 
 const baseUrl = process.env.REST_BACKEND_URL;
 
@@ -6,10 +6,8 @@ export async function apiFetch(
     endpoint: string,
     {
         requestOptions = {},
-        forceAuth = true,
     }: {
         requestOptions?: RequestInit,
-        forceAuth?: boolean
     } = {}
 ): Promise<Response> {
     const options = requestOptions || {};

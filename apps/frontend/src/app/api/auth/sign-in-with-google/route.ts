@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             },
-            forceAuth: false
         });
 
         const data = await response.json();

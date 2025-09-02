@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { apiFetch } from '../../apiFetch';
 import { ErrorCode } from '@cityborn/errors';
 

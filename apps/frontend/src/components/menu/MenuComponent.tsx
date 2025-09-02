@@ -9,7 +9,6 @@ import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
-import { ErrorDialog } from "../ui/dialogs/ErrorDialog";
 import { Dialog } from "../ui/dialogs/Dialog";
 import { useError } from "@/contexts/ErrorContext";
 
@@ -30,8 +29,6 @@ export default function MenuComponent({
     const [code, setCode] = useState<string>('')
     const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
-    // Error handling
-    const [dialogErrorMessage, setDialogErrorMessage] = useState('');
 
     const handleSoloPlay = () => {
         router.push(`/session/solo`);
@@ -53,7 +50,7 @@ export default function MenuComponent({
 
     const handleJoin = async () => {
         try {
-            const session = await ApiServiceClient.fetchSession(code);
+            await ApiServiceClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
         } catch (error: any) {
             invokeError(error);
@@ -70,13 +67,13 @@ export default function MenuComponent({
     return (
         <div className='flex flex-col items-center gap-5'>
             <div className='flex flex-col gap-1 items-center w-full'>
-                <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-24 max-h-36' />
+                <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-24 md:max-h-36' />
                 <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
 
             {user ? (
                 <div className="flex flex-col items-center justify-center">
-                    <Typography variant="h5">
+                    <Typography variant="h5" className="text-center">
                         Bienvenue <b>{user.username}</b> !
                     </Typography>
                     {!user.isVerified && (

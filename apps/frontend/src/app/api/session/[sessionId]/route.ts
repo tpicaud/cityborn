@@ -14,7 +14,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ ses
                     'Content-Type': 'application/json',
                 },
             },
-            forceAuth: false
         });
 
         const data = await response.json();

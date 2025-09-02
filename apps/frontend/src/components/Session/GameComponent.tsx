@@ -10,7 +10,6 @@ import { Guess } from "@cityborn/types";
 import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 import LoadingButton from "../ui/buttons/LoadingButton";
-import { useEffect, useMemo } from "react";
 
 export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEndGame, handlePlayAgain }: {
     localPlayerID: string | undefined,

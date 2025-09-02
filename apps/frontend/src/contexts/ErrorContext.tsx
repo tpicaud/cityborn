@@ -1,8 +1,8 @@
 'use client';
 
 import { ErrorDialog } from "@/components/ui/dialogs/ErrorDialog";
-import { ApiError, ErrorCode, getFriendlyErrorMessage } from "@cityborn/errors";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { ApiError, getFriendlyErrorMessage } from "@cityborn/errors";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 type ui_type = 'dialog';
 
@@ -16,7 +16,7 @@ const ErrorContext = createContext<ErrorContextType>({
 
 const ErrorProvider = ({ children }: { children: ReactNode }) => {
     const [errorMessage, setErrorMessage] = useState<string>('');
-    const [open, setOpen] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
 
     const invokeError = (error: ApiError | string | any, ui_type: ui_type = 'dialog') => {
         if (error instanceof ApiError) {
@@ -25,7 +25,10 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
         } else {
             setErrorMessage(error);
         }
-        setOpen(true);
+
+        if (ui_type === 'dialog') {
+            setOpenDialog(true);
+        }
     }
 
     return (
@@ -33,8 +36,8 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
             {children}
             <ErrorDialog
                 errorMessage={errorMessage}
-                open={open}
-                setOpen={setOpen}
+                open={openDialog}
+                setOpen={setOpenDialog}
                 onExited={() => setErrorMessage('')} />
         </ErrorContext.Provider>
     )

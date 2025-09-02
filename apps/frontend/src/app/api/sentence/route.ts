@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
                     'Content-Type': 'application/json',
                 },
             },
-            forceAuth: false
         });
 
         const data = await response.json();

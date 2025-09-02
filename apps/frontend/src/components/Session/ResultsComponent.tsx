@@ -195,7 +195,7 @@ const ResultsComponent = ({
                                 await handleEndGame();
                                 await handlePlayAgain();
                             }}
-                            disabled={game.mode !== GameMode.SOLO && game.hostID === localPlayerID}
+                            disabled={game.mode !== GameMode.SOLO && game.hostID !== localPlayerID}
                             className="w-24"
                         >
                             Rejouer

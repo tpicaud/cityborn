@@ -1,5 +1,5 @@
 import { IUseSession } from "./IUseSession";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
