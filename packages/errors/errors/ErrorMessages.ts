@@ -21,9 +21,6 @@ export const ERROR_MESSAGES = {
         [ErrorCode.SESSION_NO_CURRENT_GAME]: "Aucune partie en cours pour la session.",
         [ErrorCode.SESSION_ALREADY_IN_GAME]: "La session a déjà une partie en cours.",
 
-        // Game
-        [ErrorCode.GAME_NOT_FOUND]: "La partie n'existe pas.",
-
         // Default
         [ErrorCode.UNKNOWN_ERROR]: "Une erreur inconnue est survenue, veuillez réessayer.",
     },

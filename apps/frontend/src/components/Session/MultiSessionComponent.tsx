@@ -5,7 +5,6 @@ import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
-import { useMultiGame } from '@/hooks/useMultiGame';
 import { useMultiSession } from '@/hooks/useMultiSession';
 import { GameConfig } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
@@ -21,7 +20,7 @@ export default function MultiSessionComponent() {
     const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(user ? user.username : undefined);
 
     const multiSession = useMultiSession(localPlayerID, sessionID);
-    const multiGame = useMultiGame(localPlayerID);
+    //const multiGame = useMultiGame(localPlayerID);
     const hasJoinedSession = useRef(false);
 
 
@@ -36,24 +35,6 @@ export default function MultiSessionComponent() {
             hasJoinedSession.current = true;
         }
     }, [multiSession.session]);
-
-    // Automatic reconnect
-    useEffect(() => {
-        const autoReconnect = async () => {
-            try {
-                if (localPlayerID && !multiSession.connected && multiSession.socket.connected) {
-                    const { isInGame } = await multiSession.reconnect(localPlayerID);
-                    if (isInGame) {
-                        await multiGame.reconnect(localPlayerID);
-                    }
-                }
-            } catch (error) {
-                console.log(`Erreur lors de la reconnexion automatique: ${error}`);
-            }
-        }
-        autoReconnect();
-    }, [multiSession.connected, multiSession.socket.connected]);
-
 
     //////////////////////////
     // Session interactions //
@@ -100,16 +81,6 @@ export default function MultiSessionComponent() {
         }
     }
 
-    // const handleReconnectToSession = async () => {
-    //     try {
-    //         if (!localPlayerID) throw new Error('Nom du joueur non défini');
-    //         const isInGame = await multiSession.reconnect(localPlayerID);
-    //         if (isInGame) await multiGame.reconnect(localPlayerID);
-    //     } catch (error) {
-    //         console.log(`Erreur lors de la reconnexion à la session: ${error}`);
-    //     }
-    // };
-
 
     ///////////////////////
     // Game interactions //
@@ -117,7 +88,7 @@ export default function MultiSessionComponent() {
 
     const handleGuess = async (guess: Guess) => {
         try {
-            await multiGame.guess(guess);
+            await multiSession.guess(guess);
         } catch (error: any) {
             invokeError(error);
         }
@@ -125,7 +96,7 @@ export default function MultiSessionComponent() {
 
     const handleNextRound = async () => {
         try {
-            await multiGame.nextRound();
+            await multiSession.nextRound();
         } catch (error: any) {
             invokeError(error);
         }
@@ -134,21 +105,11 @@ export default function MultiSessionComponent() {
     const handleEndGame = async () => {
         try {
             await multiSession.endGame();
-            await multiGame.end();
         } catch (error: any) {
             //invokeError(error);
             console.log(error);
         }
     }
-
-    // const handleReconnectToGame = async () => {
-    //     try {
-    //         if (!localPlayerID) throw new Error('Nom du joueur non défini');
-    //         await multiGame.reconnect(localPlayerID);
-    //     } catch (error) {
-    //         console.log(`Erreur lors de la reconnexion à la partie`);
-    //     }
-    // };
 
 
     ///////////////
@@ -159,11 +120,12 @@ export default function MultiSessionComponent() {
     if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
 
     // Si game, display game
-    if (multiGame.game) {
+    if (multiSession.session.currentGame) {
         return <GameComponent
             localPlayerID={localPlayerID}
-            isHost={multiGame.isHost}
-            game={multiGame.game}
+            isHost={multiSession.isHost}
+            mode={multiSession.session.mode}
+            game={multiSession.session.currentGame}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}

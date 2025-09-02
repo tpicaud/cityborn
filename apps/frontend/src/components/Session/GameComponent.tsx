@@ -3,7 +3,7 @@
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Backdrop } from "@mui/material";
-import { RoundStatus } from "@cityborn/types";
+import { RoundStatus, SessionMode } from "@cityborn/types";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
@@ -11,9 +11,10 @@ import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 import LoadingButton from "../ui/buttons/LoadingButton";
 
-export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handleNextRound, handleEndGame, handlePlayAgain }: {
+export const GameComponent = ({ localPlayerID, isHost, mode, game, handleGuess, handleNextRound, handleEndGame, handlePlayAgain }: {
     localPlayerID: string | undefined,
     isHost: boolean;
+    mode: SessionMode,
     game: Game,
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
@@ -78,7 +79,7 @@ export const GameComponent = ({ localPlayerID, isHost, game, handleGuess, handle
                     <div className="flex flex-row w-full h-full items-center justify-center">
                         <Backdrop open={true}>
                             <div className="w-[80%]">
-                                <ResultsComponent game={game} localPlayerID={localPlayerID} handleEndGame={handleEndGame} handlePlayAgain={handlePlayAgain} />
+                                <ResultsComponent game={game} localPlayerID={localPlayerID} isHost={isHost} mode={mode} handleEndGame={handleEndGame} handlePlayAgain={handlePlayAgain} />
                             </div>
                         </Backdrop>
                     </div>
