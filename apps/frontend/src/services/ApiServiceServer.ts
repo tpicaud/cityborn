@@ -1,6 +1,5 @@
 'use server';
 
-import { apiFetch } from "@/app/api/apiFetch";
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
 import { ApiError } from "@cityborn/errors";
 import { PublicUser } from "@cityborn/types";

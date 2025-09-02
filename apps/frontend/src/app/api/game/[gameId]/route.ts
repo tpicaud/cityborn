@@ -19,7 +19,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ gam
                     'Content-Type': 'application/json'
                 }
             },
-            forceAuth: false
         });
         const data = await response.json();
 

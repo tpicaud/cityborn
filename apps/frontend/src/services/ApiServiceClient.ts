@@ -1,4 +1,4 @@
-import { ApiError, ErrorCode } from "@cityborn/errors";
+import { ApiError } from "@cityborn/errors";
 import { Game, GameConfig, GameMode, GuessObject, PublicUser, Session } from "@cityborn/types";
 
 //////////////////

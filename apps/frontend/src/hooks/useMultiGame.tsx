@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./useSocket";
 import { IUseMultiGame } from "./IUseGame";
-import { Game, GameStatus } from "@cityborn/types";
+import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";

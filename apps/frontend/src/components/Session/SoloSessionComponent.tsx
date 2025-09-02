@@ -19,7 +19,7 @@ export default function SoloSessionComponent() {
     // Session interactions //
     //////////////////////////
 
-    const handleJoinSession = (playerId: string) => { }
+    const handleJoinSession = () => { }
 
     const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
         try {

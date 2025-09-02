@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
 import { useMultiGame } from '@/hooks/useMultiGame';
 import { useMultiSession } from '@/hooks/useMultiSession';
-import { ApiError } from '@cityborn/errors';
 import { GameConfig } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
 import { useParams } from 'next/navigation';
@@ -65,7 +64,7 @@ export default function MultiSessionComponent() {
             await multiSession.join(playerID);
             setLocalPlayerID(playerID);
         } catch (error: any) {
-            invokeError(error as ApiError);
+            invokeError(error);
         }
     };
 
@@ -138,6 +137,7 @@ export default function MultiSessionComponent() {
             await multiGame.end();
         } catch (error: any) {
             //invokeError(error);
+            console.log(error);
         }
     }
 
