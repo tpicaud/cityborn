@@ -22,12 +22,12 @@ export function ErrorDialog({ errorMessage, open, setOpen, onExited }: ErrorDial
                 },
             }}
             fullWidth
-            maxWidth="xs" // sm, md, lg, xl
+            maxWidth="xs"
             sx={{
                 "& .MuiDialog-paper": {
-                    width: "90%",   // prend 90% de la largeur de l’écran
-                    maxWidth: 400,  // mais ne dépasse pas 400px
-                    height: "auto", // ou fixe si tu veux genre 300
+                    width: "90%",
+                    maxWidth: 400,
+                    height: "auto",
                     borderRadius: "1rem",
                 },
             }}>
