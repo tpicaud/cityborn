@@ -111,6 +111,14 @@ export default function MultiSessionComponent() {
         }
     }
 
+    const handlePlayAgain = async () => {
+        try {
+            await multiSession.playAgain();
+        } catch (error: any) {
+            console.log(error);
+        }
+    }
+
 
     ///////////////
     // Rendering //
@@ -124,12 +132,12 @@ export default function MultiSessionComponent() {
         return <GameComponent
             localPlayerID={localPlayerID}
             isHost={multiSession.isHost}
-            mode={multiSession.session.mode}
+            session={multiSession.session}
             game={multiSession.session.currentGame}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}
-            handlePlayAgain={handleStartGame} />
+            handlePlayAgain={handlePlayAgain} />
     } else {
         // display lobby
         return <LobbyComponent

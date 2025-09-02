@@ -5,7 +5,7 @@ import useGuess from "@/hooks/useGuess";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import RoundCountdownComponent from "./RoundCountdown";
-import { Guess } from "@cityborn/types";
+import { Guess, Session } from "@cityborn/types";
 import { Game } from "@cityborn/types";
 import { RoundStatus } from "@cityborn/types";
 
@@ -13,6 +13,7 @@ const GoogleMapComponent = dynamic(() => import('@/components/guess/maps/GoogleM
 
 interface GuessComponentProps {
     localPlayerID: string,
+    session: Session,
     game: Game,
     handleGuess: (guess: Guess) => void,
     handleNextRound: () => void,
@@ -20,6 +21,7 @@ interface GuessComponentProps {
 
 const GuessComponent: React.FC<GuessComponentProps> = ({
     localPlayerID,
+    session,
     game,
     handleGuess,
     handleNextRound,
@@ -63,6 +65,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                     <OverlayComponent
                         localPlayerID={localPlayerID}
                         preGuess={preGuess}
+                        session={session}
                         game={game}
                         handleGuess={handleGuess}
                         handleIsTimeUp={handleIsTimeUp}

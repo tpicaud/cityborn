@@ -23,23 +23,7 @@ export default function SoloSessionComponent() {
 
     const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
         try {
-            await soloSession.updateGameConfig(gameConfig);
-        } catch (error: any) {
-            invokeError(error);
-        }
-    }
-
-    const handleStartGame = async () => {
-        try {
-            await soloSession.startGame();
-        } catch (error: any) {
-            invokeError(error);
-        }
-    }
-
-    const handleEndGame = async () => {
-        try {
-            await soloSession.endGame();
+            soloSession.updateGameConfig(gameConfig);
         } catch (error: any) {
             invokeError(error);
         }
@@ -49,9 +33,17 @@ export default function SoloSessionComponent() {
     // Game interactions //
     ///////////////////////
 
+    const handleStartGame = async () => {
+        try {
+            soloSession.startGame();
+        } catch (error: any) {
+            invokeError(error);
+        }
+    }
+
     const handleGuess = async (guess: Guess) => {
         try {
-            await soloSession.guess(guess);
+            soloSession.guess(guess);
         } catch (error: any) {
             invokeError(error);
         }
@@ -59,12 +51,27 @@ export default function SoloSessionComponent() {
 
     const handleNextRound = async () => {
         try {
-            await soloSession.nextRound();
+            soloSession.nextRound();
         } catch (error: any) {
             invokeError(error);
         }
     }
 
+    const handleEndGame = async () => {
+        try {
+            soloSession.endGame();
+        } catch (error: any) {
+            invokeError(error);
+        }
+    }
+
+    const handlePlayAgain = async () => {
+        try {
+            soloSession.playAgain();
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     ///////////////
     // Rendering //
@@ -78,11 +85,12 @@ export default function SoloSessionComponent() {
         return <GameComponent
             localPlayerID={localPlayerID}
             isHost={soloSession.isHost}
+            session={soloSession.session}
             game={soloSession.session.currentGame}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}
-            handlePlayAgain={handleStartGame} />
+            handlePlayAgain={handlePlayAgain} />
     } else {
         // display lobby
         return <LobbyComponent

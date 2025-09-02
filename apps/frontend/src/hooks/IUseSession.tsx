@@ -10,5 +10,6 @@ export interface IUseSession {
     startGame: () => void;
     guess: (guess: Guess) => void;
     nextRound: () => void;
-    endGame: () => void
+    endGame: () => void;
+    playAgain: () => void;
 }

@@ -35,7 +35,7 @@ export function ErrorDialog({ errorMessage, open, setOpen, onExited }: ErrorDial
                 <ErrorOutlineIcon color="error" />
             </DialogTitle>
             <DialogContent className="flex flex-col items-center justify-center">
-                {errorMessage}
+                <p className="text-center">{errorMessage}</p>
             </DialogContent>
         </Dialog>
     );
