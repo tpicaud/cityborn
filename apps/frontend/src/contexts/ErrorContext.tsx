@@ -16,6 +16,7 @@ const ErrorContext = createContext<ErrorContextType>({
 
 const ErrorProvider = ({ children }: { children: ReactNode }) => {
     const [errorMessage, setErrorMessage] = useState<string>('');
+    const [open, setOpen] = useState(false);
 
     const invokeError = (error: ApiError | string | any, ui_type: ui_type = 'dialog') => {
         if (error instanceof ApiError) {
@@ -24,12 +25,17 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
         } else {
             setErrorMessage(error);
         }
+        setOpen(true);
     }
 
     return (
         <ErrorContext.Provider value={{ invokeError }}>
             {children}
-            <ErrorDialog errorMessage={errorMessage} setErrorMessage={setErrorMessage} />
+            <ErrorDialog
+                errorMessage={errorMessage}
+                open={open}
+                setOpen={setOpen}
+                onExited={() => setErrorMessage('')} />
         </ErrorContext.Provider>
     )
 }
