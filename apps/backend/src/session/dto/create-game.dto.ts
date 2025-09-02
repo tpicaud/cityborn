@@ -1,7 +1,7 @@
 // create-session.dto.ts
 import { IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
-import { GameConfigDto } from './game.dto';
+import { GameConfigDto } from './session.dto';
 
 export class CreateGameDto {
   @IsObject()

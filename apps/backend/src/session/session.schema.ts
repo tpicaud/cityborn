@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Categories, GameMode, SessionStatus, Session as SessionType } from '@cityborn/types';
+import { Categories, SessionMode, SessionStatus, Session as SessionType } from '@cityborn/types';
 
 export type SessionDocument = Session & Document;
 
@@ -31,8 +31,8 @@ export class Session implements SessionType {
     @Prop({ required: true })
     hostID: string;
 
-    @Prop({ required: true, enum: GameMode })
-    mode: GameMode;
+    @Prop({ required: true, enum: SessionMode })
+    mode: SessionMode;
 
     @Prop({ required: true, enum: SessionStatus })
     status: SessionStatus;

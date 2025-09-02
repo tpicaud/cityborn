@@ -1,5 +1,5 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Categories, defaultGuess, Game, GameStatus, OnlinePlayer, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UseFilters } from '@nestjs/common';
+import { Categories, defaultGuess, Game, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
@@ -171,6 +171,15 @@ export class SessionService {
         // Créer une nouvelle partie
         const game = await this.createGame(session.gameConfig);
 
+        // Start first round
+        const firstRound: Round = {
+            status: RoundStatus.GUESSING,
+            guessObjectId: game.state.guessObjectsIds[0],
+            playersGuesses: {},
+        };
+        game.status = GameStatus.IN_GAME;
+        game.state.currentRound = firstRound;
+
         // Update session
         session.status = SessionStatus.IN_GAME;
         session.currentGame = game;
@@ -229,7 +238,7 @@ export class SessionService {
     async handleGuess(socketID: string, guess: any) {
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
@@ -277,7 +286,7 @@ export class SessionService {
                 session.currentGame = game;
                 await this.saveSession(session);
             }
-            return game;
+            return session;
         });
     }
 
@@ -339,7 +348,7 @@ export class SessionService {
         session.currentGame = game;
         await this.saveSession(session);
 
-        return game;
+        return session;
     }
 
     ///////////////////////
@@ -378,7 +387,7 @@ export class SessionService {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
@@ -469,7 +478,7 @@ export class SessionService {
         if (session.currentGame) {
             const { guessObjects, ...restState } = session.currentGame.state;
 
-            const lightSession: Session = {
+            lightSession = {
                 ...session,
                 currentGame: {
                     ...session.currentGame,

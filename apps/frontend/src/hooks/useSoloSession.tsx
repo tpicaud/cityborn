@@ -30,6 +30,8 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     }, [])
 
     useEffect(() => {
+        if (!game) return;
+
         setSession((prevSession) => {
             if (!prevSession) {
                 throw new Error('Cannot update game because session is not initialized');
@@ -73,7 +75,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
         try {
             // Create  new game
-            let game = await ApiServiceClient.createSoloGame(session.gameConfig);
+            const game = await ApiServiceClient.createSoloGame(session.gameConfig);
 
             // Start game
             setGame({
@@ -205,10 +207,16 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
     const endGame = () => {
         if (!session || !session.currentGame) return;
-        session.currentGame = undefined;
+        setSession({
+            ...session,
+            currentGame: undefined
+        });
     }
 
-
+    const playAgain = async () => {
+        if (!session || !session.currentGame) return;
+        await startGame();
+    }
 
     return {
         session,
@@ -217,6 +225,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         startGame,
         guess,
         nextRound,
-        endGame
+        endGame,
+        playAgain
     }
 }
