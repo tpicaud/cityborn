@@ -1,4 +1,4 @@
-export enum GameMode {
+export enum SessionMode {
     SOLO = 'solo',
     MULTI = 'multi'
 }
