@@ -52,7 +52,7 @@
 | 22/04/2025 | 3h | Finalisation et review appli ios |
 | 25/04/2025 | 5h | Ouverture appli ios aux tests + mise à jour appli android |
 | 05/05/2025 | 9h | Début du refactoring pour les sessions |
-| 06/05/5025 | 4h | Refactoring session solo |
+| 06/05/2025 | 4h | Refactoring session solo |
 | 09/05/2025 | 5h | Début refactoring session multi |
 | 10/05/2025 | 3h | Continuation refactoring session multi |
 | 16/05/2025 | 4h | Continuation du refactoring backend session |
@@ -77,4 +77,13 @@
 | 08/08/2025 | 6h | Authentification backend |
 | 10/08/2025 | 6h | Authentification frontend |
 | 11/08/2025 | 4h | Authentification frontend |
-| 11/08/2025 | 3h | Authentification frontend visuel |
+| 12/08/2025 | 3h | Authentification frontend visuel |
+| 15/08/2025 | 3h | Base de données utilisateur cloud |
+| 18/08/2025 | 7h | Authentification via Google |
+| 20/08/2025 | 4h | Rafraîchissement session |
+| 21/08/2025 | 3h | Vérification email |
+| 26/08/2025 | 3h | Amélioration UI/UX |
+| 27/08/2025 | 4h | Amélioration UI/UX |
+| 28/08/2025 | 7h | Gestion des erreurs back http |
+| 29/08/2025 | 5h | Gestion des erreurs front http |
+| 01/09/2025 | 4h | Gestion des erreurs ws |
