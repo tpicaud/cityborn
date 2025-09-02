@@ -84,3 +84,6 @@
 | 21/08/2025 | 3h | Vérification email |
 | 26/08/2025 | 3h | Amélioration UI/UX |
 | 27/08/2025 | 4h | Amélioration UI/UX |
+| 28/08/2025 | 6h | Gestion des erreurs back http |
+| 29/08/2025 | 5h | Gestion des erreurs front http |
+| 01/09/2025 | 4h | Gestion des erreurs ws |
