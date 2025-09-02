@@ -1,14 +1,19 @@
 'use client';
 
 import * as React from "react";
-import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
+import { Box, FormControl, TextField, Typography } from "@mui/material";
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Button from "../ui/buttons/Button";
+import { useError } from "@/contexts/ErrorContext";
 
 export const SignInComponent = () => {
 
     const { refreshUser } = useAuth();
+    const { invokeError } = useError();
+    const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
+    const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] = useState(false);
 
     /////////////////
     // Google Auth //
@@ -31,8 +36,15 @@ export const SignInComponent = () => {
     }, [window.google]);
 
     const handleCredentialResponse = async (response: any) => {
-        await ApiServiceClient.signInWithGoogle(response.credential);
-        await refreshUser();
+        try {
+            setIsGoogleSignInFormSubmitting(true);
+            await ApiServiceClient.signInWithGoogle(response.credential);
+            await refreshUser();
+        } catch (error: any) {
+            invokeError(error);
+        } finally {
+            setIsGoogleSignInFormSubmitting(false);
+        }
     };
     /////////////////
 
@@ -48,10 +60,17 @@ export const SignInComponent = () => {
         });
     };
 
-    const handleSubmit = async (e: any) => {
-        e.preventDefault();
-        await ApiServiceClient.signIn(formValues.username, formValues.password);
-        await refreshUser();
+    const handleSubmit = async (e: React.FormEvent) => {
+        try {
+            setIsSignInFormSubmitting(true);
+            e.preventDefault();
+            await ApiServiceClient.signIn(formValues.username, formValues.password);
+            await refreshUser();
+        } catch (error: any) {
+            invokeError(error);
+        } finally {
+            setIsSignInFormSubmitting(false);
+        }
     };
 
     return (
@@ -67,7 +86,7 @@ export const SignInComponent = () => {
             }}
         >
             <Typography variant="h5" align="center">
-                Sign In
+                Connexion
             </Typography>
 
             <FormControl>
@@ -91,8 +110,8 @@ export const SignInComponent = () => {
                 />
             </FormControl>
 
-            <Button variant="contained" type="submit">
-                Sign In
+            <Button variant="contained" type="submit" loading={isSignInFormSubmitting}>
+                Se connecter
             </Button>
 
             <div className="flex flex-row gap-3 items-center w-full">
@@ -103,8 +122,32 @@ export const SignInComponent = () => {
                 <div className="flex-1 h-px bg-black rounded-full"></div>
             </div>
 
-            <div className="flex justify-center items-center h-[44px] w-[244px]">
+            <div className="relative flex justify-center items-center h-[44px] w-[244px]">
                 <div id="googleSignInDiv"></div>
+                {isGoogleSignInFormSubmitting && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
+                        <svg
+                            className="animate-spin h-5 w-5 text-blue-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                            />
+                            <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                        </svg>
+                    </div>
+                )}
             </div>
         </Box>
     );

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { RedisIoAdapter } from './redis/redis.adapter';
 import * as cookieParser from 'cookie-parser';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,10 +14,16 @@ async function bootstrap() {
     credentials: true
   })
 
+  // use cookies
   app.use(cookieParser());
 
+  // use validation pipe for dto
   app.useGlobalPipes(new ValidationPipe());
 
+  // use custom exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // use redis adapter
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);

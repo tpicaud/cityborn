@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getRefreshToken, storeTokensInCookies } from '../utils';
 import { apiFetch } from '../../apiFetch';
+import { ErrorCode } from '@cityborn/errors';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(_req: Request) {
@@ -19,8 +20,7 @@ export async function POST(_req: Request) {
         const data = await response.json();
 
         if (!response.ok) {
-            const message = data.message || "Failed to fetch current user";
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
         await storeTokensInCookies(data.access_token, data.refresh_token);
@@ -31,7 +31,11 @@ export async function POST(_req: Request) {
         );
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }

@@ -5,6 +5,7 @@ import * as ApiServiceServer from "@/services/ApiServiceServer";
 import AuthProvider from "@/contexts/AuthContext";
 import { Roboto } from 'next/font/google';
 import Script from "next/script";
+import ErrorProvider from "@/contexts/ErrorContext";
 
 const geistSans = localFont({
 	src: "./fonts/GeistVF.woff",
@@ -53,7 +54,9 @@ export default async function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} ${roboto.className} antialiased`}
 			>
 				<AuthProvider initialValue={user}>
-					{children}
+					<ErrorProvider>
+						{children}
+					</ErrorProvider>
 				</AuthProvider>
 			</body>
 		</html>

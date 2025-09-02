@@ -1,13 +1,16 @@
 'use client'
 
-import { Button, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
+import { DialogContent, DialogTitle, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { GameMode } from '@cityborn/types';
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
-import CloseIcon from '@mui/icons-material/Close';
+import Button from "../ui/buttons/Button";
+import LoadingButton from "../ui/buttons/LoadingButton";
+import { Dialog } from "../ui/dialogs/Dialog";
+import { useError } from "@/contexts/ErrorContext";
 
 export default function MenuComponent({
     setState,
@@ -20,57 +23,57 @@ export default function MenuComponent({
 }) {
 
     const router = useRouter();
-
     const { user } = useAuth();
+    const { invokeError } = useError();
 
     const [code, setCode] = useState<string>('')
-    const [joinErrorMessage, setJoinErrorMessage] = useState<string>();
-    const [loadingJoin, setLoadingJoin] = useState(false);
-    const [openAlert, setOpenAlert] = useState(false);
+    const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+
 
     const handleSoloPlay = () => {
         router.push(`/session/solo`);
     };
 
     const handleMultiPlay = async () => {
+
         if (!user) {
-            setOpenAlert(true);
+            setOpenConnectionAlert(true);
         } else {
-            const session = await ApiServiceClient.createSession(GameMode.MULTI);
-            router.push(`/session/multi/${session.id}`);
+            try {
+                const session = await ApiServiceClient.createSession(GameMode.MULTI);
+                router.push(`/session/multi/${session.id}`);
+            } catch (error: any) {
+                invokeError(error);
+            }
         }
     }
 
     const handleJoin = async () => {
         try {
-            if (code) {
-                const session = await ApiServiceClient.fetchSession(code);
-                if (!session) setJoinErrorMessage('La partie est introuvable')
-
-                router.push(`/session/multi/${code}`)
-            } else {
-                setJoinErrorMessage('La partie est introuvable')
-            }
-        } catch {
-            setJoinErrorMessage('Erreur lors de la connexion à la partie');
+            await ApiServiceClient.fetchSession(code);
+            router.push(`/session/multi/${code}`)
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
     const sendNewVerificationEmail = async () => {
-        ApiServiceClient.sendVerificationEmail();
-        setSentVerificationEmail(true);
+        try {
+            ApiServiceClient.sendVerificationEmail();
+            setSentVerificationEmail(true);
+        } catch { }
     }
 
     return (
         <div className='flex flex-col items-center gap-5'>
             <div className='flex flex-col gap-1 items-center w-full'>
-                <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-24 md:max-h-32' />
+                <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-24 md:max-h-36' />
                 <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
 
             {user ? (
                 <div className="flex flex-col items-center justify-center">
-                    <Typography variant="h5">
+                    <Typography variant="h5" className="text-center">
                         Bienvenue <b>{user.username}</b> !
                     </Typography>
                     {!user.isVerified && (
@@ -134,20 +137,15 @@ export default function MenuComponent({
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                     />
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
-                        onClick={async () => {
-                            setLoadingJoin(true);
-                            await handleJoin();
-                            setLoadingJoin(false);
-                            console.log(loadingJoin)
-                        }}
+                        onClick={handleJoin}
                         disabled={!code}
                     >
                         <p className='px-3'>Rejoindre</p>
-                    </Button>
+                    </LoadingButton>
 
                 </div>
 
@@ -160,38 +158,21 @@ export default function MenuComponent({
                     >
                         <b>SOLO</b>
                     </Button>
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
                         onClick={handleMultiPlay}
                     >
                         <b>MULTI</b>
-                    </Button>
+                    </LoadingButton>
                 </div>
-
-                {joinErrorMessage && (
-                    <Typography color="error" style={{ marginTop: "8px" }}>
-                        {joinErrorMessage}
-                    </Typography>
-                )}
             </div>
 
             <Dialog
-                open={openAlert}
-                onClose={() => setOpenAlert(false)}
+                open={openConnectionAlert}
+                onClose={() => setOpenConnectionAlert(false)}
             >
-                <IconButton
-                    aria-label="close"
-                    onClick={() => setOpenAlert(false)}
-                    sx={{
-                        position: 'absolute',
-                        right: 0,
-                        color: (theme) => theme.palette.grey[500],
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
                 <DialogTitle sx={{ mt: 2, mx: 3, paddingX: 2, paddingTop: 2 }}>
 
                     <p>Vous devez être connecté pour jouer en mode multi !</p>
