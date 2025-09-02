@@ -1,6 +1,6 @@
 'use client';
 
-import { GuessObject, PlayerResults } from '@cityborn/types';
+import { GameMode, GuessObject, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
 import { useRouter } from 'next/navigation';
@@ -195,7 +195,7 @@ const ResultsComponent = ({
                                 await handleEndGame();
                                 await handlePlayAgain();
                             }}
-                            disabled={game.hostID === localPlayerID}
+                            disabled={game.mode !== GameMode.SOLO && game.hostID === localPlayerID}
                             className="w-24"
                         >
                             Rejouer

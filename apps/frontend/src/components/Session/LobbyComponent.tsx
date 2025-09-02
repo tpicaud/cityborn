@@ -55,7 +55,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
             </div>
 
             <div className="relative z-10 flex flex-col items-center justify-center bg-transparent h-full pointer-events-none">
-                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[50%] min-w-80 max-h-[80%] pointer-events-auto">
+                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[90%] min-w-80 max-h-[80%] pointer-events-auto">
                     {/* Titre du lobby */}
                     <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
                         {session.mode.toUpperCase()}
@@ -91,143 +91,145 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         </div>
                     )}
 
-                    {/* Liste des joueurs */}
-                    {session.mode !== GameMode.SOLO && (
-                        <List className="w-full min-h-[10vh] max-h-[30vh] overflow-auto">
-                            {(session.players.every(p => "connected" in p)
-                                ? // Tous sont des OnlinePlayer → trier + statut
-                                (session.players as OnlinePlayer[])
-                                    .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1))
-                                : // Sinon, pas de tri
-                                session.players
-                            ).map((player) => (
-                                <ListItem key={player.id} divider>
-                                    <ListItemText
-                                        primary={
-                                            player.id === session.hostID
-                                                ? `${player.id} (Host)`
-                                                : `${player.id}`
-                                        }
-                                        secondary={
-                                            "connected" in player
-                                                ? (player as OnlinePlayer).connected
-                                                    ? "Connecté"
-                                                    : "Déconnecté"
-                                                : undefined
-                                        }
-                                        sx={{
-                                            color:
-                                                "connected" in player && !(player as OnlinePlayer).connected
-                                                    ? "text.disabled"
-                                                    : "text.primary",
-                                        }}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    )}
-
-                    <div className='max-w-full'>
-                        <Accordion
-                            defaultExpanded={session.mode === GameMode.SOLO}
-                            sx={{
-                                borderTop: '1px solid #ccc',  // Bordure grise
-                                backgroundColor: 'transparent',  // Fond transparent
-                                boxShadow: 'none',  // Pas d'ombre
-                                '&:before': {
-                                    display: 'none',  // Enlève la ligne avant l'accordion
-                                },
-                            }}
-                        >
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                                disabled={!isHost}
-                                sx={{
-                                    backgroundColor: 'transparent',  // Fond transparent pour l'en-tête
-                                    border: 'none',
-                                    paddingBottom: 0,
-                                    marginBottom: 0
-                                }}
-                            >
-                                <Typography component="span">Configuration de la partie</Typography>
-                            </AccordionSummary>
-                            <AccordionDetails
-                                sx={{
-                                    backgroundColor: 'transparent',
-                                    paddingTop: 0,
-                                    marginTop: 0
-                                }}
-                            >
-                                <div className='w-full flex flex-col gap-3'>
-                                    <FormControl sx={{ width: '100%' }}>
-                                        <InputLabel id="categories-input">Categories</InputLabel>
-                                        <Select
-                                            labelId="categories-input"
-                                            id="categories-input"
-                                            multiple
-                                            value={session.gameConfig.categories}
-                                            onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
-                                            input={<OutlinedInput label="Categories" />}
-                                            renderValue={(selected) => (selected as string[]).join(', ')}
-                                        >
-                                            {Object.values(Categories).map((category) => (
-                                                <MenuItem key={category} value={category}>
-                                                    <Checkbox checked={session.gameConfig.categories.includes(category)} />
-                                                    <ListItemText primary={category} />
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-
-                                    <div className='w-full flex flex-row gap-x-2'>
-                                        <TextField
-                                            type="number"
-                                            label="Personnalités"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={tempNbOfObjects}
-                                            onChange={(e) => {
-                                                setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
-                                            }}
-                                            onBlur={() => {
-                                                const parsed = parseInt(tempNbOfObjects, 10);
-                                                if (isNaN(parsed) || parsed <= 0) {
-                                                    handleUpdateGameConfig({ nbOfObjects: 6 });
-                                                    setTempNbOfObjects('6'); // on remet aussi le champ visuel à jour
-                                                } else {
-                                                    handleUpdateGameConfig({ nbOfObjects: parsed });
-                                                }
+                    <div className="flex flex-row justify-center items-start overflow-auto">
+                        {/* Liste des joueurs */}
+                        {session.mode !== GameMode.SOLO && (
+                            <List className="w-full min-h-[10vh]">
+                                {(session.players.every(p => "connected" in p)
+                                    ? // Tous sont des OnlinePlayer → trier + statut
+                                    (session.players as OnlinePlayer[])
+                                        .sort((a, b) => (a.connected === b.connected ? 0 : a.connected ? -1 : 1))
+                                    : // Sinon, pas de tri
+                                    session.players
+                                ).map((player) => (
+                                    <ListItem key={player.id} divider>
+                                        <ListItemText
+                                            primary={
+                                                player.id === session.hostID
+                                                    ? `${player.id} (Host)`
+                                                    : `${player.id}`
+                                            }
+                                            secondary={
+                                                "connected" in player
+                                                    ? (player as OnlinePlayer).connected
+                                                        ? "Connecté"
+                                                        : "Déconnecté"
+                                                    : undefined
+                                            }
+                                            sx={{
+                                                color:
+                                                    "connected" in player && !(player as OnlinePlayer).connected
+                                                        ? "text.disabled"
+                                                        : "text.primary",
                                             }}
                                         />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+
+                        <div className='max-w-full'>
+                            <Accordion
+                                defaultExpanded={true} //{session.mode === GameMode.SOLO}
+                                sx={{
+                                    borderTop: '1px solid #ccc',  // Bordure grise
+                                    backgroundColor: 'transparent',  // Fond transparent
+                                    boxShadow: 'none',  // Pas d'ombre
+                                    '&:before': {
+                                        display: 'none',  // Enlève la ligne avant l'accordion
+                                    },
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-controls="panel1-content"
+                                    id="panel1-header"
+                                    disabled={!isHost}
+                                    sx={{
+                                        backgroundColor: 'transparent',  // Fond transparent pour l'en-tête
+                                        border: 'none',
+                                        paddingBottom: 0,
+                                        marginBottom: 0
+                                    }}
+                                >
+                                    <Typography component="span">Configuration de la partie</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails
+                                    sx={{
+                                        backgroundColor: 'transparent',
+                                        paddingTop: 0,
+                                        marginTop: 0
+                                    }}
+                                >
+                                    <div className='w-full flex flex-col gap-3'>
+                                        <FormControl sx={{ width: '100%' }}>
+                                            <InputLabel id="categories-input">Categories</InputLabel>
+                                            <Select
+                                                labelId="categories-input"
+                                                id="categories-input"
+                                                multiple
+                                                value={session.gameConfig.categories}
+                                                onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
+                                                input={<OutlinedInput label="Categories" />}
+                                                renderValue={(selected) => (selected as string[]).join(', ')}
+                                            >
+                                                {Object.values(Categories).map((category) => (
+                                                    <MenuItem key={category} value={category}>
+                                                        <Checkbox checked={session.gameConfig.categories.includes(category)} />
+                                                        <ListItemText primary={category} />
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+
+                                        <div className='w-full flex flex-row gap-x-2'>
+                                            <TextField
+                                                type="number"
+                                                label="Personnalités"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={tempNbOfObjects}
+                                                onChange={(e) => {
+                                                    setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
+                                                }}
+                                                onBlur={() => {
+                                                    const parsed = parseInt(tempNbOfObjects, 10);
+                                                    if (isNaN(parsed) || parsed <= 0) {
+                                                        handleUpdateGameConfig({ nbOfObjects: 6 });
+                                                        setTempNbOfObjects('6'); // on remet aussi le champ visuel à jour
+                                                    } else {
+                                                        handleUpdateGameConfig({ nbOfObjects: parsed });
+                                                    }
+                                                }}
+                                            />
 
 
-                                        <TextField
-                                            type="number"
-                                            label="Timer"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={tempTimer}
-                                            onChange={(e) => {
-                                                setTempTimer(e.target.value); // on laisse l'utilisateur taper librement
-                                            }}
-                                            onBlur={() => {
-                                                const parsed = parseInt(tempTimer, 10);
-                                                if (isNaN(parsed) || parsed <= 0) {
-                                                    handleUpdateGameConfig({ timer: 20 });
-                                                    setTempTimer('20');
-                                                } else {
-                                                    handleUpdateGameConfig({ timer: parsed });
-                                                }
-                                            }}
-                                        />
+                                            <TextField
+                                                type="number"
+                                                label="Timer"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={tempTimer}
+                                                onChange={(e) => {
+                                                    setTempTimer(e.target.value); // on laisse l'utilisateur taper librement
+                                                }}
+                                                onBlur={() => {
+                                                    const parsed = parseInt(tempTimer, 10);
+                                                    if (isNaN(parsed) || parsed <= 0) {
+                                                        handleUpdateGameConfig({ timer: 20 });
+                                                        setTempTimer('20');
+                                                    } else {
+                                                        handleUpdateGameConfig({ timer: parsed });
+                                                    }
+                                                }}
+                                            />
+
+                                        </div>
 
                                     </div>
-
-                                </div>
-                            </AccordionDetails>
-                        </Accordion>
+                                </AccordionDetails>
+                            </Accordion>
+                        </div>
                     </div>
 
                     {/* Bouton pour démarrer la partie */}
