@@ -25,7 +25,7 @@ export class PlayerService {
             await this.redisService.redisClient.hset(this.getKey(socketID), data);
             await this.redisService.redisClient.expire(this.getKey(socketID), this.PLAYER_TTL);
         } catch (error) {
-            throw new InternalServerErrorException({ code: ErrorCode.PLAYER_SAVE_FAILED, message: `Error saving player: ${error.message}` })
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_SET_FAILED, message: `Error saving player: ${error.message}` })
         }
     }
 
@@ -45,7 +45,7 @@ export class PlayerService {
 
             return result;
         } catch (error) {
-            throw new InternalServerErrorException({ code: ErrorCode.PLAYER_GET_FAILED, message: `Error getting player: ${error.message}` })
+            throw new InternalServerErrorException({ code: ErrorCode.REDIS_GET_FAILED, message: `Error getting player: ${error.message}` })
         }
     }
 

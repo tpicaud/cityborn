@@ -188,33 +188,6 @@ export class SessionService {
         return session;
     }
 
-    async endGame(socketID: string) {
-
-        // Récupération du joueur
-        const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
-
-        const { playerID, sessionID } = player;
-
-
-        // Récupération du jeu dans la base de données
-        const session: Session | null = await this.getSession(sessionID)
-        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
-
-        // Check si le joueur est le host
-        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host of the session` });
-
-        // Check si une partie est en cours
-        if (!session.currentGame) throw new NotFoundException({ code: ErrorCode.SESSION_NO_CURRENT_GAME, message: `No current game in session this` });
-
-        // Update session
-        session.status = SessionStatus.IN_LOBBY;
-        session.currentGame = undefined
-
-        await this.saveSession(session);
-        return session;
-    }
-
     /////////////////////////
     // Current game method //
     /////////////////////////
@@ -332,21 +305,29 @@ export class SessionService {
         });
 
 
-        // Go to next guess object
+        // Check if game ended
         if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
+            // Store game in DB and save ended session
+            await this.endGame(game);
+
+            const lobbySession: Session = { ...session, status: SessionStatus.IN_LOBBY, currentGame: undefined };
+            await this.saveSession(lobbySession);
+
+            // Send results to client
             game.status = GameStatus.IN_RESULTS;
-            //game.state.currentRound = undefined
+            session.currentGame = game;
         } else {
+            // Go to next guess object
             game.state.currentRound = {
                 status: RoundStatus.GUESSING,
                 guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
                 playersGuesses: {},
             }
-        }
 
-        // Update game and send to the room
-        session.currentGame = game;
-        await this.saveSession(session);
+            // Update game and send to the room
+            session.currentGame = game;
+            await this.saveSession(session);
+        }
 
         return session;
     }
@@ -447,7 +428,19 @@ export class SessionService {
         await this.redisService.del(this.getKey(sessionID));
     }
 
-    // Private function
+
+    //////////////////////
+    // Private function //
+    //////////////////////
+
+    private async endGame(game: Game): Promise<void> {
+        // End game
+        // cloned_game.status = GameStatus.FINISHED;
+        // cloned_game.state.currentRound = undefined;
+
+        // TODO Store game in database
+    }
+
     private async generateUniqueSessionID(): Promise<string> {
         const MAX_ATTEMPTS = 3;
 
