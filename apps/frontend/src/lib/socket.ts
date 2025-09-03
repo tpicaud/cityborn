@@ -23,4 +23,4 @@ export const getSocket = (): Socket => {
     return socket;
 };
 
-window.socket = getSocket()
+//window.socket = getSocket()
