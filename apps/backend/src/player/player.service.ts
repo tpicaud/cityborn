@@ -7,9 +7,7 @@ export class PlayerService {
 
     private readonly prefix = 'socket:';
     private readonly PLAYER_TTL = 3600;
-    private readonly SESSION_TTL = 900;
-    private readonly GAME_TTL = 900;
-
+    
     constructor(
         private readonly redisService: RedisService,
     ) { }
@@ -18,9 +16,9 @@ export class PlayerService {
         return `${this.prefix}${socketID}`;
     }
 
-    async save(socketID: string, playerID: string, sessionID: string) {
+    async save(socketID: string, playerID: string, sessionID: string, isGuest: boolean) {
         try {
-            const data: Record<string, string> = { playerID, sessionID };
+            const data: Record<string, string> = { playerID, sessionID, isGuest: isGuest.toString() };
 
             await this.redisService.redisClient.hset(this.getKey(socketID), data);
             await this.redisService.redisClient.expire(this.getKey(socketID), this.PLAYER_TTL);
@@ -29,14 +27,15 @@ export class PlayerService {
         }
     }
 
-    async getPlayer(socketID: string): Promise<{ playerID: string; sessionID: string } | null> {
+    async getPlayer(socketID: string): Promise<{ playerID: string; sessionID: string; isGuest: boolean } | null> {
         try {
             const data = await this.redisService.redisClient.hgetall(this.getKey(socketID));
             if (Object.keys(data).length === 0) return null;
 
-            const result: { playerID: string; sessionID: string } = {
+            const result: { playerID: string; sessionID: string; isGuest: boolean } = {
                 playerID: data.playerID,
-                sessionID: data.sessionID
+                sessionID: data.sessionID,
+                isGuest: data.isGuest === "true"
             };
 
 

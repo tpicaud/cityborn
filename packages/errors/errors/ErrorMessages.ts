@@ -22,7 +22,7 @@ export const ERROR_MESSAGES = {
         [ErrorCode.SESSION_NOT_FOUND]: "La session n'existe pas",
         [ErrorCode.SESSION_PLAYER_NOT_FOUND]: "Le joueur n'existe pas dans la session.",
         [ErrorCode.SESSION_PLAYER_NOT_CONNECTED]: "Le joueur n'est pas connecté",
-        [ErrorCode.SESSION_PLAYER_ALREADY_EXISTS]: "Le joueur exite déjà dans la session.",
+        [ErrorCode.SESSION_PLAYER_ALREADY_EXISTS]: "Le joueur existe déjà dans la session.",
         [ErrorCode.SESSION_CREATION_FAILED]: "Erreur lors de la création de la session. Veuillez réessayer.",
         [ErrorCode.SESSION_FORBIDDEN_HOST]: "Le joueur n'est pas le host de la session.",
         [ErrorCode.SESSION_NO_CURRENT_GAME]: "Aucune partie en cours pour la session.",

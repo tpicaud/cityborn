@@ -1,5 +1,5 @@
 import { IUseSession } from "./IUseSession";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Guess, Session, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
@@ -12,6 +12,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     // Extends interface
     connected: boolean;
     socket: Socket;
+    hasDisconnected: boolean;
     join: (playerID: string) => Promise<void>;
     updateHost: (newHostID: string) => Promise<void>;
     kickPlayer: (playerToKick: string) => Promise<void>;
@@ -21,9 +22,8 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
-    const hasDisconnected = useRef<boolean>(false);
     const [isHost, setIsHost] = useState(false);
-    const { socket, emit, on, off } = useSocket();
+    const { socket, hasDisconnected, emit, on, off } = useSocket();
 
     /////////////////
     // useEffects //
@@ -53,7 +53,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     useEffect(() => {
         const autoReconnect = async () => {
             try {
-                if (hasDisconnected.current) {
+                if (socket.connected && hasDisconnected && !connected) {
                     await reconnect();
                 }
             } catch (error: any) {
@@ -61,7 +61,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             }
         }
         autoReconnect();
-    }, [hasDisconnected]);
+    }, [socket.connected, hasDisconnected]);
 
     // Manage host
     useEffect(() => {
@@ -96,9 +96,9 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             });
         };
 
-
         // handle messages
         on('session:update', handleSessionUpdate);
+        on('connection_error', (error) => { console.log(error) });
 
         return () => {
             // Nettoyage
@@ -223,21 +223,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     const endGame = async () => {
         if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
-
         setSession({ ...session, status: SessionStatus.IN_LOBBY });
-        //setSession({ ...session, currentGame: undefined });
-
-        // if (isHost) {
-        //     return new Promise<void>((resolve, reject) => {
-        //         emit('session:endGame', (response: { success: boolean; error?: any }) => {
-        //             if (response.success) {
-        //                 resolve();
-        //             } else {
-        //                 reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
-        //             }
-        //         });
-        //     });
-        // }
     }
 
     const playAgain = async () => {
@@ -266,13 +252,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         try {
             console.log('Reconnecting player to session...')
             const sessionID = session.id;
-            return new Promise<{ isInGame: boolean }>((resolve, reject) => {
-                const body = { sessionID, localPlayerID };
-                emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: any }) => {
+            return new Promise<void>((resolve, reject) => {
+                const body = { sessionID, playerID: localPlayerID };
+                emit('session:reconnect', body, (response: { success: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
-                        hasDisconnected.current = false;
-                        resolve({ isInGame: response.isInGame });
+                        resolve();
                     } else {
                         reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
@@ -289,6 +274,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         connected,
         socket,
         isHost,
+        hasDisconnected,
         join,
         updateHost,
         updateGameConfig,
