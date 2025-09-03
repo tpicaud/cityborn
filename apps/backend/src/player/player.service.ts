@@ -18,7 +18,7 @@ export class PlayerService {
         return `${this.prefix}${socketID}`;
     }
 
-    async save(socketID: string, playerID: string, sessionID: string) {
+    async save(socketID: string, playerID: string, sessionID: string, isGuest: boolean) {
         try {
             const data: Record<string, string> = { playerID, sessionID };
 
@@ -29,14 +29,15 @@ export class PlayerService {
         }
     }
 
-    async getPlayer(socketID: string): Promise<{ playerID: string; sessionID: string } | null> {
+    async getPlayer(socketID: string): Promise<{ playerID: string; sessionID: string; isGuest: boolean } | null> {
         try {
             const data = await this.redisService.redisClient.hgetall(this.getKey(socketID));
             if (Object.keys(data).length === 0) return null;
 
-            const result: { playerID: string; sessionID: string } = {
+            const result: { playerID: string; sessionID: string; isGuest: boolean } = {
                 playerID: data.playerID,
-                sessionID: data.sessionID
+                sessionID: data.sessionID,
+                isGuest: data.isGuest
             };
 
 
