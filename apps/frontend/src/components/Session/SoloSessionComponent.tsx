@@ -3,17 +3,17 @@
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
-import { useSoloGame } from '@/hooks/useSoloGame';
 import { useSoloSession } from '@/hooks/useSoloSession';
 import { GameConfig, Guess } from '@cityborn/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useError } from '@/contexts/ErrorContext';
 
 export default function SoloSessionComponent() {
 
     const { user } = useAuth();
+    const { invokeError } = useError();
     const localPlayerID = user ? user.username : 'guest';
-    const soloGame = useSoloGame(localPlayerID);
-    const soloSession = useSoloSession(soloGame.startGame, localPlayerID);
+    const soloSession = useSoloSession(localPlayerID);
 
     //////////////////////////
     // Session interactions //
@@ -23,19 +23,9 @@ export default function SoloSessionComponent() {
 
     const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await soloSession.updateGameConfig(gameConfig);
-        } catch (error) {
-            console.log(`Echec lors de la mise à jour de la configuration de la partie: ${error}`);
-        }
-    }
-
-    const handleStartGame = async () => {
-        try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await soloSession.startGame();
-        } catch (error) {
-            console.log(`Echec lors du démarrage de la partie: ${error}`);
+            soloSession.updateGameConfig(gameConfig);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
@@ -43,34 +33,45 @@ export default function SoloSessionComponent() {
     // Game interactions //
     ///////////////////////
 
+    const handleStartGame = async () => {
+        try {
+            soloSession.startGame();
+        } catch (error: any) {
+            invokeError(error);
+        }
+    }
+
     const handleGuess = async (guess: Guess) => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await soloGame.guess(guess);
-        } catch (error) {
-            console.log(`Echec lors de l'enregistrement du guess: ${error}`);
+            soloSession.guess(guess);
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
     const handleNextRound = async () => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await soloGame.nextRound();
-        } catch (error) {
-            console.log(`Echec lors du passage au round suivant: ${error}`);
+            soloSession.nextRound();
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
     const handleEndGame = async () => {
         try {
-            if (!localPlayerID) throw new Error('Nom du joueur non défini');
-            await soloSession.endGame();
-            await soloGame.end();
-        } catch (error) {
-            console.log(`Echec lors de la finalisation de la partie: ${error}`);
+            soloSession.endGame();
+        } catch (error: any) {
+            invokeError(error);
         }
     }
 
+    const handlePlayAgain = async () => {
+        try {
+            soloSession.playAgain();
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     ///////////////
     // Rendering //
@@ -80,15 +81,16 @@ export default function SoloSessionComponent() {
     if (!soloSession.session) return <LoadingComponent message='Chargement de la session' />
 
     // Si game, display game
-    if (soloGame.game) {
+    if (soloSession.session.currentGame) {
         return <GameComponent
             localPlayerID={localPlayerID}
-            isHost={soloGame.isHost}
-            game={soloGame.game}
+            isHost={soloSession.isHost}
+            session={soloSession.session}
+            game={soloSession.session.currentGame}
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}
-            handlePlayAgain={handleStartGame} />
+            handlePlayAgain={handlePlayAgain} />
     } else {
         // display lobby
         return <LobbyComponent

@@ -1,6 +1,6 @@
 'use client';
 
-import { Guess } from "@cityborn/types";
+import { Guess, Session } from "@cityborn/types";
 import { Box } from "@mui/material";
 import GuessObjectComponent from "./GuessObjectComponent";
 import TimerComponent from "./TimerComponent";
@@ -91,8 +91,9 @@ function GuessResult({
 
 
 interface OverlayComponentProps {
-    localPlayerID: string
-    preGuess: Guess | undefined;
+    localPlayerID: string,
+    preGuess: Guess | undefined,
+    session: Session
     game: Game,
     handleGuess: (value: Guess) => void;
     handleIsTimeUp: () => void;
@@ -102,6 +103,7 @@ interface OverlayComponentProps {
 const OverlayComponent: React.FC<OverlayComponentProps> = ({
     localPlayerID,
     preGuess,
+    session,
     game,
     handleGuess,
     handleIsTimeUp,
@@ -128,7 +130,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
             <GuessObjectComponent guessObject={game.state.guessObjects!.find(guessObject => game.state.currentRound!.guessObjectId === guessObject.id)!} />
             <div className="absolute w-[27%] mx-6 my-14">
                 {(game.state.currentRound!.status === RoundStatus.GUESSING) && (
-                    <TimerComponent totalTime={game.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
+                    <TimerComponent totalTime={session.gameConfig.timer} endMessage="Terminé !" setTimerEnded={setTimerEnded} />
                 )}
             </div>
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
