@@ -24,11 +24,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
     localPlayerID: string | undefined;
     session: Session;
     isHost: boolean;
-    handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => void;
+    handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
     handleStartGame: () => Promise<void>;
-    handleUpdateHost?: (newHostID: string) => void;
-    handleKickPlayer?: (playerToKick: string) => void;
-    handleJoinSession: (playerID: string) => void;
+    handleUpdateHost?: (newHostID: string) => Promise<void>;
+    handleKickPlayer?: (playerToKick: string) => Promise<void>;
+    handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
     const [copied, setCopied] = useState(false);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
@@ -41,6 +41,18 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
         setCopied(true);
         setTimeout(() => setCopied(false), 2000); // Réinitialise le message après 2 secondes
     };
+
+    const updateGameConfig = async () => {
+        // parse nb of objects
+        const nbOfObjectsParsed = parseInt(tempNbOfObjects, 10);
+        const nbOfObjects = (isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0) ? 6 : nbOfObjectsParsed;
+
+        // parse timer
+        const timerParsed = parseInt(tempTimer, 10);
+        const timer = (isNaN(timerParsed) || timerParsed <= 0) ? 20 : timerParsed;
+
+        await handleUpdateGameConfig({ nbOfObjects, timer })
+    }
 
     return (
         <div className="relative h-screen overflow-hidden">
@@ -192,15 +204,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                                 onChange={(e) => {
                                                     setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
                                                 }}
-                                                onBlur={() => {
-                                                    const parsed = parseInt(tempNbOfObjects, 10);
-                                                    if (isNaN(parsed) || parsed <= 0) {
-                                                        handleUpdateGameConfig({ nbOfObjects: 6 });
-                                                        setTempNbOfObjects('6'); // on remet aussi le champ visuel à jour
-                                                    } else {
-                                                        handleUpdateGameConfig({ nbOfObjects: parsed });
-                                                    }
-                                                }}
+                                                onBlur={updateGameConfig}
                                             />
 
 
@@ -211,17 +215,9 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                                 fullWidth
                                                 value={tempTimer}
                                                 onChange={(e) => {
-                                                    setTempTimer(e.target.value); // on laisse l'utilisateur taper librement
+                                                    setTempTimer(e.target.value);
                                                 }}
-                                                onBlur={() => {
-                                                    const parsed = parseInt(tempTimer, 10);
-                                                    if (isNaN(parsed) || parsed <= 0) {
-                                                        handleUpdateGameConfig({ timer: 20 });
-                                                        setTempTimer('20');
-                                                    } else {
-                                                        handleUpdateGameConfig({ timer: parsed });
-                                                    }
-                                                }}
+                                                onBlur={updateGameConfig}
                                             />
 
                                         </div>
@@ -238,7 +234,10 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         color="primary"
                         fullWidth
                         disabled={session.hostID !== localPlayerID}
-                        onClick={handleStartGame}
+                        onClick={async () => {
+                            await updateGameConfig();
+                            await handleStartGame();
+                        }}
                     >
                         Démarrer la partie
                     </LoadingButton>
@@ -276,15 +275,15 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         color="primary"
                         style={{ marginTop: 10 }}
                         disabled={currentInput.trim() === ""}
-                        onClick={() => handleJoinSession(currentInput)}
+                        onClick={async () => await handleJoinSession(currentInput)}
                     >
                         <ArrowCircleRightIcon />
                     </LoadingButton>
                 </DialogContent>
             </Dialog>
-            {!localPlayerID && (
+            {/* {!localPlayerID && (
                 <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
-            )}
+            )} */}
         </div >
     );
 };
