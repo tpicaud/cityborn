@@ -130,7 +130,7 @@ export default function MultiSessionComponent() {
     ///////////////
 
     // si pas de session, chargement
-    if (!multiSession.session || (localPlayerID && !multiSession.connected)) return <LoadingComponent message='Chargement de la session' />
+    if (!multiSession.session || !multiSession.socket?.connected || (localPlayerID && !multiSession.connected)) return <LoadingComponent message='Chargement de la session' />
 
     // Si game, display game
     if (multiSession.session.status === SessionStatus.IN_GAME && multiSession.session.currentGame) {

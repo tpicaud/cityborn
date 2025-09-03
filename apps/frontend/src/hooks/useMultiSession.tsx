@@ -1,5 +1,5 @@
 import { IUseSession } from "./IUseSession";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Guess, Session, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
@@ -21,7 +21,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
-    const hasDisconnected = useRef<boolean>(false);
     const [isHost, setIsHost] = useState(false);
     const { socket, emit, on, off } = useSocket();
 
@@ -51,9 +50,10 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     // Manage automatic reconnect
     useEffect(() => {
+        console.log(connected)
         const autoReconnect = async () => {
             try {
-                if (hasDisconnected.current) {
+                if (!connected) {
                     await reconnect();
                 }
             } catch (error: any) {
@@ -61,7 +61,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             }
         }
         autoReconnect();
-    }, [hasDisconnected]);
+    }, [connected]);
 
     // Manage host
     useEffect(() => {
@@ -272,7 +272,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
                 emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
-                        hasDisconnected.current = false;
                         resolve({ isInGame: response.isInGame });
                     } else {
                         reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
