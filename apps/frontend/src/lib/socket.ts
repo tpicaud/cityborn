@@ -12,6 +12,7 @@ declare global {
 	}
 }
 
+
 export const getSocket = (): Socket => {
     if (!socket) {
         socket = io(WEBSOCKET_URL, {
@@ -23,4 +24,4 @@ export const getSocket = (): Socket => {
     return socket;
 };
 
-// window.socket = getSocket()
+window.socket = getSocket()
