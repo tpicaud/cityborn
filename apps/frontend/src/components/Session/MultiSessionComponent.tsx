@@ -30,11 +30,11 @@ export default function MultiSessionComponent() {
 
     // Auto connect to session
     useEffect(() => {
-        if (multiSession.session && localPlayerID && !multiSession.connected && !hasJoinedSession.current) {
+        if (multiSession.session && localPlayerID && !multiSession.connected && multiSession.socket.connected && !hasJoinedSession.current) {
             handleJoinSession(localPlayerID);
             hasJoinedSession.current = true;
         }
-    }, [multiSession.session]);
+    }, [multiSession.session, multiSession.socket.connected]);
 
     //////////////////////////
     // Session interactions //
@@ -125,7 +125,7 @@ export default function MultiSessionComponent() {
     ///////////////
 
     // si pas de session, chargement
-    if (!multiSession.session) return <LoadingComponent message='Chargement de la session' />
+    if (!multiSession.session || (localPlayerID && !multiSession.connected)) return <LoadingComponent message='Chargement de la session' />
 
     // Si game, display game
     if (multiSession.session.currentGame) {
