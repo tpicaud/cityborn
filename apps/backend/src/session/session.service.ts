@@ -1,12 +1,13 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { Categories, Game, GameMode, OnlinePlayer, Session, SessionStatus } from '@cityborn/types';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UseFilters } from '@nestjs/common';
+import { Categories, defaultGuess, Game, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
-import { GameService } from 'src/game/game.service';
 import { IdService } from 'src/id/id.service';
 import { ErrorCode } from '@cityborn/errors';
+import { GameConfig } from './session.schema';
+import { GuessObjectService } from 'src/guess-object/guess-object.service';
 
 @Injectable()
 export class SessionService {
@@ -19,8 +20,8 @@ export class SessionService {
         private readonly redisService: RedisService,
         private readonly lockService: LockService,
         private readonly playerService: PlayerService,
-        private readonly gameService: GameService,
-        private readonly idService: IdService
+        private readonly idService: IdService,
+        private readonly guessObjectService: GuessObjectService
     ) { }
 
     private getKey(id: string): string {
@@ -28,29 +29,29 @@ export class SessionService {
     }
 
 
-    /////////////
-    // Methods //
-    /////////////
+    ////////////////////
+    // Session method //
+    ////////////////////
 
     async create(dto: CreateSessionDto): Promise<Session> {
-        const { gameMode } = dto;
+        const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
 
         const newSession: Session = {
             id: sessionID,
-            hostID: gameMode === GameMode.SOLO ? 'guest' : '',
-            mode: gameMode,
+            hostID: mode === SessionMode.SOLO ? 'guest' : '',
+            mode: mode,
             status: SessionStatus.IN_LOBBY,
             gameConfig: {
                 categories: [Categories.TOUTES],
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: gameMode === GameMode.SOLO ? [{ id: 'guest' }] : [],
+            players: mode === SessionMode.SOLO ? [{ id: 'guest' }] : [],
         };
 
-        if (gameMode === GameMode.MULTI) await this.saveSession(newSession);
+        if (mode === SessionMode.MULTI) await this.saveSession(newSession);
         return newSession;
     }
 
@@ -58,7 +59,7 @@ export class SessionService {
         const session = await this.getSession(sessionID);
 
         if (!session) {
-            throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session with ID "${sessionID}" not found.` });
+            throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found.` });
         }
 
         return session;
@@ -69,11 +70,14 @@ export class SessionService {
 
             // Récupération de la session
             const session: Session | null = await this.getSession(sessionID);
-            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
+
+            // Check si une partie est déjà en cours
+            if (session.currentGame) throw new ForbiddenException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session already in game` });
 
             // Check si l'id du joueur est déjà dans la session
             const playerExists = session.players.some((player: any) => player.id === playerID);
-            if (playerExists) throw new ConflictException({ code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS, message: `Player ${playerID} already exists in session` });
+            if (playerExists) throw new ConflictException({ code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS, message: `Player already exists in session` });
 
             // Register player socket
             await this.playerService.save(socketID, playerID, sessionID);
@@ -96,23 +100,23 @@ export class SessionService {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket ${socketID}` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
         // Récupération du jeu dans la base de données
         const session: Session | null = await this.getSession(sessionID)
-        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
         // Check si la session n'est pas déjà en game
-        if (session.status === "IN_GAME") throw new BadRequestException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session ${sessionID} is already in game` });
+        if (session.status === "IN_GAME") throw new BadRequestException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session is already in game` });
 
         // Check si le joueur est le host
-        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player ${playerID} is not ${sessionID}'s host` });
+        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Check si le nouveau host est dans la session
         const newHost = session.players.find((player: any) => player.id === newHostID && player.connected);
-        if (!newHost) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player ${playerID} not found in session ${sessionID}` });
+        if (!newHost) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
         // Update gameConfig
         session.hostID = newHost.id;
@@ -125,16 +129,19 @@ export class SessionService {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket ${socketID}` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
         // Récupération du jeu dans la base de données
         const session: any | undefined = await this.getSession(sessionID)
-        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
+
+        // Check si une partie est déjà en cours
+        if (session.currentGame) throw new ForbiddenException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session already in game` });
 
         // Check si le joueur est le host
-        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player ${playerID} is not ${sessionID}'s host` });
+        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Update gameConfig
         session.gameConfig = gameConfig;
@@ -147,78 +154,220 @@ export class SessionService {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket ${socketID}` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
-
         // Récupération du jeu dans la base de données
         const session: Session | null = await this.getSession(sessionID)
-        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
+
+        // Check si une partie est déjà en cours
+        if (session.currentGame) throw new ForbiddenException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session already in game` });
 
         // Check si le joueur est le host
-        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player ${playerID} is not ${sessionID}'s host` });
+        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Créer une nouvelle partie
-        const game = await this.gameService.create({
-            gameMode: session.mode,
-            hostID: session.hostID,
-            playersID: (session.players as OnlinePlayer[]).filter(player => player.connected).map(player => player.id),
-            gameConfig: session.gameConfig
-        });
+        const game = await this.createGame(session.gameConfig);
+
+        // Start first round
+        const firstRound: Round = {
+            status: RoundStatus.GUESSING,
+            guessObjectId: game.state.guessObjectsIds[0],
+            playersGuesses: {},
+        };
+        game.status = GameStatus.IN_GAME;
+        game.state.currentRound = firstRound;
 
         // Update session
         session.status = SessionStatus.IN_GAME;
-        session.currentGameId = game.id;
+        session.currentGame = game;
 
-        await this.saveSession(session, 12 * 60 * 60); // TTL in seconds
-        return { session, gameID: game.id };
+        await this.saveSession(this.getLightSession(session));
+        return session;
     }
 
     async endGame(socketID: string) {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket ${socketID}` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
 
         // Récupération du jeu dans la base de données
         const session: Session | null = await this.getSession(sessionID)
-        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
         // Check si le joueur est le host
-        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player ${playerID} is not ${sessionID}'s host` });
+        if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host of the session` });
 
         // Check si une partie est en cours
-        if (!session.currentGameId) throw new NotFoundException({ code: ErrorCode.SESSION_NO_CURRENT_GAME, message: `No current game in session ${sessionID}` });
-
-        // Check si la partie est terminée
-        const game = await this.gameService.get(session.currentGameId);
-        if (!game) throw new NotFoundException({ code: ErrorCode.GAME_NOT_FOUND, message: `Game ${session.currentGameId} not found` });
+        if (!session.currentGame) throw new NotFoundException({ code: ErrorCode.SESSION_NO_CURRENT_GAME, message: `No current game in session this` });
 
         // Update session
         session.status = SessionStatus.IN_LOBBY;
-        session.currentGameId = undefined
+        session.currentGame = undefined
 
         await this.saveSession(session);
         return session;
     }
+
+    /////////////////////////
+    // Current game method //
+    /////////////////////////
+
+    async createGame(gameConfig: GameConfig): Promise<Game> {
+        const guessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
+        const guessObjectIds = guessObjects.map(obj => obj.id);
+        const game: Game = {
+            id: await this.generateUniqueGameID(),
+            status: GameStatus.STARTING,
+            state: {
+                guessObjectsIds: guessObjectIds,
+                results: {},
+                guessObjects: guessObjects
+            }
+        }
+
+        return game;
+    }
+
+    async handleGuess(socketID: string, guess: any) {
+        // Récupération du joueur
+        const player = await this.playerService.getPlayer(socketID);
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
+
+        const { playerID, sessionID } = player;
+
+        return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
+            // Récupération du jeu dans la base de données
+            const session = await this.getSession(sessionID);
+            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
+
+            // Check si la partie existe
+            if (!session.currentGame) throw new NotFoundException({ code: ErrorCode.SESSION_NO_CURRENT_GAME, message: `No current game in this session` });
+            const game = session.currentGame;
+
+            // Vérifier si playerID existe dans la liste des joueurs (game.players)
+            const playerExists = session.players.some((player: any) => player.id === playerID);
+            if (!playerExists) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` })
+
+            // Vérifier si playerID est connecté
+            const playerConnected = session.players.some((player: any) => player.id === playerID && player.connected);
+            if (!playerConnected) throw new UnauthorizedException({ code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED, message: `Player is not connected` });
+
+            // Vérifier si un round est actif
+            if (!game.state.currentRound) throw new UnauthorizedException({ code: ErrorCode.GAME_NO_ACTIVE_ROUND, message: `No active round on current game` })
+
+            if (game.state.currentRound.playersGuesses && !game.state.currentRound.playersGuesses[playerID]) {
+                // Mettre à jour le guess du joueur dans currentRound.playersGuesses
+                game.state.currentRound.playersGuesses[playerID] = guess;
+
+                // Vérifier si tout le monde à guess
+                const connectedPlayers = session.players.filter((player: any) => player.connected);
+                const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
+                    game.state.currentRound!.playersGuesses!.hasOwnProperty(player.id)
+                );
+                if (allConnectedPlayersGuessed) {
+                    // Add null guesses
+                    for (const player of session.players) {
+                        if (!game.state.currentRound.playersGuesses[player.id]) {
+                            game.state.currentRound.playersGuesses[player.id] = defaultGuess;
+                        }
+                    }
+
+                    // Update round status
+                    game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
+                }
+
+                session.currentGame = game;
+                await this.saveSession(session);
+            }
+            return session;
+        });
+    }
+
+    async handleNextRound(socketID: string) {
+        // Récupération du joueur
+        const player = await this.playerService.getPlayer(socketID);
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
+
+        const { playerID, sessionID } = player;
+
+        // Récupération du jeu dans la base de données
+        const session = await this.getSession(sessionID);
+        if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
+
+        // Check si la partie existe
+        if (!session.currentGame) throw new NotFoundException({ code: ErrorCode.SESSION_NO_CURRENT_GAME, message: `No current game in this session` });
+        const game = session.currentGame;
+
+        // Vérifier que le host
+        if (session.hostID !== playerID) {
+            throw new UnauthorizedException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
+        }
+
+        // Trouver l'index du currentRound
+        const currentIndex = game.state.guessObjectsIds.findIndex((id: string) => id === game.state.currentRound!.guessObjectId);
+
+        // Register result
+        session.players.forEach((player: any) => {
+            const guess = game.state.currentRound!.playersGuesses![player.id];
+            const playerResults = game.state.results[player.id];
+
+            const newResult = {
+                guessObjectId: game.state.currentRound?.guessObjectId ?? '',
+                distance: guess ? guess.distance : -1,
+                points: guess ? guess.points : 0
+            };
+
+            if (playerResults && playerResults.results) {
+                playerResults.results.push(newResult);
+            } else {
+                game.state.results[player.id] = { results: [newResult] };
+            }
+        });
+
+
+        // Go to next guess object
+        if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
+            game.status = GameStatus.IN_RESULTS;
+            //game.state.currentRound = undefined
+        } else {
+            game.state.currentRound = {
+                status: RoundStatus.GUESSING,
+                guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
+                playersGuesses: {},
+            }
+        }
+
+        // Update game and send to the room
+        session.currentGame = game;
+        await this.saveSession(session);
+
+        return session;
+    }
+
+    ///////////////////////
+    // Connection method //
+    ///////////////////////
 
     async reconnectPlayer(socketID: string, sessionID: string, playerID: string) {
         return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
             // Récupération du jeu dans la base de données
             const session: Session | null = await this.getSession(sessionID);
-            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
             // Get players
             const players = session.players as OnlinePlayer[];
 
             // Check si l'id du joueur est dans la session
             const playerIndex = players.findIndex((player: any) => player.id === playerID);
-            if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player ${playerID} not found in session ${sessionID}` });
+            if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Register new player socket
             await this.playerService.save(socketID, playerID, sessionID);
@@ -229,11 +378,8 @@ export class SessionService {
             // Check host
             if (session.hostID === '') session.hostID = playerID;
 
-            // Check s'il est en game
-            const isInGame = session.currentGameId ? await this.isInGame(session.currentGameId, playerID) : false;
-
             await this.saveSession(session);
-            return { session, isInGame };
+            return session;
         });
     }
 
@@ -241,7 +387,7 @@ export class SessionService {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with socket ${socketID}` });
+        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
 
         const { playerID, sessionID } = player;
 
@@ -249,20 +395,19 @@ export class SessionService {
 
             // Récupération du jeu dans la base de données
             const session: Session | null = await this.getSession(sessionID)
-            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session ${sessionID} not found` });
+            if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
             // Check si l'id du joueur est dans la partie
             const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
-            if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player ${playerID} not found in session ${sessionID}` });
+            if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Déconnexion du joueur
             (session.players[playerIndex] as OnlinePlayer).connected = false;
 
             // Update host
-            const isHost = playerID === session.hostID
+            const isHost = playerID === session.hostID;
             if (isHost) {
-                const currentGame = session.currentGameId ? await this.gameService.get(session.currentGameId) : null;
-                const players = currentGame ? currentGame.players : session.players;
+                const players = session.players;
 
                 const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
                 if (connectedPlayers.length > 0) {
@@ -273,20 +418,16 @@ export class SessionService {
             }
 
             // Notifier la game
-            let game: Game | undefined = undefined;
-            if (session.currentGameId && await this.isInGame(session.currentGameId, playerID)) {
-                game = session.currentGameId ? await this.gameService.disconnectPlayer(socketID, isHost ? session.hostID : '') : undefined;
-                if (game && game.status === 'FINISHED') {
-                    session.status = SessionStatus.IN_LOBBY;
-                    session.currentGameId = undefined;
-                }
-            }
+            // if (session.currentGame && session.currentGame.status === 'FINISHED') {
+            //     session.status = SessionStatus.IN_LOBBY;
+            //     session.currentGame = undefined;
+            // }
 
             // Update states
             await this.playerService.deletePlayer(socketID);
             await this.saveSession(session);
 
-            return { session, game };
+            return session;
         });
     }
 
@@ -306,7 +447,7 @@ export class SessionService {
         await this.redisService.del(this.getKey(sessionID));
     }
 
-    // Auxiliary
+    // Private function
     private async generateUniqueSessionID(): Promise<string> {
         const MAX_ATTEMPTS = 3;
 
@@ -318,9 +459,36 @@ export class SessionService {
         throw new InternalServerErrorException({ code: ErrorCode.SESSION_CREATION_FAILED, message: 'Max id generation attempt reached' });
     }
 
-    // Private function
-    private async isInGame(gameID: string, playerID: string) {
-        const game = await this.gameService.get(gameID);
-        return game.players.some(player => player.id === playerID);
+
+    async generateUniqueGameID(): Promise<string> {
+        const MAX_ATTEMPTS = 3;
+
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            const candidateId = this.idService.generateUniqueNamesId();
+            //if (!(await this.getGame(candidateId))) return candidateId.toString();
+            return candidateId.toString(); // TODO Check in supabase and redis for conflicts
+        }
+
+        throw new InternalServerErrorException({ code: ErrorCode.GAME_CREATION_FAILED, message: 'Max id generation attempt reached' });
+    }
+
+    private getLightSession(session: Session): Session {
+        let lightSession = session;
+
+        if (session.currentGame) {
+            const { guessObjects, ...restState } = session.currentGame.state;
+
+            lightSession = {
+                ...session,
+                currentGame: {
+                    ...session.currentGame,
+                    state: {
+                        ...restState,
+                    }
+                },
+            }
+        }
+
+        return lightSession;
     }
 }

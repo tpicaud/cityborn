@@ -4,7 +4,7 @@ import { DialogContent, DialogTitle, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { GameMode } from '@cityborn/types';
+import { SessionMode } from '@cityborn/types';
 import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from "../ui/buttons/Button";
@@ -40,7 +40,7 @@ export default function MenuComponent({
             setOpenConnectionAlert(true);
         } else {
             try {
-                const session = await ApiServiceClient.createSession(GameMode.MULTI);
+                const session = await ApiServiceClient.createSession(SessionMode.MULTI);
                 router.push(`/session/multi/${session.id}`);
             } catch (error: any) {
                 invokeError(error);

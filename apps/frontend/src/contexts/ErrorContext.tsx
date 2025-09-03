@@ -22,10 +22,14 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
         if (error instanceof ApiError) {
             const message = getFriendlyErrorMessage(error);
             setErrorMessage(message);
-        } else {
+        } else if (typeof error === 'string') {
             setErrorMessage(error);
+        } else {
+            const errorMessage = error.message ?? 'Unexpected error';
+            setErrorMessage(errorMessage);
         }
 
+        console.log(error);
         if (ui_type === 'dialog') {
             setOpenDialog(true);
         }

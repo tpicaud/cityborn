@@ -4,7 +4,7 @@ import { Typography, List, ListItem, ListItemText, TextField, Accordion, Accordi
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
-import { GameMode, Session } from "@cityborn/types";
+import { SessionMode, Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
@@ -61,7 +61,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         {session.mode.toUpperCase()}
                     </Typography>
 
-                    {session.mode === GameMode.MULTI && (
+                    {session.mode === SessionMode.MULTI && (
                         <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
                             {/* Champ pour afficher et copier l'ID du jeu */}
                             < Typography variant="subtitle1" gutterBottom>
@@ -93,7 +93,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
 
                     <div className="flex flex-row justify-center items-start overflow-auto">
                         {/* Liste des joueurs */}
-                        {session.mode !== GameMode.SOLO && (
+                        {session.mode !== SessionMode.SOLO && (
                             <List className="w-full min-h-[10vh]">
                                 {(session.players.every(p => "connected" in p)
                                     ? // Tous sont des OnlinePlayer → trier + statut
