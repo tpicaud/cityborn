@@ -22,7 +22,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
-    const { socket, emit, on, off } = useSocket();
+    const { socket, hasDisconnected, emit, on, off } = useSocket();
 
     /////////////////
     // useEffects //
@@ -50,10 +50,10 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     // Manage automatic reconnect
     useEffect(() => {
-        console.log(connected)
+        console.log('auto reconnect')
         const autoReconnect = async () => {
             try {
-                if (!connected) {
+                if (socket.connected && hasDisconnected && !connected) {
                     await reconnect();
                 }
             } catch (error: any) {
@@ -61,7 +61,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
             }
         }
         autoReconnect();
-    }, [connected]);
+    }, [socket.connected, hasDisconnected]);
 
     // Manage host
     useEffect(() => {
@@ -95,7 +95,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
                 };
             });
         };
-
 
         // handle messages
         on('session:update', handleSessionUpdate);
@@ -267,12 +266,12 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         try {
             console.log('Reconnecting player to session...')
             const sessionID = session.id;
-            return new Promise<{ isInGame: boolean }>((resolve, reject) => {
-                const body = { sessionID, localPlayerID };
-                emit('session:reconnect', body, (response: { success: boolean; isInGame: boolean; error?: any }) => {
+            return new Promise<void>((resolve, reject) => {
+                const body = { sessionID, playerID: localPlayerID };
+                emit('session:reconnect', body, (response: { success: boolean; error?: any }) => {
                     if (response.success) {
                         setConnected(true);
-                        resolve({ isInGame: response.isInGame });
+                        resolve();
                     } else {
                         reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
                     }
