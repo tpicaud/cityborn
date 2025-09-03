@@ -119,28 +119,42 @@ const ResultsComponent = ({
                         {playersResults.size === 1 ? (
                             // Si un seul joueur, afficher une liste
                             Array.from(playersResults.entries()).map(([player, playerResults]) => (
-                                <div key={player} className="w-full max-w-[90%] border border-gray-200 rounded-lg shadow-lg">
+                                <div key={player} className="w-full border border-gray-200 rounded-lg shadow-lg">
                                     <TableContainer component={Paper} className="shadow-lg">
-                                        <Table>
+                                        <Table size='small' sx={{
+                                            "& td, & th": {
+                                                padding: {
+                                                    xs: "4px 8px"
+                                                },
+                                                fontSize: {
+                                                    xs: "0.8rem",
+                                                    sm: '1rem',
+                                                    md: '1.2rem'
+                                                }
+                                            },
+                                        }}>
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell><p className="font-bold">Nom</p></TableCell>
-                                                    <TableCell><p className="font-bold">Distance (km)</p></TableCell>
-                                                    <TableCell><p className="font-bold">Points</p></TableCell>
+                                                    <TableCell>Nom</TableCell>
+                                                    <TableCell align='right'>Distance (km)</TableCell>
+                                                    <TableCell align='right'>Points</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {playerResults.results.map((result, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>{result.guessObjectId}</TableCell>
-                                                        <TableCell>
+                                                    <TableRow
+                                                        key={index}
+                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                                    >
+                                                        <TableCell component='th' scope='row'>{result.guessObjectId}</TableCell>
+                                                        <TableCell align='right'>
                                                             {result.distance !== -1 ? (
                                                                 <p>{result.distance.toFixed(2)}</p>
                                                             ) : (
                                                                 <p>Pas de guess</p>
                                                             )}
                                                         </TableCell>
-                                                        <TableCell>{result.points}</TableCell>
+                                                        <TableCell align='right'>{result.points}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -153,32 +167,47 @@ const ResultsComponent = ({
                             Array.from(playersResults.entries())
                                 .sort(([, aResults], [, bResults]) => calculateTotalPoints(bResults) - calculateTotalPoints(aResults))
                                 .map(([player, playerResults]) => (
-                                    <Accordion key={player} className="max-w-4xl w-[80%]">
+                                    <Accordion key={player} className="w-full">
                                         <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
                                             <h3 className="font-bold">{player} - {calculateTotalPoints(playerResults)} pts</h3>
                                         </AccordionSummary>
                                         <AccordionDetails>
-                                            <TableContainer component={Paper} className="shadow-lg">
-                                                <Table>
+                                            <TableContainer component={Paper} elevation={0} className="w-full">
+                                                <Table size='small' sx={{
+                                                    width: "100%",
+                                                    "& td, & th": {
+                                                        padding: {
+                                                            xs: "4px 8px"
+                                                        },
+                                                        fontSize: {
+                                                            xs: "0.8rem",
+                                                            sm: '1rem',
+                                                            md: '1.2rem'
+                                                        }
+                                                    },
+                                                }}>
                                                     <TableHead>
                                                         <TableRow>
-                                                            <TableCell><p className="font-bold">Nom</p></TableCell>
-                                                            <TableCell><p className="font-bold">Distance (km)</p></TableCell>
-                                                            <TableCell><p className="font-bold">Points</p></TableCell>
+                                                            <TableCell>Nom</TableCell>
+                                                            <TableCell align='right'>Distance (km)</TableCell>
+                                                            <TableCell align='right'>Points</TableCell>
                                                         </TableRow>
                                                     </TableHead>
                                                     <TableBody>
                                                         {playerResults.results.map((result, index) => (
-                                                            <TableRow key={index}>
-                                                                <TableCell>{result.guessObjectId}</TableCell>
-                                                                <TableCell>
+                                                            <TableRow
+                                                                key={index}
+                                                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                                            >
+                                                                <TableCell component='th' scope='row'>{result.guessObjectId}</TableCell>
+                                                                <TableCell align='right'>
                                                                     {result.distance !== -1 ? (
                                                                         <p>{result.distance.toFixed(2)}</p>
                                                                     ) : (
                                                                         <p>Pas de guess</p>
                                                                     )}
                                                                 </TableCell>
-                                                                <TableCell>{result.points}</TableCell>
+                                                                <TableCell align='right'>{result.points}</TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -227,7 +256,7 @@ const ResultsComponent = ({
                     </div>
                 </div>
             </div>
-        </Box>
+        </Box >
     );
 
 }
