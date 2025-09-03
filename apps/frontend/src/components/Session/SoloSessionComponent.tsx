@@ -7,9 +7,11 @@ import { useSoloSession } from '@/hooks/useSoloSession';
 import { GameConfig, Guess } from '@cityborn/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { useRouter } from 'next/navigation';
 
 export default function SoloSessionComponent() {
 
+    const router = useRouter();
     const { user } = useAuth();
     const { invokeError } = useError();
     const localPlayerID = user ? user.username : 'guest';
@@ -73,6 +75,11 @@ export default function SoloSessionComponent() {
         }
     }
 
+    const handleExitGame = async () => {
+        router.push('/')
+        return;
+    }
+
     ///////////////
     // Rendering //
     ///////////////
@@ -90,7 +97,8 @@ export default function SoloSessionComponent() {
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}
-            handlePlayAgain={handlePlayAgain} />
+            handlePlayAgain={handlePlayAgain}
+            handleExitGame={handleExitGame} />
     } else {
         // display lobby
         return <LobbyComponent
