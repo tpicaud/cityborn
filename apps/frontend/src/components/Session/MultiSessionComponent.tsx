@@ -6,13 +6,14 @@ import LoadingComponent from '@/components/others/LoadingComponent';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
 import { useMultiSession } from '@/hooks/useMultiSession';
-import { GameConfig } from '@cityborn/types';
+import { GameConfig, SessionStatus } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 export default function MultiSessionComponent() {
 
+    const router = useRouter();
     const { user } = useAuth();
     const { invokeError } = useError();
     const { sessionID } = useParams<{ sessionID: string }>();
@@ -73,6 +74,10 @@ export default function MultiSessionComponent() {
         }
     }
 
+    ///////////////////////
+    // Game interactions //
+    ///////////////////////
+
     const handleStartGame = async () => {
         try {
             await multiSession.startGame();
@@ -80,11 +85,6 @@ export default function MultiSessionComponent() {
             invokeError(error);
         }
     }
-
-
-    ///////////////////////
-    // Game interactions //
-    ///////////////////////
 
     const handleGuess = async (guess: Guess) => {
         try {
@@ -119,6 +119,11 @@ export default function MultiSessionComponent() {
         }
     }
 
+    const handleExitGame = async () => {
+        router.push('/')
+        return;
+    }
+
 
     ///////////////
     // Rendering //
@@ -128,7 +133,7 @@ export default function MultiSessionComponent() {
     if (!multiSession.session || (localPlayerID && !multiSession.connected)) return <LoadingComponent message='Chargement de la session' />
 
     // Si game, display game
-    if (multiSession.session.currentGame) {
+    if (multiSession.session.status === SessionStatus.IN_GAME && multiSession.session.currentGame) {
         return <GameComponent
             localPlayerID={localPlayerID}
             isHost={multiSession.isHost}
@@ -137,7 +142,8 @@ export default function MultiSessionComponent() {
             handleGuess={handleGuess}
             handleNextRound={handleNextRound}
             handleEndGame={handleEndGame}
-            handlePlayAgain={handlePlayAgain} />
+            handlePlayAgain={handlePlayAgain}
+            handleExitGame={handleExitGame} />
     } else {
         // display lobby
         return <LobbyComponent

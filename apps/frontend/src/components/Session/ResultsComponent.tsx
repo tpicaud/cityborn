@@ -18,17 +18,17 @@ const ResultsComponent = ({
     isHost,
     mode,
     handleEndGame,
-    handlePlayAgain
+    handlePlayAgain,
+    handleExitGame,
 }: {
     game: Game,
     localPlayerID: string,
     isHost: boolean,
     mode: SessionMode,
     handleEndGame: () => Promise<void>,
-    handlePlayAgain: () => Promise<void>
+    handlePlayAgain: () => Promise<void>,
+    handleExitGame: () => Promise<void>
 }) => {
-
-    const router = useRouter();
 
     const playersResults = getGameResult(game);
     const [sentence, setSentence] = useState<{ message: string, sub_message_1: string, sub_message_2: string }>();
@@ -218,8 +218,7 @@ const ResultsComponent = ({
                                 variant="contained"
                                 color="primary"
                                 onClick={async () => {
-                                    await handleEndGame();
-                                    router.push('/');
+                                    await handleExitGame();
                                 }}
                                 className="w-24"
                             >

@@ -213,27 +213,27 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		}
 	}
 
-	@SubscribeMessage('session:endGame')
-	async endGame(
-		@ConnectedSocket() socket: Socket,
-	): Promise<WSResponse> {
-		try {
-			await this.sessionService.endGame(socket.id);
-			//this.io.to(session.id).emit('session:update', session);
+	// @SubscribeMessage('session:endGame')
+	// async endGame(
+	// 	@ConnectedSocket() socket: Socket,
+	// ): Promise<WSResponse> {
+	// 	try {
+	// 		await this.sessionService.endGame(socket.id);
+	// 		//this.io.to(session.id).emit('session:update', session);
 
-			return { success: true };
-		} catch (error) {
-			this.logger.error(error.message)
-			return {
-				success: false,
-				error: {
-					code: error.response.code,
-					message: error.message,
-					statusCode: error.status
-				}
-			};
-		}
-	}
+	// 		return { success: true };
+	// 	} catch (error) {
+	// 		this.logger.error(error.message)
+	// 		return {
+	// 			success: false,
+	// 			error: {
+	// 				code: error.response.code,
+	// 				message: error.message,
+	// 				statusCode: error.status
+	// 			}
+	// 		};
+	// 	}
+	// }
 
 	@SubscribeMessage('session:playAgain')
 	async playAgain(
@@ -241,7 +241,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 	): Promise<WSResponse> {
 		try {
 			// End previous game
-			await this.sessionService.endGame(socket.id);
+			//await this.sessionService.endGame(socket.id);
 
 			// Start new one
 			const session = await this.sessionService.startGame(socket.id);

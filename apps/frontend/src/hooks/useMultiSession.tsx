@@ -1,7 +1,7 @@
 import { IUseSession } from "./IUseSession";
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./useSocket";
-import { Guess, Session } from "@cityborn/types";
+import { Guess, Session, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
@@ -223,20 +223,21 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     const endGame = async () => {
         if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
-        
-        setSession({ ...session, currentGame: undefined });
 
-        if (isHost) {
-            return new Promise<void>((resolve, reject) => {
-                emit('session:endGame', (response: { success: boolean; error?: any }) => {
-                    if (response.success) {
-                        resolve();
-                    } else {
-                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
-                    }
-                });
-            });
-        }
+        setSession({ ...session, status: SessionStatus.IN_LOBBY });
+        //setSession({ ...session, currentGame: undefined });
+
+        // if (isHost) {
+        //     return new Promise<void>((resolve, reject) => {
+        //         emit('session:endGame', (response: { success: boolean; error?: any }) => {
+        //             if (response.success) {
+        //                 resolve();
+        //             } else {
+        //                 reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
+        //             }
+        //         });
+        //     });
+        // }
     }
 
     const playAgain = async () => {

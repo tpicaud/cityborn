@@ -3,7 +3,7 @@
 import GuessComponent from "@/components/guess/GuessComponent";
 import { ArrowForward } from "@mui/icons-material";
 import { Backdrop } from "@mui/material";
-import { RoundStatus, Session, SessionMode } from "@cityborn/types";
+import { RoundStatus, Session } from "@cityborn/types";
 import LoadingComponent from "@/components/others/LoadingComponent";
 import { Game } from "@cityborn/types";
 import { Guess } from "@cityborn/types";
@@ -11,15 +11,16 @@ import { GameStatus } from "@cityborn/types";
 import ResultsComponent from "./ResultsComponent";
 import LoadingButton from "../ui/buttons/LoadingButton";
 
-export const GameComponent = ({ localPlayerID, isHost, session, game, handleGuess, handleNextRound, handleEndGame, handlePlayAgain }: {
+export const GameComponent = ({ localPlayerID, isHost, session, game, handleGuess, handleNextRound, handleEndGame, handlePlayAgain, handleExitGame }: {
     localPlayerID: string | undefined,
     isHost: boolean;
     session: Session,
     game: Game,
-    handleGuess: (guess: Guess) => void,
-    handleNextRound: () => void,
-    handleEndGame: () => Promise<void>,
-    handlePlayAgain: () => Promise<void>
+    handleGuess: (guess: Guess) => Promise<void>,
+    handleNextRound: () => Promise<void>,
+    handleEndGame: () => Promise<void>
+    handlePlayAgain: () => Promise<void>,
+    handleExitGame: () => Promise<void>
 }) => {
 
     const NextButton: React.FC = () => {
@@ -80,7 +81,14 @@ export const GameComponent = ({ localPlayerID, isHost, session, game, handleGues
                     <div className="flex flex-row w-full h-full items-center justify-center">
                         <Backdrop open={true}>
                             <div className="w-[80%]">
-                                <ResultsComponent game={game} localPlayerID={localPlayerID} isHost={isHost} mode={session.mode} handleEndGame={handleEndGame} handlePlayAgain={handlePlayAgain} />
+                                <ResultsComponent
+                                    game={game}
+                                    localPlayerID={localPlayerID}
+                                    isHost={isHost}
+                                    mode={session.mode}
+                                    handleEndGame={handleEndGame}
+                                    handlePlayAgain={handlePlayAgain}
+                                    handleExitGame={handleExitGame} />
                             </div>
                         </Backdrop>
                     </div>
