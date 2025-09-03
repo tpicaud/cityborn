@@ -54,7 +54,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 				});
 			}
 
-			const session = await this.sessionService.join(socket.id, sessionID, playerID);
+			const session = await this.sessionService.join(socket.id, sessionID, playerID, (socket as any).user);
 
 			await socket.join(sessionID)
 			this.io.to(sessionID).emit('session:update', session);
@@ -213,35 +213,11 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		}
 	}
 
-	// @SubscribeMessage('session:endGame')
-	// async endGame(
-	// 	@ConnectedSocket() socket: Socket,
-	// ): Promise<WSResponse> {
-	// 	try {
-	// 		await this.sessionService.endGame(socket.id);
-	// 		//this.io.to(session.id).emit('session:update', session);
-
-	// 		return { success: true };
-	// 	} catch (error) {
-	// 		this.logger.error(error.message)
-	// 		return {
-	// 			success: false,
-	// 			error: {
-	// 				code: error.response.code,
-	// 				message: error.message,
-	// 				statusCode: error.status
-	// 			}
-	// 		};
-	// 	}
-	// }
-
 	@SubscribeMessage('session:playAgain')
 	async playAgain(
 		@ConnectedSocket() socket: Socket,
 	): Promise<WSResponse> {
 		try {
-			// End previous game
-			//await this.sessionService.endGame(socket.id);
 
 			// Start new one
 			const session = await this.sessionService.startGame(socket.id);
@@ -280,7 +256,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 				});
 			}
 
-			const session = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID);
+			const session = await this.sessionService.reconnectPlayer(socket.id, sessionID, playerID, (socket as any).user);
 
 			await socket.join(sessionID)
 			this.io.to(sessionID).emit('session:update', session);

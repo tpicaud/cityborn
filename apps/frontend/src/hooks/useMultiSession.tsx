@@ -12,6 +12,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     // Extends interface
     connected: boolean;
     socket: Socket;
+    hasDisconnected: boolean;
     join: (playerID: string) => Promise<void>;
     updateHost: (newHostID: string) => Promise<void>;
     kickPlayer: (playerToKick: string) => Promise<void>;
@@ -50,7 +51,6 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     // Manage automatic reconnect
     useEffect(() => {
-        console.log('auto reconnect')
         const autoReconnect = async () => {
             try {
                 if (socket.connected && hasDisconnected && !connected) {
@@ -223,21 +223,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     const endGame = async () => {
         if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
-
         setSession({ ...session, status: SessionStatus.IN_LOBBY });
-        //setSession({ ...session, currentGame: undefined });
-
-        // if (isHost) {
-        //     return new Promise<void>((resolve, reject) => {
-        //         emit('session:endGame', (response: { success: boolean; error?: any }) => {
-        //             if (response.success) {
-        //                 resolve();
-        //             } else {
-        //                 reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
-        //             }
-        //         });
-        //     });
-        // }
     }
 
     const playAgain = async () => {
@@ -288,6 +274,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         connected,
         socket,
         isHost,
+        hasDisconnected,
         join,
         updateHost,
         updateGameConfig,
