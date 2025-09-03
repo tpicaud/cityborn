@@ -116,7 +116,6 @@ export const SignUpComponent = ({
                 flexDirection: "column",
                 gap: 2,
                 maxWidth: 300,
-                mx: "auto",
             }}
         >
             <Typography variant="h5" align="center">
@@ -208,7 +207,7 @@ export const SignUpComponent = ({
                 <div className="flex-1 h-px bg-black rounded-full"></div>
             </div>
 
-            <div className="flex justify-center items-center h-[44px] w-[244px]">
+            <div className="flex justify-center items-center h-[44px] w-full">
                 <div id="googleSignInDiv"></div>
             </div>
         </Box>
