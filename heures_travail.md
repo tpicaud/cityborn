@@ -87,3 +87,5 @@
 | 28/08/2025 | 7h | Gestion des erreurs back http |
 | 29/08/2025 | 5h | Gestion des erreurs front http |
 | 01/09/2025 | 4h | Gestion des erreurs ws |
+| 02/09/2025 | 8h | Fusion Session et Game pour simplicité |
+| 03/09/2025 | 3h | Fix erreurs fin de partie |
