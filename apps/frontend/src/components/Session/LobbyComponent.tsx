@@ -56,7 +56,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
 
     return (
         <div className="relative h-screen overflow-hidden">
-            <div className="absolute inset-0">
+            {/* <div className="absolute inset-0">
                 <MapContainer center={[0, 0]} zoom={3} zoomControl={false} className="h-full w-full z-0">
                     <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -64,19 +64,19 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     />
                 </MapContainer>
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
-            </div>
+            </div> */}
 
             <div className="relative z-10 flex flex-col items-center justify-center bg-transparent h-full pointer-events-none">
                 <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[90%] min-w-80 max-h-[80%] pointer-events-auto">
                     {/* Titre du lobby */}
-                    <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+                    <Typography variant="h5">
                         {session.mode.toUpperCase()}
                     </Typography>
 
                     {session.mode === SessionMode.MULTI && (
                         <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
                             {/* Champ pour afficher et copier l'ID du jeu */}
-                            < Typography variant="subtitle1" gutterBottom>
+                            < Typography variant="subtitle1" >
                                 Code
                             </Typography>
                             <TextField
@@ -103,10 +103,24 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         </div>
                     )}
 
-                    <div className="flex flex-row justify-center items-start overflow-auto">
+                    <div className="flex flex-row justify-start items-stretch gap-8 overflow-auto">
                         {/* Liste des joueurs */}
                         {session.mode !== SessionMode.SOLO && (
-                            <List className="w-full min-h-[10vh]">
+                            <List sx={{
+                                flex: "1 1 50%",
+                                p: 0,
+                                "& .MuiListItem-root": {
+                                    py: 0.5,
+                                },
+                                "& .MuiListItemText-primary": {
+                                    fontSize: { xs: "0.85rem", md: "1rem" }
+
+                                },
+                                "& .MuiListItemText-secondary": {
+                                    fontSize: { xs: "0.75rem", md: "0.90rem" }
+                                },
+                            }}
+                            >
                                 {(session.players.every(p => "connected" in p)
                                     ? // Tous sont des OnlinePlayer → trier + statut
                                     (session.players as OnlinePlayer[])
@@ -140,91 +154,80 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                             </List>
                         )}
 
-                        <div className='max-w-full'>
-                            <Accordion
-                                defaultExpanded={true} //{session.mode === GameMode.SOLO}
-                                sx={{
-                                    borderTop: '1px solid #ccc',  // Bordure grise
-                                    backgroundColor: 'transparent',  // Fond transparent
-                                    boxShadow: 'none',  // Pas d'ombre
-                                    '&:before': {
-                                        display: 'none',  // Enlève la ligne avant l'accordion
-                                    },
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1-content"
-                                    id="panel1-header"
-                                    disabled={!isHost}
+                        <div className='flex-1 flex flex-col gap-3' style={{ flex: '1 1 50%' }}>
+                            <FormControl sx={{ width: '100%', marginTop: 2 }}>
+                                <InputLabel id="categories-input">Categories</InputLabel>
+                                <Select
+                                    labelId="categories-input"
+                                    id="categories-input"
+                                    multiple
+                                    value={session.gameConfig.categories}
+                                    size="small"
+                                    onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
+                                    input={<OutlinedInput label="Categories" />}
+                                    renderValue={(selected) => (selected as string[]).join(', ')}
                                     sx={{
-                                        backgroundColor: 'transparent',  // Fond transparent pour l'en-tête
-                                        border: 'none',
-                                        paddingBottom: 0,
-                                        marginBottom: 0
+                                        '& .MuiInputBase-input': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
                                     }}
                                 >
-                                    <Typography component="span">Configuration de la partie</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails
-                                    sx={{
-                                        backgroundColor: 'transparent',
-                                        paddingTop: 0,
-                                        marginTop: 0
+                                    {Object.values(Categories).map((category) => (
+                                        <MenuItem key={category} value={category}>
+                                            <Checkbox checked={session.gameConfig.categories.includes(category)} />
+                                            <ListItemText primary={category} />
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <div className='w-full flex flex-row gap-x-2'>
+                                <TextField
+                                    type="number"
+                                    label="Personnalités"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={tempNbOfObjects}
+                                    size="small"
+                                    onChange={(e) => {
+                                        setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
                                     }}
-                                >
-                                    <div className='w-full flex flex-col gap-3'>
-                                        <FormControl sx={{ width: '100%' }}>
-                                            <InputLabel id="categories-input">Categories</InputLabel>
-                                            <Select
-                                                labelId="categories-input"
-                                                id="categories-input"
-                                                multiple
-                                                value={session.gameConfig.categories}
-                                                onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
-                                                input={<OutlinedInput label="Categories" />}
-                                                renderValue={(selected) => (selected as string[]).join(', ')}
-                                            >
-                                                {Object.values(Categories).map((category) => (
-                                                    <MenuItem key={category} value={category}>
-                                                        <Checkbox checked={session.gameConfig.categories.includes(category)} />
-                                                        <ListItemText primary={category} />
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-
-                                        <div className='w-full flex flex-row gap-x-2'>
-                                            <TextField
-                                                type="number"
-                                                label="Personnalités"
-                                                variant="outlined"
-                                                fullWidth
-                                                value={tempNbOfObjects}
-                                                onChange={(e) => {
-                                                    setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
-                                                }}
-                                                onBlur={updateGameConfig}
-                                            />
+                                    onBlur={updateGameConfig}
+                                    sx={{
+                                        '& .MuiInputBase-input': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
+                                    }}
+                                />
 
 
-                                            <TextField
-                                                type="number"
-                                                label="Timer"
-                                                variant="outlined"
-                                                fullWidth
-                                                value={tempTimer}
-                                                onChange={(e) => {
-                                                    setTempTimer(e.target.value);
-                                                }}
-                                                onBlur={updateGameConfig}
-                                            />
-
-                                        </div>
-
-                                    </div>
-                                </AccordionDetails>
-                            </Accordion>
+                                <TextField
+                                    type="number"
+                                    label="Timer"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={tempTimer}
+                                    size="small"
+                                    onChange={(e) => {
+                                        setTempTimer(e.target.value);
+                                    }}
+                                    onBlur={updateGameConfig}
+                                    sx={{
+                                        '& .MuiInputBase-input': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        },
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -253,7 +256,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         Menu
                     </Button>
                 </Box >
-            </div>
+            </div >
 
             <Dialog
                 open={!localPlayerID}
