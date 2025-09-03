@@ -82,7 +82,6 @@ export const SignInComponent = () => {
                 flexDirection: "column",
                 gap: 2,
                 maxWidth: 300,
-                mx: "auto",
             }}
         >
             <Typography variant="h5" align="center">
@@ -122,7 +121,7 @@ export const SignInComponent = () => {
                 <div className="flex-1 h-px bg-black rounded-full"></div>
             </div>
 
-            <div className="relative flex justify-center items-center h-[44px] w-[244px]">
+            <div className="relative flex justify-center items-center h-[44px] w-full">
                 <div id="googleSignInDiv"></div>
                 {isGoogleSignInFormSubmitting && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
