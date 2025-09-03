@@ -99,6 +99,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
         // handle messages
         on('session:update', handleSessionUpdate);
+        on('connection_error', (error) => { console.log(error) });
 
         return () => {
             // Nettoyage
