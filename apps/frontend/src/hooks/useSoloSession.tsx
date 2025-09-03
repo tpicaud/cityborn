@@ -99,7 +99,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     const guess = (guess: Guess) => {
         setGame((prevGame) => {
             if (!prevGame || !prevGame.state.currentRound || !localPlayerID) return prevGame;
-            console.log('register guess')
 
             return {
                 ...prevGame,
