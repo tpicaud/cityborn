@@ -134,6 +134,10 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		}
 	}
 
+	////////////////////////
+	// Current game event //
+	////////////////////////
+
 	@SubscribeMessage('session:startGame')
 	async startGame(
 		@ConnectedSocket() socket: Socket,
@@ -156,33 +160,6 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 			};
 		}
 	}
-
-	@SubscribeMessage('session:endGame')
-	async endGame(
-		@ConnectedSocket() socket: Socket,
-	): Promise<WSResponse> {
-		try {
-			const session = await this.sessionService.endGame(socket.id);
-
-			this.io.to(session.id).emit('session:update', session);
-
-			return { success: true };
-		} catch (error) {
-			this.logger.error(error.message)
-			return {
-				success: false,
-				error: {
-					code: error.response.code,
-					message: error.message,
-					statusCode: error.status
-				}
-			};
-		}
-	}
-
-	////////////////////////
-	// Current game event //
-	////////////////////////
 
 	@SubscribeMessage('session:guess')
 	async handleGuess(
@@ -236,9 +213,59 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 		}
 	}
 
+	@SubscribeMessage('session:endGame')
+	async endGame(
+		@ConnectedSocket() socket: Socket,
+	): Promise<WSResponse> {
+		try {
+			await this.sessionService.endGame(socket.id);
+			//this.io.to(session.id).emit('session:update', session);
+
+			return { success: true };
+		} catch (error) {
+			this.logger.error(error.message)
+			return {
+				success: false,
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
+			};
+		}
+	}
+
+	@SubscribeMessage('session:playAgain')
+	async playAgain(
+		@ConnectedSocket() socket: Socket,
+	): Promise<WSResponse> {
+		try {
+			// End previous game
+			await this.sessionService.endGame(socket.id);
+
+			// Start new one
+			const session = await this.sessionService.startGame(socket.id);
+
+			this.io.to(session.id).emit('session:update', session);
+
+			return { success: true };
+		} catch (error) {
+			this.logger.error(error.message)
+			return {
+				success: false,
+				error: {
+					code: error.response.code,
+					message: error.message,
+					statusCode: error.status
+				}
+			};
+		}
+	}
+
 	//////////////////////
 	// Connection event //
 	//////////////////////
+
 	@SubscribeMessage('session:reconnect')
 	async reconnect(
 		@ConnectedSocket() socket: Socket,

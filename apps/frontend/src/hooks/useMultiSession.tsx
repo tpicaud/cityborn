@@ -223,6 +223,8 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 
     const endGame = async () => {
         if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
+        
+        setSession({ ...session, currentGame: undefined });
 
         if (isHost) {
             return new Promise<void>((resolve, reject) => {
@@ -238,8 +240,19 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     }
 
     const playAgain = async () => {
-        await endGame();
-        await startGame();
+        if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
+
+        if (isHost) {
+            return new Promise<void>((resolve, reject) => {
+                emit('session:playAgain', (response: { success: boolean; error?: any }) => {
+                    if (response.success) {
+                        resolve();
+                    } else {
+                        reject(new ApiError(response.error.code, response.error.message, response.error.statusCode));
+                    }
+                });
+            });
+        }
     }
 
     //////////////////////////
