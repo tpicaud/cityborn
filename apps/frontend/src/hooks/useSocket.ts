@@ -7,11 +7,16 @@ import { Socket } from "socket.io-client";
 export const useSocket = () => {
     const socket: Socket = getSocket();
     const [connected, setConnected] = useState(false);
+    const [hasDisconnected, setHasDisconnected] = useState(false);
 
     const { invokeError } = useError();
 
-    // Connexion socket à l'initialisation
     useEffect(() => {
+
+        // Connect on mount
+        if (!socket.connected) {
+            socket.connect();
+        }
 
         socket.on("connect", () => {
             console.log("Socket connected:", socket.id);
@@ -20,16 +25,26 @@ export const useSocket = () => {
 
         socket.on("disconnect", () => {
             console.log("Socket disconnected");
+            setHasDisconnected(true);
             setConnected(false);
         });
 
         // handle errors
-        on('error', (error: any) => {
+        socket.on('connect_error', (error) => {
+            console.log('Connection error', error)
+            invokeError(error?.message)
+        });
+
+        socket.on('error', (error: any) => {
             const api_error = new ApiError(error.code, error.message, error.statusCode);
             invokeError(api_error);
-        })
+        });
 
         return () => {
+            socket.off("connect");
+            socket.off("disconnect");
+            socket.off("connect_error");
+            socket.off("error");
             socket.disconnect();
         };
     }, []);
@@ -41,7 +56,7 @@ export const useSocket = () => {
             const hasCallback = typeof lastArg === 'function';
 
             if (hasCallback) {
-                const callback = args.pop(); // Retire le callback de la liste des args
+                const callback = args.pop();
                 socket.emit(event, ...args, callback);
             } else {
                 socket.emit(event, ...args);
@@ -61,9 +76,12 @@ export const useSocket = () => {
 
     return {
         connected,
+        hasDisconnected,
         emit,
         on,
         off,
+        connect: () => socket.connect(),
+        disconnect: () => socket.disconnect(),
         socket,
     };
 };

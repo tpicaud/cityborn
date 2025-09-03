@@ -1,5 +1,6 @@
 export interface Player {
     id: string;
+    isGuest: boolean;
 }
 
 export interface OnlinePlayer extends Player{

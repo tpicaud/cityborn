@@ -48,7 +48,7 @@ export class SessionService {
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: mode === SessionMode.SOLO ? [{ id: 'guest' }] : [],
+            players: mode === SessionMode.SOLO ? [{ id: 'guest', isGuest: true }] : [],
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
@@ -65,7 +65,7 @@ export class SessionService {
         return session;
     }
 
-    async join(socketID: string, sessionID: string, playerID: string) {
+    async join(socketID: string, sessionID: string, playerID: string, user: any) {
         return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
             // Récupération de la session
@@ -80,10 +80,11 @@ export class SessionService {
             if (playerExists) throw new ConflictException({ code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS, message: `Player already exists in session` });
 
             // Register player socket
-            await this.playerService.save(socketID, playerID, sessionID);
+            const isGuest = user ? false : true;
+            await this.playerService.save(socketID, playerID, sessionID, isGuest);
 
             // Créer un nouveau joueur
-            const newPlayer: any = { id: playerID, sessionID: sessionID, connected: true };
+            const newPlayer: OnlinePlayer = { id: playerID, connected: true, isGuest };
             if (session.players.length === 0) session.hostID = playerID;
             session.players.push(newPlayer);
 
@@ -336,7 +337,7 @@ export class SessionService {
     // Connection method //
     ///////////////////////
 
-    async reconnectPlayer(socketID: string, sessionID: string, playerID: string) {
+    async reconnectPlayer(socketID: string, sessionID: string, playerID: string, user: any) {
         return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
             // Récupération du jeu dans la base de données
@@ -350,8 +351,12 @@ export class SessionService {
             const playerIndex = players.findIndex((player: any) => player.id === playerID);
             if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
+            // Prevent non-accounts player to usurpate user accounts
+            const player = players[playerIndex];
+            if (!user && !player.isGuest) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: 'Invalid or missing user token' });
+
             // Register new player socket
-            await this.playerService.save(socketID, playerID, sessionID);
+            await this.playerService.save(socketID, playerID, sessionID, user ? false : true);
 
             // Reconnexion du joueur
             players[playerIndex].connected = true;

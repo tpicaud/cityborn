@@ -3,7 +3,6 @@
 import { SessionMode, GuessObject, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingComponent from '../others/LoadingComponent';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';

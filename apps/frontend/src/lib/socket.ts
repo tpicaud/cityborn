@@ -12,15 +12,15 @@ declare global {
 	}
 }
 
+
 export const getSocket = (): Socket => {
     if (!socket) {
         socket = io(WEBSOCKET_URL, {
             transports: ["websocket"],
-            autoConnect: true,
             withCredentials: true,
         });
     }
     return socket;
 };
 
-// window.socket = getSocket()
+window.socket = getSocket()
