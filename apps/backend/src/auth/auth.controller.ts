@@ -38,7 +38,7 @@ export class AuthController {
     }
 
     @Post('send-verification-email')
-    @UseGuards(AuthGuard)
+    @UseGuards(NotVerifiedAuthGuard)
     async sendVerificationEmail(@CurrentUser() user): Promise<void> {
         return await this.authService.sendVerificationEmail(user);
     }
