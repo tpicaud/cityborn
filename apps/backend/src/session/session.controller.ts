@@ -16,7 +16,7 @@ export class SessionController {
     @UseGuards(OptionalAuthGuard)
     @Post()
     async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user: any): Promise<SessionResponseDto> {
-        if (!user && createSessionDto.mode === SessionMode.MULTI) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
+        if (createSessionDto.mode === SessionMode.MULTI && ((!user || (user && !user.isVerified)))) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
         return {
             session: await this.sessionService.create(createSessionDto)
         }
