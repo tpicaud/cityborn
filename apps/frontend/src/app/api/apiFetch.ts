@@ -6,9 +6,11 @@ export async function apiFetch(
     endpoint: string,
     {
         requestOptions = {},
+        noCookieStore = false
     }: {
         requestOptions?: RequestInit,
-    } = {}
+        noCookieStore?: boolean
+    } = { }
 ): Promise<Response> {
     const options = requestOptions || {};
 
@@ -44,7 +46,7 @@ export async function apiFetch(
             }
         });
 
-        if (res.ok) await storeTokensInCookies(refreshed_access_token, refreshed_refresh_token);
+        if (res.ok && !noCookieStore) await storeTokensInCookies(refreshed_access_token, refreshed_refresh_token);
     }
 
     return res;
