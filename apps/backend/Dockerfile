@@ -45,4 +45,4 @@ EXPOSE 4000
 WORKDIR /app/apps/backend
 
 # Démarrage : à ajuster selon app
-CMD ["pnpm", "start"]
+CMD ["pnpm", "start:prod"]
