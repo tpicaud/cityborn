@@ -2,7 +2,6 @@
 
 import { apiFetch } from "@/app/api/apiFetch";
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
-import { ApiError } from "@cityborn/errors";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
@@ -37,7 +36,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
         }
 
         return data.user;
-    } catch (error) {
+    } catch {
         return null;
     }
 
