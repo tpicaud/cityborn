@@ -9,6 +9,7 @@ import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { RefreshGuard } from './guards/refresh.guard';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CurrentUser } from 'src/user/user.decorator';
+import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -48,7 +49,7 @@ export class AuthController {
     }
 
     @Get('me')
-    @UseGuards(AuthGuard)
+    @UseGuards(NotVerifiedAuthGuard)
     async getProfile(@Request() req): Promise<PublicUserResponseDto> {
         const identifier = req.user.username || req.user.email;
         return await this.authService.getProfile(identifier);
