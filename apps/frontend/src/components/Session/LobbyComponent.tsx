@@ -1,8 +1,7 @@
 'use client';
 
-import { Typography, List, ListItem, ListItemText, TextField, Accordion, AccordionDetails, AccordionSummary, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { Typography, List, ListItem, ListItemText, TextField, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
 import { SessionMode, Session } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
@@ -10,7 +9,6 @@ import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { DialogInput } from "../others/DialogInput";
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import IconButton from "../ui/buttons/IconButton";
 import LoadingButton from "../ui/buttons/LoadingButton";
