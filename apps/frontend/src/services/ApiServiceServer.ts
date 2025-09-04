@@ -5,10 +5,7 @@ import { ApiError } from "@cityborn/errors";
 import { PublicUser } from "@cityborn/types";
 import { cookies } from "next/headers";
 
-const REST_BACKEND_URL = process.env.REST_BACKEND_URL;
-if (!REST_BACKEND_URL) {
-    throw new Error("NEXT_PUBLIC_REST_BACKEND_URL is not defined in environment variables");
-}
+// const REST_BACKEND_URL = process.env.REST_BACKEND_URL ?? 'http://localhost:3001';
 
 //////////////////
 // Auth service //
