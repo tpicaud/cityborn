@@ -7,11 +7,11 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copier les fichiers clés
-COPY turbo.json .
-COPY pnpm-workspace.yaml .
 COPY package.json .
 COPY pnpm-lock.yaml .
-COPY apps ./apps
+COPY pnpm-workspace.yaml .
+COPY turbo.json .
+COPY apps/backend ./apps/backend
 COPY packages ./packages
 
 # Installer les dépendances
@@ -28,7 +28,10 @@ RUN pnpm turbo run build --filter=cityborn-backend
 # Étape 3 — Image finale pour l'app (runtime only)
 FROM node:23-alpine AS runner
 
-WORKDIR /app/apps/backend
+WORKDIR /app
+
+RUN npm install -g pnpm
+RUN pnpm install turbo
 
 # Copier les fichiers nécessaires au runtime
 COPY --from=builder /app/apps /app/apps
@@ -39,5 +42,7 @@ COPY --from=builder /app/package.json ./package.json
 # Expose le port que ton app utilise
 EXPOSE 4000
 
+WORKDIR /app/apps/backend
+
 # Démarrage : à ajuster selon app
-CMD ["node", "dist/main"]
+CMD ["pnpm", "start"]

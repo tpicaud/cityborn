@@ -1,8 +1,17 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/types" },
-    { "path": "apps/backend" },
-    { "path": "apps/frontend" }
+    {
+      "path": "packages/types"
+    },
+    {
+      "path": "package/errors"
+    },
+    {
+      "path": "apps/backend"
+    },
+    {
+      "path": "apps/frontend"
+    }
   ]
 }
