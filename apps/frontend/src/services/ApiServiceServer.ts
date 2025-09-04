@@ -22,12 +22,16 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
 
         if (!access_token && !refresh_token) return null;
 
+        console.log('get user')
         const response = await apiFetch(`/auth/me`, {
             requestOptions: {
                 method: 'GET',
                 cache: 'no-store'
             },
+            noCookieStore: true
         });
+
+        console.log(response.status);
 
         const data = await response.json();
 
