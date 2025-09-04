@@ -88,11 +88,20 @@ export const SignUpComponent = ({
         e.preventDefault();
 
         if (formValues.password !== formValues.confirmPassword) {
-            alert("Les mots de passe ne correspondent pas !");
+            invokeError("Les mots de passe ne correspondent pas");
+            setIsSignUpFormSubmitting(false);
             return;
         }
         if (!formValues.birthdate) {
             alert("La date de naissance n'est pas rempli");
+            setIsSignUpFormSubmitting(false);
+            return;
+        }
+
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
+        if (!passwordRegex.test(formValues.password)) {
+            invokeError("Le mot de passe doit contenir au moins une majuscule et un chiffre.");
+            setIsSignUpFormSubmitting(false);
             return;
         }
 
