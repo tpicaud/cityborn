@@ -1,4 +1,10 @@
+import { GameRecord } from "./Game.js";
+
 export class PublicUser {
+
+  /////////////
+  // Profile //
+  /////////////
   id: number;
 
   username: string;
@@ -10,4 +16,13 @@ export class PublicUser {
   createdAt?: string;
 
   updatedAt?: string;
+
+  ///////////////
+  // Relations //
+  ///////////////
+  relations?: {
+
+    games?: GameRecord[]
+    
+  }
 }
