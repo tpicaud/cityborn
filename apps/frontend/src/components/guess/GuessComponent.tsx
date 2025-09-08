@@ -28,7 +28,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
 
     const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } = useGuess(handleGuess);
-    const [isRoundCountdownFinished, setIsRoundCountdownFinished] = useState(false);
+    const [internalRoundStatus, setInternalRoundStatus] = useState<'countdown' | 'guessing' | 'results'>('countdown');
 
     // Map properties
     const mapProps = {
@@ -41,9 +41,21 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     };
 
     useEffect(() => {
-        if (game.state.currentRound?.status === RoundStatus.GUESSING) {
-            resetPreGuess()
-            setIsRoundCountdownFinished(false)
+
+        switch (game.state.currentRound?.status) {
+            case RoundStatus.GUESSING:
+                resetPreGuess();
+                setInternalRoundStatus('countdown');
+                break;
+
+            case RoundStatus.SHOWING_RESULTS:
+                setInternalRoundStatus('results');
+                break;
+
+            default:
+                resetPreGuess();
+                setInternalRoundStatus('countdown');
+                break;
         }
     }, [game.state.currentRound?.status])
 
@@ -56,11 +68,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
                 />
             </div>
 
-            {!isRoundCountdownFinished && (
-                <RoundCountdownComponent onCountdownEnd={() => setIsRoundCountdownFinished(true)} />
+            {internalRoundStatus === 'countdown' && (
+                <RoundCountdownComponent onCountdownEnd={() => setInternalRoundStatus('guessing')} />
             )}
 
-            {isRoundCountdownFinished && (
+            {(internalRoundStatus === 'guessing' || internalRoundStatus === 'results') && !(internalRoundStatus === 'results' && game.state.currentRound?.status === RoundStatus.GUESSING) && (
                 <div className="z-10">
                     <OverlayComponent
                         localPlayerID={localPlayerID}
