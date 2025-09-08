@@ -1,12 +1,21 @@
 import { ErrorCode } from '@cityborn/errors';
-import { Inject, Injectable, InternalServerErrorException, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
+export class RedisService implements OnModuleInit, OnModuleDestroy {
+
+    private readonly logger = new Logger(RedisService.name);
+
     constructor(
         @Inject('REDIS_CLIENT') readonly redisClient: Redis,
     ) { }
+
+    async onModuleInit() {
+        this.redisClient.on('error', (err) => {
+            this.logger.error('Redis Client Error:', err);
+        });
+    }
 
     async set(key: string, value: string, ttlSeconds?: number) {
         try {
