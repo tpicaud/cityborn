@@ -24,7 +24,7 @@ export class UserMapper {
           players: game.players as unknown as Player[],
           guessObjectsIds: game.guessObjectsIds,
           results: game.results as unknown as Record<string, PlayerResults>,
-          createdAt: game.createdAt.toISOString(),
+          createdAt: game.createdAt.toISOString()
         }))
       }
     }

@@ -4,9 +4,11 @@ import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { useError } from "@/contexts/ErrorContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useSoloSession(localPlayerID: string): IUseSession {
 
+    const { user } = useAuth();
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [game, setGame] = useState<Game>();
@@ -204,8 +206,17 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         }
     };
 
-    const endGame = () => {
+    const endGame = async () => {
         if (!session || !session.currentGame) return;
+
+        await ApiServiceClient.saveGameRecords({
+            mode: SessionMode.SOLO,
+            gameConfig: session.gameConfig,
+            players: session.players,
+            guessObjectsIds: session.currentGame.state.guessObjectsIds,
+            results: session.currentGame.state.results,
+        })
+
         setSession({
             ...session,
             currentGame: undefined

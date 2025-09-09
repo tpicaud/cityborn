@@ -1,5 +1,5 @@
 import { ApiError } from "@cityborn/errors";
-import { Game, GameConfig, SessionMode, GuessObject, PublicUser, Session } from "@cityborn/types";
+import { Game, GameConfig, SessionMode, GuessObject, PublicUser, Session, GameRecord } from "@cityborn/types";
 
 //////////////////
 // Auth service //
@@ -107,6 +107,43 @@ export async function verifyEmail(verification_token: string): Promise<void> {
     }
 }
 
+//////////////////
+// User service //
+//////////////////
+
+export async function getGameRecords(): Promise<GameRecord[]> {
+    const response = await fetch(`/api/user/game-records`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
+    }
+
+    return data.gameRecords as GameRecord[];
+}
+
+export async function saveGameRecords(gameRecord: GameRecord): Promise<void> {
+    const response = await fetch(`/api/user/game-records`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameRecord }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
+    }
+}
+
 //////////////////////
 // Sessions service //
 //////////////////////
@@ -185,7 +222,7 @@ export async function createSoloGame(gameConfig: GameConfig) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({gameConfig}),
+        body: JSON.stringify({ gameConfig }),
     });
 
     const data = await response.json();

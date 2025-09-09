@@ -24,11 +24,11 @@ export interface GameState {
 }
 
 export interface GameRecord {
-    id: number;
+    id?: number;
     mode: SessionMode,
     gameConfig: GameConfig,
     players: Player[],
     guessObjectsIds: string[],
     results: Record<string, PlayerResults>,
-    createdAt: string;
+    createdAt?: string;
 }
