@@ -9,9 +9,19 @@ export class PublicUser {
 
   username: string;
 
+  isVerified: boolean;
+
+}
+
+export class User extends PublicUser {
+
+  /////////////
+  // Profile //
+  /////////////
+
   email: string;
 
-  isVerified?: boolean;
+  birthdate?: string;
 
   createdAt?: string;
 
@@ -23,6 +33,6 @@ export class PublicUser {
   relations?: {
 
     games?: GameRecord[]
-    
+
   }
 }

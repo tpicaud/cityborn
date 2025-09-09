@@ -2,7 +2,7 @@
 
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
 import { ApiError } from "@cityborn/errors";
-import { PublicUser } from "@cityborn/types";
+import { User } from "@cityborn/types";
 import { cookies } from "next/headers";
 
 const REST_BACKEND_URL = process.env.REST_BACKEND_URL;
@@ -20,7 +20,7 @@ export async function hasToken(): Promise<boolean> {
     return !!token;
 }
 
-export async function getCurrentUser(): Promise<PublicUser | null> {
+export async function getCurrentUser(): Promise<User | null> {
 
     const access_token = await getAccessToken();
     const refresh_token = await getRefreshToken();
@@ -42,7 +42,7 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     }
 
     if (!data.user) return null;
-    return data.user as PublicUser;
+    return data.user as User;
 }
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {

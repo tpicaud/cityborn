@@ -1,13 +1,14 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UseFilters } from '@nestjs/common';
-import { Categories, defaultGuess, Game, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Categories, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
 import { IdService } from 'src/id/id.service';
 import { ErrorCode } from '@cityborn/errors';
-import { GameConfig } from './session.schema';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SessionService {
@@ -21,7 +22,8 @@ export class SessionService {
         private readonly lockService: LockService,
         private readonly playerService: PlayerService,
         private readonly idService: IdService,
-        private readonly guessObjectService: GuessObjectService
+        private readonly guessObjectService: GuessObjectService,
+        private readonly prisma: PrismaService
     ) { }
 
     private getKey(id: string): string {
@@ -48,7 +50,7 @@ export class SessionService {
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: mode === SessionMode.SOLO ? [{ id: 'guest', isGuest: true }] : [],
+            players: mode === SessionMode.SOLO ? [{ username: 'guest', isGuest: true }] : [],
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
@@ -84,7 +86,12 @@ export class SessionService {
             await this.playerService.save(socketID, playerID, sessionID, isGuest);
 
             // Créer un nouveau joueur
-            const newPlayer: OnlinePlayer = { id: playerID, connected: true, isGuest };
+            const newPlayer: OnlinePlayer = {
+                username: playerID,
+                isGuest,
+                id: isGuest ? undefined : user.sub,
+                connected: true,
+            };
             if (session.players.length === 0) session.hostID = playerID;
             session.players.push(newPlayer);
 
@@ -120,7 +127,7 @@ export class SessionService {
         if (!newHost) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
         // Update gameConfig
-        session.hostID = newHost.id;
+        session.hostID = newHost.username;
 
         await this.saveSession(session);
         return session;
@@ -248,8 +255,8 @@ export class SessionService {
                 if (allConnectedPlayersGuessed) {
                     // Add null guesses
                     for (const player of session.players) {
-                        if (!game.state.currentRound.playersGuesses[player.id]) {
-                            game.state.currentRound.playersGuesses[player.id] = defaultGuess;
+                        if (!game.state.currentRound.playersGuesses[player.username]) {
+                            game.state.currentRound.playersGuesses[player.username] = defaultGuess;
                         }
                     }
 
@@ -309,7 +316,7 @@ export class SessionService {
         // Check if game ended
         if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
             // Store game in DB and save ended session
-            await this.endGame(game);
+            await this.endGame(session, game);
 
             const lobbySession: Session = { ...session, status: SessionStatus.IN_LOBBY, currentGame: undefined };
             await this.saveSession(lobbySession);
@@ -397,7 +404,7 @@ export class SessionService {
 
                 const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
                 if (connectedPlayers.length > 0) {
-                    session.hostID = connectedPlayers[0].id;
+                    session.hostID = connectedPlayers[0].username;
                 } else {
                     session.hostID = '';
                 }
@@ -421,6 +428,7 @@ export class SessionService {
     // Store //
     ///////////
 
+    // Redis
     private async getSession(sessionID: string): Promise<Session | null> {
         return await this.redisService.getJSON<Session>(this.getKey(sessionID));
     }
@@ -433,17 +441,36 @@ export class SessionService {
         await this.redisService.del(this.getKey(sessionID));
     }
 
+    // PostgreSQL
+    private async storeGame(gameRecord: GameRecord): Promise<void> {
+
+    }
+
 
     //////////////////////
     // Private function //
     //////////////////////
 
-    private async endGame(game: Game): Promise<void> {
-        // End game
-        // cloned_game.status = GameStatus.FINISHED;
-        // cloned_game.state.currentRound = undefined;
-
-        // TODO Store game in database
+    private async endGame(session: Session, game: Game): Promise<void> {
+        try {
+            // Store game in database
+            await this.prisma.gameRecord.create({
+                data: {
+                    mode: session.mode,
+                    gameConfig: session.gameConfig as unknown as Prisma.InputJsonValue,
+                    players: session.players as unknown as Prisma.InputJsonValue,
+                    guessObjectsIds: game.state.guessObjectsIds,
+                    results: game.state.results as unknown as Prisma.InputJsonValue,
+                    users: {
+                        connect: session.players
+                            .filter(player => !player.isGuest)
+                            .map(player => ({ id: player.id }))
+                    }
+                }
+            });
+        } catch (error) {
+            this.logger.error(`Error storing game in db: ${error}`)
+        }
     }
 
     private async generateUniqueSessionID(): Promise<string> {
