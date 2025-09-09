@@ -1,10 +1,8 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { User as PrismaUser } from '@prisma/client';
-import { PublicUser } from '@cityborn/types';
-import { toPublicUser } from './user.mapper';
 import { v4 as uuidv4 } from 'uuid';
 import { ErrorCode } from '@cityborn/errors';
+import { User as PrismaUser } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -13,23 +11,30 @@ export class UserService {
         private readonly prisma: PrismaService
     ) { }
 
-    async createUser(data: { email: string; username: string; isVerified?: boolean, password?: string, birthdate?: string }): Promise<PrismaUser> {
-        return this.prisma.user.create({ data });
+    async createUser(
+        data: {
+            email: string;
+            username: string;
+            isVerified?: boolean,
+            password?: string,
+            birthdate?: string
+        }): Promise<PrismaUser> {
+        return await this.prisma.user.create({ data });
     }
 
     async findByIdentifier(identifier: string): Promise<PrismaUser | null> {
-        return this.prisma.user.findFirst({
+        return await this.prisma.user.findFirst({
             where: {
                 OR: [
                     { email: identifier },
                     { username: identifier }
                 ]
             }
-        });
+        })
     }
 
     async findById(id: number): Promise<PrismaUser | null> {
-        return this.prisma.user.findUnique({ where: { id } });
+        return await this.prisma.user.findUnique({ where: { id } });
     }
 
     async validateIdentifiers(username: string, email: string): Promise<void> {
@@ -90,9 +95,5 @@ export class UserService {
         await this.prisma.emailVerificationToken.delete({
             where: { id: record.id },
         });
-    }
-
-    getPublicUser(user: PrismaUser): PublicUser {
-        return toPublicUser(user);
     }
 }

@@ -1,5 +1,5 @@
 import { PublicUser } from '@cityborn/types';
-import { IsNumber, IsString, IsEmail, IsDateString } from 'class-validator';
+import { IsNumber, IsString, IsBoolean } from 'class-validator';
 
 export class PublicUserDto implements PublicUser {
   @IsNumber()
@@ -8,12 +8,6 @@ export class PublicUserDto implements PublicUser {
   @IsString()
   username: string;
 
-  @IsEmail()
-  email: string;
-
-  @IsDateString()
-  createdAt?: string;
-
-  @IsDateString()
-  updatedAt?: string;
+  @IsBoolean()
+  isVerified: boolean;
 }

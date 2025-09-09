@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
+import { UserMapper } from 'src/user/user.mapper';
 
 @Injectable()
 export class AuthService {
@@ -42,6 +43,7 @@ export class AuthService {
             birthdate,
             password: hash,
         });
+        if (!user) throw new InternalServerErrorException({ code: ErrorCode.UNKNOWN_ERROR, message: `Error creating user in database` });
 
         // Send verification email
         const verification_token = await this.userService.createVerificationToken(user);
@@ -54,7 +56,7 @@ export class AuthService {
         return {
             access_token,
             refresh_token,
-            user: this.userService.getPublicUser(user)
+            user: UserMapper.toUserDto(user)
         }
     }
 
@@ -80,7 +82,7 @@ export class AuthService {
         return {
             access_token,
             refresh_token,
-            user: this.userService.getPublicUser(user)
+            user: UserMapper.toUserDto(user)
         }
     }
 
@@ -109,7 +111,7 @@ export class AuthService {
         return {
             access_token,
             refresh_token,
-            user: this.userService.getPublicUser(user)
+            user: UserMapper.toUserDto(user)
         }
     }
 
@@ -123,7 +125,7 @@ export class AuthService {
         return {
             access_token,
             refresh_token,
-            user: this.userService.getPublicUser(user)
+            user: UserMapper.toUserDto(user)
         }
     }
 
@@ -150,7 +152,7 @@ export class AuthService {
         if (!user) throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User not found` });
 
         return {
-            user: this.userService.getPublicUser(user)
+            user: UserMapper.toUserDto(user)
         }
     }
 
