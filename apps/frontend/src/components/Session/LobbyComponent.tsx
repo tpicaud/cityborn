@@ -125,12 +125,12 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                     : // Sinon, pas de tri
                                     session.players
                                 ).map((player) => (
-                                    <ListItem key={player.id} divider>
+                                    <ListItem key={player.username} divider>
                                         <ListItemText
                                             primary={
                                                 player.username === session.hostID
-                                                    ? `${player.id} (Host)`
-                                                    : `${player.id}`
+                                                    ? `${player.username} (Host)`
+                                                    : `${player.username}`
                                             }
                                             secondary={
                                                 "connected" in player

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         const data = await response.json();
 
         if (!response.ok) {
-            const message = data.message || "Failed to fetch current user";
+            const message = data.message;
             return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
         }
 

@@ -15,6 +15,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import LoadingIconButton from "./ui/buttons/LoadingIconButton";
 import IconButton from "./ui/buttons/IconButton";
 import { useError } from "@/contexts/ErrorContext";
+import { ProfileComponent } from "./menu/ProfileComponent";
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -30,7 +31,7 @@ export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
     const { invokeError } = useError();
-    const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up'>('menu');
+    const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up' | 'profile'>('menu');
     const [openProfile, setOpenProfile] = useState(false);
     const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
 
@@ -53,6 +54,10 @@ export default function HomeComponent() {
 
         case 'menu':
             content = <MenuComponent setState={setState} setSentVerificationEmail={setSentVerificationEmail} sentVerificationEmail={sentVerificationEmail} />
+            break;
+
+        case 'profile':
+            content = <ProfileComponent user={user!} />
             break;
 
         default:
@@ -87,10 +92,11 @@ export default function HomeComponent() {
                             <div className="flex flex-row justify-end">
                                 <IconButton
                                     onClick={async () => {
-                                        setOpenProfile(true);
+                                        setState('profile');
+                                        //setOpenProfile(true);
                                     }}
                                     sx={{
-                                        visibility: user ? "visible" : "hidden"
+                                        visibility: (user && state === 'menu') ? "visible" : "hidden"
                                     }}
                                 >
                                     <AccountCircleIcon />

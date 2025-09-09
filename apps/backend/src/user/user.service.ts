@@ -1,8 +1,12 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ErrorCode } from '@cityborn/errors';
-import { User as PrismaUser } from '@prisma/client';
+import { Prisma, User as PrismaUser } from '@prisma/client';
+import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
+import { GameMapper } from 'src/session/game.mapper';
+import { GameRecordDto } from 'src/session/dto/game.dto';
+import { SessionMode } from '@cityborn/types';
 
 @Injectable()
 export class UserService {
@@ -53,6 +57,44 @@ export class UserService {
         if (existingUser.email === email) {
             throw new ConflictException({ code: ErrorCode.USER_EMAIL_ALREADY_TAKEN, message: 'Email already taken' });
         }
+    }
+
+
+    ///////////////
+    // Relations //
+    ///////////////
+    async getGameRecords(user_id: number): Promise<GameRecordsResponseDto> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: user_id },
+            include: {
+                gameRecords: {
+                    take: 5,
+                    orderBy: { createdAt: "desc" },
+                },
+            },
+        });
+        if (!user) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: `Invalid credentials` });
+
+        return { gameRecords: GameMapper.toGameRecordDto(user.gameRecords) };
+    }
+
+    async saveSoloGameRecord(user_id: number, gameRecord: GameRecordDto): Promise<void> {
+        if (gameRecord.mode !== SessionMode.SOLO) {
+            throw new BadRequestException({ code: ErrorCode.BAD_REQUEST, message: 'Cannot save game with this gameMode' })
+        }
+
+        await this.prisma.gameRecord.create({
+            data: {
+                mode: gameRecord.mode,
+                gameConfig: gameRecord.gameConfig as unknown as Prisma.InputJsonValue,
+                players: gameRecord.players as unknown as Prisma.InputJsonValue,
+                guessObjectsIds: gameRecord.guessObjectsIds,
+                results: gameRecord.results as unknown as Prisma.InputJsonValue,
+                users: {
+                    connect: { id: user_id }
+                }
+            }
+        });
     }
 
 
