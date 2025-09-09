@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export async function getTokensCookiesHeaders(access_token: string, refresh_token: string) {
     const secure = process.env.NODE_ENV === 'production';
-    
+
     const accessCookie = [
         `access_token=${access_token}`,
         `HttpOnly`,

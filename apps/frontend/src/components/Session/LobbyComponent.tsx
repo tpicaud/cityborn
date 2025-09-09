@@ -12,7 +12,6 @@ import dynamic from "next/dynamic";
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import IconButton from "../ui/buttons/IconButton";
 import LoadingButton from "../ui/buttons/LoadingButton";
-import Button from "../ui/buttons/Button";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -244,7 +243,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                     </LoadingButton>
 
                     {/* Menu */}
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         fullWidth
@@ -252,7 +251,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         onClick={() => router.push('/')}
                     >
                         Menu
-                    </Button>
+                    </LoadingButton>
                 </Box >
             </div >
 

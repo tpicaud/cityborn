@@ -108,11 +108,6 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
     handleGuess,
     handleIsTimeUp,
 }) => {
-
-    useEffect(() => {
-        console.log('Game updated in OverlayComponent', game)
-    }, [game])
-
     const [timerEnded, setTimerEnded] = useState(false);
 
     useEffect(() => {

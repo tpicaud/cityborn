@@ -1,14 +1,9 @@
 'use server';
 
+import { apiFetch } from "@/app/api/apiFetch";
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
-import { ApiError } from "@cityborn/errors";
 import { User } from "@cityborn/types";
 import { cookies } from "next/headers";
-
-const REST_BACKEND_URL = process.env.REST_BACKEND_URL;
-if (!REST_BACKEND_URL) {
-    throw new Error("NEXT_PUBLIC_REST_BACKEND_URL is not defined in environment variables");
-}
 
 //////////////////
 // Auth service //
@@ -21,28 +16,56 @@ export async function hasToken(): Promise<boolean> {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
+    try {
+        const access_token = await getAccessToken();
+        const refresh_token = await getRefreshToken();
 
-    const access_token = await getAccessToken();
-    const refresh_token = await getRefreshToken();
+        if (!access_token && !refresh_token) return null;
 
-    if (!access_token && !refresh_token) return null;
+        console.log('get user')
+        const response = await apiFetch(`/auth/me`, {
+            requestOptions: {
+                method: 'GET',
+                cache: 'no-store'
+            },
+            noCookieStore: true
+        });
 
-    const response = await fetch(`http://localhost:3000/api/auth/me`, {
-        method: 'GET',
-        headers: {
-            Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`,
-        },
-        cache: 'no-store'
-    });
+        console.log(response.status);
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (!response.ok) {
-        throw new ApiError(data.code, data.message, data.statusCode);
+        if (!response.ok) {
+            return null;
+        }
+
+        return data.user;
+    } catch {
+        return null;
     }
 
-    if (!data.user) return null;
-    return data.user as User;
+    //////////////////
+    // const access_token = await getAccessToken();
+    // const refresh_token = await getRefreshToken();
+
+    // if (!access_token && !refresh_token) return null;
+
+    // const response = await fetch(`/api/auth/me`, {
+    //     method: 'GET',
+    //     headers: {
+    //         Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`,
+    //     },
+    //     cache: 'no-store'
+    // });
+
+    // const data = await response.json();
+
+    // if (!response.ok) {
+    //     throw new ApiError(data.code, data.message, data.statusCode);
+    // }
+
+    // if (!data.user) return null;
+    // return data.user as PublicUser;
 }
 
 export async function signUp(username: string, email: string, password: string): Promise<void> {
