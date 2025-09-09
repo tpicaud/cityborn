@@ -78,7 +78,7 @@ export class SessionService {
             if (session.currentGame) throw new ForbiddenException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session already in game` });
 
             // Check si l'id du joueur est déjà dans la session
-            const playerExists = session.players.some((player: any) => player.id === playerID);
+            const playerExists = session.players.some((player: any) => player.username === playerID);
             if (playerExists) throw new ConflictException({ code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS, message: `Player already exists in session` });
 
             // Register player socket
@@ -123,7 +123,7 @@ export class SessionService {
         if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Check si le nouveau host est dans la session
-        const newHost = session.players.find((player: any) => player.id === newHostID && player.connected);
+        const newHost = session.players.find((player: any) => player.username === newHostID && player.connected);
         if (!newHost) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
         // Update gameConfig
@@ -233,11 +233,11 @@ export class SessionService {
             const game = session.currentGame;
 
             // Vérifier si playerID existe dans la liste des joueurs (game.players)
-            const playerExists = session.players.some((player: any) => player.id === playerID);
+            const playerExists = session.players.some((player: any) => player.username === playerID);
             if (!playerExists) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` })
 
             // Vérifier si playerID est connecté
-            const playerConnected = session.players.some((player: any) => player.id === playerID && player.connected);
+            const playerConnected = session.players.some((player: any) => player.username === playerID && player.connected);
             if (!playerConnected) throw new UnauthorizedException({ code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED, message: `Player is not connected` });
 
             // Vérifier si un round est actif
@@ -250,7 +250,7 @@ export class SessionService {
                 // Vérifier si tout le monde à guess
                 const connectedPlayers = session.players.filter((player: any) => player.connected);
                 const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
-                    game.state.currentRound!.playersGuesses!.hasOwnProperty(player.id)
+                    game.state.currentRound!.playersGuesses!.hasOwnProperty(player.username)
                 );
                 if (allConnectedPlayersGuessed) {
                     // Add null guesses
@@ -296,8 +296,8 @@ export class SessionService {
 
         // Register result
         session.players.forEach((player: any) => {
-            const guess = game.state.currentRound!.playersGuesses![player.id];
-            const playerResults = game.state.results[player.id];
+            const guess = game.state.currentRound!.playersGuesses![player.username];
+            const playerResults = game.state.results[player.username];
 
             const newResult = {
                 guessObjectId: game.state.currentRound?.guessObjectId ?? '',
@@ -308,7 +308,7 @@ export class SessionService {
             if (playerResults && playerResults.results) {
                 playerResults.results.push(newResult);
             } else {
-                game.state.results[player.id] = { results: [newResult] };
+                game.state.results[player.username] = { results: [newResult] };
             }
         });
 
@@ -355,7 +355,7 @@ export class SessionService {
             const players = session.players as OnlinePlayer[];
 
             // Check si l'id du joueur est dans la session
-            const playerIndex = players.findIndex((player: any) => player.id === playerID);
+            const playerIndex = players.findIndex((player: any) => player.username === playerID);
             if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Prevent non-accounts player to usurpate user accounts
@@ -391,7 +391,7 @@ export class SessionService {
             if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
             // Check si l'id du joueur est dans la partie
-            const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
+            const playerIndex = session.players.findIndex((player: any) => player.username === playerID);
             if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Déconnexion du joueur
@@ -402,19 +402,13 @@ export class SessionService {
             if (isHost) {
                 const players = session.players;
 
-                const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
+                const connectedPlayers = players.filter((player: any) => player.connected && player.username !== playerID);
                 if (connectedPlayers.length > 0) {
                     session.hostID = connectedPlayers[0].username;
                 } else {
                     session.hostID = '';
                 }
             }
-
-            // Notifier la game
-            // if (session.currentGame && session.currentGame.status === 'FINISHED') {
-            //     session.status = SessionStatus.IN_LOBBY;
-            //     session.currentGame = undefined;
-            // }
 
             // Update states
             await this.playerService.deletePlayer(socketID);
@@ -439,11 +433,6 @@ export class SessionService {
 
     private async deleteSession(sessionID: string): Promise<void> {
         await this.redisService.del(this.getKey(sessionID));
-    }
-
-    // PostgreSQL
-    private async storeGame(gameRecord: GameRecord): Promise<void> {
-
     }
 
 
