@@ -48,7 +48,7 @@ export default function MenuComponent({
         }
     }
 
-    const handleJoin = async () => {
+     const handleJoin = async () => {
         try {
             await ApiServiceClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
@@ -150,14 +150,14 @@ export default function MenuComponent({
                 </div>
 
                 <div className='flex flex-row gap-2 items-center justify-between w-full'>
-                    <Button
+                    <LoadingButton
                         variant="contained"
                         color="primary"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
                         onClick={handleSoloPlay}
                     >
                         <b>SOLO</b>
-                    </Button>
+                    </LoadingButton>
                     <LoadingButton
                         variant="contained"
                         color="primary"
