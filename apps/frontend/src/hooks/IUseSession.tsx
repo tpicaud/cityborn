@@ -7,7 +7,7 @@ export interface IUseSession {
     updateGameConfig: (gameConfig: Partial<GameConfig>) => void;
 
     // Game
-    startGame: () => void;
+    startGame: () => Promise<void>;
     guess: (guess: Guess) => void;
     nextRound: () => void;
     endGame: () => void;

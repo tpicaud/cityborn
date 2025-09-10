@@ -36,14 +36,14 @@ export async function POST(req: NextRequest) {
             }
         })
 
-        const data = await response.json();
 
         if (!response.ok) {
+            const data = await response.json();
             const message = data.message;
             return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
         }
 
-        return NextResponse.json(data, { status: 200 });
+        return NextResponse.json({ message: 'success' }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
             { message: error.message || "Internal Server Error", statusCode: 500 },

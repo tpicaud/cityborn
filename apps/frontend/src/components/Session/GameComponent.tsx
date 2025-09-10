@@ -31,8 +31,8 @@ export const GameComponent = ({ localPlayerID, isHost, session, game, handleGues
                 variant="contained"
                 color="error"
                 disabled={!isHost}
-                onClick={() => {
-                    handleNextRound();
+                onClick={async () => {
+                    await handleNextRound();
                 }}
                 sx={{
                     borderRadius: 6,

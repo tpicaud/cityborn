@@ -23,7 +23,7 @@ function GuessButton({
     return (
         <LoadingButton
             variant="contained"
-            onClick={() => preGuess && handleGuess(preGuess)}
+            onClick={async () => preGuess && await handleGuess(preGuess)}
             disabled={disabled}
             sx={{
                 color: 'white',
