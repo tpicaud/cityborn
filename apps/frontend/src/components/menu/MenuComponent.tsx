@@ -17,7 +17,7 @@ export default function MenuComponent({
     setSentVerificationEmail,
     sentVerificationEmail
 }: {
-    setState: Dispatch<SetStateAction<"menu" | "sign-in" | "sign-up">>;
+    setState: Dispatch<SetStateAction<"menu" | "sign-in" | "sign-up" | "profile">>;
     setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
     sentVerificationEmail: boolean
 }) {

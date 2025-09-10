@@ -1,9 +1,10 @@
 export interface Player {
-    id: string;
+    username;
     isGuest: boolean;
+    id?: number;
 }
 
-export interface OnlinePlayer extends Player{
+export interface OnlinePlayer extends Player {
     connected: boolean
 }
 

@@ -1,13 +1,14 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UseFilters } from '@nestjs/common';
-import { Categories, defaultGuess, Game, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Categories, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
 import { IdService } from 'src/id/id.service';
 import { ErrorCode } from '@cityborn/errors';
-import { GameConfig } from './session.schema';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SessionService {
@@ -21,7 +22,8 @@ export class SessionService {
         private readonly lockService: LockService,
         private readonly playerService: PlayerService,
         private readonly idService: IdService,
-        private readonly guessObjectService: GuessObjectService
+        private readonly guessObjectService: GuessObjectService,
+        private readonly prisma: PrismaService
     ) { }
 
     private getKey(id: string): string {
@@ -33,14 +35,14 @@ export class SessionService {
     // Session method //
     ////////////////////
 
-    async create(dto: CreateSessionDto): Promise<Session> {
+    async create(dto: CreateSessionDto, user: any): Promise<Session> {
         const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
 
         const newSession: Session = {
             id: sessionID,
-            hostID: mode === SessionMode.SOLO ? 'guest' : '',
+            hostID: mode === SessionMode.SOLO ? user ? user.username : 'guest' : '',
             mode: mode,
             status: SessionStatus.IN_LOBBY,
             gameConfig: {
@@ -48,7 +50,7 @@ export class SessionService {
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: mode === SessionMode.SOLO ? [{ id: 'guest', isGuest: true }] : [],
+            players: mode === SessionMode.SOLO ? [{ username: user ? user.username : 'guest', isGuest: user ? false : true }] : [],
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
@@ -76,7 +78,7 @@ export class SessionService {
             if (session.currentGame) throw new ForbiddenException({ code: ErrorCode.SESSION_ALREADY_IN_GAME, message: `Session already in game` });
 
             // Check si l'id du joueur est déjà dans la session
-            const playerExists = session.players.some((player: any) => player.id === playerID);
+            const playerExists = session.players.some((player: any) => player.username === playerID);
             if (playerExists) throw new ConflictException({ code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS, message: `Player already exists in session` });
 
             // Register player socket
@@ -84,7 +86,12 @@ export class SessionService {
             await this.playerService.save(socketID, playerID, sessionID, isGuest);
 
             // Créer un nouveau joueur
-            const newPlayer: OnlinePlayer = { id: playerID, connected: true, isGuest };
+            const newPlayer: OnlinePlayer = {
+                username: playerID,
+                isGuest,
+                id: isGuest ? undefined : user.sub,
+                connected: true,
+            };
             if (session.players.length === 0) session.hostID = playerID;
             session.players.push(newPlayer);
 
@@ -116,11 +123,11 @@ export class SessionService {
         if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Check si le nouveau host est dans la session
-        const newHost = session.players.find((player: any) => player.id === newHostID && player.connected);
+        const newHost = session.players.find((player: any) => player.username === newHostID && player.connected);
         if (!newHost) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
         // Update gameConfig
-        session.hostID = newHost.id;
+        session.hostID = newHost.username;
 
         await this.saveSession(session);
         return session;
@@ -226,11 +233,11 @@ export class SessionService {
             const game = session.currentGame;
 
             // Vérifier si playerID existe dans la liste des joueurs (game.players)
-            const playerExists = session.players.some((player: any) => player.id === playerID);
+            const playerExists = session.players.some((player: any) => player.username === playerID);
             if (!playerExists) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` })
 
             // Vérifier si playerID est connecté
-            const playerConnected = session.players.some((player: any) => player.id === playerID && player.connected);
+            const playerConnected = session.players.some((player: any) => player.username === playerID && player.connected);
             if (!playerConnected) throw new UnauthorizedException({ code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED, message: `Player is not connected` });
 
             // Vérifier si un round est actif
@@ -243,13 +250,13 @@ export class SessionService {
                 // Vérifier si tout le monde à guess
                 const connectedPlayers = session.players.filter((player: any) => player.connected);
                 const allConnectedPlayersGuessed = connectedPlayers.every((player: any) =>
-                    game.state.currentRound!.playersGuesses!.hasOwnProperty(player.id)
+                    game.state.currentRound!.playersGuesses!.hasOwnProperty(player.username)
                 );
                 if (allConnectedPlayersGuessed) {
                     // Add null guesses
                     for (const player of session.players) {
-                        if (!game.state.currentRound.playersGuesses[player.id]) {
-                            game.state.currentRound.playersGuesses[player.id] = defaultGuess;
+                        if (!game.state.currentRound.playersGuesses[player.username]) {
+                            game.state.currentRound.playersGuesses[player.username] = defaultGuess;
                         }
                     }
 
@@ -289,8 +296,8 @@ export class SessionService {
 
         // Register result
         session.players.forEach((player: any) => {
-            const guess = game.state.currentRound!.playersGuesses![player.id];
-            const playerResults = game.state.results[player.id];
+            const guess = game.state.currentRound!.playersGuesses![player.username];
+            const playerResults = game.state.results[player.username];
 
             const newResult = {
                 guessObjectId: game.state.currentRound?.guessObjectId ?? '',
@@ -301,7 +308,7 @@ export class SessionService {
             if (playerResults && playerResults.results) {
                 playerResults.results.push(newResult);
             } else {
-                game.state.results[player.id] = { results: [newResult] };
+                game.state.results[player.username] = { results: [newResult] };
             }
         });
 
@@ -309,7 +316,7 @@ export class SessionService {
         // Check if game ended
         if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
             // Store game in DB and save ended session
-            await this.endGame(game);
+            await this.endGame(session, game);
 
             const lobbySession: Session = { ...session, status: SessionStatus.IN_LOBBY, currentGame: undefined };
             await this.saveSession(lobbySession);
@@ -348,7 +355,7 @@ export class SessionService {
             const players = session.players as OnlinePlayer[];
 
             // Check si l'id du joueur est dans la session
-            const playerIndex = players.findIndex((player: any) => player.id === playerID);
+            const playerIndex = players.findIndex((player: any) => player.username === playerID);
             if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Prevent non-accounts player to usurpate user accounts
@@ -384,7 +391,7 @@ export class SessionService {
             if (!session) throw new NotFoundException({ code: ErrorCode.SESSION_NOT_FOUND, message: `Session not found` });
 
             // Check si l'id du joueur est dans la partie
-            const playerIndex = session.players.findIndex((player: any) => player.id === playerID);
+            const playerIndex = session.players.findIndex((player: any) => player.username === playerID);
             if (playerIndex === -1) throw new NotFoundException({ code: ErrorCode.SESSION_PLAYER_NOT_FOUND, message: `Player not found in session` });
 
             // Déconnexion du joueur
@@ -395,19 +402,13 @@ export class SessionService {
             if (isHost) {
                 const players = session.players;
 
-                const connectedPlayers = players.filter((player: any) => player.connected && player.id !== playerID);
+                const connectedPlayers = players.filter((player: any) => player.connected && player.username !== playerID);
                 if (connectedPlayers.length > 0) {
-                    session.hostID = connectedPlayers[0].id;
+                    session.hostID = connectedPlayers[0].username;
                 } else {
                     session.hostID = '';
                 }
             }
-
-            // Notifier la game
-            // if (session.currentGame && session.currentGame.status === 'FINISHED') {
-            //     session.status = SessionStatus.IN_LOBBY;
-            //     session.currentGame = undefined;
-            // }
 
             // Update states
             await this.playerService.deletePlayer(socketID);
@@ -421,6 +422,7 @@ export class SessionService {
     // Store //
     ///////////
 
+    // Redis
     private async getSession(sessionID: string): Promise<Session | null> {
         return await this.redisService.getJSON<Session>(this.getKey(sessionID));
     }
@@ -438,12 +440,26 @@ export class SessionService {
     // Private function //
     //////////////////////
 
-    private async endGame(game: Game): Promise<void> {
-        // End game
-        // cloned_game.status = GameStatus.FINISHED;
-        // cloned_game.state.currentRound = undefined;
-
-        // TODO Store game in database
+    private async endGame(session: Session, game: Game): Promise<void> {
+        try {
+            // Store game in database
+            await this.prisma.gameRecord.create({
+                data: {
+                    mode: session.mode,
+                    gameConfig: session.gameConfig as unknown as Prisma.InputJsonValue,
+                    players: session.players as unknown as Prisma.InputJsonValue,
+                    guessObjectsIds: game.state.guessObjectsIds,
+                    results: game.state.results as unknown as Prisma.InputJsonValue,
+                    users: {
+                        connect: session.players
+                            .filter(player => !player.isGuest)
+                            .map(player => ({ id: player.id }))
+                    }
+                }
+            });
+        } catch (error) {
+            this.logger.error(`Error storing game in db: ${error}`)
+        }
     }
 
     private async generateUniqueSessionID(): Promise<string> {

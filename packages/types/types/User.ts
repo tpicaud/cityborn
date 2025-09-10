@@ -1,13 +1,38 @@
+import { GameRecord } from "./Game.js";
+
 export class PublicUser {
+
+  /////////////
+  // Profile //
+  /////////////
   id: number;
 
   username: string;
 
+  isVerified: boolean;
+
+}
+
+export class User extends PublicUser {
+
+  /////////////
+  // Profile //
+  /////////////
+
   email: string;
 
-  isVerified?: boolean;
+  birthdate?: string;
 
   createdAt?: string;
 
   updatedAt?: string;
+
+  ///////////////
+  // Relations //
+  ///////////////
+  relations?: {
+
+    games?: GameRecord[]
+
+  }
 }
