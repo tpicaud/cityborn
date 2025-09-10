@@ -60,10 +60,15 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 </Typography>
             </Box>
 
-            <Accordion disabled={loading}>
+            <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
                 <AccordionSummary
                     expandIcon={!loading ? <ExpandMoreIcon /> : null}
-                    sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: '100%' }}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: '100%',
+                    }}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center w-full h-full ">
@@ -75,7 +80,12 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                         </>
                     )}
                 </AccordionSummary>
-                <AccordionDetails>
+                <AccordionDetails
+                    sx={{
+                        p: 0,
+                        m: 0
+                    }}
+                >
                     {loading ? (
                         <List dense>
                             {[1, 2, 3].map((i) => (
@@ -91,21 +101,49 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                             Aucune partie jouée
                         </Typography>
                     ) : (
+
                         <List dense>
                             {games.map((game) => (
-                                <ListItem key={game.id} divider>
-                                    <ListItemText
-                                        primary={`${game.id} — Score: ${calculateTotalPoints(
-                                            game.results[user.username]
-                                        )}`}
-                                        secondary={`Date: ${game.createdAt}`}
-                                    />
+                                <ListItem key={game.id} divider disableGutters sx={{ p: 0 }}>
+                                    <Accordion elevation={0} disableGutters sx={{ width: "100%" }}>
+                                        <AccordionSummary>
+                                            <div className="flex flex-col w-full">
+                                                <Typography variant="subtitle2">
+                                                    Partie #{game.id ?? "-"} - {game.createdAt}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {game.mode.toUpperCase()} • {calculateTotalPoints(game.results[game.players.find((p) => p.username === user.username)?.username])}
+                                                </Typography>
+                                            </div>
+                                        </AccordionSummary>
+                                        <AccordionDetails>
+                                            <div className="flex flex-col gap-2">
+                                                <Typography variant="body2">
+                                                    Joueurs : {game.players.map((p) => p.username).join(", ")}
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    Scores :
+                                                </Typography>
+                                                <List dense>
+                                                    {Object.entries(game.results).map(([playerId, result]) => (
+                                                        <ListItem key={playerId} disableGutters>
+                                                            <ListItemText
+                                                                primary={`${game.players.find((p) => p.username === playerId)?.username ?? playerId
+                                                                    } : ${calculateTotalPoints(result)}`}
+                                                            />
+                                                        </ListItem>
+                                                    ))}
+                                                </List>
+                                            </div>
+                                        </AccordionDetails>
+                                    </Accordion>
                                 </ListItem>
                             ))}
                         </List>
+
                     )}
                 </AccordionDetails>
-            </Accordion>
-        </Box>
+            </Accordion >
+        </Box >
     );
 };

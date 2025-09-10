@@ -35,14 +35,14 @@ export class SessionService {
     // Session method //
     ////////////////////
 
-    async create(dto: CreateSessionDto): Promise<Session> {
+    async create(dto: CreateSessionDto, user: any): Promise<Session> {
         const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
 
         const newSession: Session = {
             id: sessionID,
-            hostID: mode === SessionMode.SOLO ? 'guest' : '',
+            hostID: mode === SessionMode.SOLO ? user ? user.username : 'guest' : '',
             mode: mode,
             status: SessionStatus.IN_LOBBY,
             gameConfig: {
@@ -50,7 +50,7 @@ export class SessionService {
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: mode === SessionMode.SOLO ? [{ username: 'guest', isGuest: true }] : [],
+            players: mode === SessionMode.SOLO ? [{ username: user ? user.username : 'guest', isGuest: user ? false : true }] : [],
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);

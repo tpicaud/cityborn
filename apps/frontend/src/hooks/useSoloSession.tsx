@@ -4,11 +4,9 @@ import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { useError } from "@/contexts/ErrorContext";
-import { useAuth } from "@/contexts/AuthContext";
 
 export function useSoloSession(localPlayerID: string): IUseSession {
 
-    const { user } = useAuth();
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [game, setGame] = useState<Game>();
@@ -139,7 +137,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
             if (!playersGuesses) return prevGame;
 
             // Utilisation d'un Record à la place d'une Map
-            const updatedResults = { ...prevGame.state.results };  // Copier l'objet pour ne pas muter l'état original
+            const updatedResults = { ...prevGame.state.results };
 
             for (const [playerID, guess] of Object.entries(playersGuesses)) {
                 const newResult: Result = {
@@ -150,10 +148,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
                 // Accéder ou créer le playerResults pour chaque joueur
                 if (!updatedResults[playerID]) {
-                    updatedResults[playerID] = { results: [] };  // Initialisation si non existant
+                    updatedResults[playerID] = { results: [] };
                 }
 
-                updatedResults[playerID].results.push(newResult);  // Ajouter le nouveau résultat
+                updatedResults[playerID].results.push(newResult);
             }
 
             return {
