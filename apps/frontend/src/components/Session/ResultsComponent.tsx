@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionMode, GuessObject, PlayerResults } from '@cityborn/types';
+import { SessionMode, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
