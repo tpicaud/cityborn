@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useContext, createContext, ReactNode, useCallback } from "react";
-import { PublicUser } from "@cityborn/types";
+import { User } from "@cityborn/types";
 
 interface AuthContextType {
-    user: PublicUser | null;
-    setUser: React.Dispatch<React.SetStateAction<PublicUser | null>>;
+    user: User | null;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
     refreshUser: () => Promise<void>;
 }
 
 // ✅ On exporte pour pouvoir l'utiliser ailleurs
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider = ({ initialValue, children }: { initialValue: PublicUser | null, children: ReactNode }) => {
-    const [user, setUser] = useState<PublicUser | null>(initialValue);
+const AuthProvider = ({ initialValue, children }: { initialValue: User | null, children: ReactNode }) => {
+    const [user, setUser] = useState<User | null>(initialValue);
 
     const refreshUser = useCallback(async () => {
         try {

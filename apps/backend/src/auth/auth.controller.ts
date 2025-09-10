@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Post, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { AuthResponseDto } from './dto/auth.response.dto';
-import { AuthGuard } from './guards/auth.guard';
 import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { RefreshGuard } from './guards/refresh.guard';
