@@ -37,7 +37,7 @@ export default function SoloSessionComponent() {
 
     const handleStartGame = async () => {
         try {
-            soloSession.startGame();
+            await soloSession.startGame();
         } catch (error: any) {
             invokeError(error);
         }

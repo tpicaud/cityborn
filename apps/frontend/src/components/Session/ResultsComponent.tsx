@@ -28,8 +28,8 @@ const ResultsComponent = ({
     handlePlayAgain: () => Promise<void>,
     handleExitGame: () => Promise<void>
 }) => {
-
-    const playersResults = getGameResult(game);
+    console.log('game in results component', game);
+    const playersResults = new Map<string, PlayerResults>(getGameResult(game));
     const [sentence, setSentence] = useState<{ message: string, sub_message_1: string, sub_message_2: string }>();
     const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>()
 
@@ -38,7 +38,7 @@ const ResultsComponent = ({
         if (!currentPlayerResults) return;
 
         // Remplacement des IDs dans tous les résultats
-        replaceIdsWithNames(playersResults, game.state.guessObjects!);
+        //replaceIdsWithNames(playersResults, game.state.guessObjects!);
 
         setLocalPlayerResults(currentPlayerResults);
 
@@ -54,16 +54,9 @@ const ResultsComponent = ({
         };
     }, []);
 
-
-    function replaceIdsWithNames(resultsMap: Map<string, PlayerResults>, guessObjects: GuessObject[]) {
-        resultsMap.forEach((playerResults) => {
-            playerResults.results.forEach((result) => {
-                const guessObject = guessObjects.find(obj => obj.id === result.guessObjectId);
-                if (guessObject) {
-                    result.guessObjectId = guessObject.name;
-                }
-            });
-        });
+    function getGuessObjectName(id: string): string {
+        const guessObject = game.state.guessObjects?.find(obj => obj.id === id);
+        return guessObject ? guessObject.name : id;
     }
 
     async function generateEndSentence(playerResults: PlayerResults): Promise<{ message: string, sub_message_1: string, sub_message_2: string }> {
@@ -146,7 +139,7 @@ const ResultsComponent = ({
                                                         key={index}
                                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                                     >
-                                                        <TableCell component='th' scope='row'>{result.guessObjectId}</TableCell>
+                                                        <TableCell component='th' scope='row'>{getGuessObjectName(result.guessObjectId)}</TableCell>
                                                         <TableCell align='right'>
                                                             {result.distance !== -1 ? (
                                                                 <p>{result.distance.toFixed(2)}</p>

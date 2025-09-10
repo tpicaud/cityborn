@@ -1,5 +1,5 @@
 import { IUseSession } from "./IUseSession";
-import { Game, GameStatus, Guess, Result, RoundStatus, Session, SessionMode } from "@cityborn/types";
+import { Game, GameStatus, Guess, Result, RoundStatus, Session, SessionMode, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
@@ -78,6 +78,14 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         try {
             // Create  new game
             const game = await ApiServiceClient.createSoloGame(session.gameConfig);
+
+            setSession((prevSession) => {
+                if (!prevSession) return;
+                return {
+                    ...prevSession,
+                    status: SessionStatus.IN_GAME,
+                }
+            });
 
             // Start game
             setGame({
@@ -209,13 +217,17 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     const endGame = async () => {
         if (!session || !session.currentGame) return;
 
-        await ApiServiceClient.saveGameRecords({
-            mode: SessionMode.SOLO,
-            gameConfig: session.gameConfig,
-            players: session.players,
-            guessObjectsIds: session.currentGame.state.guessObjectsIds,
-            results: session.currentGame.state.results,
-        })
+        try {
+            await ApiServiceClient.saveGameRecords({
+                mode: SessionMode.SOLO,
+                gameConfig: session.gameConfig,
+                players: session.players,
+                guessObjectsIds: session.currentGame.state.guessObjectsIds,
+                results: session.currentGame.state.results,
+            });
+        } catch (error: any) {
+            invokeError(error);
+        }
 
         setSession({
             ...session,

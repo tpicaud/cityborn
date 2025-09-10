@@ -117,8 +117,6 @@ export class GameRecordDto implements GameRecord {
 
     @IsOptional()
     @IsObject()
-    @ValidateNested({ each: true })
-    @Type(() => PlayerResultsDto)
     results: Record<string, PlayerResultsDto>;
 
     @IsString()
