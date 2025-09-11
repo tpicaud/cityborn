@@ -6,7 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
 
   const cors = process.env.CORS_ORIGIN ?? '*'
   app.enableCors({
