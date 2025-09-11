@@ -1,5 +1,5 @@
 import { IUseSession } from "./IUseSession";
-import { Game, GameStatus, Guess, Result, RoundStatus, Session, SessionMode } from "@cityborn/types";
+import { Game, GameStatus, Guess, Result, RoundStatus, Session, SessionMode, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
@@ -77,6 +77,14 @@ export function useSoloSession(localPlayerID: string): IUseSession {
             // Create  new game
             const game = await ApiServiceClient.createSoloGame(session.gameConfig);
 
+            setSession((prevSession) => {
+                if (!prevSession) return;
+                return {
+                    ...prevSession,
+                    status: SessionStatus.IN_GAME,
+                }
+            });
+
             // Start game
             setGame({
                 ...game,
@@ -129,7 +137,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
             if (!playersGuesses) return prevGame;
 
             // Utilisation d'un Record à la place d'une Map
-            const updatedResults = { ...prevGame.state.results };  // Copier l'objet pour ne pas muter l'état original
+            const updatedResults = { ...prevGame.state.results };
 
             for (const [playerID, guess] of Object.entries(playersGuesses)) {
                 const newResult: Result = {
@@ -140,10 +148,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
                 // Accéder ou créer le playerResults pour chaque joueur
                 if (!updatedResults[playerID]) {
-                    updatedResults[playerID] = { results: [] };  // Initialisation si non existant
+                    updatedResults[playerID] = { results: [] };
                 }
 
-                updatedResults[playerID].results.push(newResult);  // Ajouter le nouveau résultat
+                updatedResults[playerID].results.push(newResult);
             }
 
             return {
@@ -204,8 +212,21 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         }
     };
 
-    const endGame = () => {
+    const endGame = async () => {
         if (!session || !session.currentGame) return;
+
+        try {
+            await ApiServiceClient.saveGameRecords({
+                mode: SessionMode.SOLO,
+                gameConfig: session.gameConfig,
+                players: session.players,
+                guessObjectsIds: session.currentGame.state.guessObjectsIds,
+                results: session.currentGame.state.results,
+            });
+        } catch (error: any) {
+            invokeError(error);
+        }
+
         setSession({
             ...session,
             currentGame: undefined

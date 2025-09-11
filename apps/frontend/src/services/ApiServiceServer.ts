@@ -2,7 +2,7 @@
 
 import { apiFetch } from "@/app/api/apiFetch";
 import { getAccessToken, getRefreshToken } from "@/app/api/auth/utils";
-import { PublicUser } from "@cityborn/types";
+import { User } from "@cityborn/types";
 import { cookies } from "next/headers";
 
 //////////////////
@@ -15,7 +15,7 @@ export async function hasToken(): Promise<boolean> {
     return !!token;
 }
 
-export async function getCurrentUser(): Promise<PublicUser | null> {
+export async function getCurrentUser(): Promise<User | null> {
     try {
         const access_token = await getAccessToken();
         const refresh_token = await getRefreshToken();

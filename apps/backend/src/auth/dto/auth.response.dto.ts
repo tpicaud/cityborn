@@ -1,7 +1,6 @@
-import { PublicUser } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsString } from "class-validator";
-import { PublicUserDto } from "src/user/dto/public-user.dto";
+import { UserDto } from "src/user/dto/user.dto";
 
 export class AuthResponseDto {
     @IsString()
@@ -10,6 +9,6 @@ export class AuthResponseDto {
     @IsString()
     refresh_token: string;
 
-    @Type(() => PublicUserDto)
-    user: PublicUserDto;
+    @Type(() => UserDto)
+    user: UserDto;
 }

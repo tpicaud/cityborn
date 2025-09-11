@@ -53,6 +53,9 @@ export enum ErrorCode {
     // Email
     EMAIL_SEND_FAILED = "EMAIL_SEND_FAILED",
 
+    // Classic error codes
+    BAD_REQUEST = "BAD_REQUEST",
+
     // Default
     UNKNOWN_ERROR = "UNKNOWN_ERROR"
 }

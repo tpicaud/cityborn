@@ -2,6 +2,7 @@ import { Categories, GameConfig, SessionMode, Session, SessionStatus, Coord } fr
 import { Type } from "class-transformer";
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 import { PlayerDto } from "src/player/dto/player.dto";
+import { GameDto } from "./game.dto";
 
 export class GameConfigDto implements GameConfig {
     @IsArray()
@@ -45,6 +46,6 @@ export class SessionDto implements Session {
     players: PlayerDto[];
 
     @IsOptional()
-    @IsString()
-    currentGameId?: string;
+    @Type(() => GameDto)
+    currentGame?: GameDto;
 }

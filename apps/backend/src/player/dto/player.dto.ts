@@ -1,11 +1,15 @@
 import { Player } from "@cityborn/types";
-import { IsBoolean, IsString } from "class-validator";
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class PlayerDto implements Player {
 
     @IsString()
-    id: string;
+    username: string;
 
     @IsBoolean()
     isGuest: boolean;
+
+    @IsNumber()
+    @IsOptional()
+    id?: number;
 }
