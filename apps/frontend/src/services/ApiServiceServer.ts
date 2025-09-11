@@ -22,7 +22,6 @@ export async function getCurrentUser(): Promise<User | null> {
 
         if (!access_token && !refresh_token) return null;
 
-        console.log('get user')
         const response = await apiFetch(`/auth/me`, {
             requestOptions: {
                 method: 'GET',
@@ -30,8 +29,6 @@ export async function getCurrentUser(): Promise<User | null> {
             },
             noCookieStore: true
         });
-
-        console.log(response.status);
 
         const data = await response.json();
 
