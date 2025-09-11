@@ -85,6 +85,7 @@ export default function HomeComponent() {
                                 sx={{
                                     visibility: state === 'menu' ? "hidden" : "visible"
                                 }}
+                                className="z-10"
                             >
                                 <ArrowBackIcon />
                             </IconButton>
@@ -98,6 +99,7 @@ export default function HomeComponent() {
                                     sx={{
                                         visibility: (user && state === 'menu') ? "visible" : "hidden"
                                     }}
+                                    className="z-10"
                                 >
                                     <AccountCircleIcon />
                                 </IconButton>
@@ -114,6 +116,7 @@ export default function HomeComponent() {
                                     sx={{
                                         visibility: user ? "visible" : "hidden"
                                     }}
+                                    className="z-10"
                                 >
                                     <LogoutIcon />
                                 </LoadingIconButton>
