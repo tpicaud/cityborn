@@ -35,7 +35,9 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 flexDirection: "column",
                 gap: 2,
                 maxWidth: 300,
-                padding: 1
+                padding: 1,
+                maxHeight: "80vh",
+                overflow: 'auto'
             }}
         >
             <Typography variant="h5" align="center">

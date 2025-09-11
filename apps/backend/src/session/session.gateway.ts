@@ -1,13 +1,14 @@
-import { ConnectedSocket, MessageBody, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
 import { GameConfig, Guess } from '@cityborn/types';
 import { BadRequestException, HttpStatus, Logger, UseFilters } from '@nestjs/common';
-import { AuthenticatedGateway } from 'src/auth/auth.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
 import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
+import { extractAccessTokenFromWsClient } from 'src/auth/utils';
+import { getJwtConstants } from 'src/auth/constants';
 
 interface WSResponse {
 	success: boolean,
@@ -18,23 +19,50 @@ interface WSResponse {
 	}
 }
 
-@WebSocketGateway()
+@WebSocketGateway({
+	cors: {
+		origin: process.env.CORS_ORIGIN,
+		credentials: true
+	}
+})
 @UseFilters(AllExceptionsFilter)
-export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect {
+export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 	private readonly logger = new Logger(SessionGateway.name);
 
 	constructor(
 		private readonly sessionService: SessionService,
-		configService: ConfigService,
-		jwtService: JwtService
-	) {
-		super(jwtService, configService)
-	}
+		private readonly configService: ConfigService,
+		private readonly jwtService: JwtService
+	) { }
 
 	@WebSocketServer()
 	io: Server;
 
+	async handleConnection(client: Socket) {
+		const token = extractAccessTokenFromWsClient(client);
+		if (!token) {
+			(client as any).user = null;
+			return;
+		}
+		// if (!token) {
+		//     client.emit('error', { message: 'Unauthorized: token missing' });
+		//     client.disconnect();
+		//     return;
+		// }
+
+		try {
+			(client as any).user = await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret }).catch(() => null);
+		} catch {
+			client.emit('connect_error', {
+				code: ErrorCode.USER_INVALID_CREDENTIALS,
+				message: 'Invalid credentials',
+				statusCode: HttpStatus.UNAUTHORIZED
+			});
+			client.disconnect();
+			return;
+		}
+	}
 
 	///////////////////
 	// Session event //
@@ -282,6 +310,7 @@ export class SessionGateway extends AuthenticatedGateway implements OnGatewayDis
 	): Promise<void> {
 		try {
 			const session = await this.sessionService.disconnectPlayer(socket.id);
+			if (!session) return;
 
 			await socket.leave(session.id);
 			this.io.to(session.id).emit('session:update', session);

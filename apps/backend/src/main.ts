@@ -8,7 +8,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const cors = process.env.CORS_ORIGIN ?? '*'
+  const cors = process.env.CORS_ORIGIN ?? 'http://localhost:3000';
   app.enableCors({
     origin: [cors],
     credentials: true
@@ -34,6 +34,6 @@ async function bootstrap() {
   //   next();
   // });
 
-  await app.listen(process.env.PORT ?? 4000, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 4000, process.env.HOST ?? '0.0.0.0');
 }
 bootstrap();

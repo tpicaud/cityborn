@@ -67,7 +67,7 @@ export default function MenuComponent({
     return (
         <div className='flex flex-col items-center gap-5'>
             <div className='flex flex-col gap-1 items-center w-full'>
-                <img src="/cityborn_transparent2.png" alt="Logo" className='mb-2 max-h-24 md:max-h-36' />
+                <img src="/cityborn_transparent_new_logo.png" alt="Logo" className='mb-2 max-h-24 md:max-h-36' />
                 <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
 
