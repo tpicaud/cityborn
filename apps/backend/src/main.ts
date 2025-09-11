@@ -8,7 +8,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const cors = process.env.CORS_ORIGIN ?? '*'
+  const cors = process.env.CORS_ORIGIN ?? 'http://localhost:3000';
   app.enableCors({
     origin: [cors],
     credentials: true
