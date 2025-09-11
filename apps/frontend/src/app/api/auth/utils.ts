@@ -2,31 +2,6 @@
 
 import { cookies } from "next/headers";
 
-export async function getTokensCookiesHeaders(access_token: string, refresh_token: string) {
-    const secure = process.env.NODE_ENV === 'production';
-
-    const accessCookie = [
-        `access_token=${access_token}`,
-        `HttpOnly`,
-        `Path=/`,
-        `Max-Age=${60 * 15}`, // 15 minutes
-        `SameSite=Strict`,
-        secure ? 'Secure' : '',
-    ].filter(Boolean).join('; ');
-
-    const refreshCookie = [
-        `refresh_token=${refresh_token}`,
-        `HttpOnly`,
-        `Path=/`,
-        `Max-Age=${60 * 60 * 24 * 7}`, // 7 jours
-        `SameSite=Strict`,
-        secure ? 'Secure' : '',
-    ].filter(Boolean).join('; ');
-
-    return [accessCookie, refreshCookie];
-}
-
-
 export async function storeTokensInCookies(access_token: string, refresh_token: string) {
     const cookieStore = await cookies();
 
@@ -36,9 +11,10 @@ export async function storeTokensInCookies(access_token: string, refresh_token: 
         value: access_token,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 60 * 15, // 15m
         path: '/',
+        domain: `.${process.env.DOMAIN_NAME}`
     });
 
     // Store refresh token
@@ -63,8 +39,9 @@ export async function expireTokensInCookies() {
         value: '',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 0
+        sameSite: 'lax',
+        maxAge: 0,
+        domain: `.${process.env.DOMAIN_NAME}`
     });
 
     cookieStore.set({
@@ -73,7 +50,7 @@ export async function expireTokensInCookies() {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 0
+        maxAge: 0,
     });
 }
 

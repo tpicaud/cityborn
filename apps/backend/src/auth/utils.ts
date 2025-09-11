@@ -12,5 +12,6 @@ export function extractAccessTokenFromWsClient(client?: any): string | undefined
     if (!cookies) return undefined;
 
     const parsedCookies = cookie.parse(cookies);
+
     return parsedCookies['access_token'];
 }
