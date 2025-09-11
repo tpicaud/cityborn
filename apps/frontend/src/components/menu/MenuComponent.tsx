@@ -11,6 +11,7 @@ import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
 import { Dialog } from "../ui/dialogs/Dialog";
 import { useError } from "@/contexts/ErrorContext";
+import Image from 'next/image';
 
 export default function MenuComponent({
     setState,
@@ -48,7 +49,7 @@ export default function MenuComponent({
         }
     }
 
-     const handleJoin = async () => {
+    const handleJoin = async () => {
         try {
             await ApiServiceClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
@@ -66,8 +67,16 @@ export default function MenuComponent({
 
     return (
         <div className='flex flex-col items-center gap-5'>
-            <div className='flex flex-col gap-1 items-center w-full'>
-                <img src="/cityborn_transparent_new_logo.png" alt="Logo" className='mb-2 max-h-24 md:max-h-36' />
+            <div className='relative flex flex-col gap-1 items-center w-full'>
+                <Image
+                    src="/cityborn_transparent_new_logo.png"
+                    alt="Logo"
+                    width={96}
+                    height={96}
+                    style={{ objectFit: 'contain' }}
+                    priority
+                    className="sm:w-[144px] md:h-[144px]"
+                />
                 <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
 
