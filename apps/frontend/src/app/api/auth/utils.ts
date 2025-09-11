@@ -39,6 +39,7 @@ export async function storeTokensInCookies(access_token: string, refresh_token: 
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 15, // 15m
         path: '/',
+        domain: process.env.REST_BACKEND_URL
     });
 
     // Store refresh token
