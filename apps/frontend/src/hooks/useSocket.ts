@@ -30,9 +30,10 @@ export const useSocket = () => {
         });
 
         // handle errors
-        socket.on('connect_error', (error) => {
-            console.log('Connection error', error)
-            invokeError(error?.message)
+        socket.on('connect_error', (error: any) => {
+            setHasDisconnected(false); // Avoid automatic reconnection
+            const api_error = new ApiError(error.code, error.message, error.statusCode);
+            invokeError(api_error)
         });
 
         socket.on('error', (error: any) => {

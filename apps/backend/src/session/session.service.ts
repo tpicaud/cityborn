@@ -376,11 +376,11 @@ export class SessionService {
         });
     }
 
-    async disconnectPlayer(socketID: string) {
+    async disconnectPlayer(socketID: string): Promise<Session | undefined> {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
-        if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
+        if (!player) return;
 
         const { playerID, sessionID } = player;
 
