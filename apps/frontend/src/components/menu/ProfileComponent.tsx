@@ -37,8 +37,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 maxWidth: 300,
                 padding: 1,
                 maxHeight: "80vh",
-                overflowX: "hidden",
-                overflowY: 'scroll'
+                overflow: 'auto'
             }}
         >
             <Typography variant="h5" align="center">
