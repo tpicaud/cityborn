@@ -10,6 +10,7 @@ import { GuessObject } from "@cityborn/types";
 import { RoundStatus } from "@cityborn/types";
 import { Round } from "@cityborn/types";
 import * as turf from '@turf/turf';
+import Image from 'next/image';
 
 type GoogleMapProps = {
   API_KEY: string;
@@ -131,7 +132,13 @@ const OtherPlayersGuesses: React.FC<{ currentRound: Round, guessObject: GuessObj
             position={guess.coordinates}
             anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
           >
-            <img src={'/img/player.png'} alt="players Marker" width={28} height={28} />
+            <Image
+              src="/img/player.png"
+              alt="players Marker"
+              width={28}
+              height={28}
+              priority={false}
+            />
           </AdvancedMarker>
 
           <LineBetween guess={guess.coordinates} answer={getCenterOfGuessObject(guessObject)} isLocalPlayer={false} />
@@ -254,7 +261,13 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
     const point: Coord = guessObject.answer.coordinates.value
     return (
       <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
-        <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+        <Image
+          src="/img/answer_marker.png"
+          alt="players Marker"
+          width={28}
+          height={28}
+          priority={false}
+        />
       </AdvancedMarker>
     )
   } else {
@@ -274,7 +287,13 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
     const point: Coord = guessObject.answer.coordinates.value.cityCenter
     return (
       <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
-        <img src={'/img/answer_marker.png'} alt="Answer Marker" width={32} height={32} />
+        <Image
+          src="/img/answer_marker.png"
+          alt="players Marker"
+          width={28}
+          height={28}
+          priority={false}
+        />
       </AdvancedMarker>
     )
   }
