@@ -7,6 +7,7 @@ import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 import { useError } from "@/contexts/ErrorContext";
 import { ApiError } from "@cityborn/errors";
+import { useRouter } from "next/navigation";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
     // Extends interface
@@ -19,6 +20,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     reconnect: () => void;
 } {
 
+    const router = useRouter();
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
@@ -226,6 +228,10 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         setSession({ ...session, status: SessionStatus.IN_LOBBY });
     }
 
+    const exitGame = async () => {
+        router.push('/');
+    }
+
     const playAgain = async () => {
         if (!session || !session.currentGame) throw new Error('Ending game failed: session or game not initialized');
 
@@ -284,6 +290,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
         nextRound,
         endGame,
         playAgain,
+        exitGame,
         reconnect
     };
 }

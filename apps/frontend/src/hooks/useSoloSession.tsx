@@ -4,9 +4,11 @@ import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { useError } from "@/contexts/ErrorContext";
+import { useRouter } from "next/navigation";
 
 export function useSoloSession(localPlayerID: string): IUseSession {
-
+    
+    const router = useRouter();
     const { invokeError } = useError();
     const [session, setSession] = useState<Session>();
     const [game, setGame] = useState<Game>();
@@ -215,6 +217,29 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     const endGame = async () => {
         if (!session || !session.currentGame) return;
 
+        await saveGame();
+
+        setSession({
+            ...session,
+            currentGame: undefined
+        });
+    }
+
+    const playAgain = async () => {
+        if (!session || !session.currentGame) return;
+
+        await saveGame();
+        await startGame();
+    }
+
+    const exitGame = async () => {
+        await saveGame();
+        router.push('/');
+    }
+
+    const saveGame = async () => {
+        if (!session || !session.currentGame) return;
+
         try {
             await ApiServiceClient.saveGameRecords({
                 mode: SessionMode.SOLO,
@@ -226,16 +251,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         } catch (error: any) {
             invokeError(error);
         }
-
-        setSession({
-            ...session,
-            currentGame: undefined
-        });
-    }
-
-    const playAgain = async () => {
-        if (!session || !session.currentGame) return;
-        await startGame();
     }
 
     return {
@@ -246,6 +261,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         guess,
         nextRound,
         endGame,
-        playAgain
+        playAgain,
+        exitGame
     }
 }
