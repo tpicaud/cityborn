@@ -36,7 +36,7 @@ export async function storeTokensInCookies(access_token: string, refresh_token: 
         value: access_token,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 15, // 15m
         path: '/',
     });
