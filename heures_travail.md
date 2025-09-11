@@ -89,3 +89,5 @@
 | 01/09/2025 | 4h | Gestion des erreurs ws |
 | 02/09/2025 | 8h | Fusion Session et Game pour simplicité |
 | 03/09/2025 | 7h | Fix erreurs fin de partie |
+| 08/09/2025 | 7h | Historique joueur |
+| 09/09/2025 | 5h | Historique joueur |
