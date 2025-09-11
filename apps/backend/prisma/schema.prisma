@@ -9,22 +9,23 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String   @unique
-  birthdate DateTime? @db.Date
-  password  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isVerified Boolean @default(false)
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  username   String    @unique
+  birthdate  DateTime? @db.Date
+  password   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isVerified Boolean   @default(false)
 
-  tokens EmailVerificationToken[]
+  tokens      EmailVerificationToken[]
+  gameRecords GameRecord[]             @relation("GameRecordUsers")
 }
 
 model EmailVerificationToken {
@@ -34,4 +35,16 @@ model EmailVerificationToken {
   userId    Int
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model GameRecord {
+  id              Int      @id @default(autoincrement())
+  mode            String
+  gameConfig      Json
+  players         Json
+  guessObjectsIds String[]
+  results         Json
+  createdAt       DateTime @default(now())
+
+  users User[] @relation("GameRecordUsers")
 }

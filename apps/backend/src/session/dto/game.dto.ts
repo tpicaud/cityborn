@@ -1,7 +1,9 @@
-import { Coord, Game, GameState, GameStatus, Guess, PlayerResults, Result, Round, RoundStatus } from "@cityborn/types";
+import { Coord, Game, GameConfig, GameRecord, GameState, GameStatus, Guess, Player, PlayerResults, Result, Round, RoundStatus, SessionMode } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto";
+import { GameConfigDto } from "./session.dto";
+import { PlayerDto } from "src/player/dto/player.dto";
 
 export class ResultDto implements Result {
     @IsString()
@@ -91,4 +93,33 @@ export class GameDto implements Game {
     @ValidateNested()
     @Type(() => GameStateDto)
     state: GameStateDto;
+}
+
+export class GameRecordDto implements GameRecord {
+    @IsNumber()
+    @IsOptional()
+    id?: number;
+
+    @IsEnum(SessionMode)
+    mode: SessionMode;
+
+    @Type(() => GameConfigDto)
+    gameConfig: GameConfigDto;
+
+    @IsArray()
+    @ValidateNested()
+    @Type(() => PlayerDto)
+    players: PlayerDto[];
+
+    @IsArray()
+    @IsString({ each: true })
+    guessObjectsIds: string[];
+
+    @IsOptional()
+    @IsObject()
+    results: Record<string, PlayerResultsDto>;
+
+    @IsString()
+    @IsOptional()
+    createdAt?: string;
 }

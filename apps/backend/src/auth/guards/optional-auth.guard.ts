@@ -24,7 +24,8 @@ export class OptionalAuthGuard implements CanActivate {
         }
 
         const user = await this.validateAccessToken(token);
-        if (!user.isVerified) throw new UnauthorizedException({ code: ErrorCode.USER_NOT_VERIFIED, message: 'User email not verified' });
+        if (!user.isVerified) return true;
+        
 
         request['user'] = user;
         return true;

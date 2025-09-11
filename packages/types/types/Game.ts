@@ -2,6 +2,9 @@ import { GuessObject } from "./GuessObject.js";
 import { GameStatus } from "../enums/GameStatus.js";
 import { Round } from "./Round.js";
 import { PlayerResults } from "./Results.js";
+import { SessionMode } from "../enums/SessionMode.js";
+import { GameConfig } from "./GameConfig.js";
+import { Player } from "./Player.js";
 
 export interface Game {
     id: string;
@@ -18,4 +21,14 @@ export interface GameState {
 
     // Heavy params
     guessObjects?: GuessObject[];
+}
+
+export interface GameRecord {
+    id?: number;
+    mode: SessionMode,
+    gameConfig: GameConfig,
+    players: Player[],
+    guessObjectsIds: string[],
+    results: Record<string, PlayerResults>,
+    createdAt?: string;
 }
