@@ -8,12 +8,11 @@ import { useError } from '@/contexts/ErrorContext';
 import { useMultiSession } from '@/hooks/useMultiSession';
 import { GameConfig, SessionStatus } from '@cityborn/types';
 import { Guess } from '@cityborn/types';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 export default function MultiSessionComponent() {
 
-    const router = useRouter();
     const { user } = useAuth();
     const { invokeError } = useError();
     const { sessionID } = useParams<{ sessionID: string }>();
@@ -119,8 +118,11 @@ export default function MultiSessionComponent() {
     }
 
     const handleExitGame = async () => {
-        router.push('/')
-        return;
+        try {
+            await multiSession.exitGame();
+        } catch (error: any) {
+            console.log(error);
+        }
     }
 
 
@@ -157,7 +159,7 @@ export default function MultiSessionComponent() {
                     handleJoinSession={handleJoinSession} />
             )}
 
-            { multiSession.hasDisconnected && !multiSession.connected && (
+            {multiSession.hasDisconnected && !multiSession.connected && (
                 <LoadingComponent message='Reconnexion...' />
             )}
         </>

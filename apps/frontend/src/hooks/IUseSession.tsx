@@ -12,4 +12,5 @@ export interface IUseSession {
     nextRound: () => void;
     endGame: () => void;
     playAgain: () => void;
+    exitGame: () => Promise<void>;
 }

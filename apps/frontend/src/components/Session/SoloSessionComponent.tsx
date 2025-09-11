@@ -76,8 +76,11 @@ export default function SoloSessionComponent() {
     }
 
     const handleExitGame = async () => {
-        router.push('/')
-        return;
+        try {
+            await soloSession.exitGame();
+        } catch (error: any) {
+            console.log(error);
+        }
     }
 
     ///////////////
