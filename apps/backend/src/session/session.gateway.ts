@@ -18,7 +18,12 @@ interface WSResponse {
 	}
 }
 
-@WebSocketGateway()
+@WebSocketGateway({
+	cors: {
+		origin: process.env.CORS_ORIGIN,
+		credentials: true
+	}
+})
 @UseFilters(AllExceptionsFilter)
 export class SessionGateway extends AuthenticatedGateway implements OnGatewayDisconnect {
 
