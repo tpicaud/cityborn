@@ -54,7 +54,11 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 		try {
 			(client as any).user = await this.jwtService.verifyAsync(token, { secret: getJwtConstants(this.configService).jwt_access_secret }).catch(() => null);
 		} catch {
-			client.emit('error', { message: 'Unauthorized: invalid token' });
+			client.emit('connect_error', {
+				code: ErrorCode.USER_INVALID_CREDENTIALS,
+				message: 'Invalid credentials',
+				statusCode: HttpStatus.UNAUTHORIZED
+			});
 			client.disconnect();
 			return;
 		}
@@ -306,6 +310,7 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	): Promise<void> {
 		try {
 			const session = await this.sessionService.disconnectPlayer(socket.id);
+			if (!session) return;
 
 			await socket.leave(session.id);
 			this.io.to(session.id).emit('session:update', session);

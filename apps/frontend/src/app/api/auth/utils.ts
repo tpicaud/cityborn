@@ -14,6 +14,7 @@ export async function storeTokensInCookies(access_token: string, refresh_token: 
         sameSite: 'lax',
         maxAge: 60 * 15, // 15m
         path: '/',
+        domain: `.${process.env.DOMAIN_NAME}`
     });
 
     // Store refresh token
@@ -39,7 +40,8 @@ export async function expireTokensInCookies() {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 0
+        maxAge: 0,
+        domain: `.${process.env.DOMAIN_NAME}`
     });
 
     cookieStore.set({
@@ -48,7 +50,7 @@ export async function expireTokensInCookies() {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 0
+        maxAge: 0,
     });
 }
 
