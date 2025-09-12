@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     PrismaModule,
     UserModule,
-    MailModule
+    MailModule,
+    EventModule
   ],
   controllers: [AppController],
   providers: [AppService],

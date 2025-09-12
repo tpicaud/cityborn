@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        const response = await apiFetch(`/game`, {
+        const response = await apiFetch(`/event/track`, {
             requestOptions: {
                 method: 'POST',
                 body: JSON.stringify(body),

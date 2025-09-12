@@ -48,3 +48,11 @@ model GameRecord {
 
   users User[] @relation("GameRecordUsers")
 }
+
+model Event  {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  userAnalyticsId   String
+  properties        Json
+  createdAt         DateTime  @default(now()) @db.Timestamp(6)
+}
