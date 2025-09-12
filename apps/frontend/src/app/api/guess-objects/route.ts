@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "../apiFetch";
+import { ErrorCode } from "@cityborn/errors";
 
 export async function GET(req: NextRequest) {
     try {
@@ -17,14 +18,17 @@ export async function GET(req: NextRequest) {
         const data = await response.json();
 
         if (!response.ok) {
-            const message = data.message || "Failed to fetch guess objects";
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
         return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }

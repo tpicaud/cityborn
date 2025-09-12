@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
+import { ErrorCode } from "@cityborn/errors";
 
 export async function GET() {
     try {
@@ -39,14 +40,17 @@ export async function POST(req: NextRequest) {
 
         if (!response.ok) {
             const data = await response.json();
-            const message = data.message;
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
         return NextResponse.json({ message: 'success' }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }

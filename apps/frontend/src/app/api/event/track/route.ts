@@ -6,20 +6,20 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        const response = await apiFetch(`/session/create-game`, {
+        const response = await apiFetch(`/game`, {
             requestOptions: {
                 method: 'POST',
                 body: JSON.stringify(body),
             },
         });
 
-        const data = await response.json();
 
         if (!response.ok) {
+            const data = await response.json();
             return NextResponse.json(data, { status: response.status });
         }
 
-        return NextResponse.json(data, { status: 200 });
+        return NextResponse.json({ message: 'Event successfully sent' }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
             {
