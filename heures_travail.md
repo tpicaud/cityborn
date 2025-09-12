@@ -92,3 +92,4 @@
 | 08/09/2025 | 7h | Historique joueur |
 | 09/09/2025 | 5h | Historique joueur |
 | 11/09/2025 | 7h | Fix problèmes cookies/cors websocket |
+| 12/09/2025 | 2h | Analytics |
