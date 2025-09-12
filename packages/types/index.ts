@@ -12,6 +12,7 @@ export type * from './types/Session.js';
 export * from './types/defaults.js';
 export * from './types/Sentence.js';
 export * from './types/User.js';
+export * from './types/Event.js';
 
 export * from './enums/Categories.js';
 export * from './enums/SessionMode.js';

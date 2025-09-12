@@ -1,5 +1,5 @@
 import { ApiError } from "@cityborn/errors";
-import { Game, GameConfig, SessionMode, GuessObject, PublicUser, Session, GameRecord } from "@cityborn/types";
+import { Game, GameConfig, SessionMode, GuessObject, PublicUser, Session, GameRecord, CreateEvent } from "@cityborn/types";
 
 //////////////////
 // Auth service //
@@ -236,14 +236,21 @@ export async function createSoloGame(gameConfig: GameConfig) {
     return game;
 }
 
-// export async function fetchGame(gameId: string): Promise<Game> {
-//     const response = await fetch(`/api/game/${gameId}`);
+//////////////////
+// Event service //
+//////////////////
+export async function trackEvent(event: CreateEvent): Promise<void> {
+    const response = await fetch(`/api/event/track`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(event),
+    });
 
-//     const data = await response.json();
+    const data = await response.json();
 
-//     if (!response.ok) {
-//         throw new ApiError(data.code, data.message, data.statusCode);
-//     }
-
-//     return data.game;
-// }
+    if (!response.ok) {
+        throw new ApiError(data.code, data.message, data.statusCode);
+    }
+}
