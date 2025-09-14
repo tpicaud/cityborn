@@ -4,11 +4,11 @@ import * as React from "react";
 import { Box, FormControl, TextField, Button, Typography } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { LocalizationProvider } from "node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider";
 import { useError } from "@/contexts/ErrorContext";
+import { useApi } from "@/contexts/ApiContext";
 
 interface FormValues {
     username: string;
@@ -26,6 +26,7 @@ export const SignUpComponent = ({
 
     const { refreshUser } = useAuth();
     const { invokeError } = useError();
+    const apiClient = useApi();
     const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
 
     /////////////////
@@ -50,7 +51,7 @@ export const SignUpComponent = ({
 
     const handleCredentialResponse = async (response: any) => {
         try {
-            await ApiServiceClient.signInWithGoogle(response.credential);
+            await apiClient.signInWithGoogle(response.credential);
             await refreshUser();
         } catch (error: any) {
             invokeError(error)
@@ -106,7 +107,7 @@ export const SignUpComponent = ({
         }
 
         try {
-            await ApiServiceClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
+            await apiClient.signUp(formValues.username, formValues.email, formValues.birthdate, formValues.password);
             setSentVerificationEmail(true);
             await refreshUser();
         } catch (error: any) {

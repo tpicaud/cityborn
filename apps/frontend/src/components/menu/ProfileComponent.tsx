@@ -2,13 +2,14 @@ import { useError } from "@/contexts/ErrorContext";
 import { GameRecord, User } from "@cityborn/types";
 import { Accordion, AccordionDetails, AccordionSummary, Box, CircularProgress, List, ListItem, ListItemText, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
-import * as ApiServiceClient from '@/services/ApiServiceClient';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { calculateTotalPoints } from "@/utils/calculateScore";
+import { useApi } from "@/contexts/ApiContext";
 
 export const ProfileComponent = ({ user }: { user: User }) => {
 
     const { invokeError } = useError();
+    const apiClient = useApi();
     const [games, setGames] = useState<GameRecord[]>();
     const [loading, setLoading] = useState(true);
 
@@ -16,7 +17,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
     useEffect(() => {
         const getGameRecords = async () => {
             try {
-                const games = await ApiServiceClient.getGameRecords();
+                const games = await apiClient.getGameRecords();
                 setGames(games);
             } catch (error: any) {
                 invokeError(error);
