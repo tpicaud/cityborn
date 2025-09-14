@@ -13,7 +13,9 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
+import { createEvent, CreateEvent } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
+import { EventService } from 'src/event/event.service';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +27,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly mailService: MailService,
+        private readonly eventService: EventService,
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
@@ -52,6 +55,15 @@ export class AuthService {
         // Create JWT
         const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
         const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
+
+        // Send event
+        await this.eventService.trackEvent(createEvent({
+            name: 'user_signed_up',
+            userAnalyticsId: '',
+            properties: {
+                method: 'email'
+            }
+        }));
 
         return {
             access_token,
@@ -191,7 +203,7 @@ export class AuthService {
         if (!payload.email_verified) throw new UnauthorizedException({ code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED, message: 'Google account not verified' });
 
         if (!payload.email || !payload.name) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: 'Missing name or email' });
-        
+
         return {
             email: payload.email,
             name: payload.name,

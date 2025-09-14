@@ -1,14 +1,15 @@
-import { CreateEvent } from '@cityborn/types';
+import { EventMap } from '@cityborn/types';
 import { IsObject, IsString } from 'class-validator';
 
 
-export class CreateEventDto implements CreateEvent {
+export class CreateEventDto<Name extends keyof EventMap = keyof EventMap> {
+
     @IsString()
-    name: string;
+    name: Name;
 
     @IsString()
     userAnalyticsId: string;
 
     @IsObject()
-    properties: Record<string, any>;
+    properties: EventMap[Name];
 }
