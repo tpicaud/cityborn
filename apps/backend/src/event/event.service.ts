@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { EventDto } from './event.dto';
+import { CreateEvent, EventMap } from '@cityborn/types';
+import { CreateEventDto } from './dto/create-event.dto';
+
 
 @Injectable()
 export class EventService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async trackEvent(eventDto: EventDto) {
-        return this.prisma.event.create({ data: eventDto });
+    async trackEvent<Name extends keyof EventMap>(
+        event: CreateEvent<Name> | CreateEventDto<Name>
+    ) {
+        return this.prisma.event.create({ data: event });
     }
 }
