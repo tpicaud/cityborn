@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import 'leaflet/dist/leaflet.css';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { SessionMode } from '@cityborn/types';
-import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from "../ui/buttons/Button";
 import LoadingButton from "../ui/buttons/LoadingButton";
 import { Dialog } from "../ui/dialogs/Dialog";
 import { useError } from "@/contexts/ErrorContext";
 import Image from 'next/image';
+import { useApi } from "@/contexts/ApiContext";
 
 export default function MenuComponent({
     setState,
@@ -26,6 +26,7 @@ export default function MenuComponent({
     const router = useRouter();
     const { user } = useAuth();
     const { invokeError } = useError();
+    const apiClient = useApi();
 
     const [code, setCode] = useState<string>('')
     const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
@@ -41,7 +42,7 @@ export default function MenuComponent({
             setOpenConnectionAlert(true);
         } else {
             try {
-                const session = await ApiServiceClient.createSession(SessionMode.MULTI);
+                const session = await apiClient.createSession(SessionMode.MULTI);
                 router.push(`/session/multi/${session.id}`);
             } catch (error: any) {
                 invokeError(error);
@@ -51,7 +52,7 @@ export default function MenuComponent({
 
     const handleJoin = async () => {
         try {
-            await ApiServiceClient.fetchSession(code);
+            await apiClient.fetchSession(code);
             router.push(`/session/multi/${code}`)
         } catch (error: any) {
             invokeError(error);
@@ -60,7 +61,7 @@ export default function MenuComponent({
 
     const sendNewVerificationEmail = async () => {
         try {
-            ApiServiceClient.sendVerificationEmail();
+            apiClient.sendVerificationEmail();
             setSentVerificationEmail(true);
         } catch { }
     }

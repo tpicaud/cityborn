@@ -9,13 +9,13 @@ import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from "@/contexts/AuthContext";
-import * as ApiServiceClient from '@/services/ApiServiceClient';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import LoadingIconButton from "./ui/buttons/LoadingIconButton";
 import IconButton from "./ui/buttons/IconButton";
 import { useError } from "@/contexts/ErrorContext";
 import { ProfileComponent } from "./menu/ProfileComponent";
+import { useApi } from "@/contexts/ApiContext";
 
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -30,6 +30,7 @@ declare global {
 export default function HomeComponent() {
 
     const { user, refreshUser } = useAuth();
+    const apiClient = useApi();
     const { invokeError } = useError();
     const [state, setState] = useState<'menu' | 'sign-in' | 'sign-up' | 'profile'>('menu');
     const [openProfile, setOpenProfile] = useState(false);
@@ -106,7 +107,7 @@ export default function HomeComponent() {
                                 <LoadingIconButton
                                     onClick={async () => {
                                         try {
-                                            await ApiServiceClient.signOut();
+                                            await apiClient.signOut();;
                                             await refreshUser();
                                             setState('menu');
                                         } catch (error: any) {

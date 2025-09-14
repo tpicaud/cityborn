@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import * as ApiServiceClient from '@/services/ApiServiceClient'
 import { Button } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
+import { useApi } from '@/contexts/ApiContext';
 
 export default function VerifyEmail() {
     const searchParams = useSearchParams();
@@ -12,12 +12,13 @@ export default function VerifyEmail() {
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const router = useRouter();
     const { refreshUser } = useAuth();
+    const apiClient = useApi();
 
     useEffect(() => {
         const verifyEmail = async () => {
             if (verification_token) {
                 try {
-                    await ApiServiceClient.verifyEmail(verification_token);
+                    await apiClient.verifyEmail(verification_token);
                     setStatus('success');
                 } catch {
                     setStatus('error');

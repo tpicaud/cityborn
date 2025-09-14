@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import { Box, FormControl, TextField, Typography } from "@mui/material";
-import * as ApiServiceClient from '@/services/ApiServiceClient';
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Button from "../ui/buttons/Button";
 import { useError } from "@/contexts/ErrorContext";
+import { useApi } from "@/contexts/ApiContext";
 
 export const SignInComponent = () => {
 
     const { refreshUser } = useAuth();
     const { invokeError } = useError();
+    const apiClient = useApi();
     const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
     const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] = useState(false);
 
@@ -38,7 +39,7 @@ export const SignInComponent = () => {
     const handleCredentialResponse = async (response: any) => {
         try {
             setIsGoogleSignInFormSubmitting(true);
-            await ApiServiceClient.signInWithGoogle(response.credential);
+            await apiClient.signInWithGoogle(response.credential);
             await refreshUser();
         } catch (error: any) {
             invokeError(error);
@@ -64,7 +65,7 @@ export const SignInComponent = () => {
         try {
             setIsSignInFormSubmitting(true);
             e.preventDefault();
-            await ApiServiceClient.signIn(formValues.username, formValues.password);
+            await apiClient.signIn(formValues.username, formValues.password);
             await refreshUser();
         } catch (error: any) {
             invokeError(error);
