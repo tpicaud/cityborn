@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Categories, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus } from '@cityborn/types';
+import { Categories, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus, User } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
@@ -35,7 +35,7 @@ export class SessionService {
     // Session method //
     ////////////////////
 
-    async create(dto: CreateSessionDto, user: any): Promise<Session> {
+    async create(dto: CreateSessionDto, user?: User): Promise<Session> {
         const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
@@ -67,7 +67,7 @@ export class SessionService {
         return session;
     }
 
-    async join(socketID: string, sessionID: string, playerID: string, user: any) {
+    async join(socketID: string, sessionID: string, playerID: string, user?: User) {
         return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
             // Récupération de la session
@@ -89,7 +89,7 @@ export class SessionService {
             const newPlayer: OnlinePlayer = {
                 username: playerID,
                 isGuest,
-                id: isGuest ? undefined : user.sub,
+                id: isGuest ? undefined : user!.id,
                 connected: true,
             };
             if (session.players.length === 0) session.hostID = playerID;
@@ -344,7 +344,7 @@ export class SessionService {
     // Connection method //
     ///////////////////////
 
-    async reconnectPlayer(socketID: string, sessionID: string, playerID: string, user: any) {
+    async reconnectPlayer(socketID: string, sessionID: string, playerID: string, user?: User) {
         return await this.lockService.withLock(this.getKey(sessionID), this.LOCK_TTL, async () => {
 
             // Récupération du jeu dans la base de données

@@ -9,6 +9,7 @@ import { RefreshGuard } from './guards/refresh.guard';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CurrentUser } from 'src/user/user.decorator';
 import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
+import { User } from '@cityborn/types';
 
 @Controller('auth')
 export class AuthController {
@@ -38,7 +39,7 @@ export class AuthController {
 
     @Post('send-verification-email')
     @UseGuards(NotVerifiedAuthGuard)
-    async sendVerificationEmail(@CurrentUser() user): Promise<void> {
+    async sendVerificationEmail(@CurrentUser() user?: User): Promise<void> {
         return await this.authService.sendVerificationEmail(user);
     }
 

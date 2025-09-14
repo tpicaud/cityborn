@@ -11,13 +11,13 @@ export class UserController {
     @Get('game-records')
     @UseGuards(AuthGuard)
     async getGameRecords(@Request() req): Promise<GameRecordsResponseDto> {
-        return this.userService.getGameRecords(req.user.sub);
+        return this.userService.getGameRecords(req.user.id);
     }
 
     @Post('game-records')
     @UseGuards(AuthGuard)
     async saveSoloGameRecord(@Request() req, @Body() gameRecordDto: GameRecordDto): Promise<void> {
-        return this.userService.saveSoloGameRecord(req.user.sub, gameRecordDto);
+        return this.userService.saveSoloGameRecord(req.user.id, gameRecordDto);
     }
 
 }

@@ -5,7 +5,7 @@ import { SessionResponseDto } from './dto/session.response.dto';
 import { CurrentUser } from 'src/user/user.decorator';
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 import { ErrorCode } from '@cityborn/errors';
-import { SessionMode } from '@cityborn/types';
+import { SessionMode, User } from '@cityborn/types';
 import { CreateGameDto } from './dto/create-game.dto';
 import { GameResponseDto } from './dto/game.response.dto';
 
@@ -15,7 +15,7 @@ export class SessionController {
 
     @UseGuards(OptionalAuthGuard)
     @Post()
-    async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user: any): Promise<SessionResponseDto> {
+    async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user?: User): Promise<SessionResponseDto> {
         if (createSessionDto.mode === SessionMode.MULTI && ((!user || (user && !user.isVerified)))) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
         return {
             session: await this.sessionService.create(createSessionDto, user)
