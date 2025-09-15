@@ -9,6 +9,7 @@ export async function POST(req: Request) {
         const response = await apiFetch(`/session`, {
             requestOptions: {
                 method: 'POST',
+                headers: req.headers ?? {},
                 body: JSON.stringify(body),
             },
         });

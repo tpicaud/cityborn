@@ -9,9 +9,7 @@ export async function GET(req: NextRequest) {
         const response = await apiFetch(`/sentence?score_type=${queryString}`, {
             requestOptions: {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: req.headers ?? {},
             },
         });
 

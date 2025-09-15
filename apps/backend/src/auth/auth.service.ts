@@ -59,7 +59,7 @@ export class AuthService {
         // Send event
         await this.eventService.trackEvent(createEvent({
             name: 'user_signed_up',
-            userAnalyticsId: '',
+            visitorId: '',
             properties: {
                 method: 'email'
             }

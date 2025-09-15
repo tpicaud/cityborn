@@ -10,21 +10,24 @@ export async function apiFetch(
     }: {
         requestOptions?: RequestInit,
         noCookieStore?: boolean
-    } = { }
+    } = {}
 ): Promise<Response> {
     const options = requestOptions || {};
-
     const access_token = await getAccessToken();
+
+    let headersObj;
+    if (options.headers instanceof Headers) {
+        headersObj = Object.fromEntries(options.headers.entries());
+    }
 
     // Build headers
     const headers: any = {
-        ...(options.headers || {}),
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...(headersObj || {}),
     }
 
     if (access_token) headers.Authorization = `Bearer ${access_token}`;
-
     let res = await fetch(baseUrl + endpoint, {
         ...options,
         headers

@@ -3,7 +3,7 @@ import { apiFetch } from "../../apiFetch";
 import { ErrorCode } from "@cityborn/errors";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ gameId: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ gameId: string }> }) {
     try {
         const gameId = (await params).gameId;
         if (!gameId) {
@@ -16,9 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ gam
         const response = await apiFetch(`/game/${gameId}`, {
             requestOptions: {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: req.headers ?? {},
             },
         });
         const data = await response.json();

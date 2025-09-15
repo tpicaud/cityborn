@@ -9,7 +9,7 @@ export class EventDto<Name extends keyof EventMap = keyof EventMap> {
     name: Name;
 
     @IsString()
-    userAnalyticsId: string;
+    visitorId: string;
 
     @IsObject()
     properties: EventMap[Name];

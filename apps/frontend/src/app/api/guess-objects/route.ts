@@ -9,9 +9,7 @@ export async function GET(req: NextRequest) {
         const response = await apiFetch(`/guess-objects?${queryString}`, {
             requestOptions: {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: req.headers ?? {},
             },
         });
 
