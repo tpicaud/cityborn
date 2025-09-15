@@ -8,6 +8,7 @@ import { ErrorCode } from '@cityborn/errors';
 import { SessionMode, User } from '@cityborn/types';
 import { CreateGameDto } from './dto/create-game.dto';
 import { GameResponseDto } from './dto/game.response.dto';
+import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 
 @Controller('session')
 export class SessionController {
@@ -15,10 +16,10 @@ export class SessionController {
 
     @UseGuards(OptionalAuthGuard)
     @Post()
-    async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user?: User): Promise<SessionResponseDto> {
-        if (createSessionDto.mode === SessionMode.MULTI && ((!user || (user && !user.isVerified)))) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT, message: 'User does not have an account' });
+    async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user?: User, @VisitorId() visitorId?: string): Promise<SessionResponseDto> {
+        if (createSessionDto.mode === SessionMode.MULTI && ((!user || (user && !user.isVerified)))) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED, message: 'User does not have an account or is no verified' });
         return {
-            session: await this.sessionService.create(createSessionDto, user)
+            session: await this.sessionService.create(createSessionDto, user, visitorId)
         }
     }
 
@@ -31,9 +32,9 @@ export class SessionController {
 
     @UseGuards(OptionalAuthGuard)
     @Post('create-game')
-    async createGame(@Body() createGameDto: CreateGameDto): Promise<GameResponseDto> {
+    async createGame(@Body() createGameDto: CreateGameDto, @VisitorId() visitorId?: string): Promise<GameResponseDto> {
         return {
-            game: await this.sessionService.createGame(createGameDto.gameConfig)
+            game: await this.sessionService.createGame(SessionMode.SOLO, createGameDto.gameConfig, visitorId)
         }
     }
 }

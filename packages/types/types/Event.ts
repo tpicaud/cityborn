@@ -1,9 +1,39 @@
 ///////////////////
 // Event mapping //
+
+import { SessionMode } from "../enums/SessionMode.js";
+import { GameConfig } from "./GameConfig.js";
+
 ///////////////////
 export interface EventMap {
-    user_signed_up: { method: "email" | "google" };
-    user_logged_in: { method: "email" | "google" };
+    ////////////////
+    // Connection //
+    ////////////////
+    user_signed_up: {
+        method: "email" | "google"
+    };
+    user_signed_in: {
+        method: "email" | "google"
+    };
+    user_new_connection: {};
+
+    /////////////
+    // Session //
+    /////////////
+    session_created: {
+        mode: SessionMode
+    };
+    game_started: {
+        mode: SessionMode,
+        gameConfig: GameConfig,
+        numberOfPlayers: number
+    };
+    game_finihsed: {
+        gameId: string,
+        mode: SessionMode,
+        numberOfPlayers: number,
+        average_score: number
+    };
 }
 
 //////////////////////
