@@ -3,16 +3,14 @@ import { apiFetch } from "../../apiFetch";
 import { ErrorCode } from "@cityborn/errors";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
     try {
         const sessionId = (await params).sessionId;
 
         const response = await apiFetch(`/session/${sessionId}`, {
             requestOptions: {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: req.headers ?? {},
             },
         });
 

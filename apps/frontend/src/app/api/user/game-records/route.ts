@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
 import { ErrorCode } from "@cityborn/errors";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const response = await apiFetch(`/user/game-records`, {
             requestOptions: {
-                method: 'GET'
+                method: 'GET',
+                headers: req.headers ?? {},
             }
         })
 
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
         const response = await apiFetch(`/user/game-records`, {
             requestOptions: {
                 method: 'POST',
+                headers: req.headers ?? {},
                 body: JSON.stringify(body),
             }
         })

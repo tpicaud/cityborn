@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { apiFetch } from '../../apiFetch';
 import { ErrorCode } from '@cityborn/errors';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
     try {
         const response = await apiFetch(`/auth/send-verification-email`, {
             requestOptions: {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: req.headers ?? {},
             },
         });
 

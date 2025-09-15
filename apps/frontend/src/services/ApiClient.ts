@@ -1,3 +1,4 @@
+import { getOrCreateVisitorId } from "@/lib/visitorId";
 import { ApiError } from "@cityborn/errors";
 import { CreateEvent, Game, GameConfig, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
 
@@ -5,12 +6,26 @@ export class ApiClient {
 
     constructor() { }
 
+    private async apiFetch(input: string, init?: RequestInit) {
+
+        // Headers
+        const headers = new Headers(init?.headers || {});
+        headers.set('Accept', 'application/json');
+        headers.set('Content-Type', 'application/json');
+        headers.set('X-Visitor-Id', getOrCreateVisitorId());
+
+        // Fetch
+        const response = await fetch(input, { ...init, headers });
+        return response;
+    }
+
+
     //////////////////
     // Auth service //
     //////////////////
 
     async getCurrentUser(): Promise<PublicUser | null> {
-        const response = await fetch(`/api/auth/me`, { method: 'GET' });
+        const response = await this.apiFetch(`/api/auth/me`, { method: 'GET' });
 
         const data = await response.json();
         if (!data) throw new Error("Invalid server response");
@@ -23,7 +38,7 @@ export class ApiClient {
     }
 
     async signUp(username: string, email: string, birthdate: Date, password: string): Promise<void> {
-        const response = await fetch(`/api/auth/sign-up`, {
+        const response = await this.apiFetch(`/api/auth/sign-up`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -39,7 +54,7 @@ export class ApiClient {
     }
 
     async signIn(identifier: string, password: string): Promise<void> {
-        const response = await fetch(`/api/auth/sign-in`, {
+        const response = await this.apiFetch(`/api/auth/sign-in`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -55,7 +70,7 @@ export class ApiClient {
     }
 
     async signOut(): Promise<void> {
-        const response = await fetch(`/api/auth/sign-out`, { method: 'POST' });
+        const response = await this.apiFetch(`/api/auth/sign-out`, { method: 'POST' });
 
         const data = await response.json();
 
@@ -65,7 +80,7 @@ export class ApiClient {
     }
 
     async signInWithGoogle(idToken: string): Promise<void> {
-        const response = await fetch(`/api/auth/sign-in-with-google`, {
+        const response = await this.apiFetch(`/api/auth/sign-in-with-google`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -81,7 +96,7 @@ export class ApiClient {
     }
 
     async sendVerificationEmail(): Promise<void> {
-        const response = await fetch(`/api/auth/send-verification-email`, {
+        const response = await this.apiFetch(`/api/auth/send-verification-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -96,7 +111,7 @@ export class ApiClient {
     }
 
     async verifyEmail(verification_token: string): Promise<void> {
-        const response = await fetch(`/api/auth/verify-email`, {
+        const response = await this.apiFetch(`/api/auth/verify-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -116,7 +131,7 @@ export class ApiClient {
     //////////////////
 
     async getGameRecords(): Promise<GameRecord[]> {
-        const response = await fetch(`/api/user/game-records`, {
+        const response = await this.apiFetch(`/api/user/game-records`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -133,7 +148,7 @@ export class ApiClient {
     }
 
     async saveGameRecords(gameRecord: GameRecord): Promise<void> {
-        const response = await fetch(`/api/user/game-records`, {
+        const response = await this.apiFetch(`/api/user/game-records`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -153,7 +168,7 @@ export class ApiClient {
     //////////////////////
 
     async createSession(mode: SessionMode): Promise<Session> {
-        const response = await fetch(`/api/session`, {
+        const response = await this.apiFetch(`/api/session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -171,7 +186,7 @@ export class ApiClient {
     }
 
     async fetchSession(sessionId: string): Promise<Session> {
-        const response = await fetch(`/api/session/${sessionId}`, { method: 'GET' });
+        const response = await this.apiFetch(`/api/session/${sessionId}`, { method: 'GET' });
 
         const data = await response.json();
 
@@ -187,7 +202,7 @@ export class ApiClient {
             ids: guessObjectsIds.join(','),
         });
 
-        const response = await fetch(`/api/guess-objects?${query.toString()}`, {
+        const response = await this.apiFetch(`/api/guess-objects?${query.toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -205,7 +220,7 @@ export class ApiClient {
     }
 
     async getEndSentence(score_type: string): Promise<string> {
-        const response = await fetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
+        const response = await this.apiFetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
 
         const data = await response.json();
 
@@ -221,7 +236,7 @@ export class ApiClient {
     //////////////////
 
     async createSoloGame(gameConfig: GameConfig) {
-        const response = await fetch(`/api/session/create-game`, {
+        const response = await this.apiFetch(`/api/session/create-game`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -244,7 +259,7 @@ export class ApiClient {
     // Event service //
     //////////////////
     async trackEvent(event: CreateEvent): Promise<void> {
-        const response = await fetch(`/api/event/track`, {
+        const response = await this.apiFetch(`/api/event/track`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

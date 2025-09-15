@@ -1,10 +1,10 @@
 // app/api/auth/me/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
 import { ErrorCode } from "@cityborn/errors";
 import { getAccessToken, getRefreshToken } from "../utils";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const access_token = await getAccessToken();
         const refresh_token = await getRefreshToken();
@@ -14,6 +14,7 @@ export async function GET() {
         const response = await apiFetch(`/auth/me`, {
             requestOptions: {
                 method: 'GET',
+                headers: req.headers ?? {},
                 cache: 'no-store'
             },
         });

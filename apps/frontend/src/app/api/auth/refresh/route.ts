@@ -4,7 +4,7 @@ import { apiFetch } from '../../apiFetch';
 import { ErrorCode } from '@cityborn/errors';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
     try {
         const refresh_token = await getRefreshToken();
 
@@ -12,6 +12,7 @@ export async function POST(_req: Request) {
             requestOptions: {
                 method: 'POST',
                 headers: {
+                    ...req.headers,
                     Cookie: `refresh_token=${refresh_token}`
                 }
             }

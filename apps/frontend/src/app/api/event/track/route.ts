@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
         const response = await apiFetch(`/event/track`, {
             requestOptions: {
                 method: 'POST',
+                headers: req.headers ?? {},
                 body: JSON.stringify(body),
             },
         });

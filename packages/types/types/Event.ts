@@ -11,7 +11,7 @@ export interface EventMap {
 //////////////////////
 export type Event<Name extends keyof EventMap = keyof EventMap> = {
     id: string;
-    anonUserId: string;
+    visitorId: string;
     name: Name;
     properties: EventMap[Name];
     created_at: string;
