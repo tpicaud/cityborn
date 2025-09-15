@@ -16,13 +16,15 @@ export const ProfileComponent = ({ user }: { user: User }) => {
 
     useEffect(() => {
         const getGameRecords = async () => {
-            try {
-                const games = await apiClient.getGameRecords();
-                setGames(games);
-            } catch (error: any) {
-                invokeError(error);
-            } finally {
-                setLoading(false);
+            if (user.isVerified) {
+                try {
+                    const games = await apiClient.getGameRecords();
+                    setGames(games);
+                } catch (error: any) {
+                    invokeError(error);
+                } finally {
+                    setLoading(false);
+                }
             }
         }
         getGameRecords();
@@ -54,7 +56,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 </Typography>
                 {user.birthdate && (
                     <Typography>
-                        <strong>Date de naissance:</strong> {user.birthdate}
+                        <strong>Date de naissance:</strong> {user.birthdate.split('T')[0]}
                     </Typography>
                 )}
                 <Typography>
@@ -63,7 +65,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 </Typography>
             </Box>
 
-            <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
+            {user.isVerified && <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
                 <AccordionSummary
                     expandIcon={!loading ? <ExpandMoreIcon /> : null}
                     sx={{
@@ -147,6 +149,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                     )}
                 </AccordionDetails>
             </Accordion >
+            }
         </Box >
     );
 };

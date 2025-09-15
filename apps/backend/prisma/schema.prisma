@@ -52,7 +52,7 @@ model GameRecord {
 model Event {
   id         Int      @id @default(autoincrement())
   name       String
-  visitorId String
+  visitorId  String
   properties Json
   createdAt  DateTime @default(now()) @db.Timestamp(6)
 }

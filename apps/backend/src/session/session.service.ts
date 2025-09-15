@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Categories, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus, User } from '@cityborn/types';
+import { Categories, createEvent, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus, User } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
@@ -9,6 +9,7 @@ import { ErrorCode } from '@cityborn/errors';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { EventService } from 'src/event/event.service';
 
 @Injectable()
 export class SessionService {
@@ -23,7 +24,8 @@ export class SessionService {
         private readonly playerService: PlayerService,
         private readonly idService: IdService,
         private readonly guessObjectService: GuessObjectService,
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
+        private readonly eventService: EventService
     ) { }
 
     private getKey(id: string): string {
@@ -35,7 +37,7 @@ export class SessionService {
     // Session method //
     ////////////////////
 
-    async create(dto: CreateSessionDto, user?: User): Promise<Session> {
+    async create(dto: CreateSessionDto, user?: User, visitorId?: string): Promise<Session> {
         const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
@@ -54,6 +56,18 @@ export class SessionService {
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
+
+        // Send event
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'session_created',
+                visitorId,
+                properties: {
+                    mode
+                }
+            }));
+        }
+
         return newSession;
     }
 
@@ -158,7 +172,7 @@ export class SessionService {
         return session;
     }
 
-    async startGame(socketID: string) {
+    async startGame(socketID: string, visitorId?: string) {
 
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
@@ -177,7 +191,7 @@ export class SessionService {
         if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Créer une nouvelle partie
-        const game = await this.createGame(session.gameConfig);
+        const game = await this.createGame(session.mode, session.gameConfig, visitorId);
 
         // Start first round
         const firstRound: Round = {
@@ -200,9 +214,10 @@ export class SessionService {
     // Current game method //
     /////////////////////////
 
-    async createGame(gameConfig: GameConfig): Promise<Game> {
+    async createGame(mode: SessionMode, gameConfig: GameConfig, visitorId?: string): Promise<Game> {
         const guessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
         const guessObjectIds = guessObjects.map(obj => obj.id);
+
         const game: Game = {
             id: await this.generateUniqueGameID(),
             status: GameStatus.STARTING,
@@ -211,6 +226,19 @@ export class SessionService {
                 results: {},
                 guessObjects: guessObjects
             }
+        }
+
+        // Send event
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'game_started',
+                visitorId,
+                properties: {
+                    mode,
+                    gameConfig,
+                    numberOfPlayers: 0
+                }
+            }));
         }
 
         return game;
@@ -271,7 +299,7 @@ export class SessionService {
         });
     }
 
-    async handleNextRound(socketID: string) {
+    async handleNextRound(socketID: string, visitorId?: string) {
         // Récupération du joueur
         const player = await this.playerService.getPlayer(socketID);
         if (!player) throw new NotFoundException({ code: ErrorCode.PLAYER_NOT_FOUND, message: `No player associated with this socket` });
@@ -316,7 +344,7 @@ export class SessionService {
         // Check if game ended
         if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
             // Store game in DB and save ended session
-            await this.endGame(session, game);
+            await this.endGame(session, game, visitorId);
 
             const lobbySession: Session = { ...session, status: SessionStatus.IN_LOBBY, currentGame: undefined };
             await this.saveSession(lobbySession);
@@ -440,10 +468,10 @@ export class SessionService {
     // Private function //
     //////////////////////
 
-    private async endGame(session: Session, game: Game): Promise<void> {
+    private async endGame(session: Session, game: Game, visitorId?: string): Promise<void> {
         try {
             // Store game in database
-            await this.prisma.gameRecord.create({
+            const game_record = await this.prisma.gameRecord.create({
                 data: {
                     mode: session.mode,
                     gameConfig: session.gameConfig as unknown as Prisma.InputJsonValue,
@@ -457,6 +485,23 @@ export class SessionService {
                     }
                 }
             });
+
+            // Send event
+            if (visitorId) {
+                await this.eventService.trackEvent(createEvent({
+                    name: 'game_finihsed',
+                    visitorId,
+                    properties: {
+                        gameId: game_record.id.toString(),
+                        mode: session.mode,
+                        numberOfPlayers: game.state.results ? Object.keys(game.state.results).length : 0,
+                        average_score: game.state.results ? Object.values(game.state.results).reduce((acc, res) => {
+                            const totalPoints = res.results.reduce((sum, r) => sum + r.points, 0);
+                            return acc + totalPoints;
+                        }, 0) / Object.keys(game.state.results).length : 0
+                    }
+                }));
+            }
         } catch (error) {
             this.logger.error(`Error storing game in db: ${error}`)
         }

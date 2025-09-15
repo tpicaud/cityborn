@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { RedisIoAdapter } from './redis/redis.adapter';
 import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,9 @@ async function bootstrap() {
   // use custom exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  // use interceptors
+  app.useGlobalInterceptors(new VisitorIdInterceptor());
+
   // use redis adapter
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();
@@ -30,7 +34,8 @@ async function bootstrap() {
 
   // Logger simple de toutes les requêtes
   // app.use((req, res, next) => {
-  //   console.log(req.headers)
+  //   //console.log(req.headers)
+  //   console.log(req)
   //   console.log(`${req.method} ${req.url}`);
   //   next();
   // });

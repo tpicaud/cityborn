@@ -31,7 +31,7 @@ export class AuthService {
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
-    async signUp(dto: SignUpDto): Promise<AuthResponseDto> {
+    async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
         const { email, username, birthdate, password } = dto;
 
         // Validate identifiers
@@ -57,13 +57,15 @@ export class AuthService {
         const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
 
         // Send event
-        await this.eventService.trackEvent(createEvent({
-            name: 'user_signed_up',
-            visitorId: '',
-            properties: {
-                method: 'email'
-            }
-        }));
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'user_signed_up',
+                visitorId,
+                properties: {
+                    method: 'email'
+                }
+            }));
+        }
 
         return {
             access_token,
@@ -73,7 +75,7 @@ export class AuthService {
     }
 
 
-    async signIn(dto: SignInDto): Promise<AuthResponseDto> {
+    async signIn(dto: SignInDto, visitorId?: string): Promise<AuthResponseDto> {
         const { identifier, password } = dto;
 
         // Find user
@@ -91,6 +93,17 @@ export class AuthService {
         const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
         const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
 
+                // Send event
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'user_signed_in',
+                visitorId,
+                properties: {
+                    method: 'email'
+                }
+            }));
+        }
+
         return {
             access_token,
             refresh_token,
@@ -98,7 +111,7 @@ export class AuthService {
         }
     }
 
-    async signInWithGoogle(dto: SignInWithGoogleDto): Promise<AuthResponseDto> {
+    async signInWithGoogle(dto: SignInWithGoogleDto, visitorId?: string): Promise<AuthResponseDto> {
         const { idToken } = dto;
 
         const { email, name } = await this.verifyGoogleToken(idToken);
@@ -114,6 +127,28 @@ export class AuthService {
                 username: uniqueUsername,
                 isVerified: true
             });
+
+            // Send event
+            if (visitorId) {
+                await this.eventService.trackEvent(createEvent({
+                    name: 'user_signed_up',
+                    visitorId,
+                    properties: {
+                        method: 'google'
+                    }
+                }));
+            }
+        } else {
+            // Send event
+            if (visitorId) {
+                await this.eventService.trackEvent(createEvent({
+                    name: 'user_signed_in',
+                    visitorId,
+                    properties: {
+                        method: 'google'
+                    }
+                }));
+            }
         }
 
 
