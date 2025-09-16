@@ -240,7 +240,7 @@ export class SessionService {
                 visitorId,
                 properties: {
                     mode: session.mode,
-                    gameConfig: session.gameConfig,
+                    categories: session.gameConfig.categories,
                     numberOfPlayers: session.mode === SessionMode.SOLO ?
                         session.players.length :
                         (session.players as OnlinePlayer[]).filter(player => player.connected).length

@@ -1,6 +1,7 @@
 ///////////////////
 // Event mapping //
 
+import { Categories } from "../enums/Categories.js";
 import { SessionMode } from "../enums/SessionMode.js";
 import { GameConfig } from "./GameConfig.js";
 
@@ -25,7 +26,7 @@ export interface EventMap {
     };
     game_started: {
         mode: SessionMode,
-        gameConfig: GameConfig,
+        categories: Categories[],
         numberOfPlayers: number
     };
     game_finished: {
