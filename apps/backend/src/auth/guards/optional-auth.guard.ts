@@ -10,10 +10,15 @@ import { Request } from 'express';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
-    constructor(private jwtService: JwtService, private readonly configService: ConfigService) { }
+    constructor(
+        private jwtService: JwtService,
+        private readonly configService: ConfigService,
+        private readonly userService: UserService
+    ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<Request>();
@@ -26,8 +31,9 @@ export class OptionalAuthGuard implements CanActivate {
         const user = await this.validateAccessToken(token);
         if (!user.isVerified) return true;
         
+        const fullUser = await this.userService.findById(user.id);
 
-        request['user'] = user;
+        request['user'] = fullUser;
         return true;
     }
 

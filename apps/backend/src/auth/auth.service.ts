@@ -13,7 +13,9 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
+import { createEvent, CreateEvent } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
+import { EventService } from 'src/event/event.service';
 
 @Injectable()
 export class AuthService {
@@ -25,10 +27,11 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly mailService: MailService,
+        private readonly eventService: EventService,
         @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
     ) { }
 
-    async signUp(dto: SignUpDto): Promise<AuthResponseDto> {
+    async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
         const { email, username, birthdate, password } = dto;
 
         // Validate identifiers
@@ -40,6 +43,7 @@ export class AuthService {
         const user = await this.userService.createUser({
             email,
             username,
+            type: 'email',
             birthdate,
             password: hash,
         });
@@ -53,6 +57,17 @@ export class AuthService {
         const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
         const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
 
+        // Send event
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'user_signed_up',
+                visitorId,
+                properties: {
+                    method: 'email'
+                }
+            }));
+        }
+
         return {
             access_token,
             refresh_token,
@@ -61,7 +76,7 @@ export class AuthService {
     }
 
 
-    async signIn(dto: SignInDto): Promise<AuthResponseDto> {
+    async signIn(dto: SignInDto, visitorId?: string): Promise<AuthResponseDto> {
         const { identifier, password } = dto;
 
         // Find user
@@ -79,6 +94,17 @@ export class AuthService {
         const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
         const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
 
+                // Send event
+        if (visitorId) {
+            await this.eventService.trackEvent(createEvent({
+                name: 'user_signed_in',
+                visitorId,
+                properties: {
+                    method: 'email'
+                }
+            }));
+        }
+
         return {
             access_token,
             refresh_token,
@@ -86,7 +112,7 @@ export class AuthService {
         }
     }
 
-    async signInWithGoogle(dto: SignInWithGoogleDto): Promise<AuthResponseDto> {
+    async signInWithGoogle(dto: SignInWithGoogleDto, visitorId?: string): Promise<AuthResponseDto> {
         const { idToken } = dto;
 
         const { email, name } = await this.verifyGoogleToken(idToken);
@@ -100,8 +126,31 @@ export class AuthService {
             user = await this.userService.createUser({
                 email,
                 username: uniqueUsername,
+                type: 'google',
                 isVerified: true
             });
+
+            // Send event
+            if (visitorId) {
+                await this.eventService.trackEvent(createEvent({
+                    name: 'user_signed_up',
+                    visitorId,
+                    properties: {
+                        method: 'google'
+                    }
+                }));
+            }
+        } else {
+            // Send event
+            if (visitorId) {
+                await this.eventService.trackEvent(createEvent({
+                    name: 'user_signed_in',
+                    visitorId,
+                    properties: {
+                        method: 'google'
+                    }
+                }));
+            }
         }
 
 
@@ -157,9 +206,9 @@ export class AuthService {
     }
 
     // Auxiliary
-    private async generateToken(type: 'access' | 'refresh', sub: number, username: string, email: string, isVerified: boolean): Promise<string> {
+    private async generateToken(type: 'access' | 'refresh', id: number, username: string, email: string, isVerified: boolean): Promise<string> {
         const payload = {
-            sub,
+            id,
             username,
             email,
             isVerified
@@ -191,7 +240,7 @@ export class AuthService {
         if (!payload.email_verified) throw new UnauthorizedException({ code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED, message: 'Google account not verified' });
 
         if (!payload.email || !payload.name) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: 'Missing name or email' });
-        
+
         return {
             email: payload.email,
             name: payload.name,

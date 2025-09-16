@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
         const response = await apiFetch(`/auth/verify-email`, {
             requestOptions: {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: req.headers ?? {},
                 body: JSON.stringify(body)
             },
         });
