@@ -72,11 +72,11 @@ export default function MenuComponent({
                 <Image
                     src="/cityborn_transparent_new_logo.png"
                     alt="Logo"
-                    width={96}
-                    height={96}
+                    width={256}
+                    height={256}
                     style={{ objectFit: 'contain' }}
+                    className="object-contain w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40"
                     priority
-                    className="sm:w-[144px] md:h-[144px]"
                 />
                 <p className="text-base md:text-lg text-center ">Trouve le lieu de naissance des personnalités</p>
             </div>
