@@ -43,6 +43,7 @@ export class AuthService {
         const user = await this.userService.createUser({
             email,
             username,
+            type: 'email',
             birthdate,
             password: hash,
         });
@@ -125,6 +126,7 @@ export class AuthService {
             user = await this.userService.createUser({
                 email,
                 username: uniqueUsername,
+                type: 'google',
                 isVerified: true
             });
 

@@ -6,7 +6,7 @@ import { Prisma, User as PrismaUser } from '@prisma/client';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
 import { GameRecordDto } from 'src/session/dto/game.dto';
-import { SessionMode } from '@cityborn/types';
+import { AccountType, SessionMode } from '@cityborn/types';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 
 @Injectable()
@@ -20,9 +20,10 @@ export class UserService {
         data: {
             email: string;
             username: string;
-            isVerified?: boolean,
-            password?: string,
-            birthdate?: string
+            type: AccountType;
+            isVerified?: boolean;
+            password?: string;
+            birthdate?: string;
         }): Promise<PrismaUser> {
         return await this.prisma.user.create({ data });
     }
