@@ -7,11 +7,9 @@ import { useSoloSession } from '@/hooks/useSoloSession';
 import { GameConfig, Guess } from '@cityborn/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
-import { useRouter } from 'next/navigation';
 
 export default function SoloSessionComponent() {
 
-    const router = useRouter();
     const { user } = useAuth();
     const { invokeError } = useError();
     const localPlayerID = user ? user.username : 'guest';
@@ -78,11 +76,8 @@ export default function SoloSessionComponent() {
     const handleExitGame = async () => {
         try {
             await soloSession.exitGame();
-        } catch (error) {
-            console.log(error)
-        } finally {
-            router.push('/')
-            return;
+        } catch (error: any) {
+            console.log(error);
         }
     }
 

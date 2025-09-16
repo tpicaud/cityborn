@@ -3,12 +3,12 @@ import { Game, GameStatus, Guess, Result, RoundStatus, Session, SessionMode, Ses
 import { GameConfig } from "@cityborn/types";
 import { useEffect, useState } from "react";
 import { useError } from "@/contexts/ErrorContext";
+import { useRouter } from "next/navigation";
 import { useApi } from "@/contexts/ApiContext";
 
-export function useSoloSession(localPlayerID: string): IUseSession & {
-    exitGame: () => Promise<void>
-} {
+export function useSoloSession(localPlayerID: string): IUseSession {
 
+    const router = useRouter();
     const { invokeError } = useError();
     const apiClient = useApi();
     const [session, setSession] = useState<Session>();
@@ -222,12 +222,12 @@ export function useSoloSession(localPlayerID: string): IUseSession & {
             await apiClient.endSoloGame(session);
         } catch (error: any) {
             invokeError(error);
+        } finally {
+            setSession({
+                ...session,
+                currentGame: undefined
+            });
         }
-
-        setSession({
-            ...session,
-            currentGame: undefined
-        });
     }
 
     const playAgain = async () => {
@@ -237,9 +237,9 @@ export function useSoloSession(localPlayerID: string): IUseSession & {
             await apiClient.endSoloGame(session);
         } catch (error: any) {
             invokeError(error);
+        } finally {
+            await startGame();
         }
-
-        await startGame();
     }
 
     const exitGame = async () => {
@@ -249,6 +249,8 @@ export function useSoloSession(localPlayerID: string): IUseSession & {
             await apiClient.endSoloGame(session);
         } catch (error: any) {
             invokeError(error);
+        } finally {
+            router.push('/');
         }
     }
 
