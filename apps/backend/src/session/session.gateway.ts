@@ -43,7 +43,6 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	async handleConnection(client: Socket) {
 
 		const visitorId = client.handshake?.query?.["x-visitor-id"];
-		console.log('query', client.handshake.query)
 		if (visitorId) {
 			(client as any).visitorId = visitorId;
 		}
@@ -255,11 +254,12 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	@SubscribeMessage('session:playAgain')
 	async playAgain(
 		@ConnectedSocket() socket: Socket,
+		@VisitorId() visitorId?: string
 	): Promise<WSResponse> {
 		try {
 
 			// Start new one
-			const session = await this.sessionService.startGame(socket.id);
+			const session = await this.sessionService.startGame(socket.id, visitorId);
 
 			this.io.to(session.id).emit('session:update', session);
 

@@ -1,6 +1,6 @@
 import { getOrCreateVisitorId } from "@/lib/visitorId";
 import { ApiError } from "@cityborn/errors";
-import { CreateEvent, Game, GameConfig, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
+import { CreateEvent, Game, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
 
 export class ApiClient {
 
@@ -235,13 +235,13 @@ export class ApiClient {
     // Game service //
     //////////////////
 
-    async createSoloGame(gameConfig: GameConfig) {
+    async createSoloGame(session: Session) {
         const response = await this.apiFetch(`/api/session/create-game`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ gameConfig }),
+            body: JSON.stringify({ session }),
         });
 
         const data = await response.json();
@@ -253,6 +253,35 @@ export class ApiClient {
         const game: Game = data.game;
 
         return game;
+    }
+
+    async endSoloGame(session: Session) {
+        if (!session.currentGame) return;
+
+        const lightSession: Session = {
+            ...session,
+            currentGame: {
+                ...session.currentGame,
+                state: {
+                    ...session.currentGame?.state,
+                    guessObjects: undefined
+                }
+            }
+        };
+
+        const response = await this.apiFetch(`/api/session/end-solo-game`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(lightSession),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new ApiError(data.code, data.message, data.statusCode);
+        }
     }
 
     //////////////////

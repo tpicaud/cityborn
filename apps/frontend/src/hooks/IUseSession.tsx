@@ -10,6 +10,6 @@ export interface IUseSession {
     startGame: () => Promise<void>;
     guess: (guess: Guess) => void;
     nextRound: () => void;
-    endGame: () => void;
-    playAgain: () => void;
+    endGame: () => Promise<void>;
+    playAgain: () => Promise<void>;
 }
