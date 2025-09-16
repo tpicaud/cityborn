@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "../../apiFetch";
+import { ErrorCode } from "@cityborn/errors";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const response = await apiFetch(`/user/game-records`, {
             requestOptions: {
-                method: 'GET'
+                method: 'GET',
+                headers: req.headers ?? {},
             }
         })
 
         const data = await response.json();
 
         if (!response.ok) {
-            const message = data.message || "Failed to fetch current user";
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
         return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }
@@ -32,6 +37,7 @@ export async function POST(req: NextRequest) {
         const response = await apiFetch(`/user/game-records`, {
             requestOptions: {
                 method: 'POST',
+                headers: req.headers ?? {},
                 body: JSON.stringify(body),
             }
         })
@@ -39,14 +45,17 @@ export async function POST(req: NextRequest) {
 
         if (!response.ok) {
             const data = await response.json();
-            const message = data.message;
-            return NextResponse.json({ message, statusCode: response.status }, { status: response.status });
+            return NextResponse.json(data, { status: response.status });
         }
 
         return NextResponse.json({ message: 'success' }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(
-            { message: error.message || "Internal Server Error", statusCode: 500 },
+            {
+                code: ErrorCode.UNKNOWN_ERROR,
+                message: error.message || "Internal Server Error",
+                statusCode: 500
+            },
             { status: 500 }
         );
     }

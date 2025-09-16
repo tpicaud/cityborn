@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useSocket } from "./useSocket";
 import { Guess, Session, SessionStatus } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
-import * as ApiServiceClient from "@/services/ApiServiceClient";
 import { Socket } from "socket.io-client";
 import { useError } from "@/contexts/ErrorContext";
 import { ApiError } from "@cityborn/errors";
+import { useApi } from "@/contexts/ApiContext";
 
 export function useMultiSession(localPlayerID: string | undefined, sessionID: string): IUseSession & {
     // Extends interface
@@ -20,6 +20,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
 } {
 
     const { invokeError } = useError();
+    const apiClient = useApi();
     const [session, setSession] = useState<Session>();
     const [connected, setConnected] = useState(false);
     const [isHost, setIsHost] = useState(false);
@@ -33,7 +34,7 @@ export function useMultiSession(localPlayerID: string | undefined, sessionID: st
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const session: Session = await ApiServiceClient.fetchSession(sessionID);
+                const session: Session = await apiClient.fetchSession(sessionID);
                 setSession(session);
             } catch (error: any) {
                 invokeError(error)

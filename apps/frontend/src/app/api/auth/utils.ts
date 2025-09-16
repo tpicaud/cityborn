@@ -12,7 +12,7 @@ export async function storeTokensInCookies(access_token: string, refresh_token: 
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 15, // 15m
+        maxAge: 60 * 60 * 6, // 4h
         path: '/',
         domain: `.${process.env.DOMAIN_NAME}`
     });

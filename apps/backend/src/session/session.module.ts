@@ -8,9 +8,10 @@ import { PlayerModule } from 'src/player/player.module';
 import { IdModule } from 'src/id/id.module';
 import { GuessObjectModule } from 'src/guess-object/guess-object.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { EventModule } from 'src/event/event.module';
 
 @Module({
-  imports: [RedisModule, LockModule, PlayerModule, IdModule, GuessObjectModule, PrismaModule],
+  imports: [RedisModule, LockModule, PlayerModule, IdModule, GuessObjectModule, PrismaModule, EventModule],
   controllers: [SessionController],
   providers: [SessionService, SessionGateway],
   exports: [SessionService]

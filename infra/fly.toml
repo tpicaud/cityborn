@@ -1,0 +1,26 @@
+app = "cityborn-metabase"
+
+primary_region = "cdg"
+
+[build]
+  image = "metabase/metabase:latest"
+
+[[mounts]]
+  source = "metabase_data"
+  destination = "/metabase_data"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"
+
+[env]
+  MB_DB_FILE = "/metabase_data/metabase.db"
+  MB_JETTY_HOST = "0.0.0.0"
+  MB_JETTY_PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 1

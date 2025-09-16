@@ -9,7 +9,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import * as ApiServiceClient from '@/services/ApiServiceClient';
+import { useApi } from '@/contexts/ApiContext';
 
 const ResultsComponent = ({
     game,
@@ -28,7 +28,8 @@ const ResultsComponent = ({
     handlePlayAgain: () => Promise<void>,
     handleExitGame: () => Promise<void>
 }) => {
-    console.log('game in results component', game);
+    const apiClient = useApi();
+
     const playersResults = new Map<string, PlayerResults>(getGameResult(game));
     const [sentence, setSentence] = useState<{ message: string, sub_message_1: string, sub_message_2: string }>();
     const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>()
@@ -68,7 +69,7 @@ const ResultsComponent = ({
         };
 
         const scoreType = getScoreType(totalPoints);
-        const message = await ApiServiceClient.getEndSentence(scoreType) ?? ''
+        const message = await apiClient.getEndSentence(scoreType) ?? ''
 
         let sub_message_1 = '';
         let sub_message_2 = '';

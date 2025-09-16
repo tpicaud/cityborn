@@ -61,7 +61,7 @@ export default function SoloSessionComponent() {
 
     const handleEndGame = async () => {
         try {
-            soloSession.endGame();
+            await soloSession.endGame();
         } catch (error: any) {
             invokeError(error);
         }
@@ -69,15 +69,21 @@ export default function SoloSessionComponent() {
 
     const handlePlayAgain = async () => {
         try {
-            soloSession.playAgain();
+            await soloSession.playAgain();
         } catch (error) {
             console.log(error);
         }
     }
 
     const handleExitGame = async () => {
-        router.push('/')
-        return;
+        try {
+            await soloSession.exitGame();
+        } catch (error) {
+            console.log(error)
+        } finally {
+            router.push('/')
+            return;
+        }
     }
 
     ///////////////

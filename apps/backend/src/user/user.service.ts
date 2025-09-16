@@ -6,7 +6,8 @@ import { Prisma, User as PrismaUser } from '@prisma/client';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
 import { GameRecordDto } from 'src/session/dto/game.dto';
-import { SessionMode } from '@cityborn/types';
+import { AccountType, SessionMode } from '@cityborn/types';
+import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 
 @Injectable()
 export class UserService {
@@ -19,9 +20,10 @@ export class UserService {
         data: {
             email: string;
             username: string;
-            isVerified?: boolean,
-            password?: string,
-            birthdate?: string
+            type: AccountType;
+            isVerified?: boolean;
+            password?: string;
+            birthdate?: string;
         }): Promise<PrismaUser> {
         return await this.prisma.user.create({ data });
     }
@@ -78,18 +80,18 @@ export class UserService {
         return { gameRecords: GameMapper.toGameRecordDto(user.gameRecords) };
     }
 
-    async saveSoloGameRecord(user_id: number, gameRecord: GameRecordDto): Promise<void> {
-        if (gameRecord.mode !== SessionMode.SOLO) {
+    async saveSoloGameRecord(user_id: number, createGameRecord: CreateGameRecordDto): Promise<void> {
+        if (createGameRecord.mode !== SessionMode.SOLO) {
             throw new BadRequestException({ code: ErrorCode.BAD_REQUEST, message: 'Cannot save game with this gameMode' })
         }
 
         await this.prisma.gameRecord.create({
             data: {
-                mode: gameRecord.mode,
-                gameConfig: gameRecord.gameConfig as unknown as Prisma.InputJsonValue,
-                players: gameRecord.players as unknown as Prisma.InputJsonValue,
-                guessObjectsIds: gameRecord.guessObjectsIds,
-                results: gameRecord.results as unknown as Prisma.InputJsonValue,
+                mode: createGameRecord.mode,
+                gameConfig: createGameRecord.gameConfig as unknown as Prisma.InputJsonValue,
+                players: createGameRecord.players as unknown as Prisma.InputJsonValue,
+                guessObjectsIds: createGameRecord.guessObjectsIds,
+                results: createGameRecord.results as unknown as Prisma.InputJsonValue,
                 users: {
                     connect: { id: user_id }
                 }

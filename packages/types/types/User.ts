@@ -1,5 +1,7 @@
 import { GameRecord } from "./Game.js";
 
+export type AccountType = 'email' | 'google';
+
 export class PublicUser {
 
   /////////////
@@ -22,6 +24,8 @@ export class User extends PublicUser {
   email: string;
 
   birthdate?: string;
+
+  type: AccountType;
 
   createdAt?: string;
 

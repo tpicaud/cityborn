@@ -97,8 +97,7 @@ export class GameDto implements Game {
 
 export class GameRecordDto implements GameRecord {
     @IsNumber()
-    @IsOptional()
-    id?: number;
+    id: number;
 
     @IsEnum(SessionMode)
     mode: SessionMode;
@@ -120,6 +119,5 @@ export class GameRecordDto implements GameRecord {
     results: Record<string, PlayerResultsDto>;
 
     @IsString()
-    @IsOptional()
-    createdAt?: string;
+    createdAt: string;
 }

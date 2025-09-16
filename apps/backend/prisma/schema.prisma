@@ -19,6 +19,7 @@ model User {
   email      String    @unique
   username   String    @unique
   birthdate  DateTime? @db.Date
+  type       String    @default("unknown")
   password   String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -47,4 +48,12 @@ model GameRecord {
   createdAt       DateTime @default(now())
 
   users User[] @relation("GameRecordUsers")
+}
+
+model Event {
+  id         Int      @id @default(autoincrement())
+  name       String
+  visitorId  String
+  properties Json
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
 }

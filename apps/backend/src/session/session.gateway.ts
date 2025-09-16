@@ -9,6 +9,7 @@ import { ErrorCode } from '@cityborn/errors';
 import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 import { extractAccessTokenFromWsClient } from 'src/auth/utils';
 import { getJwtConstants } from 'src/auth/constants';
+import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 
 interface WSResponse {
 	success: boolean,
@@ -40,11 +41,18 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	io: Server;
 
 	async handleConnection(client: Socket) {
+
+		const visitorId = client.handshake?.query?.["x-visitor-id"];
+		if (visitorId) {
+			(client as any).visitorId = visitorId;
+		}
+
 		const token = extractAccessTokenFromWsClient(client);
 		if (!token) {
 			(client as any).user = null;
 			return;
 		}
+
 		// if (!token) {
 		//     client.emit('error', { message: 'Unauthorized: token missing' });
 		//     client.disconnect();
@@ -169,9 +177,10 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	@SubscribeMessage('session:startGame')
 	async startGame(
 		@ConnectedSocket() socket: Socket,
+		@VisitorId() visitorId?: string
 	): Promise<WSResponse> {
 		try {
-			const session = await this.sessionService.startGame(socket.id);
+			const session = await this.sessionService.startGame(socket.id, visitorId);
 
 			this.io.to(session.id).emit('session:update', session);
 
@@ -221,10 +230,11 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
 	@SubscribeMessage('session:nextRound')
 	async handleNextRound(
-		@ConnectedSocket() socket: Socket
+		@ConnectedSocket() socket: Socket,
+		@VisitorId() visitorId?: string
 	): Promise<WSResponse> {
 		try {
-			const session = await this.sessionService.handleNextRound(socket.id);
+			const session = await this.sessionService.handleNextRound(socket.id, visitorId);
 
 			this.io.to(session.id).emit('session:update', session);
 			return { success: true };
@@ -244,11 +254,12 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	@SubscribeMessage('session:playAgain')
 	async playAgain(
 		@ConnectedSocket() socket: Socket,
+		@VisitorId() visitorId?: string
 	): Promise<WSResponse> {
 		try {
 
 			// Start new one
-			const session = await this.sessionService.startGame(socket.id);
+			const session = await this.sessionService.startGame(socket.id, visitorId);
 
 			this.io.to(session.id).emit('session:update', session);
 

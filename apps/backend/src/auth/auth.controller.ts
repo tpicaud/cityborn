@@ -9,24 +9,26 @@ import { RefreshGuard } from './guards/refresh.guard';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CurrentUser } from 'src/user/user.decorator';
 import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
+import { User } from '@cityborn/types';
+import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('sign-up')
-    async signUp(@Body() signUpDto: SignUpDto): Promise<AuthResponseDto> {
-        return await this.authService.signUp(signUpDto);
+    async signUp(@Body() signUpDto: SignUpDto, @VisitorId() visitorId?: string): Promise<AuthResponseDto> {
+        return await this.authService.signUp(signUpDto, visitorId);
     }
 
     @Post('sign-in')
-    async signIn(@Body() signInDto: SignInDto): Promise<AuthResponseDto> {
-        return await this.authService.signIn(signInDto);
+    async signIn(@Body() signInDto: SignInDto, @VisitorId() visitorId?: string): Promise<AuthResponseDto> {
+        return await this.authService.signIn(signInDto, visitorId);
     }
 
     @Post('sign-in-with-google')
-    async signInWithGoogle(@Body() signInWithGoogleDto: SignInWithGoogleDto): Promise<AuthResponseDto> {
-        return await this.authService.signInWithGoogle(signInWithGoogleDto);
+    async signInWithGoogle(@Body() signInWithGoogleDto: SignInWithGoogleDto, @VisitorId() visitorId?: string): Promise<AuthResponseDto> {
+        return await this.authService.signInWithGoogle(signInWithGoogleDto, visitorId);
     }
 
     @Post('refresh')
@@ -38,7 +40,7 @@ export class AuthController {
 
     @Post('send-verification-email')
     @UseGuards(NotVerifiedAuthGuard)
-    async sendVerificationEmail(@CurrentUser() user): Promise<void> {
+    async sendVerificationEmail(@CurrentUser() user?: User): Promise<void> {
         return await this.authService.sendVerificationEmail(user);
     }
 
