@@ -10,6 +10,7 @@ import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { EventService } from 'src/event/event.service';
+import { SessionDto } from './dto/session.dto';
 
 @Injectable()
 export class SessionService {
@@ -52,7 +53,11 @@ export class SessionService {
                 timer: 20,
                 nbOfObjects: 6
             },
-            players: mode === SessionMode.SOLO ? [{ username: user ? user.username : 'guest', isGuest: user ? false : true }] : [],
+            players: mode === SessionMode.SOLO ? [{
+                username: user ? user.username : 'guest',
+                isGuest: user ? false : true,
+                id: user ? user.id : undefined
+            }] : [],
         };
 
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
@@ -191,7 +196,7 @@ export class SessionService {
         if (session.hostID !== playerID) throw new ForbiddenException({ code: ErrorCode.SESSION_FORBIDDEN_HOST, message: `Player is not the host` });
 
         // Créer une nouvelle partie
-        const game = await this.createGame(session.mode, session.gameConfig, visitorId);
+        const game = await this.createGame(session, visitorId);
 
         // Start first round
         const firstRound: Round = {
@@ -214,8 +219,8 @@ export class SessionService {
     // Current game method //
     /////////////////////////
 
-    async createGame(mode: SessionMode, gameConfig: GameConfig, visitorId?: string): Promise<Game> {
-        const guessObjects = await this.guessObjectService.findByGameConfig(gameConfig);
+    async createGame(session: Session, visitorId?: string): Promise<Game> {
+        const guessObjects = await this.guessObjectService.findByGameConfig(session.gameConfig);
         const guessObjectIds = guessObjects.map(obj => obj.id);
 
         const game: Game = {
@@ -234,9 +239,11 @@ export class SessionService {
                 name: 'game_started',
                 visitorId,
                 properties: {
-                    mode,
-                    gameConfig,
-                    numberOfPlayers: 0
+                    mode: session.mode,
+                    gameConfig: session.gameConfig,
+                    numberOfPlayers: session.mode === SessionMode.SOLO ?
+                        session.players.length :
+                        (session.players as OnlinePlayer[]).filter(player => player.connected).length
                 }
             }));
         }
@@ -368,6 +375,11 @@ export class SessionService {
         return session;
     }
 
+    async endSoloGame(sessionDto: SessionDto, visitorId?: string) {
+        if (!sessionDto.currentGame) return;
+        await this.endGame(sessionDto, sessionDto.currentGame, visitorId);
+    }
+
     ///////////////////////
     // Connection method //
     ///////////////////////
@@ -489,7 +501,7 @@ export class SessionService {
             // Send event
             if (visitorId) {
                 await this.eventService.trackEvent(createEvent({
-                    name: 'game_finihsed',
+                    name: 'game_finished',
                     visitorId,
                     properties: {
                         gameId: game_record.id.toString(),

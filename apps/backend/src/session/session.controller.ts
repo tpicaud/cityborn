@@ -9,6 +9,7 @@ import { SessionMode, User } from '@cityborn/types';
 import { CreateGameDto } from './dto/create-game.dto';
 import { GameResponseDto } from './dto/game.response.dto';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
+import { SessionDto } from './dto/session.dto';
 
 @Controller('session')
 export class SessionController {
@@ -34,7 +35,13 @@ export class SessionController {
     @Post('create-game')
     async createGame(@Body() createGameDto: CreateGameDto, @VisitorId() visitorId?: string): Promise<GameResponseDto> {
         return {
-            game: await this.sessionService.createGame(SessionMode.SOLO, createGameDto.gameConfig, visitorId)
+            game: await this.sessionService.createGame(createGameDto.session, visitorId)
         }
+    }
+
+    @UseGuards(OptionalAuthGuard)
+    @Post('end-solo-game')
+    async endSoloGame(@Body() sessionDto: SessionDto, @VisitorId() visitorId?: string): Promise<void> {
+        await this.sessionService.endSoloGame(sessionDto, visitorId);
     }
 }

@@ -28,7 +28,7 @@ export interface EventMap {
         gameConfig: GameConfig,
         numberOfPlayers: number
     };
-    game_finihsed: {
+    game_finished: {
         gameId: string,
         mode: SessionMode,
         numberOfPlayers: number,

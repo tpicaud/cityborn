@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { GameRecordDto } from 'src/session/dto/game.dto';
+import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 
 @Controller('user')
 export class UserController {
@@ -16,8 +17,8 @@ export class UserController {
 
     @Post('game-records')
     @UseGuards(AuthGuard)
-    async saveSoloGameRecord(@Request() req, @Body() gameRecordDto: GameRecordDto): Promise<void> {
-        return this.userService.saveSoloGameRecord(req.user.id, gameRecordDto);
+    async saveSoloGameRecord(@Request() req, @Body() createGameRecordDto: CreateGameRecordDto): Promise<void> {
+        return this.userService.saveSoloGameRecord(req.user.id, createGameRecordDto);
     }
 
 }
