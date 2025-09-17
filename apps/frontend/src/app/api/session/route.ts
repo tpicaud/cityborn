@@ -14,10 +14,6 @@ export async function POST(req: Request) {
             },
         });
 
-        console.log(response.status)
-        const text = await response.text();
-        console.log(text);
-
         const data = await response.json();
 
         if (!response.ok) {
