@@ -32,8 +32,9 @@ export async function apiFetch(
         ...requestOptions,
         headers
     };
-
+    console.log('before request')
     let res = await fetch(baseUrl + endpoint, options);
+    console.log('after request')
 
     if (res.status === 401) {
         // Send event
@@ -41,9 +42,7 @@ export async function apiFetch(
 
         // try refresh
         const tokens = await refreshTokens();
-        console.log('before request')
         if (!tokens) return res;
-        console.log('after request')
 
         // Retry with new tokens
         const { refreshed_access_token, refreshed_refresh_token } = tokens;
