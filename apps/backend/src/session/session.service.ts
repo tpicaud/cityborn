@@ -39,6 +39,7 @@ export class SessionService {
     ////////////////////
 
     async create(dto: CreateSessionDto, user?: User, visitorId?: string): Promise<Session> {
+        this.logger.log('creating solo session')
         const { mode } = dto;
 
         const sessionID: string = await this.generateUniqueSessionID();
@@ -60,8 +61,10 @@ export class SessionService {
             }] : [],
         };
 
+        this.logger.log('saving solo session')
         if (mode === SessionMode.MULTI) await this.saveSession(newSession);
 
+        this.logger.log('saving solo session')
         // Send event
         if (visitorId) {
             await this.eventService.trackEvent(createEvent({
@@ -73,6 +76,7 @@ export class SessionService {
             }));
         }
 
+        this.logger.log('returning solo session')
         return newSession;
     }
 
