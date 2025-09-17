@@ -32,13 +32,18 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
-  // Logger simple de toutes les requêtes
   app.use((req, res, next) => {
-    //console.log(req.headers)
-    console.log(req)
-    console.log(`${req.method} ${req.url}`);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
   });
+
+  // Logger simple de toutes les requêtes
+  // app.use((req, res, next) => {
+  //   //console.log(req.headers)
+  //   //console.log(req)
+  //   console.log(`${req.method} ${req.url}`);
+  //   next();
+  // });
 
   await app.listen(process.env.PORT ?? 4000, process.env.HOST ?? '0.0.0.0');
 }
