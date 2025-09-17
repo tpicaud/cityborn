@@ -96,3 +96,4 @@
 | 14/09/2025 | 3h | Analytics backend |
 | 15/09/2025 | 7h | Analytics frontend |
 | 16/09/2025 | 7h | Analytics frontend |
+| 17/09/2025 | 4h | Analytics déploiement |

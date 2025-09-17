@@ -13,7 +13,6 @@ export async function POST(req: Request) {
                 body: JSON.stringify(body),
             },
         });
-        console.log(response.headers);
 
         const data = await response.json();
 
