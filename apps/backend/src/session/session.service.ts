@@ -76,7 +76,6 @@ export class SessionService {
             }));
         }
 
-        this.logger.log('returning solo session', newSession);
         return newSession;
     }
 

@@ -26,8 +26,10 @@ export class SessionController {
 
     @Get(':sessionId')
     async getSession(@Param('sessionId') sessionId: string): Promise<SessionResponseDto> {
+        const session = await this.sessionService.getById(sessionId);
+        console.log(session)
         return {
-            session: await this.sessionService.getById(sessionId)
+            session
         };
     }
 
