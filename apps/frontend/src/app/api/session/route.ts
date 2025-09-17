@@ -5,7 +5,7 @@ import { ErrorCode } from "@cityborn/errors";
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        
+
         const response = await apiFetch(`/session`, {
             requestOptions: {
                 method: 'POST',
@@ -13,6 +13,10 @@ export async function POST(req: Request) {
                 body: JSON.stringify(body),
             },
         });
+
+        console.log(response.status)
+        const text = await response.json();
+        console.log(text);
 
         const data = await response.json();
 

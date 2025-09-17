@@ -32,9 +32,8 @@ export async function apiFetch(
         ...requestOptions,
         headers
     };
-    console.log('before request')
+
     let res = await fetch(baseUrl + endpoint, options);
-    console.log('after request')
 
     if (res.status === 401) {
         // Send event
