@@ -34,7 +34,7 @@ export async function apiFetch(
     };
 
     let res = await fetch(baseUrl + endpoint, options);
-    console.log(res.status)
+
     if (res.status === 401) {
         // Send event
         if (!access_token) await sendFirstSignInEvent(headers);
