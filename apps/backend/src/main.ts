@@ -34,7 +34,7 @@ async function bootstrap() {
 
   app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.removeHeader('Content-encoding');
+    res.removeHeader('Content-Encoding');
     next();
   });
 
