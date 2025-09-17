@@ -33,12 +33,12 @@ async function bootstrap() {
   app.useWebSocketAdapter(redisIoAdapter);
 
   // Logger simple de toutes les requêtes
-  // app.use((req, res, next) => {
-  //   //console.log(req.headers)
-  //   console.log(req)
-  //   console.log(`${req.method} ${req.url}`);
-  //   next();
-  // });
+  app.use((req, res, next) => {
+    //console.log(req.headers)
+    console.log(req)
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
 
   await app.listen(process.env.PORT ?? 4000, process.env.HOST ?? '0.0.0.0');
 }
