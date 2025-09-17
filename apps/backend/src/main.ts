@@ -5,6 +5,7 @@ import { RedisIoAdapter } from './redis/redis.adapter';
 import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,11 +33,12 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
-  app.use((req, res, next) => {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.removeHeader('Content-Encoding');
-    next();
-  });
+  app.use(
+    compression({
+      level: 6,
+      threshold: 0,
+    }),
+  );
 
   // Logger simple de toutes les requêtes
   // app.use((req, res, next) => {
