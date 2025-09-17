@@ -19,8 +19,6 @@ export class SessionController {
     @Post()
     async createSession(@Body() createSessionDto: CreateSessionDto, @CurrentUser() user?: User, @VisitorId() visitorId?: string): Promise<SessionResponseDto> {
         if (createSessionDto.mode === SessionMode.MULTI && ((!user || (user && !user.isVerified)))) throw new UnauthorizedException({ code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED, message: 'User does not have an account or is no verified' });
-        const session = await this.sessionService.create(createSessionDto, user, visitorId)
-        console.log(session)
         return {
             session: await this.sessionService.create(createSessionDto, user, visitorId)
         }
