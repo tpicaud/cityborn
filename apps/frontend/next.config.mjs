@@ -2,6 +2,11 @@
 const nextConfig = {
     reactStrictMode: false,
 
+    // Compiler config
+    compiler: {
+        removeConsole: process.env.NODE_ENV === 'production'
+    },
+
     // CORS config
     async headers() {
         return [
