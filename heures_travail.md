@@ -97,3 +97,4 @@
 | 15/09/2025 | 7h | Analytics frontend |
 | 16/09/2025 | 7h | Analytics frontend |
 | 17/09/2025 | 4h | Analytics déploiement |
+| 01/10/2025 | 2h | Migration staging - prod |
