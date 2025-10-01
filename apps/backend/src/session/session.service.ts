@@ -510,10 +510,9 @@ export class SessionService {
                         gameId: game_record.id.toString(),
                         mode: session.mode,
                         numberOfPlayers: game.state.results ? Object.keys(game.state.results).length : 0,
-                        average_score: game.state.results ? Object.values(game.state.results).reduce((acc, res) => {
-                            const totalPoints = res.results.reduce((sum, r) => sum + r.points, 0);
-                            return acc + totalPoints;
-                        }, 0) / Object.keys(game.state.results).length : 0
+                        average_score: game.state.results
+                            ? Object.values(game.state.results).flatMap(res => res.results).reduce((sum, r) => sum + r.points, 0) / Object.values(game.state.results).flatMap(res => res.results).length
+                            : 0
                     }
                 }));
             }
