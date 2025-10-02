@@ -5,21 +5,76 @@
   --foreground: #313131;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ededed;
-    --foreground: #313131;
-  }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@theme {
+  /* ****** */
+  /* Colors */
+  /* ****** */
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  /* Primary */
+  --color-primary: oklch(63.948% 0.13324 235.48);
+  --color-primary-50: oklch(86.826% 0.07007 225.66);
+  --color-primary-100: oklch(84.264% 0.08378 226.99);
+  --color-primary-200: oklch(79.374% 0.10783 229.08);
+  --color-primary-300: oklch(75.036% 0.12822 230.89);
+  --color-primary-400: oklch(70.922% 0.1436 234.67);
+  --color-primary-500: oklch(63.948% 0.13324 235.48);
+  --color-primary-600: oklch(52.118% 0.10624 234.48);
+  --color-primary-700: oklch(39.309% 0.07797 233.89);
+  --color-primary-800: oklch(25.608% 0.04664 229.45);
+  --color-primary-900: oklch(6.0847% 0.01039 194.77);
+  --color-primary-950: oklch(0% 0 none);
+
+  /* Secondary */
+  --color-secondary: oklch(65.711% 0.14868 60.73);
+  --color-secondary-50: oklch(87.998% 0.07428 71.238);
+  --color-secondary-100: oklch(85.631% 0.08947 69.986);
+  --color-secondary-200: oklch(81.161% 0.11701 68.526);
+  --color-secondary-300: oklch(76.915% 0.14157 66.305);
+  --color-secondary-400: oklch(72.97% 0.15977 62.132);
+  --color-secondary-500: oklch(65.711% 0.14868 60.73);
+  --color-secondary-600: oklch(53.376% 0.11896 61.294);
+  --color-secondary-700: oklch(40.282% 0.08705 62.225);
+  --color-secondary-800: oklch(26.231% 0.05226 67.809);
+  --color-secondary-900: oklch(6.5053% 0.01418 109.77);
+  --color-secondary-950: oklch(0% 0 none);
+
+  /* Accent */
+  --color-accent: oklch(76.066% 0.16881 160.35);
+  --color-accent-50: oklch(91.356% 0.09273 169.96);
+  --color-accent-100: oklch(90.013% 0.11043 168.65);
+  --color-accent-200: oklch(87.501% 0.13952 166.73);
+  --color-accent-300: oklch(85.388% 0.16407 164.06);
+  --color-accent-400: oklch(83.741% 0.18223 160.96);
+  --color-accent-500: oklch(76.066% 0.16881 160.35);
+  --color-accent-600: oklch(61.557% 0.13529 160.66);
+  --color-accent-700: oklch(46.134% 0.0994 161.2);
+  --color-accent-800: oklch(29.274% 0.05908 164.15);
+  --color-accent-900: oklch(6.0847% 0.01039 194.77);
+  --color-accent-950: oklch(0% 0 none);
+
+  --background-image-gradient-primary: linear-gradient(90deg,
+      var(--color-primary-500) 0%,
+      var(--color-primary-300) 100%);
+
+
+
+  /* ********** */
+  /* Typography */
+  /* ********** */
+  --font-sans: Geist;
+  --font-heading: Poppins;
+
+  --spacing-: '0.25rem';
+  --spacing-2: '0.5rem';
+  --spacing-3: '0.75rem';
+  --spacing-4: '1rem';
+  --spacing-5: '1.25rem';
+  --spacing-6: '1.5rem';
+  --spacing-7: '1.75rem';
+  --spacing-8: '2rem';
+  --spacing-9: '2.5rem';
+  --spacing-10: '3rem';
+  --spacing-11: '4rem';
+  --spacing-12: '6rem';
 }
