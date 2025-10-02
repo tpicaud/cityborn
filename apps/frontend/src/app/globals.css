@@ -53,9 +53,25 @@
   --color-accent-900: oklch(6.0847% 0.01039 194.77);
   --color-accent-950: oklch(0% 0 none);
 
+  /* Neutral */
+  --color-neutral: oklch(97.343% 0.00132 286.37);
+  --color-neutral-50: oklch(100% 0 none);
+  --color-neutral-100: oklch(100% 0 none);
+  --color-neutral-200: oklch(100% 0 none);
+  --color-neutral-300: oklch(100% 0 none);
+  --color-neutral-400: oklch(100% 0 none);
+  --color-neutral-500: oklch(97.343% 0.00132 286.37);
+  --color-neutral-600: oklch(88.369% 0.00679 286.26);
+  --color-neutral-700: oklch(79.418% 0.00978 286.17);
+  --color-neutral-800: oklch(69.949% 0.0159 285.98);
+  --color-neutral-900: oklch(60.12% 0.02106 285.75);
+  --color-neutral-950: oklch(55.346% 0.02151 285.68);
+
+  --shadow-primary: 2;
+
   --background-image-gradient-primary: linear-gradient(90deg,
-      var(--color-primary-500) 0%,
-      var(--color-primary-300) 100%);
+      var(--color-primary-400) 0%,
+      var(--color-primary-200) 100%);
 
 
 
