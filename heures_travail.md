@@ -97,4 +97,5 @@
 | 15/09/2025 | 7h | Analytics frontend |
 | 16/09/2025 | 7h | Analytics frontend |
 | 17/09/2025 | 4h | Analytics déploiement |
-| 01/10/2025 | 2h | Migration staging - prod |
+| 01/10/2025 | 5h | Migration staging -> prod + début analyse maquette figma |
+| 02/10/2025 | 6h | Restructuration maquette figma + création theme app + maj app android |
