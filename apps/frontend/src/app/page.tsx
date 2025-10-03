@@ -3,9 +3,8 @@ import { Menu } from '@/features/menu/menu';
 
 export default function Home() {
 	return (
-		<main>
+		<section className="min-h-screen h-full">
 			<Menu />
-			{/* <HomeComponent /> */}
-		</main>
+		</section>
 	);
 }

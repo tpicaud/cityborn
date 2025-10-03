@@ -45,18 +45,20 @@ export default async function RootLayout({
 	}
 
 	return (
-		<html lang="en">
+		<html lang="fr" className="h-full">
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<link href="https://fonts.googleapis.com/css2?family=Geist&family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
 				<Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
 			</head>
-			<body className="antialised font-sans">
-				<AuthProvider initialValue={user}>
-					<ErrorProvider>
-						{children}
-					</ErrorProvider>
-				</AuthProvider>
+			<body className="h-full antialiased font-sans">
+				<main className="min-h-screen h-full">
+					<AuthProvider initialValue={user}>
+						<ErrorProvider>
+							{children}
+						</ErrorProvider>
+					</AuthProvider>
+				</main>
 			</body>
 		</html>
 	);
