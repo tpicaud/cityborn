@@ -67,11 +67,10 @@
   --color-neutral-900: oklch(60.12% 0.02106 285.75);
   --color-neutral-950: oklch(55.346% 0.02151 285.68);
 
-  --shadow-primary: 2;
-
-  --background-image-gradient-primary: linear-gradient(90deg,
-      var(--color-primary-400) 0%,
-      var(--color-primary-200) 100%);
+  /* Gradients */
+  --background-image-gradient-primary: linear-gradient(90deg, var(--color-primary-400) 0%, var(--color-accent-200) 100%);
+  --background-image-gradient-secondary: linear-gradient(90deg, var(--color-secondary-400) 0%, var(--color-secondary-200) 100%);
+  --background-image-gradient-accent: linear-gradient(90deg, var(--color-accent-400) 0%, var(--color-accent-200) 100%);
 
 
 
@@ -81,7 +80,7 @@
   --font-sans: Geist;
   --font-heading: Poppins;
 
-  --spacing-: '0.25rem';
+  --spacing-1: '0.25rem';
   --spacing-2: '0.5rem';
   --spacing-3: '0.75rem';
   --spacing-4: '1rem';
