@@ -9,15 +9,12 @@ export default function UiComponentsPage() {
                 <h1 className="text-2xl p-1">Buttons</h1>
 
                 {/* Variants */}
-                <div className="grid grid-rows-3 grid-cols-4 border border-gray-300">
+                <div className="grid grid-rows-3 grid-cols-3 border border-gray-300">
 
                     {/* Header */}
                     <div className="grid place-items-center p-6 border border-gray-300"></div>
                     <div className="grid place-items-center p-6 border border-gray-300">
                         Default
-                    </div>
-                    <div className="grid place-items-center p-6 border border-gray-300">
-                        Hover
                     </div>
                     <div className="grid place-items-center p-6 border border-gray-300">
                         Disabled
@@ -26,11 +23,6 @@ export default function UiComponentsPage() {
                     {/* 1 row */}
                     <div className="grid place-items-center p-6 border border-gray-300">
                         Primary
-                    </div>
-                    <div className="grid place-items-center p-6 border border-gray-300">
-                        <Button variant="primary" size="md">
-                            LABEL
-                        </Button>
                     </div>
                     <div className="grid place-items-center p-6 border border-gray-300">
                         <Button variant="primary" size="md">
@@ -53,11 +45,6 @@ export default function UiComponentsPage() {
                         </Button>
                     </div>
                     <div className="grid place-items-center p-6 border border-gray-300">
-                        <Button variant="secondary" size="md">
-                            LABEL
-                        </Button>
-                    </div>
-                    <div className="grid place-items-center p-6 border border-gray-300">
                         <Button variant="secondary" size="md" disabled={true}>
                             LABEL
                         </Button>
@@ -66,11 +53,6 @@ export default function UiComponentsPage() {
                     {/* 3 row */}
                     <div className="grid place-items-center p-6 border border-gray-300">
                         Accent
-                    </div>
-                    <div className="grid place-items-center p-6 border border-gray-300">
-                        <Button variant="accent" size="md">
-                            LABEL
-                        </Button>
                     </div>
                     <div className="grid place-items-center p-6 border border-gray-300">
                         <Button variant="accent" size="md">
@@ -113,7 +95,7 @@ export default function UiComponentsPage() {
                 </div>
 
                 {/* Loading */}
-                <div className="grid grid-rows-1 grid-cols-2 p-6">
+                <div className="grid grid-rows-1 grid-cols-2">
                     <div className="grid place-items-center p-6 border border-gray-300">
                         Loading button
                     </div>
