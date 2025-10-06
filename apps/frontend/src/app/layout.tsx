@@ -6,6 +6,7 @@ import AuthProvider from "@/contexts/AuthContext";
 import { Roboto } from 'next/font/google';
 import Script from "next/script";
 import ErrorProvider from "@/contexts/ErrorContext";
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 
 const geistSans = localFont({
 	src: "./fonts/GeistVF.woff",
@@ -53,11 +54,13 @@ export default async function RootLayout({
 			</head>
 			<body className="h-full antialiased font-sans">
 				<main className="min-h-screen h-full">
-					<AuthProvider initialValue={user}>
-						<ErrorProvider>
-							{children}
-						</ErrorProvider>
-					</AuthProvider>
+					<AppRouterCacheProvider options={{ enableCssLayer: true }}>
+						<AuthProvider initialValue={user}>
+							<ErrorProvider>
+								{children}
+							</ErrorProvider>
+						</AuthProvider>
+					</AppRouterCacheProvider>
 				</main>
 			</body>
 		</html>
