@@ -1,43 +1,135 @@
+'use client';
+
 import Button from "@/components/ui/buttons/Button"
 
 export default function UiComponentsPage() {
     return (
-        <section className="min-h-screen h-full">
-            <div className="h-full w-full flex flex-col items-center justify-center gap-4">
-                <div className="flex flex-row gap-4">
-                    <Button variant="primary" size="sm">
-                        <p className="font-heading font-bold text-neutral">Jouer</p>
-                    </Button>
-                    <Button variant="primary" size="md">
-                        <p className="font-heading font-bold text-neutral">Jouer</p>
-                    </Button>
-                    <Button variant="primary" size="lg">
-                        <p className="font-heading font-bold text-neutral">Jouer</p>
-                    </Button>
+        <section className="min-h-screen h-full p-6">
+            <div className="flex flex-col items-center gap-3">
+                <h1 className="text-2xl p-1">Buttons</h1>
+
+                {/* Variants */}
+                <div className="grid grid-rows-3 grid-cols-4 border border-gray-300">
+
+                    {/* Header */}
+                    <div className="grid place-items-center p-6 border border-gray-300"></div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Default
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Hover
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Disabled
+                    </div>
+
+                    {/* 1 row */}
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Primary
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="md" disabled={true}>
+                            LABEL
+                        </Button>
+                    </div>
+
+                    {/* 2 row */}
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Secondary
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="secondary" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="secondary" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="secondary" size="md" disabled={true}>
+                            LABEL
+                        </Button>
+                    </div>
+
+                    {/* 3 row */}
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Accent
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="accent" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="accent" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="accent" size="md" disabled={true}>
+                            LABEL
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex flex-row gap-4">
-                    <Button variant="secondary" size="sm">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
-                    <Button variant="secondary" size="md">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
-                    <Button variant="secondary" size="lg">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
+
+                {/* Sizes */}
+                <div className="grid grid-rows-2 grid-cols-3 border border-gray-300">
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Small
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Medium
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Large
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="sm">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="md">
+                            LABEL
+                        </Button>
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button variant="primary" size="lg">
+                            LABEL
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex flex-row gap-4">
-                    <Button variant="accent" size="sm">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
-                    <Button variant="accent" size="md">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
-                    <Button variant="accent" size="lg">
-                        <p className="font-heading font-bold text-neutral-400">Jouer</p>
-                    </Button>
+
+                {/* Loading */}
+                <div className="grid grid-rows-1 grid-cols-2 p-6">
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        Loading button
+                    </div>
+                    <div className="grid place-items-center p-6 border border-gray-300">
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            onClick={async () => {
+                                await new Promise(res => setTimeout(res, 2000));
+                                console.log('loader finished');
+                            }}>
+                            LABEL
+                        </Button>
+                    </div>
                 </div>
             </div>
-        </section>
+        </section >
     )
 }
