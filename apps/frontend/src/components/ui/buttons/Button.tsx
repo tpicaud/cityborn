@@ -11,10 +11,10 @@ interface ButtonProps {
     onClick?: () => Promise<void>;
 }
 
-const className = 'text-shadow-'
+const className = ''
 
 // Base styles
-const baseButtonStyle = 'transition-transform duration-200 ease-in-out transform hover:scale-105';
+const baseButtonStyle = 'transition-transform duration-200 ease-in-out transform hover:scale-105 active:scale-95';
 const baseTextStyle = 'font-sans font-bold text-neutral text-shadow-[0_0px_10px_rgba(0_0_0_/_0.65)]'
 
 // Variant styles
