@@ -1,12 +1,12 @@
 import Header from "@/components/headers";
 
-export default async function RootLayout({
+export default async function MainLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
     return (
-        <div>
+        <div className="h-full flex flex-col">
             {/* Header */}
             <Header />
 
@@ -18,7 +18,9 @@ export default async function RootLayout({
             <div className="absolute inset-0 bg-black/50 z-[-1]" />
 
             {/* Content */}
-            {children}
+            <div className="h-full">
+                {children}
+            </div>
         </div>
     )
 }
