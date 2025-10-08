@@ -1,5 +1,4 @@
 import Button from "@/components/ui/buttons/Button"
-import Link from "next/link";
 import Image from "next/image";
 import { WordCarousel } from "./components/wordCarousel";
 
@@ -9,7 +8,7 @@ export const Menu = () => {
             className="h-full flex flex-col"
         >
             <div className="flex-1 flex flex-col items-center justify-center
-                            pb-24 gap-8 md:gap-6 p-1"
+                            pb-20 gap-8 md:gap-6 p-1"
             >
                 <Image src={'/logo_white.webp'} alt={"logo"} width={112} height={112}></Image>
 
