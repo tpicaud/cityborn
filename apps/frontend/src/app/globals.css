@@ -6,6 +6,12 @@
   --foreground: #313131;
 }
 
+html {
+  /* ******* */
+  /* Default */
+  /* ******* */
+  @apply text-neutral;
+}
 
 @theme {
   /* ****** */

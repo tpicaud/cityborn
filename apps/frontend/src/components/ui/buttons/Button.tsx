@@ -1,3 +1,5 @@
+'use client';
+
 import { CircularProgress, Button as MuiButton } from "@mui/material";
 import { ReactNode, useState } from "react";
 import clsx from "clsx";
@@ -11,7 +13,11 @@ interface ButtonProps {
     onClick?: () => Promise<void>;
 }
 
-const className = ''
+const className = 'text-l'
+
+function applyBreakpoint(classes: string, prefix: 'sm' | 'md' | 'lg') {
+    return classes.split(' ').map(cls => `${prefix}:${cls}`).join(' ');
+}
 
 // Base styles
 const baseButtonStyle = 'transition-transform duration-200 ease-in-out transform hover:scale-105 active:scale-95';
@@ -30,16 +36,20 @@ const disabledStyle = 'bg-neutral-700 shadow-none filter grayscale';
 
 // Size styles
 const sizeStyles: Record<string, string> = {
-    sm: 'px-5 py-1 min-w-[6rem] min-h-[2rem] rounded-lg shadow-[0_0_10px_5px_rgba(0,0,0,0.15)]',
-    md: 'px-6 py-2 min-w-[8rem] min-h-[2.5rem] rounded-xl shadow-[0_0_15px_5px_rgba(0,0,0,0.2)]',
-    lg: 'px-8 py-3 min-w-[10rem] min-h-[3rem] rounded-2xl shadow-[0_0_15px_5px_rgba(0,0,0,0.22)]',
+    sm: 'px-5 py-2 min-w-[4rem] min-h-[1rem] rounded-lg shadow-[0_0_10px_5px_rgba(0,0,0,0.15)]',
+    md: 'px-9 py-2 min-w-[5rem] min-h-[2rem] rounded-xl shadow-[0_0_15px_5px_rgba(0,0,0,0.2)]',
+    lg: 'px-12 py-2 min-w-[6rem] min-h-[2rem] rounded-2xl shadow-[0_0_15px_5px_rgba(0,0,0,0.22)]',
 };
+const autoSizeStyle = `${sizeStyles.sm} ${applyBreakpoint(sizeStyles.md, 'md')} ${applyBreakpoint(sizeStyles.lg, 'lg')}`;
 
+// Text styles
 const textStyles: Record<string, string> = {
-    sm: 'text-sm font-sans font-bold text-neutral',
-    md: 'text-md font-sans font-bold text-neutral',
-    lg: 'text-lg font-sans font-bold text-neutral',
+    sm: 'text-[11px]',
+    md: 'text-sm',
+    lg: 'text-base',
+    auto: 'text-[9px] md:text-sm lg:text-base'
 };
+const autoTextStyle = `${textStyles.sm} ${applyBreakpoint(textStyles.md, 'md')} ${applyBreakpoint(textStyles.lg, 'lg')}`;
 
 export default function Button({
     children,
@@ -51,9 +61,10 @@ export default function Button({
     ...props
 }: ButtonProps) {
 
+    // Apply styles
     const variantClass = disabled ? disabledStyle : variantStyles[variant];
-    const sizeClass = (size === 'auto') ? `${sizeStyles['sm']} md:${sizeStyles['md']} lg:${sizeStyles['lg']}` : sizeStyles[size];
-    const textClass = (size === 'auto') ? `${textStyles['sm']} md:${textStyles['md']} lg:${textStyles['lg']}` : textStyles[size];
+    const sizeClass = size === 'auto' ? autoSizeStyle : sizeStyles[size];
+    const textClass = size === 'auto' ? autoTextStyle : textStyles[size];
 
     const [loading, setLoading] = useState(false);
 
@@ -67,7 +78,6 @@ export default function Button({
     }
 
     return (
-
         <MuiButton
             className={clsx(
                 baseButtonStyle,
@@ -77,6 +87,7 @@ export default function Button({
             )}
             disabled={disabled || loading}
             onClick={handleClick}
+            sx={{ minWidth: 0, padding: 0, borderRadius: 0 }}
             {...props}
         >
             <span className={clsx(baseTextStyle, textClass)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>

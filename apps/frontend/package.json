@@ -37,6 +37,7 @@
     "express": "^4.21.2",
     "leaflet": "^1.9.4",
     "mongodb": "^6.11.0",
+    "motion": "^12.23.22",
     "nanoid": "^5.1.5",
     "next": "15.4.6",
     "osmtogeojson": "^3.0.0-beta.5",
