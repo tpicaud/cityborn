@@ -8,41 +8,6 @@ export const Menu = () => {
         <section
             className="h-full flex flex-col"
         >
-            {/* Background */}
-            <div
-                className="absolute inset-0 bg-cover bg-center z-[-1]"
-                style={{ backgroundImage: `url('./background_worldmap.png')` }}
-            />
-            <div className="absolute inset-0 bg-black/50 z-[-1]" />
-
-            {/* Header */}
-            <header className="h-20 md:h-24
-                        flex flex-row items-center justify-between
-                        bg-transparent p-1 z-10">
-
-                {/* Logo */}
-                <div className="flex items-center h-full">
-                    <Link href="/" className="h-full transition-transform duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-                        <img
-                            src={'./logo.svg'}
-                            alt="Logo"
-                            className="h-full w-auto"
-                        />
-                    </Link>
-                </div>
-
-                {/* Connection buttons */}
-                <div className="flex flex-row items-center justify-between gap-2 md:gap-3 h-full">
-                    <Button variant="secondary">
-                        CONNEXION
-                    </Button>
-                    <Button variant="primary">
-                        INSCRIPTION
-                    </Button>
-                </div>
-            </header>
-
-            {/* Content */}
             <div className="flex-1 flex flex-col items-center justify-center
                             pb-24 gap-8 md:gap-6 p-1"
             >
