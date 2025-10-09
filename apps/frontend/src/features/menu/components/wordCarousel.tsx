@@ -9,6 +9,7 @@ export const WordCarousel = () => {
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
+        setIndex(0);
         const interval = setInterval(() => {
             setIndex((prev) => (prev + 1) % words.length);
         }, 1700);
@@ -18,7 +19,8 @@ export const WordCarousel = () => {
     return (
         <div className="relative overflow-hidden h-8 w-full">
             <AnimatePresence
-                mode="sync">
+                mode="sync"
+            >
                 <motion.div
                     key={index}
                     initial={{ y: 50, opacity: 1 }}
