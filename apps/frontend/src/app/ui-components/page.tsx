@@ -1,8 +1,8 @@
 'use client';
 
 import Button from "@/components/ui/buttons/Button"
-import Card from "@/components/ui/cards/card";
-import { WordCarousel } from "@/features/menu/components/wordCarousel";
+import Card from "@/components/ui/cards/Card";
+import { WordCarousel } from "@/features/menu/components/WwordCarousel";
 
 export default function UiComponentsPage() {
     return (

@@ -11,6 +11,7 @@ html {
   /* Default */
   /* ******* */
   @apply text-neutral;
+  @apply text-shadow-classic;
 }
 
 @theme {
@@ -86,4 +87,6 @@ html {
   /* ********** */
   --font-sans: Geist;
   --font-heading: Poppins;
+
+  --text-shadow-classic: 0 0px 15px rgba(0, 0, 0, 0.65);
 }
