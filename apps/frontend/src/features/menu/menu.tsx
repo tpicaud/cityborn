@@ -56,14 +56,11 @@ export const Menu = () => {
 
 						{/* Create */}
 						<div className="grid grid-cols-1 gap-4 w-full place-items-center
-										md:grid-cols-2 md:gap-6 md:w-auto
-									  border-red-500 border-4"
-						>
+										md:grid-cols-2 md:gap-6 md:w-auto">
 							<div className="w-full h-32 max-w-96
 										sm:w-90 sm:h-42
 										md:w-72 md:h-90 md:place-items-end
-										lg:w-80 lg:h-96
-										border-green-500 border-4">
+										lg:w-80 lg:h-96">
 								<Card
 									size="lg"
 									className="flex flex-col justify-center items-center h-full w-full"
@@ -74,8 +71,7 @@ export const Menu = () => {
 							<div className="w-full h-32 max-w-96
 										sm:w-90 sm:h-42
 										md:w-72 md:h-90 md:place-items-end
-										lg:w-80 lg:h-96
-										border-green-500 border-4">
+										lg:w-80 lg:h-96">
 								<Card
 									size="lg"
 									className="flex flex-col justify-center items-center h-full w-full"
