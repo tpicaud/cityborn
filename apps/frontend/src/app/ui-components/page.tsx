@@ -2,7 +2,7 @@
 
 import Button from "@/components/ui/buttons/Button"
 import Card from "@/components/ui/cards/Card";
-import { WordCarousel } from "@/features/menu/components/WwordCarousel";
+import { WordCarousel } from "@/features/menu/components/WordCarousel";
 
 export default function UiComponentsPage() {
     return (
