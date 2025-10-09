@@ -102,3 +102,4 @@
 | 03/10/2025 | 5h | Restructuration boutons Figma + page test ui components |
 | 06/10/2025 | 7h | Implémentation design boutons |
 | 07/10/2025 | 7h | Finalisation boutons + implémentation page accueil |
+| 08/10/2025 | 3h | Finalisation page accueil |
