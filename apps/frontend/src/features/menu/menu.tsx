@@ -39,6 +39,8 @@ export const Menu = () => {
 				}
 				playView={
 					<div className="flex-1 flex flex-col gap-5 items-center justify-center p-4">
+
+						{/* Join */}
 						<Card
 							size="lg"
 							className="w-64 h-28 flex flex-col items-center justify-center p-2"
@@ -46,12 +48,43 @@ export const Menu = () => {
 							<div className="w-full flex flex-col gap-2 justify-center items-center">
 								<h2 className="text-base md:text-lg">REJOINDRE</h2>
 								<div className="flex flex-row gap-2">
-									<Input className="w-full bg-neutral rounded-xl pl-1" placeholder="Code"></Input>
+									<Input className="w-full bg-neutral rounded-xl pl-2" placeholder="Code"></Input>
 									<Button size="sm">GO</Button>
 								</div>
 							</div>
 						</Card>
-						<div
+
+						{/* Create */}
+						<div className="grid grid-cols-1 gap-4 w-full place-items-center
+										md:grid-cols-2 md:gap-6 md:w-auto
+									  border-red-500 border-4"
+						>
+							<div className="w-full h-32 max-w-96
+										sm:w-90 sm:h-42
+										md:w-72 md:h-90 md:place-items-end
+										lg:w-80 lg:h-96
+										border-green-500 border-4">
+								<Card
+									size="lg"
+									className="flex flex-col justify-center items-center h-full w-full"
+								>
+									<div>Card 1</div>
+								</Card>
+							</div>
+							<div className="w-full h-32 max-w-96
+										sm:w-90 sm:h-42
+										md:w-72 md:h-90 md:place-items-end
+										lg:w-80 lg:h-96
+										border-green-500 border-4">
+								<Card
+									size="lg"
+									className="flex flex-col justify-center items-center h-full w-full"
+								>
+									<div>Card 1</div>
+								</Card>
+							</div>
+						</div>
+						{/* <div
 							className="h-full grid gap-3 md:gap-6
                                     grid-cols-1 sm:grid-cols-2
                                     min-h-[40%] lg:max-h-[60%]
@@ -94,7 +127,7 @@ export const Menu = () => {
 									</div>
 								</Card>
 							</div>
-						</div>
+						</div> */}
 					</div>
 				}
 			/>
