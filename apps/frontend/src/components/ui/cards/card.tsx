@@ -27,7 +27,7 @@ const variantStyles: Record<string, string> = {
 const sizeStyles: Record<string, string> = {
     sm: 'p-3 rounded-lg shadow-[0_0_10px_5px_rgba(0,0,0,0.12)]',
     md: 'p-4 rounded-xl shadow-[0_0_15px_5px_rgba(0,0,0,0.17)]',
-    lg: 'p-5 rounded-2xl shadow-[0_0_15px_5px_rgba(0,0,0,0.20)]',
+    lg: 'p-6 rounded-2xl shadow-[0_0_15px_5px_rgba(0,0,0,0.20)]',
 };
 
 const textStyles: Record<string, string> = {
