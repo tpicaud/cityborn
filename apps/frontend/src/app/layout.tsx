@@ -1,28 +1,26 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
 import * as ApiServiceServer from "@/services/ApiServiceServer";
 import AuthProvider from "@/contexts/AuthContext";
-import { Roboto } from 'next/font/google';
 import Script from "next/script";
 import ErrorProvider from "@/contexts/ErrorContext";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 
-const geistSans = localFont({
-	src: "./fonts/GeistVF.woff",
-	variable: "--font-geist-sans",
-	weight: "100 900",
-});
-const geistMono = localFont({
-	src: "./fonts/GeistMonoVF.woff",
-	variable: "--font-geist-mono",
-	weight: "100 900",
-});
+// const geistSans = localFont({
+// 	src: "./fonts/GeistVF.woff",
+// 	variable: "--font-geist-sans",
+// 	weight: "100 900",
+// });
+// const geistMono = localFont({
+// 	src: "./fonts/GeistMonoVF.woff",
+// 	variable: "--font-geist-mono",
+// 	weight: "100 900",
+// });
 
-const roboto = Roboto({
-	subsets: ['latin'],
-	weight: ['400', '500', '700'],
-});
+// const roboto = Roboto({
+// 	subsets: ['latin'],
+// 	weight: ['400', '500', '700'],
+// });
 
 export const metadata: Metadata = {
 	title: "CityBorn",
