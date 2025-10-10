@@ -13,7 +13,7 @@ interface ButtonProps {
     onClick?: () => void;
 }
 
-const className = 'text-l'
+// const className = 'text-l'
 
 function applyBreakpoint(classes: string, prefix: 'sm' | 'md' | 'lg') {
     return classes.split(' ').map(cls => `${prefix}:${cls}`).join(' ');

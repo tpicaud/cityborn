@@ -7,20 +7,18 @@ interface CardProps {
     variant?: 'primary' | 'secondary' | 'accent';
     size?: 'sm' | 'md' | 'lg' | 'auto';
     className?: string;
-    disabled?: boolean;
     onClick?: () => Promise<void>;
 }
 
 // Base styles
 const baseCardStyle = '';
-const baseTextStyle = 'font-sans font-bold text-neutral text-shadow-[0_0px_10px_rgba(0_0_0_/_0.65)]'
+// const baseTextStyle = 'font-sans font-bold text-neutral text-shadow-[0_0px_10px_rgba(0_0_0_/_0.65)]'
 
 // Variant styles
 const variantStyles: Record<string, string> = {
     primary: 'bg-gradient-primary',
     secondary: 'bg-gradient-secondary',
     accent: 'bg-gradient-accent',
-    disabled: 'bg-neutral-600'
 };
 
 // Size styles
@@ -41,7 +39,6 @@ export default function Card({
     variant = 'primary',
     size = 'auto',
     className = '',
-    disabled = false,
     ...props
 }: CardProps) {
 
