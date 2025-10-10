@@ -1,6 +1,6 @@
 'use client';
 
-import Button from "@/components/ui/buttons/Button";
+import Button from "@/components/ui/buttons/NewButton";
 import { useState } from "react";
 import { WordCarousel } from "./WordCarousel";
 import Image from 'next/image';

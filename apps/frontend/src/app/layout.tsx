@@ -53,7 +53,7 @@ export default async function RootLayout({
 				<Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
 			</head>
 			<body className="h-full antialiased font-sans">
-				<main className="min-h-screen h-full p-4 md:p-6">
+				<main className="min-h-screen h-full">
 					<AppRouterCacheProvider options={{ enableCssLayer: true }}>
 						<AuthProvider initialValue={user}>
 							<ErrorProvider>

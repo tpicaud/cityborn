@@ -6,7 +6,8 @@ export default async function MainLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col p-4 md:p-6 text-neutral text-shadow-classic;
+">
             {/* Header */}
             <Header />
 
