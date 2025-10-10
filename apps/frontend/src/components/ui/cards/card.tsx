@@ -34,6 +34,7 @@ const textStyles: Record<string, string> = {
     lg: 'text-lg font-sans font-bold text-neutral',
 };
 
+
 export default function Card({
     children,
     variant = 'primary',
