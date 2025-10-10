@@ -1,6 +1,6 @@
 'use client';
 
-import Button from "@/components/ui/buttons/Button"
+import Button from "@/components/ui/buttons/NewButton"
 import Card from "@/components/ui/cards/Card";
 import { WordCarousel } from "@/features/menu/components/WordCarousel";
 

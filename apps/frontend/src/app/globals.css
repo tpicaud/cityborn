@@ -10,8 +10,6 @@ html {
   /* ******* */
   /* Default */
   /* ******* */
-  @apply text-neutral;
-  @apply text-shadow-classic;
 }
 
 @theme {
