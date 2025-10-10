@@ -2,6 +2,7 @@ import Button from "@/components/ui/buttons/Button";
 import Link from "next/link";
 
 export default function Header() {
+
     return (
         <header className="h-20 md:h-24
                         flex flex-row items-center justify-between

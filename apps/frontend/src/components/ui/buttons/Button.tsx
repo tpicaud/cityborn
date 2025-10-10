@@ -10,7 +10,7 @@ interface ButtonProps {
     size?: 'sm' | 'md' | 'lg' | 'auto';
     className?: string;
     disabled?: boolean;
-    onClick?: () => Promise<void>;
+    onClick?: () => void;
 }
 
 const className = 'text-l'
