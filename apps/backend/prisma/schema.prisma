@@ -57,3 +57,46 @@ model Event {
   properties Json
   createdAt  DateTime @default(now()) @db.Timestamp(6)
 }
+
+////////////////////////////////////////////
+// Location/GuessObject/Categories models //
+////////////////////////////////////////////
+
+model Location {
+  id       String  @id @default(cuid())
+  name     String
+  type     String
+  level    String?
+  iso_code String?
+  centroid Float[]
+  geometry Json    @db.JsonB
+  source   Json?   @db.JsonB
+
+  // parent relation
+  parentId String?
+  parent   Location?  @relation("ParentChild", fields: [parentId], references: [id])
+  children Location[] @relation("ParentChild")
+
+  guessObjects GuessObject[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GuessObject {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float?
+
+  locationId String
+  location   Location   @relation(fields: [locationId], references: [id])
+  categories Category[] @relation("CategoryGuessObjects")
+}
+
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  guesses GuessObject[] @relation("CategoryGuessObjects")
+}
