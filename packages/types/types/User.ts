@@ -7,7 +7,7 @@ export class PublicUser {
   /////////////
   // Profile //
   /////////////
-  id: number;
+  id: string;
 
   username: string;
 

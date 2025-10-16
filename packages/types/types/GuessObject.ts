@@ -1,9 +1,12 @@
+import { WorldLocation } from "./WorldLocation.js";
+
 export interface GuessObject {
     id: string;
     name: string;
+    image?: string;
     description?: string;
     short_description?: string;
-    location?: Location;
+    world_location?: WorldLocation;
 }
 
 

@@ -24,7 +24,7 @@ export interface GameState {
 }
 
 export interface GameRecord {
-    id: number;
+    id: string;
     mode: SessionMode,
     gameConfig: GameConfig,
     players: Player[],

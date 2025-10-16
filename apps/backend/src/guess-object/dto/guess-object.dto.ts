@@ -1,48 +1,99 @@
-import { GuessObject } from "@cityborn/types";
+import { GuessObject, WorldLocation } from "@cityborn/types";
 import { Type } from "class-transformer";
 import {
   IsString,
-  IsObject,
   ValidateNested,
+  IsOptional,
+  IsUUID,
+  IsEnum,
+  IsArray,
 } from "class-validator";
 
-class CoordinatesDto {
-  @IsString()
-  type: string;
+export class GeometryDto {
+  @IsEnum(['Point', 'Polygon', 'MultiPolygon'])
+  type: 'Point' | 'Polygon' | 'MultiPolygon';
 
-  @IsObject()
-  value: any; // tu peux remplacer `any` par un type plus précis si tu le connais (ex: number[] pour des coordonnées geo)
+  @IsArray()
+  coordinates: number[] | number[][] | number[][][];
 }
 
-class AnswerDto {
-  @IsString()
-  place_name: string;
-
-  @ValidateNested()
-  @Type(() => CoordinatesDto)
-  coordinates: CoordinatesDto;
-}
-
-export class GuessObjectDto implements GuessObject {
+export class WorldLocationParentDto {
+  @IsUUID()
   @IsString()
   id: string;
 
   @IsString()
   name: string;
 
+}
+
+export class WorldLocationSourceDto {
   @IsString()
-  category: string;
+  provider: string;
 
   @IsString()
-  description: string;
+  external_id: string;
+}
+
+export class WorldLocationDto implements WorldLocation {
+  @IsUUID()
+  @IsString()
+  id: string;
 
   @IsString()
-  short_description: string;
+  name: string;
 
+  @IsEnum(['area', 'point'])
+  type: 'area' | 'point';
+
+  @Type(() => GeometryDto)
+  geometry: GeometryDto
+
+  @IsOptional()
+  @IsEnum(['ADM1', 'ADM2', 'ADM3', 'ADM4'])
+  level?: 'ADM1' | 'ADM2' | 'ADM3' | 'ADM4';
+
+  @IsOptional()
   @IsString()
-  image: string;
+  iso_code?: string;
 
+  @IsOptional()
   @ValidateNested()
-  @Type(() => AnswerDto)
-  answer: AnswerDto;
+  @Type(() => WorldLocationParentDto)
+  parent?: WorldLocationParentDto;
+
+  @IsOptional()
+  @IsArray()
+  centroid?: [number, number];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorldLocationSourceDto)
+  source?: WorldLocationSourceDto;
+}
+
+export class GuessObjectDto implements GuessObject {
+
+  @IsUUID()
+  @IsString()
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  short_description?: string;
+
+  @IsOptional()
+  @Type(() => WorldLocationDto)
+  world_location?: WorldLocationDto
 }
