@@ -105,3 +105,6 @@
 | 08/10/2025 | 3h | Finalisation page accueil menu |
 | 09/10/2025 | 7h | Page play menu |
 | 10/10/2025 | 5h | Finalisation page play menu + push sur staging |
+| 14/10/2025 | 2h | Réflexion schéma guess objects |
+| 15/10/2025 | 4h |  Typage + model guess guess objects/localisation/category |
+| 16/10/2025 | 6h | Gestion migrations prisma + benchmark api geocoding |
