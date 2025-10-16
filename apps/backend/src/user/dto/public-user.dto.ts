@@ -3,7 +3,7 @@ import { IsNumber, IsString, IsBoolean } from 'class-validator';
 
 export class PublicUserDto implements PublicUser {
   @IsNumber()
-  id: number;
+  id: string;
 
   @IsString()
   username: string;

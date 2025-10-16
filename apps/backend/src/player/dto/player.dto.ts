@@ -9,7 +9,7 @@ export class PlayerDto implements Player {
     @IsBoolean()
     isGuest: boolean;
 
-    @IsNumber()
     @IsOptional()
-    id?: number;
+    @IsNumber()
+    id?: string;
 }

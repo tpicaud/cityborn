@@ -5,7 +5,6 @@ import { ErrorCode } from '@cityborn/errors';
 import { Prisma, User as PrismaUser } from '@prisma/client';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
-import { GameRecordDto } from 'src/session/dto/game.dto';
 import { AccountType, SessionMode } from '@cityborn/types';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 
@@ -39,7 +38,7 @@ export class UserService {
         })
     }
 
-    async findById(id: number): Promise<PrismaUser | null> {
+    async findById(id: string): Promise<PrismaUser | null> {
         return await this.prisma.user.findUnique({ where: { id } });
     }
 
@@ -65,7 +64,7 @@ export class UserService {
     ///////////////
     // Relations //
     ///////////////
-    async getGameRecords(user_id: number): Promise<GameRecordsResponseDto> {
+    async getGameRecords(user_id: string): Promise<GameRecordsResponseDto> {
         const user = await this.prisma.user.findUnique({
             where: { id: user_id },
             include: {
@@ -80,7 +79,7 @@ export class UserService {
         return { gameRecords: GameMapper.toGameRecordDto(user.gameRecords) };
     }
 
-    async saveSoloGameRecord(user_id: number, createGameRecord: CreateGameRecordDto): Promise<void> {
+    async saveSoloGameRecord(user_id: string, createGameRecord: CreateGameRecordDto): Promise<void> {
         if (createGameRecord.mode !== SessionMode.SOLO) {
             throw new BadRequestException({ code: ErrorCode.BAD_REQUEST, message: 'Cannot save game with this gameMode' })
         }

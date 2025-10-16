@@ -1,4 +1,4 @@
-export interface Location {
+export interface WorldLocation {
     id: string;
     name: string;
     type: 'area' | 'point';
@@ -13,7 +13,6 @@ export interface Location {
     parent?: {
         id: string;
         name: string;
-        type: 'country' | 'region' | 'city';
     };
     centroid?: [number, number];
     source?: {

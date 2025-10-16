@@ -97,7 +97,7 @@ export class GameDto implements Game {
 
 export class GameRecordDto implements GameRecord {
     @IsNumber()
-    id: number;
+    id: string;
 
     @IsEnum(SessionMode)
     mode: SessionMode;
