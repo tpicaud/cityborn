@@ -1,7 +1,7 @@
 export interface Location {
     id: string;
     name: string;
-    type: 'country' | 'region' | 'city' | 'point' | 'custom';
+    type: 'area' | 'point';
     geometry: {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];
