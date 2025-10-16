@@ -14,19 +14,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-////////////////////
-// User & Profile //
-////////////////////
-
 model User {
-  id         String    @id @default(uuid())
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique
   username   String    @unique
   birthdate  DateTime? @db.Date
   type       String    @default("unknown")
   password   String?
   createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  updatedAt  DateTime? @updatedAt
   isVerified Boolean   @default(false)
 
   tokens      EmailVerificationToken[]
@@ -34,16 +30,16 @@ model User {
 }
 
 model EmailVerificationToken {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   token     String   @unique
-  userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
 model GameRecord {
-  id              String   @id @default(uuid())
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   mode            String
   gameConfig      Json
   players         Json
@@ -54,57 +50,8 @@ model GameRecord {
   users User[] @relation("GameRecordUsers")
 }
 
-////////////////////////////////////////////
-// Location/GuessObject/Categories models //
-////////////////////////////////////////////
-
-model Location {
-  id       String  @id @default(uuid())
-  name     String
-  type     String
-  level    String?
-  iso_code String?
-  centroid Float[]
-  geometry Json    @db.JsonB
-  source   Json?   @db.JsonB
-
-  // parent relation
-  parentId String?
-  parent   Location?  @relation("ParentChild", fields: [parentId], references: [id])
-  children Location[] @relation("ParentChild")
-
-  guessObjects GuessObject[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model GuessObject {
-  id                String  @id @default(uuid())
-  name              String
-  image             String?
-  description       String?
-  short_description String?
-
-  world_location_id String
-  world_location    Location   @relation(fields: [world_location_id], references: [id])
-  categories        Category[] @relation("CategoryGuessObjects")
-}
-
-model Category {
-  id          String  @id @default(uuid())
-  name        String
-  description String?
-
-  guessObjects GuessObject[] @relation("CategoryGuessObjects")
-}
-
-//////////////
-// Tracking //
-//////////////
-
 model Event {
-  id         String   @id @default(uuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String
   visitorId  String
   properties Json
