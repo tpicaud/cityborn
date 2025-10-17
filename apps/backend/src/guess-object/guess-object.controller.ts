@@ -1,7 +1,8 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { GuessObjectService } from './guess-object.service';
 import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 
 @Controller('guess-objects')
 export class GuessObjectController {
@@ -18,5 +19,10 @@ export class GuessObjectController {
         return {
             guessObjects: await this.guessObjectsService.findSome(idsArray)
         }
+    }
+
+    @Post()
+    async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
+        return await this.guessObjectsService.create(createGuessObjectDto);
     }
 }

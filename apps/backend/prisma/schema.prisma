@@ -77,7 +77,7 @@ enum LocationLevel {
   ADM4
 }
 
-model Location {
+model WorldLocation {
   id       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String
   type     LocationType
@@ -89,8 +89,8 @@ model Location {
 
   // parent relation
   parentId String?    @db.Uuid
-  parent   Location?  @relation("ParentChild", fields: [parentId], references: [id])
-  children Location[] @relation("ParentChild")
+  parent   WorldLocation?  @relation("ParentChild", fields: [parentId], references: [id])
+  children WorldLocation[] @relation("ParentChild")
 
   guessObjects GuessObject[]
 
@@ -106,7 +106,7 @@ model GuessObject {
   short_description String?
 
   world_location_id String     @db.Uuid
-  world_location    Location   @relation(fields: [world_location_id], references: [id])
+  world_location    WorldLocation   @relation(fields: [world_location_id], references: [id])
   categories        Category[] @relation("CategoryGuessObjects")
 }
 
