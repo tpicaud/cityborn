@@ -87,4 +87,10 @@ export class GuessObjectService {
         // Créer le GuessObject avec l'id de la loc
         return ""
     }
+
+    async delete(id: string): Promise<void> {
+        await this.prisma.guessObject.delete({
+            where: { id },
+        });
+    }
 }
