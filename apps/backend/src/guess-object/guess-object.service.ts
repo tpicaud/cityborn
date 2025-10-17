@@ -2,6 +2,8 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { Categories, GameConfig, GuessObject } from '@cityborn/types';
 import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GuessObjectMapper } from './mappers/guess-object.mapper';
+import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 
 @Injectable()
 export class GuessObjectService {
@@ -11,107 +13,78 @@ export class GuessObjectService {
 
 
     async findSome(guessObjectsIds: string[]): Promise<GuessObject[]> {
-        const guessObjects = await this.prisma.guessObject.findMany({
-            where: {
-                id: { in: guessObjectsIds },
-            },
-        });
+        try {
+            const rawGuessObjects = await this.prisma.guessObject.findMany({
+                where: {
+                    id: { in: guessObjectsIds },
+                },
+                include: {
+                    world_location: true,
+                }
+            });
 
-        if (!guessObjects || guessObjects.length === 0) {
-            throw new NotFoundException({
-                code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
-                message: 'No GuessObjects found for the provided IDs',
+            if (!rawGuessObjects || rawGuessObjects.length === 0) {
+                throw new NotFoundException({
+                    code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+                    message: 'No GuessObjects found for the provided IDs',
+                });
+            }
+
+            const guessObjects = rawGuessObjects.map(obj => GuessObjectMapper.toGuessObjectDto(obj))
+            return guessObjects;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
+                message: `Error retrieving guess objects from game config: ${error.message}`,
             });
         }
-
-        return guessObjects;
     }
-
-    // async findSome(guessObjectsIds: string[]): Promise<GuessObject[]> {
-    //     try {
-    //         const rawGuessObjects = await this.guessObjectModel.find({
-    //             _id: { $in: guessObjectsIds }
-    //         }).lean().exec();
-
-    //         if (!rawGuessObjects || rawGuessObjects.length === 0) {
-    //             throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: 'No GuessObjects found for the provided IDs' });
-    //         }
-
-    //         const guessObjects = rawGuessObjects
-    //             .filter(doc => doc.name && doc.category && doc.description && doc.image)
-    //             .map(doc => ({
-    //                 id: doc._id.toString(),
-    //                 name: doc.name,
-    //                 category: doc.category,
-    //                 description: doc.description,
-    //                 short_description: doc.short_description,
-    //                 image: doc.image,
-    //                 answer: {
-    //                     place_name: doc.answer?.place_name,
-    //                     coordinates: doc.answer?.coordinates
-    //                 }
-    //             }));
-
-    //         // Vérifier si certains IDs n’ont pas été trouvés
-    //         const foundIds = guessObjects.map(obj => obj.id);
-    //         const notFoundIds = guessObjectsIds.filter(id => !foundIds.includes(id));
-    //         if (notFoundIds.length > 0) {
-    //             throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: `No GuessObjects found for IDs ${notFoundIds}` });
-    //         }
-
-    //         return guessObjects;
-    //     } catch (error) {
-    //         throw new InternalServerErrorException({ code: ErrorCode.GUESS_OBJECTS_GET_FAILED, message: `Error retrieving guess objects from ids: ${error.message}` });
-    //     }
-    // }
 
     async findByGameConfig(gameConfig: GameConfig): Promise<GuessObject[]> {
         try {
-            const pipeline: any[] = [];
+            // Construction du filtre Prisma
+            const where: any = {};
 
-            // Appliquer un filtre par catégories (sauf si 'TOUTES' est inclus)
+            // Si des catégories sont spécifiées et qu’elles ne contiennent pas "TOUTES"
             if (
                 gameConfig.categories &&
                 gameConfig.categories.length > 0 &&
                 !gameConfig.categories.includes(Categories.TOUTES)
             ) {
-                pipeline.push({
-                    $match: {
-                        category: { $in: gameConfig.categories }
-                    }
-                });
+                where.category = { in: gameConfig.categories };
             }
 
-            // Tirer au sort un certain nombre d'objets
-            pipeline.push({
-                $sample: { size: gameConfig.nbOfObjects }
+            // Get random objects
+            const allObjects = await this.prisma.guessObject.findMany({
+                where,
+            });
+            const shuffled = allObjects.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, gameConfig.nbOfObjects);
+
+            // Get relations for selected objects
+            const selectedRawGuessObjects = await this.prisma.guessObject.findMany({
+                where: { id: { in: selected.map(obj => obj.id) } },
+                include: {
+                    world_location: true,
+                },
             });
 
-            const rawObjects = await this.guessObjectModel.aggregate(pipeline).exec();
-
-            // Optionnel : filtrer ceux qui n'ont pas les champs obligatoires
-            const guessObjects = rawObjects
-                .filter(doc => doc.name && doc.category && doc.description && doc.image)
-                .map(doc => ({
-                    id: doc._id.toString(),
-                    name: doc.name,
-                    category: doc.category,
-                    description: doc.description,
-                    short_description: doc.short_description,
-                    image: doc.image,
-                    answer: {
-                        place_name: doc.answer?.place_name,
-                        coordinates: doc.answer?.coordinates
-                    }
-                }));
-
-            if (guessObjects.length === 0) {
-                throw new NotFoundException({ code: ErrorCode.GUESS_OBJECTS_NOT_FOUND, message: `No guess objects found for the provided gameConfig ${gameConfig}` });
-            }
-
+            const guessObjects = selectedRawGuessObjects.map(obj => GuessObjectMapper.toGuessObjectDto(obj))
             return guessObjects;
         } catch (error) {
-            throw new InternalServerErrorException({ code: ErrorCode.GUESS_OBJECTS_GET_FAILED, message: `Error retrieving guess objects from game config: ${error.message}` })
+            throw new InternalServerErrorException({
+                code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
+                message: `Error retrieving guess objects from game config: ${error.message}`,
+            });
         }
+    }
+
+    async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
+        // Récupérer la location dans la db
+
+        // Si pas présente, récupérer la location chez nominatim, puis stocker dans la db
+
+        // Créer le GuessObject avec l'id de la loc
+        return ""
     }
 }

@@ -6,8 +6,11 @@ export interface GuessObject {
     image?: string;
     description?: string;
     short_description?: string;
+    world_location_id?: string;
     world_location?: WorldLocation;
 }
+
+export type CreateGuessObject = Omit<GuessObject, 'id' | 'world_location'>;
 
 
 // export interface GuessObject {

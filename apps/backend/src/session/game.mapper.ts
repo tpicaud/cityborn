@@ -1,6 +1,6 @@
 import { GameRecord as PrismaGameRecord } from "@prisma/client";
 import { GameRecordDto, PlayerResultsDto } from "./dto/game.dto";
-import { GameConfig, SessionMode } from "@cityborn/types";
+import { SessionMode } from "@cityborn/types";
 import { PlayerDto } from "src/player/dto/player.dto";
 import { GameConfigDto } from "./dto/session.dto";
 
