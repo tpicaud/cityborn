@@ -4,11 +4,14 @@ import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
+import { WikidataService } from 'src/wikidata/wikidata.service';
+import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 
 @Injectable()
 export class GuessObjectService {
     constructor(
         private readonly prisma: PrismaService,
+        private readonly wikiDataService: WikidataService
     ) { }
 
 
@@ -77,6 +80,16 @@ export class GuessObjectService {
                 message: `Error retrieving guess objects from game config: ${error.message}`,
             });
         }
+    }
+
+    async searchByName(name: string): Promise<GuessObjectsSearchResponseDto> {
+        const wikidata_response = await this.wikiDataService.searchByName(name);
+        return GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response);
+    }
+
+    async searchById(id: string): Promise<GuessObjectCandidateDto> {
+        const wikidata_response = await this.wikiDataService.searchById(id);
+        return GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
     }
 
     async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
