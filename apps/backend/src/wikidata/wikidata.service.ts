@@ -27,6 +27,7 @@ export class WikidataService {
             action: 'wbsearchentities',
             format: 'json',
             language: 'fr',
+            uselanguage: 'fr',
             search: q,
         });
 
@@ -37,14 +38,19 @@ export class WikidataService {
             }
 
             const data = await response.json();
-            const wikidata_response: WikidataSearchResponse = {
-                results: data.search.map((item: any) => ({
-                    id: item.id,
-                    label: item.label,
-                    description: item.description,
-                }))
-            }
 
+            console.log(data.search[0])
+            const wikidata_response: WikidataSearchResponse = {
+                results: data.search
+                    .filter((item: any) => item.label && item.label.trim() !== "")
+                    .map((item: any) => ({
+                        id: item.id,
+                        label: item.label,
+                        description: item.description || "",
+                    })),
+            };
+
+            console.log(wikidata_response)
             return wikidata_response;
         } catch (error) {
             throw new InternalServerErrorException({
