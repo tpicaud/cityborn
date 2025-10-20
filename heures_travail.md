@@ -108,3 +108,5 @@
 | 14/10/2025 | 2h | Réflexion schéma guess objects |
 | 15/10/2025 | 4h |  Typage + model guess guess objects/localisation/category |
 | 16/10/2025 | 6h | Gestion migrations prisma + benchmark api geocoding |
+| 17/10/2025 | 4h | Api guess objects |
+| 20/10/2025 | 6h | Api guess objects + création admin dashboard |
