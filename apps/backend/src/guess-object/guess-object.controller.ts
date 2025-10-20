@@ -3,41 +3,48 @@ import { GuessObjectService } from './guess-object.service';
 import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
+import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
 
 @Controller('guess-objects')
 export class GuessObjectController {
-    constructor(private readonly guessObjectsService: GuessObjectService) { }
+    constructor(
+        private readonly guessObjectsService: GuessObjectService
+    ) { }
 
 
     @UseGuards(AuthGuard)
     @Get()
     async getGuessObjectsFromIds(
-        @Query('guessObjectsIds') guessObjectsIds?: string | string[],
-        @Query('q') query?: string,
+        @Query('guessObjectsIds') guessObjectsIds: string | string[],
     ): Promise<GuessObjectsResponseDto> {
 
-        if (guessObjectsIds) {
-            const idsArray = Array.isArray(guessObjectsIds)
-                ? guessObjectsIds
-                : guessObjectsIds.split(',');
+        const idsArray = Array.isArray(guessObjectsIds)
+            ? guessObjectsIds
+            : guessObjectsIds.split(',');
 
-            return {
-                guessObjects: await this.guessObjectsService.findSome(idsArray)
-            };
-        }
-
-        if (query) {
-            return {
-                guessObjects: await this.guessObjectsService.searchByName(query)
-            }
-        }
-
-        throw new BadRequestException({
-            code: ErrorCode.BAD_REQUEST,
-            message: `guessObjectsIds of q parameter is invalid`,
-        });
+        return {
+            guessObjects: await this.guessObjectsService.findSome(idsArray)
+        };
     }
+
+    @Get('search')
+    async search(
+        @Query('q') q?: string,
+        @Query('id') id?: string,
+    ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
+        if (id) {
+            return this.guessObjectsService.searchById(id);
+        } else if (q) {
+            return this.guessObjectsService.searchByName(q);
+        } else {
+            throw new BadRequestException({
+                code: ErrorCode.BAD_REQUEST,
+                message: `Either 'q' or 'id' must be provided`,
+            });
+        }
+    }
+
 
     @Post()
     async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<string> {

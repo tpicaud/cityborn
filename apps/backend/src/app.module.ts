@@ -15,6 +15,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
 import { EventModule } from './event/event.module';
+import { WikidataModule } from './wikidata/wikidata.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { EventModule } from './event/event.module';
     PrismaModule,
     UserModule,
     MailModule,
-    EventModule
+    EventModule,
+    WikidataModule
   ],
   controllers: [AppController],
   providers: [AppService],
