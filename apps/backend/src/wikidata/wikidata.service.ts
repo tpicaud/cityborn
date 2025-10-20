@@ -76,11 +76,17 @@ export class WikidataService {
             const data = await response.json();
             const entity = data.entities[id];
 
+            const rawImageName = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+            const imageUrl = rawImageName
+                ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(rawImageName)}`
+                : undefined;
+
+
             const wikidataItem: WikidataItemResponse = {
                 id: entity.id,
                 label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
                 short_description: (entity.descriptions.fr?.value || entity.descriptions.en?.value) ?? undefined,
-                image: entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value ?? undefined,
+                image: imageUrl,
                 world_location_id: await this.getOSMId(entity.claims?.P19?.[0]?.mainsnak?.datavalue?.value.id) ?? undefined
             };
 
