@@ -8,7 +8,10 @@ export interface WikidataSearchResponse {
 export interface WikidataItemResponse {
     id: string;
     label: string;
+    image?: string;
     description?: string;
+    short_description?: string;
+    world_location_id?: string;
 }
 
 @Injectable()
@@ -46,7 +49,7 @@ export class WikidataService {
                     .map((item: any) => ({
                         id: item.id,
                         label: item.label,
-                        description: item.description || "",
+                        short_description: item.description || "",
                     })),
             };
 
@@ -76,7 +79,9 @@ export class WikidataService {
             const wikidataItem: WikidataItemResponse = {
                 id: entity.id,
                 label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
-                description: entity.descriptions.fr?.value || entity.descriptions.en?.value,
+                short_description: (entity.descriptions.fr?.value || entity.descriptions.en?.value) ?? undefined,
+                image: entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value ?? undefined,
+                world_location_id: await this.getOSMId(entity.claims?.P19?.[0]?.mainsnak?.datavalue?.value.id) ?? undefined
             };
 
             return wikidataItem;
@@ -86,5 +91,22 @@ export class WikidataService {
                 message: `Error retrieving Wikidata entity ${id}: ${error.message}`,
             });
         }
+    }
+
+    // Auxiliary
+    private async getOSMId(place_id: string): Promise<string | undefined> {
+        if (!place_id) return undefined;
+
+        const response = await fetch(`https://www.wikidata.org/wiki/Special:EntityData/${place_id}.json`);
+
+        if (!response.ok) {
+            throw new Error(`Erreur Wikidata: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const entity = data.entities[place_id];
+
+        const osmIdClaim = entity.claims?.P402?.[0]?.mainsnak?.datavalue?.value;
+        return osmIdClaim ?? undefined;
     }
 }
