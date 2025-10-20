@@ -12,10 +12,8 @@ export interface GuessObject {
 
 export type CreateGuessObject = Omit<GuessObject, 'id' | 'world_location'>;
 
-export interface GuessObjectCandidate {
+export type GuessObjectCandidate = Omit<GuessObject, 'id'> & {
     external_id: string;
-    label: string;
-    description?: string
 }
 
 

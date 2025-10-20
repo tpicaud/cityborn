@@ -1,9 +1,17 @@
 import * as Ariakit from "@ariakit/react";
 import { startTransition, useEffect, useState } from "react";
-import { search } from "./action";
+import { searchByName } from "./action";
 import { GuessObjectCandidate } from "@cityborn/types";
 
-export function SearchInput({ label = "Input", placeholder = "e.g., Pomme" }: { label?: string; placeholder?: string }) {
+export function SearchInput({
+    label = "Input",
+    placeholder = "e.g., Pomme",
+    setCandidate
+}: {
+    label?: string;
+    placeholder?: string;
+    setCandidate: React.Dispatch<React.SetStateAction<GuessObjectCandidate | null>>;
+}) {
 
     const [searchValue, setSearchValue] = useState("");
     const [matches, setMatches] = useState<GuessObjectCandidate[]>([]);
@@ -16,7 +24,7 @@ export function SearchInput({ label = "Input", placeholder = "e.g., Pomme" }: { 
 
         const timeoutId = setTimeout(async () => {
             try {
-                const candidates = await search(searchValue);
+                const candidates = await searchByName(searchValue);
                 setMatches(candidates);
             } catch (error) {
                 console.error("Search error:", error);
@@ -36,23 +44,24 @@ export function SearchInput({ label = "Input", placeholder = "e.g., Pomme" }: { 
             <Ariakit.ComboboxLabel>
                 {label}
             </Ariakit.ComboboxLabel>
-            <Ariakit.Combobox placeholder={placeholder} autoComplete='off' className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-40 mt-1" />
-            <Ariakit.ComboboxPopover gutter={8} className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
+            <Ariakit.Combobox placeholder={placeholder} autoComplete='off' className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2" />
+            <Ariakit.ComboboxPopover gutter={8} sameWidth className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
                 {matches.length ? (
-                    matches.slice(0, 5).map((item) => (
+                    matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem
-                            key={item.external_id}
-                            value={item.label}
+                            key={candidate.external_id}
+                            value={candidate.name}
+                            onClick={() => setCandidate(candidate)}
                             className="p-2 hover:bg-gray-300 hover:rounded-md hover:cursor-pointer"
                         >
                             <div className="flex flex-col">
-                                <span className="text-sm font-medium text-gray-900">{item.label}</span>
-                                <span className="text-xs text-gray-500">{item.description}</span>
+                                <span className="text-sm font-medium text-gray-900">{candidate.name}</span>
+                                <span className="text-xs text-gray-500">{candidate.short_description}</span>
                             </div>
                         </Ariakit.ComboboxItem>
                     ))
                 ) : (
-                    searchValue ? <div className="pl-2 text-gray-800">No results found</div> : <div></div>
+                    searchValue ? <div className="p-2 text-gray-800 bg-white rounded-md shadow-md min-w-full">No results found</div> : <div></div>
                 )}
             </Ariakit.ComboboxPopover>
         </Ariakit.ComboboxProvider>

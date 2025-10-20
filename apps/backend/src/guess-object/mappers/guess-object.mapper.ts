@@ -27,8 +27,11 @@ export class GuessObjectMapper {
     static toGuessObjectCandidateDto(response: WikidataItemResponse): GuessObjectCandidateDto {
         return {
             external_id: response.id,
-            label: response.label,
-            description: response.description
+            name: response.label,
+            description: response.description ?? undefined,
+            short_description: response.short_description ?? undefined,
+            image: response.image ?? undefined,
+            world_location_id: response.world_location_id ?? undefined,
         }
     }
 

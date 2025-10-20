@@ -1,17 +1,34 @@
 import { GuessObjectCandidate } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsOptional, IsString } from "class-validator";
+import { WorldLocationDto } from "./guess-object.dto";
 
 export class GuessObjectCandidateDto implements GuessObjectCandidate {
     @IsString()
     external_id: string;
 
     @IsString()
-    label: string;
+    name: string;
+
+    @IsOptional()
+    @IsString()
+    image?: string;
+
+    @IsOptional()
+    @IsString()
+    short_description?: string;
 
     @IsOptional()
     @IsString()
     description?: string;
+
+    @IsOptional()
+    @IsString()
+    world_location_id?: string;
+
+    @IsOptional()
+    @IsString()
+    world_location?: WorldLocationDto;
 
 }
 
