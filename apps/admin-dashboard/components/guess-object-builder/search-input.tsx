@@ -41,9 +41,6 @@ export function SearchInput({
                 startTransition(() => setSearchValue(value));
             }}
         >
-            <Ariakit.ComboboxLabel>
-                {label}
-            </Ariakit.ComboboxLabel>
             <Ariakit.Combobox placeholder={placeholder} autoComplete='off' className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2" />
             <Ariakit.ComboboxPopover gutter={8} sameWidth className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
                 {matches.length ? (
