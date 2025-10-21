@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ErrorCode } from '@cityborn/errors';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+
+export interface NominatimSearchResponse {
+    results: NominatimItemResponse[];
+}
 
 export interface NominatimItemResponse {
     place_id: string;
@@ -19,6 +24,42 @@ export class NominatimService {
 
     constructor() { }
 
+    async searchByName(q: string): Promise<NominatimSearchResponse> {
+        // const params = new URLSearchParams({
+        //     action: 'wbsearchentities',
+        //     format: 'json',
+        //     language: 'fr',
+        //     uselanguage: 'fr',
+        //     search: q,
+        // });
+
+        try {
+            const response = await fetch(`${this.NOMINATIM_API_URL}?${params}`);
+            if (!response.ok) {
+                throw new Error(`Erreur Wikidata: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            const wikidata_response: NominatimSearchResponse = {
+                results: data.search
+                    .filter((item: any) => item.label && item.label.trim() !== "")
+                    .map((item: any) => ({
+                        id: item.id,
+                        label: item.label,
+                        short_description: item.description || "",
+                    })),
+            };
+
+            return wikidata_response;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                code: ErrorCode.WORLD_LOCATION_SEARCH_FAILED,
+                message: `Error retrieving nominatim search results: ${error.message}`,
+            });
+        }
+    }
+    
     async findByOsmId(osm_id: string, osm_type: 'N' | 'W' | 'R' = 'R'): Promise<NominatimItemResponse | null> {
         try {
             const params: Record<string, string> = {

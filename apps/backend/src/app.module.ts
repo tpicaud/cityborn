@@ -17,6 +17,7 @@ import { MailModule } from './mail/mail.module';
 import { EventModule } from './event/event.module';
 import { WikidataModule } from './wikidata/wikidata.module';
 import { NominatimModule } from './nominatim/nominatim.module';
+import { WorldLocationModule } from './world-location/world-location.module';
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { NominatimModule } from './nominatim/nominatim.module';
     MailModule,
     EventModule,
     WikidataModule,
-    NominatimModule
+    NominatimModule,
+    WorldLocationModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,7 @@
 import { GuessObjectCandidate } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsOptional, IsString } from "class-validator";
-import { WorldLocationDto } from "./guess-object.dto";
+import { WorldLocationDto } from "src/world-location/dto/world-location.dto";
 
 export class GuessObjectCandidateDto implements GuessObjectCandidate {
     @IsString()
@@ -34,5 +34,5 @@ export class GuessObjectCandidateDto implements GuessObjectCandidate {
 
 export class GuessObjectsSearchResponseDto {
     @Type(() => GuessObjectCandidateDto)
-    candidates: GuessObjectCandidate[];
+    candidates: GuessObjectCandidateDto[];
 }
