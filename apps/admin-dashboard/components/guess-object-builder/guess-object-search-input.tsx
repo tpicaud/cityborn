@@ -1,9 +1,9 @@
 import * as Ariakit from "@ariakit/react";
 import { ChangeEventHandler, startTransition, useEffect, useState } from "react";
-import { searchByName } from "./action";
+import { searchGuessObjectByName } from "./action";
 import { GuessObjectCandidate } from "@cityborn/types";
 
-export function SearchInput({
+export function GuessObjectSearchInput({
     type = "text",
     id,
     placeholder = "e.g., Pomme",
@@ -30,7 +30,7 @@ export function SearchInput({
 
         const timeoutId = setTimeout(async () => {
             try {
-                const candidates = await searchByName(searchValue);
+                const candidates = await searchGuessObjectByName(searchValue);
                 setMatches(candidates);
             } catch (error) {
                 console.error("Search error:", error);

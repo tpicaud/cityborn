@@ -64,7 +64,7 @@ export class WikidataService {
     /**
      * Wikidata search by id
      */
-    async searchById(id: string): Promise<WikidataItemResponse> {
+    async findById(id: string): Promise<WikidataItemResponse> {
         try {
             const response = await fetch(`${this.WIKIDATA_URL}/Special:EntityData/${id}.json`);
             if (!response.ok) {

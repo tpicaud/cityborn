@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SearchInput } from "./search-input";
 import { GuessObjectCandidate } from "@cityborn/types";
-import { searchById } from "./action";
+import { GuessObjectSearchInput } from "./guess-object-search-input";
+import { searchGuessObjectById } from "./action";
 
 export function GuessObjectBuilder() {
     const [guessObjectCandidate, setGuessObjectCandidate] = useState<GuessObjectCandidate | null>(null);
@@ -19,7 +19,7 @@ export function GuessObjectBuilder() {
         const getFullObject = async () => {
             if (!guessObjectCandidate?.external_id) return;
 
-            const fullCandidate = await searchById(guessObjectCandidate.external_id);
+            const fullCandidate = await searchGuessObjectById(guessObjectCandidate.external_id);
             console.log("Full candidate data:", fullCandidate);
 
             if (fullCandidate) {
@@ -44,7 +44,7 @@ export function GuessObjectBuilder() {
                     <div className="grid grid-cols-2 grid-rows-1 gap-10">
                         <div className="flex flex-col gap-2">
                             <label htmlFor="name">Rechercher un objet</label>
-                            <SearchInput
+                            <GuessObjectSearchInput
                                 type="text"
                                 id="name"
                                 placeholder="e.g. Justin Timberlake"

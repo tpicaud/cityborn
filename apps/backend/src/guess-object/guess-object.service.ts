@@ -6,14 +6,14 @@ import { GuessObjectMapper } from './mappers/guess-object.mapper';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 import { WikidataService } from 'src/wikidata/wikidata.service';
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
-import { NominatimService } from 'src/nominatim/nominatim.service';
+import { WorldLocationService } from 'src/world-location/world-location.service';
 
 @Injectable()
 export class GuessObjectService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly wikiDataService: WikidataService,
-        private readonly nominatimService: NominatimService
+        private readonly worldLocationService: WorldLocationService
     ) { }
 
 
@@ -89,15 +89,15 @@ export class GuessObjectService {
         return GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response);
     }
 
-    async searchById(id: string): Promise<GuessObjectCandidateDto> {
-        const wikidata_response = await this.wikiDataService.searchById(id);
+    async findById(id: string): Promise<GuessObjectCandidateDto> {
+        const wikidata_response = await this.wikiDataService.findById(id);
         const guessObjectCandidate = GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
 
         if (guessObjectCandidate.world_location_id) {
-            const nominatim_response = await this.nominatimService.findByOsmId(guessObjectCandidate.world_location_id);
-            if (nominatim_response) guessObjectCandidate.world_location = GuessObjectMapper.toWorldLocationDtoFromNominatimItem(nominatim_response);
+            const world_location = await this.worldLocationService.findById(guessObjectCandidate.world_location_id);
+            if (world_location) guessObjectCandidate.world_location = world_location;
         }
-        console.log(guessObjectCandidate)
+
         return guessObjectCandidate;
     }
 

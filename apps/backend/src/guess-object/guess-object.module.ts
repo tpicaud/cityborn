@@ -3,10 +3,10 @@ import { GuessObjectController } from './guess-object.controller';
 import { GuessObjectService } from './guess-object.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { WikidataModule } from 'src/wikidata/wikidata.module';
-import { NominatimModule } from 'src/nominatim/nominatim.module';
+import { WorldLocationModule } from 'src/world-location/world-location.module';
 
 @Module({
-  imports: [PrismaModule, WikidataModule, NominatimModule],
+  imports: [PrismaModule, WikidataModule, WorldLocationModule],
   controllers: [GuessObjectController],
   providers: [GuessObjectService],
   exports: [GuessObjectService]
