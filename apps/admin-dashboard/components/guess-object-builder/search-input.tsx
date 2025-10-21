@@ -1,15 +1,21 @@
 import * as Ariakit from "@ariakit/react";
-import { startTransition, useEffect, useState } from "react";
+import { ChangeEventHandler, startTransition, useEffect, useState } from "react";
 import { searchByName } from "./action";
 import { GuessObjectCandidate } from "@cityborn/types";
 
 export function SearchInput({
-    label = "Input",
+    type = "text",
+    id,
     placeholder = "e.g., Pomme",
+    value,
+    onChange,
     setCandidate
 }: {
-    label?: string;
+    type: string;
+    id: string;
     placeholder?: string;
+    value: string | undefined;
+    onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
     setCandidate: React.Dispatch<React.SetStateAction<GuessObjectCandidate | null>>;
 }) {
 
@@ -41,7 +47,15 @@ export function SearchInput({
                 startTransition(() => setSearchValue(value));
             }}
         >
-            <Ariakit.Combobox placeholder={placeholder} autoComplete='off' className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2" />
+            <Ariakit.Combobox
+                type={type}
+                id={id}
+                placeholder={placeholder}
+                value={value}
+                autoComplete='off'
+                onChange={onChange}
+                className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2"
+            />
             <Ariakit.ComboboxPopover gutter={8} sameWidth className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
