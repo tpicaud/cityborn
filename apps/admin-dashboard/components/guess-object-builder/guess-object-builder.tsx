@@ -27,6 +27,7 @@ export function GuessObjectBuilder() {
                     short_description: fullCandidate.short_description ?? "",
                     image: fullCandidate.image ?? "",
                     world_location_id: fullCandidate.world_location_id ?? "",
+                    world_location: fullCandidate.world_location
                 });
             }
         };
@@ -61,7 +62,9 @@ export function GuessObjectBuilder() {
                                 type="text"
                                 id="localisation"
                                 placeholder="e.g. Paris"
-                                value={guessObjectCandidate?.world_location_id ?? ""}
+                                value={
+                                    guessObjectCandidate?.world_location ? guessObjectCandidate.world_location.name : ""
+                                    }
                                 onChange={(e) =>
                                     updateGuessObjectCandidate({ world_location_id: e.target.value })
                                 }

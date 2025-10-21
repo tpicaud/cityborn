@@ -42,7 +42,6 @@ export class WikidataService {
 
             const data = await response.json();
 
-            console.log(data.search[0])
             const wikidata_response: WikidataSearchResponse = {
                 results: data.search
                     .filter((item: any) => item.label && item.label.trim() !== "")
@@ -53,7 +52,6 @@ export class WikidataService {
                     })),
             };
 
-            console.log(wikidata_response)
             return wikidata_response;
         } catch (error) {
             throw new InternalServerErrorException({

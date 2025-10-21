@@ -51,7 +51,7 @@ export function SearchInput({
                 type={type}
                 id={id}
                 placeholder={placeholder}
-                value={value}
+                value={value ?? ""}
                 autoComplete='off'
                 onChange={onChange}
                 className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2"
