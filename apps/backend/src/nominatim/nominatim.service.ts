@@ -29,6 +29,7 @@ export class NominatimService {
                 addressdetails: '1',     // inclut les détails d'adresse
                 extratags: '1',          // inclut les métadonnées OSM
                 namedetails: '1',        // inclut les noms alternatifs
+                'accept-language': 'fr'
             };
 
             const queryString = new URLSearchParams(params).toString();
