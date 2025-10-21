@@ -63,12 +63,12 @@ export function GuessObjectBuilder() {
                                 id="localisation"
                                 placeholder="e.g. Paris"
                                 value={
-                                    guessObjectCandidate?.world_location ? guessObjectCandidate.world_location.name : ""
+                                    guessObjectCandidate?.world_location ? guessObjectCandidate.world_location.display_name : ""
                                     }
                                 onChange={(e) =>
                                     updateGuessObjectCandidate({ world_location_id: e.target.value })
                                 }
-                                className="bg-white text-gray-800 rounded-md p-2 max-w-52"
+                                className="bg-white text-gray-800 rounded-md p-2 w-full max-w-96"
                             />
 
                             <label htmlFor="short_description" className="mt-4">
