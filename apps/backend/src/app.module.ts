@@ -16,6 +16,7 @@ import { UserModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
 import { EventModule } from './event/event.module';
 import { WikidataModule } from './wikidata/wikidata.module';
+import { NominatimModule } from './nominatim/nominatim.module';
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { WikidataModule } from './wikidata/wikidata.module';
     UserModule,
     MailModule,
     EventModule,
-    WikidataModule
+    WikidataModule,
+    NominatimModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,7 +2,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import LogoutButton from "@/components/logout-button";
-import { ActiveUsers } from "@/components/active-users";
 import { GuessObjectBuilder } from "@/components/guess-object-builder/guess-object-builder";
 
 export default async function Dashboard() {
@@ -20,7 +19,6 @@ export default async function Dashboard() {
             <h1 className="text-2xl font-bold hidden sm:block">
               Admin
             </h1>
-            <ActiveUsers />
           </div>
           <LogoutButton />
         </div>

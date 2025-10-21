@@ -6,12 +6,14 @@ import { GuessObjectMapper } from './mappers/guess-object.mapper';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 import { WikidataService } from 'src/wikidata/wikidata.service';
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
+import { NominatimService } from 'src/nominatim/nominatim.service';
 
 @Injectable()
 export class GuessObjectService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly wikiDataService: WikidataService
+        private readonly wikiDataService: WikidataService,
+        private readonly nominatimService: NominatimService
     ) { }
 
 
@@ -89,7 +91,14 @@ export class GuessObjectService {
 
     async searchById(id: string): Promise<GuessObjectCandidateDto> {
         const wikidata_response = await this.wikiDataService.searchById(id);
-        return GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
+        const guessObjectCandidate = GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
+
+        if (guessObjectCandidate.world_location_id) {
+            const nominatim_response = await this.nominatimService.findByOsmId(guessObjectCandidate.world_location_id);
+            if (nominatim_response) guessObjectCandidate.world_location = GuessObjectMapper.toWorldLocationDtoFromNominatimItem(nominatim_response);
+        }
+        console.log(guessObjectCandidate)
+        return guessObjectCandidate;
     }
 
     async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
