@@ -43,6 +43,10 @@ export class WorldLocationDto implements WorldLocation {
   @IsString()
   name: string;
 
+  @IsOptional()
+  @IsString()
+  display_name?: string;
+
   @IsEnum(['area', 'point'])
   type: 'area' | 'point';
 

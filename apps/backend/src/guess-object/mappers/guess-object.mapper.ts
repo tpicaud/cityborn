@@ -46,6 +46,7 @@ export class GuessObjectMapper {
         return {
             id: prismaWorldLocation.id,
             name: prismaWorldLocation.name,
+            display_name: prismaWorldLocation.display_name ?? undefined,
             type: prismaWorldLocation.type,
             geometry: prismaWorldLocation.geometry as unknown as {
                 type: 'Point' | 'Polygon' | 'MultiPolygon';
@@ -66,6 +67,7 @@ export class GuessObjectMapper {
         return {
             id: nominatimItem.osm_id,
             name: nominatimItem.name,
+            display_name: nominatimItem.display_name ?? undefined,
             type: nominatimItem.geojson.type === 'Point' ? 'point' : 'area',
             geometry: nominatimItem.geojson as unknown as {
                 type: 'Point' | 'Polygon' | 'MultiPolygon';
