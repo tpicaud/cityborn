@@ -34,12 +34,12 @@ model User {
 }
 
 model EmailVerificationToken {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  token     String   @unique
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token String @unique
 
-  userId    String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id])
-  
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
@@ -78,17 +78,18 @@ enum LocationLevel {
 }
 
 model WorldLocation {
-  id       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name     String
-  type     LocationType
-  level    LocationLevel?
-  iso_code String?
-  centroid Float[]
-  geometry Json           @db.JsonB
-  source   Json?          @db.JsonB
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  display_name String?
+  type         LocationType
+  level        LocationLevel?
+  iso_code     String?
+  centroid     Float[]
+  geometry     Json           @db.JsonB
+  source       Json?          @db.JsonB
 
   // parent relation
-  parentId String?    @db.Uuid
+  parentId String?         @db.Uuid
   parent   WorldLocation?  @relation("ParentChild", fields: [parentId], references: [id])
   children WorldLocation[] @relation("ParentChild")
 
@@ -105,9 +106,9 @@ model GuessObject {
   description       String?
   short_description String?
 
-  world_location_id String     @db.Uuid
-  world_location    WorldLocation   @relation(fields: [world_location_id], references: [id])
-  categories        Category[] @relation("CategoryGuessObjects")
+  world_location_id String        @db.Uuid
+  world_location    WorldLocation @relation(fields: [world_location_id], references: [id])
+  categories        Category[]    @relation("CategoryGuessObjects")
 }
 
 model Category {
