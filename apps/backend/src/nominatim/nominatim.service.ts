@@ -12,6 +12,7 @@ export interface NominatimItemResponse {
     lon: string
     name: string;
     display_name: string;
+    addresstype?: string;
     geojson: {
         type: string;
         coordinates: number[] | number[][] | number[][][];
@@ -25,41 +26,71 @@ export class NominatimService {
     constructor() { }
 
     async searchByName(q: string): Promise<NominatimSearchResponse> {
-        // const params = new URLSearchParams({
-        //     action: 'wbsearchentities',
-        //     format: 'json',
-        //     language: 'fr',
-        //     uselanguage: 'fr',
-        //     search: q,
-        // });
-
         try {
-            const response = await fetch(`${this.NOMINATIM_API_URL}?${params}`);
+            const params: Record<string, string> = {
+                q,
+                format: 'json',
+                addressdetails: '1',
+                extratags: '1',
+                'accept-language': 'fr',
+                limit: '20',
+            };
+
+            const queryString = new URLSearchParams(params).toString();
+            const url = `${this.NOMINATIM_API_URL}/search?${queryString}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Cityborn/1.0 (cityborn.contact@gmail.app)',
+                },
+            });
+
             if (!response.ok) {
-                throw new Error(`Erreur Wikidata: ${response.statusText}`);
+                throw new Error(`Nominatim search failed: ${response.statusText}`);
             }
 
             const data = await response.json();
 
-            const wikidata_response: NominatimSearchResponse = {
-                results: data.search
-                    .filter((item: any) => item.label && item.label.trim() !== "")
-                    .map((item: any) => ({
-                        id: item.id,
-                        label: item.label,
-                        short_description: item.description || "",
-                    })),
-            };
+            // Garde uniquement les relations
+            const filtered_data = data.filter((r: any) => r.osm_type === 'relation');
 
-            return wikidata_response;
-        } catch (error) {
+            // Group by display_name et garde celui avec le place_rank le plus haut
+            const grouped: Record<string, any> = {};
+            for (const item of filtered_data) {
+                const key = item.display_name;
+                if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
+                    grouped[key] = item;
+                }
+            }
+
+            // Map en NominatimItemResponse
+            const results: NominatimItemResponse[] = Object.values(grouped).map((item: any) => ({
+                place_id: item.place_id?.toString() ?? '',
+                osm_id: item.osm_id?.toString() ?? '',
+                lat: item.lat,
+                lon: item.lon,
+                name: item.namedetails?.['name:fr'] || item.display_name?.split(',')[0] || 'Inconnu',
+                display_name: item.display_name,
+                addresstype: item.addresstype,
+                place_rank: item.place_rank,
+                geojson: item.geojson ?? {
+                    type: 'Point',
+                    coordinates: [Number(item.lon), Number(item.lat)],
+                },
+            }));
+
+            return { results };
+        } catch (error: any) {
+            console.error('Error fetching Nominatim data:', error);
+
             throw new InternalServerErrorException({
                 code: ErrorCode.WORLD_LOCATION_SEARCH_FAILED,
                 message: `Error retrieving nominatim search results: ${error.message}`,
             });
         }
     }
-    
+
+
     async findByOsmId(osm_id: string, osm_type: 'N' | 'W' | 'R' = 'R'): Promise<NominatimItemResponse | null> {
         try {
             const params: Record<string, string> = {

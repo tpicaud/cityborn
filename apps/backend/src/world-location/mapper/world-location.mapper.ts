@@ -34,6 +34,7 @@ export class WorldLocationMapper {
             id: nominatimItem.osm_id,
             name: nominatimItem.name,
             display_name: nominatimItem.display_name ?? undefined,
+            addresstype: nominatimItem.addresstype ?? undefined,
             type: nominatimItem.geojson.type === 'Point' ? 'point' : 'area',
             geometry: nominatimItem.geojson as unknown as {
                 type: 'Point' | 'Polygon' | 'MultiPolygon';
