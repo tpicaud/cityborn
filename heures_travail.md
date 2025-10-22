@@ -111,3 +111,4 @@
 | 17/10/2025 | 4h | Api guess objects |
 | 20/10/2025 | 8h | Api guess objects + création admin dashboard + builder guess object |
 | 21/10/2025 | 6h | Api guess objects + création admin dashboard + builder guess object |
+| 22/10/2025 | 6h | Api guess objects + création admin dashboard + builder guess object |
