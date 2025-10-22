@@ -9,14 +9,18 @@ export function GuessObjectSearchInput({
     placeholder = "e.g., Pomme",
     value,
     onChange,
-    setCandidate
+    onSelect,
+    className = 'bg-white',
+    popoverClassName = 'bg-white'
 }: {
     type: string;
     id: string;
     placeholder?: string;
     value: string | undefined;
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
-    setCandidate: React.Dispatch<React.SetStateAction<GuessObjectCandidate | null>>;
+    onSelect: (candidate: GuessObjectCandidate | undefined) => void
+    className?: string;
+    popoverClassName?: string;
 }) {
 
     const [searchValue, setSearchValue] = useState("");
@@ -54,15 +58,15 @@ export function GuessObjectSearchInput({
                 value={value ?? ""}
                 autoComplete='off'
                 onChange={onChange}
-                className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2"
+                className={className}
             />
-            <Ariakit.ComboboxPopover gutter={8} sameWidth className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
+            <Ariakit.ComboboxPopover gutter={8} sameWidth className={popoverClassName}>
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem
                             key={candidate.external_id}
                             value={candidate.name}
-                            onClick={() => setCandidate(candidate)}
+                            onClick={() => onSelect(candidate)}
                             className="p-2 hover:bg-gray-300 hover:rounded-md hover:cursor-pointer"
                         >
                             <div className="flex flex-col">

@@ -38,7 +38,7 @@ export async function searchGuessObjectById(id: string): Promise<GuessObjectCand
 }
 
 export async function searchWorldLocationByName(query: string): Promise<WorldLocation[]> {
-    const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/search?q=${encodeURIComponent(query)}`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/world-location/search?q=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -48,8 +48,26 @@ export async function searchWorldLocationByName(query: string): Promise<WorldLoc
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || 'Failed to search guess objects');
+        throw new Error(data.message || 'Failed to search world locations');
     }
 
     return data.candidates as WorldLocation[] ?? [];
+}
+
+export async function searchWorldLocationById(id: string): Promise<WorldLocation> {
+
+    const response = await fetch(`${process.env.BACKEND_URL}/world-location/search?id=${id}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to search world location');
+    }
+
+    return data as WorldLocation ?? {};
 }

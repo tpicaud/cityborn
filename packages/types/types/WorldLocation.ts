@@ -9,6 +9,7 @@ export interface WorldLocation {
 
     // Optional
     display_name?: string;
+    addresstype?: string;
     level?: 'ADM1' | 'ADM2' | 'ADM3' | 'ADM4';
     iso_code?: string;
     parent?: {

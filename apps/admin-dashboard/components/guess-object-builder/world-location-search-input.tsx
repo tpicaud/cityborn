@@ -3,20 +3,24 @@ import { ChangeEventHandler, startTransition, useEffect, useState } from "react"
 import { searchWorldLocationByName } from "./action";
 import { WorldLocation } from "@cityborn/types";
 
-export function WorldLocationCandidateSearchInput({
+export function WorldLocationSearchInput({
     type = "text",
     id,
     placeholder = "e.g., Paris",
     value,
     onChange,
-    setCandidate
+    onSelect,
+    className = "bg-white",
+    popoverClassName = "bg-white"
 }: {
     type: string;
     id: string;
     placeholder?: string;
     value: string | undefined;
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
-    setCandidate: React.Dispatch<React.SetStateAction<WorldLocation | null>>;
+    onSelect: (candidate: WorldLocation | undefined) => void;
+    className?: string;
+    popoverClassName?: string;
 }) {
 
     const [searchValue, setSearchValue] = useState("");
@@ -31,6 +35,7 @@ export function WorldLocationCandidateSearchInput({
         const timeoutId = setTimeout(async () => {
             try {
                 const candidates = await searchWorldLocationByName(searchValue);
+                console.log(candidates)
                 setMatches(candidates);
             } catch (error) {
                 console.error("Search error:", error);
@@ -54,19 +59,27 @@ export function WorldLocationCandidateSearchInput({
                 value={value ?? ""}
                 autoComplete='off'
                 onChange={onChange}
-                className="bg-white rounded-md shadow-md text-gray-800 pl-2 h-10 w-52 mt-2"
+                className={className}
             />
-            <Ariakit.ComboboxPopover gutter={8} sameWidth className="text-gray-800 bg-white rounded-md shadow-md min-w-full">
+            <Ariakit.ComboboxPopover gutter={8} sameWidth className={popoverClassName}>
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem
                             key={candidate.id}
                             value={candidate.name}
-                            onClick={() => setCandidate(candidate)}
+                            onClick={() => onSelect(candidate)}
                             className="p-2 hover:bg-gray-300 hover:rounded-md hover:cursor-pointer"
                         >
                             <div className="flex flex-col">
-                                <span className="text-sm font-medium text-gray-900">{candidate.name}</span>
+                                <span className="text-sm font-medium text-gray-900">
+                                    <div>
+                                        {candidate.name}
+                                        {candidate.addresstype && (
+                                            <span className="font-thin text-gray-500 italic"> ({candidate.addresstype})</span>
+                                        )}
+                                    </div>
+                                </span>
+
                                 <span className="text-xs text-gray-500">{candidate.display_name}</span>
                             </div>
                         </Ariakit.ComboboxItem>
