@@ -12,11 +12,11 @@ export class CreateGuessObjectDto implements CreateGuessObject {
     @IsOptional()
     @IsString()
     description?: string;
+
     @IsOptional()
     @IsString()
     short_description?: string;
 
-    @IsOptional()
     @IsString()
-    world_location_id?: string;
+    world_location_id: string;
 }

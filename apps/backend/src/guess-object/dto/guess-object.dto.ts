@@ -24,6 +24,9 @@ export class GuessObjectDto implements GuessObject {
   @IsString()
   short_description?: string;
 
+  @IsString()
+  world_location_id: string;
+
   @IsOptional()
   @Type(() => WorldLocationDto)
   world_location?: WorldLocationDto

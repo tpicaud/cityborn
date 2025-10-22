@@ -24,7 +24,7 @@ export class GuessObjectCandidateDto implements GuessObjectCandidate {
 
     @IsOptional()
     @IsString()
-    world_location_id?: string;
+    world_location_id?: string
 
     @IsOptional()
     @IsString()
