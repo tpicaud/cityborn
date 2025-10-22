@@ -16,6 +16,10 @@ export class GuessObjectMapper {
             image: prismaGuessObject.image ?? undefined,
             description: prismaGuessObject.description ?? undefined,
             short_description: prismaGuessObject.short_description ?? undefined,
+            source: prismaGuessObject.source as unknown as {
+                provider: string;
+                external_id: string;
+            } ?? undefined,
             world_location_id: prismaGuessObject.world_location_id,
             world_location: prismaGuessObject.world_location ? WorldLocationMapper.toWorldLocationDto(prismaGuessObject.world_location) : undefined
         }
@@ -23,12 +27,31 @@ export class GuessObjectMapper {
 
     static toGuessObjectCandidateDto(response: WikidataItemResponse): GuessObjectCandidateDto {
         return {
-            external_id: response.id,
+            source: {
+                provider: 'wikidata',
+                external_id: response.id
+            },
             name: response.label,
             description: response.description ?? undefined,
             short_description: response.short_description ?? undefined,
             image: response.image ?? undefined,
+            
             world_location_id: response.world_location_id ?? undefined,
+        }
+    }
+
+    static toGuessObjectCandidateFromPrismaDto(prismaGuessObject: PrismaGuessObjectWithRelations): GuessObjectCandidateDto {
+        return {
+            source: prismaGuessObject.source as unknown as {
+                provider: string;
+                external_id: string;
+            } ?? undefined,
+            name: prismaGuessObject.name,
+            description: prismaGuessObject.description ?? undefined,
+            short_description: prismaGuessObject.short_description ?? undefined,
+            image: prismaGuessObject.image ?? undefined,
+            world_location_id: prismaGuessObject.world_location_id,
+            world_location: prismaGuessObject.world_location ? WorldLocationMapper.toWorldLocationDto(prismaGuessObject.world_location) : undefined
         }
     }
 

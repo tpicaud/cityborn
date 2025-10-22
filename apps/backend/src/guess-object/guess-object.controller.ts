@@ -34,7 +34,7 @@ export class GuessObjectController {
         @Query('id') id?: string,
     ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
         if (id) {
-            return this.guessObjectsService.findById(id);
+            return this.guessObjectsService.findBySourceId(id);
         } else if (q) {
             return this.guessObjectsService.searchByName(q);
         } else {

@@ -101,6 +101,7 @@ model GuessObject {
   image             String?
   description       String?
   short_description String?
+  source            Json?   @db.JsonB
 
   world_location_id String        @db.Uuid
   world_location    WorldLocation @relation(fields: [world_location_id], references: [id])
