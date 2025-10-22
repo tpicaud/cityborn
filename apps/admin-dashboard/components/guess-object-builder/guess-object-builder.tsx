@@ -30,12 +30,12 @@ export function GuessObjectBuilder() {
     }, [worldLocationCandidate]);
 
         async function handleFetchGuessObjectCandidate(guessObjectCandidate: GuessObjectCandidate | undefined) {
-        if (!guessObjectCandidate?.external_id) return;
+        if (!guessObjectCandidate?.source?.external_id) return;
 
-        const fullCandidate = await searchGuessObjectById(guessObjectCandidate.external_id);
+        const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
         console.log("Full candidate data:", fullCandidate);
 
-        if (fullCandidate) {
+        if (fullCandidate) { 
             setGuessObjectCandidate({
                 ...fullCandidate
             });

@@ -3,6 +3,14 @@ import { Type } from "class-transformer";
 import { IsUUID, IsString, IsOptional } from "class-validator";
 import { WorldLocationDto } from "src/world-location/dto/world-location.dto";
 
+export class GuessObjectSourceDto {
+  @IsString()
+  provider: string;
+
+  @IsString()
+  external_id: string;
+}
+
 export class GuessObjectDto implements GuessObject {
 
   @IsUUID()
@@ -23,6 +31,10 @@ export class GuessObjectDto implements GuessObject {
   @IsOptional()
   @IsString()
   short_description?: string;
+
+  @IsOptional()
+  @Type(() => GuessObjectSourceDto)
+  source?: GuessObjectSourceDto;
 
   @IsString()
   world_location_id: string;

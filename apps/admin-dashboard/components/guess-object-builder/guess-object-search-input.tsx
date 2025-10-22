@@ -64,7 +64,7 @@ export function GuessObjectSearchInput({
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem
-                            key={candidate.external_id}
+                            key={candidate.source?.external_id}
                             value={candidate.name}
                             onClick={() => onSelect(candidate)}
                             className="p-2 hover:bg-gray-300 hover:rounded-md hover:cursor-pointer"

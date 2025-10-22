@@ -88,11 +88,66 @@ export class GuessObjectService {
 
     async searchByName(name: string): Promise<GuessObjectsSearchResponseDto> {
         const wikidata_response = await this.wikiDataService.searchByName(name);
-        return GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response);
+        const guess_objects_candidates_from_wikidata = (GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response)).candidates;
+
+        // search in db
+        const guess_objects_from_db = await this.prisma.guessObject.findMany({
+            where: {
+                name: {
+                    contains: name,
+                    mode: 'insensitive',
+                },
+            },
+        });
+        const guess_objects_candidates_from_db = guess_objects_from_db.map(obj => GuessObjectMapper.toGuessObjectCandidateFromPrismaDto(obj));
+
+        // 🔄 Remplacer les candidats Wikidata par ceux de la DB quand l’external_id correspond
+        const dbByExternalId = new Map(
+            guess_objects_candidates_from_db.map(obj => [obj.source?.external_id, obj]),
+        );
+
+        const merged_candidates = guess_objects_candidates_from_wikidata.map(wikiCandidate => {
+            const dbObj = dbByExternalId.get(wikiCandidate.source?.external_id);
+            if (dbObj) {
+                // On renvoie la version DB mappée au bon format
+                return dbObj;
+            }
+            return wikiCandidate;
+        });
+
+        return {
+            candidates: merged_candidates,
+        };
     }
 
-    async findById(id: string): Promise<GuessObjectCandidateDto> {
-        const wikidata_response = await this.wikiDataService.findById(id);
+    async findBySourceId(external_id: string): Promise<GuessObjectDto | GuessObjectCandidateDto> {
+        const guessObjectInDB = await this.findBySourceIdInDB(external_id);
+        if (guessObjectInDB) {
+            return guessObjectInDB;
+        } else {
+            return this.findBySourceIdInProvider(external_id);
+        }
+    }
+
+    async findBySourceIdInDB(external_id: string): Promise<GuessObjectDto | null> {
+        const guessObject = await this.prisma.guessObject.findFirst({
+            where: {
+                source: {
+                    path: ["external_id"],
+                    equals: external_id,
+                },
+            },
+            include: {
+                world_location: true
+            }
+        });
+        if (!guessObject) return null;
+
+        return GuessObjectMapper.toGuessObjectDto(guessObject);
+    }
+
+    async findBySourceIdInProvider(external_id: string): Promise<GuessObjectCandidateDto> {
+        const wikidata_response = await this.wikiDataService.findById(external_id);
         const guessObjectCandidate = GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
 
         if (guessObjectCandidate.world_location_id) {
