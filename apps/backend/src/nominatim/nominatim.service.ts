@@ -1,5 +1,7 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 
 export interface NominatimSearchResponse {
     results: NominatimItemResponse[];
@@ -63,7 +65,6 @@ export class NominatimService {
                 }
             }
 
-            // Map en NominatimItemResponse
             const results: NominatimItemResponse[] = Object.values(grouped).map((item: any) => ({
                 place_id: item.place_id?.toString() ?? '',
                 osm_id: item.osm_id?.toString() ?? '',

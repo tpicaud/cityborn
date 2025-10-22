@@ -16,6 +16,7 @@ export class GuessObjectMapper {
             image: prismaGuessObject.image ?? undefined,
             description: prismaGuessObject.description ?? undefined,
             short_description: prismaGuessObject.short_description ?? undefined,
+            world_location_id: prismaGuessObject.world_location_id,
             world_location: prismaGuessObject.world_location ? WorldLocationMapper.toWorldLocationDto(prismaGuessObject.world_location) : undefined
         }
     }

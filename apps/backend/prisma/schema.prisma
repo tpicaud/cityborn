@@ -81,17 +81,13 @@ model WorldLocation {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String
   display_name String?
+  addresstype  String?
   type         LocationType
   level        LocationLevel?
   iso_code     String?
   centroid     Float[]
   geometry     Json           @db.JsonB
   source       Json?          @db.JsonB
-
-  // parent relation
-  parentId String?         @db.Uuid
-  parent   WorldLocation?  @relation("ParentChild", fields: [parentId], references: [id])
-  children WorldLocation[] @relation("ParentChild")
 
   guessObjects GuessObject[]
 
