@@ -5,10 +5,10 @@ import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 import { GuessObjectSearchInput } from "./guess-object-search-input";
 import { searchGuessObjectById, searchWorldLocationById } from "./action";
 import { WorldLocationSearchInput } from "./world-location-search-input";
+import { WorldLocationViewer } from "./world-location-viewer";
 
 export function GuessObjectBuilder() {
     const [guessObjectCandidate, setGuessObjectCandidate] = useState<GuessObjectCandidate | null>(null);
-    const [worldLocationCandidate, setWorldLocationCandidate] = useState<WorldLocation | null>(null);
 
     const updateGuessObjectCandidate = (update: Partial<GuessObjectCandidate>) => {
         setGuessObjectCandidate((prev) =>
@@ -20,22 +20,13 @@ export function GuessObjectBuilder() {
         console.log(guessObjectCandidate);
     }, [guessObjectCandidate])
 
-    useEffect(() => {
-        if (worldLocationCandidate) {
-            updateGuessObjectCandidate({
-                world_location_id: worldLocationCandidate.id,
-                world_location: worldLocationCandidate
-            });
-        }
-    }, [worldLocationCandidate]);
-
-        async function handleFetchGuessObjectCandidate(guessObjectCandidate: GuessObjectCandidate | undefined) {
+    async function handleFetchGuessObjectCandidate(guessObjectCandidate: GuessObjectCandidate | undefined) {
         if (!guessObjectCandidate?.source?.external_id) return;
 
         const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
         console.log("Full candidate data:", fullCandidate);
 
-        if (fullCandidate) { 
+        if (fullCandidate) {
             setGuessObjectCandidate({
                 ...fullCandidate
             });
@@ -58,9 +49,11 @@ export function GuessObjectBuilder() {
 
     return (
         <div className="w-full h-full">
-            <div className="flex flex-col">
-                <h2 className="text-xl font-bold mb-1">Constructeur d'objets</h2>
-                <span className="h-[2px] w-full bg-foreground mb-5"></span>
+            <div className="h-full flex flex-col gap-8 w-full">
+                <div className="flex flex-col w-full">
+                    <h2 className="text-xl font-bold mb-2">Constructeur d'objets</h2>
+                    <span className="h-[2px] w-full bg-foreground mb-5"></span>
+                </div>
                 <form>
                     <div className="grid grid-cols-2 grid-rows-1 gap-10">
                         <div className="flex flex-col gap-2">
@@ -132,6 +125,9 @@ export function GuessObjectBuilder() {
                         </div>
                     </div>
                 </form>
+                <div className="h-full w-full">
+                    <WorldLocationViewer world_location={guessObjectCandidate?.world_location} API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} />
+                </div>
             </div>
         </div>
     );

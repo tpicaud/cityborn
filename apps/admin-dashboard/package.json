@@ -10,6 +10,7 @@
   "dependencies": {
     "@ariakit/react": "^0.4.19",
     "@cityborn/types": "workspace:*",
+    "@vis.gl/react-google-maps": "^1.5.3",
     "clsx": "^2.1.1",
     "jose": "^6.1.0",
     "lucide-react": "^0.546.0",
