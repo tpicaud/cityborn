@@ -67,7 +67,7 @@ export function GuessObjectBuilder() {
                                 updateGuessObjectCandidate({ name: e.target.value })
                             }
                             onSelect={handleFetchGuessObjectCandidate}
-                            className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-52"
+                            className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-96"
                             popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
                         />
 
