@@ -37,6 +37,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     defaultCenter: center || { lat: 22.54992, lng: 0 },
     defaultZoom: zoom || 3,
     zoomControl: false,
+    clickableIcons: false,    // désactive les icônes cliquables (restaurants, etc.)
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,

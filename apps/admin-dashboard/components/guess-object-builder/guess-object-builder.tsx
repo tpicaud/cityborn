@@ -6,6 +6,7 @@ import { GuessObjectSearchInput } from "./guess-object-search-input";
 import { searchGuessObjectById, searchWorldLocationById } from "./action";
 import { WorldLocationSearchInput } from "./world-location-search-input";
 import { WorldLocationViewer } from "./world-location-viewer";
+import GuessObjectCard from "./guess-object-card";
 
 export function GuessObjectBuilder() {
     const [guessObjectCandidate, setGuessObjectCandidate] = useState<GuessObjectCandidate | null>(null);
@@ -54,79 +55,78 @@ export function GuessObjectBuilder() {
                     <h2 className="text-xl font-bold mb-2">Constructeur d'objets</h2>
                     <span className="h-[2px] w-full bg-foreground mb-5"></span>
                 </div>
-                <form>
-                    <div className="grid grid-cols-2 grid-rows-1 gap-10">
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="name">Rechercher un objet</label>
-                            <GuessObjectSearchInput
-                                type="text"
-                                id="name"
-                                placeholder="e.g. Justin Timberlake"
-                                value={guessObjectCandidate ? guessObjectCandidate.name : undefined}
-                                onChange={(e) =>
-                                    updateGuessObjectCandidate({ name: e.target.value })
-                                }
-                                onSelect={handleFetchGuessObjectCandidate}
-                                className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-52"
-                                popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
-                            />
+                <div className="flex flex-col gap-8 w-full h-full">
+                    <form className="flex flex-col gap-2">
+                        <label htmlFor="name">Rechercher un objet</label>
+                        <GuessObjectSearchInput
+                            type="text"
+                            id="name"
+                            placeholder="e.g. Justin Timberlake"
+                            value={guessObjectCandidate ? guessObjectCandidate.name : undefined}
+                            onChange={(e) =>
+                                updateGuessObjectCandidate({ name: e.target.value })
+                            }
+                            onSelect={handleFetchGuessObjectCandidate}
+                            className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-52"
+                            popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
+                        />
 
-                            <label htmlFor="localisation" className="mt-4">
-                                Localisation
-                            </label>
-                            <WorldLocationSearchInput
-                                type="text"
-                                id="localisation"
-                                placeholder="e.g. Paris"
-                                value={
-                                    guessObjectCandidate?.world_location ? (guessObjectCandidate.world_location.display_name ?? guessObjectCandidate.world_location.name) : ""
-                                }
-                                onChange={(e) =>
-                                    updateGuessObjectCandidate({
-                                        world_location: {
-                                            id: "",
-                                            name: e.target.value,
-                                            type: "point",
-                                            geometry: {
-                                                type: "Point",
-                                                coordinates: []
-                                            }
+                        <label htmlFor="localisation" className="mt-4">
+                            Localisation
+                        </label>
+                        <WorldLocationSearchInput
+                            type="text"
+                            id="localisation"
+                            placeholder="e.g. Paris"
+                            value={
+                                guessObjectCandidate?.world_location ? (guessObjectCandidate.world_location.display_name ?? guessObjectCandidate.world_location.name) : ""
+                            }
+                            onChange={(e) =>
+                                updateGuessObjectCandidate({
+                                    world_location: {
+                                        id: "",
+                                        name: e.target.value,
+                                        type: "point",
+                                        geometry: {
+                                            type: "Point",
+                                            coordinates: []
                                         }
-                                    })
-                                }
-                                onSelect={handleFetchWorldLocationCandidate}
-                                className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-96"
-                                popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
-                            />
+                                    }
+                                })
+                            }
+                            onSelect={handleFetchWorldLocationCandidate}
+                            className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-96"
+                            popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
+                        />
 
-                            <label htmlFor="short_description" className="mt-4">
-                                Courte description
-                            </label>
-                            <input
-                                type="text"
-                                id="short_description"
-                                placeholder="e.g. Tennisman"
-                                value={guessObjectCandidate?.short_description ?? ""}
-                                onChange={(e) =>
-                                    updateGuessObjectCandidate({ short_description: e.target.value })
-                                }
-                                className="bg-white text-gray-800 rounded-md p-2 w-full max-w-96"
-                            />
+                        <label htmlFor="short_description" className="mt-4">
+                            Courte description
+                        </label>
+                        <input
+                            type="text"
+                            id="short_description"
+                            placeholder="e.g. Tennisman"
+                            value={guessObjectCandidate?.short_description ?? ""}
+                            onChange={(e) =>
+                                updateGuessObjectCandidate({ short_description: e.target.value })
+                            }
+                            className="bg-white text-gray-800 rounded-md p-2 w-full max-w-96"
+                        />
+                    </form>
+                    <div className="relative flex-1">
+                        {/* La carte d'infos par-dessus */}
+                        <div className="flex justify-end absolute m-3 right-0 z-10 pointer-events-none">
+                            <GuessObjectCard guessObject={guessObjectCandidate} />
                         </div>
 
-                        <div className="w-72 h-72 rounded-md border">
-                            {guessObjectCandidate?.image ? (
-                                <img
-                                    src={guessObjectCandidate.image}
-                                    alt="image"
-                                    className="w-full h-full object-contain"
-                                />
-                            ) : null}
+                        {/* La carte en fond */}
+                        <div className="absolute inset-0">
+                            <WorldLocationViewer
+                                world_location={guessObjectCandidate?.world_location}
+                                API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+                            />
                         </div>
                     </div>
-                </form>
-                <div className="h-full w-full">
-                    <WorldLocationViewer world_location={guessObjectCandidate?.world_location} API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} />
                 </div>
             </div>
         </div>
