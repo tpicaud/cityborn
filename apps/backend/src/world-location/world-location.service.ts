@@ -20,6 +20,15 @@ export class WorldLocationService {
     }
 
     async findById(id: string): Promise<WorldLocationDto> {
+        const prisma_world_location = await this.prisma.worldLocation.findUnique({
+            where: {
+                id: id,
+            },
+        });
+
+        if (prisma_world_location) return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
+
+        // si pas dans la db, rechercher sur nominatim
         const nominatim_response = await this.nominatimService.findByOsmId(id);
         if (!nominatim_response) {
             throw new NotFoundException({
