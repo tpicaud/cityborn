@@ -21,6 +21,9 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
                 mapId='3fe9c0c47c132c089312908f'
                 defaultCenter={defaultCenter}
                 defaultZoom={defaultZoom}
+                disableDefaultUI
+                clickableIcons={false}    // désactive les icônes cliquables (restaurants, etc.)
+                scrollwheel={true}
             >
                 <WorldLocationDisplay world_location={world_location} />
             </Map>
