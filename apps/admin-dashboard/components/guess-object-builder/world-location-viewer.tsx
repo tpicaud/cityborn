@@ -35,11 +35,18 @@ const WorldLocationDisplay: React.FC<{ world_location: WorldLocation | undefined
     const map = useMap();
 
     useEffect(() => {
+        if (!map) return;
+        map.data.forEach((feature: any) => map.data.remove(feature));
+
         if (
-            !map || !world_location ||
+            !world_location ||
             (world_location.type === 'area' && !world_location.geometry) ||
             (world_location.type === 'point' && !world_location.centroid)
-        ) return;
+        ) {
+            map.setZoom(2); // par exemple niveau global
+            map.setCenter({ lat: 0, lng: 0 }); // centre par défaut, ici équateur / Greenwich
+            return;
+        }
 
         map.data.forEach((feature: any) => map.data.remove(feature));
         map.data.addGeoJson(convertToGeoJson(world_location.geometry));
