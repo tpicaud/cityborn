@@ -29,7 +29,7 @@ export class WorldLocationSourceDto {
 }
 
 export class WorldLocationDto implements WorldLocation {
-  @IsUUID()
+
   @IsString()
   id: string;
 

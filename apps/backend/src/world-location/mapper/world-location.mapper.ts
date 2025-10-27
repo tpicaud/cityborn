@@ -31,7 +31,7 @@ export class WorldLocationMapper {
 
     static toWorldLocationDtoFromNominatimItem(nominatimItem: NominatimItemResponse): WorldLocationDto {
         return {
-            id: nominatimItem.osm_id,
+            id: nominatimItem.osm_id.toString(),
             name: nominatimItem.name,
             display_name: nominatimItem.display_name ?? undefined,
             addresstype: nominatimItem.addresstype ?? undefined,

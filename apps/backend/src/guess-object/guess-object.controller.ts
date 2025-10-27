@@ -2,7 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Query,
 import { GuessObjectService } from './guess-object.service';
 import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
+import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from './dto/create-guess-object.dto';
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
 
@@ -34,9 +34,9 @@ export class GuessObjectController {
         @Query('id') id?: string,
     ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
         if (id) {
-            return this.guessObjectsService.findBySourceId(id);
+            return await this.guessObjectsService.findBySourceId(id);
         } else if (q) {
-            return this.guessObjectsService.searchByName(q);
+            return await this.guessObjectsService.searchByName(q);
         } else {
             throw new BadRequestException({
                 code: ErrorCode.BAD_REQUEST,
@@ -47,12 +47,14 @@ export class GuessObjectController {
 
 
     @Post()
-    async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
-        return await this.guessObjectsService.create(createGuessObjectDto);
+    async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<CreateGuessObjectResponseDto> {
+        return {
+            id: await this.guessObjectsService.create(createGuessObjectDto)
+        }
     }
 
-    @Delete('id')
-    async deleteGuessObjects(@Param() id: string): Promise<void> {
-        return await this.guessObjectsService.delete(id);
+    @Delete(':id')
+    async deleteGuessObjects(@Param('id') id: string): Promise<void> {
+        await this.guessObjectsService.delete(id);
     }
 }

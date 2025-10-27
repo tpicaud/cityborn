@@ -81,7 +81,7 @@ export class WikidataService {
 
 
             const wikidataItem: WikidataItemResponse = {
-                id: entity.id,
+                id: entity.id.toString(),
                 label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
                 short_description: (entity.descriptions.fr?.value || entity.descriptions.en?.value) ?? undefined,
                 image: imageUrl,
@@ -111,6 +111,6 @@ export class WikidataService {
         const entity = data.entities[place_id];
 
         const osmIdClaim = entity.claims?.P402?.[0]?.mainsnak?.datavalue?.value;
-        return osmIdClaim ?? undefined;
+        return osmIdClaim.toString() ?? undefined;
     }
 }

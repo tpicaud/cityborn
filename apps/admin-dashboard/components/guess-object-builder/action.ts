@@ -1,6 +1,6 @@
 "use server";
 
-import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
+import { CreateGuessObject, GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 
 export async function searchGuessObjectByName(query: string): Promise<GuessObjectCandidate[]> {
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/search?q=${encodeURIComponent(query)}`, {
@@ -70,4 +70,35 @@ export async function searchWorldLocationById(id: string): Promise<WorldLocation
     }
 
     return data as WorldLocation ?? {};
+}
+
+export async function saveGuessObject(createGuessObject: CreateGuessObject): Promise<void> {
+    const response = await fetch(`${process.env.BACKEND_URL}/guess-objects`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(createGuessObject)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to save guess object');
+    }
+}
+
+export async function deleteGuessObject(id: string): Promise<void> {
+    const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete guess object');
+    }
 }

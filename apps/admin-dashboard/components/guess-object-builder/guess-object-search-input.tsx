@@ -6,6 +6,7 @@ import { GuessObjectCandidate } from "@cityborn/types";
 export function GuessObjectSearchInput({
     type = "text",
     id,
+    name,
     placeholder = "e.g., Pomme",
     value,
     onChange,
@@ -15,6 +16,7 @@ export function GuessObjectSearchInput({
 }: {
     type: string;
     id: string;
+    name: string | undefined;
     placeholder?: string;
     value: string | undefined;
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
@@ -40,7 +42,7 @@ export function GuessObjectSearchInput({
                 console.error("Search error:", error);
                 setMatches([]);
             }
-        }, 400);
+        }, 300);
 
         return () => clearTimeout(timeoutId);
     }, [searchValue]);
@@ -54,6 +56,7 @@ export function GuessObjectSearchInput({
             <Ariakit.Combobox
                 type={type}
                 id={id}
+                name={name ?? id}
                 placeholder={placeholder}
                 value={value ?? ""}
                 autoComplete='off'

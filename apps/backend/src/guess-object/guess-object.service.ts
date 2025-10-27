@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Categories, GameConfig, GuessObject } from '@cityborn/types';
 import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -125,7 +125,7 @@ export class GuessObjectService {
         if (guessObjectInDB) {
             return guessObjectInDB;
         } else {
-            return this.findBySourceIdInProvider(external_id);
+            return await this.findBySourceIdInProvider(external_id);
         }
     }
 
@@ -161,10 +161,28 @@ export class GuessObjectService {
     async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
 
         // Récupérer la location dans la db
-        let world_location = await this.worldLocationService.findById(createGuessObjectDto.world_location_id);
+        let world_location = await this.worldLocationService.findByIdInDB(createGuessObjectDto.world_location_id);
         if (!world_location) {
+            if (!createGuessObjectDto.world_location) {
+                throw new BadRequestException({
+                    code: ErrorCode.BAD_REQUEST,
+                    message: `No world location id found, and no world location provided`,
+                });
+            }
             // Si pas présente, récupérer la location chez nominatim, puis stocker dans la db
-            world_location = await this.worldLocationService.create(world_location);
+            world_location = await this.worldLocationService.create(createGuessObjectDto.world_location);
+        }
+
+        // Vérifier si un GuessObject avec le même nom et world_location_id existe déjà
+        const existingGuessObject = await this.prisma.guessObject.findFirst({
+            where: {
+                name: createGuessObjectDto.name,
+                world_location_id: world_location.id,
+            },
+        });
+
+        if (existingGuessObject) {
+            return existingGuessObject.id;
         }
 
 

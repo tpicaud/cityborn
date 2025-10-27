@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 import { GuessObjectSearchInput } from "./guess-object-search-input";
-import { searchGuessObjectById, searchWorldLocationById } from "./action";
+import { saveGuessObject, searchGuessObjectById, searchWorldLocationById } from "./action";
 import { WorldLocationSearchInput } from "./world-location-search-input";
 import { WorldLocationViewer } from "./world-location-viewer";
 import GuessObjectCard from "./guess-object-card";
+import { Button } from "../ui/Button";
 
 export function GuessObjectBuilder() {
     const [guessObjectCandidate, setGuessObjectCandidate] = useState<GuessObjectCandidate | null>(null);
@@ -17,15 +18,10 @@ export function GuessObjectBuilder() {
         );
     };
 
-    useEffect(() => {
-        console.log(guessObjectCandidate);
-    }, [guessObjectCandidate])
-
     async function handleFetchGuessObjectCandidate(guessObjectCandidate: GuessObjectCandidate | undefined) {
         if (!guessObjectCandidate?.source?.external_id) return;
 
         const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
-        console.log("Full candidate data:", fullCandidate);
 
         if (fullCandidate) {
             setGuessObjectCandidate({
@@ -38,13 +34,36 @@ export function GuessObjectBuilder() {
         if (!world_location?.id) return;
 
         const fullCandidate = await searchWorldLocationById(world_location.id);
-        console.log("Full candidate data:", fullCandidate);
 
         if (fullCandidate) {
             updateGuessObjectCandidate({
                 world_location_id: fullCandidate.id,
                 world_location: fullCandidate
             });
+        }
+    }
+
+    async function handleSaveGuessObject(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+        try {
+            e.preventDefault();
+
+            if (!guessObjectCandidate) {
+                alert("Objet non valide");
+                return;
+            }
+
+            if (!guessObjectCandidate.world_location_id) {
+                alert("Localisation non valide, veuillez resélectionner");
+                return;
+            }
+
+            await saveGuessObject({
+                world_location_id: guessObjectCandidate.world_location_id.toString(),
+                ...guessObjectCandidate
+            });
+        } catch (error) {
+            console.log(error);
+            alert("Erreur lors de l'enregistrement de l'objet");
         }
     }
 
@@ -56,11 +75,12 @@ export function GuessObjectBuilder() {
                     <span className="h-[2px] w-full bg-foreground mb-5"></span>
                 </div>
                 <div className="flex flex-col gap-8 w-full h-full">
-                    <form className="flex flex-col gap-2">
+                    <form onSubmit={handleSaveGuessObject} className="flex flex-col gap-2">
                         <label htmlFor="name">Rechercher un objet</label>
                         <GuessObjectSearchInput
                             type="text"
                             id="name"
+                            name={guessObjectCandidate?.name}
                             placeholder="e.g. Justin Timberlake"
                             value={guessObjectCandidate ? guessObjectCandidate.name : undefined}
                             onChange={(e) =>
@@ -71,12 +91,13 @@ export function GuessObjectBuilder() {
                             popoverClassName="text-gray-800 bg-white rounded-md shadow-md min-w-full"
                         />
 
-                        <label htmlFor="localisation" className="mt-4">
+                        <label htmlFor="world_location_id" className="mt-4">
                             Localisation
                         </label>
                         <WorldLocationSearchInput
                             type="text"
-                            id="localisation"
+                            id="world_location_id"
+                            name={guessObjectCandidate?.world_location_id}
                             placeholder="e.g. Paris"
                             value={
                                 guessObjectCandidate?.world_location ? (guessObjectCandidate.world_location.display_name ?? guessObjectCandidate.world_location.name) : ""
@@ -104,6 +125,7 @@ export function GuessObjectBuilder() {
                         </label>
                         <input
                             type="text"
+                            name="short_description"
                             id="short_description"
                             placeholder="e.g. Tennisman"
                             value={guessObjectCandidate?.short_description ?? ""}
@@ -112,14 +134,17 @@ export function GuessObjectBuilder() {
                             }
                             className="bg-white text-gray-800 rounded-md p-2 w-full max-w-96"
                         />
+                        <div className="w-full max-w-96 mt-4">
+                            <Button variant="primary" type="submit">
+                                Enregistrer
+                            </Button>
+                        </div>
                     </form>
                     <div className="relative flex-1">
-                        {/* La carte d'infos par-dessus */}
                         <div className="flex justify-end absolute m-3 right-0 z-10 pointer-events-none">
                             <GuessObjectCard guessObject={guessObjectCandidate} />
                         </div>
 
-                        {/* La carte en fond */}
                         <div className="absolute inset-0">
                             <WorldLocationViewer
                                 world_location={guessObjectCandidate?.world_location}
