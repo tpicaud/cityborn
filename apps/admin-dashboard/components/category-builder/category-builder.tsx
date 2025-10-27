@@ -38,14 +38,6 @@ export function CategoryBuilder({
         );
     };
 
-    function handleSelectGuessObject(guessObject: GuessObject) {
-        if (selectedGuessObject?.name === guessObject.name) {
-            setSelectedGuessObject(undefined);
-        } else {
-            setSelectedGuessObject(guessObject);
-        }
-    }
-
     async function addOrUpdateGuessObject(id: string) {
         const object = await getGuessObject(id);
 
@@ -67,6 +59,21 @@ export function CategoryBuilder({
         });
     }
 
+    function handleCreateGuessObject() {
+        setSelectedGuessObject({
+            name: "",
+            id: "",
+            world_location_id: ""
+        })
+    }
+    
+    function handleSelectGuessObject(guessObject: GuessObject) {
+        if (selectedGuessObject?.name === guessObject.name) {
+            setSelectedGuessObject(undefined);
+        } else {
+            setSelectedGuessObject(guessObject);
+        }
+    }
 
     async function handleSaveCategory() {
 
@@ -110,7 +117,10 @@ export function CategoryBuilder({
                     <div className="flex flex-col h-full gap-2">
                         <div className="flex flex-row gap-2 items-baseline">
                             <h2 className="flex flex-row gap-1 items-baseline">Objets<span className="font-bold text-gray-300">{'(' + createCategory.guessObjects.length + ')'}</span></h2>
-                            <Button variant="primary" className="h-6 font-bold p-auto">+</Button>
+                            <Button
+                            variant="primary"
+                            onClick={handleCreateGuessObject}
+                            className="h-6 font-bold p-auto">+</Button>
                         </div>
                         <div className="h-full rounded-xl border border-gray-300 p-3 overflow-y-auto">
                             <GuessObjectsList
