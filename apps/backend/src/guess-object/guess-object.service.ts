@@ -7,7 +7,6 @@ import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 import { WikidataService } from 'src/wikidata/wikidata.service';
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { WorldLocationService } from 'src/world-location/world-location.service';
-import { get } from 'http';
 import { GuessObjectDto } from './dto/guess-object.dto';
 
 @Injectable()
@@ -18,6 +17,36 @@ export class GuessObjectService {
         private readonly worldLocationService: WorldLocationService
     ) { }
 
+    async findById(id: string, include?: string): Promise<GuessObjectDto> {
+        const allowed_includes = ['world_location'];
+
+        const includeOptions: Record<string, boolean> = {};
+
+        if (include) {
+            const includes = include
+                .split(',')
+                .map((i) => i.trim())
+                .filter((i) => allowed_includes.includes(i));
+
+            for (const relation of includes) {
+                includeOptions[relation] = true;
+            }
+        }
+
+        const guess_object = await this.prisma.guessObject.findUnique({
+            where: { id },
+            include: includeOptions
+        });
+
+        if (!guess_object) {
+            throw new NotFoundException({
+                code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+                message: 'No GuessObject found for the provided ID',
+            });
+        }
+
+        return GuessObjectMapper.toGuessObjectDto(guess_object);
+    }
 
     async findSome(guessObjectsIds: string[]): Promise<GuessObjectDto[]> {
         try {
@@ -84,6 +113,23 @@ export class GuessObjectService {
                 message: `Error retrieving guess objects from game config: ${error.message}`,
             });
         }
+    }
+
+    async update(id: string, updatedFields: Partial<GuessObjectDto>): Promise<string> {
+        const data = {
+            name: updatedFields.name,
+            image: updatedFields.image,
+            description: updatedFields.description,
+            short_description: updatedFields.short_description,
+            world_location_id: updatedFields.world_location_id,
+        };
+
+        const updated_object = await this.prisma.guessObject.update({
+            where: { id },
+            data,
+        });
+
+        return updated_object.id;
     }
 
     async searchByName(name: string): Promise<GuessObjectsSearchResponseDto> {

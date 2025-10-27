@@ -47,8 +47,9 @@ export class WorldLocationDto implements WorldLocation {
   @IsEnum(['area', 'point'])
   type: 'area' | 'point';
 
+  @IsOptional()
   @Type(() => GeometryDto)
-  geometry: GeometryDto
+  geometry?: GeometryDto
 
   @IsOptional()
   @IsEnum(['ADM1', 'ADM2', 'ADM3', 'ADM4'])

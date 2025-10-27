@@ -1,6 +1,6 @@
 "use server";
 
-import { CreateGuessObject, GuessObjectCandidate, WorldLocation } from "@cityborn/types";
+import { CreateGuessObject, GuessObject, GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 
 export async function searchGuessObjectByName(query: string): Promise<GuessObjectCandidate[]> {
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/search?q=${encodeURIComponent(query)}`, {
@@ -72,7 +72,7 @@ export async function searchWorldLocationById(id: string): Promise<WorldLocation
     return data as WorldLocation ?? {};
 }
 
-export async function saveGuessObject(createGuessObject: CreateGuessObject): Promise<void> {
+export async function saveGuessObject(createGuessObject: CreateGuessObject): Promise<string> {
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects`, {
         method: 'POST',
         headers: {
@@ -86,6 +86,26 @@ export async function saveGuessObject(createGuessObject: CreateGuessObject): Pro
     if (!response.ok) {
         throw new Error(data.message || 'Failed to save guess object');
     }
+
+    return data.id
+}
+
+export async function patchGuessObject(id: string, updatedFields: Partial<GuessObject>): Promise<string> {
+    const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedFields)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete guess object');
+    }
+
+    return data.id
 }
 
 export async function deleteGuessObject(id: string): Promise<void> {
