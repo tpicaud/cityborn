@@ -6,6 +6,7 @@ import { WorldLocation } from "@cityborn/types";
 export function WorldLocationSearchInput({
     type = "text",
     id,
+    name,
     placeholder = "e.g., Paris",
     value,
     onChange,
@@ -15,6 +16,7 @@ export function WorldLocationSearchInput({
 }: {
     type: string;
     id: string;
+    name: string | undefined;
     placeholder?: string;
     value: string | undefined;
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
@@ -55,6 +57,7 @@ export function WorldLocationSearchInput({
             <Ariakit.Combobox
                 type={type}
                 id={id}
+                name={name ?? id}
                 placeholder={placeholder}
                 value={value ?? ""}
                 autoComplete='off'

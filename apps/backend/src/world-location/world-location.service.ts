@@ -20,16 +20,27 @@ export class WorldLocationService {
     }
 
     async findById(id: string): Promise<WorldLocationDto> {
+        const db_world_location = await this.findByIdInDB(id);
+        if (db_world_location) return db_world_location;
+
+        // Else, search external provider
+        return await this.findByIdExternal(id);
+    }
+
+    async findByIdInDB(id: string): Promise<WorldLocationDto | null> {
         const prisma_world_location = await this.prisma.worldLocation.findUnique({
             where: {
                 id: id,
             },
         });
 
-        if (prisma_world_location) return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
+        if (!prisma_world_location) return null;
+        return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
+    }
 
-        // si pas dans la db, rechercher sur nominatim
+    async findByIdExternal(id: string): Promise<WorldLocationDto> {
         const nominatim_response = await this.nominatimService.findByOsmId(id);
+
         if (!nominatim_response) {
             throw new NotFoundException({
                 code: ErrorCode.WORLD_LOCATION_NOT_FOUND,
@@ -43,7 +54,7 @@ export class WorldLocationService {
     async create(world_location_dto: WorldLocationDto): Promise<WorldLocationDto> {
         const prisma_world_location = await this.prisma.worldLocation.create({
             data: {
-                id: world_location_dto.id,
+                id: world_location_dto.id.toString(),
                 name: world_location_dto.name,
                 type: world_location_dto.type,
                 geometry: world_location_dto.geometry as unknown as Prisma.InputJsonValue,
