@@ -1,10 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { GuessObjectService } from './guess-object.service';
 import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from './dto/create-guess-object.dto';
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
+import { GuessObjectDto } from './dto/guess-object.dto';
 
 @Controller('guess-objects')
 export class GuessObjectController {
@@ -25,6 +26,24 @@ export class GuessObjectController {
 
         return {
             guessObjects: await this.guessObjectsService.findSome(idsArray)
+        };
+    }
+
+    @Get(':id')
+    async getGuessObject(
+        @Param('id') id: string,
+        @Query('include') include?: string,
+    ): Promise<GuessObjectDto> {
+        return await this.guessObjectsService.findById(id, include);
+    }
+
+    @Patch(':id')
+    async patchGuessObject(
+        @Param('id') id: string,
+        @Body() updatedFields: Partial<GuessObjectDto>
+    ): Promise<{ id: string }> {
+        return {
+            id: await this.guessObjectsService.update(id, updatedFields)
         };
     }
 

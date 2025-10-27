@@ -2,7 +2,7 @@ export interface WorldLocation {
     id: string;
     name: string;
     type: 'area' | 'point';
-    geometry: {
+    geometry?: {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];
     }
@@ -18,3 +18,5 @@ export interface WorldLocation {
         external_id: string;
     }
 }
+
+export type WorldLocationPreview = Pick<WorldLocation, 'id' | 'name' | 'display_name'>;

@@ -6,3 +6,5 @@ export interface Category {
     description?: string;
     guessObjects: GuessObject[];
 }
+
+export type CreateCategory = Omit<Category, 'id'>;
