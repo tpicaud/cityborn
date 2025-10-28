@@ -3,6 +3,7 @@
 import { CreateGuessObject, GuessObject, GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 
 export async function searchGuessObjectByName(query: string): Promise<GuessObjectCandidate[]> {
+    console.error(`Searching by name: ${query}`)
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/search?q=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: {

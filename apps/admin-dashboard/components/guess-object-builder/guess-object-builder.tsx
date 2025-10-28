@@ -24,7 +24,11 @@ export function GuessObjectBuilder({
             if (guessObject?.id) {
                 try {
                     const full_object = await getGuessObject(guessObject?.id, ['world_location'])
-                    setGuessObjectCandidate(full_object);
+                    if (full_object) {
+                        setGuessObjectCandidate(full_object);
+                    } else {
+                        setGuessObjectCandidate(guessObject);
+                    }
                 } catch {
                     setGuessObjectCandidate(guessObject);
                 }
@@ -48,6 +52,7 @@ export function GuessObjectBuilder({
         const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
 
         if (fullCandidate) {
+            console.log('full candidate:', fullCandidate)
             setGuessObjectCandidate({
                 ...fullCandidate
             });
@@ -92,7 +97,7 @@ export function GuessObjectBuilder({
                     ...guessObjectCandidate
                 });
             }
-            
+
             if (!id) throw new Error('Error saving or updating object');
 
             await addOrUpdateGuessObject(id);
@@ -115,7 +120,7 @@ export function GuessObjectBuilder({
                     placeholder="e.g. Justin Timberlake"
                     value={guessObjectCandidate ? guessObjectCandidate.name : undefined}
                     onChange={(e) =>
-                        updateGuessObjectCandidate({ name: e.target.value })
+                        updateGuessObjectCandidate({ id: "", name: e.target.value })
                     }
                     onSelect={handleFetchGuessObjectCandidate}
                     className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-96"

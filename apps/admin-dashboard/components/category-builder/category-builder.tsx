@@ -39,24 +39,30 @@ export function CategoryBuilder({
     };
 
     async function addOrUpdateGuessObject(id: string) {
-        const object = await getGuessObject(id);
+        try {
+            const object = await getGuessObject(id);
+            if (!object) return;
+            
+            setCreateCategory(prev => {
+                const index = prev.guessObjects.findIndex(obj => obj.id === object.id);
+                let updatedGuessObjects;
 
-        setCreateCategory(prev => {
-            const index = prev.guessObjects.findIndex(obj => obj.id === object.id);
-            let updatedGuessObjects;
+                if (index === -1) {
+                    // ajout
+                    updatedGuessObjects = [...prev.guessObjects, object];
+                } else {
+                    // mise à jour
+                    updatedGuessObjects = prev.guessObjects.map(obj =>
+                        obj.id === object.id ? object : obj
+                    );
+                }
 
-            if (index === -1) {
-                // ajout
-                updatedGuessObjects = [...prev.guessObjects, object];
-            } else {
-                // mise à jour
-                updatedGuessObjects = prev.guessObjects.map(obj =>
-                    obj.id === object.id ? object : obj
-                );
-            }
-
-            return { ...prev, guessObjects: updatedGuessObjects };
-        });
+                return { ...prev, guessObjects: updatedGuessObjects };
+            });
+        } catch (error) {
+            alert("Erreur lors de l'ajout de l'objet")
+            console.error(error)
+        }
     }
 
     function handleCreateGuessObject() {
@@ -66,7 +72,7 @@ export function CategoryBuilder({
             world_location_id: ""
         })
     }
-    
+
     function handleSelectGuessObject(guessObject: GuessObject) {
         if (selectedGuessObject?.name === guessObject.name) {
             setSelectedGuessObject(undefined);
@@ -118,9 +124,9 @@ export function CategoryBuilder({
                         <div className="flex flex-row gap-2 items-baseline">
                             <h2 className="flex flex-row gap-1 items-baseline">Objets<span className="font-bold text-gray-300">{'(' + createCategory.guessObjects.length + ')'}</span></h2>
                             <Button
-                            variant="primary"
-                            onClick={handleCreateGuessObject}
-                            className="h-6 font-bold p-auto">+</Button>
+                                variant="primary"
+                                onClick={handleCreateGuessObject}
+                                className="h-6 font-bold p-auto">+</Button>
                         </div>
                         <div className="h-full rounded-xl border border-gray-300 p-3 overflow-y-auto">
                             <GuessObjectsList

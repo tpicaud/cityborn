@@ -133,8 +133,11 @@ export class GuessObjectService {
     }
 
     async searchByName(name: string): Promise<GuessObjectsSearchResponseDto> {
+        console.log('1')
         const wikidata_response = await this.wikiDataService.searchByName(name);
+        console.log('2')
         const guess_objects_candidates_from_wikidata = (GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response)).candidates;
+        console.log('3')
 
         // search in db
         const guess_objects_from_db = await this.prisma.guessObject.findMany({
@@ -146,6 +149,7 @@ export class GuessObjectService {
             },
         });
         const guess_objects_candidates_from_db = guess_objects_from_db.map(obj => GuessObjectMapper.toGuessObjectCandidateFromPrismaDto(obj));
+        console.log('4')
 
         // 🔄 Remplacer les candidats Wikidata par ceux de la DB quand l’external_id correspond
         const dbByExternalId = new Map(
@@ -161,6 +165,7 @@ export class GuessObjectService {
             return wikiCandidate;
         });
 
+        console.log(merged_candidates);
         return {
             candidates: merged_candidates,
         };

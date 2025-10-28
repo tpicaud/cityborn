@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { GuessObjectService } from './guess-object.service';
 import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -9,6 +9,8 @@ import { GuessObjectDto } from './dto/guess-object.dto';
 
 @Controller('guess-objects')
 export class GuessObjectController {
+    private readonly logger = new Logger(GuessObjectController.name);
+
     constructor(
         private readonly guessObjectsService: GuessObjectService
     ) { }
@@ -34,6 +36,7 @@ export class GuessObjectController {
         @Param('id') id: string,
         @Query('include') include?: string,
     ): Promise<GuessObjectDto> {
+        this.logger.error(`GET ${id} - ${include}`);
         return await this.guessObjectsService.findById(id, include);
     }
 
@@ -52,6 +55,8 @@ export class GuessObjectController {
         @Query('q') q?: string,
         @Query('id') id?: string,
     ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
+        console.error(`SEARCH: ${q}`);
+
         if (id) {
             return await this.guessObjectsService.findBySourceId(id);
         } else if (q) {
