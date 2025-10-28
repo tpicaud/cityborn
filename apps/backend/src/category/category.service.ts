@@ -47,7 +47,7 @@ export class CategoryService {
     async create(data: CreateCategoryDto) {
         const { guessObjectIds, ...categoryData } = data;
 
-        return this.prisma.category.create({
+        const category = await this.prisma.category.create({
             data: {
                 ...categoryData,
                 guessObjects: guessObjectIds
@@ -56,6 +56,8 @@ export class CategoryService {
                     } : undefined
             },
         });
+
+        return CategoryMapper.toCategoryDto(category);
     }
 
     async update(id: string, data: UpdateCategoryDto) {
@@ -74,7 +76,7 @@ export class CategoryService {
             }
         }
 
-        return this.prisma.category.update({
+        const updated_category = await this.prisma.category.update({
             where: { id },
             data: {
                 ...categoryData,
@@ -84,6 +86,7 @@ export class CategoryService {
             },
             include: { guessObjects: true },
         });
+        return CategoryMapper.toCategoryDto(updated_category);
     }
 
 

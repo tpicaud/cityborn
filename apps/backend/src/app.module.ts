@@ -18,7 +18,6 @@ import { EventModule } from './event/event.module';
 import { WikidataModule } from './wikidata/wikidata.module';
 import { NominatimModule } from './nominatim/nominatim.module';
 import { WorldLocationModule } from './world-location/world-location.module';
-import { ControllerModule } from './category/controller/controller.module';
 import { CategoryModule } from './category/category.module';
 
 @Module({
@@ -52,7 +51,6 @@ import { CategoryModule } from './category/category.module';
     WikidataModule,
     NominatimModule,
     WorldLocationModule,
-    ControllerModule,
     CategoryModule
   ],
   controllers: [AppController],

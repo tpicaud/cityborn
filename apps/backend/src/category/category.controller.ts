@@ -12,11 +12,11 @@ export class CategoryController {
 
     @Get()
     async findAll(
-        @Query('include') include: string
+        @Query('include') include?: string
     ): Promise<CategoriesResponseDto> {
         let includes: string[];
         try {
-            includes = include.split(',').map((i) => i.trim())
+            includes = include ? include.split(',').map((i) => i.trim()) : []
         } catch {
             throw new BadRequestException({
                 code: ErrorCode.BAD_REQUEST,
@@ -44,7 +44,7 @@ export class CategoryController {
     }
 
     @Post()
-    async create(@Body() createCategoryDto: CreateCategoryDto) {
+    async create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryDto> {
         return this.categoryService.create(createCategoryDto);
     }
 
