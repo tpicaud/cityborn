@@ -6,30 +6,21 @@ import { useState } from "react";
 import { Button } from "../ui/Button";
 import { getGuessObject } from "./action";
 import { GuessObjectsList } from "./guess-objects-list";
+import { deleteGuessObject } from "../guess-object-builder/action";
 
 interface CategoryBuilderProps {
     category?: CreateCategory
 }
 
+const NEW_CATEGORY: CreateCategory = {
+    name: "",
+    guessObjects: []
+}
+
 export function CategoryBuilder({
     category
 }: CategoryBuilderProps) {
-    const [createCategory, setCreateCategory] = useState<CreateCategory>({
-        name: category?.name ?? "",
-        description: category?.description ?? "",
-        guessObjects: category?.guessObjects ?? [{
-            id: 'c2d3d323-10ab-4a78-8e88-89127867111b',
-            name: 'test',
-            world_location_id: '7444',
-            world_location: {
-                id: '7444',
-                name: 'Paris',
-                display_name: 'Paris, Ile-de-France',
-                type: 'area'
-            }
-        }]
-    })
-
+    const [createCategory, setCreateCategory] = useState<CreateCategory>(category ? category : NEW_CATEGORY);
     const [selectedGuessObject, setSelectedGuessObject] = useState<GuessObject>();
 
     const updateCreateCategory = (update: Partial<CreateCategory>) => {
@@ -42,8 +33,10 @@ export function CategoryBuilder({
         try {
             const object = await getGuessObject(id);
             if (!object) return;
-            
+
             setCreateCategory(prev => {
+                if (!prev.guessObjects) prev.guessObjects = [];
+
                 const index = prev.guessObjects.findIndex(obj => obj.id === object.id);
                 let updatedGuessObjects;
 
@@ -78,6 +71,31 @@ export function CategoryBuilder({
             setSelectedGuessObject(undefined);
         } else {
             setSelectedGuessObject(guessObject);
+        }
+    }
+
+    async function handleDeleteGuessObject(guessObject: GuessObject) {
+        try {
+            await deleteGuessObject(guessObject.id);
+
+            setCreateCategory(prev => {
+                if (!prev.guessObjects) return prev;
+
+                const index = prev.guessObjects.findIndex(obj => obj.id === guessObject.id);
+                let updatedGuessObjects;
+
+                if (index === -1) {
+                    return prev;
+                } else {
+                    updatedGuessObjects = prev.guessObjects.filter(obj => obj.id !== guessObject.id);
+                }
+
+                return { ...prev, guessObjects: updatedGuessObjects };
+            });
+            setSelectedGuessObject(undefined);
+        } catch (error) {
+            alert("Erreur lors de la suppression de l'objet");
+            console.error(error);
         }
     }
 
@@ -122,7 +140,12 @@ export function CategoryBuilder({
                     </div>
                     <div className="flex flex-col h-full gap-2">
                         <div className="flex flex-row gap-2 items-baseline">
-                            <h2 className="flex flex-row gap-1 items-baseline">Objets<span className="font-bold text-gray-300">{'(' + createCategory.guessObjects.length + ')'}</span></h2>
+                            <h2 className="flex flex-row gap-1 items-baseline">
+                                Objets
+                                <span className="font-bold text-gray-300">
+                                    {'(' + (createCategory.guessObjects ? createCategory.guessObjects.length : 0) + ')'}
+                                </span>
+                            </h2>
                             <Button
                                 variant="primary"
                                 onClick={handleCreateGuessObject}
@@ -133,6 +156,7 @@ export function CategoryBuilder({
                                 guessObjects={createCategory.guessObjects}
                                 selectedGuessObject={selectedGuessObject}
                                 handleSelectGuessObject={handleSelectGuessObject}
+                                handleDeleteGuessObject={handleDeleteGuessObject}
                             />
                         </div>
 

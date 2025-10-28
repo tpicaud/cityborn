@@ -21,24 +21,22 @@ export function GuessObjectBuilder({
 
     useEffect(() => {
         const updateGuessObjectCandidate = async () => {
-            if (guessObject?.id) {
-                try {
-                    const full_object = await getGuessObject(guessObject?.id, ['world_location'])
-                    if (full_object) {
-                        setGuessObjectCandidate(full_object);
-                    } else {
-                        setGuessObjectCandidate(guessObject);
-                    }
-                } catch {
-                    setGuessObjectCandidate(guessObject);
-                }
-            } else {
+            if (!guessObject?.id) {
+                setGuessObjectCandidate(guessObject);
+                return;
+            }
+
+            try {
+                const fullObject = await getGuessObject(guessObject.id, ['world_location']);
+                setGuessObjectCandidate(fullObject || guessObject);
+            } catch {
                 setGuessObjectCandidate(guessObject);
             }
-        }
+        };
 
-        updateGuessObjectCandidate()
-    }, [guessObject])
+        updateGuessObjectCandidate();
+    }, [guessObject]);
+
 
     const updateGuessObjectCandidate = (update: Partial<GuessObjectCandidate>) => {
         setGuessObjectCandidate((prev) =>
@@ -52,7 +50,6 @@ export function GuessObjectBuilder({
         const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
 
         if (fullCandidate) {
-            console.log('full candidate:', fullCandidate)
             setGuessObjectCandidate({
                 ...fullCandidate
             });
@@ -120,7 +117,7 @@ export function GuessObjectBuilder({
                     placeholder="e.g. Justin Timberlake"
                     value={guessObjectCandidate ? guessObjectCandidate.name : undefined}
                     onChange={(e) =>
-                        updateGuessObjectCandidate({ id: "", name: e.target.value })
+                        updateGuessObjectCandidate({ name: e.target.value })
                     }
                     onSelect={handleFetchGuessObjectCandidate}
                     className="bg-white rounded-md shadow-md text-gray-800 p-2 h-10 w-full max-w-96"

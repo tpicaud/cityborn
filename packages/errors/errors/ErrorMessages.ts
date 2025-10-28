@@ -36,6 +36,9 @@ export const ERROR_MESSAGES = {
         // World location
         [ErrorCode.WORLD_LOCATION_NOT_FOUND]: "Aucun lieu trouvé pour cet identifiant",
 
+        // Category
+        [ErrorCode.CATEGORY_NOT_FOUND]: "Aucune catégorie trouvée pour cet identifiant",
+
         // Default
         [ErrorCode.UNKNOWN_ERROR]: "Une erreur inconnue est survenue, veuillez réessayer.",
     },
