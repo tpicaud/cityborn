@@ -105,3 +105,4 @@
 | 08/10/2025 | 3h | Finalisation page accueil menu |
 | 09/10/2025 | 7h | Page play menu |
 | 10/10/2025 | 5h | Finalisation page play menu + push sur staging |
+| 27/10/2025 | 8h | Dashboard admin |
