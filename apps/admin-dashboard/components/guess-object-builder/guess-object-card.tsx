@@ -2,8 +2,11 @@ import { GuessObjectCandidate } from "@cityborn/types";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
+import { useEffect } from "react";
 
 export default function GuessObjectCard({ guessObject }: Readonly<{ guessObject: GuessObjectCandidate | null }>) {
+    useEffect(() => console.log(guessObject), [guessObject]);
+
     if (!guessObject) return;
 
     return (

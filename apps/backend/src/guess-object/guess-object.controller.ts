@@ -15,6 +15,22 @@ export class GuessObjectController {
         private readonly guessObjectsService: GuessObjectService
     ) { }
 
+    @Get('search')
+    async search(
+        @Query('q') q?: string,
+        @Query('id') id?: string,
+    ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
+        if (id) {
+            return await this.guessObjectsService.findBySourceId(id);
+        } else if (q) {
+            return await this.guessObjectsService.searchByName(q);
+        } else {
+            throw new BadRequestException({
+                code: ErrorCode.BAD_REQUEST,
+                message: `Either 'q' or 'id' must be provided`,
+            });
+        }
+    }
 
     @UseGuards(AuthGuard)
     @Get()
@@ -36,7 +52,6 @@ export class GuessObjectController {
         @Param('id') id: string,
         @Query('include') include?: string,
     ): Promise<GuessObjectDto> {
-        this.logger.error(`GET ${id} - ${include}`);
         return await this.guessObjectsService.findById(id, include);
     }
 
@@ -49,26 +64,6 @@ export class GuessObjectController {
             id: await this.guessObjectsService.update(id, updatedFields)
         };
     }
-
-    @Get('search')
-    async search(
-        @Query('q') q?: string,
-        @Query('id') id?: string,
-    ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
-        console.error(`SEARCH: ${q}`);
-
-        if (id) {
-            return await this.guessObjectsService.findBySourceId(id);
-        } else if (q) {
-            return await this.guessObjectsService.searchByName(q);
-        } else {
-            throw new BadRequestException({
-                code: ErrorCode.BAD_REQUEST,
-                message: `Either 'q' or 'id' must be provided`,
-            });
-        }
-    }
-
 
     @Post()
     async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<CreateGuessObjectResponseDto> {

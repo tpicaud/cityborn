@@ -21,7 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         variant === "primary" &&
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         variant === "destructive" &&
-          "bg-red-600 text-zinc-50 shadow hover:bg-red-700",
+          "bg-red-700 text-zinc-50 shadow hover:bg-red-800",
         variant === "outline" &&
           "border border-zinc-700 bg-transparent text-zinc-50 hover:bg-zinc-800 hover:text-zinc-100",
         variant === "ghost" && "hover:bg-zinc-800 hover:text-zinc-50",

@@ -111,6 +111,6 @@ export class WikidataService {
         const entity = data.entities[place_id];
 
         const osmIdClaim = entity.claims?.P402?.[0]?.mainsnak?.datavalue?.value;
-        return osmIdClaim.toString() ?? undefined;
+        return osmIdClaim ? osmIdClaim.toString() : undefined;
     }
 }

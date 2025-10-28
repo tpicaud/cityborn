@@ -45,6 +45,9 @@ export enum ErrorCode {
     WORLD_LOCATION_SEARCH_FAILED = "WORLD_LOCATION_SEARCH_FAILED",
     WORLD_LOCATION_NOT_FOUND = "WORLD_LOCATION_NOT_FOUND",
 
+    // Category
+    CATEGORY_NOT_FOUND = "CATEGORY_NOT_FOUND",
+
 
     ///////////////
     // Technical //
