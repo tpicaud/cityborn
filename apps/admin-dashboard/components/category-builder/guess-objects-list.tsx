@@ -10,11 +10,6 @@ export function GuessObjectsList({
     selectedGuessObject: GuessObject | undefined
     handleSelectGuessObject: (guessObject: GuessObject) => void
 }) {
-
-    useEffect(() => {
-        console.log('update list')
-    }, [guessObjects[0]]);
-
     return (
         <div className="h-full w-full">
             {

@@ -7,12 +7,17 @@ export async function getGuessObject(id: string, includes?: string[]) {
         ? `?include=${includes.join(',')}`
         : '';
 
+    console.log(`GET BY ID ${id} - ${includes}`)
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/${id}${query}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         },
     });
+
+    if (response.status === 404) {
+        return null;
+    }
 
     const data = await response.json();
 
