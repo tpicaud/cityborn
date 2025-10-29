@@ -6,9 +6,13 @@ import { CategoriesList } from "./categories-list";
 import { createCategory, getAllCategories } from "./action";
 import { Button } from "../ui/Button";
 import Loader from "../ui/Loader";
-import { Plus, RefreshCcw } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CreateCategoryDialog } from "./create-category-popup";
 
 export function CategoriesEditor() {
+    const router = useRouter()
+
     const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<Category[]>([])
     const [searchValue, setSearchValue] = useState<string>('');
@@ -30,15 +34,12 @@ export function CategoriesEditor() {
         }
     }
 
-    async function handleCreateCategory() {
+    async function handleCreateCategory(newCategory: CreateCategory) {
         try {
             setIsLoading(true);
-            const newCategory: CreateCategory = {
-                name: "Ma catégorie"
-            };
-
             const category = await createCategory(newCategory);
-            categories.push(category)
+            categories.push(category);
+            await onCategorySelect(category);
         } catch (error) {
             alert('Erreur lors de la création de la catégorie');
             console.log(error);
@@ -48,7 +49,7 @@ export function CategoriesEditor() {
     }
 
     async function onCategorySelect(category: Category) {
-
+        router.push(`/dashboard/edit-category/${category.id}`)
     }
 
     return (
@@ -56,13 +57,6 @@ export function CategoriesEditor() {
             <div className="flex flex-col w-full">
                 <div className="flex flex-row gap-2 mb-2 items-center">
                     <h2 className="text-xl font-bold">Catégories</h2>
-                    <Button
-                        variant="outline"
-                        onClick={handleFetchCategories}
-                        className="px-2 py-0 h-auto"
-                    >
-                        ↻
-                    </Button>
                 </div>
 
                 <span className="h-[2px] w-full bg-foreground"></span>
@@ -78,7 +72,7 @@ export function CategoriesEditor() {
             </div>
             <div className="flex flex-col items-center justify-center gap-4">
                 <div className="flex flex-row gap-2 mb-1">
-                    <Button variant="primary" onClick={handleCreateCategory}><Plus /></Button>
+                    <CreateCategoryDialog handleCreateCategory={handleCreateCategory} />
                     <Button variant="outline" onClick={handleFetchCategories}><RefreshCcw /></Button>
                 </div>
                 {

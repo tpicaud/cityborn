@@ -1,7 +1,5 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 
 export interface NominatimSearchResponse {
     results: NominatimItemResponse[];
@@ -9,6 +7,7 @@ export interface NominatimSearchResponse {
 
 export interface NominatimItemResponse {
     place_id: string;
+    osm_type: 'node' | 'way' | 'relation';
     osm_id: string;
     lat: string;
     lon: string
@@ -54,11 +53,11 @@ export class NominatimService {
             const data = await response.json();
 
             // Garde uniquement les relations
-            const filtered_data = data.filter((r: any) => r.osm_type === 'relation');
+            //const filtered_data = data.filter((r: any) => r.osm_type === 'relation');
 
             // Group by display_name et garde celui avec le place_rank le plus haut
             const grouped: Record<string, any> = {};
-            for (const item of filtered_data) {
+            for (const item of data) {
                 const key = item.display_name;
                 if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
                     grouped[key] = item;
@@ -67,6 +66,7 @@ export class NominatimService {
 
             const results: NominatimItemResponse[] = Object.values(grouped).map((item: any) => ({
                 place_id: item.place_id?.toString() ?? '',
+                osm_type: item.osm_type.toString() ?? '',
                 osm_id: item.osm_id?.toString() ?? '',
                 lat: item.lat,
                 lon: item.lon,
@@ -92,10 +92,25 @@ export class NominatimService {
     }
 
 
-    async findByOsmId(osm_id: string, osm_type: 'N' | 'W' | 'R' = 'R'): Promise<NominatimItemResponse | null> {
+    async findByOsmId(osm_id: string, osm_type: 'node' | 'way' | 'relation' = 'relation'): Promise<NominatimItemResponse | null> {
         try {
+            let id: string;
+            switch (osm_type) {
+                case 'node':
+                    id = 'N' + osm_id;
+                    break;
+                case 'way':
+                    id = 'W' + osm_id;
+                    break;
+                case 'relation':
+                    id = 'R' + osm_id;
+                    break;
+                default:
+                    id = 'R' + osm_id;
+            }
+
             const params: Record<string, string> = {
-                osm_ids: `${osm_type}${osm_id}`,
+                osm_ids: id,
                 format: 'json',
                 polygon_geojson: '1',   // inclut la géométrie GeoJSON
                 polygon_threshold: '0.001', // simplification de la géométrie

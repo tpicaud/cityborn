@@ -197,7 +197,7 @@ export class GuessObjectService {
         const guessObjectCandidate = GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
 
         if (guessObjectCandidate.world_location_id) {
-            const world_location = await this.worldLocationService.findById(guessObjectCandidate.world_location_id);
+            const world_location = await this.worldLocationService.findByIdExternal(guessObjectCandidate.world_location_id, guessObjectCandidate.world_location?.osm_type!);
             if (world_location) guessObjectCandidate.world_location = world_location;
         }
 

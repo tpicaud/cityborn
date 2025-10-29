@@ -79,6 +79,7 @@ enum LocationLevel {
 
 model WorldLocation {
   id           String         @id @default(dbgenerated("gen_random_uuid()"))
+  osm_type     String         @default("relation")
   name         String
   display_name String?
   addresstype  String?

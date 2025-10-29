@@ -19,12 +19,12 @@ export class WorldLocationService {
         return WorldLocationMapper.toWorldLocationSearchResponseDto(nominatim_response);
     }
 
-    async findById(id: string): Promise<WorldLocationDto> {
+    async findById(id: string, osm_type: string): Promise<WorldLocationDto> {
         const db_world_location = await this.findByIdInDB(id);
         if (db_world_location) return db_world_location;
 
         // Else, search external provider
-        return await this.findByIdExternal(id);
+        return await this.findByIdExternal(id, osm_type);
     }
 
     async findByIdInDB(id: string): Promise<WorldLocationDto | null> {
@@ -38,8 +38,8 @@ export class WorldLocationService {
         return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
     }
 
-    async findByIdExternal(id: string): Promise<WorldLocationDto> {
-        const nominatim_response = await this.nominatimService.findByOsmId(id);
+    async findByIdExternal(id: string, osm_type: string): Promise<WorldLocationDto> {
+        const nominatim_response = await this.nominatimService.findByOsmId(id, osm_type as any);
 
         if (!nominatim_response) {
             throw new NotFoundException({

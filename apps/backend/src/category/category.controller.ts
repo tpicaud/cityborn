@@ -33,7 +33,7 @@ export class CategoryController {
     ): Promise<CategoryDto> {
         let includes: string[];
         try {
-            includes = include.split(',').map((i) => i.trim())
+            includes = include ? include.split(',').map((i) => i.trim()) : []
         } catch {
             throw new BadRequestException({
                 code: ErrorCode.BAD_REQUEST,
@@ -51,9 +51,9 @@ export class CategoryController {
     @Put(':id')
     async update(
         @Param('id') id: string,
-        @Body() updateCategoryDto: UpdateCategoryDto,
+        @Body() updatedCategory: UpdateCategoryDto,
     ) {
-        return this.categoryService.update(id, updateCategoryDto);
+        return this.categoryService.update(id, updatedCategory);
     }
 
     @Delete(':id')

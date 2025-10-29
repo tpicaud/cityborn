@@ -43,7 +43,7 @@ export function WorldLocationSearchInput({
                 console.error("Search error:", error);
                 setMatches([]);
             }
-        }, 400);
+        }, 300);
 
         return () => clearTimeout(timeoutId);
     }, [searchValue]);

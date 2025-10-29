@@ -24,6 +24,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
                 disableDefaultUI
                 clickableIcons={false}    // désactive les icônes cliquables (restaurants, etc.)
                 scrollwheel={true}
+                style={{ zIndex: 0 }}
             >
                 <WorldLocationDisplay world_location={world_location} />
             </Map>

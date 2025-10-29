@@ -34,6 +34,9 @@ export class WorldLocationDto implements WorldLocation {
   id: string;
 
   @IsString()
+  osm_type: string;
+
+  @IsString()
   name: string;
 
   @IsOptional()

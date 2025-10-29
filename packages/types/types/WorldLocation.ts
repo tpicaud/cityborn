@@ -1,5 +1,6 @@
 export interface WorldLocation {
     id: string;
+    osm_type: string;
     name: string;
     type: 'area' | 'point';
     geometry?: {
