@@ -117,22 +117,9 @@ export class GuessObjectService {
 
     async update(id: string, updatedFields: Partial<GuessObjectDto>): Promise<string> {
 
-        if (updatedFields.world_location_id) {
-            // Récupérer la location dans la db
-            let world_location = await this.worldLocationService.findByIdInDB(updatedFields.world_location_id);
-            if (!world_location) {
-                if (!updatedFields.world_location) {
-                    throw new BadRequestException({
-                        code: ErrorCode.BAD_REQUEST,
-                        message: `No world location id found, and no world location provided`,
-                    });
-                }
-                // Si pas présente, récupérer la location chez nominatim, puis stocker dans la db
-                world_location = await this.worldLocationService.create(updatedFields.world_location);
-            }
+        const world_location_id = await this.resolveWorldLocationId(updatedFields);
+        if (world_location_id) updatedFields.world_location_id = world_location_id;
 
-            updatedFields.world_location_id = world_location.id;
-        }
 
         const data = {
             name: updatedFields.name,
@@ -268,5 +255,31 @@ export class GuessObjectService {
         await this.prisma.guessObject.delete({
             where: { id },
         });
+    }
+
+    private async resolveWorldLocationId(updatedFields: Partial<GuessObjectDto>): Promise<string | undefined> {
+        const { world_location_id, world_location } = updatedFields;
+
+        if (world_location_id) {
+            const exists = await this.worldLocationService.findByIdInDB(world_location_id);
+            if (exists) return world_location_id;
+
+            if (!world_location) {
+                throw new BadRequestException({
+                    code: ErrorCode.BAD_REQUEST,
+                    message: `No world location found for id ${world_location_id}`,
+                });
+            }
+
+            const newLoc = await this.worldLocationService.create(world_location);
+            return newLoc.id;
+        }
+
+        if (world_location) {
+            const newLoc = await this.worldLocationService.create(world_location);
+            return newLoc.id;
+        }
+
+        return undefined;
     }
 }
