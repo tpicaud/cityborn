@@ -1,8 +1,9 @@
 import { Type } from "class-transformer";
 import { IsArray, IsOptional, IsString, IsUUID } from "class-validator";
 import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto";
+import { Category } from "@cityborn/types";
 
-export class CategoryDto {
+export class CategoryDto implements Category {
     @IsUUID()
     id: string
 
@@ -16,7 +17,7 @@ export class CategoryDto {
     @IsOptional()
     @IsArray()
     @IsUUID('all', { each: true })
-    guessObjectIds?: string[];
+    guessObjectsIds?: string[];
 
     @IsOptional()
     @IsArray()

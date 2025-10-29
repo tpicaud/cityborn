@@ -61,12 +61,12 @@ export class CategoryService {
     }
 
     async update(categoryId: string, data: UpdateCategoryDto) {
-        const { guessObjectIds, connectIds, disconnectIds, id, ...categoryData } = data;
+        const { guessObjectsIds, connectIds, disconnectIds, id, ...categoryData } = data;
 
         const relationUpdate: any = {};
 
-        if (guessObjectIds) {
-            relationUpdate.set = guessObjectIds.map((id) => ({ id }));
+        if (guessObjectsIds) {
+            relationUpdate.set = guessObjectsIds.map((id) => ({ id }));
         } else {
             if (connectIds) {
                 relationUpdate.connect = connectIds.map((id) => ({ id }));

@@ -86,8 +86,7 @@ export function GuessObjectBuilder({
             // If id, then update, else post
             let id: string;
             if (guessObjectCandidate.id) {
-                const { world_location, ...rest } = guessObjectCandidate;
-                id = await patchGuessObject(guessObjectCandidate.id, rest);
+                id = await patchGuessObject(guessObjectCandidate.id, guessObjectCandidate);
             } else {
                 id = await saveGuessObject({
                     world_location_id: guessObjectCandidate.world_location_id.toString(),
