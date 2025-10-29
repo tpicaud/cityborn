@@ -60,8 +60,8 @@ export class CategoryService {
         return CategoryMapper.toCategoryDto(category);
     }
 
-    async update(id: string, data: UpdateCategoryDto) {
-        const { guessObjectIds, connectIds, disconnectIds, ...categoryData } = data;
+    async update(categoryId: string, data: UpdateCategoryDto) {
+        const { guessObjectIds, connectIds, disconnectIds, id, ...categoryData } = data;
 
         const relationUpdate: any = {};
 
@@ -77,7 +77,7 @@ export class CategoryService {
         }
 
         const updated_category = await this.prisma.category.update({
-            where: { id },
+            where: { id: categoryId },
             data: {
                 ...categoryData,
                 ...(Object.keys(relationUpdate).length > 0

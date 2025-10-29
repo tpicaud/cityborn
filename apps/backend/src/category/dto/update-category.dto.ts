@@ -1,25 +1,15 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsArray, IsOptional, IsString, IsUUID } from "class-validator";
+import { CategoryDto } from './category.dto';
 
-export class UpdateCategoryDto {
-    @IsString()
-    name: string
-
-    @IsOptional()
-    @IsString()
-    description?: string
-
+export class UpdateCategoryDto extends PartialType(CategoryDto) {
     @IsOptional()
     @IsArray()
-    @IsUUID('all', { each: true })
-    guessObjectIds?: string[];
-
-    @IsOptional()
-    @IsArray()
-    @IsUUID('all', { each: true })
+    @IsString({ each: true })
     connectIds?: string[];
 
     @IsOptional()
     @IsArray()
-    @IsUUID('all', { each: true })
+    @IsString({ each: true })
     disconnectIds?: string[];
 }

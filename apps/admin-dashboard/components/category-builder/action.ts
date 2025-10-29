@@ -1,13 +1,12 @@
 'use server';
 
-import { GuessObject } from "@cityborn/types";
+import { GuessObject, UpdateCategory } from "@cityborn/types";
 
 export async function getGuessObject(id: string, includes?: string[]) {
     const query = includes && includes.length > 0
         ? `?include=${includes.join(',')}`
         : '';
 
-    console.log(`GET BY ID ${id} - ${includes}`)
     const response = await fetch(`${process.env.BACKEND_URL}/guess-objects/${id}${query}`, {
         method: 'GET',
         headers: {
@@ -23,6 +22,43 @@ export async function getGuessObject(id: string, includes?: string[]) {
 
     if (!response.ok) {
         throw new Error(data.message || 'Failed to get guess object');
+    }
+
+    return data as GuessObject
+}
+
+export async function saveCategory(id: string, updatedCategory: UpdateCategory) {
+
+    const response = await fetch(`${process.env.BACKEND_URL}/category/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedCategory)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to save category');
+    }
+
+    return data as GuessObject
+}
+
+export async function deleteCategory(id: string) {
+
+    const response = await fetch(`${process.env.BACKEND_URL}/category/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete category');
     }
 
     return data as GuessObject

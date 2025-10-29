@@ -9,3 +9,8 @@ export interface Category {
 }
 
 export type CreateCategory = Omit<Category, 'id'>;
+
+export type UpdateCategory = Category & {
+    connectIds?: string[],
+    disconnectIds?: string[]
+}

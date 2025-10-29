@@ -14,9 +14,10 @@ export class WorldLocationController {
     async search(
         @Query('q') q?: string,
         @Query('id') id?: string,
+        @Query('osm_type') osm_type?: string
     ): Promise<WorldLocationDto | WorldLocationSearchResponseDto> {
-        if (id) {
-            return this.worldLocationServcice.findById(id);
+        if (id && osm_type) {
+            return this.worldLocationServcice.findById(id, osm_type);
         } else if (q) {
             return this.worldLocationServcice.searchByName(q);
         } else {

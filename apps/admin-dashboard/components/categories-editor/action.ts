@@ -3,7 +3,7 @@
 import { Category, CreateCategory } from "@cityborn/types";
 
 export async function getAllCategories(): Promise<Category[]> {
-    const response = await fetch(`${process.env.BACKEND_URL}/category`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/category?include=guessObjects`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

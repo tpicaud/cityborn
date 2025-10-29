@@ -59,7 +59,7 @@ export function GuessObjectBuilder({
     async function handleFetchWorldLocationCandidate(world_location: WorldLocation | undefined) {
         if (!world_location?.id) return;
 
-        const fullCandidate = await searchWorldLocationById(world_location.id);
+        const fullCandidate = await searchWorldLocationById(world_location.id, world_location.osm_type);
 
         if (fullCandidate) {
             updateGuessObjectCandidate({
@@ -108,7 +108,7 @@ export function GuessObjectBuilder({
 
     return (
         <div className="flex flex-col gap-8 w-full h-full">
-            <form onSubmit={handleSaveGuessObject} className="flex flex-col gap-2">
+            <form onSubmit={handleSaveGuessObject} className="flex flex-col gap-2 z-10">
                 <label htmlFor="name">Rechercher un objet</label>
                 <GuessObjectSearchInput
                     type="text"
@@ -139,6 +139,7 @@ export function GuessObjectBuilder({
                         updateGuessObjectCandidate({
                             world_location: {
                                 id: "",
+                                osm_type: "relation",
                                 name: e.target.value,
                                 type: "point",
                                 geometry: {
@@ -178,7 +179,7 @@ export function GuessObjectBuilder({
                     <GuessObjectCard guessObject={guessObjectCandidate} />
                 </div>
 
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 z-0">
                     <WorldLocationViewer
                         world_location={guessObjectCandidate?.world_location}
                         API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}

@@ -54,9 +54,9 @@ export async function searchWorldLocationByName(query: string): Promise<WorldLoc
     return data.candidates as WorldLocation[] ?? [];
 }
 
-export async function searchWorldLocationById(id: string): Promise<WorldLocation> {
+export async function searchWorldLocationById(id: string, osm_type: string): Promise<WorldLocation> {
 
-    const response = await fetch(`${process.env.BACKEND_URL}/world-location/search?id=${id}`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/world-location/search?id=${id}&osm_type=${osm_type}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

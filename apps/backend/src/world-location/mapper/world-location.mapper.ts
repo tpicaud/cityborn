@@ -11,6 +11,7 @@ export class WorldLocationMapper {
     static toWorldLocationDto(prismaWorldLocation: PrismaWorldLocationWithRelations): WorldLocationDto {
         return {
             id: prismaWorldLocation.id,
+            osm_type: prismaWorldLocation.osm_type,
             name: prismaWorldLocation.name,
             display_name: prismaWorldLocation.display_name ?? undefined,
             type: prismaWorldLocation.type,
@@ -32,6 +33,7 @@ export class WorldLocationMapper {
     static toWorldLocationDtoFromNominatimItem(nominatimItem: NominatimItemResponse): WorldLocationDto {
         return {
             id: nominatimItem.osm_id.toString(),
+            osm_type: nominatimItem.osm_type,
             name: nominatimItem.name,
             display_name: nominatimItem.display_name ?? undefined,
             addresstype: nominatimItem.addresstype ?? undefined,
