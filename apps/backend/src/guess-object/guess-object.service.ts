@@ -116,6 +116,24 @@ export class GuessObjectService {
     }
 
     async update(id: string, updatedFields: Partial<GuessObjectDto>): Promise<string> {
+
+        if (updatedFields.world_location_id) {
+            // Récupérer la location dans la db
+            let world_location = await this.worldLocationService.findByIdInDB(updatedFields.world_location_id);
+            if (!world_location) {
+                if (!updatedFields.world_location) {
+                    throw new BadRequestException({
+                        code: ErrorCode.BAD_REQUEST,
+                        message: `No world location id found, and no world location provided`,
+                    });
+                }
+                // Si pas présente, récupérer la location chez nominatim, puis stocker dans la db
+                world_location = await this.worldLocationService.create(updatedFields.world_location);
+            }
+
+            updatedFields.world_location_id = world_location.id;
+        }
+
         const data = {
             name: updatedFields.name,
             image: updatedFields.image,

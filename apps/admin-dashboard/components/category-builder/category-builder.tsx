@@ -112,7 +112,9 @@ export function CategoryBuilder({
         try {
             setIsSaveLoading(true);
             const updatedCategory: UpdateCategory = {
-                ...category
+                ...category,
+                guessObjects: undefined,
+                guessObjectsIds: undefined
             }
             await saveCategory(category.id, updatedCategory);
         } catch (error) {
