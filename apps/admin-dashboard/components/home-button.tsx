@@ -9,8 +9,8 @@ export default function HomeButton() {
     const router = useRouter()
 
     return (
-        <Button variant="outline" onClick={() => router.push('/dashboard')}>
-            <House className="h-4 w-4" />
+        <Button variant="outline">
+            <House className="h-4 w-4" onClick={() => router.push('/dashboard')}/>
         </Button>
     )
 }

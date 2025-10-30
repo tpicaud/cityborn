@@ -16,14 +16,31 @@ export class CategoryService {
 
     private buildInclude(includes: string[]) {
         const include: any = {};
+
         if (includes.includes('guessObjects')) {
             include.guessObjects = {};
+
             if (includes.includes('world_location')) {
                 include.guessObjects.include = { world_location: true };
             }
+
+            if (includes.includes('world_location_preview')) {
+                include.guessObjects.include = {
+                    world_location: {
+                        select: {
+                            id: true,
+                            osm_type: true,
+                            name: true,
+                            display_name: true,
+                        },
+                    },
+                };
+            }
         }
+
         return include;
     }
+
 
     async findAll(includes: string[] = []) {
         const categories = await this.prisma.category.findMany({

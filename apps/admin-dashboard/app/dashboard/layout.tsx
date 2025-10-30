@@ -1,7 +1,5 @@
 import HomeButton from "@/components/home-button";
 import LogoutButton from "@/components/logout-button";
-import { Button } from "@/components/ui/Button";
-import { House } from "lucide-react";
 
 export default function DashboardLayout({
     children,
@@ -11,7 +9,8 @@ export default function DashboardLayout({
     return (
         <div className="h-full flex flex-col text-zinc-50">
             <header className="relative z-40 bg-zinc-900/50 border-b border-zinc-700 p-4 backdrop-blur-lg shadow-sm">
-                <div className="max-w-7xl lg:max-w-8xl mx-auto flex justify-between items-center">
+
+                <div className="max-w-7xl lg:max-w-8xl mx-auto flex justify-between items-center h-6">
                     <div className="flex items-center gap-6">
                         <h1 className="text-2xl font-bold hidden sm:block">
                             Admin

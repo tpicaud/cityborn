@@ -52,7 +52,16 @@ export class GuessObjectController {
         @Param('id') id: string,
         @Query('include') include?: string,
     ): Promise<GuessObjectDto> {
-        return await this.guessObjectsService.findById(id, include);
+        let includes: string[];
+        try {
+            includes = include ? include.split(',').map((i) => i.trim()) : []
+        } catch {
+            throw new BadRequestException({
+                code: ErrorCode.BAD_REQUEST,
+                message: "Bad query"
+            })
+        }
+        return await this.guessObjectsService.findById(id, includes);
     }
 
     @Patch(':id')
