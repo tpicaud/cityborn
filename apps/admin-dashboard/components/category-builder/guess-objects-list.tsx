@@ -1,5 +1,4 @@
 import { GuessObject } from "@cityborn/types";
-import { useEffect } from "react";
 import { Button } from "../ui/Button";
 
 export function GuessObjectsList({
