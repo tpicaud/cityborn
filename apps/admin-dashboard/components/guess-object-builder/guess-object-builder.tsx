@@ -105,7 +105,7 @@ export function GuessObjectBuilder({
                     </div>
                 </div>
 
-                <label htmlFor="short_description" className="mb-3">
+                <label htmlFor="short_description" className="flex items-center h-14">
                     Localisation
                 </label>
 
@@ -145,7 +145,7 @@ export function GuessObjectBuilder({
                         <GuessObjectCard guessObject={guessObjectCandidate} />
                     </div>
 
-                    <div className="absolute inset-0 z-0 h-full w-full">
+                    <div className="inset-0 z-0 h-full w-full">
                         <WorldLocationViewer
                             world_location={guessObjectCandidate?.world_location}
                             API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}

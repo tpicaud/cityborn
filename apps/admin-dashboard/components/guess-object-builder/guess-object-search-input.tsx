@@ -63,7 +63,11 @@ export function GuessObjectSearchInput({
                 onChange={onChange}
                 className={className}
             />
-            <Ariakit.ComboboxPopover gutter={8} sameWidth className={popoverClassName}>
+            <Ariakit.ComboboxPopover
+            gutter={8}
+            sameWidth
+            portal
+            className={popoverClassName}>
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem

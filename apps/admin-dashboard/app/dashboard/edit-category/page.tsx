@@ -5,6 +5,6 @@ export default async function EditCategory({ searchParams }: { searchParams: { i
     const { id } = await searchParams;
     const category = await getCategory(id)
     return (
-            <CategoryBuilder fetchedCategory={category} />
+        <CategoryBuilder fetchedCategory={category} />
     )
 }

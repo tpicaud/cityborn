@@ -182,8 +182,8 @@ export function CategoryBuilder({
     }
 
     return (
-        <div className="h-full w-full grid grid-cols-2 grid-rows-1 gap-12">
-            <div className="h-full flex flex-col gap-8 w-full">
+        <div className="flex-1 w-full flex flex-row gap-12">
+            <div className="flex-1 flex flex-col gap-8 w-full">
                 <div className="flex flex-col w-full">
                     <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
                         <h2 className="text-xl font-bold">Editeur de catégorie</h2>
@@ -199,9 +199,9 @@ export function CategoryBuilder({
                     </div>
                     <span className="h-[2px] w-full bg-foreground"></span>
                 </div>
-                <div className="flex flex-col h-full gap-8">
+                <div className="flex-1 flex flex-col gap-8 min-h-0">
                     <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-2 gap-4 mb-7">
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="h-full">
                                 <label htmlFor="name">Nom</label>
                                 <input
@@ -232,40 +232,50 @@ export function CategoryBuilder({
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-col h-full max-h-full gap-2 ">
-                        <div className="flex flex-row gap-2 items-baseline">
+                    <div className="flex-1 min-h-0 flex flex-col h-full gap-2 ">
+                        <div className="flex flex-row gap-2 items-center h-7">
                             <h2 className="flex flex-row gap-1 items-baseline">
                                 Objets
                                 <span className="font-bold text-gray-300">
                                     {'(' + (category.guessObjects ? category.guessObjects.length : 0) + ')'}
                                 </span>
                             </h2>
-                            <Button
-                                variant="primary"
-                                onClick={handleCreateGuessObject}
-                                className="h-6 font-bold p-auto">
-                                +
-                            </Button>
                             <input
                                 placeholder="Rechercher"
                                 value={searchObjectValue}
                                 onChange={(e) => setSearchObjectValue(e.target.value)}
-                                className="w-48 p-2 h-7 rounded-md border border-gray-300"
+                                className="w-48 p-2 h-full rounded-md border border-gray-300"
                             />
-                        </div>
-                        <div className="flex-1 rounded-xl border border-gray-300 p-3 overflow-y-auto">
-                            <GuessObjectsList
-                                guessObjects={filteredGuessObjects}
-                                selectedGuessObject={guessObjectCandidate as GuessObject}
-                                handleSelectGuessObject={handleSelectGuessObject}
-                                handleDeleteGuessObject={handleDeleteGuessObject}
-                            />
+                            <Button
+                                variant="primary"
+                                onClick={handleCreateGuessObject}
+                                className="h-full font-bold p-auto">
+                                +
+                            </Button>
                         </div>
 
+                        <div className="relative flex-1 min-h-0 rounded-xl border border-gray-300 overflow-hidden">
+                            {/* Contenu scrollable */}
+                            <div className="h-full overflow-y-auto 
+                  [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                                <div className="p-3">
+                                    <GuessObjectsList
+                                        guessObjects={filteredGuessObjects}
+                                        selectedGuessObject={guessObjectCandidate as GuessObject}
+                                        handleSelectGuessObject={handleSelectGuessObject}
+                                        handleDeleteGuessObject={handleDeleteGuessObject}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Ombre dégradée fixe en bas */}
+                            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 
+                  bg-gradient-to-t from-neutral-800 to-transparent" />
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className="h-full flex flex-col gap-8">
+            <div className="flex-1 flex flex-col gap-8">
                 <div className="flex flex-col w-full">
                     <div className="flex flex-row gap-4 mb-2 items-center h-8">
                         <h2 className="text-xl font-bold">Editeur d'objet</h2>
