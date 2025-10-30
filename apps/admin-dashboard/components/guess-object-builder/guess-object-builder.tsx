@@ -39,14 +39,15 @@ export function GuessObjectBuilder({
         );
     };
 
-    async function handleFetchGuessObjectCandidate(guessObjectCandidate: GuessObjectCandidate | undefined) {
-        if (!guessObjectCandidate?.source?.external_id) return;
+    async function handleFetchGuessObjectCandidate(guessObjectCandidatePreview: GuessObjectCandidate | undefined) {
+        if (!guessObjectCandidatePreview?.source?.external_id) return;
 
-        const fullCandidate = await searchGuessObjectById(guessObjectCandidate.source?.external_id);
+        const fullCandidate = await searchGuessObjectById(guessObjectCandidatePreview.source?.external_id);
 
         if (fullCandidate) {
             setGuessObjectCandidate({
-                ...fullCandidate
+                ...fullCandidate,
+                id: guessObjectCandidate ? guessObjectCandidate.id : fullCandidate.id,
             });
         }
     }

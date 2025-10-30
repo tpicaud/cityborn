@@ -283,7 +283,7 @@ export function CategoryBuilder({
                             <div className="flex items-center">
                                 <Button size='sm' variant="primary" onClick={handleSaveGuessObjectCandidate}>
                                     <p className="font-bold">
-                                        {guessObjectCandidate.id ? (
+                                        {!guessObjectCandidate.id ? (
                                             "Ajouter l'objet"
                                         ) : (
                                             "Mettre à jour l'objet"
