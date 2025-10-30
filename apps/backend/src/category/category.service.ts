@@ -4,10 +4,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryMapper } from './mappers/category.mapper';
+import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import pLimit from 'p-limit';
 
 @Injectable()
 export class CategoryService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly guessObjectService: GuessObjectService
+    ) { }
 
     private buildInclude(includes: string[]) {
         const include: any = {};
@@ -86,15 +91,56 @@ export class CategoryService {
             },
             include: { guessObjects: true },
         });
+
+        // Delete guess objects
+        if (disconnectIds && disconnectIds.length >= 0) {
+            const limit = pLimit(5);
+
+            await Promise.all(
+                disconnectIds.map((id) =>
+                    limit(async () => {
+                        const count = await this.prisma.category.count({
+                            where: { guessObjects: { some: { id } } },
+                        });
+
+                        if (count === 0) {
+                            await this.guessObjectService.delete(id);
+                        }
+                    })
+                )
+            );
+        }
+
         return CategoryMapper.toCategoryDto(updated_category);
     }
 
 
-    async remove(id: string) {
-        await this.findOne(id);
+    async delete(id: string) {
+        // Check if exist
+        const category = await this.findOne(id, ['guessObjects']);
 
-        return this.prisma.category.delete({
+        // Delete
+        await this.prisma.category.delete({
             where: { id },
         });
+
+        // Delete guess objects if orphelin
+        if (category.guessObjects && category.guessObjects.length >= 0) {
+            const limit = pLimit(5);
+
+            await Promise.all(
+                category.guessObjects.map((guessObject) =>
+                    limit(async () => {
+                        const count = await this.prisma.category.count({
+                            where: { guessObjects: { some: { id: guessObject.id } } },
+                        });
+
+                        if (count === 0) {
+                            await this.guessObjectService.delete(guessObject.id);
+                        }
+                    })
+                )
+            );
+        }
     }
 }

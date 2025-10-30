@@ -69,4 +69,11 @@ export class WorldLocationService {
 
         return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
     }
+
+    async delete(id: string): Promise<WorldLocationDto> {
+        const world_location = await this.prisma.worldLocation.delete({
+            where: { id }
+        });
+        return WorldLocationMapper.toWorldLocationDto(world_location);
+    }
 }
