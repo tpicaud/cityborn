@@ -20,7 +20,7 @@ export default function DashboardLayout({
                 </div>
             </header>
 
-            <main className="flex-1 flex min-h-0 max-h-full w-full relative z-0 max-w-7xl mx-auto p-4 lg:px-0 lg:max-w-8xl">
+            <main className="flex-1 flex min-h-0 max-h-full w-full relative z-0 max-w-7xl mx-auto p-4 lg:max-w-8xl">
                 {children}
             </main>
         </div>
