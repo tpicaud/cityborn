@@ -114,4 +114,5 @@
 | 22/10/2025 | 6h          | Api guess objects + création admin dashboard + builder guess object                  |
 | 27/10/2025 | 8h          | Dashboard admin                                                                      |
 | 28/10/2025 | 6h          | Admin dashboard + category editor                                                    |
-
+| 29/10/2025 | 8h          | Admin dashboard + category editor                                                    |
+| 28/10/2025 | 6h          | Admin dashboard amélioration ux                                                      |
