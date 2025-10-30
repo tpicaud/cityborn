@@ -37,7 +37,6 @@ export function CategoriesList({
                             }
                         </div>
                         <p>objets</p>
-
                     </div>
                 </div>
             ))}

@@ -55,7 +55,7 @@ export function CategoriesEditor() {
     }
 
     async function onCategorySelect(category: Category) {
-        router.push(`/dashboard/edit-category/${category.id}`)
+        router.push(`/dashboard/edit-category?id=${category.id}`)
     }
 
     return (

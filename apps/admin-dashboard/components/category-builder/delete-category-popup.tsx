@@ -17,19 +17,6 @@ export function DeleteCategoryPopup({
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async () => {
-        try {
-            setIsLoading(true);
-            await handleDeleteCategory();
-            dialog.hide();
-        } catch (error) {
-            alert('Erreur lors de la suppression de la catégorie');
-            console.error(error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     return (
         <div className="w-full h-full flex items-center">
             <Button size="sm" variant="destructive" onClick={dialog.show}>
@@ -56,7 +43,7 @@ export function DeleteCategoryPopup({
                             Annuler
                         </Button>
                         <Button variant="destructive" onClick={handleDeleteCategory}>
-                            {isLoading ? <Loader /> : <p>Supprimer</p>}
+                            Supprimer
                         </Button>
                     </div>
                 </div>

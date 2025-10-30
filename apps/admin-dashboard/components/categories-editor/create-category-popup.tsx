@@ -89,8 +89,8 @@ export function CreateCategoryDialog({
                             <Button onClick={dialog.hide} variant="outline">
                                 Annuler
                             </Button>
-                            <Button type="submit" variant="primary">
-                                {isLoading ? <Loader /> : <p>Créer</p>}
+                            <Button type="submit" variant="primary" size='default' onClick={handleSubmit}>
+                                Créer
                             </Button>
                         </div>
                     </form>

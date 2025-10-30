@@ -17,25 +17,34 @@ export class GuessObjectService {
         private readonly worldLocationService: WorldLocationService
     ) { }
 
-    async findById(id: string, include?: string): Promise<GuessObjectDto> {
-        const allowed_includes = ['world_location'];
+    private buildInclude(includes: string[]) {
+        let include: any = {};
 
-        const includeOptions: Record<string, boolean> = {};
 
-        if (include) {
-            const includes = include
-                .split(',')
-                .map((i) => i.trim())
-                .filter((i) => allowed_includes.includes(i));
-
-            for (const relation of includes) {
-                includeOptions[relation] = true;
-            }
+        if (includes.includes('world_location')) {
+            include = { world_location: true };
         }
 
+        if (includes.includes('world_location_preview')) {
+            include = {
+                world_location: {
+                    select: {
+                        id: true,
+                        osm_type: true,
+                        name: true,
+                        display_name: true,
+                    },
+                },
+            };
+        }
+
+        return include;
+    }
+
+    async findById(id: string, includes: string[] = []): Promise<GuessObjectDto> {
         const guess_object = await this.prisma.guessObject.findUnique({
             where: { id },
-            include: includeOptions
+            include: this.buildInclude(includes)
         });
 
         if (!guess_object) {

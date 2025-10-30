@@ -3,7 +3,7 @@
 import { Category } from "@cityborn/types";
 
 export async function getCategory(id: string): Promise<Category> {
-    const response = await fetch(`${process.env.BACKEND_URL}/category/${id}?include=guessObjects`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/category/${id}?include=guessObjects,world_location_preview`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
