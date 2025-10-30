@@ -220,7 +220,7 @@ export class GuessObjectService {
                     message: `No world location id found, and no world location provided`,
                 });
             }
-            // Si pas présente, récupérer la location chez nominatim, puis stocker dans la db
+            // Si pas présente, utiliser la loc dans la requête
             world_location = await this.worldLocationService.create(createGuessObjectDto.world_location);
         }
 
@@ -252,9 +252,24 @@ export class GuessObjectService {
     }
 
     async delete(id: string): Promise<void> {
-        await this.prisma.guessObject.delete({
+        const guess_object = await this.prisma.guessObject.delete({
             where: { id },
         });
+
+        if (!guess_object) {
+            throw new NotFoundException({
+                code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+                message: `Guess object not found`,
+            });
+        }
+
+        const count = await this.prisma.guessObject.count({
+            where: { world_location_id: guess_object.world_location_id }
+        });
+
+        if (count === 0) {
+            await this.worldLocationService.delete(guess_object.world_location_id);
+        }
     }
 
     private async resolveWorldLocationId(updatedFields: Partial<GuessObjectDto>): Promise<string | undefined> {

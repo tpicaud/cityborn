@@ -1,7 +1,7 @@
 "use client";
 
 import { Category, CreateCategory } from "@cityborn/types";
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CategoriesList } from "./categories-list";
 import { createCategory, getAllCategories } from "./action";
 import { Button } from "../ui/Button";
@@ -20,6 +20,12 @@ export function CategoriesEditor() {
     useEffect(() => {
         handleFetchCategories();
     }, []);
+
+    const filteredCategories = useMemo(() => {
+        return categories.filter((category) =>
+            category.name.toLowerCase().includes(searchValue.toLowerCase())
+        );
+    }, [categories, searchValue]);
 
     async function handleFetchCategories() {
         try {
@@ -78,9 +84,9 @@ export function CategoriesEditor() {
                 {
                     !isLoading
                         ? (
-                            (!categories || categories.length === 0)
-                                ? <p className="text-center text-gray-300">Aucunes catégories</p>
-                                : <CategoriesList categories={categories} onCategorySelect={onCategorySelect} />
+                            (!filteredCategories || filteredCategories.length === 0)
+                                ? <p className="text-center text-gray-300">Aucunes catégories trouvées</p>
+                                : <CategoriesList categories={filteredCategories} onCategorySelect={onCategorySelect} />
                         )
                         : <div className="flex items-center justify-center"><Loader /></div>
                 }

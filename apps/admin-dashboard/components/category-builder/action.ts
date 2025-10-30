@@ -55,11 +55,9 @@ export async function deleteCategory(id: string) {
         },
     });
 
-    const data = await response.json();
 
     if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.message || 'Failed to delete category');
     }
-
-    return data as GuessObject
 }
