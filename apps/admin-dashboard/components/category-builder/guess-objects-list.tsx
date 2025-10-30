@@ -13,7 +13,7 @@ export function GuessObjectsList({
     handleDeleteGuessObject: (guessObject: GuessObject) => void
 }) {
     return (
-        <div className="h-full w-full">
+        <div className="h-full w-full z-0">
             {
                 (!guessObjects || guessObjects.length === 0) ? (
                     <p className="text-center text-gray-300">
