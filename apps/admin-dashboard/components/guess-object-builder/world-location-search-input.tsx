@@ -9,6 +9,7 @@ export function WorldLocationSearchInput({
     name,
     placeholder = "e.g., Paris",
     value,
+    disabled,
     onChange,
     onSelect,
     className = "bg-white",
@@ -19,6 +20,7 @@ export function WorldLocationSearchInput({
     name: string | undefined;
     placeholder?: string;
     value: string | undefined;
+    disabled: boolean,
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
     onSelect: (candidate: WorldLocation | undefined) => void;
     className?: string;
