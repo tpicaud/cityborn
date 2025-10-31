@@ -122,9 +122,9 @@ model Category {
 // End game sentence //
 ///////////////////////
 enum ScoreType {
-  good
-  average
-  bad
+  GOOD
+  AVERAGE
+  BAD
 }
 
 model EndGameSentence {
