@@ -6,6 +6,7 @@ import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from './dto/create
 import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
 import { GuessObjectDto } from './dto/guess-object.dto';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('guess-objects')
 export class GuessObjectController {
@@ -15,6 +16,7 @@ export class GuessObjectController {
         private readonly guessObjectsService: GuessObjectService
     ) { }
 
+    @UseGuards(AdminGuard)
     @Get('search')
     async search(
         @Query('q') q?: string,
@@ -64,6 +66,12 @@ export class GuessObjectController {
         return await this.guessObjectsService.findById(id, includes);
     }
 
+
+    ////////////////
+    // Admin only //
+    ////////////////
+
+    @UseGuards(AdminGuard)
     @Patch(':id')
     async patchGuessObject(
         @Param('id') id: string,
@@ -74,6 +82,7 @@ export class GuessObjectController {
         };
     }
 
+    @UseGuards(AdminGuard)
     @Post()
     async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<CreateGuessObjectResponseDto> {
         return {
@@ -81,6 +90,7 @@ export class GuessObjectController {
         }
     }
 
+    @UseGuards(AdminGuard)
     @Delete(':id')
     async deleteGuessObjects(@Param('id') id: string): Promise<void> {
         await this.guessObjectsService.delete(id);
