@@ -3,14 +3,15 @@
 import { House } from "lucide-react";
 import { Button } from "./ui/Button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function HomeButton() {
 
-    const router = useRouter()
-
     return (
-        <Button variant="outline">
-            <House className="h-4 w-4" onClick={() => router.push('/dashboard')}/>
-        </Button>
+        <Link href="/dashboard">
+            <Button variant="outline">
+                <House className="h-4 w-4" />
+            </Button>
+        </Link>
     )
 }

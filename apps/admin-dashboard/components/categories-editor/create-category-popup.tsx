@@ -3,7 +3,6 @@ import * as Ariakit from "@ariakit/react";
 import { Button } from "../ui/Button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import Loader from "../ui/Loader";
 
 export function CreateCategoryDialog({
     handleCreateCategory,
@@ -14,21 +13,18 @@ export function CreateCategoryDialog({
     const [createCategory, setCreateCategory] = useState<CreateCategory>({
         name: "",
         description: "",
+        isPublished: false
     });
-    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         try {
-            setIsLoading(true);
             e.preventDefault();
             await handleCreateCategory(createCategory);
             dialog.hide();
-            setCreateCategory({ name: "", description: "" });
+            setCreateCategory({ name: "", description: "", isPublished: false });
         } catch (error) {
             alert('Erreur lors de la création de la catégorie');
             console.error(error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
