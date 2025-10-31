@@ -42,12 +42,22 @@ export class CategoryService {
     }
 
 
-    async findAll(includes: string[] = []) {
+    async findAll({
+        includes = [],
+        include_published = false
+    }: {
+        includes?: string[],
+        include_published?: boolean
+    }) {
         const categories = await this.prisma.category.findMany({
             include: this.buildInclude(includes),
         });
 
-        return CategoryMapper.toCategoriesResponseDto(categories);
+        const filtered_categories = include_published
+            ? categories
+            : categories.filter(category => category.isPublished)
+
+        return CategoryMapper.toCategoriesResponseDto(filtered_categories);
     }
 
     async findOne(id: string, includes: string[] = []) {

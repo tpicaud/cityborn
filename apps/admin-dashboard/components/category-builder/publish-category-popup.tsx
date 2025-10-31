@@ -2,19 +2,22 @@ import * as Ariakit from "@ariakit/react";
 import { Button } from "../ui/Button";
 import { CircleAlert } from "lucide-react";
 
-export function DeleteCategoryPopup({
-    handleDeleteCategory,
+export function PublishCategoryPopup({
+    isPublished,
+    handlePublishCategory,
 }: {
-    handleDeleteCategory: () => Promise<void>;
+    isPublished: boolean,
+    handlePublishCategory: (publish: boolean) => Promise<void>;
 }) {
     const dialog = Ariakit.useDialogStore();
 
     return (
         <div className="w-full h-full flex items-center">
-            <Button size="sm" variant="destructive" onClick={dialog.show}>
-                Supprimer
+            <Button size="sm" variant="primary" onClick={dialog.show}>
+                {isPublished ? 'Dépublier' : 'Publier'}
             </Button>
-            
+
+
             <Ariakit.Dialog
                 store={dialog}
                 portal={false}
@@ -26,16 +29,28 @@ export function DeleteCategoryPopup({
             >
                 <div className="h-full w-full p-6">
                     <Ariakit.DialogHeading className="flex flex-col gap-2 items-center text-center">
-                        <CircleAlert strokeWidth={2.75} size={32} className="h-full text-red-700"/>
-                        <div><p className="font-bold">Action irréversible</p><p>Etes-vous sûr de vouloir supprimer la catégorie ?</p></div>
+                        <CircleAlert strokeWidth={2.75} size={32} className="h-full text-red-700" />
+                        <p>Etes-vous sûr de vouloir {isPublished ? 'dépublier' : 'publier'} la catégorie ?</p>
                     </Ariakit.DialogHeading>
                     <div className="flex justify-center gap-2 mt-4">
                         <Button onClick={dialog.hide} variant="outline">
                             Annuler
                         </Button>
-                        <Button variant="destructive" onClick={handleDeleteCategory}>
-                            Supprimer
-                        </Button>
+                        {isPublished ? (
+                            <Button variant="destructive" onClick={async () => {
+                                await handlePublishCategory(false)
+                                dialog.hide()
+                            }}>
+                                Dépublier
+                            </Button>
+                        ) : (
+                            <Button variant="destructive" onClick={async () => {
+                                await handlePublishCategory(true);
+                                dialog.hide()
+                            }}>
+                                Publier
+                            </Button>
+                        )}
                     </div>
                 </div>
             </Ariakit.Dialog >

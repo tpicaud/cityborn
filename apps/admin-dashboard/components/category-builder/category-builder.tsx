@@ -11,6 +11,7 @@ import Loader from "../ui/Loader";
 import { ArrowDownToLine } from "lucide-react";
 import { DeleteCategoryPopup } from "./delete-category-popup";
 import { useRouter } from "next/navigation";
+import { PublishCategoryPopup } from "./publish-category-popup";
 
 interface CategoryBuilderProps {
     fetchedCategory: Category
@@ -119,11 +120,12 @@ export function CategoryBuilder({
         }
     }
 
-    async function handleSaveCategory() {
+    async function handleSaveCategory(publish?: boolean) {
         try {
             setIsSaveLoading(true);
             const updatedCategory: UpdateCategory = {
                 ...category,
+                isPublished: publish ?? false,
                 guessObjects: undefined,
                 guessObjectsIds: undefined
             }
@@ -134,6 +136,11 @@ export function CategoryBuilder({
         } finally {
             setIsSaveLoading(false);
         }
+    }
+
+    async function handlePublishCategory(publish: boolean) {
+        await handleSaveCategory(publish);
+        updateCategory({isPublished: publish})
     }
 
     async function handleDeleteCategory() {
@@ -188,12 +195,13 @@ export function CategoryBuilder({
                     <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
                         <h2 className="text-xl font-bold">Editeur de catégorie</h2>
                         <div className="flex flex-row items-center justify-center gap-2">
-                            <Button size='sm' variant="primary" onClick={handleSaveCategory}>
+                            <Button size='sm' variant="outline" onClick={() => handleSaveCategory()}>
                                 {isSaveLoading
                                     ? <Loader />
-                                    : <ArrowDownToLine size={20} />
+                                    :  <p>Enregistrer</p>
                                 }
                             </Button>
+                            <PublishCategoryPopup isPublished={category.isPublished} handlePublishCategory={handlePublishCategory} />
                             <DeleteCategoryPopup handleDeleteCategory={handleDeleteCategory} />
                         </div>
                     </div>
