@@ -2,7 +2,6 @@
 
 import { House } from "lucide-react";
 import { Button } from "./ui/Button";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function HomeButton() {
