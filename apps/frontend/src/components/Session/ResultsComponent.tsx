@@ -193,7 +193,7 @@ const ResultsComponent = ({
                                                                 key={index}
                                                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                                             >
-                                                                <TableCell component='th' scope='row'>{result.guessObjectId}</TableCell>
+                                                                <TableCell component='th' scope='row'>{getGuessObjectName(result.guessObjectId)}</TableCell>
                                                                 <TableCell align='right'>
                                                                     {result.distance !== -1 ? (
                                                                         <p>{result.distance.toFixed(2)}</p>
