@@ -109,14 +109,28 @@ model GuessObject {
   categories        Category[]    @relation("CategoryGuessObjects")
 }
 
-
 model Category {
   id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
-  isPublished    Boolean @default(false)
+  isPublished Boolean @default(false)
   description String?
 
   guessObjects GuessObject[] @relation("CategoryGuessObjects")
+}
+
+///////////////////////
+// End game sentence //
+///////////////////////
+enum ScoreType {
+  good
+  average
+  bad
+}
+
+model EndGameSentence {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message String
+  score_type ScoreType
 }
 
 //////////////
