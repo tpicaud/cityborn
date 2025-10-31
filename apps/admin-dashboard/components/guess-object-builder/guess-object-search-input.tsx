@@ -9,6 +9,7 @@ export function GuessObjectSearchInput({
     name,
     placeholder = "e.g., Pomme",
     value,
+    disabled,
     onChange,
     onSelect,
     className = 'bg-white',
@@ -19,6 +20,7 @@ export function GuessObjectSearchInput({
     name: string | undefined;
     placeholder?: string;
     value: string | undefined;
+    disabled: boolean;
     onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
     onSelect: (candidate: GuessObjectCandidate | undefined) => void
     className?: string;
@@ -59,15 +61,16 @@ export function GuessObjectSearchInput({
                 name={name ?? id}
                 placeholder={placeholder}
                 value={value ?? ""}
+                disabled={disabled}
                 autoComplete='off'
                 onChange={onChange}
                 className={className}
             />
             <Ariakit.ComboboxPopover
-            gutter={8}
-            sameWidth
-            portal
-            className={popoverClassName}>
+                gutter={8}
+                sameWidth
+                portal
+                className={popoverClassName}>
                 {matches.length ? (
                     matches.slice(0, 5).map((candidate) => (
                         <Ariakit.ComboboxItem

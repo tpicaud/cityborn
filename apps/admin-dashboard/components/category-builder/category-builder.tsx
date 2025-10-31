@@ -200,9 +200,9 @@ export function CategoryBuilder({
                     <span className="h-[2px] w-full bg-foreground"></span>
                 </div>
                 <div className="flex-1 flex flex-col gap-8 min-h-0">
-                    <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="h-full">
+                    <div className="w-full flex flex-col gap-2">
+                        <div className="w-full flex flex-row gap-12">
+                            <div className="h-full flex flex-col w-[30%] min-w-40">
                                 <label htmlFor="name">Nom</label>
                                 <input
                                     type="text"
@@ -213,11 +213,11 @@ export function CategoryBuilder({
                                     onChange={(e) =>
                                         updateCategory({ name: e.target.value })
                                     }
-                                    className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full max-w-96"
+                                    className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                                 />
                             </div>
-                            <div className="h-full">
-                                <label htmlFor="description" className="mt-4">Description</label>
+                            <div className="h-full flex flex-col w-[70%] min-w-72">
+                                <label htmlFor="description">Description</label>
                                 <input
                                     type="text"
                                     id="Description"
@@ -227,7 +227,7 @@ export function CategoryBuilder({
                                     onChange={(e) =>
                                         updateCategory({ description: e.target.value })
                                     }
-                                    className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full max-w-96"
+                                    className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                                 />
                             </div>
                         </div>
