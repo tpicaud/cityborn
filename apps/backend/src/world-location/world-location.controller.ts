@@ -1,7 +1,8 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { WorldLocationService } from './world-location.service';
 import { ErrorCode } from '@cityborn/errors';
 import { WorldLocationDto, WorldLocationSearchResponseDto } from './dto/world-location.dto';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('world-location')
 export class WorldLocationController {
@@ -10,6 +11,11 @@ export class WorldLocationController {
         private readonly worldLocationServcice: WorldLocationService
     ) { }
 
+    ////////////////
+    // Admin only //
+    ////////////////
+    
+    @UseGuards(AdminGuard)
     @Get('search')
     async search(
         @Query('q') q?: string,

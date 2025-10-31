@@ -1,9 +1,10 @@
 "use server";
 
+import { apiFetch } from "@/lib/apiFetch";
 import { Category, CreateCategory } from "@cityborn/types";
 
 export async function getAllCategories(): Promise<Category[]> {
-    const response = await fetch(`${process.env.BACKEND_URL}/category?include=guessObjects`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/category?include=guessObjects`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -20,7 +21,7 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 export async function createCategory(createCategory: CreateCategory): Promise<Category> {
-    const response = await fetch(`${process.env.BACKEND_URL}/category`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/category`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

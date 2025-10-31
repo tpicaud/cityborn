@@ -1,10 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { ErrorCode } from '@cityborn/errors';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CategoriesResponseDto } from './dto/categories.response.dto';
 import { CategoryDto } from './dto/category.dto';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('category')
 export class CategoryController {
@@ -43,11 +44,18 @@ export class CategoryController {
         return this.categoryService.findOne(id, includes);
     }
 
+
+    ////////////////
+    // Admin only //
+    ////////////////
+    
+    @UseGuards(AdminGuard)
     @Post()
     async create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryDto> {
         return this.categoryService.create(createCategoryDto);
     }
 
+    @UseGuards(AdminGuard)
     @Put(':id')
     async update(
         @Param('id') id: string,
@@ -56,6 +64,7 @@ export class CategoryController {
         return this.categoryService.update(id, updatedCategory);
     }
 
+    @UseGuards(AdminGuard)
     @Delete(':id')
     async delete(@Param('id') id: string) {
         return this.categoryService.delete(id);
