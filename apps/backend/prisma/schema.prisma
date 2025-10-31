@@ -109,9 +109,11 @@ model GuessObject {
   categories        Category[]    @relation("CategoryGuessObjects")
 }
 
+
 model Category {
   id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
+  isPublished    Boolean @default(false)
   description String?
 
   guessObjects GuessObject[] @relation("CategoryGuessObjects")

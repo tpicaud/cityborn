@@ -3,6 +3,7 @@ import { GuessObject } from "./GuessObject.js";
 export interface Category {
     id: string;
     name: string;
+    isPublished: boolean;
     description?: string;
     guessObjectsIds?: string[];
     guessObjects?: GuessObject[];

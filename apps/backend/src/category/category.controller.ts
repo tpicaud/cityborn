@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { ErrorCode } from '@cityborn/errors';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -6,14 +6,17 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { CategoriesResponseDto } from './dto/categories.response.dto';
 import { CategoryDto } from './dto/category.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { OptionalAdminGuard } from 'src/auth/guards/optional-admin.guard';
 
 @Controller('category')
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
 
+    @UseGuards(OptionalAdminGuard)
     @Get()
-    async findAll(
-        @Query('include') include?: string
+    async findAllPublished(
+        @Req() req,
+        @Query('include') include?: string,
     ): Promise<CategoriesResponseDto> {
         let includes: string[];
         try {
@@ -24,7 +27,7 @@ export class CategoryController {
                 message: "Bad query"
             })
         }
-        return this.categoryService.findAll(includes);
+        return this.categoryService.findAll({ includes, include_published: req.admin });
     }
 
     @Get(':id')
@@ -48,7 +51,7 @@ export class CategoryController {
     ////////////////
     // Admin only //
     ////////////////
-    
+
     @UseGuards(AdminGuard)
     @Post()
     async create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryDto> {

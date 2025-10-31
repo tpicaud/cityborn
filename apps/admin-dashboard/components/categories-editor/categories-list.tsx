@@ -14,13 +14,25 @@ export function CategoriesList({
                 <div
                     key={category.id}
                     onClick={() => onCategorySelect(category)}
-                    className="w-full h-full
-                                flex flex-row justify-between
-                                rounded-xl border-2 border-transparent p-3 bg-neutral-700 transition
-                              hover:border-gray-100 hover:cursor-pointer"
+                    className={`w-full h-full
+                                flex flex-row justify-between p-3 bg-neutral-700
+                                rounded-xl border border-solid
+                                ${category.isPublished ? 'border-green-600' : 'border-orange-500'}
+                                hover:outline-2 hover:outline-orange-100 hover:border-transparent
+                                transition-all duration-50 cursor-pointer`}
                 >
-                    <div className="flex flex-col gap-2 justfy-left">
-                        <h3 className="text-left text-lg font-bold">{category.name}</h3>
+
+                    <div className="flex flex-col gap-1 justfy-left">
+                        <div>
+                            <div className="italic font-extralight text-xs">
+                                {category.isPublished ? (
+                                    <p className="text-green-600">Publié</p>
+                                ) : (
+                                    <p className="text-orange-500">Non publié</p>
+                                )}
+                            </div>
+                            <h3 className="text-left text-lg font-bold">{category.name}</h3>
+                        </div>
                         <div>
                             {
                                 category.description

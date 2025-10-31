@@ -12,6 +12,7 @@ export class CategoryMapper {
         return {
             id: prismaCategory.id,
             name: prismaCategory.name,
+            isPublished: prismaCategory.isPublished,
             description: prismaCategory.description ?? undefined,
             guessObjects: prismaCategory.guessObjects
                 ? prismaCategory.guessObjects.map(obj => GuessObjectMapper.toGuessObjectDto(obj))

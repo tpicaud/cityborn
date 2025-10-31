@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, FormEventHandler, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 import { GuessObjectSearchInput } from "./guess-object-search-input";
 import { searchGuessObjectById, searchWorldLocationById } from "./action";
