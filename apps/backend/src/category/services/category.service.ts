@@ -1,9 +1,9 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryMapper } from './mappers/category.mapper';
+import { CreateCategoryDto } from '../dto/create-category.dto';
+import { UpdateCategoryDto } from '../dto/update-category.dto';
+import { CategoryMapper } from '../mappers/category.mapper';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import pLimit from 'p-limit';
 
@@ -44,23 +44,21 @@ export class CategoryService {
 
     async findAll({
         includes = [],
-        include_published = false
     }: {
         includes?: string[],
-        include_published?: boolean
     }) {
         const categories = await this.prisma.category.findMany({
             include: this.buildInclude(includes),
         });
 
-        const filtered_categories = include_published
-            ? categories
-            : categories.filter(category => category.isPublished)
-
-        return CategoryMapper.toCategoriesResponseDto(filtered_categories);
+        return categories;
     }
 
-    async findOne(id: string, includes: string[] = []) {
+    async findOne(id: string, {
+        includes = []
+    }: {
+        includes: string[]
+    }) {
         const category = await this.prisma.category.findUnique({
             where: { id },
             include: this.buildInclude(includes),
@@ -73,7 +71,7 @@ export class CategoryService {
             });
         }
 
-        return CategoryMapper.toCategoryDto(category);
+        return category;
     }
 
     async create(data: CreateCategoryDto) {
@@ -89,7 +87,7 @@ export class CategoryService {
             },
         });
 
-        return CategoryMapper.toCategoryDto(category);
+        return category
     }
 
     async update(categoryId: string, data: UpdateCategoryDto) {
@@ -138,13 +136,15 @@ export class CategoryService {
             );
         }
 
-        return CategoryMapper.toCategoryDto(updated_category);
+        return updated_category;
     }
 
 
     async delete(id: string) {
         // Check if exist
-        const category = await this.findOne(id, ['guessObjects']);
+        const category = await this.findOne(id, {
+            includes: ['guessObjects']
+        });
 
         // Delete
         await this.prisma.category.delete({
