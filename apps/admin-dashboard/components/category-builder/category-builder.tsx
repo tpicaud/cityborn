@@ -6,11 +6,12 @@ import { useMemo, useState } from "react";
 import { Button } from "../ui/Button";
 import { deleteCategory, getGuessObject, patchGuessObject, saveCategory, saveGuessObject } from "./action";
 import { GuessObjectsList } from "./guess-objects-list";
-import { deleteGuessObject } from "../guess-object-builder/action";
+import { deleteGuessObject, searchGuessObjectByName } from "../guess-object-builder/action";
 import Loader from "../ui/Loader";
 import { DeleteCategoryPopup } from "./delete-category-popup";
 import { useRouter } from "next/navigation";
 import { PublishCategoryPopup } from "./publish-category-popup";
+import { ImportCSVPopup } from "./import-csv-popup";
 
 interface CategoryBuilderProps {
     fetchedCategory: Category
@@ -40,6 +41,128 @@ export function CategoryBuilder({
             prev ? { ...prev, ...update } : (update as Category)
         );
     };
+
+    ///////////////////////////
+    // Guess object function //
+    ///////////////////////////
+
+    function handleCreateGuessObject() {
+        setGuessObjectCandidate({
+            name: "",
+            id: "",
+            world_location_id: ""
+        })
+    }
+
+    function handleSelectGuessObject(guessObject: GuessObject) {
+        if (guessObjectCandidate?.name === guessObject.name) {
+            setGuessObjectCandidate(undefined);
+        } else {
+            setGuessObjectCandidate(guessObject);
+        }
+    }
+
+    async function handleSaveGuessObjectCandidate(): Promise<void> {
+        try {
+
+            if (!guessObjectCandidate) {
+                alert("Objet non valide");
+                return;
+            }
+
+            if (!guessObjectCandidate.world_location_id) {
+                alert("Localisation non valide, veuillez resélectionner");
+                return;
+            }
+
+            // If id, then update, else post
+            let id: string;
+            if (guessObjectCandidate.id) {
+                id = await patchGuessObject(guessObjectCandidate.id, guessObjectCandidate);
+            } else {
+                id = await saveGuessObject({
+                    world_location_id: guessObjectCandidate.world_location_id.toString(),
+                    ...guessObjectCandidate
+                });
+            }
+
+            if (!id) throw new Error('Error saving or updating object');
+
+            await addOrUpdateGuessObjectToCategory(id);
+        } catch (error) {
+            console.log(error);
+            alert("Erreur lors de l'enregistrement de l'objet");
+        }
+    }
+
+    async function handleDeleteGuessObject(guessObject: GuessObject) {
+        try {
+            await deleteGuessObject(guessObject.id);
+
+            setCategory(prev => {
+                if (!prev.guessObjects) return prev;
+
+                const index = prev.guessObjects.findIndex(obj => obj.id === guessObject.id);
+                let updatedGuessObjects;
+
+                if (index === -1) {
+                    return prev;
+                } else {
+                    updatedGuessObjects = prev.guessObjects.filter(obj => obj.id !== guessObject.id);
+                }
+
+                return { ...prev, guessObjects: updatedGuessObjects };
+            });
+            setGuessObjectCandidate(undefined);
+        } catch (error) {
+            alert("Erreur lors de la suppression de l'objet");
+            console.error(error);
+        }
+    }
+
+
+    ///////////////////////
+    // Category function //
+    ///////////////////////
+
+    async function handleSaveCategory(publish?: boolean) {
+        try {
+            setIsSaveLoading(true);
+            const updatedCategory: UpdateCategory = {
+                ...category,
+                isPublished: publish ?? false,
+                guessObjects: undefined,
+                guessObjectsIds: undefined
+            }
+            await saveCategory(category.id, updatedCategory);
+        } catch (error) {
+            alert("Erreur lors de l'enregistrement de la catégorie");
+            console.error(error)
+        } finally {
+            setIsSaveLoading(false);
+        }
+    }
+
+    async function handlePublishCategory(publish: boolean) {
+        await handleSaveCategory(publish);
+        updateCategory({ isPublished: publish })
+    }
+
+    async function handleDeleteCategory() {
+        try {
+            setIsSaveLoading(true);
+            await deleteCategory(category.id);
+            router.push('/dashboard');
+        } catch (error) {
+            alert("Erreur lors de la suppression de la catégorie");
+            console.error(error);
+            setIsSaveLoading(false);
+        }
+    }
+
+    /////////////////////////////////
+    // Add to category function //
+    /////////////////////////////////
 
     async function addOrUpdateGuessObjectToCategory(id: string) {
         try {
@@ -80,115 +203,6 @@ export function CategoryBuilder({
         }
     }
 
-    function handleCreateGuessObject() {
-        setGuessObjectCandidate({
-            name: "",
-            id: "",
-            world_location_id: ""
-        })
-    }
-
-    function handleSelectGuessObject(guessObject: GuessObject) {
-        if (guessObjectCandidate?.name === guessObject.name) {
-            setGuessObjectCandidate(undefined);
-        } else {
-            setGuessObjectCandidate(guessObject);
-        }
-    }
-
-    async function handleDeleteGuessObject(guessObject: GuessObject) {
-        try {
-            await deleteGuessObject(guessObject.id);
-
-            setCategory(prev => {
-                if (!prev.guessObjects) return prev;
-
-                const index = prev.guessObjects.findIndex(obj => obj.id === guessObject.id);
-                let updatedGuessObjects;
-
-                if (index === -1) {
-                    return prev;
-                } else {
-                    updatedGuessObjects = prev.guessObjects.filter(obj => obj.id !== guessObject.id);
-                }
-
-                return { ...prev, guessObjects: updatedGuessObjects };
-            });
-            setGuessObjectCandidate(undefined);
-        } catch (error) {
-            alert("Erreur lors de la suppression de l'objet");
-            console.error(error);
-        }
-    }
-
-    async function handleSaveCategory(publish?: boolean) {
-        try {
-            setIsSaveLoading(true);
-            const updatedCategory: UpdateCategory = {
-                ...category,
-                isPublished: publish ?? false,
-                guessObjects: undefined,
-                guessObjectsIds: undefined
-            }
-            await saveCategory(category.id, updatedCategory);
-        } catch (error) {
-            alert("Erreur lors de l'enregistrement de la catégorie");
-            console.error(error)
-        } finally {
-            setIsSaveLoading(false);
-        }
-    }
-
-    async function handlePublishCategory(publish: boolean) {
-        await handleSaveCategory(publish);
-        updateCategory({isPublished: publish})
-    }
-
-    async function handleDeleteCategory() {
-        try {
-            setIsSaveLoading(true);
-            await deleteCategory(category.id);
-            router.push('/dashboard');
-        } catch (error) {
-            alert("Erreur lors de la suppression de la catégorie");
-            console.error(error);
-            setIsSaveLoading(false);
-        }
-    }
-
-    async function handleSaveGuessObjectCandidate(): Promise<void> {
-        try {
-
-            if (!guessObjectCandidate) {
-                alert("Objet non valide");
-                return;
-            }
-
-            if (!guessObjectCandidate.world_location_id) {
-                alert("Localisation non valide, veuillez resélectionner");
-                return;
-            }
-
-            // If id, then update, else post
-            let id: string;
-            if (guessObjectCandidate.id) {
-                id = await patchGuessObject(guessObjectCandidate.id, guessObjectCandidate);
-            } else {
-                id = await saveGuessObject({
-                    world_location_id: guessObjectCandidate.world_location_id.toString(),
-                    ...guessObjectCandidate
-                });
-            }
-
-            if (!id) throw new Error('Error saving or updating object');
-
-            await addOrUpdateGuessObjectToCategory(id);
-        } catch (error) {
-            console.log(error);
-            alert("Erreur lors de l'enregistrement de l'objet");
-        }
-    }
-
     return (
         <div className="flex-1 w-full flex flex-row gap-12">
             <div className="flex-1 flex flex-col gap-8 w-full">
@@ -199,7 +213,7 @@ export function CategoryBuilder({
                             <Button size='sm' variant="outline" onClick={() => handleSaveCategory()}>
                                 {isSaveLoading
                                     ? <Loader />
-                                    :  <p>Enregistrer</p>
+                                    : <p>Enregistrer</p>
                                 }
                             </Button>
                             <PublishCategoryPopup isPublished={category.isPublished} handlePublishCategory={handlePublishCategory} />
@@ -241,6 +255,15 @@ export function CategoryBuilder({
                             </div>
                         </div>
                     </div>
+                    <div className="flex flex-col">
+                        <label>Visibilité</label>
+                        <p className={`
+                            w-fit p-2 mt-3 text-xs rounded-md border
+                            ${category.isPublished ? 'text-green-600 border-green-500' : 'text-orange-500 border-orange-500'}
+                            `}>
+                            {category.isPublished ? 'Publiée' : 'Non publiée'}
+                        </p>
+                    </div>
                     <div className="flex-1 min-h-0 flex flex-col h-full gap-2 ">
                         <div className="flex flex-row gap-2 items-center h-7">
                             <h2 className="flex flex-row gap-1 items-baseline">
@@ -261,12 +284,13 @@ export function CategoryBuilder({
                                 className="h-full font-bold p-auto">
                                 +
                             </Button>
+                            <ImportCSVPopup addOrUpdateGuessObjectToCategory={addOrUpdateGuessObjectToCategory}/>
                         </div>
 
                         <div className="relative flex-1 min-h-0 rounded-xl border border-gray-300 overflow-hidden">
                             {/* Contenu scrollable */}
                             <div className="h-full overflow-y-auto 
-                  [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                                            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                                 <div className="p-3">
                                     <GuessObjectsList
                                         guessObjects={filteredGuessObjects}
@@ -279,7 +303,7 @@ export function CategoryBuilder({
 
                             {/* Ombre dégradée fixe en bas */}
                             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 
-                  bg-gradient-to-t from-neutral-800 to-transparent" />
+                                            bg-gradient-to-t from-neutral-800 to-transparent" />
                         </div>
                     </div>
                 </div>

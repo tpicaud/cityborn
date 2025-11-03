@@ -26,9 +26,9 @@ export function CategoriesList({
                         <div>
                             <div className="italic font-extralight text-xs">
                                 {category.isPublished ? (
-                                    <p className="text-green-600">Publié</p>
+                                    <p className="text-green-600">Publiée</p>
                                 ) : (
-                                    <p className="text-orange-500">Non publié</p>
+                                    <p className="text-orange-500">Non publiée</p>
                                 )}
                             </div>
                             <h3 className="text-left text-lg font-bold">{category.name}</h3>
