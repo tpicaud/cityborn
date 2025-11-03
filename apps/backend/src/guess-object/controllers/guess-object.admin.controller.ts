@@ -1,22 +1,21 @@
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { GuessObjectService } from './guess-object.service';
-import { GuessObjectsResponseDto } from './dto/guess-object.response.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from './dto/create-guess-object.dto';
-import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
+import { GuessObjectService } from '../guess-object.service';
+import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
+import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from '../dto/create-guess-object.dto';
+import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from '../dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
-import { GuessObjectDto } from './dto/guess-object.dto';
+import { GuessObjectDto } from '../dto/guess-object.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 
-@Controller('guess-objects')
-export class GuessObjectController {
-    private readonly logger = new Logger(GuessObjectController.name);
+@UseGuards(AdminGuard)
+@Controller('admin/guess-objects')
+export class AdminGuessObjectController {
+    private readonly logger = new Logger(AdminGuessObjectController.name);
 
     constructor(
         private readonly guessObjectsService: GuessObjectService
     ) { }
 
-    @UseGuards(AdminGuard)
     @Get('search')
     async search(
         @Query('q') q?: string,
@@ -34,7 +33,6 @@ export class GuessObjectController {
         }
     }
 
-    @UseGuards(AuthGuard)
     @Get()
     async getGuessObjectsFromIds(
         @Query('guessObjectsIds') guessObjectsIds: string | string[],
@@ -66,12 +64,6 @@ export class GuessObjectController {
         return await this.guessObjectsService.findById(id, includes);
     }
 
-
-    ////////////////
-    // Admin only //
-    ////////////////
-
-    @UseGuards(AdminGuard)
     @Patch(':id')
     async patchGuessObject(
         @Param('id') id: string,
@@ -82,7 +74,6 @@ export class GuessObjectController {
         };
     }
 
-    @UseGuards(AdminGuard)
     @Post()
     async createGuessObject(@Body() createGuessObjectDto: CreateGuessObjectDto): Promise<CreateGuessObjectResponseDto> {
         return {
@@ -90,7 +81,6 @@ export class GuessObjectController {
         }
     }
 
-    @UseGuards(AdminGuard)
     @Delete(':id')
     async deleteGuessObjects(@Param('id') id: string): Promise<void> {
         await this.guessObjectsService.delete(id);

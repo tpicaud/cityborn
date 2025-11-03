@@ -8,7 +8,7 @@ export async function getGuessObject(id: string, includes?: string[]) {
         ? `?include=${includes.join(',')}`
         : '';
 
-    const response = await apiFetch(`${process.env.BACKEND_URL}/guess-objects/${id}${query}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/guess-objects/${id}${query}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export async function getGuessObject(id: string, includes?: string[]) {
 
 export async function saveCategory(id: string, updatedCategory: UpdateCategory) {
 
-    const response = await apiFetch(`${process.env.BACKEND_URL}/category/${id}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/category/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export async function saveCategory(id: string, updatedCategory: UpdateCategory) 
 
 export async function deleteCategory(id: string) {
 
-    const response = await apiFetch(`${process.env.BACKEND_URL}/category/${id}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/category/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export async function deleteCategory(id: string) {
 }
 
 export async function saveGuessObject(createGuessObject: CreateGuessObject): Promise<string> {
-    const response = await apiFetch(`${process.env.BACKEND_URL}/guess-objects`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/guess-objects`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export async function saveGuessObject(createGuessObject: CreateGuessObject): Pro
 }
 
 export async function patchGuessObject(id: string, updatedFields: Partial<GuessObject>): Promise<string> {
-    const response = await apiFetch(`${process.env.BACKEND_URL}/guess-objects/${id}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/guess-objects/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ export async function patchGuessObject(id: string, updatedFields: Partial<GuessO
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete guess object');
+        throw new Error(data.message || 'Failed to patch guess object');
     }
 
     return data.id

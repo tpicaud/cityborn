@@ -4,7 +4,8 @@ import { ErrorCode } from '@cityborn/errors';
 import { WorldLocationDto, WorldLocationSearchResponseDto } from './dto/world-location.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 
-@Controller('world-location')
+@UseGuards(AdminGuard)
+@Controller('admin/world-location')
 export class WorldLocationController {
 
     constructor(
@@ -14,8 +15,7 @@ export class WorldLocationController {
     ////////////////
     // Admin only //
     ////////////////
-    
-    @UseGuards(AdminGuard)
+
     @Get('search')
     async search(
         @Query('q') q?: string,
