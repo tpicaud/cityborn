@@ -215,8 +215,10 @@ export class GuessObjectService {
     }
 
     async delete(id: string): Promise<void> {
-        const guess_object = await this.prisma.guessObject.delete({
+
+        const guess_object = await this.prisma.guessObject.findUnique({
             where: { id },
+            include: { categories: true }, // inclut les catégories associées
         });
 
         if (!guess_object) {
@@ -225,6 +227,17 @@ export class GuessObjectService {
                 message: `Guess object not found`,
             });
         }
+
+        if (guess_object.categories.length > 0) {
+            throw new BadRequestException({
+                code: ErrorCode.BAD_REQUEST,
+                message: `Cannot delete guess object because it belongs to one or more categories`,
+            });
+        }
+
+        await this.prisma.guessObject.delete({
+            where: { id },
+        });
 
         const count = await this.prisma.guessObject.count({
             where: { world_location_id: guess_object.world_location_id }
