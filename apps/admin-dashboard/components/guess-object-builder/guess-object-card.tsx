@@ -5,7 +5,6 @@ import CardMedia from "@mui/material/CardMedia";
 import { useEffect } from "react";
 
 export default function GuessObjectCard({ guessObject }: Readonly<{ guessObject: GuessObjectCandidate | null }>) {
-    useEffect(() => console.log(guessObject), [guessObject]);
 
     if (!guessObject) return;
 

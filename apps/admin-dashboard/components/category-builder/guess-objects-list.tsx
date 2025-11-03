@@ -27,7 +27,7 @@ export function GuessObjectsList({
                                 onClick={() => handleSelectGuessObject(obj)}
                                 className={`rounded-xl border-2 p-3 bg-neutral-700 transition
                                           hover:border-gray-100 hover:cursor-pointer
-                                            ${selectedGuessObject === obj ? 'border-gray-100' : 'border-transparent'}`}
+                                            ${selectedGuessObject?.id === obj.id ? 'border-gray-100' : 'border-transparent'}`}
                             >
                                 <div className="flex flex-row items-center justify-between">
                                     <div className="flex flex-col gap-1">

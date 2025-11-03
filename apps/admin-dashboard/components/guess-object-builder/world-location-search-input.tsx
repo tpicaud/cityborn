@@ -39,7 +39,6 @@ export function WorldLocationSearchInput({
         const timeoutId = setTimeout(async () => {
             try {
                 const candidates = await searchWorldLocationByName(searchValue);
-                console.log(candidates)
                 setMatches(candidates);
             } catch (error) {
                 console.error("Search error:", error);

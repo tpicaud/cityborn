@@ -35,6 +35,7 @@ const WorldLocationDisplay: React.FC<{ world_location: WorldLocation | undefined
     const map = useMap();
 
     useEffect(() => {
+
         if (!map) return;
         map.data.forEach((feature: any) => map.data.remove(feature));
 
@@ -57,10 +58,12 @@ const WorldLocationDisplay: React.FC<{ world_location: WorldLocation | undefined
             fillOpacity: 0.2,
         })
 
+        console.log(world_location)
+
         // Centrage sur le centroid ou sur les bounds
         const point = world_location.centroid;
         if (world_location.type === 'point' && world_location.centroid) {
-            map.panTo({ lat: point![1], lng: point![0] });
+            map.panTo({ lat: point![0], lng: point![1] });
             map.setZoom(12);
         } else if (world_location.type === 'area') {
             const bounds = new google.maps.LatLngBounds();
@@ -77,8 +80,8 @@ const WorldLocationDisplay: React.FC<{ world_location: WorldLocation | undefined
     if (!map || !world_location) return;
 
     const point: [number, number] | undefined = world_location.centroid;
-    return point ? (
-        <AdvancedMarker position={{ lat: point[1], lng: point[0] }} />
+    return (point && world_location.type !== 'point') ? (
+        <AdvancedMarker position={{ lat: point[0], lng: point[1] }} />
     ) : null;
 }
 
