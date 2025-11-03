@@ -35,7 +35,12 @@ export class GuessObjectCandidateDto implements GuessObjectCandidate {
 
 }
 
-export class GuessObjectsSearchResponseDto {
+export class GuessObjectCandidateResponseDto {
     @Type(() => GuessObjectCandidateDto)
-    candidates: GuessObjectCandidateDto[];
+    guessObjectCandidate: GuessObjectCandidateDto
+}
+
+export class GuessObjectCandidatesResponseDto {
+    @Type(() => GuessObjectCandidateDto)
+    guessObjectCandidates: GuessObjectCandidateDto
 }

@@ -2,7 +2,6 @@ import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patc
 import { GuessObjectService } from '../guess-object.service';
 import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
 import { CreateGuessObjectDto, CreateGuessObjectResponseDto } from '../dto/create-guess-object.dto';
-import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from '../dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
 import { GuessObjectDto } from '../dto/guess-object.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
@@ -15,23 +14,6 @@ export class AdminGuessObjectController {
     constructor(
         private readonly guessObjectsService: GuessObjectService
     ) { }
-
-    @Get('search')
-    async search(
-        @Query('q') q?: string,
-        @Query('id') id?: string,
-    ): Promise<GuessObjectCandidateDto | GuessObjectsSearchResponseDto> {
-        if (id) {
-            return await this.guessObjectsService.findBySourceId(id);
-        } else if (q) {
-            return await this.guessObjectsService.searchByName(q);
-        } else {
-            throw new BadRequestException({
-                code: ErrorCode.BAD_REQUEST,
-                message: `Either 'q' or 'id' must be provided`,
-            });
-        }
-    }
 
     @Get()
     async getGuessObjectsFromIds(

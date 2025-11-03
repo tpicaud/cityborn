@@ -5,15 +5,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
 import { WikidataService } from 'src/wikidata/wikidata.service';
-import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from './dto/search-guess-object.response.dto';
 import { WorldLocationService } from 'src/world-location/world-location.service';
 import { GuessObjectDto } from './dto/guess-object.dto';
+import { GuessObjectCandidateDto } from './dto/search-guess-object.response.dto';
 
 @Injectable()
 export class GuessObjectService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly wikiDataService: WikidataService,
         private readonly worldLocationService: WorldLocationService
     ) { }
 
@@ -146,12 +145,8 @@ export class GuessObjectService {
         return updated_object.id;
     }
 
-    async searchByName(name: string): Promise<GuessObjectsSearchResponseDto> {
-        const wikidata_response = await this.wikiDataService.searchByName(name);
-        const guess_objects_candidates_from_wikidata = (GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response)).candidates;
-
-        // search in db
-        const guess_objects_from_db = await this.prisma.guessObject.findMany({
+    async searchByName(name: string): Promise<GuessObjectCandidateDto[]> {
+        const prisma_guess_objects = await this.prisma.guessObject.findMany({
             where: {
                 name: {
                     contains: name,
@@ -159,37 +154,10 @@ export class GuessObjectService {
                 },
             },
         });
-        const guess_objects_candidates_from_db = guess_objects_from_db.map(obj => GuessObjectMapper.toGuessObjectCandidateFromPrismaDto(obj));
-
-        // 🔄 Remplacer les candidats Wikidata par ceux de la DB quand l’external_id correspond
-        const dbByExternalId = new Map(
-            guess_objects_candidates_from_db.map(obj => [obj.source?.external_id, obj]),
-        );
-
-        const merged_candidates = guess_objects_candidates_from_wikidata.map(wikiCandidate => {
-            const dbObj = dbByExternalId.get(wikiCandidate.source?.external_id);
-            if (dbObj) {
-                // On renvoie la version DB mappée au bon format
-                return dbObj;
-            }
-            return wikiCandidate;
-        });
-
-        return {
-            candidates: merged_candidates,
-        };
+        return prisma_guess_objects.map(obj => GuessObjectMapper.toGuessObjectCandidateFromPrismaDto(obj));
     }
 
-    async findBySourceId(external_id: string): Promise<GuessObjectDto | GuessObjectCandidateDto> {
-        const guessObjectInDB = await this.findBySourceIdInDB(external_id);
-        if (guessObjectInDB) {
-            return guessObjectInDB;
-        } else {
-            return await this.findBySourceIdInProvider(external_id);
-        }
-    }
-
-    async findBySourceIdInDB(external_id: string): Promise<GuessObjectDto | null> {
+    async findByExternalId(external_id: string): Promise<GuessObjectDto | null> {
         const guessObject = await this.prisma.guessObject.findFirst({
             where: {
                 source: {
@@ -206,22 +174,9 @@ export class GuessObjectService {
         return GuessObjectMapper.toGuessObjectDto(guessObject);
     }
 
-    async findBySourceIdInProvider(external_id: string): Promise<GuessObjectCandidateDto> {
-        const wikidata_response = await this.wikiDataService.findById(external_id);
-        const guessObjectCandidate = GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
-
-        if (guessObjectCandidate.world_location_id) {
-            const world_location = await this.worldLocationService.findByIdExternal(guessObjectCandidate.world_location_id, guessObjectCandidate.world_location?.osm_type!);
-            if (world_location) guessObjectCandidate.world_location = world_location;
-        }
-
-        return guessObjectCandidate;
-    }
-
     async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
-
         // Récupérer la location dans la db
-        let world_location = await this.worldLocationService.findByIdInDB(createGuessObjectDto.world_location_id);
+        let world_location = await this.worldLocationService.get(createGuessObjectDto.world_location_id);
         if (!world_location) {
             if (!createGuessObjectDto.world_location) {
                 throw new BadRequestException({
@@ -285,7 +240,7 @@ export class GuessObjectService {
         const { world_location_id, world_location } = updatedFields;
 
         if (world_location_id) {
-            const exists = await this.worldLocationService.findByIdInDB(world_location_id);
+            const exists = await this.worldLocationService.get(world_location_id);
             if (exists) return world_location_id;
 
             if (!world_location) {

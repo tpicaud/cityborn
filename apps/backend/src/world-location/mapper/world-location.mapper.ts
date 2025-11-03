@@ -52,10 +52,4 @@ export class WorldLocationMapper {
             }
         }
     }
-
-    static toWorldLocationSearchResponseDto(response: NominatimSearchResponse): WorldLocationSearchResponseDto {
-        return {
-            candidates: response.results.map(item => this.toWorldLocationDtoFromNominatimItem(item))
-        }
-    }
 }
