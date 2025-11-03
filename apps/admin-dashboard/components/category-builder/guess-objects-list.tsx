@@ -5,12 +5,12 @@ export function GuessObjectsList({
     guessObjects,
     selectedGuessObject,
     handleSelectGuessObject,
-    handleDeleteGuessObject
+    handleRemoveFromCategory
 }: {
     guessObjects: GuessObject[] | undefined
     selectedGuessObject: GuessObject | undefined
     handleSelectGuessObject: (guessObject: GuessObject) => void,
-    handleDeleteGuessObject: (guessObject: GuessObject) => void
+    handleRemoveFromCategory: (guessObject: GuessObject) => void
 }) {
     return (
         <div className="h-full w-full z-0">
@@ -52,7 +52,7 @@ export function GuessObjectsList({
                                         className="group-hover:!border-transparent group-hover:!bg-neutral-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleDeleteGuessObject(obj)
+                                            handleRemoveFromCategory(obj)
                                         }}>X</Button>
                                 </div>
                             </div>

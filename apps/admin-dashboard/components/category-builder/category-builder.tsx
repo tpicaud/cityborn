@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import { Button } from "../ui/Button";
 import { deleteCategory, getGuessObject, patchGuessObject, saveCategory, saveGuessObject } from "./action";
 import { GuessObjectsList } from "./guess-objects-list";
-import { deleteGuessObject, searchGuessObjectByName } from "../guess-object-builder/action";
 import Loader from "../ui/Loader";
 import { DeleteCategoryPopup } from "./delete-category-popup";
 import { useRouter } from "next/navigation";
@@ -95,31 +94,6 @@ export function CategoryBuilder({
         }
     }
 
-    async function handleDeleteGuessObject(guessObject: GuessObject) {
-        try {
-            await deleteGuessObject(guessObject.id);
-
-            setCategory(prev => {
-                if (!prev.guessObjects) return prev;
-
-                const index = prev.guessObjects.findIndex(obj => obj.id === guessObject.id);
-                let updatedGuessObjects;
-
-                if (index === -1) {
-                    return prev;
-                } else {
-                    updatedGuessObjects = prev.guessObjects.filter(obj => obj.id !== guessObject.id);
-                }
-
-                return { ...prev, guessObjects: updatedGuessObjects };
-            });
-            setGuessObjectCandidate(undefined);
-        } catch (error) {
-            alert("Erreur lors de la suppression de l'objet");
-            console.error(error);
-        }
-    }
-
 
     ///////////////////////
     // Category function //
@@ -200,6 +174,30 @@ export function CategoryBuilder({
         } catch (error) {
             alert("Erreur lors de l'ajout de l'objet")
             console.error(error)
+        }
+    }
+
+    async function handleRemoveFromCategory(guessObject: GuessObject) {
+        try {
+            if (!category.guessObjects) return;
+            const index = category.guessObjects.findIndex(obj => obj.id === guessObject.id);
+            let updatedGuessObjects: GuessObject[];
+
+            if (index === -1) return;
+            updatedGuessObjects = category.guessObjects.filter(obj => obj.id !== guessObject.id);
+
+            const updated_category: UpdateCategory = {
+                ...category,
+                guessObjects: undefined,
+                guessObjectsIds: undefined,
+                disconnectIds: [guessObject.id]
+            }
+            setCategory({...category, guessObjects: updatedGuessObjects});
+            await saveCategory(category.id, updated_category);
+            setGuessObjectCandidate(undefined);
+        } catch (error) {
+            alert("Erreur lors de la suppression de l'objet");
+            console.error(error);
         }
     }
 
@@ -284,7 +282,7 @@ export function CategoryBuilder({
                                 className="h-full font-bold p-auto">
                                 +
                             </Button>
-                            <ImportCSVPopup addOrUpdateGuessObjectToCategory={addOrUpdateGuessObjectToCategory}/>
+                            <ImportCSVPopup addOrUpdateGuessObjectToCategory={addOrUpdateGuessObjectToCategory} />
                         </div>
 
                         <div className="relative flex-1 min-h-0 rounded-xl border border-gray-300 overflow-hidden">
@@ -296,7 +294,7 @@ export function CategoryBuilder({
                                         guessObjects={filteredGuessObjects}
                                         selectedGuessObject={guessObjectCandidate as GuessObject}
                                         handleSelectGuessObject={handleSelectGuessObject}
-                                        handleDeleteGuessObject={handleDeleteGuessObject}
+                                        handleRemoveFromCategory={handleRemoveFromCategory}
                                     />
                                 </div>
                             </div>
