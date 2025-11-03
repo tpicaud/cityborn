@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { Categories, GameConfig, GuessObject } from '@cityborn/types';
+import { Categories, GameConfig } from '@cityborn/types';
 import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
-import { WikidataService } from 'src/wikidata/wikidata.service';
 import { WorldLocationService } from 'src/world-location/world-location.service';
 import { GuessObjectDto } from './dto/guess-object.dto';
 import { GuessObjectCandidateDto } from './dto/search-guess-object.response.dto';
