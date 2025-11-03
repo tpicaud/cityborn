@@ -2,13 +2,12 @@
 
 import { Category, GuessObject, GuessObjectCandidate, UpdateCategory } from "@cityborn/types";
 import { GuessObjectBuilder } from "../guess-object-builder/guess-object-builder";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../ui/Button";
 import { deleteCategory, getGuessObject, patchGuessObject, saveCategory, saveGuessObject } from "./action";
 import { GuessObjectsList } from "./guess-objects-list";
 import { deleteGuessObject } from "../guess-object-builder/action";
 import Loader from "../ui/Loader";
-import { ArrowDownToLine } from "lucide-react";
 import { DeleteCategoryPopup } from "./delete-category-popup";
 import { useRouter } from "next/navigation";
 import { PublishCategoryPopup } from "./publish-category-popup";
@@ -42,7 +41,7 @@ export function CategoryBuilder({
         );
     };
 
-    async function addOrUpdateGuessObject(id: string) {
+    async function addOrUpdateGuessObjectToCategory(id: string) {
         try {
             const object = await getGuessObject(id, ['world_location_preview']);
             if (!object) return;
@@ -73,6 +72,8 @@ export function CategoryBuilder({
 
                 return { ...prev, guessObjects: updatedGuessObjects };
             });
+
+            setGuessObjectCandidate(object);
         } catch (error) {
             alert("Erreur lors de l'ajout de l'objet")
             console.error(error)
@@ -181,7 +182,7 @@ export function CategoryBuilder({
 
             if (!id) throw new Error('Error saving or updating object');
 
-            await addOrUpdateGuessObject(id);
+            await addOrUpdateGuessObjectToCategory(id);
         } catch (error) {
             console.log(error);
             alert("Erreur lors de l'enregistrement de l'objet");
