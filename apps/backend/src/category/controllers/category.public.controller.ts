@@ -5,7 +5,7 @@ import { CategoriesResponseDto } from '../dto/categories.response.dto';
 import { CategoryDto } from '../dto/category.dto';
 
 @Controller('category')
-export class CategoryController {
+export class PublicCategoryController {
     constructor(private readonly publicCategoryService: PublicCategoryService) { }
 
     @Get()

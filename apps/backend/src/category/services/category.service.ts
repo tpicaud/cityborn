@@ -3,7 +3,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
-import { CategoryMapper } from '../mappers/category.mapper';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import pLimit from 'p-limit';
 

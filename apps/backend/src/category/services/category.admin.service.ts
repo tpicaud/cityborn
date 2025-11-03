@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CategoryMapper } from "../mappers/category.mapper";
 import { CategoryService } from "./category.service";
 import { ErrorCode } from "@cityborn/errors";
@@ -7,6 +7,7 @@ import { CategoriesResponseDto } from "../dto/categories.response.dto";
 import { UpdateCategoryDto } from "../dto/update-category.dto";
 import { CreateCategoryDto } from "../dto/create-category.dto";
 
+@Injectable()
 export class AdminCategoryService {
     constructor(private readonly categoryService: CategoryService) { }
 
@@ -26,7 +27,7 @@ export class AdminCategoryService {
     }): Promise<CategoryDto> {
         const category = await this.categoryService.findOne(id, { includes });
 
-        if (!category || !category.isPublished) {
+        if (!category) {
             throw new NotFoundException({
                 code: ErrorCode.CATEGORY_NOT_FOUND,
                 message: `Category with id ${id} not found`

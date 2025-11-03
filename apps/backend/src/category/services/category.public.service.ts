@@ -1,10 +1,11 @@
-import { NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CategoryMapper } from "../mappers/category.mapper";
 import { CategoryService } from "./category.service";
 import { ErrorCode } from "@cityborn/errors";
 import { CategoryDto } from "../dto/category.dto";
 import { CategoriesResponseDto } from "../dto/categories.response.dto";
 
+@Injectable()
 export class PublicCategoryService {
     constructor(private readonly categoryService: CategoryService) { }
 
