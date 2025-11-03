@@ -4,7 +4,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 
 export async function searchGuessObjectByName(query: string): Promise<GuessObjectCandidate[]> {
-    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/guess-objects/search?q=${encodeURIComponent(query)}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/search/guess-object?q=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -17,12 +17,12 @@ export async function searchGuessObjectByName(query: string): Promise<GuessObjec
         throw new Error(data.message || 'Failed to search guess objects');
     }
 
-    return data.candidates as GuessObjectCandidate[] ?? [];
+    return data.results as GuessObjectCandidate[] ?? [];
 }
 
-export async function searchGuessObjectById(id: string): Promise<GuessObjectCandidate> {
+export async function searchGuessObjectByExternalId(external_id: string): Promise<GuessObjectCandidate> {
 
-    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/guess-objects/search?id=${id}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/search/guess-object?external_id=${external_id}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -35,11 +35,11 @@ export async function searchGuessObjectById(id: string): Promise<GuessObjectCand
         throw new Error(data.message || 'Failed to search guess objects');
     }
 
-    return data as GuessObjectCandidate ?? {};
+    return data.results as GuessObjectCandidate ?? {};
 }
 
 export async function searchWorldLocationByName(query: string): Promise<WorldLocation[]> {
-    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/world-location/search?q=${encodeURIComponent(query)}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/search/world-location?q=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -52,12 +52,12 @@ export async function searchWorldLocationByName(query: string): Promise<WorldLoc
         throw new Error(data.message || 'Failed to search world locations');
     }
 
-    return data.candidates as WorldLocation[] ?? [];
+    return data.results as WorldLocation[] ?? [];
 }
 
 export async function searchWorldLocationById(id: string, osm_type: string): Promise<WorldLocation> {
 
-    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/world-location/search?id=${id}&osm_type=${osm_type}`, {
+    const response = await apiFetch(`${process.env.BACKEND_URL}/admin/search/world-location?id=${id}&osm_type=${osm_type}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export async function searchWorldLocationById(id: string, osm_type: string): Pro
         throw new Error(data.message || 'Failed to search world location');
     }
 
-    return data as WorldLocation ?? {};
+    return data.results as WorldLocation ?? {};
 }
 
 export async function deleteGuessObject(id: string): Promise<void> {

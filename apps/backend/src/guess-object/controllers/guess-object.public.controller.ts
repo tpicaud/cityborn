@@ -2,10 +2,8 @@ import { BadRequestException, Controller, Get, Logger, Param, Query, UseGuards }
 import { GuessObjectService } from '../guess-object.service';
 import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { GuessObjectCandidateDto, GuessObjectsSearchResponseDto } from '../dto/search-guess-object.response.dto';
 import { ErrorCode } from '@cityborn/errors';
 import { GuessObjectDto } from '../dto/guess-object.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('guess-objects')
 export class PublicGuessObjectController {

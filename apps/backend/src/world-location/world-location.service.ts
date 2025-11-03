@@ -1,8 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NominatimService } from 'src/nominatim/nominatim.service';
-import { WorldLocationDto, WorldLocationSearchResponseDto } from './dto/world-location.dto';
+import { WorldLocationDto } from './dto/world-location.dto';
 import { WorldLocationMapper } from './mapper/world-location.mapper';
-import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
@@ -10,24 +9,10 @@ import { Prisma } from '@prisma/client';
 export class WorldLocationService {
 
     constructor(
-        private readonly nominatimService: NominatimService,
         private readonly prisma: PrismaService,
     ) { }
 
-    async searchByName(name: string): Promise<WorldLocationSearchResponseDto> {
-        const nominatim_response = await this.nominatimService.searchByName(name);
-        return WorldLocationMapper.toWorldLocationSearchResponseDto(nominatim_response);
-    }
-
-    async findById(id: string, osm_type: string): Promise<WorldLocationDto> {
-        const db_world_location = await this.findByIdInDB(id);
-        if (db_world_location) return db_world_location;
-
-        // Else, search external provider
-        return await this.findByIdExternal(id, osm_type);
-    }
-
-    async findByIdInDB(id: string): Promise<WorldLocationDto | null> {
+    async get(id: string): Promise<WorldLocationDto | null> {
         const prisma_world_location = await this.prisma.worldLocation.findUnique({
             where: {
                 id: id,
@@ -36,19 +21,6 @@ export class WorldLocationService {
 
         if (!prisma_world_location) return null;
         return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
-    }
-
-    async findByIdExternal(id: string, osm_type: string): Promise<WorldLocationDto> {
-        const nominatim_response = await this.nominatimService.findByOsmId(id, osm_type as any);
-
-        if (!nominatim_response) {
-            throw new NotFoundException({
-                code: ErrorCode.WORLD_LOCATION_NOT_FOUND,
-                message: 'No location found for the provided ID',
-            });
-        };
-
-        return WorldLocationMapper.toWorldLocationDtoFromNominatimItem(nominatim_response);
     }
 
     async create(world_location_dto: WorldLocationDto): Promise<WorldLocationDto> {

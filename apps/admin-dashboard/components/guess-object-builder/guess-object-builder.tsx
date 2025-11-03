@@ -3,7 +3,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { GuessObjectCandidate, WorldLocation } from "@cityborn/types";
 import { GuessObjectSearchInput } from "./guess-object-search-input";
-import { searchGuessObjectById, searchWorldLocationById } from "./action";
+import { searchGuessObjectByExternalId, searchWorldLocationById } from "./action";
 import { WorldLocationSearchInput } from "./world-location-search-input";
 import { WorldLocationViewer } from "./world-location-viewer";
 import GuessObjectCard from "./guess-object-card";
@@ -46,7 +46,7 @@ export function GuessObjectBuilder({
             setIsLoadingFullObject(true);
             if (!guessObjectCandidatePreview?.source?.external_id) return;
 
-            const fullCandidate = await searchGuessObjectById(guessObjectCandidatePreview.source?.external_id);
+            const fullCandidate = await searchGuessObjectByExternalId(guessObjectCandidatePreview.source?.external_id);
 
             if (fullCandidate) {
                 setGuessObjectCandidate({
