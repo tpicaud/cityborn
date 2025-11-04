@@ -145,7 +145,9 @@ export function CategoryBuilder({
 
             // Update remotely
             const updatedCategory: UpdateCategory = {
-                ...category,
+                id: category.id,
+                name: category.name,
+                isPublished: category.isPublished,
                 connectIds: [id]
             }
             await saveCategory(category.id, updatedCategory);

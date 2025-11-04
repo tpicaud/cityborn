@@ -25,7 +25,7 @@ export function ImportCSVPopup({
   const dialog = Ariakit.useDialogStore();
   const [file, setFile] = useState<File>();
   const [objects, setObjects] = useState<Objects[]>();
-  const [state, setState] = useState<'start' | 'loading' | 'recap'>();
+  const [state, setState] = useState<'start' | 'loading' | 'recap'>('start');
   const cancelImportRef = useRef(false);
   const [progress, setProgress] = useState(0);
   const [importRecap, setImportRecap] = useState<ImportRecap>({
@@ -98,6 +98,8 @@ export function ImportCSVPopup({
         const full_obj = await searchGuessObjectByExternalId(candidate_obj.source?.external_id!);
         if (obj.description) full_obj.short_description = obj.description;
 
+        if (!full_obj.world_location_id) throw new Error('No world location found')
+
         const id = await saveGuessObject({
           world_location_id: full_obj.world_location_id?.toString()!,
           ...full_obj
@@ -115,7 +117,7 @@ export function ImportCSVPopup({
         });
 
       } catch (error) {
-        console.log(`Error importing ${obj.name}: ${error}`);
+        console.error(`Error importing ${obj.name}: ${error}`);
 
         setImportRecap(prev => {
           const newRecap = {
@@ -137,6 +139,12 @@ export function ImportCSVPopup({
 
   function handleStopImport() {
     cancelImportRef.current = true;
+
+    const interval = setInterval(() => {
+      if (state !== 'loading') {
+        clearInterval(interval);
+      }
+    }, 100);
   }
 
   return (
