@@ -98,7 +98,7 @@ model WorldLocation {
 
 model GuessObject {
   id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name              String
+  name              String  @unique
   image             String?
   description       String?
   short_description String?
@@ -128,8 +128,8 @@ enum ScoreType {
 }
 
 model EndGameSentence {
-  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  message String
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String
   score_type ScoreType
 }
 
