@@ -27,7 +27,6 @@ export class CoordDto implements Coord {
 }
 
 export class SessionDto implements Session {
-    @IsUUID()
     @IsString()
     id: string;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionMode, PlayerResults } from '@cityborn/types';
+import { SessionMode, PlayerResults, ScoreType } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -62,24 +62,30 @@ const ResultsComponent = ({
 
     async function generateEndSentence(playerResults: PlayerResults): Promise<{ message: string, sub_message_1: string, sub_message_2: string }> {
         const totalPoints = calculateTotalPoints(playerResults);
-        const getScoreType = (points: number) => {
-            if (points < 3000) return 'Mauvais';
-            if (points < 5000) return 'Moyen';
-            return 'Bon';
+        const getScoreType = (points: number): ScoreType => {
+            const avg_score = points / game.state.guessObjectsIds.length
+            if (avg_score < 500) return ScoreType.BAD;
+            if (avg_score < 833) return ScoreType.AVERAGE;
+            return ScoreType.GOOD;
         };
 
         const scoreType = getScoreType(totalPoints);
-        const message = await apiClient.getEndSentence(scoreType) ?? ''
+        let message = '';
+        try {
+            message = await apiClient.getEndSentence(scoreType) ?? ''
+        } catch (error) {
+            console.error(error);
+        }
 
         let sub_message_1 = '';
         let sub_message_2 = '';
 
-        if (scoreType === 'Mauvais') {
+        if (scoreType === ScoreType.BAD) {
             sub_message_1 = 'Bon... ';
             sub_message_2 = 'Essaie encore !';
-        } else if (scoreType === 'Bon') {
+        } else if (scoreType === ScoreType.GOOD) {
             sub_message_1 = 'Félicitation ! ';
-        } else if (scoreType === 'Moyen') {
+        } else if (scoreType === ScoreType.AVERAGE) {
             sub_message_2 = 'Essaie encore !';
         }
 
