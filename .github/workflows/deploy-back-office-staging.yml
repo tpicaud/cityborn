@@ -1,14 +1,13 @@
-name: Deploy Staging Frontend to Vercel
+name: Deploy Staging Back Office to Vercel
 
 on:
   push:
     branches:
       - staging
     paths:
-      - 'apps/frontend/**'
+      - 'apps/back-office/**'
       - 'packages/types/**'
       - 'package/errors/**'
-
   workflow_dispatch:
 
 jobs:
