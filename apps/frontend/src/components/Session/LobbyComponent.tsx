@@ -81,8 +81,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
             </div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center bg-transparent h-full pointer-events-none">
-                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[90%] min-w-80 max-h-[80%] pointer-events-auto">
+            <div className="relative z-10 flex flex-col items-center justify-center 
+                            bg-transparent h-full w-full pointer-events-none">
+                <Box className="flex flex-col items-center gap-2 p-6 
+                              bg-slate-100 shadow-xl rounded-2xl 
+                                max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] max-h-[80%] pointer-events-auto">
                     {/* Titre du lobby */}
                     <Typography variant="h5">
                         {session.mode.toUpperCase()}
@@ -118,7 +121,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         </div>
                     )}
 
-                    <div className="flex flex-row justify-start items-stretch gap-8 overflow-auto">
+                    <div className="flex flex-row justify-start items-stretch gap-8 max-w-full">
                         {/* Liste des joueurs */}
                         {session.mode !== SessionMode.SOLO && (
                             <List sx={{
@@ -169,7 +172,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                             </List>
                         )}
 
-                        <div className='flex-1 flex flex-col gap-3' style={{ flex: '1 1 50%' }}>
+                        <div className='flex-1 flex flex-col gap-3 max-w-full'>
                             <FormControl sx={{ width: '100%', marginTop: 2 }}>
                                 <InputLabel id="categories-input">Categories</InputLabel>
                                 <Select
@@ -210,14 +213,29 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                                 .join(', ')}
                                         </Box>
                                     )}
+                                    MenuProps={{
+                                        anchorOrigin: {
+                                            vertical: "bottom",
+                                            horizontal: "left",
+                                        },
+                                        transformOrigin: {
+                                            vertical: "top",
+                                            horizontal: "left",
+                                        },
+                                        PaperProps: {
+                                            className: "max-h-72 overflow-y-auto rounded-lg shadow-lg border border-neutral-800",
+                                            // max-h-72 => ~18rem, overflow-y-auto => scroll, arrondis + ombre
+                                        },
+                                    }}
+                                    className="overflow-y-auto"
                                 >
                                     {/* Bouton dynamique Select All / Unselect All */}
                                     <MenuItem value="toggle_all" className="ml-4 h-fit w-fit rounded-md border border-neutral-800">
                                         <ListItemText
                                             primary={
                                                 session.gameConfig.categories.length === categories.length
-                                                    ? "Tout sélectionner"
-                                                    : "Tout désélectionner"
+                                                    ? "Tout désélectionner"
+                                                    : "Tout sélectionner"
                                             }
                                         />
                                     </MenuItem>
