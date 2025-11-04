@@ -1,13 +1,15 @@
-import { Categories, GameConfig, SessionMode, Session, SessionStatus, Coord } from "@cityborn/types";
+import { GameConfig, SessionMode, Session, SessionStatus, Coord } from "@cityborn/types";
 import { Type } from "class-transformer";
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
 import { PlayerDto } from "src/player/dto/player.dto";
 import { GameDto } from "./game.dto";
+import { CategoryDto } from "src/category/dto/category.dto";
 
 export class GameConfigDto implements GameConfig {
     @IsArray()
-    @IsEnum(Categories, { each: true })
-    categories: Categories[];
+    @ValidateNested({ each: true })
+    @Type(() => CategoryDto)
+    categories: CategoryDto[];
 
     @IsNumber()
     timer: number;

@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Categories, createEvent, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus, User } from '@cityborn/types';
+import { createEvent, defaultGuess, Game, GameConfig, GameRecord, GameStatus, OnlinePlayer, Round, RoundStatus, Session, SessionMode, SessionStatus, User } from '@cityborn/types';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { LockService } from 'src/lock/lock.service';
@@ -50,7 +50,7 @@ export class SessionService {
             mode: mode,
             status: SessionStatus.IN_LOBBY,
             gameConfig: {
-                categories: [Categories.TOUTES],
+                categories: [],
                 timer: 20,
                 nbOfObjects: 6
             },

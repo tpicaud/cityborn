@@ -1,7 +1,7 @@
-import { Categories } from "../enums/Categories.js";
+import { Category } from "./Category.js";
 
 export interface GameConfig {
-    categories: Categories[];
+    categories: Category[];
     timer: number;
     nbOfObjects: number;
 }

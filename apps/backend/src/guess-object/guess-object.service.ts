@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { Categories, GameConfig } from '@cityborn/types';
+import { GameConfig } from '@cityborn/types';
 import { ErrorCode } from '@cityborn/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
@@ -85,35 +85,34 @@ export class GuessObjectService {
 
     async findByGameConfig(gameConfig: GameConfig): Promise<GuessObjectDto[]> {
         try {
-            // Construction du filtre Prisma
             const where: any = {};
 
             // Si des catégories sont spécifiées et qu’elles ne contiennent pas "TOUTES"
             if (
                 gameConfig.categories &&
-                gameConfig.categories.length > 0 &&
-                !gameConfig.categories.includes(Categories.TOUTES)
+                gameConfig.categories.length > 0
             ) {
-                where.category = { in: gameConfig.categories };
+                const categoryIds = gameConfig.categories.map(cat => cat.id);
+                where.categories = {
+                    some: {
+                        id: { in: categoryIds },
+                    },
+                };
             }
 
-            // Get random objects
+            // Récupération de tous les objets correspondants
             const allObjects = await this.prisma.guessObject.findMany({
                 where,
+                include: { world_location: true },
             });
+
+            // Mélange aléatoire et sélection
             const shuffled = allObjects.sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, gameConfig.nbOfObjects);
 
-            // Get relations for selected objects
-            const selectedRawGuessObjects = await this.prisma.guessObject.findMany({
-                where: { id: { in: selected.map(obj => obj.id) } },
-                include: {
-                    world_location: true,
-                },
-            });
+            // Conversion en DTO
+            return selected.map(obj => GuessObjectMapper.toGuessObjectDto(obj));
 
-            const guessObjects = selectedRawGuessObjects.map(obj => GuessObjectMapper.toGuessObjectDto(obj))
-            return guessObjects;
         } catch (error) {
             throw new InternalServerErrorException({
                 code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
@@ -121,6 +120,7 @@ export class GuessObjectService {
             });
         }
     }
+
 
     async update(id: string, updatedFields: Partial<GuessObjectDto>): Promise<string> {
 

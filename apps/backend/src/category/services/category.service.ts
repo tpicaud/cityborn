@@ -49,7 +49,6 @@ export class CategoryService {
         const categories = await this.prisma.category.findMany({
             include: this.buildInclude(includes),
         });
-
         return categories;
     }
 
