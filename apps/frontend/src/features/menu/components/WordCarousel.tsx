@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 const words = ["Roger Federer", "Tom Hanks", "Céline Dion", "Nelson Mandela", "Marie Curie"];
 
+
 export const WordCarousel = () => {
     const [index, setIndex] = useState(0);
 
