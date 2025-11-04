@@ -206,7 +206,7 @@ export class AuthService {
     }
 
     // Auxiliary
-    private async generateToken(type: 'access' | 'refresh', id: number, username: string, email: string, isVerified: boolean): Promise<string> {
+    private async generateToken(type: 'access' | 'refresh', id: string, username: string, email: string, isVerified: boolean): Promise<string> {
         const payload = {
             id,
             username,

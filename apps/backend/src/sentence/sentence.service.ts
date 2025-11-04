@@ -1,24 +1,32 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Sentence, SentenceDocument } from './sentence.schema';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ErrorCode } from '@cityborn/errors';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { SentenceDto } from './dto/sentence.dto';
+import { ScoreType } from '@cityborn/types';
+import { SentenceMapper } from './mapper/sentence.mapper';
 
 @Injectable()
 export class SentenceService {
-    constructor(@InjectModel(Sentence.name, 'sentences') private sentenceModel: Model<SentenceDocument>) {}
+    constructor(private readonly prisma: PrismaService) { }
 
-    async findRandomOne(score_type: string): Promise<Sentence> {
+    async findRandomOne(score_type: ScoreType): Promise<SentenceDto> {
 
-        const result = await this.sentenceModel.aggregate([
-            { $match: { score_type } },
-            { $sample: { size: 1 } }
-        ]);
+        const sentences = await this.prisma.endGameSentence.findMany({
+            where: {
+                score_type
+            }
+        });
 
-        if (!result || result.length === 0) {
-            throw new NotFoundException({ code: ErrorCode.GAME_END_SENTENCE_NOT_FOUND, message: `No sentence found for score type: ${score_type}` });
+        if (sentences.length === 0) {
+            throw new NotFoundException({
+                code: ErrorCode.GAME_END_SENTENCE_NOT_FOUND,
+                message: 'Sentence not found'
+            });
         }
 
-        return result[0];
+        const randomIndex = Math.floor(Math.random() * sentences.length);
+        const randomSentence = sentences[randomIndex];
+
+        return SentenceMapper.toSentenceDto(randomSentence);
     }
 }

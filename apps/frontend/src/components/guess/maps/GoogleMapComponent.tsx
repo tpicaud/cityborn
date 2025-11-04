@@ -37,6 +37,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     defaultCenter: center || { lat: 22.54992, lng: 0 },
     defaultZoom: zoom || 3,
     zoomControl: false,
+    clickableIcons: false,    // désactive les icônes cliquables (restaurants, etc.)
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,
@@ -89,6 +90,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     <APIProvider apiKey={API_KEY} libraries={['geometry']}>
       <Map
         id="map"
+        key={guessObject.id}
         {...mapOptions}
         onClick={(event) => {
           if (currentRound.status === RoundStatus.GUESSING && currentRound.playersGuesses?.[localPlayerID] === undefined) {
@@ -157,13 +159,19 @@ const LocalPlayerGuess: React.FC<{ currentRound: Round, guessObject: GuessObject
       {(guess.distance !== -1) ? (
         <>
           <AdvancedMarker position={guess.coordinates} />
-          <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
+          {currentRound.status === RoundStatus.SHOWING_RESULTS && (
+            <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
+          )}
           {!guess.win && (
             <LineBetween guess={guess.coordinates} answer={getCenterOfGuessObject(guessObject)} isLocalPlayer={true} />
           )}
         </>
       ) : (
-        <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
+        (
+          currentRound.status === RoundStatus.SHOWING_RESULTS && (
+            <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
+          )
+        )
       )}
     </>
   );
@@ -239,86 +247,85 @@ const ResetMap: React.FC<{ guessObjectId: string, center: Coord, zoom: number }>
 
   useEffect(() => {
     if (map) {
-      map.setCenter(center);
-      map.setZoom(zoom);
-
-      // Remove any existing lines
       map.data.forEach((feature) => {
         map.data.remove(feature);
       });
+
+      map.setCenter(center);
+      map.setZoom(zoom);
     }
   }, [guessObjectId]);
 
-  return null; // No visual render, just resetting the map
+  return null;
 }
 
 const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) => {
-  const map = useMap()
+  const map = useMap();
 
-  if (!isGeoJSON(guessObject)) {
+  useEffect(() => {
+    if (!map) return;
 
-    // Display the point
-    const point: Coord = guessObject.answer.coordinates.value
-    return (
-      <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
-        <Image
-          src="/img/answer_marker.png"
-          alt="players Marker"
-          width={28}
-          height={28}
-          priority={false}
-        />
-      </AdvancedMarker>
-    )
-  } else {
-
-    // Display boundaries of the city
-    if (map) {
-      map.data.addGeoJson(guessObject.answer.coordinates.value.boundaries);
+    if (isGeoJSON(guessObject)) {
+      const geojson = convertToGeoJson(guessObject.world_location?.geometry!);
+      map.data.addGeoJson(geojson);
       map.data.setStyle({
         fillColor: '#FF0000',
         strokeColor: '#FF0000',
         strokeWeight: 1,
         fillOpacity: 0.2,
-      })
+      });
     }
 
-    // Display center of the city
-    const point: Coord = guessObject.answer.coordinates.value.cityCenter
-    return (
-      <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
-        <Image
-          src="/img/answer_marker.png"
-          alt="players Marker"
-          width={28}
-          height={28}
-          priority={false}
-        />
-      </AdvancedMarker>
-    )
-  }
-}
+    return () => {
+      map.data.forEach((feature) => map.data.remove(feature));
+    };
+  }, [map, guessObject]);
+
+  const point: Coord = {
+    lat: guessObject.world_location?.centroid![0]!,
+    lng: guessObject.world_location?.centroid![1]!,
+  };
+
+  return (
+    <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
+      <Image
+        src="/img/answer_marker.png"
+        alt="answer marker"
+        width={28}
+        height={28}
+      />
+    </AdvancedMarker>
+  );
+};
 
 const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
-  if (!isGeoJSON(guessObject)) {
-    return guessObject.answer.coordinates.value;
-  } else {
-    return guessObject.answer.coordinates.value.cityCenter
-  }
+  return {
+    lat: guessObject.world_location?.centroid![0]!,
+    lng: guessObject.world_location?.centroid![1]!,
+  };
 }
 
 const hasWin = (point: google.maps.LatLng, guessObject: GuessObject): boolean => {
   try {
-    const geoJson = guessObject.answer.coordinates.value.boundaries
+    const geoJson = guessObject.world_location?.geometry!
+    if (geoJson.type === 'Point') return false;
     const turfPoint = turf.point([point.lng(), point.lat()]);
-    return turf.booleanPointInPolygon(turfPoint, geoJson);
+    return turf.booleanPointInPolygon(turfPoint, geoJson as any);
   } catch {
     return false
   }
 }
 
 const isGeoJSON = (guessObject: GuessObject): boolean => {
-  return guessObject.answer.coordinates.type === 'GeoJSON'
+  return (guessObject.world_location?.geometry?.type! === 'MultiPolygon' || guessObject.world_location?.geometry?.type! === 'Polygon')
+}
+
+function convertToGeoJson(geometry: any) {
+  return {
+    type: "Feature",
+    geometry,
+    properties: {}
+  };
 }
 
 export default GoogleMapComponent;

@@ -1,48 +1,45 @@
-import { GuessObject } from "@cityborn/types";
+import { GuessObject, WorldLocation } from "@cityborn/types";
 import { Type } from "class-transformer";
-import {
-  IsString,
-  IsObject,
-  ValidateNested,
-} from "class-validator";
+import { IsUUID, IsString, IsOptional } from "class-validator";
+import { WorldLocationDto } from "src/world-location/dto/world-location.dto";
 
-class CoordinatesDto {
+export class GuessObjectSourceDto {
   @IsString()
-  type: string;
+  provider: string;
 
-  @IsObject()
-  value: any; // tu peux remplacer `any` par un type plus précis si tu le connais (ex: number[] pour des coordonnées geo)
-}
-
-class AnswerDto {
   @IsString()
-  place_name: string;
-
-  @ValidateNested()
-  @Type(() => CoordinatesDto)
-  coordinates: CoordinatesDto;
+  external_id: string;
 }
 
 export class GuessObjectDto implements GuessObject {
+
+  @IsUUID()
   @IsString()
   id: string;
 
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsString()
-  category: string;
+  image?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  short_description?: string;
+
+  @IsOptional()
+  @Type(() => GuessObjectSourceDto)
+  source?: GuessObjectSourceDto;
 
   @IsString()
-  description: string;
+  world_location_id: string;
 
-  @IsString()
-  short_description: string;
-
-  @IsString()
-  image: string;
-
-  @ValidateNested()
-  @Type(() => AnswerDto)
-  answer: AnswerDto;
+  @IsOptional()
+  @Type(() => WorldLocationDto)
+  world_location?: WorldLocationDto
 }

@@ -33,6 +33,12 @@ export const ERROR_MESSAGES = {
         [ErrorCode.GAME_NO_ACTIVE_ROUND]: "Aucun round actif dans la game",
         [ErrorCode.GAME_CREATION_FAILED]: "Erreur lors de la création de la partie",
 
+        // World location
+        [ErrorCode.WORLD_LOCATION_NOT_FOUND]: "Aucun lieu trouvé pour cet identifiant",
+
+        // Category
+        [ErrorCode.CATEGORY_NOT_FOUND]: "Aucune catégorie trouvée pour cet identifiant",
+
         // Default
         [ErrorCode.UNKNOWN_ERROR]: "Une erreur inconnue est survenue, veuillez réessayer.",
     },
