@@ -117,3 +117,4 @@
 | 29/10/2025 | 8h          | Admin dashboard + category editor                                                    |
 | 30/10/2025 | 8h          | Admin dashboard amélioration ux                                                      |
 | 31/10/2025 | 4h          | Admin dashboard amélioration ux                                                      |
+| 03/11/2025 | 8h          | Admin dashboard ajout importation fichier                                            |
