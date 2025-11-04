@@ -13,7 +13,6 @@ import IconButton from "../ui/buttons/IconButton";
 import LoadingButton from "../ui/buttons/LoadingButton";
 import { useError } from "@/contexts/ErrorContext";
 import { useApi } from "@/contexts/ApiContext";
-import Button from "../ui/buttons/Button";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -44,7 +43,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
             try {
                 const categories = await apiClient.fetchCategories();
                 setCategories(categories)
-            } catch (error) {
+            } catch {
                 invokeError('Aucunes catégories trouvées')
             }
         }
