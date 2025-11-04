@@ -10,12 +10,15 @@
     "build": "turbo run build",
     "build:backend": "turbo run build --filter=cityborn-backend",
     "build:frontend": "turbo run build --filter=cityborn-frontend",
+    "build:back-office": "turbo run build --filter=cityborn-back-office",
     "dev": "turbo run dev",
     "dev:backend": "turbo run dev --filter=cityborn-backend",
     "dev:frontend": "turbo run dev --filter=cityborn-frontend",
+    "dev:back-office": "turbo run dev --filter=cityborn-back-office",
     "start": "turbo run start",
     "start:backend": "turbo run start --filter=cityborn-backend",
-    "start:frontend": "turbo run start --filter=cityborn-frontend"
+    "start:frontend": "turbo run start --filter=cityborn-frontend",
+    "start:back-office": "turbo run start --filter=cityborn-back-office"
   },
   "devDependencies": {
     "turbo": "^2.5.4"
