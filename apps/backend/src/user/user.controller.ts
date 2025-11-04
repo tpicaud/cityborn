@@ -2,7 +2,6 @@ import { Controller, Get, UseGuards, Request, Post, Body } from '@nestjs/common'
 import { UserService } from './user.service';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { GameRecordDto } from 'src/session/dto/game.dto';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 
 @Controller('user')

@@ -2,16 +2,18 @@
 
 import { Typography, List, ListItem, ListItemText, TextField, Checkbox, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Box, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useState } from "react";
-import { SessionMode, Session } from "@cityborn/types";
+import { useEffect, useState } from "react";
+import { SessionMode, Session, Category } from "@cityborn/types";
 import { GameConfig } from "@cityborn/types";
-import { Categories } from "@cityborn/types";
 import { OnlinePlayer } from "@cityborn/types";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import IconButton from "../ui/buttons/IconButton";
 import LoadingButton from "../ui/buttons/LoadingButton";
+import { useError } from "@/contexts/ErrorContext";
+import { useApi } from "@/contexts/ApiContext";
+import Button from "../ui/buttons/Button";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -27,11 +29,27 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
     handleKickPlayer?: (playerToKick: string) => Promise<void>;
     handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
+    const { invokeError } = useError();
+    const apiClient = useApi();
+
     const [copied, setCopied] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [tempNbOfObjects, setTempNbOfObjects] = useState(session.gameConfig.nbOfObjects.toString());
     const [tempTimer, setTempTimer] = useState<string>(session.gameConfig.timer.toString());
     const [currentInput, setCurrentInput] = useState<string>('');
     const router = useRouter();
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const categories = await apiClient.fetchCategories();
+                setCategories(categories)
+            } catch (error) {
+                invokeError('Aucunes catégories trouvées')
+            }
+        }
+        fetchCategories();
+    }, [])
 
     const handleCopy = () => {
         navigator.clipboard.writeText(session.id);
@@ -63,8 +81,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                 <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
             </div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center bg-transparent h-full pointer-events-none">
-                <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[90%] min-w-80 max-h-[80%] pointer-events-auto">
+            <div className="relative z-10 flex flex-col items-center justify-center 
+                            bg-transparent h-full w-full pointer-events-none">
+                <Box className="flex flex-col items-center gap-2 p-6 
+                              bg-slate-100 shadow-xl rounded-2xl 
+                                max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] max-h-[80%] pointer-events-auto">
                     {/* Titre du lobby */}
                     <Typography variant="h5">
                         {session.mode.toUpperCase()}
@@ -100,7 +121,7 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                         </div>
                     )}
 
-                    <div className="flex flex-row justify-start items-stretch gap-8 overflow-auto">
+                    <div className="flex flex-row justify-start items-stretch gap-8 max-w-full">
                         {/* Liste des joueurs */}
                         {session.mode !== SessionMode.SOLO && (
                             <List sx={{
@@ -151,36 +172,84 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                             </List>
                         )}
 
-                        <div className='flex-1 flex flex-col gap-3' style={{ flex: '1 1 50%' }}>
+                        <div className='flex-1 flex flex-col gap-3 max-w-full'>
                             <FormControl sx={{ width: '100%', marginTop: 2 }}>
                                 <InputLabel id="categories-input">Categories</InputLabel>
                                 <Select
-                                    labelId="categories-input"
-                                    id="categories-input"
                                     multiple
-                                    value={session.gameConfig.categories}
-                                    size="small"
-                                    onChange={(e) => handleUpdateGameConfig({ categories: e.target.value as Categories[] })}
+                                    value={session.gameConfig.categories.map(cat => cat.id)}
+                                    onChange={(e) => {
+                                        const value = e.target.value as string[];
+
+                                        if (value.includes('toggle_all')) {
+                                            // Si tout est déjà sélectionné, on désélectionne tout
+                                            if (session.gameConfig.categories.length === categories.length) {
+                                                handleUpdateGameConfig({ categories: [] });
+                                            } else {
+                                                // Sinon, on sélectionne tout
+                                                handleUpdateGameConfig({ categories: [...categories] });
+                                            }
+                                            return;
+                                        }
+
+                                        const selected_categories: Category[] = value
+                                            .map(category_id => categories.find(category => category.id === category_id))
+                                            .filter((category): category is Category => !!category);
+                                        handleUpdateGameConfig({ categories: selected_categories });
+                                    }}
                                     input={<OutlinedInput label="Categories" />}
-                                    renderValue={(selected) => (selected as string[]).join(', ')}
-                                    sx={{
-                                        '& .MuiInputBase-input': {
-                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                    renderValue={(selected) => (
+                                        <Box
+                                            sx={{
+                                                display: 'block',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                width: '100%',
+                                            }}
+                                        >
+                                            {(selected as string[])
+                                                .map((cat_id) => categories.find(cat => cat.id === cat_id)?.name)
+                                                .join(', ')}
+                                        </Box>
+                                    )}
+                                    MenuProps={{
+                                        anchorOrigin: {
+                                            vertical: "bottom",
+                                            horizontal: "left",
                                         },
-                                        '& .MuiInputLabel-root': {
-                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        transformOrigin: {
+                                            vertical: "top",
+                                            horizontal: "left",
+                                        },
+                                        PaperProps: {
+                                            className: "max-h-72 overflow-y-auto rounded-lg shadow-lg border border-neutral-800",
+                                            // max-h-72 => ~18rem, overflow-y-auto => scroll, arrondis + ombre
                                         },
                                     }}
+                                    className="overflow-y-auto"
                                 >
-                                    {Object.values(Categories).map((category) => (
-                                        <MenuItem key={category} value={category}>
-                                            <Checkbox checked={session.gameConfig.categories.includes(category)} />
-                                            <ListItemText primary={category} />
+                                    {/* Bouton dynamique Select All / Unselect All */}
+                                    <MenuItem value="toggle_all" className="ml-4 h-fit w-fit rounded-md border border-neutral-800">
+                                        <ListItemText
+                                            primary={
+                                                session.gameConfig.categories.length === categories.length
+                                                    ? "Tout désélectionner"
+                                                    : "Tout sélectionner"
+                                            }
+                                        />
+                                    </MenuItem>
+
+                                    {categories.map((category) => (
+                                        <MenuItem key={category.id} value={category.id}>
+                                            <Checkbox
+                                                checked={session.gameConfig.categories.some((c) => c.id === category.id)}
+                                            />
+                                            <ListItemText primary={category.name} />
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-
                             <div className='w-full flex flex-row gap-x-2'>
                                 <TextField
                                     type="number"

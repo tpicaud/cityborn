@@ -73,7 +73,7 @@ function GuessResult({
                 )}
             </Box>
             <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full" >
-                <p><b>{guessObject.name}</b> est né à <b>{guessObject.answer.place_name}</b></p>
+                <p><b>{guessObject.name}</b> est né à <b>{guessObject.world_location!.name}</b></p>
                 {currentRound.playersGuesses[localPlayerID].distance !== -1 ? (
                     currentRound.playersGuesses[localPlayerID].distance === 0 ? (
                         <p><b>Bien joué ! Tu as deviné !</b></p>

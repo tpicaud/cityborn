@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
-import { GuessObjectController } from './guess-object.controller';
 import { GuessObjectService } from './guess-object.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { GuessObject, GuessObjectSchema } from './guess-object.schema';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { WorldLocationModule } from 'src/world-location/world-location.module';
+import { PublicGuessObjectController } from './controllers/guess-object.public.controller';
+import { AdminGuessObjectController } from './controllers/guess-object.admin.controller';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: GuessObject.name, schema: GuessObjectSchema, collection: 'celebrities' }
-    ], 'guessObjects')
-  ],
-  controllers: [GuessObjectController],
+  imports: [PrismaModule, WorldLocationModule],
+  controllers: [PublicGuessObjectController, AdminGuessObjectController],
   providers: [GuessObjectService],
   exports: [GuessObjectService]
 })
-export class GuessObjectModule {}
+export class GuessObjectModule { }

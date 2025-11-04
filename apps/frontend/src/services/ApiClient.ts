@@ -1,6 +1,6 @@
 import { getOrCreateVisitorId } from "@/lib/visitorId";
 import { ApiError } from "@cityborn/errors";
-import { CreateEvent, Game, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
+import { Category, CreateEvent, Game, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
 
 export class ApiClient {
 
@@ -197,6 +197,23 @@ export class ApiClient {
         return data.session as Session;
     }
 
+    async fetchCategories(): Promise<Category[]> {
+        const response = await this.apiFetch(`/api/category`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new ApiError(data.code, data.message, data.statusCode);
+        }
+
+        return data.categories;
+    }
+
     async fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
         const query = new URLSearchParams({
             ids: guessObjectsIds.join(','),
@@ -228,7 +245,7 @@ export class ApiClient {
             throw new ApiError(data.code, data.message, data.statusCode);
         }
 
-        return data.sentence.sentence ?? '';
+        return data.message ?? '';
     }
 
     //////////////////

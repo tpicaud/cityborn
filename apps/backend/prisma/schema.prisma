@@ -14,15 +14,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+////////////////////
+// User & Profile //
+////////////////////
+
 model User {
-  id         Int       @id @default(autoincrement())
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique
   username   String    @unique
   birthdate  DateTime? @db.Date
   type       String    @default("unknown")
   password   String?
   createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  updatedAt  DateTime? @updatedAt
   isVerified Boolean   @default(false)
 
   tokens      EmailVerificationToken[]
@@ -30,17 +34,24 @@ model User {
 }
 
 model EmailVerificationToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token String @unique
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
+enum GameMode {
+  solo
+  multi
+}
+
 model GameRecord {
-  id              Int      @id @default(autoincrement())
-  mode            String
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mode            GameMode
   gameConfig      Json
   players         Json
   guessObjectsIds String[]
@@ -50,8 +61,84 @@ model GameRecord {
   users User[] @relation("GameRecordUsers")
 }
 
+////////////////////////////////////////////
+// Location/GuessObject/Categories models //
+////////////////////////////////////////////
+
+enum LocationType {
+  area
+  point
+}
+
+enum LocationLevel {
+  ADM1
+  ADM2
+  ADM3
+  ADM4
+}
+
+model WorldLocation {
+  id           String         @id @default(dbgenerated("gen_random_uuid()"))
+  osm_type     String         @default("relation")
+  name         String
+  display_name String?
+  addresstype  String?
+  type         LocationType
+  level        LocationLevel?
+  iso_code     String?
+  centroid     Float[]
+  geometry     Json           @db.JsonB
+  source       Json?          @db.JsonB
+
+  guessObjects GuessObject[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GuessObject {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String  @unique
+  image             String?
+  description       String?
+  short_description String?
+  source            Json?   @db.JsonB
+
+  world_location_id String
+  world_location    WorldLocation @relation(fields: [world_location_id], references: [id])
+  categories        Category[]    @relation("CategoryGuessObjects")
+}
+
+model Category {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  isPublished Boolean @default(false)
+  description String?
+
+  guessObjects GuessObject[] @relation("CategoryGuessObjects")
+}
+
+///////////////////////
+// End game sentence //
+///////////////////////
+enum ScoreType {
+  GOOD
+  AVERAGE
+  BAD
+}
+
+model EndGameSentence {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String
+  score_type ScoreType
+}
+
+//////////////
+// Tracking //
+//////////////
+
 model Event {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String
   visitorId  String
   properties Json

@@ -14,7 +14,7 @@ export class UserMapper {
       username: prismaUser.username,
       birthdate: prismaUser.birthdate?.toISOString(),
       createdAt: prismaUser.createdAt.toISOString(),
-      updatedAt: prismaUser.updatedAt.toISOString(),
+      updatedAt: prismaUser.updatedAt ? prismaUser.updatedAt.toISOString() : undefined,
       isVerified: prismaUser.isVerified,
       relations: {
         games: prismaUser.gameRecords?.map(game => ({

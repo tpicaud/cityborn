@@ -1,7 +1,7 @@
 export interface Player {
-    username;
+    username: string;
     isGuest: boolean;
-    id?: number;
+    id?: string;
 }
 
 export interface OnlinePlayer extends Player {

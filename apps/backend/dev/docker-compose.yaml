@@ -1,6 +1,6 @@
 services:
   cityborn_db:
-    image: postgis/postgis:latest
+    image: postgres:latest
     container_name: cityborn_db
     restart: always
     environment:
