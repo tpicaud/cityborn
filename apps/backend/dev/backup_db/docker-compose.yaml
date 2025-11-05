@@ -1,0 +1,13 @@
+services:
+  cityborn_db_backup:
+    image: supabase/postgres:17.6.1.038
+    container_name: cityborn_db_backup
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cityborn_db_backup
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
