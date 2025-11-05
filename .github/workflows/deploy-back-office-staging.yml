@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - 'apps/frontend/**'
+      - 'apps/back-office/**'
       - 'packages/types/**'
       - 'packages/errors/**'
 
