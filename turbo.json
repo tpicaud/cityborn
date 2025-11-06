@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**"
+      ]
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "start": {
+      "dependsOn": [
+        "build"
+      ],
+      "cache": false
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "AUTH_SECRET",
+    "ADMIN_PASSWORD",
+    "BACKEND_URL",
+    "ADMIN_DASHBOARD_TOKEN",
+    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
+  ]
+}
