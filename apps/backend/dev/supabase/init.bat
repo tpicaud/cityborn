@@ -1,0 +1,4 @@
+set PGPASSWORD=postgres
+psql -h localhost -p 5432 -U postgres -d postgres -f .\reset_db.sql
+psql -h localhost -p 5432 -U postgres -d postgres -f .\schema.sql
+psql -h localhost -p 5432 -U postgres -d postgres -f .\seed.sql
