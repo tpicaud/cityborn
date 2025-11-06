@@ -118,3 +118,6 @@
 | 30/10/2025 | 8h          | Admin dashboard amélioration ux                                                      |
 | 31/10/2025 | 4h          | Admin dashboard amélioration ux                                                      |
 | 03/11/2025 | 8h          | Admin dashboard ajout importation fichier                                            |
+| 04/11/2025 | 8h          | Intégration nouveaux modèle dans le frontend                                         |
+| 05/11/2025 | 8h          | Passage prod                                                                         |
+| 06/11/2025 | 5h          | Résolution problème mmigration database                                              |
