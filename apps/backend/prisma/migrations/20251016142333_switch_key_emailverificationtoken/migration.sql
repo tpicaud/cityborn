@@ -1,19 +1,38 @@
-/*
-  Warnings:
+-- 1. Drop ancienne contrainte
+ALTER TABLE "public"."EmailVerificationToken"
+    DROP CONSTRAINT IF EXISTS "EmailVerificationToken_userId_fkey";
 
-  - A unique constraint covering the columns `[uuid]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Changed the type of `userId` on the `EmailVerificationToken` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
+-- 2. Ajouter la nouvelle colonne en nullable
+ALTER TABLE "public"."EmailVerificationToken"
+    ADD COLUMN "userId_new" UUID;
 
-*/
--- DropForeignKey
-ALTER TABLE "public"."EmailVerificationToken" DROP CONSTRAINT "EmailVerificationToken_userId_fkey";
+-- 3. Backfill depuis l’ancienne colonne vers User.uuid
+UPDATE "public"."EmailVerificationToken" t
+SET "userId_new" = u."uuid"
+FROM "public"."User" u
+WHERE t."userId" = u."id";
 
--- AlterTable
-ALTER TABLE "public"."EmailVerificationToken" DROP COLUMN "userId",
-ADD COLUMN     "userId" UUID NOT NULL;
+-- 4. Supprimer les tokens orphelins (si certains userId ne correspondaient plus)
+DELETE FROM "public"."EmailVerificationToken"
+WHERE "userId_new" IS NULL;
 
--- CreateIndex
-CREATE UNIQUE INDEX "User_uuid_key" ON "public"."User"("uuid");
+-- 5. Rendre la nouvelle colonne NOT NULL
+ALTER TABLE "public"."EmailVerificationToken"
+    ALTER COLUMN "userId_new" SET NOT NULL;
 
--- AddForeignKey
-ALTER TABLE "public"."EmailVerificationToken" ADD CONSTRAINT "EmailVerificationToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- 6. Supprimer l’ancienne colonne
+ALTER TABLE "public"."EmailVerificationToken"
+    DROP COLUMN "userId";
+
+-- 7. Renommer la nouvelle colonne
+ALTER TABLE "public"."EmailVerificationToken"
+    RENAME COLUMN "userId_new" TO "userId";
+
+-- 8. Créer l’index unique sur User.uuid si nécessaire
+CREATE UNIQUE INDEX IF NOT EXISTS "User_uuid_key" ON "public"."User"("uuid");
+
+-- 9. Recréer la contrainte de clé étrangère
+ALTER TABLE "public"."EmailVerificationToken"
+    ADD CONSTRAINT "EmailVerificationToken_userId_fkey"
+    FOREIGN KEY ("userId") REFERENCES "public"."User"("uuid")
+    ON DELETE RESTRICT ON UPDATE CASCADE;
