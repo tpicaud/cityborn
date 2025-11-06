@@ -13,9 +13,26 @@ CREATE TYPE "LocationType" AS ENUM ('area', 'point');
 -- CreateEnum
 CREATE TYPE "LocationLevel" AS ENUM ('ADM1', 'ADM2', 'ADM3', 'ADM4');
 
--- AlterTable
-ALTER TABLE "GameRecord" DROP COLUMN "mode",
-ADD COLUMN     "mode" "GameMode" NOT NULL;
+-- 2. Add a new nullable column of the enum type
+ALTER TABLE "GameRecord"
+ADD COLUMN mode_tmp "GameMode";
+
+-- 3. Convert existing values (strings) to enum
+UPDATE "GameRecord"
+SET mode_tmp = mode::"GameMode";
+
+-- 4. Drop the old string column
+ALTER TABLE "GameRecord"
+DROP COLUMN mode;
+
+-- 5. Rename the temporary column to the final name
+ALTER TABLE "GameRecord"
+RENAME COLUMN mode_tmp TO mode;
+
+-- 6. Make the column NOT NULL (only now that data is filled)
+ALTER TABLE "GameRecord"
+ALTER COLUMN mode SET NOT NULL;
+
 
 -- AlterTable
 ALTER TABLE "User" ALTER COLUMN "updatedAt" DROP NOT NULL;
