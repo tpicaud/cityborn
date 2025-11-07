@@ -88,6 +88,7 @@ export function CategoryBuilder({
             if (!id) throw new Error('Error saving or updating object');
 
             await addOrUpdateGuessObjectToCategory(id);
+            handleCreateGuessObject();
         } catch (error) {
             console.log(error);
             alert("Erreur lors de l'enregistrement de l'objet");
@@ -314,7 +315,9 @@ export function CategoryBuilder({
                         <h2 className="text-xl font-bold">Editeur d'objet</h2>
                         {guessObjectCandidate &&
                             <div className="flex items-center">
-                                <Button size='sm' variant="primary" onClick={handleSaveGuessObjectCandidate}>
+                                <Button
+                                size='sm'
+                                variant={`${guessObjectCandidate.id ? "outline" : 'primary'}`} onClick={handleSaveGuessObjectCandidate}>
                                     <p className="font-bold">
                                         {!guessObjectCandidate.id ? (
                                             "Ajouter l'objet"
