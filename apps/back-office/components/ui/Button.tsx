@@ -48,7 +48,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "destructive" &&
           "bg-red-700 text-zinc-50 shadow hover:bg-red-800",
           variant === "outline" &&
-          "border border-zinc-700 bg-transparent text-zinc-50 hover:bg-zinc-800 hover:text-zinc-100",
+          "border border-neutral-500 bg-transparent text-zinc-50 hover:bg-zinc-800 hover:text-zinc-100",
           variant === "ghost" && "hover:bg-zinc-800 hover:text-zinc-50",
           /* sizes ------------------------------------------------------------- */
           size === "default" && "h-9 px-4 py-2",
