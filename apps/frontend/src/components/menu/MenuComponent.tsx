@@ -109,7 +109,7 @@ export default function MenuComponent({
                     <Button
                         variant="contained"
                         color="primary"
-                        className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+                        className="text-white px-6 w-full rounded"
                         onClick={async () => {
                             setState('sign-in');
                         }}
@@ -119,7 +119,7 @@ export default function MenuComponent({
                     <Button
                         variant="contained"
                         color="primary"
-                        className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+                        className="text-white px-6 w-full rounded"
                         onClick={async () => {
                             setState('sign-up');
                         }}
@@ -150,7 +150,7 @@ export default function MenuComponent({
                     <LoadingButton
                         variant="contained"
                         color="primary"
-                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+                        className="text-white px-6 py-2 rounded"
                         onClick={handleJoin}
                         disabled={!code}
                     >

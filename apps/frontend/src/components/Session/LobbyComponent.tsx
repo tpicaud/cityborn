@@ -173,10 +173,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
 
                         <div className='flex-1 flex flex-col gap-3 max-w-full'>
                             <FormControl sx={{ width: '100%', marginTop: 2 }}>
-                                <InputLabel id="categories-input">Categories</InputLabel>
+                                <InputLabel id="categories-input" shrink={true}>Categories</InputLabel>
                                 <Select
                                     multiple
-                                    value={session.gameConfig.categories.map(cat => cat.id)}
+                                    displayEmpty
+                                    value={session.gameConfig.categories.map(cat => cat.id) ?? []}
                                     onChange={(e) => {
                                         const value = e.target.value as string[];
 
@@ -207,9 +208,11 @@ export const LobbyComponent = ({ localPlayerID, isHost, session, handleUpdateHos
                                                 width: '100%',
                                             }}
                                         >
-                                            {(selected as string[])
-                                                .map((cat_id) => categories.find(cat => cat.id === cat_id)?.name)
-                                                .join(', ')}
+                                            {(selected as string[]).length !== 0
+                                                ? (selected as string[])
+                                                    .map((cat_id) => categories.find(cat => cat.id === cat_id)?.name)
+                                                    .join(', ')
+                                                : 'Toutes'}
                                         </Box>
                                     )}
                                     MenuProps={{

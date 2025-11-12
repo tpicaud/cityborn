@@ -113,7 +113,7 @@ export class NominatimService {
                 osm_ids: id,
                 format: 'json',
                 polygon_geojson: '1',   // inclut la géométrie GeoJSON
-                polygon_threshold: '0.001', // simplification de la géométrie
+                polygon_threshold: '0.0001', // simplification de la géométrie
                 addressdetails: '1',     // inclut les détails d'adresse
                 extratags: '1',          // inclut les métadonnées OSM
                 namedetails: '1',        // inclut les noms alternatifs
