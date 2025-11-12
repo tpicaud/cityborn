@@ -7,12 +7,8 @@ import { GoogleClientProvider } from './providers/google-client.provider';
 import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [
-    UserModule,
-    MailModule,
-    JwtModule.register({ global: true })
-  ],
+  imports: [UserModule, MailModule, JwtModule.register({ global: true })],
   controllers: [AuthController],
-  providers: [AuthService, GoogleClientProvider]
+  providers: [AuthService, GoogleClientProvider],
 })
 export class AuthModule {}

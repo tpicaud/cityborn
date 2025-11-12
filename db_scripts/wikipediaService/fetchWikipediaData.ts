@@ -6,7 +6,7 @@ const WIKIPEDIA_API_URL = 'wikipedia.org/w/api.php';
 interface WikipediaQueryOptions {
   titles: string; // Les titres des articles séparés par "|"
   props: string[]; // Liste des propriétés (ex: "extracts", "pageimages", "coordinates")
-  formatVersion?: number; // Version du format (par défaut 2) 
+  formatVersion?: number; // Version du format (par défaut 2)
   language?: string; // Langue de l'article (par défaut "fr")
   exintro?: boolean; // Si on veut seulement l'intro du texte
   exsentences?: number; // Nombre de phrases à récupérer
@@ -16,7 +16,7 @@ interface WikipediaQueryOptions {
 
 // Fonction pour construire l'URL wikipedia
 function buildWikipediaURL(language: string) {
-    return `https://${language}.${WIKIPEDIA_API_URL}`;
+  return `https://${language}.${WIKIPEDIA_API_URL}`;
 }
 
 // Fonction pour créer dynamiquement la requête à Wikipédia
@@ -46,7 +46,9 @@ const fetchWikipediaData = async (options: WikipediaQueryOptions) => {
   });
 
   try {
-    const response = await axios.get(`${buildWikipediaURL(language)}?${params.toString()}`);
+    const response = await axios.get(
+      `${buildWikipediaURL(language)}?${params.toString()}`,
+    );
     return response.data;
   } catch (error) {
     console.error('Erreur lors de la requête Wikipedia:', error);

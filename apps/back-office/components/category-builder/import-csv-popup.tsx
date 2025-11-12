@@ -1,14 +1,17 @@
-import * as Ariakit from "@ariakit/react";
+import * as Ariakit from '@ariakit/react';
 import Papa from 'papaparse';
-import { useEffect, useRef, useState } from "react";
-import { Button } from "../ui/Button";
-import { searchGuessObjectByExternalId, searchGuessObjectByName } from "../guess-object-builder/action";
-import { saveGuessObject } from "./action";
-import Loader from "../ui/Loader";
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '../ui/Button';
+import {
+  searchGuessObjectByExternalId,
+  searchGuessObjectByName,
+} from '../guess-object-builder/action';
+import { saveGuessObject } from './action';
+import Loader from '../ui/Loader';
 
 interface Objects {
   name: string;
-  description?: string
+  description?: string;
 }
 
 interface ImportRecap {
@@ -18,9 +21,9 @@ interface ImportRecap {
 }
 
 export function ImportCSVPopup({
-  addOrUpdateGuessObjectToCategory
+  addOrUpdateGuessObjectToCategory,
 }: {
-  addOrUpdateGuessObjectToCategory: (id: string) => Promise<void>
+  addOrUpdateGuessObjectToCategory: (id: string) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const [file, setFile] = useState<File>();
@@ -31,7 +34,7 @@ export function ImportCSVPopup({
   const [importRecap, setImportRecap] = useState<ImportRecap>({
     success: 0,
     failed: 0,
-    failed_objects: []
+    failed_objects: [],
   });
 
   function handleClose() {
@@ -41,11 +44,13 @@ export function ImportCSVPopup({
     setImportRecap({
       success: 0,
       failed: 0,
-      failed_objects: []
+      failed_objects: [],
     });
   }
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setFile(file);
@@ -55,25 +60,30 @@ export function ImportCSVPopup({
     reader.onload = async (e) => {
       const csvText = e.target?.result as string;
       const parsed_objects = await parseObjectFromCSV(csvText);
-      setObjects(parsed_objects)
+      setObjects(parsed_objects);
     };
 
     reader.readAsText(file);
   };
 
-  async function parseObjectFromCSV(csv: string): Promise<{
-    name: string,
-    description?: string
-  }[]> {
+  async function parseObjectFromCSV(csv: string): Promise<
+    {
+      name: string;
+      description?: string;
+    }[]
+  > {
     const result = Papa.parse(csv, { header: true });
-    const objects: { name: string, description: string }[] = [];
+    const objects: { name: string; description: string }[] = [];
 
     for (const row of result.data as any[]) {
-      if (row["Name"] && row["Name"].trim()) {
-        objects.push({ name: row["Name"].trim(), description: row["Description"].trim() ?? undefined });
+      if (row['Name'] && row['Name'].trim()) {
+        objects.push({
+          name: row['Name'].trim(),
+          description: row['Description'].trim() ?? undefined,
+        });
       }
     }
-    console.log(objects)
+    console.log(objects);
     return objects;
   }
 
@@ -85,7 +95,7 @@ export function ImportCSVPopup({
     setImportRecap({
       success: 0,
       failed: 0,
-      failed_objects: []
+      failed_objects: [],
     });
 
     for (const obj of objects) {
@@ -95,44 +105,53 @@ export function ImportCSVPopup({
         const resulsts = await searchGuessObjectByName(obj.name);
         const candidate_obj = resulsts[0];
 
-        const full_obj = await searchGuessObjectByExternalId(candidate_obj.source?.external_id!);
+        const full_obj = await searchGuessObjectByExternalId(
+          candidate_obj.source?.external_id!,
+        );
         if (obj.description) full_obj.short_description = obj.description;
 
-        if (!full_obj.world_location_id) throw new Error('No world location found')
+        if (!full_obj.world_location_id)
+          throw new Error('No world location found');
 
         const id = await saveGuessObject({
           world_location_id: full_obj.world_location_id?.toString()!,
-          ...full_obj
+          ...full_obj,
         });
 
         await addOrUpdateGuessObjectToCategory(id);
 
-        setImportRecap(prev => {
+        setImportRecap((prev) => {
           const newRecap = {
             ...prev,
             success: prev.success + 1,
           };
-          setProgress(Math.round((newRecap.success + newRecap.failed) / objects.length * 100));
+          setProgress(
+            Math.round(
+              ((newRecap.success + newRecap.failed) / objects.length) * 100,
+            ),
+          );
           return newRecap;
         });
-
       } catch (error) {
         console.error(`Error importing ${obj.name}: ${error}`);
 
-        setImportRecap(prev => {
+        setImportRecap((prev) => {
           const newRecap = {
             ...prev,
             failed: prev.failed + 1,
             failed_objects: [...prev.failed_objects, obj],
           };
-          setProgress(Math.round((newRecap.success + newRecap.failed) / objects.length * 100));
+          setProgress(
+            Math.round(
+              ((newRecap.success + newRecap.failed) / objects.length) * 100,
+            ),
+          );
           return newRecap;
         });
       } finally {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // éviter rate limit
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // éviter rate limit
       }
     }
-
 
     setState('recap');
   }
@@ -165,73 +184,80 @@ export function ImportCSVPopup({
                            focus:outline-none"
       >
         <div className="h-full w-full p-6">
-          {state === 'start'
-            ? (
-              <div className="w-full h-full flex flex-col gap-4">
-                <label
-                  htmlFor="csvInput"
-                  className="flex items-center justify-center h-24 w-full
+          {state === 'start' ? (
+            <div className="w-full h-full flex flex-col gap-4">
+              <label
+                htmlFor="csvInput"
+                className="flex items-center justify-center h-24 w-full
                        border-2 border-dashed border-foreground rounded-md cursor-pointer
                        text-center text-grayforeground hover:bg-neutral-800 transition"
+              >
+                {file ? file.name : 'Sélectionnez un fichier'}
+              </label>
+
+              <input
+                id="csvInput"
+                placeholder="Sélectionnez un fichier"
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              {objects && (
+                <p className="text-center">
+                  ✅ {objects?.length} noms d'objets trouvés
+                </p>
+              )}
+              <div className="flex justify-center gap-2">
+                <Button
+                  variant="primary"
+                  disabled={!objects}
+                  onClick={handleImportObjects}
                 >
-                  {file ? file.name : "Sélectionnez un fichier"}
-                </label>
-
-                <input
-                  id="csvInput"
-                  placeholder="Sélectionnez un fichier"
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                {objects && <p className="text-center">✅ {objects?.length} noms d'objets trouvés</p>}
-                <div className="flex justify-center gap-2">
-                  <Button variant="primary" disabled={!objects} onClick={handleImportObjects}>
-                    Importer les objets
-                  </Button>
-                </div>
+                  Importer les objets
+                </Button>
               </div>
-            ) : (
-              (state === 'loading')
-                ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                    <Loader />
-                    <p>{importRecap.failed + importRecap.success} / {objects?.length}</p>
+            </div>
+          ) : state === 'loading' ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+              <Loader />
+              <p>
+                {importRecap.failed + importRecap.success} / {objects?.length}
+              </p>
 
-                    <div className="w-full bg-gray-300 h-3 mt-2">
-                      <div
-                        className="bg-blue-500 h-3 transition-all"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
+              <div className="w-full bg-gray-300 h-3 mt-2">
+                <div
+                  className="bg-blue-500 h-3 transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
 
-                    <Button variant="destructive" onClick={handleStopImport}>
-                      Annuler
-                    </Button>
+              <Button variant="destructive" onClick={handleStopImport}>
+                Annuler
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+              <p>✅ {importRecap.success} objets ajoutés</p>
+              <div className="flex flex-col items-center justify-center gap-2">
+                <p>❌ {importRecap.failed} imports échoués</p>
+                {importRecap.failed_objects && (
+                  <div className="h-max-24 overflow-y-auto">
+                    <ul className="list-disc pl-5">
+                      {importRecap.failed_objects.map((obj) => (
+                        <li key={obj.name}>{obj.name}</li>
+                      ))}
+                    </ul>
                   </div>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                    <p>✅ {importRecap.success} objets ajoutés</p>
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <p>❌ {importRecap.failed} imports échoués</p>
-                      {importRecap.failed_objects && (
-                        <div className="h-max-24 overflow-y-auto">
-                          <ul className="list-disc pl-5">
-                            {importRecap.failed_objects.map(obj => <li key={obj.name}>{obj.name}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                    <Button variant="primary" onClick={dialog.hide}>
-                      OK
-                    </Button>
-                  </div>
-                )
-            )
-          }
+                )}
+              </div>
+              <Button variant="primary" onClick={dialog.hide}>
+                OK
+              </Button>
+            </div>
+          )}
         </div>
-      </Ariakit.Dialog >
+      </Ariakit.Dialog>
     </div>
   );
 }

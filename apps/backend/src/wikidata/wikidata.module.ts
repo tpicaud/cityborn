@@ -3,6 +3,6 @@ import { WikidataService } from './wikidata.service';
 
 @Module({
   providers: [WikidataService],
-  exports: [WikidataService]
+  exports: [WikidataService],
 })
 export class WikidataModule {}

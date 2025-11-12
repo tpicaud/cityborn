@@ -1,17 +1,17 @@
 // src/components/logout-button.tsx
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
-import { logout } from "@/app/logout/action";
-import { Button } from "./ui/Button";
+import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
+import { logout } from '@/app/logout/action';
+import { Button } from './ui/Button';
 
 export default function LogoutButton() {
   const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login");
+    router.push('/login');
   };
 
   return (

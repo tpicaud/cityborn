@@ -1,7 +1,7 @@
-import { GuessObject, WorldLocation } from "@cityborn/types";
-import { Type } from "class-transformer";
-import { IsUUID, IsString, IsOptional } from "class-validator";
-import { WorldLocationDto } from "src/world-location/dto/world-location.dto";
+import { GuessObject, WorldLocation } from '@cityborn/types';
+import { Type } from 'class-transformer';
+import { IsUUID, IsString, IsOptional } from 'class-validator';
+import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 
 export class GuessObjectSourceDto {
   @IsString()
@@ -12,7 +12,6 @@ export class GuessObjectSourceDto {
 }
 
 export class GuessObjectDto implements GuessObject {
-
   @IsUUID()
   @IsString()
   id: string;
@@ -41,5 +40,5 @@ export class GuessObjectDto implements GuessObject {
 
   @IsOptional()
   @Type(() => WorldLocationDto)
-  world_location?: WorldLocationDto
+  world_location?: WorldLocationDto;
 }

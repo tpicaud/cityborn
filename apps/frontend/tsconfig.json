@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,12 +20,8 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ] // Permet d'utiliser des alias pour importer les types
+      "@/*": ["./src/*"],
+      "@types/*": ["src/types/*"] // Permet d'utiliser des alias pour importer les types
     },
     "target": "ES2017"
   },
@@ -40,7 +32,5 @@
     ".next/types/**/*.ts",
     "src/app/session/solo/[gameID]/results"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

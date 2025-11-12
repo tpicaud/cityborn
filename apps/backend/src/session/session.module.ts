@@ -11,9 +11,17 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { EventModule } from 'src/event/event.module';
 
 @Module({
-  imports: [RedisModule, LockModule, PlayerModule, IdModule, GuessObjectModule, PrismaModule, EventModule],
+  imports: [
+    RedisModule,
+    LockModule,
+    PlayerModule,
+    IdModule,
+    GuessObjectModule,
+    PrismaModule,
+    EventModule,
+  ],
   controllers: [SessionController],
   providers: [SessionService, SessionGateway],
-  exports: [SessionService]
+  exports: [SessionService],
 })
 export class SessionModule {}
