@@ -4,8 +4,8 @@ import {
   ExecutionContext,
   CallHandler,
   ContextType,
-} from "@nestjs/common";
-import { Observable } from "rxjs";
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class VisitorIdInterceptor implements NestInterceptor {
@@ -13,7 +13,7 @@ export class VisitorIdInterceptor implements NestInterceptor {
     const ctx: ContextType = context.getType();
     if (ctx === 'http') {
       const request = context.switchToHttp().getRequest();
-      const visitorId = request.headers["x-visitor-id"];
+      const visitorId = request.headers['x-visitor-id'];
 
       if (visitorId) {
         request.visitorId = visitorId;

@@ -11,6 +11,6 @@ import { CategoryService } from './services/category.service';
   imports: [PrismaModule, GuessObjectModule],
   controllers: [PublicCategoryController, AdminCategoryController],
   providers: [CategoryService, PublicCategoryService, AdminCategoryService],
-  exports: [CategoryService, PublicCategoryService, AdminCategoryService]
+  exports: [CategoryService, PublicCategoryService, AdminCategoryService],
 })
-export class CategoryModule { }
+export class CategoryModule {}

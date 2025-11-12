@@ -8,6 +8,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   providers: [EventService],
   controllers: [EventController],
-  exports: [EventService]
+  exports: [EventService],
 })
-export class EventModule { }
+export class EventModule {}

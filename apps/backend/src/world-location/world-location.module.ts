@@ -5,6 +5,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   providers: [WorldLocationService],
-  exports: [WorldLocationService]
+  exports: [WorldLocationService],
 })
 export class WorldLocationModule {}

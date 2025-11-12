@@ -1,4 +1,4 @@
 export enum SessionMode {
-    SOLO = 'solo',
-    MULTI = 'multi'
+  SOLO = 'solo',
+  MULTI = 'multi',
 }

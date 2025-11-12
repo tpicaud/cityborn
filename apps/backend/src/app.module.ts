@@ -43,9 +43,9 @@ import { SearchModule } from './search/search.module';
     NominatimModule,
     WorldLocationModule,
     CategoryModule,
-    SearchModule
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

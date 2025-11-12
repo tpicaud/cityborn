@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  Dispatch,
+  SetStateAction,
+} from 'react';
 
 interface TimerComponentProps {
   totalTime: number;
@@ -8,7 +14,11 @@ interface TimerComponentProps {
   setTimerEnded: Dispatch<SetStateAction<boolean>>;
 }
 
-const TimerComponent: React.FC<TimerComponentProps> = ({ totalTime, endMessage, setTimerEnded }) => {
+const TimerComponent: React.FC<TimerComponentProps> = ({
+  totalTime,
+  endMessage,
+  setTimerEnded,
+}) => {
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const startTime = useRef(Date.now());
 
@@ -17,16 +27,15 @@ const TimerComponent: React.FC<TimerComponentProps> = ({ totalTime, endMessage, 
       const elapsedTime = (Date.now() - startTime.current) / 1000;
       const newTimeLeft = Math.max(totalTime - elapsedTime, 0);
       setTimeLeft(newTimeLeft);
-  
+
       if (newTimeLeft <= 0) {
         setTimerEnded(true);
         clearInterval(intervalId);
       }
     }, 10); // Met à jour toutes les 100ms
-  
+
     return () => clearInterval(intervalId); // Nettoyage de l'intervalle
   }, []);
-  
 
   // Calcul de la largeur de la barre de progression en pourcentage
   const progress = (timeLeft / totalTime) * 100;
@@ -39,18 +48,18 @@ const TimerComponent: React.FC<TimerComponentProps> = ({ totalTime, endMessage, 
   };
 
   return (
-      <div className="relative w-full h-10 bg-gray-300 bg-opacity-60 rounded-full overflow-hidden z-50">
-        <div
-          className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-[0ms]"
-          style={{ width: `${progress}%` }}
-        ></div>
-        <span
-          className={`absolute inset-0 flex items-center justify-center font-semibold text-xl transition-colors duration-500 
+    <div className="relative w-full h-10 bg-gray-300 bg-opacity-60 rounded-full overflow-hidden z-50">
+      <div
+        className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-[0ms]"
+        style={{ width: `${progress}%` }}
+      ></div>
+      <span
+        className={`absolute inset-0 flex items-center justify-center font-semibold text-xl transition-colors duration-500 
             ${timeLeft <= 5 ? 'text-red-500' : 'text-white'}`}
-        >
-          {timeLeft > 0 ? formatTime(timeLeft) : endMessage}
-        </span>
-      </div>
+      >
+        {timeLeft > 0 ? formatTime(timeLeft) : endMessage}
+      </span>
+    </div>
   );
 };
 

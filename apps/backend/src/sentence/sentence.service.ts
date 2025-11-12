@@ -7,26 +7,25 @@ import { SentenceMapper } from './mapper/sentence.mapper';
 
 @Injectable()
 export class SentenceService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    async findRandomOne(score_type: ScoreType): Promise<SentenceDto> {
+  async findRandomOne(score_type: ScoreType): Promise<SentenceDto> {
+    const sentences = await this.prisma.endGameSentence.findMany({
+      where: {
+        score_type,
+      },
+    });
 
-        const sentences = await this.prisma.endGameSentence.findMany({
-            where: {
-                score_type
-            }
-        });
-
-        if (sentences.length === 0) {
-            throw new NotFoundException({
-                code: ErrorCode.GAME_END_SENTENCE_NOT_FOUND,
-                message: 'Sentence not found'
-            });
-        }
-
-        const randomIndex = Math.floor(Math.random() * sentences.length);
-        const randomSentence = sentences[randomIndex];
-
-        return SentenceMapper.toSentenceDto(randomSentence);
+    if (sentences.length === 0) {
+      throw new NotFoundException({
+        code: ErrorCode.GAME_END_SENTENCE_NOT_FOUND,
+        message: 'Sentence not found',
+      });
     }
+
+    const randomIndex = Math.floor(Math.random() * sentences.length);
+    const randomSentence = sentences[randomIndex];
+
+    return SentenceMapper.toSentenceDto(randomSentence);
+  }
 }

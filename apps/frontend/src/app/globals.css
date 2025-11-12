@@ -1,5 +1,5 @@
 @layer theme, base, mui, components, utilities;
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ededed;
@@ -74,11 +74,21 @@ html {
   --color-neutral-950: oklch(55.346% 0.02151 285.68);
 
   /* Gradients */
-  --background-image-gradient-primary: linear-gradient(90deg, var(--color-primary-400) 0%, var(--color-accent-200) 100%);
-  --background-image-gradient-secondary: linear-gradient(90deg, var(--color-secondary-400) 0%, var(--color-secondary-200) 100%);
-  --background-image-gradient-accent: linear-gradient(90deg, var(--color-accent-400) 0%, var(--color-accent-200) 100%);
-
-
+  --background-image-gradient-primary: linear-gradient(
+    90deg,
+    var(--color-primary-400) 0%,
+    var(--color-accent-200) 100%
+  );
+  --background-image-gradient-secondary: linear-gradient(
+    90deg,
+    var(--color-secondary-400) 0%,
+    var(--color-secondary-200) 100%
+  );
+  --background-image-gradient-accent: linear-gradient(
+    90deg,
+    var(--color-accent-400) 0%,
+    var(--color-accent-200) 100%
+  );
 
   /* ********** */
   /* Typography */
