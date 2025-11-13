@@ -6,7 +6,6 @@ import { createClient } from 'redis';
 import { ServerOptions } from 'socket.io';
 
 export class RedisIoAdapter extends IoAdapter {
-
   private readonly logger = new Logger(RedisIoAdapter.name);
 
   private adapterConstructor: ReturnType<typeof createAdapter>;

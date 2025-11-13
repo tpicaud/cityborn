@@ -1,6 +1,13 @@
-import { WorldLocation } from "@cityborn/types";
-import { Type } from "class-transformer";
-import { IsEnum, IsArray, IsUUID, IsString, IsOptional, ValidateNested } from "class-validator";
+import { WorldLocation } from '@cityborn/types';
+import { Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsArray,
+  IsUUID,
+  IsString,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
 
 export class GeometryDto {
   @IsEnum(['Point', 'Polygon', 'MultiPolygon'])
@@ -17,7 +24,6 @@ export class WorldLocationParentDto {
 
   @IsString()
   name: string;
-
 }
 
 export class WorldLocationSourceDto {
@@ -29,7 +35,6 @@ export class WorldLocationSourceDto {
 }
 
 export class WorldLocationDto implements WorldLocation {
-
   @IsString()
   id: string;
 
@@ -52,7 +57,7 @@ export class WorldLocationDto implements WorldLocation {
 
   @IsOptional()
   @Type(() => GeometryDto)
-  geometry?: GeometryDto
+  geometry?: GeometryDto;
 
   @IsOptional()
   @IsEnum(['ADM1', 'ADM2', 'ADM3', 'ADM4'])
@@ -78,6 +83,6 @@ export class WorldLocationDto implements WorldLocation {
 }
 
 export class WorldLocationSearchResponseDto {
-    @Type(() => WorldLocationDto)
-    candidates: WorldLocationDto[];
+  @Type(() => WorldLocationDto)
+  candidates: WorldLocationDto[];
 }

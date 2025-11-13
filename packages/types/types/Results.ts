@@ -1,9 +1,9 @@
 export interface PlayerResults {
-    results: Result[]
+  results: Result[];
 }
 
 export interface Result {
-    guessObjectId: string,
-    distance: number,
-    points: number
+  guessObjectId: string;
+  distance: number;
+  points: number;
 }

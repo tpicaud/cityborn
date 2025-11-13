@@ -1,14 +1,21 @@
 'use client';
 
-import React, { useEffect } from "react";
-import { AdvancedMarker, AdvancedMarkerAnchorPoint, APIProvider, Map, MapMouseEvent, useMap } from "@vis.gl/react-google-maps";
-import { calculatePoints } from "@/utils/calculateScore";
-import { MapProps } from "@cityborn/types";
-import { Coord } from "@cityborn/types";
-import { Guess } from "@cityborn/types";
-import { GuessObject } from "@cityborn/types";
-import { RoundStatus } from "@cityborn/types";
-import { Round } from "@cityborn/types";
+import React, { useEffect } from 'react';
+import {
+  AdvancedMarker,
+  AdvancedMarkerAnchorPoint,
+  APIProvider,
+  Map,
+  MapMouseEvent,
+  useMap,
+} from '@vis.gl/react-google-maps';
+import { calculatePoints } from '@/utils/calculateScore';
+import { MapProps } from '@cityborn/types';
+import { Coord } from '@cityborn/types';
+import { Guess } from '@cityborn/types';
+import { GuessObject } from '@cityborn/types';
+import { RoundStatus } from '@cityborn/types';
+import { Round } from '@cityborn/types';
 import * as turf from '@turf/turf';
 import Image from 'next/image';
 
@@ -19,25 +26,19 @@ type GoogleMapProps = {
 
 const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   API_KEY,
-  mapProps: {
-    center,
-    zoom,
-    preGuess,
-    localPlayerID,
-    game,
-    handlePreGuess
-  },
+  mapProps: { center, zoom, preGuess, localPlayerID, game, handlePreGuess },
 }) => {
-
-  const currentRound = game.state.currentRound!
-  const guessObject = game.state.guessObjects!.find((obj) => obj.id === currentRound.guessObjectId)!;
+  const currentRound = game.state.currentRound!;
+  const guessObject = game.state.guessObjects!.find(
+    (obj) => obj.id === currentRound.guessObjectId,
+  )!;
 
   const mapOptions = {
     mapId: 'e475de68d18cf73',
     defaultCenter: center || { lat: 22.54992, lng: 0 },
     defaultZoom: zoom || 3,
     zoomControl: false,
-    clickableIcons: false,    // désactive les icônes cliquables (restaurants, etc.)
+    clickableIcons: false, // désactive les icônes cliquables (restaurants, etc.)
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,
@@ -54,7 +55,6 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   };
 
   const getDistanceTo = (lat: number, lng: number): number => {
-
     const guessedLatLng = new google.maps.LatLng(lat, lng);
 
     if (isGeoJSON(guessObject!) && hasWin(guessedLatLng, guessObject!)) {
@@ -64,7 +64,12 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     const answer: Coord = getCenterOfGuessObject(guessObject!);
     const answerLatLng = new google.maps.LatLng(answer.lat, answer.lng);
 
-    return google.maps.geometry.spherical.computeDistanceBetween(guessedLatLng, answerLatLng) / 1000;
+    return (
+      google.maps.geometry.spherical.computeDistanceBetween(
+        guessedLatLng,
+        answerLatLng,
+      ) / 1000
+    );
   };
 
   const handleMapClick = (event: MapMouseEvent) => {
@@ -72,19 +77,18 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
       const lat = event.detail.latLng.lat;
       const lng = event.detail.latLng.lng;
 
-      const distance = (lat !== 0 && lng !== 0) ? getDistanceTo(lat, lng) : -1;
+      const distance = lat !== 0 && lng !== 0 ? getDistanceTo(lat, lng) : -1;
       const points = calculatePoints(distance);
 
       const newGuess: Guess = {
         coordinates: { lat, lng },
         distance,
         points,
-        win: (distance === 0) ? true : false
+        win: distance === 0 ? true : false,
       };
       handlePreGuess(newGuess);
     }
   };
-
 
   return (
     <APIProvider apiKey={API_KEY} libraries={['geometry']}>
@@ -93,97 +97,133 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
         key={guessObject.id}
         {...mapOptions}
         onClick={(event) => {
-          if (currentRound.status === RoundStatus.GUESSING && currentRound.playersGuesses?.[localPlayerID] === undefined) {
+          if (
+            currentRound.status === RoundStatus.GUESSING &&
+            currentRound.playersGuesses?.[localPlayerID] === undefined
+          ) {
             handleMapClick(event);
           }
         }}
       >
         {/* Pre-guess advanced marker */}
-        {preGuess && (preGuess.distance !== -1) && (currentRound.status === RoundStatus.GUESSING) && <AdvancedMarker position={preGuess.coordinates} />}
+        {preGuess &&
+          preGuess.distance !== -1 &&
+          currentRound.status === RoundStatus.GUESSING && (
+            <AdvancedMarker position={preGuess.coordinates} />
+          )}
 
         {/* Confirmed guess advanced marker */}
-        {(currentRound.status === RoundStatus.SHOWING_RESULTS) && (
+        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <>
             <AnswerDisplay guessObject={guessObject} />
-            <LocalPlayerGuess currentRound={currentRound} guessObject={guessObject} localPlayerID={localPlayerID} />
-            <OtherPlayersGuesses currentRound={currentRound} guessObject={guessObject} localPlayerID={localPlayerID} />
+            <LocalPlayerGuess
+              currentRound={currentRound}
+              guessObject={guessObject}
+              localPlayerID={localPlayerID}
+            />
+            <OtherPlayersGuesses
+              currentRound={currentRound}
+              guessObject={guessObject}
+              localPlayerID={localPlayerID}
+            />
           </>
         )}
-        <ResetMap guessObjectId={currentRound.guessObjectId} center={mapOptions.defaultCenter} zoom={mapOptions.defaultZoom} />
-
+        <ResetMap
+          guessObjectId={currentRound.guessObjectId}
+          center={mapOptions.defaultCenter}
+          zoom={mapOptions.defaultZoom}
+        />
       </Map>
     </APIProvider>
   );
 };
 
-const OtherPlayersGuesses: React.FC<{ currentRound: Round, guessObject: GuessObject, localPlayerID: string }> = ({ currentRound, guessObject, localPlayerID }) => {
-
+const OtherPlayersGuesses: React.FC<{
+  currentRound: Round;
+  guessObject: GuessObject;
+  localPlayerID: string;
+}> = ({ currentRound, guessObject, localPlayerID }) => {
   const guesses = currentRound.playersGuesses
     ? Object.entries(currentRound.playersGuesses)
-      .filter(([playerID]) => playerID !== localPlayerID) // Exclut le guess du localPlayerID
-      .map(([, guess]) => guess)
+        .filter(([playerID]) => playerID !== localPlayerID) // Exclut le guess du localPlayerID
+        .map(([, guess]) => guess)
     : [];
 
   return (
     <>
-      {guesses.map((guess, index) => (
-        (guess.distance !== -1) &&
-        <React.Fragment key={index}>
-          <AdvancedMarker
-            key={index}
-            position={guess.coordinates}
-            anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
-          >
-            <Image
-              src="/img/player.png"
-              alt="players Marker"
-              width={28}
-              height={28}
-              priority={false}
-            />
-          </AdvancedMarker>
+      {guesses.map(
+        (guess, index) =>
+          guess.distance !== -1 && (
+            <React.Fragment key={index}>
+              <AdvancedMarker
+                key={index}
+                position={guess.coordinates}
+                anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
+              >
+                <Image
+                  src="/img/player.png"
+                  alt="players Marker"
+                  width={28}
+                  height={28}
+                  priority={false}
+                />
+              </AdvancedMarker>
 
-          <LineBetween guess={guess.coordinates} answer={getCenterOfGuessObject(guessObject)} isLocalPlayer={false} />
-        </React.Fragment>
-      ))}
+              <LineBetween
+                guess={guess.coordinates}
+                answer={getCenterOfGuessObject(guessObject)}
+                isLocalPlayer={false}
+              />
+            </React.Fragment>
+          ),
+      )}
     </>
   );
 };
 
-const LocalPlayerGuess: React.FC<{ currentRound: Round, guessObject: GuessObject, localPlayerID: string }> = ({ currentRound, guessObject, localPlayerID }) => {
-
+const LocalPlayerGuess: React.FC<{
+  currentRound: Round;
+  guessObject: GuessObject;
+  localPlayerID: string;
+}> = ({ currentRound, guessObject, localPlayerID }) => {
   const guess = currentRound.playersGuesses![localPlayerID];
 
   return (
     <>
-      {(guess.distance !== -1) ? (
+      {guess.distance !== -1 ? (
         <>
           <AdvancedMarker position={guess.coordinates} />
           {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-            <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} guess={guess.coordinates} />
+            <ZoomToBounds
+              answer={getCenterOfGuessObject(guessObject)}
+              guess={guess.coordinates}
+            />
           )}
           {!guess.win && (
-            <LineBetween guess={guess.coordinates} answer={getCenterOfGuessObject(guessObject)} isLocalPlayer={true} />
+            <LineBetween
+              guess={guess.coordinates}
+              answer={getCenterOfGuessObject(guessObject)}
+              isLocalPlayer={true}
+            />
           )}
         </>
       ) : (
-        (
-          currentRound.status === RoundStatus.SHOWING_RESULTS && (
-            <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
-          )
+        currentRound.status === RoundStatus.SHOWING_RESULTS && (
+          <ZoomToBounds answer={getCenterOfGuessObject(guessObject)} />
         )
       )}
     </>
   );
 };
 
-
-const ZoomToBounds: React.FC<{ answer: Coord, guess?: Coord, }> = ({ answer, guess }) => {
+const ZoomToBounds: React.FC<{ answer: Coord; guess?: Coord }> = ({
+  answer,
+  guess,
+}) => {
   const map = useMap();
 
   useEffect(() => {
     if (map) {
-
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
 
@@ -204,11 +244,14 @@ const ZoomToBounds: React.FC<{ answer: Coord, guess?: Coord, }> = ({ answer, gue
   return null; // No visual render, just zooming to bounds
 };
 
-const LineBetween: React.FC<{ guess: Coord, answer: Coord, isLocalPlayer: boolean }> = ({ guess, answer, isLocalPlayer }) => {
+const LineBetween: React.FC<{
+  guess: Coord;
+  answer: Coord;
+  isLocalPlayer: boolean;
+}> = ({ guess, answer, isLocalPlayer }) => {
   const map = useMap();
 
   useEffect(() => {
-
     const line = new google.maps.Polyline({
       path: [
         { lat: guess.lat, lng: guess.lng },
@@ -217,16 +260,18 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord, isLocalPlayer: boolea
       geodesic: true,
       strokeColor: isLocalPlayer ? '#0000FF' : '#616161',
       strokeOpacity: 0,
-      icons: [{
-        icon: {
-          path: 'M 0,-1 0,1',
-          strokeOpacity: 1,
-          strokeWeight: isLocalPlayer ? 5 : 2,
-          scale: 4
+      icons: [
+        {
+          icon: {
+            path: 'M 0,-1 0,1',
+            strokeOpacity: 1,
+            strokeWeight: isLocalPlayer ? 5 : 2,
+            scale: 4,
+          },
+          offset: '20',
+          repeat: '20px',
         },
-        offset: '20',
-        repeat: '20px'
-      }],
+      ],
       map: map,
     });
     line.setMap(map);
@@ -242,7 +287,11 @@ const LineBetween: React.FC<{ guess: Coord, answer: Coord, isLocalPlayer: boolea
   return null; // No visual render, just adding a line to the map
 };
 
-const ResetMap: React.FC<{ guessObjectId: string, center: Coord, zoom: number }> = ({ guessObjectId, center, zoom }) => {
+const ResetMap: React.FC<{
+  guessObjectId: string;
+  center: Coord;
+  zoom: number;
+}> = ({ guessObjectId, center, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -257,9 +306,11 @@ const ResetMap: React.FC<{ guessObjectId: string, center: Coord, zoom: number }>
   }, [guessObjectId]);
 
   return null;
-}
+};
 
-const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) => {
+const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({
+  guessObject,
+}) => {
   const map = useMap();
 
   useEffect(() => {
@@ -287,7 +338,10 @@ const AnswerDisplay: React.FC<{ guessObject: GuessObject }> = ({ guessObject }) 
   };
 
   return (
-    <AdvancedMarker position={point} anchorPoint={AdvancedMarkerAnchorPoint.CENTER}>
+    <AdvancedMarker
+      position={point}
+      anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
+    >
       <Image
         src="/img/answer_marker.png"
         alt="answer marker"
@@ -303,28 +357,34 @@ const getCenterOfGuessObject = (guessObject: GuessObject): Coord => {
     lat: guessObject.world_location?.centroid![0]!,
     lng: guessObject.world_location?.centroid![1]!,
   };
-}
+};
 
-const hasWin = (point: google.maps.LatLng, guessObject: GuessObject): boolean => {
+const hasWin = (
+  point: google.maps.LatLng,
+  guessObject: GuessObject,
+): boolean => {
   try {
-    const geoJson = guessObject.world_location?.geometry!
+    const geoJson = guessObject.world_location?.geometry!;
     if (geoJson.type === 'Point') return false;
     const turfPoint = turf.point([point.lng(), point.lat()]);
     return turf.booleanPointInPolygon(turfPoint, geoJson as any);
   } catch {
-    return false
+    return false;
   }
-}
+};
 
 const isGeoJSON = (guessObject: GuessObject): boolean => {
-  return (guessObject.world_location?.geometry?.type! === 'MultiPolygon' || guessObject.world_location?.geometry?.type! === 'Polygon')
-}
+  return (
+    guessObject.world_location?.geometry?.type! === 'MultiPolygon' ||
+    guessObject.world_location?.geometry?.type! === 'Polygon'
+  );
+};
 
 function convertToGeoJson(geometry: any) {
   return {
-    type: "Feature",
+    type: 'Feature',
     geometry,
-    properties: {}
+    properties: {},
   };
 }
 

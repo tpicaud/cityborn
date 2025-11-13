@@ -1,5 +1,11 @@
 // create-session.dto.ts
-import { IsArray, IsEnum, IsObject, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsObject,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { GameConfigDto, SessionDto } from './session.dto';
 import { CreateGameRecord, SessionMode } from '@cityborn/types';
@@ -13,7 +19,6 @@ export class CreateGameDto {
 }
 
 export class CreateGameRecordDto implements CreateGameRecord {
-
   @IsEnum(SessionMode)
   mode: SessionMode;
 

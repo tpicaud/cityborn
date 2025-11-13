@@ -1,7 +1,7 @@
-import { MongoClient } from "mongodb";
+import { MongoClient } from 'mongodb';
 
 // Configuration de la connexion MongoDB
-const uri = process.env.NEXT_PUBLIC_MONGODB_URI || "";
+const uri = process.env.NEXT_PUBLIC_MONGODB_URI || '';
 
 // Connexion persistante
 let dbClient: MongoClient | null = null;

@@ -1,4 +1,12 @@
-import { IsString, IsEmail, MinLength, MaxLength, Matches, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsDateString,
+  IsOptional,
+} from 'class-validator';
 
 export class SignUpDto {
   @IsString()
@@ -10,13 +18,14 @@ export class SignUpDto {
   email: string;
 
   @IsDateString()
-  birthdate: string
+  birthdate: string;
 
   @IsString()
   @MinLength(6)
   @MaxLength(32)
   @Matches(/^(?=.*[A-Z])(?=.*\d).+$/, {
-    message: 'The password must contain at least one uppercase letter and one number.',
+    message:
+      'The password must contain at least one uppercase letter and one number.',
   })
   password: string;
 }

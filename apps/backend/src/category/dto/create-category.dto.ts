@@ -1,17 +1,17 @@
-import { Type } from "class-transformer"
-import { IsString, IsOptional, IsArray, IsUUID } from "class-validator"
-import { GuessObjectDto } from "src/guess-object/dto/guess-object.dto"
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsArray, IsUUID } from 'class-validator';
+import { GuessObjectDto } from 'src/guess-object/dto/guess-object.dto';
 
 export class CreateCategoryDto {
-    @IsString()
-    name: string
+  @IsString()
+  name: string;
 
-    @IsOptional()
-    @IsString()
-    description?: string
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsOptional()
-    @IsArray()
-    @IsUUID('all', { each: true })
-    guessObjectIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  guessObjectIds?: string[];
 }

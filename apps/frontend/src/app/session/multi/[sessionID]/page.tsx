@@ -1,5 +1,5 @@
-import MultiSessionComponent from "@/components/Session/MultiSessionComponent";
+import MultiSessionComponent from '@/components/Session/MultiSessionComponent';
 
 export default function MultiSessionPage() {
-    return <MultiSessionComponent />
+  return <MultiSessionComponent />;
 }

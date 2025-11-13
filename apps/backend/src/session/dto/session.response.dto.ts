@@ -1,7 +1,7 @@
-import { Type } from "class-transformer";
-import { SessionDto } from "./session.dto";
+import { Type } from 'class-transformer';
+import { SessionDto } from './session.dto';
 
 export class SessionResponseDto {
-    @Type(() => SessionDto)
-    session: SessionDto;
+  @Type(() => SessionDto)
+  session: SessionDto;
 }

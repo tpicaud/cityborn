@@ -4,10 +4,10 @@ import { CreateEventDto } from './dto/create-event.dto';
 
 @Controller('event')
 export class EventController {
-    constructor (private readonly eventService: EventService) { }
+  constructor(private readonly eventService: EventService) {}
 
-    @Post('track')
-    async track(@Body() eventDto: CreateEventDto) {
-        return await this.eventService.trackEvent(eventDto);
-    }
+  @Post('track')
+  async track(@Body() eventDto: CreateEventDto) {
+    return await this.eventService.trackEvent(eventDto);
+  }
 }

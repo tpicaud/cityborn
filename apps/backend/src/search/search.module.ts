@@ -9,6 +9,11 @@ import { NominatimModule } from 'src/nominatim/nominatim.module';
 @Module({
   controllers: [AdminSearchController],
   providers: [SearchService],
-  imports: [GuessObjectModule, WikidataModule, WorldLocationModule, NominatimModule]
+  imports: [
+    GuessObjectModule,
+    WikidataModule,
+    WorldLocationModule,
+    NominatimModule,
+  ],
 })
 export class SearchModule {}
