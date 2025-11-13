@@ -5,4 +5,4 @@
 @import "nativewind/theme";
 
 /* Shared theme */
-@import "@cityborn/design-system/cityborn-theme.css"
+@import "@cityborn/design-system/dist/cityborn-theme.css"
