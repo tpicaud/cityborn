@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@cityborn/errors": "workspace:*",
+    "@cityborn/types": "workspace:*",
     "axios": "^1.10.0",
     "typescript": "^5.9.3"
   }
