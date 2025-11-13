@@ -121,3 +121,4 @@
 | 04/11/2025 | 8h          | Intégration nouveaux modèle dans le frontend                                         |
 | 05/11/2025 | 8h          | Passage prod                                                                         |
 | 06/11/2025 | 5h          | Résolution problème mmigration database                                              |
+| 12/11/2025 | 7h          | Prise en main Expo                                                                   |

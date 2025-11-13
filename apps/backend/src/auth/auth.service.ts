@@ -1,4 +1,11 @@
-import { Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
@@ -19,247 +26,352 @@ import { EventService } from 'src/event/event.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
 
-    private readonly logger = new Logger(AuthService.name);
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly mailService: MailService,
+    private readonly eventService: EventService,
+    @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
+  ) {}
 
-    constructor(
-        private readonly userService: UserService,
-        private readonly jwtService: JwtService,
-        private readonly configService: ConfigService,
-        private readonly mailService: MailService,
-        private readonly eventService: EventService,
-        @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
-    ) { }
+  async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
+    const { email, username, birthdate, password } = dto;
 
-    async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
-        const { email, username, birthdate, password } = dto;
+    // Validate identifiers
+    await this.userService.validateIdentifiers(username, email);
 
-        // Validate identifiers
-        await this.userService.validateIdentifiers(username, email);
+    // Hash password
+    const hash = await bcrypt.hash(password, 10);
 
-        // Hash password
-        const hash = await bcrypt.hash(password, 10);
+    const user = await this.userService.createUser({
+      email,
+      username,
+      type: 'email',
+      birthdate,
+      password: hash,
+    });
+    if (!user)
+      throw new InternalServerErrorException({
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: `Error creating user in database`,
+      });
 
-        const user = await this.userService.createUser({
-            email,
-            username,
-            type: 'email',
-            birthdate,
-            password: hash,
+    // Send verification email
+    const verification_token =
+      await this.userService.createVerificationToken(user);
+    await this.mailService.sendVerificationEmail(email, verification_token);
+
+    // Create JWT
+    const access_token = await this.generateToken(
+      'access',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+    const refresh_token = await this.generateToken(
+      'refresh',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+
+    // Send event
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_up',
+          visitorId,
+          properties: {
+            method: 'email',
+          },
+        }),
+      );
+    }
+
+    return {
+      access_token,
+      refresh_token,
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  async signIn(dto: SignInDto, visitorId?: string): Promise<AuthResponseDto> {
+    const { identifier, password } = dto;
+
+    // Find user
+    const user = await this.userService.findByIdentifier(identifier);
+    if (!user)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: `Invalid credentials`,
+      });
+
+    // Check if vanilla account
+    if (!user.password)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: `Invalid credentials`,
+      });
+
+    // Validate password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: `Invalid credentials`,
+      });
+
+    // Create JWT
+    const access_token = await this.generateToken(
+      'access',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+    const refresh_token = await this.generateToken(
+      'refresh',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+
+    // Send event
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_in',
+          visitorId,
+          properties: {
+            method: 'email',
+          },
+        }),
+      );
+    }
+
+    return {
+      access_token,
+      refresh_token,
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  async signInWithGoogle(
+    dto: SignInWithGoogleDto,
+    visitorId?: string,
+  ): Promise<AuthResponseDto> {
+    const { idToken } = dto;
+
+    const { email, name } = await this.verifyGoogleToken(idToken);
+
+    // Vérifie si l’utilisateur existe déjà
+    let user = await this.userService.findByIdentifier(email);
+
+    if (!user) {
+      const uniqueUsername = await this.generateUniqueUsername(name);
+
+      user = await this.userService.createUser({
+        email,
+        username: uniqueUsername,
+        type: 'google',
+        isVerified: true,
+      });
+
+      // Send event
+      if (visitorId) {
+        await this.eventService.trackEvent(
+          createEvent({
+            name: 'user_signed_up',
+            visitorId,
+            properties: {
+              method: 'google',
+            },
+          }),
+        );
+      }
+    } else {
+      // Send event
+      if (visitorId) {
+        await this.eventService.trackEvent(
+          createEvent({
+            name: 'user_signed_in',
+            visitorId,
+            properties: {
+              method: 'google',
+            },
+          }),
+        );
+      }
+    }
+
+    const access_token = await this.generateToken(
+      'access',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+    const refresh_token = await this.generateToken(
+      'refresh',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+
+    return {
+      access_token,
+      refresh_token,
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  async refresh(identifier: string): Promise<AuthResponseDto> {
+    const user = await this.userService.findByIdentifier(identifier);
+    if (!user)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_REFRESH_FAILED,
+        message: 'Invalid refresh token',
+      });
+
+    const access_token = await this.generateToken(
+      'access',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+    const refresh_token = await this.generateToken(
+      'refresh',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+
+    return {
+      access_token,
+      refresh_token,
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  async sendVerificationEmail(currentUser: any): Promise<void> {
+    try {
+      const user = await this.userService.findByIdentifier(currentUser.email);
+      if (!user) return; // no error for security
+
+      // Send verification email
+      const verification_token =
+        await this.userService.createVerificationToken(user);
+      await this.mailService.sendVerificationEmail(
+        user.email,
+        verification_token,
+      );
+    } catch {
+      return; // no error for security
+    }
+  }
+
+  async verifyEmail(dto: VerifyEmailDto): Promise<void> {
+    const { verification_token } = dto;
+    return await this.userService.verifyEmail(verification_token);
+  }
+
+  async getProfile(identifier: string): Promise<PublicUserResponseDto> {
+    const user = await this.userService.findByIdentifier(identifier);
+    if (!user)
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User not found`,
+      });
+
+    return {
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  // Auxiliary
+  private async generateToken(
+    type: 'access' | 'refresh',
+    id: string,
+    username: string,
+    email: string,
+    isVerified: boolean,
+  ): Promise<string> {
+    const payload = {
+      id,
+      username,
+      email,
+      isVerified,
+    };
+
+    switch (type) {
+      case 'access':
+        return await this.jwtService.signAsync(payload, {
+          secret: getJwtConstants(this.configService).jwt_access_secret,
+          expiresIn: '15m',
         });
-        if (!user) throw new InternalServerErrorException({ code: ErrorCode.UNKNOWN_ERROR, message: `Error creating user in database` });
 
-        // Send verification email
-        const verification_token = await this.userService.createVerificationToken(user);
-        await this.mailService.sendVerificationEmail(email, verification_token);
-
-        // Create JWT
-        const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
-        const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
-
-        // Send event
-        if (visitorId) {
-            await this.eventService.trackEvent(createEvent({
-                name: 'user_signed_up',
-                visitorId,
-                properties: {
-                    method: 'email'
-                }
-            }));
-        }
-
-        return {
-            access_token,
-            refresh_token,
-            user: UserMapper.toUserDto(user)
-        }
-    }
-
-
-    async signIn(dto: SignInDto, visitorId?: string): Promise<AuthResponseDto> {
-        const { identifier, password } = dto;
-
-        // Find user
-        const user = await this.userService.findByIdentifier(identifier);
-        if (!user) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: `Invalid credentials` });
-
-        // Check if vanilla account
-        if (!user.password) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: `Invalid credentials` });
-
-        // Validate password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: `Invalid credentials` });
-
-        // Create JWT
-        const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
-        const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
-
-                // Send event
-        if (visitorId) {
-            await this.eventService.trackEvent(createEvent({
-                name: 'user_signed_in',
-                visitorId,
-                properties: {
-                    method: 'email'
-                }
-            }));
-        }
-
-        return {
-            access_token,
-            refresh_token,
-            user: UserMapper.toUserDto(user)
-        }
-    }
-
-    async signInWithGoogle(dto: SignInWithGoogleDto, visitorId?: string): Promise<AuthResponseDto> {
-        const { idToken } = dto;
-
-        const { email, name } = await this.verifyGoogleToken(idToken);
-
-        // Vérifie si l’utilisateur existe déjà
-        let user = await this.userService.findByIdentifier(email);
-
-        if (!user) {
-            const uniqueUsername = await this.generateUniqueUsername(name);
-
-            user = await this.userService.createUser({
-                email,
-                username: uniqueUsername,
-                type: 'google',
-                isVerified: true
-            });
-
-            // Send event
-            if (visitorId) {
-                await this.eventService.trackEvent(createEvent({
-                    name: 'user_signed_up',
-                    visitorId,
-                    properties: {
-                        method: 'google'
-                    }
-                }));
-            }
-        } else {
-            // Send event
-            if (visitorId) {
-                await this.eventService.trackEvent(createEvent({
-                    name: 'user_signed_in',
-                    visitorId,
-                    properties: {
-                        method: 'google'
-                    }
-                }));
-            }
-        }
-
-
-        const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
-        const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
-
-        return {
-            access_token,
-            refresh_token,
-            user: UserMapper.toUserDto(user)
-        }
-    }
-
-    async refresh(identifier: string): Promise<AuthResponseDto> {
-        const user = await this.userService.findByIdentifier(identifier);
-        if (!user) throw new UnauthorizedException({ code: ErrorCode.USER_REFRESH_FAILED, message: "Invalid refresh token" })
-
-        const access_token = await this.generateToken('access', user.id, user.username, user.email, user.isVerified);
-        const refresh_token = await this.generateToken('refresh', user.id, user.username, user.email, user.isVerified);
-
-        return {
-            access_token,
-            refresh_token,
-            user: UserMapper.toUserDto(user)
-        }
-    }
-
-    async sendVerificationEmail(currentUser: any): Promise<void> {
-        try {
-            const user = await this.userService.findByIdentifier(currentUser.email);
-            if (!user) return // no error for security
-
-            // Send verification email
-            const verification_token = await this.userService.createVerificationToken(user);
-            await this.mailService.sendVerificationEmail(user.email, verification_token);
-        } catch {
-            return; // no error for security
-        }
-    }
-
-    async verifyEmail(dto: VerifyEmailDto): Promise<void> {
-        const { verification_token } = dto;
-        return await this.userService.verifyEmail(verification_token);
-    }
-
-    async getProfile(identifier: string): Promise<PublicUserResponseDto> {
-        const user = await this.userService.findByIdentifier(identifier);
-        if (!user) throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User not found` });
-
-        return {
-            user: UserMapper.toUserDto(user)
-        }
-    }
-
-    // Auxiliary
-    private async generateToken(type: 'access' | 'refresh', id: string, username: string, email: string, isVerified: boolean): Promise<string> {
-        const payload = {
-            id,
-            username,
-            email,
-            isVerified
-        }
-
-        switch (type) {
-            case 'access':
-                return await this.jwtService.signAsync(payload, {
-                    secret: getJwtConstants(this.configService).jwt_access_secret,
-                    expiresIn: '15m'
-                });
-
-            case 'refresh':
-                return await this.jwtService.signAsync(payload, {
-                    secret: getJwtConstants(this.configService).jwt_refresh_secret,
-                    expiresIn: '7d'
-                });
-        }
-    }
-
-    private async verifyGoogleToken(idToken: string) {
-        const ticket = await this.googleClient.verifyIdToken({
-            idToken,
-            audience: process.env.GOOGLE_CLIENT_ID,
+      case 'refresh':
+        return await this.jwtService.signAsync(payload, {
+          secret: getJwtConstants(this.configService).jwt_refresh_secret,
+          expiresIn: '7d',
         });
-        const payload = ticket.getPayload();
-        if (!payload) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: 'Invalid credentials' });
+    }
+  }
 
-        if (!payload.email_verified) throw new UnauthorizedException({ code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED, message: 'Google account not verified' });
+  private async verifyGoogleToken(idToken: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'Invalid credentials',
+      });
 
-        if (!payload.email || !payload.name) throw new UnauthorizedException({ code: ErrorCode.USER_INVALID_CREDENTIALS, message: 'Missing name or email' });
+    if (!payload.email_verified)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED,
+        message: 'Google account not verified',
+      });
 
-        return {
-            email: payload.email,
-            name: payload.name,
-        };
+    if (!payload.email || !payload.name)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'Missing name or email',
+      });
+
+    return {
+      email: payload.email,
+      name: payload.name,
+    };
+  }
+
+  private async generateUniqueUsername(base: string): Promise<string> {
+    const sanitized = base.replace(/\s+/g, '').toLowerCase();
+
+    let username: string = sanitized;
+    let exists = true;
+
+    while (exists) {
+      const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
+      username = `${sanitized}${suffix}`;
+
+      exists = (await this.userService.findByIdentifier(username))
+        ? true
+        : false;
     }
 
-    private async generateUniqueUsername(base: string): Promise<string> {
-        const sanitized = base.replace(/\s+/g, '').toLowerCase();
-
-        let username: string = sanitized;
-        let exists = true;
-
-        while (exists) {
-            const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
-            username = `${sanitized}${suffix}`;
-
-            exists = await this.userService.findByIdentifier(username) ? true : false;
-        }
-
-        return username;
-    }
+    return username;
+  }
 }

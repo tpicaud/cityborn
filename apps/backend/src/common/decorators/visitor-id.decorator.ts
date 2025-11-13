@@ -1,4 +1,8 @@
-import { ContextType, createParamDecorator, ExecutionContext } from "@nestjs/common";
+import {
+  ContextType,
+  createParamDecorator,
+  ExecutionContext,
+} from '@nestjs/common';
 
 export const VisitorId = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {

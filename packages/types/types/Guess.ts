@@ -1,8 +1,8 @@
-import { Coord } from "./Coord.js";
+import { Coord } from './Coord.js';
 
 export interface Guess {
-    coordinates: Coord;
-    distance: number;
-    points: number;
-    win: boolean;
+  coordinates: Coord;
+  distance: number;
+  points: number;
+  win: boolean;
 }

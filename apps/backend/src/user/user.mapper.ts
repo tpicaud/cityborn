@@ -1,5 +1,14 @@
-import { GameConfig, Player, PlayerResults, SessionMode, User } from '@cityborn/types';
-import { User as PrismaUser, GameRecord as PrismaGameRecord } from '@prisma/client';
+import {
+  GameConfig,
+  Player,
+  PlayerResults,
+  SessionMode,
+  User,
+} from '@cityborn/types';
+import {
+  User as PrismaUser,
+  GameRecord as PrismaGameRecord,
+} from '@prisma/client';
 import { UserDto } from './dto/user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 
@@ -14,20 +23,22 @@ export class UserMapper {
       username: prismaUser.username,
       birthdate: prismaUser.birthdate?.toISOString(),
       createdAt: prismaUser.createdAt.toISOString(),
-      updatedAt: prismaUser.updatedAt ? prismaUser.updatedAt.toISOString() : undefined,
+      updatedAt: prismaUser.updatedAt
+        ? prismaUser.updatedAt.toISOString()
+        : undefined,
       isVerified: prismaUser.isVerified,
       relations: {
-        games: prismaUser.gameRecords?.map(game => ({
+        games: prismaUser.gameRecords?.map((game) => ({
           id: game.id,
           mode: game.mode as SessionMode,
           gameConfig: game.gameConfig as unknown as GameConfig,
           players: game.players as unknown as Player[],
           guessObjectsIds: game.guessObjectsIds,
           results: game.results as unknown as Record<string, PlayerResults>,
-          createdAt: game.createdAt.toISOString()
-        }))
-      }
-    }
+          createdAt: game.createdAt.toISOString(),
+        })),
+      },
+    };
   }
 
   static toPublicUserDto(user: User): PublicUserDto {

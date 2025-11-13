@@ -7,6 +7,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [SentenceController],
   providers: [SentenceService],
-  exports: [SentenceService]
+  exports: [SentenceService],
 })
 export class SentenceModule {}

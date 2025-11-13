@@ -3,6 +3,6 @@ import { RedisHTTPService } from './redisHTTP.service';
 
 @Module({
   providers: [RedisHTTPService],
-  exports: [RedisHTTPService]
+  exports: [RedisHTTPService],
 })
 export class RedisHTTPModule {}

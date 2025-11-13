@@ -25,7 +25,6 @@
 //     isGuest: boolean
 // }
 
-
 // @Schema()
 // export class Session implements SessionType {
 //     @Prop({ required: true })

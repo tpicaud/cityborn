@@ -1,9 +1,8 @@
-import { GameRecord } from "./Game.js";
+import { GameRecord } from './Game.js';
 
 export type AccountType = 'email' | 'google';
 
 export class PublicUser {
-
   /////////////
   // Profile //
   /////////////
@@ -12,11 +11,9 @@ export class PublicUser {
   username: string;
 
   isVerified: boolean;
-
 }
 
 export class User extends PublicUser {
-
   /////////////
   // Profile //
   /////////////
@@ -35,8 +32,6 @@ export class User extends PublicUser {
   // Relations //
   ///////////////
   relations?: {
-
-    games?: GameRecord[]
-
-  }
+    games?: GameRecord[];
+  };
 }

@@ -3,6 +3,6 @@ import { LockService } from './lock.service';
 
 @Module({
   providers: [LockService],
-  exports: [LockService]
+  exports: [LockService],
 })
 export class LockModule {}

@@ -1,322 +1,342 @@
-import { getOrCreateVisitorId } from "@/lib/visitorId";
-import { ApiError } from "@cityborn/errors";
-import { Category, CreateEvent, Game, GameRecord, GuessObject, PublicUser, Session, SessionMode } from "@cityborn/types";
+import { getOrCreateVisitorId } from '@/lib/visitorId';
+import { ApiError } from '@cityborn/errors';
+import {
+  Category,
+  CreateEvent,
+  Game,
+  GameRecord,
+  GuessObject,
+  PublicUser,
+  Session,
+  SessionMode,
+} from '@cityborn/types';
 
 export class ApiClient {
+  constructor() {}
 
-    constructor() { }
+  private async apiFetch(input: string, init?: RequestInit) {
+    // Headers
+    const headers = new Headers(init?.headers || {});
+    headers.set('Accept', 'application/json');
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-Visitor-Id', getOrCreateVisitorId());
 
-    private async apiFetch(input: string, init?: RequestInit) {
+    // Fetch
+    const response = await fetch(input, { ...init, headers });
+    return response;
+  }
 
-        // Headers
-        const headers = new Headers(init?.headers || {});
-        headers.set('Accept', 'application/json');
-        headers.set('Content-Type', 'application/json');
-        headers.set('X-Visitor-Id', getOrCreateVisitorId());
+  //////////////////
+  // Auth service //
+  //////////////////
 
-        // Fetch
-        const response = await fetch(input, { ...init, headers });
-        return response;
+  async getCurrentUser(): Promise<PublicUser | null> {
+    const response = await this.apiFetch(`/api/auth/me`, { method: 'GET' });
+
+    const data = await response.json();
+    if (!data) throw new Error('Invalid server response');
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
+    return (data.user as PublicUser) || null;
+  }
 
-    //////////////////
-    // Auth service //
-    //////////////////
+  async signUp(
+    username: string,
+    email: string,
+    birthdate: Date,
+    password: string,
+  ): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/sign-up`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, email, birthdate, password }),
+    });
 
-    async getCurrentUser(): Promise<PublicUser | null> {
-        const response = await this.apiFetch(`/api/auth/me`, { method: 'GET' });
+    const data = await response.json();
 
-        const data = await response.json();
-        if (!data) throw new Error("Invalid server response");
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+  async signIn(identifier: string, password: string): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/sign-in`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ identifier, password }),
+    });
 
-        return data.user as PublicUser || null;
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  async signOut(): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/sign-out`, {
+      method: 'POST',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  async signInWithGoogle(idToken: string): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/sign-in-with-google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  async sendVerificationEmail(): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/send-verification-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  async verifyEmail(verification_token: string): Promise<void> {
+    const response = await this.apiFetch(`/api/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ verification_token }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  //////////////////
+  // User service //
+  //////////////////
+
+  async getGameRecords(): Promise<GameRecord[]> {
+    const response = await this.apiFetch(`/api/user/game-records`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async signUp(username: string, email: string, birthdate: Date, password: string): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/sign-up`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, email, birthdate, password }),
-        });
+    return data.gameRecords as GameRecord[];
+  }
 
-        const data = await response.json();
+  async saveGameRecords(gameRecord: GameRecord): Promise<void> {
+    const response = await this.apiFetch(`/api/user/game-records`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(gameRecord),
+    });
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
+    }
+  }
+
+  //////////////////////
+  // Sessions service //
+  //////////////////////
+
+  async createSession(mode: SessionMode): Promise<Session> {
+    const response = await this.apiFetch(`/api/session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mode }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async signIn(identifier: string, password: string): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/sign-in`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ identifier, password }),
-        });
+    return data.session as Session;
+  }
 
-        const data = await response.json();
+  async fetchSession(sessionId: string): Promise<Session> {
+    const response = await this.apiFetch(`/api/session/${sessionId}`, {
+      method: 'GET',
+    });
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async signOut(): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/sign-out`, { method: 'POST' });
+    return data.session as Session;
+  }
 
-        const data = await response.json();
+  async fetchCategories(): Promise<Category[]> {
+    const response = await this.apiFetch(`/api/category`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async signInWithGoogle(idToken: string): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/sign-in-with-google`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ idToken }),
-        });
+    return data.categories;
+  }
 
-        const data = await response.json();
+  async fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
+    const query = new URLSearchParams({
+      ids: guessObjectsIds.join(','),
+    });
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const response = await this.apiFetch(
+      `/api/guess-objects?${query.toString()}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ guessObjectsIds }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async sendVerificationEmail(): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/send-verification-email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+    return data.guessObjects;
+  }
 
-        const data = await response.json();
+  async getEndSentence(score_type: string): Promise<string> {
+    const response = await this.apiFetch(
+      `/api/sentence?score_type=${encodeURIComponent(score_type)}`,
+    );
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    async verifyEmail(verification_token: string): Promise<void> {
-        const response = await this.apiFetch(`/api/auth/verify-email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ verification_token }),
-        });
+    return data.message ?? '';
+  }
 
-        const data = await response.json();
+  //////////////////
+  // Game service //
+  //////////////////
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+  async createSoloGame(session: Session) {
+    const response = await this.apiFetch(`/api/session/create-game`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ session }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    //////////////////
-    // User service //
-    //////////////////
+    const game: Game = data.game;
 
-    async getGameRecords(): Promise<GameRecord[]> {
-        const response = await this.apiFetch(`/api/user/game-records`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+    return game;
+  }
 
-        const data = await response.json();
+  async endSoloGame(session: Session) {
+    if (!session.currentGame) return;
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    const lightSession: Session = {
+      ...session,
+      currentGame: {
+        ...session.currentGame,
+        state: {
+          ...session.currentGame?.state,
+          guessObjects: undefined,
+        },
+      },
+    };
 
-        return data.gameRecords as GameRecord[];
+    const response = await this.apiFetch(`/api/session/end-solo-game`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(lightSession),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
+  }
 
-    async saveGameRecords(gameRecord: GameRecord): Promise<void> {
-        const response = await this.apiFetch(`/api/user/game-records`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(gameRecord),
-        });
+  //////////////////
+  // Event service //
+  //////////////////
+  async trackEvent(event: CreateEvent): Promise<void> {
+    const response = await this.apiFetch(`/api/event/track`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(event),
+    });
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
+    if (!response.ok) {
+      throw new ApiError(data.code, data.message, data.statusCode);
     }
-
-    //////////////////////
-    // Sessions service //
-    //////////////////////
-
-    async createSession(mode: SessionMode): Promise<Session> {
-        const response = await this.apiFetch(`/api/session`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mode }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        return data.session as Session;
-    }
-
-    async fetchSession(sessionId: string): Promise<Session> {
-        const response = await this.apiFetch(`/api/session/${sessionId}`, { method: 'GET' });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        return data.session as Session;
-    }
-
-    async fetchCategories(): Promise<Category[]> {
-        const response = await this.apiFetch(`/api/category`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        return data.categories;
-    }
-
-    async fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
-        const query = new URLSearchParams({
-            ids: guessObjectsIds.join(','),
-        });
-
-        const response = await this.apiFetch(`/api/guess-objects?${query.toString()}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ guessObjectsIds }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        return data.guessObjects;
-    }
-
-    async getEndSentence(score_type: string): Promise<string> {
-        const response = await this.apiFetch(`/api/sentence?score_type=${encodeURIComponent(score_type)}`);
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        return data.message ?? '';
-    }
-
-    //////////////////
-    // Game service //
-    //////////////////
-
-    async createSoloGame(session: Session) {
-        const response = await this.apiFetch(`/api/session/create-game`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ session }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-
-        const game: Game = data.game;
-
-        return game;
-    }
-
-    async endSoloGame(session: Session) {
-        if (!session.currentGame) return;
-
-        const lightSession: Session = {
-            ...session,
-            currentGame: {
-                ...session.currentGame,
-                state: {
-                    ...session.currentGame?.state,
-                    guessObjects: undefined
-                }
-            }
-        };
-
-        const response = await this.apiFetch(`/api/session/end-solo-game`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(lightSession),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-    }
-
-    //////////////////
-    // Event service //
-    //////////////////
-    async trackEvent(event: CreateEvent): Promise<void> {
-        const response = await this.apiFetch(`/api/event/track`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(event),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new ApiError(data.code, data.message, data.statusCode);
-        }
-    }
+  }
 }

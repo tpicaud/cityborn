@@ -1,5 +1,5 @@
 // src/lib/rate-limit.ts
-import { cookies } from "next/headers";
+import { cookies } from 'next/headers';
 
 interface LoginAttempt {
   count: number;
@@ -17,10 +17,10 @@ export async function checkRateLimit(): Promise<{
   resetTime?: number;
 }> {
   const cookieStore = await cookies();
-  const attemptsData = cookieStore.get("login_attempts")?.value;
-  
+  const attemptsData = cookieStore.get('login_attempts')?.value;
+
   let attempts: LoginAttempt = { count: 0, lastAttempt: 0 };
-  
+
   if (attemptsData) {
     try {
       attempts = JSON.parse(attemptsData);
@@ -29,9 +29,9 @@ export async function checkRateLimit(): Promise<{
       attempts = { count: 0, lastAttempt: 0 };
     }
   }
-  
+
   const now = Date.now();
-  
+
   // Check if currently locked
   if (attempts.lockedUntil && now < attempts.lockedUntil) {
     return {
@@ -40,14 +40,14 @@ export async function checkRateLimit(): Promise<{
       resetTime: attempts.lockedUntil,
     };
   }
-  
+
   // Reset attempts if window has passed
   if (now - attempts.lastAttempt > RESET_WINDOW) {
     attempts = { count: 0, lastAttempt: now };
   }
-  
+
   const remainingAttempts = Math.max(0, MAX_ATTEMPTS - attempts.count);
-  
+
   return {
     isBlocked: false,
     remainingAttempts,
@@ -56,10 +56,10 @@ export async function checkRateLimit(): Promise<{
 
 export async function recordFailedAttempt(): Promise<void> {
   const cookieStore = await cookies();
-  const attemptsData = cookieStore.get("login_attempts")?.value;
-  
+  const attemptsData = cookieStore.get('login_attempts')?.value;
+
   let attempts: LoginAttempt = { count: 0, lastAttempt: 0 };
-  
+
   if (attemptsData) {
     try {
       attempts = JSON.parse(attemptsData);
@@ -67,31 +67,31 @@ export async function recordFailedAttempt(): Promise<void> {
       attempts = { count: 0, lastAttempt: 0 };
     }
   }
-  
+
   const now = Date.now();
-  
+
   // Reset if window has passed
   if (now - attempts.lastAttempt > RESET_WINDOW) {
     attempts = { count: 0, lastAttempt: now };
   }
-  
+
   attempts.count += 1;
   attempts.lastAttempt = now;
-  
+
   // Lock if max attempts reached
   if (attempts.count >= MAX_ATTEMPTS) {
     attempts.lockedUntil = now + LOCK_DURATION;
   }
-  
-  cookieStore.set("login_attempts", JSON.stringify(attempts), {
+
+  cookieStore.set('login_attempts', JSON.stringify(attempts), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60, // 24 hours
   });
 }
 
 export async function resetAttempts(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete("login_attempts");
+  cookieStore.delete('login_attempts');
 }

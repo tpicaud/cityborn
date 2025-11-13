@@ -2,7 +2,7 @@
 
 // const checkDataValidity = async () => {
 //     console.log("Checking data validity...");
-//     const titles: string[] = [] 
+//     const titles: string[] = []
 
 //     try {
 //         // Check the stars.csv validity by checking wikipedia pages
@@ -15,7 +15,6 @@
 //     } catch (error) {
 //         console.error('Erreur lors de la lecture du csv', error);
 //     }
-
 
 //     const incorrectTitles = await checkPagesValidity(titles);
 

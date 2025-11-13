@@ -1,7 +1,7 @@
 // src/app/logout/action.ts
-"use server";
+'use server';
 
-import { deleteSession } from "@/lib/auth";
+import { deleteSession } from '@/lib/auth';
 
 export async function logout() {
   await deleteSession();

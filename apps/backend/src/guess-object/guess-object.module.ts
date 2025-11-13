@@ -9,6 +9,6 @@ import { AdminGuessObjectController } from './controllers/guess-object.admin.con
   imports: [PrismaModule, WorldLocationModule],
   controllers: [PublicGuessObjectController, AdminGuessObjectController],
   providers: [GuessObjectService],
-  exports: [GuessObjectService]
+  exports: [GuessObjectService],
 })
-export class GuessObjectModule { }
+export class GuessObjectModule {}

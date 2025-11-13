@@ -7,6 +7,10 @@
   "homepage": "https://github.com/tpicaud/cityborn#readme",
   "packageManager": "pnpm@10.12.3",
   "scripts": {
+    "format": "prettier --write .",
+    "format:frontend": "prettier --write packages/cityborn-frontend",
+    "format:backend": "prettier --write packages/cityborn-backend",
+    "format:back-office": "prettier --write packages/cityborn-back-office",
     "build": "turbo run build",
     "build:backend": "turbo run build --filter=cityborn-backend",
     "build:frontend": "turbo run build --filter=cityborn-frontend",
@@ -26,6 +30,8 @@
     }
   },
   "devDependencies": {
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.6.2",
     "turbo": "^2.5.4"
   }
 }
