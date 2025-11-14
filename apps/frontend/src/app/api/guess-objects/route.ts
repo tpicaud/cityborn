@@ -1,33 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiFetch } from '../apiFetch';
-import { ErrorCode } from '@cityborn/errors';
+import { WebTokenStorage } from '@/lib/tokenStorage';
+import { ApiClient } from '@cityborn/api';
+import { cookies } from 'next/headers';
+import { getBaseUrl, throwApiError } from '../utils';
 
 export async function GET(req: NextRequest) {
+  const tokenStorage = new WebTokenStorage(await cookies());
+  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+
   try {
-    const queryString = req.nextUrl.searchParams.toString();
+    const searchParams = req.nextUrl.searchParams;
+    const guessObjectsIdsParam = searchParams.get('guessObjectsIds');
 
-    const response = await apiFetch(`/guess-objects?${queryString}`, {
-      requestOptions: {
-        method: 'GET',
-        headers: req.headers ?? {},
-      },
-    });
+    const guessObjectsIds: string[] = guessObjectsIdsParam
+      ? guessObjectsIdsParam.split(',')
+      : [];
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    const guessObjects = await apiClient.fetchGuessObjects(guessObjectsIds);
+    return NextResponse.json(guessObjects, { status: 200 });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: error.message || 'Internal Server Error',
-        statusCode: 500,
-      },
-      { status: 500 },
-    );
+    return throwApiError(error);
   }
 }

@@ -195,6 +195,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
+    console.log(data);
     return data.session as Session;
   }
 
@@ -265,7 +266,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.message ?? '';
+    return data.sentence.message ?? '';
   }
 
   //////////////////

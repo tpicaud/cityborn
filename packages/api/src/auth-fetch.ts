@@ -5,7 +5,7 @@ export class AuthFetch {
   private isRefreshing = false;
   private refreshQueue: ((token: string | null) => void)[] = [];
   private baseURL: string;
-  private tokenStorage: TokenStorage;
+  tokenStorage: TokenStorage;
 
   constructor(baseURL: string, tokenStorage: TokenStorage) {
     this.baseURL = baseURL.replace(/\/+$/, '');
