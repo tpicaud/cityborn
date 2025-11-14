@@ -15,6 +15,7 @@ export * from './types/User.js';
 export * from './types/Event.js';
 export * from './types/WorldLocation.js';
 export * from './types/Category.js';
+export * from './types/TokenStorage.js';
 
 export * from './enums/SessionMode.js';
 export * from './enums/GameStatus.js';
