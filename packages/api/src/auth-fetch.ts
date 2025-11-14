@@ -1,5 +1,5 @@
-import { ApiError, ErrorPayload } from '@cityborn/errors';
-import { TokenStorage } from './api-client';
+import { ApiError, ErrorCode, ErrorPayload } from '@cityborn/errors';
+import { TokenStorage } from '@cityborn/types';
 
 export class AuthFetch {
   private isRefreshing = false;
@@ -47,7 +47,7 @@ export class AuthFetch {
 
     // Handle refresh
     if (response.status === 401) {
-      return this.handle401<T>(method, url, body, options);
+      return await this.handle401<T>(method, url, body, options);
     }
 
     // Else throw error
@@ -96,7 +96,13 @@ export class AuthFetch {
 
   private async refreshToken(): Promise<string> {
     const refreshToken = await this.tokenStorage.getRefreshToken();
-    if (!refreshToken) throw new Error('No refresh token available');
+    if (!refreshToken) {
+      throw new ApiError(
+        ErrorCode.USER_REFRESH_FAILED,
+        'No refresh token available',
+        401,
+      );
+    }
 
     const response = await fetch(`${this.baseURL}/auth/refresh`, {
       method: 'POST',
@@ -104,7 +110,10 @@ export class AuthFetch {
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (!response.ok) throw new Error('Failed to refresh token');
+    if (!response.ok) {
+      const error: ErrorPayload = await response.json();
+      throw new ApiError(error.code, error.message, error.statusCode);
+    }
 
     const data = await response.json();
     const { access_token, refresh_token } = data;
@@ -119,22 +128,22 @@ export class AuthFetch {
 
   // ------- méthodes HTTP -------
   async get<T>(url: string, options?: RequestInit): Promise<T> {
-    return this.authFetch<T>('GET', url, undefined, options);
+    return await this.authFetch<T>('GET', url, undefined, options);
   }
 
   async post<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
-    return this.authFetch<T>('POST', url, body, options);
+    return await this.authFetch<T>('POST', url, body, options);
   }
 
   async put<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
-    return this.authFetch<T>('PUT', url, body, options);
+    return await this.authFetch<T>('PUT', url, body, options);
   }
 
   async patch<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
-    return this.authFetch<T>('PATCH', url, body, options);
+    return await this.authFetch<T>('PATCH', url, body, options);
   }
 
   async delete<T>(url: string, options?: RequestInit): Promise<T> {
-    return this.authFetch<T>('DELETE', url, undefined, options);
+    return await this.authFetch<T>('DELETE', url, undefined, options);
   }
 }
