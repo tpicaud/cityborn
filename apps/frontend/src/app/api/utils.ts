@@ -1,4 +1,4 @@
-import { ApiError, ErrorCode } from '@cityborn/errors';
+import { ApiError, ErrorCode, ErrorPayload } from '@cityborn/errors';
 import { NextResponse } from 'next/server';
 
 export function getBaseUrl(): string {
@@ -8,14 +8,13 @@ export function getBaseUrl(): string {
 }
 
 export function throwApiError(error: any) {
-  return NextResponse.json(
-    {
-      code: error.code ?? ErrorCode.UNKNOWN_ERROR,
-      message: error.message ?? 'Internal server error',
-      statusCode: error.statusCode ?? 500,
-    },
-    {
-      status: error.statusCode,
-    },
-  );
+  const apiError: ErrorPayload = {
+    code: error.code ?? ErrorCode.UNKNOWN_ERROR,
+    message: error.message ?? 'Internal server error',
+    statusCode: error.statusCode ?? 500,
+  };
+
+  return NextResponse.json(apiError, {
+    status: error.statusCode,
+  });
 }
