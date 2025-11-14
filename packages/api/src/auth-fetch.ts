@@ -66,7 +66,13 @@ export class AuthFetch {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
-            reject(new Error('Refresh failed'));
+            reject(
+              new ApiError(
+                ErrorCode.USER_REFRESH_FAILED,
+                'Refresh failed',
+                500,
+              ),
+            );
             return;
           }
           try {
@@ -126,7 +132,7 @@ export class AuthFetch {
     this.refreshQueue = [];
   }
 
-  // ------- méthodes HTTP -------
+  // ------- HTTP methods -------
   async get<T>(url: string, options?: RequestInit): Promise<T> {
     return await this.authFetch<T>('GET', url, undefined, options);
   }

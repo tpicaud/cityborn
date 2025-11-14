@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await apiClient.getCurrentUser();
     return NextResponse.json(user, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return throwApiError(error);
   }
 }
