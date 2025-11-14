@@ -35,3 +35,13 @@ export class User extends PublicUser {
     games?: GameRecord[];
   };
 }
+
+export class CreateUser {
+  username: string;
+
+  email: string;
+
+  birthdate: string;
+
+  password: string;
+}
