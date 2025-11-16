@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiFetch } from '../../apiFetch';
-import { ErrorCode } from '@cityborn/errors';
 import { WebTokenStorage } from '@/lib/tokenStorage';
 import { ApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
@@ -12,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const gameRecords = await apiClient.getGameRecords();
-    return NextResponse.json({ gameRecords }, { status: 200 });
+    return NextResponse.json(gameRecords, { status: 200 });
   } catch (error: any) {
     return throwApiError(error);
   }
