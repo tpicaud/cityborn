@@ -109,7 +109,7 @@ export class ApiClient {
   }
 
   async fetchSession(sessionId: string): Promise<Session> {
-    return await this.authFetch.get<Session>(`/sessions/${sessionId}`, {
+    return await this.authFetch.get<Session>(`/session/${sessionId}`, {
       method: 'GET',
       cache: 'no-store',
     });
