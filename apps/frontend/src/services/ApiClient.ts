@@ -265,7 +265,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.message ?? '';
+    return data.sentence.message ?? '';
   }
 
   //////////////////
@@ -282,7 +282,6 @@ export class ApiClient {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       throw new ApiError(data.code, data.message, data.statusCode);
     }

@@ -1,36 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiFetch } from '../../apiFetch';
-import { ErrorCode } from '@cityborn/errors';
+import { WebTokenStorage } from '@/lib/tokenStorage';
+import { ApiClient } from '@cityborn/api';
+import { cookies } from 'next/headers';
+import { getBaseUrl, throwApiError } from '../../utils';
 
 export async function POST(req: NextRequest) {
+  const tokenStorage = new WebTokenStorage(await cookies());
+  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+
   try {
     const body = await req.json();
 
-    const response = await apiFetch(`/auth/verify-email`, {
-      requestOptions: {
-        method: 'POST',
-        headers: req.headers ?? {},
-        body: JSON.stringify(body),
-      },
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      return NextResponse.json(data, { status: response.status });
-    }
-
+    await apiClient.verifyEmail(body.token);
     return NextResponse.json(
       { message: 'Email verified successfully' },
       { status: 200 },
     );
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: error.message || 'Internal Server Error',
-        statusCode: 500,
-      },
-      { status: 500 },
-    );
+    return throwApiError(error);
   }
 }

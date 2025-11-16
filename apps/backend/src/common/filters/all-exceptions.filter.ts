@@ -6,14 +6,8 @@ import {
   Logger,
   HttpException,
 } from '@nestjs/common';
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode, ErrorPayload } from '@cityborn/errors';
 import { WsException } from '@nestjs/websockets';
-
-type ErrorPayload = {
-  statusCode: HttpStatus;
-  code: ErrorCode;
-  message: string;
-};
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
