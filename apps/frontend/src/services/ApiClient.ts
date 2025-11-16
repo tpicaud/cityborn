@@ -195,7 +195,6 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    console.log(data);
     return data.session as Session;
   }
 
@@ -283,7 +282,6 @@ export class ApiClient {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       throw new ApiError(data.code, data.message, data.statusCode);
     }

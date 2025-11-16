@@ -23,6 +23,13 @@ export class ApiClient {
   //////////////////
 
   async getCurrentUser() {
+    const access_token = await this.authFetch.tokenStorage.getAccessToken();
+    const refresh_token = await this.authFetch.tokenStorage.getRefreshToken();
+
+    if (!access_token || !refresh_token) {
+      return null;
+    }
+
     return await this.authFetch.get<null | User>('/auth/me', {
       method: 'GET',
       cache: 'no-store',
@@ -58,7 +65,15 @@ export class ApiClient {
   }
 
   async signInWithGoogle(idToken: string) {
-    await this.authFetch.post<void>('/auth/sign-in-with-google', { idToken });
+    const tokens = await this.authFetch.post<{
+      access_token: string;
+      refresh_token: string;
+    }>('/auth/sign-in-with-google', { idToken });
+
+    await this.authFetch.tokenStorage.setTokens(
+      tokens.access_token,
+      tokens.refresh_token,
+    );
   }
 
   async sendVerificationEmail() {
@@ -117,7 +132,7 @@ export class ApiClient {
 
   async getEndSentence(score_type: string): Promise<string> {
     return await this.authFetch.get<string>(
-      `/end-sentences?score_type=${score_type}`,
+      `/sentence?score_type=${score_type}`,
       {
         method: 'GET',
         cache: 'no-store',
@@ -134,7 +149,7 @@ export class ApiClient {
   }
 
   async endSoloGame(session: Session): Promise<void> {
-    await this.authFetch.post<void>('/session/end-solo-game', { session });
+    await this.authFetch.post<void>('/session/end-solo-game', { ...session });
   }
 
   //////////////////
