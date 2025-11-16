@@ -5,7 +5,7 @@
       "path": "packages/types"
     },
     {
-      "path": "package/errors"
+      "path": "packages/errors"
     },
     {
       "path": "apps/backend"
