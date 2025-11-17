@@ -22,6 +22,7 @@ export default function HomeScreen() {
           ></TextInput>
           <Button variant="primary" label="Rejoindre" />
         </View>
+
         <View className="flex flex-row w-full items-center justify-between">
           <Button variant="primary" label="SOLO" className="w-[45%]" />
           <Button variant="primary" label="MULTI" className="w-[45%]" />
