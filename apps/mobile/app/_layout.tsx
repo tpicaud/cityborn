@@ -3,20 +3,36 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import '../global.css';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ImageBackground } from 'react-native';
 
 export default function RootLayout() {
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        paddingHorizontal: 16,
-        backgroundColor: '#f4f4f5',
-      }}
+    <ImageBackground
+      source={require('../assets/images/background_worldmap.png')}
+      resizeMode="cover"
+      className="h-full w-full absolute"
     >
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </SafeAreaView>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: 'transparent',
+        }}
+      >
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        >
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
