@@ -10,7 +10,7 @@ type Props = {
   size?: 'default';
   disabled?: boolean;
   className?: string;
-  onPress?: () => Promise<void>;
+  onPress?: () => Promise<void> | void;
 };
 
 export default function Button({

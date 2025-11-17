@@ -13,19 +13,20 @@ export default function HomeComponent() {
       />
       <View className="flex flex-col w-full items-center justify-between gap-4">
         <Button
-          variant="primary"
+          color="primary"
+          variant="outlined"
           label="CONNEXION"
           className="w-[70%] h-14 font-bold"
         />
         <Button
-          variant="primary"
+          color="primary"
+          variant="filled"
           label="INSCRIPTION"
           className="w-[70%] h-14"
         />
         <Button
           variant="default"
           label="Jouer sans compte"
-          className="w-[70%] h-14"
           onPress={() => router.navigate('/(tabs)/play')}
         />
       </View>
