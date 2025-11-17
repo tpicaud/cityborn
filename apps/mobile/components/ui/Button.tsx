@@ -1,55 +1,103 @@
 import { cn } from '@/lib/utils';
-import { StyleSheet, View, Pressable, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import LoaderIcon from './LoaderIcon';
 
 type Props = {
   label: string;
-  variant?: 'default' | 'primary' | 'destructive' | 'outlined' | 'ghost';
+  color?: 'primary' | 'destructive';
+  variant?: 'default' | 'filled' | 'outlined' | 'ghost';
   size?: 'default';
+  disabled?: boolean;
   className?: string;
-  onPress?: () => void;
+  onPress?: () => Promise<void>;
 };
 
 export default function Button({
   label,
-  variant = 'primary',
+  color = 'primary',
+  variant = 'filled',
   size = 'default',
+  disabled = false,
   className,
   onPress,
 }: Props) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePress = async () => {
+    if (!onPress) return;
+
+    try {
+      setIsLoading(true);
+      await onPress();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Default button
+  if (variant === 'default') {
+    return (
+      <Pressable onPress={handlePress} className={className}>
+        <Text className="font-medium text-zinc-900 underline">{label}</Text>
+      </Pressable>
+    );
+  }
+
+  // Styled button
+  const variantStyles = {
+    filled: '',
+    outlined: 'border-2',
+    ghost: '',
+  };
+
+  const containerStyles = {
+    primary: {
+      filled: 'bg-primary-500 hover:bg-primary-400',
+      outlined: 'bg-transparent border-primary-500 hover:bg-primary-500/10',
+      ghost: 'bg-transparent hover:bg-primary-500/10',
+    },
+    destructive: {
+      filled: 'bg-destructive-500 hover:bg-destructive-400',
+      outlined:
+        'bg-transparent border-destructive-500 hover:bg-destructive-500/10',
+      ghost: 'bg-transparent hover:bg-destructive-500/10',
+    },
+  };
+
+  const textStyles = {
+    primary: {
+      filled: 'text-zinc-50',
+      outlined: 'text-primary-500',
+      ghost: 'text-primary-400',
+    },
+    destructive: {
+      filled: 'text-zinc-50',
+      outlined: 'text-destructive-500',
+      ghost: 'text-destructive-500',
+    },
+  };
+
   return (
-    <View
+    <Pressable
+      onPress={handlePress}
+      disabled={disabled}
       className={cn(
-        /* base -------------------------------------------------------------- */
-        'inline-flex items-center justify-center whitespace-nowrap cursor-pointer rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-50',
-        /* variants ---------------------------------------------------------- */
-        variant === 'default' && 'text-zinc-900',
-        variant === 'primary' &&
-          'bg-primary-600 text-zinc-50 shadow hover:bg-primary/90',
-        variant === 'destructive' &&
-          'bg-red-700 text-zinc-50 shadow hover:bg-red-700',
-        variant === 'outlined' &&
-          'border border-zinc-700 bg-transparent text-zinc-50 hover:bg-zinc-800 hover:text-zinc-100',
-        variant === 'ghost' && 'hover:bg-zinc-800 hover:text-zinc-50',
-        /* sizes ------------------------------------------------------------- */
+        'inline-flex items-center justify-center rounded-full font-medium transition-colors',
         size === 'default' && 'h-10 w-48 px-4 py-1',
-        /* custom ------------------------------------------------------------ */
+        variantStyles[variant],
+        containerStyles[color][variant],
+        disabled && 'opacity-50 ',
         className,
       )}
     >
-      <Pressable onPress={onPress}>
-        <Text
-          className={cn(
-            /* variants ---------------------------------------------------------- */
-            variant === 'default' && 'text-zinc-900 underline',
-            variant === 'primary' && 'text-zinc-50',
-            variant === 'destructive' && 'text-zinc-50',
-            variant === 'outlined' && 'text-zinc-50',
-            variant === 'ghost' && 'text-zinc-50',
-          )}
-        >
+      {isLoading ? (
+        <LoaderIcon color="white" />
+      ) : (
+        <Text className={cn('font-medium', textStyles[color][variant])}>
           {label}
         </Text>
-      </Pressable>
-    </View>
+      )}
+    </Pressable>
   );
 }
