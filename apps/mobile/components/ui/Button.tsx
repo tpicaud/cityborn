@@ -20,10 +20,9 @@ export default function Button({
     <View
       className={cn(
         /* base -------------------------------------------------------------- */
-        'inline-flex items-center justify-center whitespace-nowrap cursor-pointer rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center whitespace-nowrap cursor-pointer rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-50',
         /* variants ---------------------------------------------------------- */
-        variant === 'default' &&
-          'bg-zinc-800 text-zinc-50 shadow hover:bg-zinc-700',
+        variant === 'default' && 'text-zinc-900',
         variant === 'primary' &&
           'bg-primary-600 text-zinc-50 shadow hover:bg-primary/90',
         variant === 'destructive' &&
@@ -32,7 +31,7 @@ export default function Button({
           'border border-zinc-700 bg-transparent text-zinc-50 hover:bg-zinc-800 hover:text-zinc-100',
         variant === 'ghost' && 'hover:bg-zinc-800 hover:text-zinc-50',
         /* sizes ------------------------------------------------------------- */
-        size === 'default' && 'h-10 w-40 px-4 py-1',
+        size === 'default' && 'h-10 w-48 px-4 py-1',
         /* custom ------------------------------------------------------------ */
         className,
       )}
@@ -41,7 +40,7 @@ export default function Button({
         <Text
           className={cn(
             /* variants ---------------------------------------------------------- */
-            variant === 'default' && 'text-zinc-50',
+            variant === 'default' && 'text-zinc-900 underline',
             variant === 'primary' && 'text-zinc-50',
             variant === 'destructive' && 'text-zinc-50',
             variant === 'outlined' && 'text-zinc-50',
