@@ -1,29 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { useAuth } from '@cityborn/contexts';
 import { apiClient } from '@/lib/apiClient';
 import Button from '@/components/ui/Button';
 import TextInput from '@/components/ui/TextInput';
+import { useRouter } from 'expo-router';
+import { getFriendlyErrorMessage } from '@cityborn/errors';
 
 export const SignInComponent = () => {
+  const router = useRouter();
   const { refreshUser } = useAuth();
-
   const [formValues, setFormValues] = useState({ username: '', password: '' });
-  const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    validateForm();
+  }, [formValues]);
 
   const handleChange = (key: string, value: string) => {
     setFormValues({ ...formValues, [key]: value });
   };
 
+  const validateForm = () => {
+    if (
+      formValues.username.trim() !== '' &&
+      formValues.password.trim() !== ''
+    ) {
+      setIsFormValid(true);
+    } else {
+      setIsFormValid(false);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
-      setIsSignInFormSubmitting(true);
+      setErrorMessage(null);
       await apiClient.signIn(formValues.username, formValues.password);
       await refreshUser();
+      router.navigate('/');
     } catch (error: any) {
+      setErrorMessage(getFriendlyErrorMessage(error));
       console.error(error);
-    } finally {
-      setIsSignInFormSubmitting(false);
     }
   };
 
@@ -33,25 +51,34 @@ export const SignInComponent = () => {
         CONNEXION
       </Text>
 
-      <View className="flex-col items-center justify-center gap-6 mb-32">
-        <TextInput
-          placeholder="Username"
-          value={formValues.username}
-          onChangeText={(text) => handleChange('username', text)}
-          autoCapitalize="none"
-        />
+      <View className="flex-col items-center justify-center w-auto gap-6 mb-32">
+        <View className="flex-col items-center justify-center gap-6">
+          <TextInput
+            placeholder="Username"
+            value={formValues.username}
+            onChangeText={(text) => handleChange('username', text)}
+            autoCapitalize="none"
+            error={!!errorMessage}
+          />
 
-        <TextInput
-          placeholder="Password"
-          value={formValues.password}
-          onChangeText={(text) => handleChange('password', text)}
-          secureTextEntry
-        />
+          <TextInput
+            placeholder="Password"
+            value={formValues.password}
+            onChangeText={(text) => handleChange('password', text)}
+            autoCapitalize="none"
+            secureTextEntry
+            error={!!errorMessage}
+          />
 
+          <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
+            {errorMessage}
+          </Text>
+        </View>
         <Button
           variant="filled"
           color="primary"
           size="large"
+          disabled={!isFormValid}
           label="SE CONNECTER"
           onPress={handleSubmit}
         />

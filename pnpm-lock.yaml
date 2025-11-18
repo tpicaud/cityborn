@@ -452,6 +452,9 @@ importers:
       '@cityborn/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@cityborn/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
       '@cityborn/types':
         specifier: workspace:*
         version: link:../../packages/types
