@@ -26,6 +26,8 @@
   --color-destructive-900: oklch(0.2313 0.0911 21.59);
 
   /* Foreground */
-  /* --color-foreground-on-primary: var(--color-zinc-50); */
-  --color-foreground-on-primary: #ffffff;
+  --color-foreground: var(--color-neutral-700);
+
+  /* Background */
+  --color-background: var(--color-zinc-50);
 }

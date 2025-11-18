@@ -30,7 +30,7 @@ export class ApiClient {
       return null;
     }
 
-    return await this.authFetch.get<null | User>('/auth/me', {
+    return await this.authFetch.get<User>('/auth/me', {
       method: 'GET',
       cache: 'no-store',
     });

@@ -1,0 +1,27 @@
+{
+  "name": "@cityborn/contexts",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "type": "module",
+  "author": "Tom Picaud",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@cityborn/types": "workspace:*",
+    "@cityborn/api": "workspace:*",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}

@@ -7,7 +7,7 @@ type Props = {
   label: string;
   color?: 'primary' | 'destructive';
   variant?: 'default' | 'filled' | 'outlined' | 'ghost';
-  size?: 'default';
+  size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   className?: string;
   onPress?: () => Promise<void> | void;
@@ -17,7 +17,7 @@ export default function Button({
   label,
   color = 'primary',
   variant = 'filled',
-  size = 'default',
+  size = 'small',
   disabled = false,
   className,
   onPress,
@@ -84,7 +84,9 @@ export default function Button({
       disabled={disabled}
       className={cn(
         'inline-flex items-center justify-center rounded-full font-medium transition-colors',
-        size === 'default' && 'h-10 w-48 px-4 py-1',
+        size === 'small' && 'h-10 w-48 px-4 py-1',
+        size === 'medium' && '',
+        size === 'large' && 'h-14 w-70 px-4 font-bold',
         variantStyles[variant],
         containerStyles[color][variant],
         disabled && 'opacity-50 ',
