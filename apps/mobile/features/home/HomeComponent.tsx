@@ -1,6 +1,6 @@
 import Button from '@/components/ui/Button';
 import { useAuth } from '@cityborn/contexts';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { View, Image, Text } from 'react-native';
 
 export default function HomeComponent() {
