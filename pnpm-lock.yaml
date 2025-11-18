@@ -603,6 +603,9 @@ importers:
       '@cityborn/types':
         specifier: workspace:*
         version: link:../types
+      '@types/react':
+        specifier: ~19.1.0
+        version: 19.1.17
       react:
         specifier: 19.1.0
         version: 19.1.0
