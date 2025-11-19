@@ -15,7 +15,7 @@ export const ERROR_MESSAGES = {
     [ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED]:
       "Le compte Google n'est pas vérifié.",
     [ErrorCode.USER_REFRESH_FAILED]:
-      'Erreur lors du rafraîchissement de la session. Veuillez vous reconnecter.',
+      'Session expirée. Veuillez vous reconnecter.',
     [ErrorCode.USER_NOT_VERIFIED]:
       "Le compte n'est pas vérifié. Veuillez faire vérifier votre adresse mail.",
     [ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN]:

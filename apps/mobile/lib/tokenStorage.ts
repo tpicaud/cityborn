@@ -3,11 +3,15 @@ import * as SecureStore from 'expo-secure-store';
 
 export class MobileTokenStorage implements TokenStorage {
   async getAccessToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('access_token');
+    return await SecureStore.getItemAsync('access_token', {
+      keychainService: 'auth',
+    });
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('refresh_token');
+    return await SecureStore.getItemAsync('refresh_token', {
+      keychainService: 'auth',
+    });
   }
 
   async setTokens(access_token: string, refresh_token: string): Promise<void> {

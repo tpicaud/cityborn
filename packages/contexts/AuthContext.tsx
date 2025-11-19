@@ -28,7 +28,9 @@ export const AuthProvider = ({
 
   const refreshUser = useCallback(async () => {
     try {
+      console.log('Refreshing user...');
       const user = await getCurrentUser();
+      console.log('User refreshed:', user);
       setUser(user);
     } catch {
       setUser(null);

@@ -1,6 +1,8 @@
 import { ApiError, ErrorCode, ErrorPayload } from '@cityborn/errors';
 import { TokenStorage } from '@cityborn/types';
 
+type RequestInitWithAuth = RequestInit & { includeAuth?: boolean };
+
 export class AuthFetch {
   private isRefreshing = false;
   private refreshQueue: ((token: string | null) => void)[] = [];
@@ -16,8 +18,10 @@ export class AuthFetch {
     method: string,
     url: string,
     body?: any,
-    options: RequestInit = {},
+    options: RequestInitWithAuth = {},
   ): Promise<T> {
+    options.includeAuth = options.includeAuth ?? true;
+
     const token = await this.tokenStorage.getAccessToken();
 
     const headers: Record<string, any> = {
@@ -29,7 +33,7 @@ export class AuthFetch {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseURL}${url}`, {
+    const response = await this.timeoutFetch(`${this.baseURL}${url}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -46,7 +50,7 @@ export class AuthFetch {
     }
 
     // Handle refresh
-    if (response.status === 401) {
+    if (response.status === 401 && options.includeAuth) {
       return await this.handle401<T>(method, url, body, options);
     }
 
@@ -110,10 +114,12 @@ export class AuthFetch {
       );
     }
 
-    const response = await fetch(`${this.baseURL}/auth/refresh`, {
+    const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${refreshToken}`,
+      },
     });
 
     if (!response.ok) {
@@ -132,24 +138,51 @@ export class AuthFetch {
     this.refreshQueue = [];
   }
 
+  private async timeoutFetch<T>(
+    input: RequestInfo,
+    init: RequestInit,
+    timeoutMs = 10_000,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await fetch(input, { ...init, signal: controller.signal });
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
   // ------- HTTP methods -------
-  async get<T>(url: string, options?: RequestInit): Promise<T> {
+  async get<T>(url: string, options?: RequestInitWithAuth): Promise<T> {
     return await this.authFetch<T>('GET', url, undefined, options);
   }
 
-  async post<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
+  async post<T>(
+    url: string,
+    body?: any,
+    options?: RequestInitWithAuth,
+  ): Promise<T> {
     return await this.authFetch<T>('POST', url, body, options);
   }
 
-  async put<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
+  async put<T>(
+    url: string,
+    body?: any,
+    options?: RequestInitWithAuth,
+  ): Promise<T> {
     return await this.authFetch<T>('PUT', url, body, options);
   }
 
-  async patch<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
+  async patch<T>(
+    url: string,
+    body?: any,
+    options?: RequestInitWithAuth,
+  ): Promise<T> {
     return await this.authFetch<T>('PATCH', url, body, options);
   }
 
-  async delete<T>(url: string, options?: RequestInit): Promise<T> {
+  async delete<T>(url: string, options?: RequestInitWithAuth): Promise<T> {
     return await this.authFetch<T>('DELETE', url, undefined, options);
   }
 }

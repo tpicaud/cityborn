@@ -1,5 +1,5 @@
+import View from '@/components/ui/View';
 import { SignInComponent } from '@/features/auth/SignInComponent';
-import { View } from 'react-native';
 
 export default function SignInScreen() {
   return (

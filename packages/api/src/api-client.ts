@@ -8,6 +8,8 @@ import {
   Category,
   CreateEvent,
   Game,
+  GuessObject,
+  Sentence,
 } from '@cityborn/types';
 import { AuthFetch } from './auth-fetch.js';
 
@@ -26,21 +28,22 @@ export class ApiClient {
     const access_token = await this.authFetch.tokenStorage.getAccessToken();
     const refresh_token = await this.authFetch.tokenStorage.getRefreshToken();
 
-    if (!access_token || !refresh_token) {
+    if (!access_token && !refresh_token) {
       return null;
     }
 
-    return await this.authFetch.get<User>('/auth/me', {
+    const data = await this.authFetch.get<{ user: User }>('/auth/me', {
       method: 'GET',
       cache: 'no-store',
     });
+    return data.user;
   }
 
   async signUp(createUser: CreateUser) {
     const tokens = await this.authFetch.post<{
       access_token: string;
       refresh_token: string;
-    }>('/auth/sign-up', { ...createUser });
+    }>('/auth/sign-up', { ...createUser }, { includeAuth: false });
 
     await this.authFetch.tokenStorage.setTokens(
       tokens.access_token,
@@ -48,16 +51,18 @@ export class ApiClient {
     );
   }
 
-  async signIn(identifier: string, password: string): Promise<void> {
-    const tokens = await this.authFetch.post<{
+  async signIn(identifier: string, password: string): Promise<User> {
+    const data = await this.authFetch.post<{
       access_token: string;
       refresh_token: string;
-    }>('/auth/sign-in', { identifier, password });
+      user: User;
+    }>('/auth/sign-in', { identifier, password }, { includeAuth: false });
 
     await this.authFetch.tokenStorage.setTokens(
-      tokens.access_token,
-      tokens.refresh_token,
+      data.access_token,
+      data.refresh_token,
     );
+    return data.user;
   }
 
   async signOut() {
@@ -68,7 +73,7 @@ export class ApiClient {
     const tokens = await this.authFetch.post<{
       access_token: string;
       refresh_token: string;
-    }>('/auth/sign-in-with-google', { idToken });
+    }>('/auth/sign-in-with-google', { idToken }, { includeAuth: false });
 
     await this.authFetch.tokenStorage.setTokens(
       tokens.access_token,
@@ -88,10 +93,14 @@ export class ApiClient {
   // User service //
   //////////////////
   async getGameRecords(): Promise<GameRecord[]> {
-    return await this.authFetch.get<GameRecord[]>('/user/game-records', {
-      method: 'GET',
-      cache: 'no-store',
-    });
+    const data = await this.authFetch.get<{ gameRecords: GameRecord[] }>(
+      '/user/game-records',
+      {
+        method: 'GET',
+        cache: 'no-store',
+      },
+    );
+    return data.gameRecords;
   }
 
   async saveGameRecord(gameRecord: GameRecord): Promise<void> {
@@ -116,22 +125,29 @@ export class ApiClient {
   }
 
   async fetchCategories(): Promise<Category[]> {
-    return await this.authFetch.get<Category[]>('/category', {
-      method: 'GET',
-      cache: 'no-store',
-    });
+    const data = await this.authFetch.get<{ categories: Category[] }>(
+      '/category',
+      {
+        method: 'GET',
+        cache: 'no-store',
+      },
+    );
+    return data.categories;
   }
 
-  async fetchGuessObjects(guessObjectsIds: string[]): Promise<string[]> {
+  async fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
     const query = new URLSearchParams({
       guessObjectsIds: guessObjectsIds.join(','),
     }).toString();
 
-    return await this.authFetch.get<string[]>(`/guess-objects?${query}`);
+    const data = await this.authFetch.get<{ guessObjects: GuessObject[] }>(
+      `/guess-objects?${query}`,
+    );
+    return data.guessObjects;
   }
 
-  async getEndSentence(score_type: string): Promise<string> {
-    return await this.authFetch.get<string>(
+  async getEndSentence(score_type: string): Promise<Sentence> {
+    return await this.authFetch.get<Sentence>(
       `/sentence?score_type=${score_type}`,
       {
         method: 'GET',

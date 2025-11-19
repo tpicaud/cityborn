@@ -1,6 +1,8 @@
 import Button from '@/components/ui/Button';
 import { useState } from 'react';
-import { TextInput, View, Text } from 'react-native';
+import { TextInput } from 'react-native';
+import Text from '@/components/ui/Text';
+import View from '@/components/ui/View';
 
 export default function PlayComponent() {
   const [joinCode, setJoinCode] = useState('');
@@ -21,7 +23,7 @@ export default function PlayComponent() {
               color="primary"
               variant="filled"
               label="GO"
-              className="w-16 rounded-l-none h-full"
+              className="w-16 rounded-l-none h-full border border-primary-500"
             />
           </View>
         </View>
