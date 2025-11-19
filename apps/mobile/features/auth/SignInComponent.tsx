@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
 import { useAuth } from '@cityborn/contexts';
 import { apiClient } from '@/lib/apiClient';
 import Button from '@/components/ui/Button';
 import TextInput from '@/components/ui/TextInput';
 import { useRouter } from 'expo-router';
 import { getFriendlyErrorMessage } from '@cityborn/errors';
+import Text from '@/components/ui/Text';
+import View from '@/components/ui/View';
 
 export const SignInComponent = () => {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { setUser } = useAuth();
   const [formValues, setFormValues] = useState({ username: '', password: '' });
   const [isFormValid, setIsFormValid] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -36,10 +37,14 @@ export const SignInComponent = () => {
   const handleSubmit = async () => {
     try {
       setErrorMessage(null);
-      await apiClient.signIn(formValues.username, formValues.password);
-      await refreshUser();
+      const user = await apiClient.signIn(
+        formValues.username,
+        formValues.password,
+      );
+      setUser(user);
       router.navigate('/');
     } catch (error: any) {
+      console.error(error);
       setErrorMessage(getFriendlyErrorMessage(error));
       console.error(error);
     }

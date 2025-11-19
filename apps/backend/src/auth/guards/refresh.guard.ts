@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getJwtConstants } from '../constants';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
+import { extractTokenFromHTTPHeader } from '../utils';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
@@ -19,7 +20,9 @@ export class RefreshGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const refreshToken = request.cookies?.refresh_token;
+    const refreshToken =
+      request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
+
     if (!refreshToken)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
