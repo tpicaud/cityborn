@@ -1,12 +1,14 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { IconSymbol } from '@/components/ui/Icon-symbol';
+import { Icon } from '@/components/ui/Icon';
+import { colors } from '@cityborn/design-system';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: colors.primary[500],
       }}
     >
       <Tabs.Screen
@@ -14,8 +16,12 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon
+              size={24}
+              name={focused ? 'home_fill' : 'home_outline'}
+              color={color}
+            />
           ),
         }}
       />
@@ -24,10 +30,10 @@ export default function TabLayout() {
         options={{
           title: 'Play',
           headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="gamecontroller.circle.fill"
+          tabBarIcon: ({ color, focused }) => (
+            <Icon
+              size={24}
+              name={focused ? 'gamepad_fill' : 'gamepad_outline'}
               color={color}
             />
           ),
@@ -38,8 +44,12 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.2.circle.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon
+              size={24}
+              name={focused ? 'profile_fill' : 'profile_outline'}
+              color={color}
+            />
           ),
         }}
       />
@@ -49,7 +59,7 @@ export default function TabLayout() {
           title: 'Components',
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="cube.box.fill" color={color} />
+            <Icon size={24} name="components_fill" color={color} />
           ),
         }}
       />

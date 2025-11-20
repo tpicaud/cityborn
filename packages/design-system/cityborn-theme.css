@@ -14,19 +14,22 @@
   --color-primary-950: oklch(0% 0 none);
 
   /* Destructive */
-  --color-destructive-50: oklch(0.9703 0.0121 4.74);
-  --color-destructive-100: oklch(0.9415 0.022 10.61);
-  --color-destructive-200: oklch(0.8546 0.0589 10.47);
-  --color-destructive-300: oklch(0.7707 0.0989 11.67);
-  --color-destructive-400: oklch(0.6241 0.179 17.15);
-  --color-destructive-500: oklch(0.5402 0.219 26.28);
-  --color-destructive-600: oklch(0.4991 0.2021 26.14);
-  --color-destructive-700: oklch(0.372 0.1501 25.02);
-  --color-destructive-800: oklch(0.3047 0.1221 23.92);
-  --color-destructive-900: oklch(0.2313 0.0911 21.59);
+  --color-destructive: oklch(54.023% 0.21901 26.279);
+  --color-destructive-50: oklch(76.701% 0.1382 13.058);
+  --color-destructive-100: oklch(73.354% 0.1635 14.618);
+  --color-destructive-200: oklch(67.546% 0.20908 18.068);
+  --color-destructive-300: oklch(63.995% 0.24078 22.509);
+  --color-destructive-400: oklch(61.645% 0.25038 26.585);
+  --color-destructive-500: oklch(54.023% 0.21901 26.279);
+  --color-destructive-600: oklch(42.842% 0.17331 25.46);
+  --color-destructive-700: oklch(31.14% 0.12481 23.777);
+  --color-destructive-800: oklch(17.799% 0.07134 18.411);
+  --color-destructive-900: oklch(0% 0 none);
+  --color-destructive-950: oklch(0% 0 none);
 
   /* Foreground */
   --color-foreground: var(--color-neutral-700);
+  --color-foreground-on-primary: var(--color-zinc-50);
 
   /* Background */
   --color-background: var(--color-zinc-50);

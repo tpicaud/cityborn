@@ -1,10 +1,10 @@
-import View from '@/components/ui/View';
+import ScreenLayout from '@/components/ScreenLayout';
 import { SignInComponent } from '@/features/auth/SignInComponent';
 
 export default function SignInScreen() {
   return (
-    <View className="flex-1">
+    <ScreenLayout>
       <SignInComponent />
-    </View>
+    </ScreenLayout>
   );
 }
