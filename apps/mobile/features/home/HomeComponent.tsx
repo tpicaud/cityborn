@@ -1,10 +1,9 @@
 import Button from '@/components/ui/Button';
+import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { Image } from 'react-native';
-import Text from '@/components/ui/Text';
-import View from '@/components/ui/View';
 
 export default function HomeComponent() {
   const router = useRouter();
@@ -12,7 +11,7 @@ export default function HomeComponent() {
 
   return (
     <View className="flex-1">
-      <View className=" flex-1 flex flex-col justify-center items-center mb-15 gap-6">
+      <View className=" flex-1 flex flex-col justify-center items-center gap-6">
         <Image
           source={require('../../assets/images/logo.png')}
           className="mb-6"

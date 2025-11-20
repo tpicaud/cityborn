@@ -11,6 +11,7 @@
     "format:frontend": "prettier --write packages/cityborn-frontend",
     "format:backend": "prettier --write packages/cityborn-backend",
     "format:back-office": "prettier --write packages/cityborn-back-office",
+    "format:mobile": "prettier --write packages/mobile",
     "build": "turbo run build",
     "build:backend": "turbo run build --filter=cityborn-backend",
     "build:frontend": "turbo run build --filter=cityborn-frontend",
@@ -19,10 +20,12 @@
     "dev:backend": "turbo run dev --filter=cityborn-backend",
     "dev:frontend": "turbo run dev --filter=cityborn-frontend",
     "dev:back-office": "turbo run dev --filter=cityborn-back-office",
+    "dev:mobile": "turbo run dev --filter=cityborn-mobile",
     "start": "turbo run start",
     "start:backend": "turbo run start --filter=cityborn-backend",
     "start:frontend": "turbo run start --filter=cityborn-frontend",
-    "start:back-office": "turbo run start --filter=cityborn-back-office"
+    "start:back-office": "turbo run start --filter=cityborn-back-office",
+    "start:mobile": "turbo run start --filter=cityborn-mobile"
   },
   "pnpm": {
     "overrides": {

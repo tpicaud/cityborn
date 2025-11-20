@@ -4,9 +4,17 @@
     "slug": "cityborn-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "androidStatusBar": {
+      "hidden": true,
+      "backgroundColor": "#fafafa"
+    },
+    "androidNavigationBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#ffffff"
+    },
     "icon": "./assets/images/icon.png",
     "scheme": "citybornmobile",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -33,7 +41,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#fafafa",
           "dark": {
             "backgroundColor": "#000000"
           }

@@ -2,13 +2,13 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import '../global.css';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { apiClient } from '@/lib/apiClient';
 import { AuthProvider } from '@cityborn/contexts';
 import { useEffect, useState } from 'react';
 import { User } from '@cityborn/types';
 import LoaderIcon from '@/components/ui/LoaderIcon';
-import View from '@/components/ui/View';
+import { View } from '@/components/ui/native/NativeComponents';
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
@@ -39,22 +39,11 @@ export default function RootLayout() {
   }
 
   return (
-    <View className="flex-1">
-      <AuthProvider
-        initialValue={user}
-        getCurrentUser={apiClient.getCurrentUser}
-      >
-        {/* <ImageBackground
-        source={require('../assets/images/background_worldmap.png')}
-        resizeMode="cover"
-        className="absolute inset-0"
-      />
-      <View className="absolute inset-0 bg-black opacity-40" /> */}
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: 'transparent',
-          }}
+    <SafeAreaProvider>
+      <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
+        <AuthProvider
+          initialValue={user}
+          getCurrentUser={apiClient.getCurrentUser}
         >
           <Stack
             screenOptions={{
@@ -69,9 +58,9 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-          <StatusBar style="auto" />
-        </SafeAreaView>
-      </AuthProvider>
-    </View>
+          <StatusBar hidden />
+        </AuthProvider>
+      </View>
+    </SafeAreaProvider>
   );
 }

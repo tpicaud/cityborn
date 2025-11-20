@@ -2,13 +2,15 @@
   "name": "@cityborn/design-system",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "index.js",
-    "styles.css"
+    "dist"
   ],
   "scripts": {
-    "build": "postcss cityborn-theme.css -o dist/cityborn-theme.css"
+    "build:ts": "tsc",
+    "build:css": "postcss cityborn-theme.css -o dist/cityborn-theme.css",
+    "build": "pnpm build:ts && pnpm build:css"
   },
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.12.3",
@@ -17,5 +19,8 @@
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4.1.17"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

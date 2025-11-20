@@ -1,8 +1,7 @@
 import Button from '@/components/ui/Button';
+import { View, Text } from '@/components/ui/native/NativeComponents';
+import TextInput from '@/components/ui/TextInput';
 import { useState } from 'react';
-import { TextInput } from 'react-native';
-import Text from '@/components/ui/Text';
-import View from '@/components/ui/View';
 
 export default function PlayComponent() {
   const [joinCode, setJoinCode] = useState('');
@@ -12,12 +11,12 @@ export default function PlayComponent() {
       <View className="flex-1 justify-center items-center gap-20">
         <View className="flex justify-center items-center gap-4">
           <Text className="text-2xl">Rejoindre</Text>
-          <View className="flex flex-row w-[65%] h-12">
+          <View className="flex flex-row w-50 h-12">
             <TextInput
               value={joinCode}
               placeholder="Entrez le code"
               onChangeText={(text) => setJoinCode(text)}
-              className="flex-1 rounded-l-full pl-3 border-1"
+              className="flex-1 rounded-r-none pl-3 border-1"
             />
             <Button
               color="primary"
@@ -34,13 +33,13 @@ export default function PlayComponent() {
               color="primary"
               variant="filled"
               label="SOLO"
-              className="w-[70%] h-14"
+              size="large"
             />
             <Button
               color="primary"
               variant="filled"
               label="MULTI"
-              className="w-[70%] h-14"
+              size="large"
             />
           </View>
         </View>

@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@cityborn/contexts';
 import { apiClient } from '@/lib/apiClient';
 import Button from '@/components/ui/Button';
-import TextInput from '@/components/ui/TextInput';
 import { useRouter } from 'expo-router';
 import { getFriendlyErrorMessage } from '@cityborn/errors';
-import Text from '@/components/ui/Text';
-import View from '@/components/ui/View';
+import TextInput from '@/components/ui/TextInput';
+import { View, Text } from '@/components/ui/native/NativeComponents';
 
 export const SignInComponent = () => {
   const router = useRouter();
