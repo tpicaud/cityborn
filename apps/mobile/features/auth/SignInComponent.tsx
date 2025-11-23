@@ -7,10 +7,18 @@ import { getFriendlyErrorMessage } from '@cityborn/errors';
 import TextInput from '@/components/ui/TextInput';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 
+interface FormValues {
+  username: string;
+  password: string;
+}
+
 export const SignInComponent = () => {
   const router = useRouter();
   const { setUser } = useAuth();
-  const [formValues, setFormValues] = useState({ username: '', password: '' });
+  const [formValues, setFormValues] = useState<FormValues>({
+    username: '',
+    password: '',
+  });
   const [isFormValid, setIsFormValid] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

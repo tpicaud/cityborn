@@ -39,16 +39,19 @@ export class ApiClient {
     return data.user;
   }
 
-  async signUp(createUser: CreateUser) {
-    const tokens = await this.authFetch.post<{
+  async signUp(createUser: CreateUser): Promise<User> {
+    const data = await this.authFetch.post<{
       access_token: string;
       refresh_token: string;
+      user: User;
     }>('/auth/sign-up', { ...createUser }, { includeAuth: false });
 
     await this.authFetch.tokenStorage.setTokens(
-      tokens.access_token,
-      tokens.refresh_token,
+      data.access_token,
+      data.refresh_token,
     );
+
+    return data.user;
   }
 
   async signIn(identifier: string, password: string): Promise<User> {
