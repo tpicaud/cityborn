@@ -51,6 +51,7 @@ export default function HomeComponent() {
               variant="filled"
               label="INSCRIPTION"
               size="large"
+              onPress={() => router.navigate('/sign-up/sign-up')}
             />
             <Button
               variant="default"
