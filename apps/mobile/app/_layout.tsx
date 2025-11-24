@@ -78,6 +78,12 @@ export default function RootLayout() {
                   headerShadowVisible: false,
                 }}
               />
+              <Stack.Screen
+                name="session/solo"
+                options={{
+                  headerShown: false,
+                }}
+              />
             </Stack>
           </AuthProvider>
         </View>
