@@ -76,7 +76,6 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-          <StatusBar hidden />
         </AuthProvider>
       </View>
     </SafeAreaProvider>
