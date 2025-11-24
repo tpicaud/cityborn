@@ -18,6 +18,7 @@
   "dependencies": {
     "@cityborn/types": "workspace:*",
     "@cityborn/api": "workspace:*",
+    "@cityborn/errors": "workspace:*",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

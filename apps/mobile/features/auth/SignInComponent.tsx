@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { getFriendlyErrorMessage } from '@cityborn/errors';
 import TextInput from '@/components/ui/TextInput';
 import { View, Text } from '@/components/ui/native/NativeComponents';
+import { useError } from '@cityborn/contexts';
 
 interface FormValues {
   username: string;
@@ -15,6 +16,7 @@ interface FormValues {
 export const SignInComponent = () => {
   const router = useRouter();
   const { setUser } = useAuth();
+  const { invokeError } = useError();
   const [formValues, setFormValues] = useState<FormValues>({
     username: '',
     password: '',
@@ -51,7 +53,6 @@ export const SignInComponent = () => {
       setUser(user);
       router.navigate('/');
     } catch (error: any) {
-      console.error(error);
       setErrorMessage(getFriendlyErrorMessage(error));
       console.error(error);
     }
