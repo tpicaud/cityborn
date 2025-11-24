@@ -122,3 +122,6 @@
 | 05/11/2025 | 8h          | Passage prod                                                                         |
 | 06/11/2025 | 5h          | Résolution problème mmigration database                                              |
 | 12/11/2025 | 7h          | Prise en main Expo                                                                   |
+| 13/11/2025 | 7h          | Initialisation projet Expo migration api dans un package partagé                     |
+| 14/11/2025 | 7h          | Migration api dans un package partagé                                                |
+| 17/11/2025 | 7h          | Projet expo - Création des tabs                                                      |
