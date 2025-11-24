@@ -44,14 +44,14 @@ export default function HomeComponent() {
               variant="outlined"
               label="CONNEXION"
               size="large"
-              onPress={() => router.navigate('/sign-in/sign-in')}
+              onPress={() => router.navigate('/auth/sign-in')}
             />
             <Button
               color="primary"
               variant="filled"
               label="INSCRIPTION"
               size="large"
-              onPress={() => router.navigate('/sign-up/sign-up')}
+              onPress={() => router.navigate('/auth/sign-up')}
             />
             <Button
               variant="default"

@@ -11,7 +11,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 interface FormValues {
   username: string;
   email: string;
-  birthdate: Date;
+  birthdate: Date | null;
   password: string;
   confirmPassword: string;
 }
@@ -22,93 +22,133 @@ export const SignUpComponent = () => {
   const [formValues, setFormValues] = useState<FormValues>({
     username: '',
     email: '',
-    birthdate: new Date(),
+    birthdate: null,
     password: '',
     confirmPassword: '',
   });
   // Date picker
-  const [mode, setMode] = useState('date');
-  const [show, setShow] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   // validation
-  const [isFormValid, setIsFormValid] = useState(true);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormValues, string>>
+  >({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    validateForm();
-  }, [formValues]);
 
   const handleChange = (key: keyof FormValues, value: any) => {
     setFormValues({
       ...formValues,
       [key]: key === 'birthdate' ? new Date(value) : value,
     });
+    setErrors({ ...errors, [key]: null });
   };
 
-  const validateForm = () => {
-    const { username, email, birthdate, password, confirmPassword } =
-      formValues;
+  const validateInput = (field: keyof FormValues, value: any) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
 
-    if (!username.trim()) {
-      setIsFormValid(false);
-      setErrorMessage("Le nom d'utilisateur est obligatoire.");
-      return;
-    }
+      switch (field) {
+        case 'username':
+          if (!String(value).trim()) {
+            newErrors.username = "Nom d'utilisateur obligatoire";
+          } else {
+            delete newErrors.username;
+          }
+          break;
 
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setIsFormValid(false);
-      setErrorMessage("L'adresse e-mail est invalide.");
-      return;
-    }
+        case 'email':
+          if (!String(value).trim()) {
+            newErrors.email = 'Email obligatoire';
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            newErrors.email = 'Email invalide';
+          } else {
+            delete newErrors.email;
+          }
+          break;
 
-    if (!birthdate) {
-      setIsFormValid(false);
-      setErrorMessage('La date de naissance est obligatoire.');
-      return;
-    }
+        case 'birthdate':
+          if (!value) {
+            newErrors.birthdate = 'La date de naissance est obligatoire';
+          } else {
+            delete newErrors.birthdate;
+          }
+          break;
 
-    if (!password.trim()) {
-      setIsFormValid(false);
-      setErrorMessage('Le mot de passe est obligatoire.');
-      return;
-    }
+        case 'password': {
+          const password = value;
+          if (!password || !password.trim()) {
+            newErrors.password = 'Mot de passe obligatoire';
+          } else if (password.length < 6) {
+            newErrors.password = 'Minimum 6 caractères requis';
+          } else if (!/[A-Z]/.test(password) || !/\d/.test(password)) {
+            newErrors.password =
+              'Doit contenir au moins une majuscule et un chiffre';
+          } else {
+            delete newErrors.password;
+          }
 
-    if (password.length < 6) {
-      setIsFormValid(false);
-      setErrorMessage('Le mot de passe doit contenir au minimum 6 caractères.');
-      return;
-    }
+          if (
+            formValues.confirmPassword &&
+            formValues.confirmPassword !== password
+          ) {
+            newErrors.confirmPassword =
+              'Les mots de passe ne correspondent pas';
+          } else {
+            delete newErrors.confirmPassword;
+          }
 
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
+          break;
+        }
 
-    if (!hasUppercase || !hasNumber) {
-      setIsFormValid(false);
-      setErrorMessage(
-        'Le mot de passe doit contenir au moins une majuscule et un chiffre.',
-      );
-      return;
-    }
+        case 'confirmPassword': {
+          const confirm = value;
+          if (!confirm || !confirm.trim()) {
+            newErrors.confirmPassword = 'Confirmation obligatoire';
+          } else if (confirm !== formValues.password) {
+            newErrors.confirmPassword =
+              'Les mots de passe ne correspondent pas';
+          } else {
+            delete newErrors.confirmPassword;
+          }
+          break;
+        }
+      }
 
-    if (password !== confirmPassword) {
-      setIsFormValid(false);
-      setErrorMessage('Les mots de passe ne correspondent pas.');
-      return;
-    }
-
-    setIsFormValid(true);
-    setErrorMessage(null);
+      return newErrors;
+    });
   };
 
-  const showTimepicker = () => {
-    setShow(true);
+  const validateForm = (): boolean => {
+    validateInput('username', formValues.username);
+    validateInput('email', formValues.email);
+    validateInput('birthdate', formValues.birthdate);
+    validateInput('password', formValues.password);
+    validateInput('confirmPassword', formValues.confirmPassword);
+
+    const noErrors = Object.keys(errors).length === 0;
+    if (!noErrors) setErrorMessage('Le formulaire est invalide.');
+    return noErrors;
   };
 
   const handleSubmit = async () => {
+    setErrorMessage(null);
+
+    if (
+      !formValues.username ||
+      !formValues.email ||
+      !formValues.birthdate ||
+      !formValues.password ||
+      !formValues.confirmPassword
+    ) {
+      validateForm();
+      return;
+    }
+
+    if (!validateForm()) return;
+
     try {
-      setErrorMessage(null);
       const user = await apiClient.signUp({
         ...formValues,
-        birthdate: formValues.birthdate.toString(),
+        birthdate: formValues.birthdate!.toISOString(),
       });
       setUser(user);
       router.navigate('/');
@@ -125,55 +165,106 @@ export const SignUpComponent = () => {
         INSCRIPTION
       </Text>
 
-      <View className="flex-col items-center justify-center w-auto gap-6 mb-32">
+      <View className="flex-col items-center justify-center gap-6 mb-32 w-70">
         <View className="flex-col items-center justify-center gap-6">
-          <TextInput
-            placeholder="Nom d'utilisateur"
-            value={formValues.username}
-            onChangeText={(text) => handleChange('username', text)}
-            autoCapitalize="none"
-            error={!!errorMessage}
-          />
-
-          <TextInput
-            placeholder="Email"
-            value={formValues.email}
-            onChangeText={(text) => handleChange('email', text)}
-            autoCapitalize="none"
-            error={!!errorMessage}
-          />
-
-          <Button onPress={showTimepicker} label="Show time picker!" />
-          <Text>selected: {formValues.birthdate.toLocaleString()}</Text>
-          {show && (
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={formValues.birthdate}
-              is24Hour={true}
-              onChange={(_event: any, selectedDate: Date | undefined) => {
-                if (selectedDate) handleChange('birthdate', selectedDate);
-                setShow(false);
-              }}
+          <View className="w-full relative">
+            <TextInput
+              placeholder="Nom d'utilisateur"
+              value={formValues.username}
+              onChangeText={(text) => handleChange('username', text)}
+              onBlur={() => validateInput('username', formValues.username)}
+              autoCapitalize="none"
+              error={!!errors.username}
             />
-          )}
 
-          <TextInput
-            placeholder="Mot de passe"
-            value={formValues.password}
-            onChangeText={(text) => handleChange('password', text)}
-            autoCapitalize="none"
-            secureTextEntry
-            error={!!errorMessage}
-          />
+            {errors.username && (
+              <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                {errors.username}
+              </Text>
+            )}
+          </View>
 
-          <TextInput
-            placeholder="Confirmez le mot de passe"
-            value={formValues.confirmPassword}
-            onChangeText={(text) => handleChange('confirmPassword', text)}
-            autoCapitalize="none"
-            secureTextEntry
-            error={!!errorMessage}
-          />
+          <View className="w-full relative">
+            <TextInput
+              placeholder="Email"
+              value={formValues.email}
+              onChangeText={(text) => handleChange('email', text)}
+              onBlur={() => validateInput('email', formValues.email)}
+              autoCapitalize="none"
+              error={!!errors.email}
+            />
+            {errors.email && (
+              <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                {errors.email}
+              </Text>
+            )}
+          </View>
+
+          <View className="w-full relative">
+            <TextInput
+              onPress={() => setShowDatePicker(true)}
+              onBlur={(text) => validateInput('birthdate', text)}
+              placeholder="Sélectionner une date"
+              value={
+                formValues.birthdate
+                  ? formValues.birthdate.toLocaleDateString()
+                  : ''
+              }
+              error={!!errors.birthdate}
+            />
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={formValues.birthdate ?? new Date(Date.now())}
+                is24Hour={true}
+                onChange={(_event: any, selectedDate: Date | undefined) => {
+                  if (selectedDate) handleChange('birthdate', selectedDate);
+                  setShowDatePicker(false);
+                }}
+              />
+            )}
+            {errors.birthdate && (
+              <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                {errors.birthdate}
+              </Text>
+            )}
+          </View>
+
+          <View className="w-full relative">
+            <TextInput
+              placeholder="Mot de passe"
+              value={formValues.password}
+              onChangeText={(text) => handleChange('password', text)}
+              onBlur={() => validateInput('password', formValues.password)}
+              autoCapitalize="none"
+              secureTextEntry
+              error={!!errors.password}
+            />
+            {errors.password && (
+              <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                {errors.password}
+              </Text>
+            )}
+          </View>
+
+          <View className="w-full relative">
+            <TextInput
+              placeholder="Confirmez le mot de passe"
+              value={formValues.confirmPassword}
+              onChangeText={(text) => handleChange('confirmPassword', text)}
+              onBlur={() =>
+                validateInput('confirmPassword', formValues.confirmPassword)
+              }
+              autoCapitalize="none"
+              secureTextEntry
+              error={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                {errors.confirmPassword}
+              </Text>
+            )}
+          </View>
 
           <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
             {errorMessage}
@@ -183,7 +274,6 @@ export const SignUpComponent = () => {
           variant="filled"
           color="primary"
           size="large"
-          disabled={!isFormValid}
           label="SE CONNECTER"
           onPress={handleSubmit}
         />
