@@ -25,7 +25,11 @@ export class MobileTokenStorage implements TokenStorage {
   }
 
   async clearTokens(): Promise<void> {
-    await SecureStore.deleteItemAsync('access_token');
-    await SecureStore.deleteItemAsync('refresh_token');
+    await SecureStore.deleteItemAsync('access_token', {
+      keychainService: 'auth',
+    });
+    await SecureStore.deleteItemAsync('refresh_token', {
+      keychainService: 'auth',
+    });
   }
 }
