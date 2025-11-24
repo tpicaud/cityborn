@@ -94,6 +94,11 @@ export const SignInComponent = () => {
           label="SE CONNECTER"
           onPress={handleSubmit}
         />
+        <Button
+          variant="default"
+          label="Pas de compte ? Inscris-toi ici !"
+          onPress={() => router.navigate('/auth/sign-up')}
+        />
       </View>
     </View>
   );

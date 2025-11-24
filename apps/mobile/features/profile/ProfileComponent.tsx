@@ -1,19 +1,22 @@
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { GameRecord } from '@cityborn/types';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 
 export default function ProfileComponent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    //fetchGameRecords();
+    fetchGameRecords();
   }, []);
 
   const fetchGameRecords = async () => {
@@ -33,9 +36,23 @@ export default function ProfileComponent() {
     <View className="flex-1">
       {!user ? (
         <View className="flex-1 flex justify-center items-center">
-          <Text className="place-self-center text-2xl text-center">
-            Tu n'es pas connecté !
-          </Text>
+          <View className="flex flex-col w-full items-center justify-between gap-4 mt-10">
+            <Text className="text-2xl mb-6">Tu n'es pas connecté !</Text>
+            <Button
+              color="primary"
+              variant="outlined"
+              label="CONNEXION"
+              size="large"
+              onPress={() => router.navigate('/auth/sign-in')}
+            />
+            <Button
+              color="primary"
+              variant="filled"
+              label="INSCRIPTION"
+              size="large"
+              onPress={() => router.navigate('/auth/sign-up')}
+            />
+          </View>
         </View>
       ) : (
         <View className="flex-1 gap-8 mt-10">
