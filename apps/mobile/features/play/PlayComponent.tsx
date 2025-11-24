@@ -1,9 +1,11 @@
 import Button from '@/components/ui/Button';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 export default function PlayComponent() {
+  const router = useRouter();
   const [joinCode, setJoinCode] = useState('');
 
   return (
@@ -34,6 +36,7 @@ export default function PlayComponent() {
               variant="filled"
               label="SOLO"
               size="large"
+              onPress={() => router.navigate('/session/solo')}
             />
             <Button
               color="primary"
