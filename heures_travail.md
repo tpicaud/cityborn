@@ -1,4 +1,4 @@
-# Heure de travail
+z# Heure de travail
 
 | Date       | Nb d'heures | Tâche                                                                                |
 | ---------- | ----------- | ------------------------------------------------------------------------------------ |
@@ -125,3 +125,8 @@
 | 13/11/2025 | 7h          | Initialisation projet Expo migration api dans un package partagé                     |
 | 14/11/2025 | 7h          | Migration api dans un package partagé                                                |
 | 17/11/2025 | 7h          | Projet expo - Création des tabs                                                      |
+| 18/11/2025 | 6h          | Sign in et user context partagés                                                     |
+| 19/11/2025 | 6h          | Intégration du context partagée dans l'app et le web                                 |
+| 20/11/2025 | 4h          | Gestion du theme de couleurs partagé et gestion de la navbar/statusbar               |
+| 23/11/2025 | 1h          | Début sign up                                                                        |
+| 24/11/2025 | 6h          | Finalisation sign up/in + gestion rendu erreurs + début session solo                 |
