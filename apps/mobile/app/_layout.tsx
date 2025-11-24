@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { User } from '@cityborn/types';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
+import ErrorProvider from '../../../packages/contexts/dist/ErrorContext';
+import ErrorDialog from '@/components/ui/ErrorDialog';
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
@@ -39,45 +41,47 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-        <AuthProvider
-          initialValue={user}
-          getCurrentUser={apiClient.getCurrentUser}
-        >
-          <Stack
-            screenOptions={{
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
+    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
+          <AuthProvider
+            initialValue={user}
+            getCurrentUser={apiClient.getCurrentUser}
           >
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                headerShown: false,
+            <Stack
+              screenOptions={{
                 contentStyle: { backgroundColor: 'transparent' },
               }}
-            />
-            <Stack.Screen
-              name="auth/sign-in"
-              options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerShadowVisible: false,
-              }}
-            />
-            <Stack.Screen
-              name="auth/sign-up"
-              options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerShadowVisible: false,
-              }}
-            />
-          </Stack>
-        </AuthProvider>
-      </View>
-    </SafeAreaProvider>
+            >
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+              <Stack.Screen
+                name="auth/sign-in"
+                options={{
+                  headerShown: true,
+                  headerTitle: '',
+                  headerTransparent: true,
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="auth/sign-up"
+                options={{
+                  headerShown: true,
+                  headerTitle: '',
+                  headerTransparent: true,
+                  headerShadowVisible: false,
+                }}
+              />
+            </Stack>
+          </AuthProvider>
+        </View>
+      </SafeAreaProvider>
+    </ErrorProvider>
   );
 }

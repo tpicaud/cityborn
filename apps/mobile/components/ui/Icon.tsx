@@ -22,6 +22,12 @@ const ICONS = {
   components_fill: {
     ionicons: 'albums',
   },
+  alert_outline: {
+    ionicons: 'alert-circle-outline',
+  },
+  alert_fill: {
+    ionicons: 'alert-circle',
+  },
 };
 
 type IconName = keyof typeof ICONS;
