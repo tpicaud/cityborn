@@ -2,7 +2,4 @@ node_modules
 dist
 .turbo
 .vscode
-
-.env*
-!.env.example
-!.env.sample
+*/**/.env
