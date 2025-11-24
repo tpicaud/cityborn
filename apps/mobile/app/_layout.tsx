@@ -57,6 +57,24 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
+            <Stack.Screen
+              name="auth/sign-in"
+              options={{
+                headerShown: true,
+                headerTitle: '',
+                headerTransparent: true,
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="auth/sign-up"
+              options={{
+                headerShown: true,
+                headerTitle: '',
+                headerTransparent: true,
+                headerShadowVisible: false,
+              }}
+            />
           </Stack>
           <StatusBar hidden />
         </AuthProvider>
