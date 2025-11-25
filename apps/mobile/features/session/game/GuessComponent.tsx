@@ -1,0 +1,93 @@
+import { useEffect, useState } from 'react';
+import { Guess, Session } from '@cityborn/types';
+import { Game } from '@cityborn/types';
+import { RoundStatus } from '@cityborn/types';
+import RoundCountdownComponent from './RoundCountdown';
+import useGuess from './hooks/useGuess';
+import OverlayComponent from './OverlayComponent';
+import MapComponent from './MapComponent';
+
+interface GuessComponentProps {
+  localPlayerID: string;
+  session: Session;
+  game: Game;
+  handleGuess: (guess: Guess) => void;
+  handleNextRound: () => void;
+}
+
+const GuessComponent: React.FC<GuessComponentProps> = ({
+  localPlayerID,
+  session,
+  game,
+  handleGuess,
+  handleNextRound,
+}) => {
+  const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
+    useGuess(handleGuess);
+  const [internalRoundStatus, setInternalRoundStatus] = useState<
+    'countdown' | 'guessing' | 'results'
+  >('countdown');
+
+  // Map properties
+  const mapProps = {
+    center: { lat: 48.8566, lng: 2.3522 },
+    zoom: 2,
+    preGuess,
+    localPlayerID,
+    game,
+    handlePreGuess,
+  };
+
+  useEffect(() => {
+    switch (game.state.currentRound?.status) {
+      case RoundStatus.GUESSING:
+        resetPreGuess();
+        setInternalRoundStatus('countdown');
+        break;
+
+      case RoundStatus.SHOWING_RESULTS:
+        setInternalRoundStatus('results');
+        break;
+
+      default:
+        resetPreGuess();
+        setInternalRoundStatus('countdown');
+        break;
+    }
+  }, [game.state.currentRound?.status]);
+
+  return (
+    <div>
+      <div className="fixed w-full h-full z-0">
+        <MapComponent mapProps={mapProps} />
+      </div>
+
+      {internalRoundStatus === 'countdown' && (
+        <RoundCountdownComponent
+          onCountdownEnd={() => setInternalRoundStatus('guessing')}
+        />
+      )}
+
+      {(internalRoundStatus === 'guessing' ||
+        internalRoundStatus === 'results') &&
+        !(
+          internalRoundStatus === 'results' &&
+          game.state.currentRound?.status === RoundStatus.GUESSING
+        ) && (
+          <div className="z-10">
+            <OverlayComponent
+              localPlayerID={localPlayerID}
+              preGuess={preGuess}
+              session={session}
+              game={game}
+              handleGuess={handleGuess}
+              handleIsTimeUp={handleIsTimeUp}
+              handleNextRound={handleNextRound}
+            />
+          </div>
+        )}
+    </div>
+  );
+};
+
+export default GuessComponent;
