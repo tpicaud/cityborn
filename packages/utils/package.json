@@ -17,6 +17,7 @@
   },
   "packageManager": "pnpm@10.12.3",
   "dependencies": {
+    "@cityborn/types": "workspace:*",
     "typescript": "^5.9.3"
   }
 }

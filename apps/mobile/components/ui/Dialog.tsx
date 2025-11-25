@@ -12,7 +12,7 @@ interface DialogProps extends ModalProps {
   onClose?: () => void;
   title?: string;
   message?: string;
-  className: string;
+  className?: string;
 }
 
 const Dialog = ({

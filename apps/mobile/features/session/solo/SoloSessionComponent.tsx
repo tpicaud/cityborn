@@ -3,7 +3,7 @@ import { GameConfig, Guess } from '@cityborn/types';
 import { SoloLobbyComponent } from './SoloLobbyComponent';
 import { View } from '@/components/ui/native/NativeComponents';
 import LoaderIcon from '@/components/ui/LoaderIcon';
-import { GameComponent } from './GameComponent';
+import { GameComponent } from '../game/GameComponent';
 import { useSoloSession } from './hooks/useSoloSession';
 
 export default function SoloSessionComponent() {

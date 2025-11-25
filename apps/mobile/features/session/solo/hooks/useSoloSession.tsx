@@ -1,4 +1,4 @@
-import { IUseSession } from './IUseSession';
+import { IUseSession } from '../../hooks/IUseSession';
 import {
   Game,
   GameStatus,
