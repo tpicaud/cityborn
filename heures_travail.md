@@ -130,3 +130,4 @@ z# Heure de travail
 | 20/11/2025 | 4h          | Gestion du theme de couleurs partagé et gestion de la navbar/statusbar               |
 | 23/11/2025 | 1h          | Début sign up                                                                        |
 | 24/11/2025 | 6h          | Finalisation sign up/in + gestion rendu erreurs + début session solo                 |
+| 25/11/2025 | 7h          | Lobby + game                                                                         |
