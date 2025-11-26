@@ -57,9 +57,13 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     });
   }, [game]);
 
+  // useEffect(() => {
+  //   console.log(session);
+  // }, [session]);
+
   useEffect(() => {
-    console.log(session);
-  }, [session]);
+    console.log(game);
+  }, [game]);
 
   ///////////////////////
   // Session functions //
@@ -87,10 +91,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const startGame = async () => {
     if (!session) return;
-
     try {
       // Create  new game
       const game = await apiClient.createSoloGame(session);
+      console.log(game);
 
       setSession((prevSession) => {
         if (!prevSession) return;
@@ -140,6 +144,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const nextRound = () => {
+    console.log('next round');
     if (!game) return;
 
     // Record result of the round

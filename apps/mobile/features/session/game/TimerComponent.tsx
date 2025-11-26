@@ -1,13 +1,6 @@
-'use client';
-
-import { View } from '@/components/ui/native/NativeComponents';
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  Dispatch,
-  SetStateAction,
-} from 'react';
+import { colors } from '@cityborn/design-system';
+import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
+import { View, Text } from 'react-native';
 
 interface TimerComponentProps {
   totalTime: number;
@@ -21,45 +14,56 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
   setTimerEnded,
 }) => {
   const [timeLeft, setTimeLeft] = useState(totalTime);
-  const startTime = useRef(Date.now());
+  const [progress, setProgress] = useState((timeLeft / totalTime) * 100);
 
   useEffect(() => {
+    const startTime = Date.now();
+
     const intervalId = setInterval(() => {
-      const elapsedTime = (Date.now() - startTime.current) / 1000;
-      const newTimeLeft = Math.max(totalTime - elapsedTime, 0);
+      const elapsed = (Date.now() - startTime) / 1000;
+      const newTimeLeft = Math.max(totalTime - elapsed, 0);
+
       setTimeLeft(newTimeLeft);
+      setProgress((newTimeLeft / totalTime) * 100);
 
       if (newTimeLeft <= 0) {
         setTimerEnded(true);
         clearInterval(intervalId);
       }
-    }, 10); // Met à jour toutes les 100ms
+    }, 7);
 
-    return () => clearInterval(intervalId); // Nettoyage de l'intervalle
+    return () => clearInterval(intervalId);
   }, []);
 
-  // Calcul de la largeur de la barre de progression en pourcentage
-  const progress = (timeLeft / totalTime) * 100;
-
-  // Formate le temps restant en minutes et secondes
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? `0${s}` : s}`;
   };
 
   return (
-    <View className="relative w-full h-10 bg-gray-300 bg-opacity-60 rounded-full overflow-hidden z-50">
+    <View className="relative w-full h-10 bg-neutral-200 rounded-full overflow-hidden border border-foreground">
       <View
-        className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-[0ms]"
-        style={{ width: `${progress}%` }}
-      ></View>
-      <span
-        className={`absolute inset-0 flex items-center justify-center font-semibold text-xl transition-colors duration-500 
-            ${timeLeft <= 5 ? 'text-red-500' : 'text-white'}`}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          height: '100%',
+          width: `${progress}%`,
+          backgroundColor: colors.primary[200],
+        }}
+      />
+
+      {/* Texte */}
+      <View
+        className={`absolute inset-0 flex items-center justify-center font-semibold text-xl z-10`}
       >
-        {timeLeft > 0 ? formatTime(timeLeft) : endMessage}
-      </span>
+        <Text
+          className={`font-bold ${timeLeft <= 5 ? 'text-red-500' : 'text-foreground'}`}
+        >
+          {timeLeft > 0 ? formatTime(timeLeft + 1) : endMessage}
+        </Text>
+      </View>
     </View>
   );
 };

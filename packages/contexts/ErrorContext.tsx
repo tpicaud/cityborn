@@ -42,7 +42,7 @@ const ErrorProvider = ({
       setErrorMessage(errorMessage);
     }
 
-    console.log(error);
+    console.error(error);
     if (ui_type === 'dialog') {
       setOpenDialog(true);
     }
