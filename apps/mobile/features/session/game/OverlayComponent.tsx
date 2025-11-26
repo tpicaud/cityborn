@@ -26,10 +26,10 @@ function GuessResult({
   const playerGuess = currentRound.playersGuesses[localPlayerID];
 
   return (
-    <View className="flex flex-col m-2 gap-2 items-center justify-center w-full">
+    <View className="flex flex-col gap-2 items-center justify-center w-full">
       {/* Points Box */}
-      <View className="flex flex-col py-2 px-4 text-xl text-center bg-green-200 rounded shadow">
-        <Text className="text-green-600 text-xl md:text-xl lg:text-2xl font-bold">
+      <View className="flex flex-col py-2 px-4 text-xl bg-green-200 rounded shadow">
+        <Text className="text-green-600 text-xl md:text-xl lg:text-2xl font-bold text-center">
           {playerGuess.points} pts
         </Text>
 
@@ -60,26 +60,29 @@ function GuessResult({
       {/* Guess Info */}
       <View className="p-2 text-center bg-blue-200 rounded shadow w-full">
         <Text className="text-blue-600 text-xs md:text-base lg:text-xl">
-          <Text className="font-bold">{guessObject.name}</Text> est né à{' '}
-          <Text className="font-bold">{guessObject.world_location?.name}</Text>
+          <Text className="font-bold text-center">{guessObject.name}</Text> est
+          né à{' '}
+          <Text className="font-bold text-center">
+            {guessObject.world_location?.name}
+          </Text>
         </Text>
 
         {playerGuess.distance !== -1 ? (
           playerGuess.distance === 0 ? (
-            <Text className="text-blue-600 text-sm md:text-base font-bold mt-1">
+            <Text className="text-blue-600 text-sm md:text-base font-bold mt-1 text-center">
               Bien joué ! Tu as deviné !
             </Text>
           ) : (
-            <Text className="text-blue-600 text-sm md:text-base mt-1">
+            <Text className="text-blue-600 text-sm md:text-base mt-1 text-center">
               Tu es à{' '}
-              <Text className="font-bold">
+              <Text className="font-bold text-center">
                 {playerGuess.distance.toFixed(2)}
               </Text>{' '}
               km
             </Text>
           )
         ) : (
-          <Text className="text-blue-600 font-bold text-sm md:text-base mt-1">
+          <Text className="text-blue-600 font-bold text-sm md:text-base mt-1 text-center">
             Tu n'as pas deviné à temps !
           </Text>
         )}
@@ -123,25 +126,29 @@ const OverlayComponent = ({
   )!;
 
   return (
-    <View>
-      {/* Carte de la personne à deviner */}
-      <GuessObjectCard guessObject={currentGuessObject} />
+    <View className="flex-1 bg-transparent">
+      <View className="absolute top-5 w-full">
+        {/* Timer positionné en overlay */}
+        <View className="absolute left-0 w-40">
+          {game.state.currentRound!.status === RoundStatus.GUESSING && (
+            <TimerComponent
+              totalTime={session.gameConfig.timer}
+              endMessage="Terminé !"
+              setTimerEnded={setTimerEnded}
+            />
+          )}
+        </View>
+        {/* Carte de la personne à deviner */}
 
-      {/* Timer positionné en overlay */}
-      <View className="absolute w-[27%] mx-6 my-14">
-        {game.state.currentRound!.status === RoundStatus.GUESSING && (
-          <TimerComponent
-            totalTime={session.gameConfig.timer}
-            endMessage="Terminé !"
-            setTimerEnded={setTimerEnded}
-          />
-        )}
+        <View className="absolute right-0">
+          <GuessObjectCard guessObject={currentGuessObject} />
+        </View>
       </View>
 
       {/* Zone boutons / résultats */}
-      <View className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[80%] min-w-20">
+      <View className="absolute bottom-0 bg-transparent w-full">
         {game.state.currentRound!.status === RoundStatus.GUESSING && (
-          <View className="relative w-full flex justify-center items-center">
+          <View className="relative w-full flex justify-center items-center bg-transparent">
             <Button
               size="large"
               label="GUESS"

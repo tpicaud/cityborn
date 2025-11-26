@@ -117,14 +117,21 @@ export class ApiClient {
   //////////////////////
 
   async createSession(mode: SessionMode): Promise<Session> {
-    return await this.authFetch.post<Session>('/session', { mode });
+    const data = await this.authFetch.post<{ session: Session }>('/session', {
+      mode,
+    });
+    return data.session;
   }
 
   async fetchSession(sessionId: string): Promise<Session> {
-    return await this.authFetch.get<Session>(`/session/${sessionId}`, {
-      method: 'GET',
-      cache: 'no-store',
-    });
+    const data = await this.authFetch.get<{ session: Session }>(
+      `/session/${sessionId}`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+      },
+    );
+    return data.session;
   }
 
   async fetchCategories(): Promise<Category[]> {
@@ -164,7 +171,11 @@ export class ApiClient {
   //////////////////
 
   async createSoloGame(session: Session): Promise<Game> {
-    return await this.authFetch.post<Game>('/session/create-game', { session });
+    const data = await this.authFetch.post<{ game: Game }>(
+      '/session/create-game',
+      { session },
+    );
+    return data.game;
   }
 
   async endSoloGame(session: Session): Promise<void> {

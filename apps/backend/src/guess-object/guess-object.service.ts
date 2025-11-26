@@ -84,7 +84,7 @@ export class GuessObjectService {
     } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
-        message: `Error retrieving guess objects from game config: ${error.message}`,
+        message: `Error retrieving guess objects : ${error.message}`,
       });
     }
   }

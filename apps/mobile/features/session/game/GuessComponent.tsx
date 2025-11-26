@@ -6,6 +6,7 @@ import RoundCountdownComponent from './RoundCountdown';
 import useGuess from './hooks/useGuess';
 import OverlayComponent from './OverlayComponent';
 import MapComponent from './MapComponent';
+import { View } from 'react-native';
 
 interface GuessComponentProps {
   localPlayerID: string;
@@ -57,10 +58,10 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   }, [game.state.currentRound?.status]);
 
   return (
-    <div>
-      <div className="fixed w-full h-full z-0">
+    <View className="flex-1">
+      <View className="z-0">
         <MapComponent mapProps={mapProps} />
-      </div>
+      </View>
 
       {internalRoundStatus === 'countdown' && (
         <RoundCountdownComponent
@@ -74,7 +75,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
           internalRoundStatus === 'results' &&
           game.state.currentRound?.status === RoundStatus.GUESSING
         ) && (
-          <div className="z-10">
+          <View className="flex-1 z-10">
             <OverlayComponent
               localPlayerID={localPlayerID}
               preGuess={preGuess}
@@ -84,9 +85,9 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
               handleIsTimeUp={handleIsTimeUp}
               handleNextRound={handleNextRound}
             />
-          </div>
+          </View>
         )}
-    </div>
+    </View>
   );
 };
 
