@@ -50,6 +50,7 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 contentStyle: { backgroundColor: 'transparent' },
+                animation: 'none',
               }}
             >
               <Stack.Screen
