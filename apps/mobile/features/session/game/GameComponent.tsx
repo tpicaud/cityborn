@@ -52,39 +52,42 @@ export const GameComponent = ({
 
   // Game render
   return (
-    <View style={StyleSheet.absoluteFillObject}>
-      <GuessComponent
-        localPlayerID={localPlayerID}
-        session={session}
-        game={game}
-        handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
-      />
-
+    <View style={StyleSheet.absoluteFill}>
+      <View style={StyleSheet.absoluteFill}>
+        <GuessComponent
+          localPlayerID={localPlayerID}
+          session={session}
+          game={game}
+          handleGuess={handleGuess}
+          handleNextRound={handleNextRound}
+        />
+      </View>
       {/* Dialog results */}
       {game.status === GameStatus.IN_RESULTS && (
-        <Dialog visible={true} className="h-[80%] w-[90%] p-8">
-          <View className="flex-1 w-full">
-            <ResultsComponent
-              game={game}
-              localPlayerID={localPlayerID}
-              isHost={isHost}
-              mode={session.mode}
-              handleEndGame={handleEndGame}
-              handlePlayAgain={handlePlayAgain}
-              handleExitGame={handleExitGame}
-            />
-          </View>
-          <View className="flex gap-4 items-center justify-center">
-            <Button
-              variant="filled"
-              size="large"
-              label="Rejouer"
-              onPress={handleEndGame}
-            />
-            <Button variant="default" label="Menu" onPress={handleExitGame} />
-          </View>
-        </Dialog>
+        <View>
+          <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
+            <View className="flex-1 w-full">
+              <ResultsComponent
+                game={game}
+                localPlayerID={localPlayerID}
+                isHost={isHost}
+                mode={session.mode}
+                handleEndGame={handleEndGame}
+                handlePlayAgain={handlePlayAgain}
+                handleExitGame={handleExitGame}
+              />
+            </View>
+            <View className="flex gap-4 items-center justify-center">
+              <Button
+                variant="filled"
+                size="large"
+                label="Rejouer"
+                onPress={handleEndGame}
+              />
+              <Button variant="default" label="Menu" onPress={handleExitGame} />
+            </View>
+          </Dialog>
+        </View>
       )}
     </View>
   );

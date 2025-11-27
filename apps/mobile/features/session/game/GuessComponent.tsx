@@ -64,9 +64,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
       </View>
 
       {internalRoundStatus === 'countdown' && (
-        <RoundCountdownComponent
-          onCountdownEnd={() => setInternalRoundStatus('guessing')}
-        />
+        <View className="absolute inset-0 z-20">
+          <RoundCountdownComponent
+            onCountdownEnd={() => setInternalRoundStatus('guessing')}
+          />
+        </View>
       )}
 
       {(internalRoundStatus === 'guessing' ||

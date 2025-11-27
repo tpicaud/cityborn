@@ -1,6 +1,7 @@
 import Dialog from '@/components/ui/Dialog';
 import { Text } from '@/components/ui/native/NativeComponents';
 import { useState, useEffect } from 'react';
+import { View } from 'react-native';
 
 interface TimerComponentProps {
   onCountdownEnd: () => void;
@@ -26,9 +27,11 @@ const RoundCountdownComponent: React.FC<TimerComponentProps> = ({
   }, [countdown]);
 
   return (
-    <Dialog visible={true} className="bg-transparent">
-      <Text className="text-8xl">{countdown}</Text>
-    </Dialog>
+    <View className="">
+      <Dialog visible={true} className="h-full w-full bg-transparent">
+        <Text className="text-8xl text-background">{countdown}</Text>
+      </Dialog>
+    </View>
   );
 };
 
