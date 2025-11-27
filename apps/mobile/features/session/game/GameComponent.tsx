@@ -5,11 +5,7 @@ import { Text } from '@/components/ui/native/NativeComponents';
 import { Game, GameStatus, Guess, RoundStatus, Session } from '@cityborn/types';
 import ResultsComponent from './ResultsComponent';
 import GuessComponent from './GuessComponent';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export const GameComponent = ({
   localPlayerID,
@@ -32,8 +28,6 @@ export const GameComponent = ({
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
 }) => {
-  const insets = useSafeAreaInsets();
-
   // Game starting or round loading
   if (
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
@@ -58,15 +52,7 @@ export const GameComponent = ({
 
   // Game render
   return (
-    <View
-      style={{
-        position: 'absolute',
-        top: insets.top,
-        bottom: insets.bottom + 16,
-        right: 16,
-        left: 16,
-      }}
-    >
+    <View style={StyleSheet.absoluteFillObject}>
       <GuessComponent
         localPlayerID={localPlayerID}
         session={session}
@@ -74,38 +60,6 @@ export const GameComponent = ({
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
       />
-
-      {/* Bouton / compteur à droite */}
-      {game.state.currentRound && (
-        <View
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '55%',
-            transform: [{ translateY: -50 }],
-            zIndex: 50,
-          }}
-        >
-          <View className="flex flex-col gap-2">
-            {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
-              <Button
-                size="small"
-                label="->"
-                className="w-auto text-center"
-                onPress={async () => await handleNextRound()}
-              />
-            )}
-            <View className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
-              <Text>
-                {game.state.guessObjectsIds.findIndex(
-                  (id) => game.state.currentRound!.guessObjectId === id,
-                ) + 1}
-                /{game.state.guessObjectsIds!.length}
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
 
       {/* Dialog results */}
       {game.status === GameStatus.IN_RESULTS && (

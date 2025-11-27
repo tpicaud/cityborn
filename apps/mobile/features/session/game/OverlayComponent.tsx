@@ -4,8 +4,10 @@ import TimerComponent from './TimerComponent';
 import { RoundStatus } from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { useEffect, useState } from 'react';
-import { View, Text } from '@/components/ui/native/NativeComponents';
+import { Text } from '@/components/ui/native/NativeComponents';
 import Button from '@/components/ui/Button';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function GuessResult({
   currentRound,
@@ -98,7 +100,7 @@ interface OverlayComponentProps {
   game: Game;
   handleGuess: (value: Guess) => void | Promise<void>;
   handleIsTimeUp: () => void;
-  handleNextRound: () => void;
+  handleNextRound: () => void | Promise<void>;
 }
 
 const OverlayComponent = ({
@@ -108,8 +110,10 @@ const OverlayComponent = ({
   game,
   handleGuess,
   handleIsTimeUp,
+  handleNextRound,
 }: OverlayComponentProps) => {
   const [timerEnded, setTimerEnded] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     setTimerEnded(false);
@@ -126,7 +130,16 @@ const OverlayComponent = ({
   )!;
 
   return (
-    <View className="flex-1 bg-transparent">
+    <View
+      className="h-full w-full"
+      style={{
+        position: 'absolute',
+        top: insets.top,
+        bottom: insets.bottom + 16,
+        right: 16,
+        left: 16,
+      }}
+    >
       <View className="absolute top-5 w-full">
         {/* Timer positionné en overlay */}
         <View className="absolute left-0 w-40">
@@ -146,7 +159,7 @@ const OverlayComponent = ({
       </View>
 
       {/* Zone boutons / résultats */}
-      <View className="absolute bottom-0 bg-transparent w-full">
+      <View className="absolute bottom-0 bg-transparent w-full z-10">
         {game.state.currentRound!.status === RoundStatus.GUESSING && (
           <View className="relative w-full flex justify-center items-center bg-transparent">
             <Button
@@ -170,6 +183,38 @@ const OverlayComponent = ({
           />
         )}
       </View>
+
+      {/* Bouton / compteur à droite */}
+      {game.state.currentRound && (
+        <View
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: '55%',
+            transform: [{ translateY: -50 }],
+            zIndex: 50,
+          }}
+        >
+          <View className="flex flex-col gap-2">
+            {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
+              <Button
+                size="small"
+                label="->"
+                className="w-auto text-center"
+                onPress={async () => await handleNextRound()}
+              />
+            )}
+            <View className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
+              <Text>
+                {game.state.guessObjectsIds.findIndex(
+                  (id) => game.state.currentRound!.guessObjectId === id,
+                ) + 1}
+                /{game.state.guessObjectsIds!.length}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
