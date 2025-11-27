@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Guess, Session } from '@cityborn/types';
+import { Guess, MapProps, Session } from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { RoundStatus } from '@cityborn/types';
 import RoundCountdownComponent from './RoundCountdown';
@@ -30,7 +30,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   >('countdown');
 
   // Map properties
-  const mapProps = {
+  const mapProps: MapProps = {
     center: { lat: 48.8566, lng: 2.3522 },
     zoom: 2,
     preGuess,

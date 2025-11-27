@@ -61,9 +61,9 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   //   console.log(session);
   // }, [session]);
 
-  useEffect(() => {
-    console.log(game);
-  }, [game]);
+  // useEffect(() => {
+  //   console.log(game);
+  // }, [game]);
 
   ///////////////////////
   // Session functions //
@@ -94,7 +94,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     try {
       // Create  new game
       const game = await apiClient.createSoloGame(session);
-      console.log(game);
 
       setSession((prevSession) => {
         if (!prevSession) return;
