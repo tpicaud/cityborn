@@ -77,7 +77,7 @@ export class SessionService {
       status: SessionStatus.IN_LOBBY,
       gameConfig: {
         categories: [],
-        timer: 4,
+        timer: 10000,
         nbOfObjects: 8,
       },
       players:

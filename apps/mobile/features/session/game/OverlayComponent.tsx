@@ -195,7 +195,7 @@ const OverlayComponent = ({
             zIndex: 50,
           }}
         >
-          <View className="flex flex-col gap-2">
+          <View className="flex flex-col gap-2" pointerEvents="auto">
             {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
               <Button
                 size="small"
