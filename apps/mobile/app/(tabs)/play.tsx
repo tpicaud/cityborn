@@ -1,10 +1,10 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import PlayComponent from '@/features/play/PlayComponent';
+import Play from '@/features/play/Play';
 
 export default function PlayScreen() {
   return (
     <ScreenLayout>
-      <PlayComponent />
+      <Play />
     </ScreenLayout>
   );
 }

@@ -4,7 +4,7 @@ import TextInput from '@/components/ui/TextInput';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-export default function PlayComponent() {
+export default function Play() {
   const router = useRouter();
   const [joinCode, setJoinCode] = useState('');
 

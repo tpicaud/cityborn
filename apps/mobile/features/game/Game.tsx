@@ -2,15 +2,21 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text } from '@/components/ui/native/NativeComponents';
-import { Game, GameStatus, Guess, RoundStatus, Session } from '@cityborn/types';
-import ResultsComponent from './ResultsComponent';
-import GuessComponent from './GuessComponent';
+import {
+  Game as GameType,
+  GameStatus,
+  Guess as GuessType,
+  Session,
+  GameConfig,
+} from '@cityborn/types';
+import Results from './components/Results';
+import Guess from './components/Guess';
 import { StyleSheet, View } from 'react-native';
 
-export const GameComponent = ({
+export const Game = ({
   localPlayerID,
   isHost,
-  session,
+  gameConfig,
   game,
   handleGuess,
   handleNextRound,
@@ -20,9 +26,9 @@ export const GameComponent = ({
 }: {
   localPlayerID: string | undefined;
   isHost: boolean;
-  session: Session;
-  game: Game;
-  handleGuess: (guess: Guess) => Promise<void>;
+  gameConfig: GameConfig;
+  game: GameType;
+  handleGuess: (guess: GuessType) => Promise<void>;
   handleNextRound: () => Promise<void>;
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
@@ -39,7 +45,6 @@ export const GameComponent = ({
       </View>
     );
   }
-
   // Player not in game and game already started
   if (!localPlayerID) {
     return (
@@ -54,9 +59,9 @@ export const GameComponent = ({
   return (
     <View style={StyleSheet.absoluteFill}>
       <View style={StyleSheet.absoluteFill}>
-        <GuessComponent
+        <Guess
           localPlayerID={localPlayerID}
-          session={session}
+          gameConfig={gameConfig}
           game={game}
           handleGuess={handleGuess}
           handleNextRound={handleNextRound}
@@ -67,11 +72,10 @@ export const GameComponent = ({
         <View>
           <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
             <View className="flex-1 w-full">
-              <ResultsComponent
+              <Results
                 game={game}
                 localPlayerID={localPlayerID}
                 isHost={isHost}
-                mode={session.mode}
                 handleEndGame={handleEndGame}
                 handlePlayAgain={handlePlayAgain}
                 handleExitGame={handleExitGame}

@@ -7,11 +7,10 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { ScrollView } from 'react-native';
 
-const ResultsComponent = ({
+const Results = ({
   game,
   localPlayerID,
   isHost,
-  mode,
   handleEndGame,
   handlePlayAgain,
   handleExitGame,
@@ -19,7 +18,6 @@ const ResultsComponent = ({
   game: Game;
   localPlayerID: string;
   isHost: boolean;
-  mode: SessionMode;
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
@@ -353,4 +351,4 @@ const ResultsComponent = ({
   // );
 };
 
-export default ResultsComponent;
+export default Results;

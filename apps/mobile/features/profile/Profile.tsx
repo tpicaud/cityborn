@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 
-export default function ProfileComponent() {
+export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
   const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);

@@ -2,13 +2,13 @@ import { colors } from '@cityborn/design-system';
 import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { View, Text } from 'react-native';
 
-interface TimerComponentProps {
+interface TimerProps {
   totalTime: number;
   endMessage: string;
   setTimerEnded: Dispatch<SetStateAction<boolean>>;
 }
 
-const TimerComponent: React.FC<TimerComponentProps> = ({
+const Timer: React.FC<TimerProps> = ({
   totalTime,
   endMessage,
   setTimerEnded,
@@ -68,4 +68,4 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
   );
 };
 
-export default TimerComponent;
+export default Timer;

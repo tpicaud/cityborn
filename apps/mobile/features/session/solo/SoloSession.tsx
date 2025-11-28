@@ -1,10 +1,10 @@
 import { useAuth, useError } from '@cityborn/contexts';
 import { GameConfig, Guess } from '@cityborn/types';
-import { SoloLobbyComponent } from './SoloLobbyComponent';
+import { SoloLobby } from './SoloLobby';
 import { View } from '@/components/ui/native/NativeComponents';
 import LoaderIcon from '@/components/ui/LoaderIcon';
-import { GameComponent } from '../game/GameComponent';
-import { useSoloSession } from './hooks/useSoloSession';
+import { Game } from '../../game/Game';
+import { useSoloSession } from '../hooks/useSoloSession';
 
 export default function SoloSessionComponent() {
   const { user } = useAuth();
@@ -91,10 +91,10 @@ export default function SoloSessionComponent() {
   // Si game, display game
   if (soloSession.session.currentGame) {
     return (
-      <GameComponent
+      <Game
         localPlayerID={localPlayerID}
         isHost={soloSession.isHost}
-        session={soloSession.session}
+        gameConfig={soloSession.session.gameConfig}
         game={soloSession.session.currentGame}
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
@@ -106,7 +106,7 @@ export default function SoloSessionComponent() {
   } else {
     // display lobby
     return (
-      <SoloLobbyComponent
+      <SoloLobby
         localPlayerID={localPlayerID}
         isHost={soloSession.isHost}
         session={soloSession.session}

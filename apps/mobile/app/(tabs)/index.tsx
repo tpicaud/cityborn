@@ -1,10 +1,10 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import HomeComponent from '@/features/home/HomeComponent';
+import Home from '@/features/home/Home';
 
 export default function HomeScreen() {
   return (
     <ScreenLayout>
-      <HomeComponent />
+      <Home />
     </ScreenLayout>
   );
 }
