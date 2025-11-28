@@ -1,10 +1,4 @@
-import {
-  GameConfig,
-  Guess,
-  GuessObject,
-  Round,
-  Session,
-} from '@cityborn/types';
+import { GameConfig, Guess, GuessObject, Round } from '@cityborn/types';
 import GuessObjectCard from './GuessObjectCard';
 import Timer from './Timer';
 import { RoundStatus } from '@cityborn/types';
@@ -102,7 +96,6 @@ function GuessResult({
 interface OverlayProps {
   localPlayerID: string;
   preGuess: Guess | undefined;
-  gameConfig: GameConfig;
   game: Game;
   handleGuess: (value: Guess) => void | Promise<void>;
   handleIsTimeUp: () => void;
@@ -112,7 +105,6 @@ interface OverlayProps {
 const Overlay = ({
   localPlayerID,
   preGuess,
-  gameConfig,
   game,
   handleGuess,
   handleIsTimeUp,
@@ -151,7 +143,7 @@ const Overlay = ({
         <View className="absolute left-0 w-40">
           {game.state.currentRound!.status === RoundStatus.GUESSING && (
             <Timer
-              totalTime={gameConfig.timer}
+              totalTime={game.config.timer}
               endMessage="Terminé !"
               setTimerEnded={setTimerEnded}
             />

@@ -6,7 +6,6 @@ import {
   Game as GameType,
   GameStatus,
   Guess as GuessType,
-  Session,
   GameConfig,
 } from '@cityborn/types';
 import Results from './components/Results';
@@ -16,7 +15,6 @@ import { StyleSheet, View } from 'react-native';
 export const Game = ({
   localPlayerID,
   isHost,
-  gameConfig,
   game,
   handleGuess,
   handleNextRound,
@@ -61,7 +59,6 @@ export const Game = ({
       <View style={StyleSheet.absoluteFill}>
         <Guess
           localPlayerID={localPlayerID}
-          gameConfig={gameConfig}
           game={game}
           handleGuess={handleGuess}
           handleNextRound={handleNextRound}

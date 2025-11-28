@@ -339,6 +339,7 @@ export class SessionService {
 
     const game: Game = {
       id: await this.generateUniqueGameID(),
+      config: session.gameConfig,
       status: GameStatus.STARTING,
       state: {
         guessObjectsIds: guessObjectIds,

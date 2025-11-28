@@ -8,6 +8,7 @@ import { Player } from './Player.js';
 
 export interface Game {
   id: string;
+  config: GameConfig;
   status: GameStatus;
   state: GameState;
 }

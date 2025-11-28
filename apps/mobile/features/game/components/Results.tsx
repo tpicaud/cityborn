@@ -89,10 +89,6 @@ const Results = ({
     return { message, sub_message_1, sub_message_2 };
   }
 
-  useEffect(() => {
-    console.log(sentence, localPlayerResults);
-  }, [sentence, localPlayerResults]);
-
   if (!sentence || !localPlayerResults) {
     return (
       <View className="flex-1 items-center justify-center">
