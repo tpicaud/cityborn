@@ -11,6 +11,7 @@ import {
   RoundStatus,
 } from '@cityborn/types';
 import { calculatePoints } from '@cityborn/utils';
+import { colors } from '@cityborn/design-system';
 
 export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
   const { center, zoom, preGuess, game, localPlayerID, handlePreGuess } =
@@ -121,8 +122,12 @@ export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
         { latitude: guess.lat, longitude: guess.lng },
         { latitude: answer.lat, longitude: answer.lng },
       ]}
-      strokeColor={isLocalPlayer ? '#0000FF' : '#616161'}
-      strokeWidth={isLocalPlayer ? 3 : 2}
+      strokeColor={
+        isLocalPlayer ? colors.primary[500] : colors.foreground.DEFAULT
+      }
+      strokeWidth={isLocalPlayer ? 4 : 2}
+      geodesic={true}
+      lineDashPattern={[10, 10]}
     />
   );
 
@@ -181,11 +186,16 @@ export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
         ref={mapRef}
         provider="google"
         style={{ flex: 1 }}
-        initialRegion={{
-          latitude: center.lat || 0,
-          longitude: center.lng || 0,
-          latitudeDelta: 50,
-          longitudeDelta: 50,
+        userInterfaceStyle="light"
+        zoomTapEnabled={false}
+        showsPointsOfInterest={false}
+        rotateEnabled={false}
+        poiClickEnabled={false}
+        initialCamera={{
+          center: { latitude: 48.8566, longitude: 2.3522 },
+          pitch: 0,
+          heading: 0,
+          zoom: -10,
         }}
         onPress={(e) => {
           if (currentRound.status === RoundStatus.GUESSING && !localGuess)
@@ -199,6 +209,7 @@ export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
               latitude: preGuess.coordinates.lat,
               longitude: preGuess.coordinates.lng,
             }}
+            tappable={false}
           />
         )}
 
@@ -213,7 +224,7 @@ export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
             coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
             anchor={{ x: 0.5, y: 0.5 }}
             calloutAnchor={{ x: 0, y: 50 }}
-            tracksViewChanges={true}
+            tappable={false}
           >
             <Image
               source={require('@/assets/maps/answer_marker.png')}

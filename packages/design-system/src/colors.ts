@@ -27,4 +27,11 @@ export const colors = {
     900: '#000000',
     950: '#000000',
   },
+  foreground: {
+    DEFAULT: '#404040',
+    on_primary: '#fafafa',
+  },
+  background: {
+    DEFAULT: '#fafafa',
+  },
 };
