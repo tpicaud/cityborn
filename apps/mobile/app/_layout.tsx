@@ -81,7 +81,10 @@ export default function RootLayout() {
               <Stack.Screen
                 name="session/solo"
                 options={{
-                  headerShown: false,
+                  headerShown: true,
+                  headerTitle: '',
+                  headerTransparent: true,
+                  headerShadowVisible: false,
                 }}
               />
             </Stack>
