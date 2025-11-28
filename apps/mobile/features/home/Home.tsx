@@ -5,7 +5,7 @@ import { useAuth } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { Image } from 'react-native';
 
-export default function HomeComponent() {
+export default function Home() {
   const router = useRouter();
   const { user, setUser } = useAuth();
 

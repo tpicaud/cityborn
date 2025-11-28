@@ -3,12 +3,12 @@ import { Text } from '@/components/ui/native/NativeComponents';
 import { useState, useEffect } from 'react';
 import { View } from 'react-native';
 
-interface TimerComponentProps {
+interface RoundCountdownProps {
   onCountdownEnd: () => void;
   initialCount?: number; // Default value 3
 }
 
-const RoundCountdownComponent: React.FC<TimerComponentProps> = ({
+const RoundCountdown: React.FC<RoundCountdownProps> = ({
   onCountdownEnd,
   initialCount = 3,
 }) => {
@@ -35,4 +35,4 @@ const RoundCountdownComponent: React.FC<TimerComponentProps> = ({
   );
 };
 
-export default RoundCountdownComponent;
+export default RoundCountdown;

@@ -1,10 +1,10 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import SoloSessionComponent from '@/features/session/solo/SoloSessionComponent';
+import SoloSession from '@/features/session/solo/SoloSession';
 
 export default function SoloSessionScreen() {
   return (
     <ScreenLayout>
-      <SoloSessionComponent />
+      <SoloSession />
     </ScreenLayout>
   );
 }

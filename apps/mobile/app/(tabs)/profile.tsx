@@ -1,10 +1,10 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import ProfileComponent from '@/features/profile/ProfileComponent';
+import Profile from '@/features/profile/Profile';
 
 export default function ProfilePage() {
   return (
     <ScreenLayout>
-      <ProfileComponent />
+      <Profile />
     </ScreenLayout>
   );
 }

@@ -4,9 +4,8 @@ import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useError } from '@cityborn/contexts';
 import { Category, GameConfig, Session } from '@cityborn/types';
-import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 
 interface SoloLobbyProps {
   localPlayerID: string | undefined;
@@ -16,7 +15,7 @@ interface SoloLobbyProps {
   handleStartGame: () => Promise<void>;
 }
 
-export function SoloLobbyComponent({
+export function SoloLobby({
   localPlayerID,
   session,
   isHost,

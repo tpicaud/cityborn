@@ -13,7 +13,7 @@ import {
 import { calculatePoints } from '@cityborn/utils';
 import { colors } from '@cityborn/design-system';
 
-export default function MapComponent({ mapProps }: { mapProps: MapProps }) {
+export default function Map({ mapProps }: { mapProps: MapProps }) {
   const { center, zoom, preGuess, game, localPlayerID, handlePreGuess } =
     mapProps;
 

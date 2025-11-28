@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Guess, MapProps, Session } from '@cityborn/types';
+import {
+  GameConfig,
+  Guess as GuessType,
+  MapProps,
+  Session,
+} from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { RoundStatus } from '@cityborn/types';
-import RoundCountdownComponent from './RoundCountdown';
-import useGuess from './hooks/useGuess';
-import OverlayComponent from './OverlayComponent';
-import MapComponent from './MapComponent';
-import { View, StyleSheet } from 'react-native';
+import RoundCountdown from './RoundCountdown';
+import useGuess from '../hooks/useGuess';
+import Overlay from './Overlay';
+import Map from './Map';
+import { View } from 'react-native';
 
-interface GuessComponentProps {
+interface GuessProps {
   localPlayerID: string;
-  session: Session;
+  gameConfig: GameConfig;
   game: Game;
-  handleGuess: (guess: Guess) => void;
+  handleGuess: (guess: GuessType) => void;
   handleNextRound: () => void;
 }
 
-const GuessComponent: React.FC<GuessComponentProps> = ({
+const Guess: React.FC<GuessProps> = ({
   localPlayerID,
-  session,
+  gameConfig,
   game,
   handleGuess,
   handleNextRound,
@@ -60,12 +65,12 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   return (
     <View className="flex-1">
       <View className="absolute inset-0 z-0">
-        <MapComponent mapProps={mapProps} />
+        <Map mapProps={mapProps} />
       </View>
 
       {internalRoundStatus === 'countdown' && (
         <View className="absolute inset-0 z-20">
-          <RoundCountdownComponent
+          <RoundCountdown
             onCountdownEnd={() => setInternalRoundStatus('guessing')}
           />
         </View>
@@ -81,10 +86,10 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
             className="absolute inset-0 z-10 bg-transparent"
             pointerEvents="box-none"
           >
-            <OverlayComponent
+            <Overlay
               localPlayerID={localPlayerID}
               preGuess={preGuess}
-              session={session}
+              gameConfig={gameConfig}
               game={game}
               handleGuess={handleGuess}
               handleIsTimeUp={handleIsTimeUp}
@@ -96,4 +101,4 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   );
 };
 
-export default GuessComponent;
+export default Guess;

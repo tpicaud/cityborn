@@ -1,6 +1,12 @@
-import { Guess, GuessObject, Round, Session } from '@cityborn/types';
+import {
+  GameConfig,
+  Guess,
+  GuessObject,
+  Round,
+  Session,
+} from '@cityborn/types';
 import GuessObjectCard from './GuessObjectCard';
-import TimerComponent from './TimerComponent';
+import Timer from './Timer';
 import { RoundStatus } from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { useEffect, useState } from 'react';
@@ -93,25 +99,25 @@ function GuessResult({
   );
 }
 
-interface OverlayComponentProps {
+interface OverlayProps {
   localPlayerID: string;
   preGuess: Guess | undefined;
-  session: Session;
+  gameConfig: GameConfig;
   game: Game;
   handleGuess: (value: Guess) => void | Promise<void>;
   handleIsTimeUp: () => void;
   handleNextRound: () => void | Promise<void>;
 }
 
-const OverlayComponent = ({
+const Overlay = ({
   localPlayerID,
   preGuess,
-  session,
+  gameConfig,
   game,
   handleGuess,
   handleIsTimeUp,
   handleNextRound,
-}: OverlayComponentProps) => {
+}: OverlayProps) => {
   const [timerEnded, setTimerEnded] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -144,8 +150,8 @@ const OverlayComponent = ({
         {/* Timer positionné en overlay */}
         <View className="absolute left-0 w-40">
           {game.state.currentRound!.status === RoundStatus.GUESSING && (
-            <TimerComponent
-              totalTime={session.gameConfig.timer}
+            <Timer
+              totalTime={gameConfig.timer}
               endMessage="Terminé !"
               setTimerEnded={setTimerEnded}
             />
@@ -219,4 +225,4 @@ const OverlayComponent = ({
   );
 };
 
-export default OverlayComponent;
+export default Overlay;
