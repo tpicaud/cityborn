@@ -143,7 +143,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const nextRound = () => {
-    console.log('next round');
     if (!game) return;
 
     // Record result of the round

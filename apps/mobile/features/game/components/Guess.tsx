@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  GameConfig,
-  Guess as GuessType,
-  MapProps,
-  Session,
-} from '@cityborn/types';
+import { GameConfig, Guess as GuessType, MapProps } from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { RoundStatus } from '@cityborn/types';
 import RoundCountdown from './RoundCountdown';
@@ -15,7 +10,6 @@ import { View } from 'react-native';
 
 interface GuessProps {
   localPlayerID: string;
-  gameConfig: GameConfig;
   game: Game;
   handleGuess: (guess: GuessType) => void;
   handleNextRound: () => void;
@@ -23,7 +17,6 @@ interface GuessProps {
 
 const Guess: React.FC<GuessProps> = ({
   localPlayerID,
-  gameConfig,
   game,
   handleGuess,
   handleNextRound,
@@ -89,7 +82,6 @@ const Guess: React.FC<GuessProps> = ({
             <Overlay
               localPlayerID={localPlayerID}
               preGuess={preGuess}
-              gameConfig={gameConfig}
               game={game}
               handleGuess={handleGuess}
               handleIsTimeUp={handleIsTimeUp}
