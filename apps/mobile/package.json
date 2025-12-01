@@ -19,6 +19,7 @@
     "@cityborn/types": "workspace:*",
     "@cityborn/utils": "workspace:*",
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/cli": "^20.0.2",
     "@react-native-community/datetimepicker": "^8.5.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
@@ -54,7 +55,8 @@
     "react-native-svg": "^15.15.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
