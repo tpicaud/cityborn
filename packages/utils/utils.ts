@@ -17,3 +17,7 @@ export function getGameResult(game: Game): Map<string, PlayerResults> {
 
   return resultsMap;
 }
+
+export function generateVisitorId(): string {
+  return crypto.randomUUID();
+}
