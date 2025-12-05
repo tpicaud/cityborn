@@ -6,7 +6,7 @@ export default function GuessObjectCard({
   guessObject,
 }: Readonly<{ guessObject: GuessObject }>) {
   return (
-    <View className="flex w-full min-h-40 max-h-70 min-w-20 max-w-40 rounded-xs">
+    <View className="flex w-full min-h-40 max-h-70 min-w-25 max-w-40 rounded-xs">
       <Image
         source={guessObject.image}
         placeholder="Image"
