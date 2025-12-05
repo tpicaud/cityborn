@@ -40,7 +40,7 @@ export class AuthGuard implements CanActivate {
       const user = await validateAccessToken(
         token,
         this.jwtService,
-        getJwtConstants(this.configService).jwt_refresh_secret,
+        getJwtConstants(this.configService).jwt_access_secret,
       );
 
       if (!user.isVerified)
