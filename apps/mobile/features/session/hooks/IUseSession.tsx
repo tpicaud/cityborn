@@ -4,7 +4,7 @@ import { Session } from '@cityborn/types';
 export interface IUseSession {
   session: Session | undefined;
   isHost: boolean;
-  updateGameConfig: (gameConfig: Partial<GameConfig>) => void;
+  updateGameConfig: (gameConfig: Partial<GameConfig>) => void | Promise<void>;
 
   // Game
   startGame: () => Promise<void>;

@@ -1,10 +1,11 @@
 import { generateVisitorId } from '@cityborn/utils';
+import { asyncStorage } from './asyncStorage';
 
-export function getOrCreateVisitorId(): string {
-  let visitor_id = localStorage.getItem('visitor_id');
+export async function getOrCreateVisitorId(): Promise<string> {
+  let visitor_id = await asyncStorage.get<string>('visitor_id');
   if (!visitor_id) {
     visitor_id = generateVisitorId();
-    localStorage.setItem('visitor_id', visitor_id);
+    asyncStorage.set<string>('visitor_id', visitor_id);
   }
   return visitor_id;
 }

@@ -21,7 +21,7 @@ export const ERROR_MESSAGES = {
     [ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN]:
       'Le lien de vérification a expiré ou est invalide.',
     [ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED]:
-      "L'action nécessite un compte utilisateur vérifié.",
+      'Vous devez posséder un compte utilisateur vérifié.',
 
     // Player
     [ErrorCode.PLAYER_NOT_FOUND]: "Le joueur n'existe pas.",

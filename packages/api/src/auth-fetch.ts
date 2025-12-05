@@ -29,7 +29,7 @@ export class AuthFetch {
       ...(options.headers || {}),
     };
 
-    if (token) {
+    if (token && options.includeAuth) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -41,22 +41,48 @@ export class AuthFetch {
       ...options,
     });
 
-    if (response.ok) {
+    // -----------------------
+    // Parse JSON safely
+    // -----------------------
+    let data: any = null;
+
+    const contentType = response.headers.get('Content-Type') ?? '';
+
+    if (response.status !== 204 && contentType.includes('application/json')) {
       try {
-        return (await response.json()) as T;
+        data = await response.json();
       } catch {
-        return {} as T;
+        // Don't throw — treat as no JSON response
+        data = null;
       }
     }
 
-    // Handle refresh
-    if (response.status === 401 && options.includeAuth) {
+    if (response.ok) {
+      return (data ?? {}) as T;
+    }
+
+    if (
+      response.status === 401 &&
+      data &&
+      data.code === ErrorCode.TOKEN_EXPIRED &&
+      options.includeAuth
+    ) {
       return await this.handle401<T>(method, url, body, options);
     }
 
-    // Else throw error
-    const error: ErrorPayload = await response.json();
-    throw new ApiError(error.code, error.message, error.statusCode);
+    if (data && data.code) {
+      throw new ApiError(
+        data.code,
+        data.message,
+        data.statusCode ?? response.status,
+      );
+    }
+
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected server response',
+      response.status,
+    );
   }
 
   // ------- Handle refresh -------

@@ -13,7 +13,6 @@ export function useMultiSession(
   localPlayerID: string | undefined,
   sessionID: string,
 ): IUseSession & {
-  // Extends interface
   connected: boolean;
   socket: Socket;
   hasDisconnected: boolean;

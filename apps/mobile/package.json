@@ -28,10 +28,11 @@
     "@turf/turf": "^7.2.0",
     "clsx": "^2.1.1",
     "expo": "~54.0.23",
+    "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.10",
     "expo-font": "~14.0.9",
     "expo-haptics": "~15.0.7",
-    "expo-image": "~3.0.10",
+    "expo-image": "~3.0.11",
     "expo-linking": "~8.0.8",
     "expo-navigation-bar": "^5.0.9",
     "expo-router": "~6.0.14",
@@ -48,6 +49,7 @@
     "react-native": "0.81.5",
     "react-native-css": "^3.0.1",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-get-random-values": "^2.0.0",
     "react-native-maps": "1.20.1",
     "react-native-reanimated": "~4.1.5",
     "react-native-safe-area-context": "~5.6.2",
@@ -55,8 +57,8 @@
     "react-native-svg": "^15.15.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
-    "tailwind-merge": "^3.3.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",

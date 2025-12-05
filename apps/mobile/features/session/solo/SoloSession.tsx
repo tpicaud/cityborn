@@ -6,7 +6,7 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Game } from '../../game/Game';
 import { useSoloSession } from '../hooks/useSoloSession';
 
-export default function SoloSessionComponent() {
+export default function SoloSession() {
   const { user } = useAuth();
   const { invokeError } = useError();
   const localPlayerID = user ? user.username : 'guest';
@@ -94,7 +94,6 @@ export default function SoloSessionComponent() {
       <Game
         localPlayerID={localPlayerID}
         isHost={soloSession.isHost}
-        gameConfig={soloSession.session.gameConfig}
         game={soloSession.session.currentGame}
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}

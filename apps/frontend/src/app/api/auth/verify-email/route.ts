@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    await apiClient.verifyEmail(body.token);
+    await apiClient.verifyEmail(body.verification_token);
     return NextResponse.json(
       { message: 'Email verified successfully' },
       { status: 200 },

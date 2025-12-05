@@ -10,6 +10,7 @@ import { getJwtConstants } from '../constants';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
 import { extractTokenFromHTTPHeader } from '../utils';
+import { validateRefreshToken } from './utils';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
@@ -29,20 +30,12 @@ export class RefreshGuard implements CanActivate {
         message: 'No refresh token provided',
       });
 
-    try {
-      request.user = await this.validateRefreshToken(refreshToken);
-      return true;
-    } catch (err) {
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Invalid refresh token',
-      });
-    }
-  }
+    request.user = await validateRefreshToken(
+      refreshToken,
+      this.jwtService,
+      getJwtConstants(this.configService).jwt_refresh_secret,
+    );
 
-  private async validateRefreshToken(token: string) {
-    return await this.jwtService.verifyAsync(token, {
-      secret: getJwtConstants(this.configService).jwt_refresh_secret,
-    });
+    return true;
   }
 }

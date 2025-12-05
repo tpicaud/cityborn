@@ -88,8 +88,10 @@ export class ApiClient {
     await this.authFetch.post<void>('/auth/send-verification-email');
   }
 
-  async verifyEmail(token: string) {
-    await this.authFetch.post<void>('/auth/verify-email', { token });
+  async verifyEmail(verification_token: string) {
+    await this.authFetch.post<void>('/auth/verify-email', {
+      verification_token,
+    });
   }
 
   //////////////////

@@ -22,7 +22,7 @@ function ErrorDialog({
   };
 
   return (
-    <Dialog visible={open} onClose={handleClose} className="border">
+    <Dialog visible={open} onClose={handleClose}>
       <View className="flex justify-center items-center gap-4">
         <Icon name="alert_fill" size={40} color={colors.destructive[500]} />
         <Text className="text-lg text-center">{errorMessage}</Text>

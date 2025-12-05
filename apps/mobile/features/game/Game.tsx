@@ -6,7 +6,6 @@ import {
   Game as GameType,
   GameStatus,
   Guess as GuessType,
-  GameConfig,
 } from '@cityborn/types';
 import Results from './components/Results';
 import Guess from './components/Guess';
@@ -24,7 +23,6 @@ export const Game = ({
 }: {
   localPlayerID: string | undefined;
   isHost: boolean;
-  gameConfig: GameConfig;
   game: GameType;
   handleGuess: (guess: GuessType) => Promise<void>;
   handleNextRound: () => Promise<void>;

@@ -1,4 +1,5 @@
 import { Game, PlayerResults } from '@cityborn/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Game
 export function calculatePoints(distance: number) {
@@ -18,6 +19,7 @@ export function getGameResult(game: Game): Map<string, PlayerResults> {
   return resultsMap;
 }
 
+// Tracking
 export function generateVisitorId(): string {
-  return crypto.randomUUID();
+  return uuidv4();
 }

@@ -28,6 +28,15 @@ const ICONS = {
   alert_fill: {
     ionicons: 'alert-circle',
   },
+  clipboard_outline: {
+    ionicons: 'clipboard-outline',
+  },
+  clipboard_fill: {
+    ionicons: 'clipboard',
+  },
+  image_outline: {
+    ionicons: 'image-outline',
+  },
 };
 
 type IconName = keyof typeof ICONS;

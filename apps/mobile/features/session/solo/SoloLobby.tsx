@@ -45,7 +45,7 @@ export function SoloLobby({
   };
 
   return (
-    <View className="flex-1 justi items-center">
+    <View className="flex-1 justify-center items-center">
       <View className="flex-1 flex items-center justify-center gap-10 w-70">
         <Text className="text-2xl  font-bold">SOLO</Text>
 
