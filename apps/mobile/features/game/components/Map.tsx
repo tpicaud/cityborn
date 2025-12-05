@@ -147,7 +147,16 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
               latitude: guess.coordinates.lat,
               longitude: guess.coordinates.lng,
             }}
-          />
+            anchor={{ x: 0.5, y: 0.5 }}
+            calloutAnchor={{ x: 0, y: 50 }}
+            tappable={false}
+          >
+            <Image
+              source={require('@/assets/maps/player.png')}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+          </Marker>
           {renderLine(
             guess.coordinates,
             getCenterOfGuessObject(guessObject),
@@ -215,11 +224,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
         {/* Answer marker */}
         {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          // <Marker
-          //   coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
-          //   anchor={{ x: 0.5, y: 0.5 }}
-          //   icon={require('@/assets/maps/answer_marker.png')}
-          // />
           <Marker
             coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
             anchor={{ x: 0.5, y: 0.5 }}
