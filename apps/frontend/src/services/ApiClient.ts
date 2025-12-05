@@ -156,7 +156,7 @@ export class ApiClient {
     if (!response.ok) {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
-    console.log(data);
+
     return data as GameRecord[];
   }
 
