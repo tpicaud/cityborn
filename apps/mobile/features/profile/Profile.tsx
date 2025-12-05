@@ -16,7 +16,9 @@ export default function Profile() {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchGameRecords();
+    if (user && user.isVerified) {
+      fetchGameRecords();
+    }
   }, []);
 
   const fetchGameRecords = async () => {
@@ -108,7 +110,9 @@ export default function Profile() {
                 </View>
               ) : gamesRecords.length === 0 ? (
                 <Text className="text-center mt-2 text-neutral-600 italic">
-                  Aucunes parties trouvées.
+                  {user.isVerified
+                    ? 'Aucunes parties trouvées.'
+                    : 'Vérifiez votre email pour voir votre historique de parties.'}
                 </Text>
               ) : (
                 <ScrollView

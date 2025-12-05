@@ -4,6 +4,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { Image } from 'react-native';
+import NotVerifiedBanner from './components/NotVerifiedBanner';
 
 export default function Home() {
   const router = useRouter();
@@ -21,6 +22,9 @@ export default function Home() {
             <Text className="text-3xl">
               Bienvenue <Text className="font-bold">{user.username}</Text>
             </Text>
+
+            {!user.isVerified && <NotVerifiedBanner />}
+
             <Button
               color="primary"
               variant="filled"

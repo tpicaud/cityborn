@@ -1,10 +1,11 @@
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import LoaderIcon from './LoaderIcon';
 
 type Props = {
-  label: string;
+  children?: ReactNode;
+  label?: string;
   color?: 'primary' | 'destructive';
   variant?: 'default' | 'filled' | 'outlined' | 'ghost';
   size?: 'small' | 'medium' | 'large';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function Button({
+  children,
   label,
   color = 'primary',
   variant = 'filled',
@@ -85,7 +87,7 @@ export default function Button({
       className={cn(
         'inline-flex items-center justify-center rounded-full font-medium transition-colors',
         size === 'small' && 'h-10 w-48 px-4 py-1',
-        size === 'medium' && '',
+        size === 'medium' && 'h-12 w-60 px-4 py-1',
         size === 'large' && 'h-14 w-70 px-4 font-bold',
         variantStyles[variant],
         containerStyles[color][variant],
@@ -95,10 +97,12 @@ export default function Button({
     >
       {isLoading ? (
         <LoaderIcon color="white" />
-      ) : (
+      ) : label ? (
         <Text className={cn('font-medium', textStyles[color][variant])}>
           {label}
         </Text>
+      ) : (
+        children
       )}
     </Pressable>
   );

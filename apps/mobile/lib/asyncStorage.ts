@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const storage = {
+export const asyncStorage = {
   async set<T>(key: string, value: T): Promise<void> {
     try {
       const json = JSON.stringify(value);

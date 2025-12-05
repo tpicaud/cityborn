@@ -1,12 +1,32 @@
 import Button from '@/components/ui/Button';
+import Dialog from '@/components/ui/Dialog';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { apiClient } from '@/lib/apiClient';
+import { useAuth, useError } from '@cityborn/contexts';
+import { SessionMode } from '@cityborn/types';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 export default function Play() {
+  const { user } = useAuth();
+  const { invokeError } = useError();
   const router = useRouter();
   const [joinCode, setJoinCode] = useState('');
+  const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+
+  const handleMultiPlay = async () => {
+    if (!user) {
+      setOpenConnectionAlert(true);
+    } else {
+      try {
+        const session = await apiClient.createSession(SessionMode.MULTI);
+        router.navigate(`/session/multi/${session.id}`);
+      } catch (error: any) {
+        invokeError(error);
+      }
+    }
+  };
 
   return (
     <View className="flex-1">
@@ -43,10 +63,38 @@ export default function Play() {
               variant="filled"
               label="MULTI"
               size="large"
+              onPress={handleMultiPlay}
             />
           </View>
         </View>
       </View>
+
+      {/* Connection dialog */}
+      <Dialog
+        visible={openConnectionAlert}
+        onClose={() => setOpenConnectionAlert(false)}
+        className="h-auto"
+      >
+        <View className="p-5">
+          <Text className="text-center text-xl mb-6">
+            Vous devez être connecté pour jouer en mode multi !
+          </Text>
+          <View className="flex flex-col gap-4 items-center justify-center w-full">
+            <Button
+              label="CONNEXION"
+              size="medium"
+              variant="outlined"
+              onPress={() => router.navigate('/auth/sign-in')}
+            />
+            <Button
+              label="INSCRIPTION"
+              size="medium"
+              variant="filled"
+              onPress={() => router.navigate('/auth/sign-up')}
+            />
+          </View>
+        </View>
+      </Dialog>
     </View>
   );
 }

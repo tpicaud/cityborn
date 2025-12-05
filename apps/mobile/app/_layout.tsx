@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
+import 'react-native-get-random-values';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { apiClient } from '@/lib/apiClient';
 import { AuthProvider } from '@cityborn/contexts';
@@ -80,6 +81,15 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="session/solo"
+                options={{
+                  headerShown: true,
+                  headerTitle: '',
+                  headerTransparent: true,
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="session/multi/[sessionID]"
                 options={{
                   headerShown: true,
                   headerTitle: '',

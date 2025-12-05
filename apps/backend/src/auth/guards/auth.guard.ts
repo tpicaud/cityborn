@@ -5,13 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { getJwtConstants } from '../constants';
 import {
   extractTokenFromHTTPHeader,
   extractAccessTokenFromWsClient,
 } from '../utils';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '@cityborn/errors';
+import { validateAccessToken } from './utils';
+import { getJwtConstants } from '../constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -36,7 +37,12 @@ export class AuthGuard implements CanActivate {
           message: 'Token missing',
         });
 
-      const user = await this.validateAccessToken(token);
+      const user = await validateAccessToken(
+        token,
+        this.jwtService,
+        getJwtConstants(this.configService).jwt_refresh_secret,
+      );
+
       if (!user.isVerified)
         throw new UnauthorizedException({
           code: ErrorCode.USER_NOT_VERIFIED,
@@ -56,27 +62,18 @@ export class AuthGuard implements CanActivate {
         return false;
       }
       try {
-        client.user = await this.validateAccessToken(token);
-      } catch {
-        client.emit('error', { message: 'Unauthorized: invalid token' });
+        const user = await validateAccessToken(
+          token,
+          this.jwtService,
+          getJwtConstants(this.configService).jwt_access_secret,
+        );
+      } catch (error) {
+        client.emit('error', error);
         client.disconnect();
         return false;
       }
     }
 
     return true;
-  }
-
-  private async validateAccessToken(token: string) {
-    try {
-      return await this.jwtService.verifyAsync(token, {
-        secret: getJwtConstants(this.configService).jwt_access_secret,
-      });
-    } catch {
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_TOKEN,
-        message: 'Invalid token',
-      });
-    }
   }
 }
