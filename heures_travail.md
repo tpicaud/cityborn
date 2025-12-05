@@ -132,3 +132,6 @@ z# Heure de travail
 | 24/11/2025 | 6h          | Finalisation sign up/in + gestion rendu erreurs + début session solo                 |
 | 25/11/2025 | 7h          | Lobby + game                                                                         |
 | 26/11/2025 | 7h          | Game overlay                                                                         |
+| 28/11/2025 | 7h          | Finalisation intégration solo                                                        |
+| 04/12/2025 | 2h          | Début intégration multi                                                              |
+| 05/12/2025 | 8h          | Intégration multi                                                                    |
