@@ -135,3 +135,4 @@ z# Heure de travail
 | 28/11/2025 | 7h          | Finalisation intégration solo                                                        |
 | 04/12/2025 | 2h          | Début intégration multi                                                              |
 | 05/12/2025 | 8h          | Intégration multi                                                                    |
+| 12/12/2025 | 5h          | Test du multi et correction de bugs                                                  |
