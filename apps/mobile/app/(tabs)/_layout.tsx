@@ -14,7 +14,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Accueil',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <Icon
@@ -28,7 +28,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="play"
         options={{
-          title: 'Play',
+          title: 'Jouer',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <Icon
@@ -56,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="components"
         options={{
-          title: 'Components',
+          title: 'Composants',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <Icon size={24} name="components_fill" color={color} />

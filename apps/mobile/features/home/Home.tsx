@@ -59,7 +59,7 @@ export default function Home() {
             />
             <Button
               variant="default"
-              label="Jouer sans compte"
+              label="Joue sans compte"
               onPress={() => router.navigate('/(tabs)/play')}
             />
           </View>

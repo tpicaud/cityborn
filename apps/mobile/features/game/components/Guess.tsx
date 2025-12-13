@@ -11,6 +11,7 @@ import { View } from 'react-native';
 interface GuessProps {
   localPlayerID: string;
   game: Game;
+  isHost: boolean;
   handleGuess: (guess: GuessType) => void;
   handleNextRound: () => void;
 }
@@ -18,6 +19,7 @@ interface GuessProps {
 const Guess: React.FC<GuessProps> = ({
   localPlayerID,
   game,
+  isHost,
   handleGuess,
   handleNextRound,
 }) => {
@@ -57,10 +59,12 @@ const Guess: React.FC<GuessProps> = ({
 
   return (
     <View className="flex-1">
+      {/* Maps */}
       <View className="absolute inset-0 z-0">
         <Map mapProps={mapProps} />
       </View>
 
+      {/* Round Countdown */}
       {internalRoundStatus === 'countdown' && (
         <View className="absolute inset-0 z-20">
           <RoundCountdown
@@ -69,6 +73,7 @@ const Guess: React.FC<GuessProps> = ({
         </View>
       )}
 
+      {/* Round Results */}
       {(internalRoundStatus === 'guessing' ||
         internalRoundStatus === 'results') &&
         !(
@@ -83,6 +88,7 @@ const Guess: React.FC<GuessProps> = ({
               localPlayerID={localPlayerID}
               preGuess={preGuess}
               game={game}
+              isHost={isHost}
               handleGuess={handleGuess}
               handleIsTimeUp={handleIsTimeUp}
               handleNextRound={handleNextRound}

@@ -16,6 +16,7 @@ import {
   GameRecord,
   GameStatus,
   OnlinePlayer,
+  PlayerResults,
   Round,
   RoundStatus,
   Session,
@@ -343,7 +344,13 @@ export class SessionService {
       status: GameStatus.STARTING,
       state: {
         guessObjectsIds: guessObjectIds,
-        results: {},
+        results: session.players.reduce(
+          (acc, player) => {
+            acc[player.username] = { results: [] };
+            return acc;
+          },
+          {} as Record<string, PlayerResults>,
+        ),
         guessObjects: guessObjects,
       },
     };
