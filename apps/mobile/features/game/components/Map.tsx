@@ -127,7 +127,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
       }
       strokeWidth={isLocalPlayer ? 4 : 2}
       geodesic={true}
-      lineDashPattern={[10, 10]}
     />
   );
 
@@ -148,11 +147,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
               longitude: guess.coordinates.lng,
             }}
             anchor={{ x: 0.5, y: 0.5 }}
-            calloutAnchor={{ x: 0, y: 50 }}
             tappable={false}
           >
             <Image
-              source={require('@/assets/maps/player.png')}
+              source={require('../../../assets/maps/player.png')}
               style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
@@ -227,11 +225,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           <Marker
             coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
             anchor={{ x: 0.5, y: 0.5 }}
-            calloutAnchor={{ x: 0, y: 50 }}
             tappable={false}
           >
             <Image
-              source={require('@/assets/maps/answer_marker.png')}
+              source={require('../../../assets/maps/answer_marker.png')}
               style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
@@ -240,11 +237,12 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
         {/* Local player guess line */}
         {currentRound.status === RoundStatus.SHOWING_RESULTS &&
-          localGuess?.distance !== -1 &&
-          !localGuess?.win && (
+          localGuess &&
+          localGuess.distance !== -1 &&
+          !localGuess.win && (
             <>
               {renderLine(
-                localGuess!.coordinates,
+                localGuess.coordinates,
                 getCenterOfGuessObject(guessObject),
                 true,
               )}
