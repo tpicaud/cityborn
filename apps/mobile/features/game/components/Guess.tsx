@@ -73,7 +73,7 @@ const Guess: React.FC<GuessProps> = ({
         </View>
       )}
 
-      {/* Round Results */}
+      {/* Round */}
       {(internalRoundStatus === 'guessing' ||
         internalRoundStatus === 'results') &&
         !(

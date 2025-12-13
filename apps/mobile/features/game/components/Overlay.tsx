@@ -37,7 +37,7 @@ function GuessResult({
 
           {Object.keys(currentRound.playersGuesses).length > 1 && (
             <View>
-              <View className="my-1 w-[70%] self-center border-b border-green-600" />
+              <View className="my-1 w-[70%] self-center border-b border-foreground-on-primary" />
 
               <View className="flex flex-row flex-wrap justify-center items-center mt-2 gap-1 w-full">
                 {Object.entries(currentRound.playersGuesses).map(
@@ -46,7 +46,7 @@ function GuessResult({
 
                     return (
                       <View key={playerID} className="px-1">
-                        <Text className="text-green-700 text-base font-semibold text-center">
+                        <Text className="text-foreground-on-primary text-base font-semibold text-center">
                           {playerID}: {guess.points}
                         </Text>
                       </View>
