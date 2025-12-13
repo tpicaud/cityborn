@@ -15,6 +15,10 @@ export default function Play() {
   const [joinCode, setJoinCode] = useState('');
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
+  const handleSoloPlay = () => {
+    router.navigate('/session/solo');
+  };
+
   const handleMultiPlay = async () => {
     if (!user) {
       setOpenConnectionAlert(true);
@@ -25,6 +29,15 @@ export default function Play() {
       } catch (error: any) {
         invokeError(error);
       }
+    }
+  };
+
+  const handleJoin = async () => {
+    try {
+      await apiClient.fetchSession(joinCode);
+      router.push(`/session/multi/${joinCode}`);
+    } catch (error: any) {
+      invokeError(error);
     }
   };
 
@@ -45,6 +58,8 @@ export default function Play() {
               variant="filled"
               label="GO"
               className="w-16 rounded-l-none h-full border border-primary-500"
+              disabled={joinCode.length === 0}
+              onPress={handleJoin}
             />
           </View>
         </View>
@@ -56,7 +71,7 @@ export default function Play() {
               variant="filled"
               label="SOLO"
               size="large"
-              onPress={() => router.navigate('/session/solo')}
+              onPress={handleSoloPlay}
             />
             <Button
               color="primary"
@@ -79,7 +94,7 @@ export default function Play() {
           <Text className="text-center text-xl mb-6">
             Vous devez être connecté pour jouer en mode multi !
           </Text>
-          <View className="flex flex-col gap-4 items-center justify-center w-full">
+          <View className="flex flex-col gap-4 items-center justify-center w-min-full">
             <Button
               label="CONNEXION"
               size="medium"

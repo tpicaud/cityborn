@@ -54,15 +54,18 @@ export const Game = ({
   // Game render
   return (
     <View style={StyleSheet.absoluteFill}>
+      {/* Guess */}
       <View style={StyleSheet.absoluteFill}>
         <Guess
           localPlayerID={localPlayerID}
           game={game}
+          isHost={isHost}
           handleGuess={handleGuess}
           handleNextRound={handleNextRound}
         />
       </View>
-      {/* Dialog results */}
+
+      {/* Results */}
       {game.status === GameStatus.IN_RESULTS && (
         <View>
           <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">

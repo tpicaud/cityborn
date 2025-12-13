@@ -9,6 +9,8 @@ import { Pressable, ScrollView } from 'react-native';
 import { Icon } from '@/components/ui/Icon';
 import * as Clipboard from 'expo-clipboard';
 import { colors } from '@cityborn/design-system';
+import Dialog from '@/components/ui/Dialog';
+import TextInput from '@/components/ui/TextInput';
 
 interface MultiLobbyProps {
   localPlayerID: string | undefined;
@@ -35,6 +37,7 @@ export function MultiLobby({
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -159,6 +162,7 @@ export function MultiLobby({
         <Button
           size="large"
           label="JOUER"
+          disabled={!isHost}
           onPress={async () => {
             await handleUpdateGameConfig({
               ...session.gameConfig,
@@ -170,6 +174,24 @@ export function MultiLobby({
           }}
         />
       </View>
+      <Dialog visible={!localPlayerID} className="h-auto">
+        <View className="flex items-center justify-center">
+          <Text className="text-center text-xl mb-4">
+            Comment tu t'appelles ?
+          </Text>
+          <TextInput
+            value={currentPseudoInput}
+            onChangeText={(text) => setCurrentPseudoInput(text)}
+            className="mb-3"
+          />
+          <Button
+            label="Jouer"
+            size="medium"
+            disabled={!currentPseudoInput}
+            onPress={() => handleJoinSession(currentPseudoInput)}
+          />
+        </View>
+      </Dialog>
     </View>
   );
 }

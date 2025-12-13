@@ -1,13 +1,13 @@
-import { GameConfig, Guess, GuessObject, Round } from '@cityborn/types';
+import { Guess, GuessObject, Round } from '@cityborn/types';
 import GuessObjectCard from './GuessObjectCard';
 import Timer from './Timer';
 import { RoundStatus } from '@cityborn/types';
 import { Game } from '@cityborn/types';
 import { useEffect, useState } from 'react';
-import { Text } from '@/components/ui/native/NativeComponents';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 import Button from '@/components/ui/Button';
-import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Card from '@/components/ui/Card';
 
 function GuessResult({
   currentRound,
@@ -29,66 +29,64 @@ function GuessResult({
 
   return (
     <View className="flex flex-col gap-2 items-center justify-center w-full">
-      {/* Points Box */}
-      <View className="flex flex-col py-2 px-4 text-xl bg-green-200 rounded shadow">
-        <Text className="text-green-600 text-xl md:text-xl lg:text-2xl font-bold text-center">
-          {playerGuess.points} pts
-        </Text>
+      <Card size="medium" className="bg-primary">
+        <View className="flex flex-col">
+          <Text className="text-foreground-on-primary text-xl md:text-xl lg:text-2xl font-bold text-center">
+            {playerGuess.points} pts
+          </Text>
 
-        {Object.keys(currentRound.playersGuesses).length > 1 && (
-          <>
-            {/* Simili <hr> */}
-            <View className="my-1 w-[70%] self-center border-b border-green-600" />
+          {Object.keys(currentRound.playersGuesses).length > 1 && (
+            <View>
+              <View className="my-1 w-[70%] self-center border-b border-green-600" />
 
-            <View className="flex flex-row flex-wrap justify-center mt-2 gap-1 w-full">
-              {Object.entries(currentRound.playersGuesses).map(
-                ([playerID, guess]) => {
-                  if (playerID === localPlayerID) return null;
+              <View className="flex flex-row flex-wrap justify-center items-center mt-2 gap-1 w-full">
+                {Object.entries(currentRound.playersGuesses).map(
+                  ([playerID, guess]) => {
+                    if (playerID === localPlayerID) return null;
 
-                  return (
-                    <View key={playerID} className="px-1">
-                      <Text className="text-green-700 text-xs md:text-base font-semibold">
-                        {playerID}: {guess.points}
-                      </Text>
-                    </View>
-                  );
-                },
-              )}
+                    return (
+                      <View key={playerID} className="px-1">
+                        <Text className="text-green-700 text-base font-semibold text-center">
+                          {playerID}: {guess.points}
+                        </Text>
+                      </View>
+                    );
+                  },
+                )}
+              </View>
             </View>
-          </>
-        )}
-      </View>
+          )}
+        </View>
+      </Card>
 
       {/* Guess Info */}
-      <View className="p-2 text-center bg-blue-200 rounded shadow w-full">
-        <Text className="text-blue-600 text-xs md:text-base lg:text-xl">
-          <Text className="font-bold text-center">{guessObject.name}</Text> est
-          né à{' '}
-          <Text className="font-bold text-center">
+      <Card size="small" className="bg-background w-[80%]">
+        <View>
+          <Text className="text-xl font-bold text-center">
             {guessObject.world_location?.name}
           </Text>
-        </Text>
 
-        {playerGuess.distance !== -1 ? (
-          playerGuess.distance === 0 ? (
-            <Text className="text-blue-600 text-sm md:text-base font-bold mt-1 text-center">
-              Bien joué ! Tu as deviné !
-            </Text>
+          {playerGuess.distance !== -1 ? (
+            playerGuess.distance === 0 ? (
+              <Text className=" text-sm md:text-base font-bold mt-1 text-center">
+                Bien joué ! Tu as deviné !
+              </Text>
+            ) : (
+              <Text className="0 text-sm md:text-base mt-1 text-center">
+                Tu es à{' '}
+                <Text className="font-bold text-center">
+                  {playerGuess.distance.toFixed(0)}
+                </Text>{' '}
+                km
+              </Text>
+            )
           ) : (
-            <Text className="text-blue-600 text-sm md:text-base mt-1 text-center">
-              Tu es à{' '}
-              <Text className="font-bold text-center">
-                {playerGuess.distance.toFixed(2)}
-              </Text>{' '}
-              km
+            <Text className=" font-bold text-sm md:text-base mt-1 text-center">
+              Tu n'as pas deviné à temps !
             </Text>
-          )
-        ) : (
-          <Text className="text-blue-600 font-bold text-sm md:text-base mt-1 text-center">
-            Tu n'as pas deviné à temps !
-          </Text>
-        )}
-      </View>
+          )}
+        </View>
+      </Card>
     </View>
   );
 }
@@ -97,6 +95,7 @@ interface OverlayProps {
   localPlayerID: string;
   preGuess: Guess | undefined;
   game: Game;
+  isHost: boolean;
   handleGuess: (value: Guess) => void | Promise<void>;
   handleIsTimeUp: () => void;
   handleNextRound: () => void | Promise<void>;
@@ -106,15 +105,18 @@ const Overlay = ({
   localPlayerID,
   preGuess,
   game,
+  isHost,
   handleGuess,
   handleIsTimeUp,
   handleNextRound,
 }: OverlayProps) => {
   const [timerEnded, setTimerEnded] = useState(false);
+  const [hasGuessed, setHasGuessed] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     setTimerEnded(false);
+    setHasGuessed(false);
   }, [game.state.currentRound?.guessObjectId]);
 
   useEffect(() => {
@@ -139,7 +141,7 @@ const Overlay = ({
       }}
     >
       <View className="absolute top-5 w-full">
-        {/* Timer positionné en overlay */}
+        {/* Timer */}
         <View className="absolute left-0 w-40">
           {game.state.currentRound!.status === RoundStatus.GUESSING && (
             <Timer
@@ -149,26 +151,33 @@ const Overlay = ({
             />
           )}
         </View>
-        {/* Carte de la personne à deviner */}
 
+        {/* GuessObject card */}
         <View className="absolute right-0">
           <GuessObjectCard guessObject={currentGuessObject} />
         </View>
       </View>
 
-      {/* Zone boutons / résultats */}
-      <View className="absolute bottom-0 bg-transparent w-full z-10">
+      {/* Round results */}
+      <View className="absolute bottom-0 w-full z-10">
         {game.state.currentRound!.status === RoundStatus.GUESSING && (
           <View className="relative w-full flex justify-center items-center bg-transparent">
             <Button
               size="large"
-              label="GUESS"
+              label={
+                hasGuessed
+                  ? `${Object.keys(game.state.currentRound?.playersGuesses!).length}/${Object.keys(game.state.results).length}...`
+                  : 'GUESS'
+              }
               disabled={
                 !preGuess ||
                 game.state.currentRound?.playersGuesses?.[localPlayerID] !==
                   undefined
               }
-              onPress={async () => await handleGuess(preGuess!)}
+              onPress={async () => {
+                await handleGuess(preGuess!);
+                setHasGuessed(true);
+              }}
             />
           </View>
         )}
@@ -182,7 +191,7 @@ const Overlay = ({
         )}
       </View>
 
-      {/* Bouton / compteur à droite */}
+      {/* Next button / counter */}
       {game.state.currentRound && (
         <View
           style={{
@@ -191,14 +200,19 @@ const Overlay = ({
             top: '55%',
             transform: [{ translateY: -50 }],
             zIndex: 50,
+            backgroundColor: 'transparent',
           }}
         >
-          <View className="flex flex-col gap-2" pointerEvents="auto">
+          <View
+            className="flex flex-col gap-2 bg-transparent"
+            pointerEvents="auto"
+          >
             {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
               <Button
                 size="small"
                 label="->"
                 className="w-auto text-center"
+                disabled={!isHost}
                 onPress={async () => await handleNextRound()}
               />
             )}
