@@ -5,8 +5,9 @@ import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { GameRecord } from '@cityborn/types';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 
 export default function Profile() {
@@ -15,11 +16,11 @@ export default function Profile() {
   const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (user && user.isVerified) {
       fetchGameRecords();
     }
-  }, []);
+  }, []));
 
   const fetchGameRecords = async () => {
     if (!user) return;
