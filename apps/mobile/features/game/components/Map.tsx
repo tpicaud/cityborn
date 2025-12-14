@@ -125,7 +125,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
       strokeColor={
         isLocalPlayer ? colors.primary[500] : colors.foreground.DEFAULT
       }
-      strokeWidth={isLocalPlayer ? 4 : 2}
+      fillColor={
+        isLocalPlayer ? colors.primary[500] : colors.foreground.DEFAULT
+      }
+      strokeWidth={isLocalPlayer ? 4 : 1}
       geodesic={true}
     />
   );
