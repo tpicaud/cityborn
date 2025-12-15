@@ -202,10 +202,13 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         rotateEnabled={false}
         poiClickEnabled={false}
         initialCamera={{
-          center: { latitude: 48.8566, longitude: 2.3522 },
+          center: {
+            latitude: 15,
+            longitude: 0,
+          },
+          zoom: 0,
           pitch: 0,
           heading: 0,
-          zoom: -10,
         }}
         onPress={(e) => {
           if (currentRound.status === RoundStatus.GUESSING && !localGuess)
