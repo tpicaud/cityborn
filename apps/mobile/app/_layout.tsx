@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
@@ -11,6 +11,8 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import ErrorProvider from '../../../packages/contexts/dist/ErrorContext';
 import ErrorDialog from '@/components/ui/ErrorDialog';
+import { TouchableOpacity } from 'react-native';
+import { Icon } from '@/components/ui/Icon';
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
@@ -52,6 +54,20 @@ export default function RootLayout() {
               screenOptions={{
                 contentStyle: { backgroundColor: 'transparent' },
                 animation: 'none',
+                headerLeft: () => {
+                  const router = useRouter();
+                  return (
+                    <TouchableOpacity
+                      onPressIn={() => {
+                        console.log('back');
+                        router.back();
+                      }}
+                      className="mt-4"
+                    >
+                      <Icon name="arrow_back_outline" size={28} />
+                    </TouchableOpacity>
+                  );
+                },
               }}
             >
               <Stack.Screen
