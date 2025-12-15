@@ -10,6 +10,8 @@ import {
 import Results from './components/Results';
 import Guess from './components/Guess';
 import { StyleSheet, View } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect, useNavigation } from 'expo-router';
 
 export const Game = ({
   localPlayerID,
@@ -30,6 +32,24 @@ export const Game = ({
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
 }) => {
+  const navigation = useNavigation();
+  const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    setShowResults(game.status === GameStatus.IN_RESULTS);
+  }, [game.status]);
+
+  // Hide header
+  useFocusEffect(
+    useCallback(() => {
+      navigation.setOptions({ headerShown: false });
+
+      return () => {
+        navigation.setOptions({ headerShown: true });
+      };
+    }, []),
+  );
+
   // Game starting or round loading
   if (
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
@@ -68,7 +88,10 @@ export const Game = ({
       {/* Results */}
       {game.status === GameStatus.IN_RESULTS && (
         <View>
-          <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
+          <Dialog
+            visible={showResults}
+            className="absolute h-[80%] w-[90%] p-8"
+          >
             <View className="flex-1 w-full">
               <Results
                 game={game}
@@ -84,9 +107,19 @@ export const Game = ({
                 variant="filled"
                 size="large"
                 label="Rejouer"
-                onPress={handleEndGame}
+                onPress={async () => {
+                  setShowResults(false);
+                  await handleEndGame();
+                }}
               />
-              <Button variant="default" label="Menu" onPress={handleExitGame} />
+              <Button
+                variant="default"
+                label="Menu"
+                onPress={async () => {
+                  setShowResults(false);
+                  await handleExitGame();
+                }}
+              />
             </View>
           </Dialog>
         </View>
