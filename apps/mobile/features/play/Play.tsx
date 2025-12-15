@@ -56,6 +56,7 @@ export default function Play() {
                 className="flex-1 rounded-r-none pl-3 h-full border"
                 keyboardType="numeric"
                 clearButtonMode="always"
+                maxLength={6}
               />
               <Button
                 color="primary"
