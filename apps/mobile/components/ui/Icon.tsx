@@ -37,6 +37,18 @@ const ICONS = {
   image_outline: {
     ionicons: 'image-outline',
   },
+  arrow_back_outline: {
+    ionicons: 'arrow-back-outline',
+  },
+  arrow_back_fill: {
+    ionicons: 'arrow-back',
+  },
+  chevron_back_outline: {
+    ionicons: 'chevron-back-outline',
+  },
+  chevron_back_fill: {
+    ionicons: 'chevron-back',
+  },
 };
 
 type IconName = keyof typeof ICONS;
