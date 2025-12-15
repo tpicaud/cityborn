@@ -23,3 +23,17 @@ export function getGameResult(game: Game): Map<string, PlayerResults> {
 export function generateVisitorId(): string {
   return uuidv4();
 }
+
+// Dates
+export const isoToLocalDate = (
+  isoString: string,
+  withHours: boolean = false,
+) => {
+  if (!isoString) return null;
+
+  const date = new Date(isoString);
+
+  return withHours
+    ? date.toLocaleString()
+    : date.toLocaleString().split(',')[0];
+};
