@@ -51,7 +51,7 @@ export default function Play() {
               value={joinCode}
               placeholder="Entrez le code"
               onChangeText={(text) => setJoinCode(text)}
-              className="flex-1 rounded-r-none pl-3 border-1"
+              className="flex-1 rounded-r-none pl-3 h-full border"
             />
             <Button
               color="primary"
