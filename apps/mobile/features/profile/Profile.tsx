@@ -5,6 +5,7 @@ import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { GameRecord } from '@cityborn/types';
+import { calculateTotalPoints } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -16,11 +17,13 @@ export default function Profile() {
   const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  useFocusEffect(useCallback(() => {
-    if (user && user.isVerified) {
-      fetchGameRecords();
-    }
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.isVerified) {
+        fetchGameRecords();
+      }
+    }, []),
+  );
 
   const fetchGameRecords = async () => {
     if (!user) return;
@@ -33,6 +36,14 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isoToLocalDate = (isoString: string) => {
+    if (!isoString) return null;
+
+    const date = new Date(isoString);
+
+    return date.toLocaleString().split(',')[0];
   };
 
   return (
@@ -125,7 +136,16 @@ export default function Profile() {
                       key={record.id}
                       className="flex flex-row justify-between items-center p-4 border border-b rounded-xl mb-2"
                     >
-                      <Text>{record.id}</Text>
+                      <View className="flex flex-col justify-between items-start">
+                        <Text>{record.mode}</Text>
+                        <Text>{isoToLocalDate(record.createdAt)}</Text>
+                      </View>
+                      <View className="flex flex-col justify-between items-center">
+                        <Text className="font-bold">
+                          {calculateTotalPoints(record.results[user.username])}
+                        </Text>
+                        <Text>pts</Text>
+                      </View>
                     </View>
                   ))}
                 </ScrollView>
