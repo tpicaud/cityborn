@@ -57,13 +57,7 @@ export default function RootLayout() {
                 headerLeft: () => {
                   const router = useRouter();
                   return (
-                    <TouchableOpacity
-                      onPressIn={() => {
-                        console.log('back');
-                        router.back();
-                      }}
-                      className="mt-4"
-                    >
+                    <TouchableOpacity onPressIn={router.back} className="mt-4">
                       <Icon name="arrow_back_outline" size={28} />
                     </TouchableOpacity>
                   );
