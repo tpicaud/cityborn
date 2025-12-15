@@ -44,13 +44,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
     };
   }
 
-  function toCoord(latlng: LatLng): Coord {
-    return {
-      lat: latlng.latitude,
-      lng: latlng.longitude,
-    };
-  }
-
   const handleMapPress = (event: { nativeEvent: { coordinate: LatLng } }) => {
     const { coordinate } = event.nativeEvent;
     const distance = getDistanceTo(coordinate.latitude, coordinate.longitude);
@@ -172,17 +165,32 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   const focusMap = () => {
     if (!mapRef.current) return;
+
     const answer = getCenterOfGuessObject(guessObject);
     const coords: LatLng[] = [{ latitude: answer.lat, longitude: answer.lng }];
-    if (localGuess && localGuess.distance !== -1)
+
+    if (localGuess && localGuess.distance !== -1) {
       coords.push({
         latitude: localGuess.coordinates.lat,
         longitude: localGuess.coordinates.lng,
       });
-    mapRef.current.fitToCoordinates(coords, {
-      edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
-      animated: true,
-    });
+
+      mapRef.current.fitToCoordinates(coords, {
+        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
+        animated: true,
+      });
+      return;
+    }
+
+    mapRef.current.animateToRegion(
+      {
+        latitude: answer.lat,
+        longitude: answer.lng,
+        latitudeDelta: 0.3,
+        longitudeDelta: 0.3,
+      },
+      100,
+    );
   };
 
   useEffect(() => {
