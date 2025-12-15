@@ -5,7 +5,7 @@ import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { GameRecord } from '@cityborn/types';
-import { calculateTotalPoints } from '@cityborn/utils';
+import { calculateTotalPoints, isoToLocalDate } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,14 +36,6 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const isoToLocalDate = (isoString: string) => {
-    if (!isoString) return null;
-
-    const date = new Date(isoString);
-
-    return date.toLocaleString().split(',')[0];
   };
 
   return (
