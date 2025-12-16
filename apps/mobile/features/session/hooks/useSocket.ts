@@ -1,59 +1,77 @@
 import { useError } from '@cityborn/contexts';
-import { getSocket } from '@/lib/socket';
+import { initSocket } from '@/lib/socket';
 import { ApiError } from '@cityborn/errors';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 
 export const useSocket = () => {
-  const socket: Socket = getSocket();
+  const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [hasDisconnected, setHasDisconnected] = useState(false);
 
   const { invokeError } = useError();
 
   useEffect(() => {
-    // Connect on mount
-    if (!socket.connected) {
-      socket.connect();
-    }
+    let mounted = true;
 
-    socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-      setConnected(true);
-    });
+    initSocket().then((socket: Socket) => {
+      console.log('initialized');
+      if (!mounted) return;
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setHasDisconnected(true);
-      setConnected(false);
-    });
+      socketRef.current = socket;
 
-    // handle errors
-    socket.on('connect_error', (error: any) => {
-      setHasDisconnected(false); // Avoid automatic reconnection
-      const api_error = new ApiError(
-        error.code,
-        error.message,
-        error.statusCode,
-      );
-      invokeError(api_error);
-    });
+      // Connect on mount
+      if (!socket.connected) {
+        socket.connect();
+      }
 
-    socket.on('error', (error: any) => {
-      const api_error = new ApiError(
-        error.code,
-        error.message,
-        error.statusCode,
-      );
-      invokeError(api_error);
+      socket.on('connect', () => {
+        console.log('Socket connected:', socket.id);
+        setConnected(true);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setHasDisconnected(true);
+        setConnected(false);
+      });
+
+      // handle errors
+      socket.on('connect_error', (error: any) => {
+        setHasDisconnected(false); // Avoid automatic reconnection
+        const api_error = new ApiError(
+          error.code,
+          error.message,
+          error.statusCode,
+        );
+        invokeError(api_error);
+      });
+
+      socket.on('error', (error: any) => {
+        const api_error = new ApiError(
+          error.code,
+          error.message,
+          error.statusCode,
+        );
+        invokeError(api_error);
+      });
     });
 
     return () => {
+      mounted = false;
+
+      const socket = socketRef.current;
+
+      if (!socket) return;
+
       socket.off('connect');
       socket.off('disconnect');
       socket.off('connect_error');
       socket.off('error');
       socket.disconnect();
+
+      socketRef.current = null;
+      console.log('Cleaning up socket');
     };
   }, []);
 
@@ -64,22 +82,22 @@ export const useSocket = () => {
 
     if (hasCallback) {
       const callback = args.pop();
-      socket.emit(event, ...args, callback);
+      socketRef.current?.emit(event, ...args, callback);
     } else {
-      socket.emit(event, ...args);
+      socketRef.current?.emit(event, ...args);
     }
   }, []);
 
   const on = useCallback(
     (event: string, callback: (...args: any[]) => void) => {
-      socket.on(event, callback);
+      socketRef.current?.on(event, callback);
     },
     [],
   );
 
   const off = useCallback(
     (event: string, callback: (...args: any[]) => void) => {
-      socket.off(event, callback);
+      socketRef.current?.off(event, callback);
     },
     [],
   );
@@ -90,8 +108,8 @@ export const useSocket = () => {
     emit,
     on,
     off,
-    connect: () => socket.connect(),
-    disconnect: () => socket.disconnect(),
-    socket,
+    connect: () => socketRef.current?.connect(),
+    disconnect: () => socketRef.current?.disconnect(),
+    socket: socketRef.current,
   };
 };
