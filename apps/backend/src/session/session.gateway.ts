@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
-import { GameConfig, Guess } from '@cityborn/types';
+import { GameConfig, Guess, User } from '@cityborn/types';
 import {
   BadRequestException,
   HttpStatus,
@@ -23,6 +23,8 @@ import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 import { extractAccessTokenFromWsClient } from 'src/auth/utils';
 import { getJwtConstants } from 'src/auth/constants';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
+import { CurrentUser } from 'src/user/user.decorator';
+import { validateAccessToken } from 'src/auth/guards/utils';
 
 interface WSResponse {
   success: boolean;
@@ -66,26 +68,14 @@ export class SessionGateway
       return;
     }
 
-    // if (!token) {
-    //     client.emit('error', { message: 'Unauthorized: token missing' });
-    //     client.disconnect();
-    //     return;
-    // }
+    const payload = await validateAccessToken(
+      token,
+      this.jwtService,
+      getJwtConstants(this.configService).jwt_access_secret,
+    ).catch(() => null);
 
-    try {
-      (client as any).user = await this.jwtService
-        .verifyAsync(token, {
-          secret: getJwtConstants(this.configService).jwt_access_secret,
-        })
-        .catch(() => null);
-    } catch {
-      client.emit('connect_error', {
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Invalid credentials',
-        statusCode: HttpStatus.UNAUTHORIZED,
-      });
-      client.disconnect();
-      return;
+    if (payload) {
+      (client as any).user = payload;
     }
   }
 
@@ -96,6 +86,7 @@ export class SessionGateway
   @SubscribeMessage('session:join')
   async handleJoin(
     @ConnectedSocket() socket: Socket,
+    @CurrentUser() user: User,
     @MessageBody('sessionID') sessionID: string,
     @MessageBody('playerID') playerID: string,
   ): Promise<WSResponse> {
@@ -111,11 +102,11 @@ export class SessionGateway
         socket.id,
         sessionID,
         playerID,
-        (socket as any).user,
+        user,
       );
 
-      await socket.join(sessionID);
-      this.io.to(sessionID).emit('session:update', session);
+      await socket.join(session.id);
+      this.io.to(session.id).emit('session:update', session);
 
       this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
       return { success: true };
@@ -314,6 +305,7 @@ export class SessionGateway
   @SubscribeMessage('session:reconnect')
   async reconnect(
     @ConnectedSocket() socket: Socket,
+    @CurrentUser() user: User,
     @MessageBody('sessionID') sessionID: string,
     @MessageBody('playerID') playerID: string,
   ): Promise<WSResponse & { isInGame?: boolean }> {
@@ -329,7 +321,7 @@ export class SessionGateway
         socket.id,
         sessionID,
         playerID,
-        (socket as any).user,
+        user,
       );
 
       await socket.join(sessionID);

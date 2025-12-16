@@ -33,3 +33,5 @@ export class MobileTokenStorage implements TokenStorage {
     });
   }
 }
+
+export const tokenStorage = new MobileTokenStorage();

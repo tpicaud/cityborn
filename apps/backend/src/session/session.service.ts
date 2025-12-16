@@ -12,8 +12,6 @@ import {
   createEvent,
   defaultGuess,
   Game,
-  GameConfig,
-  GameRecord,
   GameStatus,
   OnlinePlayer,
   PlayerResults,
@@ -79,7 +77,7 @@ export class SessionService {
       gameConfig: {
         categories: [],
         timer: 20,
-        nbOfObjects: 6,
+        nbOfObjects: 2,
       },
       players:
         mode === SessionMode.SOLO

@@ -14,7 +14,7 @@ export function useMultiSession(
   sessionID: string,
 ): IUseSession & {
   connected: boolean;
-  socket: Socket;
+  socket: Socket | null;
   hasDisconnected: boolean;
   join: (playerID: string) => Promise<void>;
   updateHost: (newHostID: string) => Promise<void>;
@@ -56,7 +56,7 @@ export function useMultiSession(
   useEffect(() => {
     const autoReconnect = async () => {
       try {
-        if (socket.connected && hasDisconnected && !connected) {
+        if (socket && socket.connected && hasDisconnected && !connected) {
           await reconnect();
         }
       } catch (error: any) {
@@ -64,7 +64,7 @@ export function useMultiSession(
       }
     };
     autoReconnect();
-  }, [socket.connected, hasDisconnected]);
+  }, [socket, hasDisconnected]);
 
   // Manage host
   useEffect(() => {
@@ -75,9 +75,11 @@ export function useMultiSession(
 
   // Handle socket listener
   useEffect(() => {
+    if (!socket) return;
+
     // handle events
     const handleSessionUpdate = (session: Session) => {
-      console.log('Session update: ', session);
+      //console.log('Session update: ', session);
 
       setSession((prevSession) => {
         const prevGuessObjects = prevSession?.currentGame?.state?.guessObjects;
@@ -108,7 +110,7 @@ export function useMultiSession(
       // Nettoyage
       off('session:update', handleSessionUpdate);
     };
-  }, [on, off]);
+  }, [socket, on, off]);
 
   ///////////////////////
   // Session functions //
