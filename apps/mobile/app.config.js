@@ -5,6 +5,18 @@ export default {
     version: '1.0.0',
     orientation: 'portrait',
 
+    android: {
+      package: 'com.app.cityborn',
+      adaptiveIcon: {
+        backgroundColor: '#E6F4FE',
+        foregroundImage: './assets/images/android-icon-foreground.png',
+        backgroundImage: './assets/images/android-icon-background.png',
+        monochromeImage: './assets/images/android-icon-monochrome.png',
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+    },
+
     androidStatusBar: {
       hidden: true,
       backgroundColor: '#fafafa',
@@ -24,17 +36,6 @@ export default {
       supportsTablet: true,
     },
 
-    android: {
-      adaptiveIcon: {
-        backgroundColor: '#E6F4FE',
-        foregroundImage: './assets/images/android-icon-foreground.png',
-        backgroundImage: './assets/images/android-icon-background.png',
-        monochromeImage: './assets/images/android-icon-monochrome.png',
-      },
-      edgeToEdgeEnabled: true,
-      predictiveBackGestureEnabled: false,
-    },
-
     web: {
       output: 'static',
       favicon: './assets/images/favicon.png',
@@ -42,6 +43,16 @@ export default {
 
     plugins: [
       'expo-router',
+      [
+        'expo-build-properties',
+        {
+          android: {
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
+            buildToolsVersion: '36.0.0',
+          },
+        },
+      ],
       [
         'expo-splash-screen',
         {
