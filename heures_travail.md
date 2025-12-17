@@ -136,3 +136,6 @@ z# Heure de travail
 | 04/12/2025 | 2h          | Début intégration multi                                                              |
 | 05/12/2025 | 8h          | Intégration multi                                                                    |
 | 12/12/2025 | 5h          | Test du multi et correction de bugs                                                  |
+| 15/12/2025 | 5h          | Détails sur l'ui/ux marges, icons, map zoom, headers                                 |
+| 16/12/2025 | 4h          | Gestion des problème d'authentification en partie sur mobile                         |
+| 17/12/2025 | 8h          | Gestion des problème de longueur des noms de dossier sous windows                    |
