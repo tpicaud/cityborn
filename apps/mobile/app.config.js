@@ -1,5 +1,3 @@
-import { setStatusBarHidden, setStatusBarStyle } from 'expo-status-bar';
-
 export default {
   expo: {
     name: 'Cityborn',
