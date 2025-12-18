@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image } from 'react-native';
-import MapView, { Marker, Polygon, Polyline, LatLng } from 'react-native-maps';
+import MapView, {
+  Marker,
+  Polygon,
+  Polyline,
+  LatLng,
+  PROVIDER_GOOGLE,
+} from 'react-native-maps';
 import * as turf from '@turf/turf';
 import {
   MapProps,
@@ -202,7 +208,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
       <MapView
         key={guessObject.id}
         ref={mapRef}
-        provider="google"
+        provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         userInterfaceStyle="light"
         zoomTapEnabled={false}
