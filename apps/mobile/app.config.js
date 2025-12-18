@@ -4,6 +4,7 @@ export default {
     slug: 'cityborn-mobile',
     version: '1.0.0',
     orientation: 'portrait',
+    userInterfaceStyle: 'light',
 
     android: {
       package: 'com.app.cityborn',
@@ -15,6 +16,7 @@ export default {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      userInterfaceStyle: 'light',
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_API_KEY,
@@ -39,6 +41,7 @@ export default {
 
     ios: {
       supportsTablet: true,
+      userInterfaceStyle: 'light',
     },
 
     web: {
