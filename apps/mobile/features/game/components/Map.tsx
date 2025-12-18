@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Image } from 'react-native';
+import { View, Image, Appearance } from 'react-native';
 import MapView, {
   Marker,
   Polygon,
@@ -202,6 +202,8 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
   useEffect(() => {
     if (currentRound.status === RoundStatus.SHOWING_RESULTS) focusMap();
   }, [currentRound]);
+  const theme = Appearance.getColorScheme();
+  console.log(theme);
 
   return (
     <View style={{ flex: 1 }}>
@@ -210,9 +212,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
-        userInterfaceStyle="light"
         zoomTapEnabled={false}
         showsPointsOfInterest={false}
+        customMapStyle={lightMapStyle}
+        userInterfaceStyle="light"
         rotateEnabled={false}
         poiClickEnabled={false}
         initialCamera={{
@@ -276,3 +279,87 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
     </View>
   );
 }
+
+const lightMapStyle = [
+  {
+    featureType: 'administrative',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'administrative',
+    elementType: 'geometry.fill',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'administrative',
+    elementType: 'geometry.stroke',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'administrative',
+    elementType: 'labels.text',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'landscape',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'road',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'transit',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+  {
+    featureType: 'water',
+    elementType: 'all',
+    stylers: [
+      {
+        visibility: 'on',
+      },
+    ],
+  },
+];
