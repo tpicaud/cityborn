@@ -312,7 +312,7 @@ export function useMultiSession(
   };
 
   const exitGame = async () => {
-    router.push('/');
+    router.replace('/');
   };
 
   const playAgain = async () => {
