@@ -1,7 +1,7 @@
 export default {
   expo: {
-    name: 'cityborn-mobile',
-    slug: 'cityborn-mobile',
+    name: 'Cityborn',
+    slug: 'cityborn',
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
