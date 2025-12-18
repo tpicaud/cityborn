@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
-import { ReactNode, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ReactNode, useState } from 'react';
+import { Pressable, Text } from 'react-native';
 import LoaderIcon from './LoaderIcon';
 
 type Props = {
@@ -48,9 +48,9 @@ export default function Button({
 
   // Styled button
   const variantStyles = {
-    filled: '',
+    filled: 'border-2 border-transparent',
     outlined: 'border-2',
-    ghost: '',
+    ghost: 'border-2 border-transparent',
   };
 
   const containerStyles = {
@@ -84,6 +84,7 @@ export default function Button({
     <Pressable
       onPress={handlePress}
       disabled={disabled}
+      key={Math.random()}
       className={cn(
         'inline-flex items-center justify-center rounded-full font-medium transition-colors',
         size === 'small' && 'h-10 w-48 px-4 py-1',
@@ -91,7 +92,7 @@ export default function Button({
         size === 'large' && 'h-14 w-70 px-4 font-bold',
         variantStyles[variant],
         containerStyles[color][variant],
-        disabled && 'opacity-50 ',
+        disabled ? 'opacity-50' : 'opacity-100',
         className,
       )}
     >
