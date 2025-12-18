@@ -68,9 +68,6 @@ export default {
           imageWidth: 200,
           resizeMode: 'contain',
           backgroundColor: '#fafafa',
-          dark: {
-            backgroundColor: '#000000',
-          },
         },
       ],
     ],
