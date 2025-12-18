@@ -267,7 +267,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     } catch (error: any) {
       invokeError(error);
     } finally {
-      router.push('/');
+      router.replace('/');
     }
   };
 
