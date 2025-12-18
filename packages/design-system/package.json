@@ -8,9 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build:ts": "tsc",
-    "build:css": "postcss cityborn-theme.css -o dist/cityborn-theme.css",
-    "build": "pnpm build:ts && pnpm build:css"
+    "build": "tsc"
   },
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.12.3",
