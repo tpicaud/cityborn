@@ -1,3 +1,5 @@
+import { setStatusBarHidden, setStatusBarStyle } from 'expo-status-bar';
+
 export default {
   expo: {
     name: 'Cityborn',
@@ -6,6 +8,7 @@ export default {
     orientation: 'portrait',
     userInterfaceStyle: 'light',
     icon: './assets/images/icon.png',
+    newArchEnabled: true,
 
     android: {
       package: 'com.app.cityborn',
@@ -19,20 +22,10 @@ export default {
       },
     },
 
-    androidStatusBar: {
-      hidden: true,
-      backgroundColor: '#fafafa',
-    },
-
     androidNavigationBar: {
       barStyle: 'light-content',
       backgroundColor: '#ffffff',
     },
-
-    icon: './assets/images/icon.png',
-    scheme: 'citybornmobile',
-    userInterfaceStyle: 'light',
-    newArchEnabled: true,
 
     ios: {
       supportsTablet: true,
