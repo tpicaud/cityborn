@@ -11,7 +11,7 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import ErrorProvider from '../../../packages/contexts/dist/ErrorContext';
 import ErrorDialog from '@/components/ui/ErrorDialog';
-import { TouchableOpacity } from 'react-native';
+import { StatusBar, TouchableOpacity } from 'react-native';
 import { Icon } from '@/components/ui/Icon';
 
 export default function RootLayout() {
@@ -50,6 +50,7 @@ export default function RootLayout() {
             initialValue={user}
             getCurrentUser={apiClient.getCurrentUser}
           >
+            <StatusBar hidden={true} />
             <Stack
               screenOptions={{
                 contentStyle: { backgroundColor: 'transparent' },
