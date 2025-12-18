@@ -203,7 +203,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
     if (currentRound.status === RoundStatus.SHOWING_RESULTS) focusMap();
   }, [currentRound]);
   const theme = Appearance.getColorScheme();
-  console.log(theme);
 
   return (
     <View style={{ flex: 1 }}>
