@@ -523,7 +523,7 @@ importers:
         version: 5.0.10(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@react-native-community/cli@20.0.2(typescript@5.9.3))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-router:
         specifier: ~6.0.14
-        version: 6.0.19(ypeut7e34x7ifgbevqssd635ui)
+        version: 6.0.19(a1161f9ce78c4311849fb44d2afbdabd)
       expo-secure-store:
         specifier: ^15.0.7
         version: 15.0.8(expo@54.0.29)
@@ -537,7 +537,7 @@ importers:
         specifier: ~1.0.7
         version: 1.0.8(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@react-native-community/cli@20.0.2(typescript@5.9.3))(@types/react@19.1.17)(react@19.1.0))
       expo-system-ui:
-        specifier: ~6.0.8
+        specifier: ~6.0.9
         version: 6.0.9(expo@54.0.29)(react-native-web@0.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@react-native-community/cli@20.0.2(typescript@5.9.3))(@types/react@19.1.17)(react@19.1.0))
       expo-web-browser:
         specifier: ~15.0.9
@@ -11774,7 +11774,7 @@ snapshots:
       wrap-ansi: 7.0.0
       ws: 8.18.3
     optionalDependencies:
-      expo-router: 6.0.19(ypeut7e34x7ifgbevqssd635ui)
+      expo-router: 6.0.19(a1161f9ce78c4311849fb44d2afbdabd)
       react-native: 0.81.5(@babel/core@7.28.5)(@react-native-community/cli@20.0.2(typescript@5.9.3))(@types/react@19.1.17)(react@19.1.0)
     transitivePeerDependencies:
       - bufferutil
@@ -18442,7 +18442,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-router@6.0.19(ypeut7e34x7ifgbevqssd635ui):
+  expo-router@6.0.19(a1161f9ce78c4311849fb44d2afbdabd):
     dependencies:
       '@expo/metro-runtime': 6.1.2(expo@54.0.29)(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@react-native-community/cli@20.0.2(typescript@5.9.3))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@expo/schema-utils': 0.1.8
