@@ -13,6 +13,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { SignInWithGoogleButton } from './GoogleSignIn';
 
 interface FormValues {
   username: string;
@@ -289,6 +290,12 @@ export const SignUpComponent = () => {
               onPress={handleSubmit}
             />
           </View>
+          <View className="flex flex-row items-center gap-2 w-full">
+            <View className="flex-1  h-px bg-foreground" />
+            <Text>OU</Text>
+            <View className="flex-1 h-px bg-foreground" />
+          </View>
+          <SignInWithGoogleButton />
         </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
