@@ -1,4 +1,3 @@
-import Button from '@/components/ui/Button';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { ApiError, ErrorCode } from '@cityborn/errors';
@@ -7,6 +6,7 @@ import {
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
+import { Pressable, Image } from 'react-native';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
@@ -41,11 +41,11 @@ export const SignInWithGoogleButton = () => {
   };
 
   return (
-    <Button
-      label="Se connecter avec Google"
-      variant="outlined"
-      size="large"
-      onPress={handleSignIn}
-    />
+    <Pressable onPress={handleSignIn}>
+      <Image
+        source={require('../../assets/images/google/android_light_rd_ctn@2x.png')}
+        resizeMode="contain"
+      />
+    </Pressable>
   );
 };
