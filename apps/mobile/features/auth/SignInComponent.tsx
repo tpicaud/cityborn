@@ -70,11 +70,9 @@ export const SignInComponent = () => {
         style={{ flex: 1 }}
       >
         <View className="flex-1 flex-col gap-8 items-center justify-center w-70 self-center">
-          <Text className="text-2xl mt-12 font-bold text-foreground">
-            CONNEXION
-          </Text>
+          <Text className="text-2xl font-bold text-foreground">CONNEXION</Text>
 
-          <View className="flex-col items-center justify-center w-auto gap-6">
+          <View className="flex-col items-center justify-center w-auto gap-0">
             <View className="flex-col items-center justify-center gap-6">
               <TextInput
                 placeholder="Username"
@@ -109,6 +107,7 @@ export const SignInComponent = () => {
               variant="default"
               label="Pas de compte ? Inscris-toi ici !"
               onPress={() => router.navigate('/auth/sign-up')}
+              className="mt-6"
             />
           </View>
           <View className="flex flex-row items-center gap-2 w-full">

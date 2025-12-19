@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@cityborn/contexts';
 import { ApiError, ErrorCode } from '@cityborn/errors';
 import {
@@ -6,6 +7,7 @@ import {
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, Image } from 'react-native';
 
 GoogleSignin.configure({
@@ -15,8 +17,9 @@ GoogleSignin.configure({
 export const SignInWithGoogleButton = () => {
   const { setUser } = useAuth();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = async () => {
+  const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -40,10 +43,23 @@ export const SignInWithGoogleButton = () => {
     }
   };
 
+  const handlePress = async () => {
+    try {
+      setIsLoading(true);
+      await signIn();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Pressable onPress={handleSignIn}>
+    <Pressable
+      onPress={handlePress}
+      disabled={isLoading}
+      className={cn(isLoading ? 'opacity-50' : 'opacity-100')}
+    >
       <Image
-        source={require('../../assets/images/google/android_light_rd_ctn@2x.png')}
+        source={require('../../assets/images/google/android_light_rd_ctn.png')}
         resizeMode="contain"
       />
     </Pressable>

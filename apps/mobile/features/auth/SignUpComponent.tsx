@@ -172,12 +172,12 @@ export const SignUpComponent = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <View className="flex-1 flex-col gap-8 items-center justify-center">
-          <Text className="text-2xl mt-12 font-bold text-foreground">
+        <View className="flex-1 flex-col gap-8 items-center justify-center w-70 self-center">
+          <Text className="text-2xl font-bold text-foreground">
             INSCRIPTION
           </Text>
 
-          <View className="flex-col items-center justify-center gap-6 w-70">
+          <View className="flex-col items-center justify-center gap-0 w-70">
             <View className="flex-col items-center justify-center gap-6">
               <View className="w-full relative">
                 <TextInput
