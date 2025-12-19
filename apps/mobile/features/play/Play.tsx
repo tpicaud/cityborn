@@ -44,9 +44,9 @@ export default function Play() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View className="flex-1">
-        <View className="flex-1 justify-center items-center gap-20">
-          <View className="flex justify-center items-center gap-4">
+      <View className="flex-1 w-70 self-center">
+        <View className="flex-1 justify-center items-center gap-10">
+          <View className="h-[45%] flex justify-end items-center gap-4">
             <Text className="text-2xl">Rejoindre</Text>
             <View className="flex flex-row w-50 h-12">
               <TextInput
@@ -67,7 +67,14 @@ export default function Play() {
               />
             </View>
           </View>
-          <View className="flex w-full justify-center items-center gap-4">
+
+          <View className="flex flex-row items-center justify-center gap-2 w-full">
+            <View className="flex-1  h-px bg-foreground" />
+            <Text>OU</Text>
+            <View className="flex-1 h-px bg-foreground" />
+          </View>
+
+          <View className="h-[45%] flex w-full justify-start items-center gap-4">
             <Text className="text-2xl">Créer</Text>
             <View className="flex flex-col w-full items-center gap-4">
               <Button

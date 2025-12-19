@@ -11,38 +11,40 @@ export default function Home() {
   const { user, setUser } = useAuth();
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 w-70 self-center">
       <View className=" flex-1 flex flex-col justify-center items-center gap-6">
         <Image
           source={require('../../assets/images/logo.png')}
           className="mb-6"
         />
         {user ? (
-          <View className="flex flex-col justify-center items-center gap-6">
-            <Text className="text-3xl">
+          <View className="flex flex-col justify-center items-center gap-8">
+            <Text className="text-3xl text-center">
               Bienvenue <Text className="font-bold">{user.username}</Text>
             </Text>
 
             {!user.isVerified && <NotVerifiedBanner />}
 
-            <Button
-              color="primary"
-              variant="filled"
-              label="JOUER"
-              size="large"
-              onPress={() => router.navigate('/(tabs)/play')}
-            />
-            <Button
-              variant="default"
-              label="Déconnexion"
-              onPress={async () => {
-                await apiClient.signOut();
-                setUser(null);
-              }}
-            />
+            <View className="flex flex-col gap-6 items-center justify-center">
+              <Button
+                color="primary"
+                variant="filled"
+                label="JOUER"
+                size="large"
+                onPress={() => router.navigate('/(tabs)/play')}
+              />
+              <Button
+                variant="default"
+                label="Déconnexion"
+                onPress={async () => {
+                  await apiClient.signOut();
+                  setUser(null);
+                }}
+              />
+            </View>
           </View>
         ) : (
-          <View className="flex flex-col w-full items-center justify-between gap-4">
+          <View className="flex flex-col w-full items-center justify-between gap-6">
             <Button
               color="primary"
               variant="outlined"
