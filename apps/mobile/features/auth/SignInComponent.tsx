@@ -12,6 +12,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { SignInWithGoogleButton } from './GoogleSignIn';
 
 interface FormValues {
   username: string;
@@ -55,7 +56,7 @@ export const SignInComponent = () => {
         formValues.password,
       );
       setUser(user);
-      router.navigate('/');
+      router.push('/');
     } catch (error: any) {
       setErrorMessage(getFriendlyErrorMessage(error));
       console.error(error);
@@ -68,7 +69,7 @@ export const SignInComponent = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <View className="flex-1 flex-col gap-8 items-center justify-center">
+        <View className="flex-1 flex-col gap-8 items-center justify-center w-70 self-center">
           <Text className="text-2xl mt-12 font-bold text-foreground">
             CONNEXION
           </Text>
@@ -110,6 +111,12 @@ export const SignInComponent = () => {
               onPress={() => router.navigate('/auth/sign-up')}
             />
           </View>
+          <View className="flex flex-row items-center gap-2 w-full">
+            <View className="flex-1  h-px bg-foreground" />
+            <Text>OU</Text>
+            <View className="flex-1 h-px bg-foreground" />
+          </View>
+          <SignInWithGoogleButton />
         </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>

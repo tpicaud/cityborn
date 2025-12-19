@@ -157,7 +157,7 @@ export const SignUpComponent = () => {
         birthdate: formValues.birthdate!.toISOString(),
       });
       setUser(user);
-      router.navigate('/');
+      router.push('/');
     } catch (error: any) {
       console.error(error);
       setErrorMessage(getFriendlyErrorMessage(error));
