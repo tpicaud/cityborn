@@ -59,6 +59,13 @@ export default {
           backgroundColor: '#fafafa',
         },
       ],
+      [
+        '@react-native-google-signin/google-signin',
+        {
+          iosUrlScheme:
+            'com.googleusercontent.apps.871572964929-iajpene5iktr5isun4sg6dqnjri8po0p',
+        },
+      ],
     ],
 
     experiments: {
