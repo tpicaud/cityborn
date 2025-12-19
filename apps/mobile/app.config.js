@@ -2,6 +2,7 @@ export default {
   expo: {
     name: 'Cityborn',
     slug: 'cityborn',
+    scheme: 'cityborn',
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
