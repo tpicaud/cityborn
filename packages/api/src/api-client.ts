@@ -73,15 +73,17 @@ export class ApiClient {
   }
 
   async signInWithGoogle(idToken: string) {
-    const tokens = await this.authFetch.post<{
+    const res = await this.authFetch.post<{
       access_token: string;
       refresh_token: string;
+      user: User;
     }>('/auth/sign-in-with-google', { idToken }, { includeAuth: false });
 
     await this.authFetch.tokenStorage.setTokens(
-      tokens.access_token,
-      tokens.refresh_token,
+      res.access_token,
+      res.refresh_token,
     );
+    return res.user;
   }
 
   async sendVerificationEmail() {
