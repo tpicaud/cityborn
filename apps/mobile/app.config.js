@@ -91,6 +91,7 @@ export default {
             'com.googleusercontent.apps.871572964929-iajpene5iktr5isun4sg6dqnjri8po0p',
         },
       ],
+      '@react-native-community/datetimepicker',
     ],
 
     experiments: {
