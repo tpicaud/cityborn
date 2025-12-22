@@ -1,6 +1,21 @@
+const IS_DEV = process.env.APP_VARIANT === 'development';
+const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
+
+const getUniqueIdentifier = () => {
+  if (IS_DEV) return 'com.app.cityborn.dev';
+  if (IS_PREVIEW) return 'com.app.cityborn.preview';
+  return 'com.app.cityborn';
+};
+
+const getAppName = () => {
+  if (IS_DEV) return 'Cityborn (Dev)';
+  if (IS_PREVIEW) return 'Cityborn (Preview)';
+  return 'Cityborn';
+};
+
 export default {
   expo: {
-    name: 'Cityborn',
+    name: getAppName(),
     slug: 'cityborn',
     scheme: 'cityborn',
     version: '1.0.0',
@@ -10,7 +25,7 @@ export default {
     newArchEnabled: true,
 
     android: {
-      package: 'com.app.cityborn',
+      package: getUniqueIdentifier(),
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       userInterfaceStyle: 'light',
@@ -27,6 +42,7 @@ export default {
     },
 
     ios: {
+      bundleIdentifier: getUniqueIdentifier(),
       supportsTablet: true,
       userInterfaceStyle: 'light',
       config: {
@@ -37,6 +53,16 @@ export default {
     web: {
       output: 'static',
       favicon: './assets/images/favicon.png',
+    },
+
+    extra: {
+      eas: {
+        projectId: '2e929dee-4003-47f1-8aac-8d2b06f5dc6f',
+      },
+    },
+
+    scripts: {
+      dev: 'APP_VARIANT=development npx expo start',
     },
 
     plugins: [
