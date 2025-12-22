@@ -36,11 +36,6 @@ export default {
       },
     },
 
-    androidNavigationBar: {
-      barStyle: 'light-content',
-      backgroundColor: '#ffffff',
-    },
-
     ios: {
       bundleIdentifier: getUniqueIdentifier(),
       supportsTablet: true,
@@ -48,11 +43,6 @@ export default {
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
       },
-    },
-
-    web: {
-      output: 'static',
-      favicon: './assets/images/favicon.png',
     },
 
     extra: {
@@ -84,6 +74,14 @@ export default {
           imageWidth: 200,
           resizeMode: 'contain',
           backgroundColor: '#fafafa',
+        },
+      ],
+      [
+        'expo-navigation-bar',
+        {
+          backgroundColor: '#ffffff',
+          barStyle: 'light',
+          visibility: 'visible',
         },
       ],
       [
