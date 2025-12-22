@@ -24,15 +24,18 @@ export const SignInWithGoogleButton = () => {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
 
-      if (!isSuccessResponse(response)) return;
+      if (isSuccessResponse(response)) {
+        const userInfo = response.data;
+        const idToken = userInfo.idToken;
+        if (!idToken) return;
 
-      const idToken = response.data?.idToken;
-      if (!idToken) return;
+        const user = await apiClient.signInWithGoogle(idToken);
 
-      const user = await apiClient.signInWithGoogle(idToken);
-
-      setUser(user);
-      router.push('/');
+        setUser(user);
+        router.push('/');
+      } else {
+        console.log('Google sign in modal closed by user');
+      }
     } catch (error) {
       console.error(error);
       throw new ApiError(
