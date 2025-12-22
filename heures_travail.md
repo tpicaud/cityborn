@@ -137,5 +137,7 @@ z# Heure de travail
 | 05/12/2025 | 8h          | Intégration multi                                                                    |
 | 12/12/2025 | 5h          | Test du multi et correction de bugs                                                  |
 | 15/12/2025 | 5h          | Détails sur l'ui/ux marges, icons, map zoom, headers                                 |
-| 16/12/2025 | 4h          | Gestion des problème d'authentification en partie sur mobile                         |
-| 17/12/2025 | 8h          | Gestion des problème de longueur des noms de dossier sous windows                    |
+| 16/12/2025 | 4h          | Gestion des problèmes d'authentification en partie sur mobile                        |
+| 17/12/2025 | 8h          | Gestion des problèmes de longueur des noms de dossier sous windows                   |
+| 18/12/2025 | 8h          | Forcer la thème clair de google map, ajout du splash screen et de l'icon             |
+| 19/12/2025 | 8h          | Ajout du Sign in with Google                                                         |
