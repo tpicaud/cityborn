@@ -21,7 +21,7 @@ interface ErrorProviderProps {
   }>;
 }
 
-const ErrorProvider = ({
+export const ErrorProvider = ({
   children,
   ErrorDialogComponent,
 }: ErrorProviderProps) => {
