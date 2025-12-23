@@ -1,0 +1,10 @@
+**/node_modules
+
+apps/*
+
+!apps/mobile
+!apps/mobile/**
+
+db_script
+docs
+infra
