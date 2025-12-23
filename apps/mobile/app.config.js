@@ -15,7 +15,7 @@ export default {
     name: getAppName(),
     slug: 'cityborn',
     scheme: 'cityborn',
-    version: '1.0.0',
+    version: '0.0.1',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
     icon: './assets/images/icon.png',
