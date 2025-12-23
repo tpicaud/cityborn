@@ -2,13 +2,10 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
 const getUniqueIdentifier = () => {
-  if (IS_DEV) return 'com.app.cityborn.dev';
-  if (IS_PREVIEW) return 'com.app.cityborn.preview';
   return 'com.app.cityborn';
 };
 
 const getAppName = () => {
-  if (IS_DEV) return 'Cityborn (Dev)';
   if (IS_PREVIEW) return 'Cityborn (Preview)';
   return 'Cityborn';
 };
