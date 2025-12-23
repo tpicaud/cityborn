@@ -51,6 +51,14 @@ export default {
       },
     },
 
+    updates: {
+      url: 'https://u.expo.dev/2e929dee-4003-47f1-8aac-8d2b06f5dc6f',
+    },
+
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
+
     scripts: {
       dev: 'APP_VARIANT=development npx expo start',
     },
