@@ -141,3 +141,5 @@ z# Heure de travail
 | 17/12/2025 | 8h          | Gestion des problèmes de longueur des noms de dossier sous windows                   |
 | 18/12/2025 | 8h          | Forcer la thème clair de google map, ajout du splash screen et de l'icon             |
 | 19/12/2025 | 8h          | Ajout du Sign in with Google                                                         |
+| 22/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
+| 22/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
