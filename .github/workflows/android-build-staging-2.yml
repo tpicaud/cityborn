@@ -52,7 +52,7 @@ jobs:
         run: eas build:version:sync --platform android --profile staging
 
       - name: Build Android app
-        run: eas build --platform android --profile staging --local --auto-submit --output ${{ github.workspace }}/app-release.aab
+        run: eas build --platform android --profile staging --local --output ${{ github.workspace }}/app-release.aab
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
