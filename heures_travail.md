@@ -142,4 +142,5 @@ z# Heure de travail
 | 18/12/2025 | 8h          | Forcer la thème clair de google map, ajout du splash screen et de l'icon             |
 | 19/12/2025 | 8h          | Ajout du Sign in with Google                                                         |
 | 22/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
-| 22/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
+| 23/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
+| 24/12/2025 | 8h          | Prise en main Expo eas + workflows                                                   |
