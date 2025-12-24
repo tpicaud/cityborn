@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18.x]
+        node: [20.x]
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
