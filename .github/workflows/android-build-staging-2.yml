@@ -49,7 +49,7 @@ jobs:
 
       - name: Syncing app version code
         working-directory: apps/mobile
-        run: eas build:version:sync
+        run: eas build:version:sync --platform android --profile staging
 
       - name: Build Android app
         run: eas build --platform android --profile staging --local --auto-submit --output ${{ github.workspace }}/app-release.aab
