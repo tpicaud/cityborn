@@ -51,9 +51,6 @@ jobs:
         working-directory: apps/mobile
         run: eas build:version:sync
 
-      - name: Pull staging environment
-        run: eas env:pull --environment preview
-
       - name: Build Android app
         run: eas build --platform android --profile staging --local --auto-submit --output ${{ github.workspace }}/app-release.aab
 
