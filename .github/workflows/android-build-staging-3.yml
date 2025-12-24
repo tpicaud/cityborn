@@ -13,10 +13,10 @@ jobs:
         node: [18.x]
     steps:
       - name: 🏗 Setup repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 🏗 Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
@@ -48,7 +48,7 @@ jobs:
             --profile=staging
 
       - name: 📱 Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: app-android
           path: app-build
