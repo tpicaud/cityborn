@@ -55,7 +55,7 @@ export default function Button({
 
   const containerStyles = {
     primary: {
-      filled: 'bg-primary-500 hover:bg-primary-400',
+      filled: 'bg-primary-200 hover:bg-primary-400',
       outlined: 'bg-transparent border-primary-500 hover:bg-primary-500/10',
       ghost: 'bg-transparent hover:bg-primary-500/10',
     },
