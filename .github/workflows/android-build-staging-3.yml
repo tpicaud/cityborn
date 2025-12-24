@@ -39,6 +39,13 @@ jobs:
       - name: 📦 Install dependencies
         run: pnpm install
 
+      - name: Increase Gradle memory
+        run: |
+          echo "ORG_GRADLE_JVMARGS=-Xmx4g -XX:MaxMetaspaceSize=2g" >> $GITHUB_ENV
+
+      - name: Kill Gradle daemon
+        run: ./android/gradlew --stop || true
+    
       - name: 👷 Build app
         working-directory: apps/mobile
         run: |
