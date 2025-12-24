@@ -1,12 +1,14 @@
-const IS_DEV = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
+const IS_STAGING = process.env.APP_VARIANT === 'staging';
 
 const getUniqueIdentifier = () => {
+  if (IS_PREVIEW) return 'com.app.cityborn.preview';
   return 'com.app.cityborn';
 };
 
 const getAppName = () => {
   if (IS_PREVIEW) return 'Cityborn (Preview)';
+  if (IS_STAGING) return 'Cityborn (Staging)';
   return 'Cityborn';
 };
 

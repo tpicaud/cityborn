@@ -7,20 +7,33 @@
   "build": {
     "preview": {
       "environment": "preview",
-      "distribution": "store",
+      "distribution": "internal",
       "channel": "preview",
       "env": {
         "APP_VARIANT": "preview"
       }
     },
+    "staging": {
+      "distribution": "store",
+      "environment": "preview",
+      "channel": "staging",
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "staging"
+      }
+    },
     "production": {
+      "distribution": "store",
       "environment": "production",
       "channel": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "production"
+      }
     }
   },
   "submit": {
-    "preview": {
+    "staging": {
       "android": {
         "track": "alpha"
       }
