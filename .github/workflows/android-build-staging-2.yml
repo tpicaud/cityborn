@@ -49,6 +49,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Force Java memory
+        run: |
+          echo "JAVA_TOOL_OPTIONS=-Xmx4g -XX:MaxMetaspaceSize=2g" >> $GITHUB_ENV
+
       - name: Syncing app version code
         working-directory: apps/mobile
         run: eas build:version:sync --platform android --profile staging
