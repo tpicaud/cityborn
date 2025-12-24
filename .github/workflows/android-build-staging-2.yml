@@ -10,6 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: Mobile - Staging
+    env:
+      GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
