@@ -1,13 +1,10 @@
 name: Android Staging Update
 
 on:
-  push:
-    branches:
-      - feature/expo-app_test-workflow
   workflow_dispatch:
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Setup repo
