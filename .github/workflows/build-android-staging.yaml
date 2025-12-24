@@ -31,4 +31,5 @@ jobs:
         run: pnpm install
 
       - name: 🚀 Build app
+        working-directory: apps/mobile
         run: eas build --platform android --profile staging --non-interactive --auto-submit
