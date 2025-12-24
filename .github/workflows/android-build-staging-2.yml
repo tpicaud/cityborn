@@ -1,9 +1,6 @@
 name: Android App Build
 
 on:
-  push:
-    branches:
-      - feature/expo-app_test-workflow
   workflow_dispatch:
 
 jobs:
