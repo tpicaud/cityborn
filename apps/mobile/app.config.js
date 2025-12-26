@@ -64,6 +64,7 @@ export default {
 
     plugins: [
       'expo-router',
+      ['./expo-plugins/withGradleProperties'],
       [
         'expo-build-properties',
         {
