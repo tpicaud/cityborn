@@ -1,6 +1,6 @@
-const { withGradleProperties } = require('@expo/config-plugins');
+import { withGradleProperties } from '@expo/config-plugins';
 
-module.exports = function withGradlePropertiesModification(config) {
+export default function withGradlePropertiesModification(config) {
   return withGradleProperties(config, (config) => {
     const properties = config.modResults;
 
@@ -19,4 +19,4 @@ module.exports = function withGradlePropertiesModification(config) {
 
     return config;
   });
-};
+}
