@@ -19,6 +19,7 @@
     "@cityborn/errors": "workspace:*",
     "@cityborn/types": "workspace:*",
     "@cityborn/utils": "workspace:*",
+    "@expo/config-plugins": "^54.0.4",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/cli": "^20.0.2",
