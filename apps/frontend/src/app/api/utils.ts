@@ -1,4 +1,4 @@
-import { ApiError, ErrorCode, ErrorPayload } from '@cityborn/errors';
+import { ErrorCode, ErrorPayload } from '@cityborn/errors';
 import { NextResponse } from 'next/server';
 
 export function getBaseUrl(): string {
