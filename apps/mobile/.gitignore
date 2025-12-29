@@ -45,3 +45,6 @@ app-example
 
 # builds
 /app-builds
+
+# android studio
+.idea
