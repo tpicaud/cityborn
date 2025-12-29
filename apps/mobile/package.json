@@ -6,7 +6,7 @@
     "dev": "expo start",
     "start": "expo start",
     "prebuild": "expo prebuild --clean",
-    "build-preview": ". .env.staging && NODE_ENV=staging eas build --profile preview --platform android --local --output app-builds/cityborn-preview.apk",
+    "build-preview": ". .env.local && NODE_ENV=staging eas build --profile preview --platform android --local --output app-builds/cityborn-preview.apk",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
