@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { WebTokenStorage } from '@/lib/tokenStorage';
 import { cookies } from 'next/headers';
 import { getBaseUrl, throwApiError } from '../../utils';
 import { ApiClient } from '@cityborn/api';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const tokenStorage = new WebTokenStorage(await cookies());
   const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
 

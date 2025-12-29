@@ -4,7 +4,7 @@ import { ApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { getBaseUrl, throwApiError } from '../../utils';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const tokenStorage = new WebTokenStorage(await cookies());
   const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
 
