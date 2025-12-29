@@ -7,9 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: Mobile - Staging
-    env:
-      GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g
     steps:
+      - name: Delete unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
       - name: Setup repo
         uses: actions/checkout@v4
 
@@ -45,10 +46,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-
-      - name: Force Java memory
-        run: |
-          echo "JAVA_TOOL_OPTIONS=-Xmx4g -XX:MaxMetaspaceSize=2g" >> $GITHUB_ENV
 
       - name: Syncing app version code
         working-directory: apps/mobile

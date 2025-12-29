@@ -1,8 +1,5 @@
 name: Build App
 on:
-  push:
-    branches:
-      - feature/expo-app_test-workflow
   workflow_dispatch:
 
 jobs:
