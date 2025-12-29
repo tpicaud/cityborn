@@ -1,3 +1,11 @@
+if (
+  !process.env.APP_VARIANT |
+  !process.env.NODE_ENV |
+  !process.env.GOOGLE_MAPS_API_KEY
+) {
+  throw new Error('Environment not loaded');
+}
+
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 const IS_STAGING = process.env.APP_VARIANT === 'staging';
 
@@ -11,10 +19,6 @@ const getAppName = () => {
   if (IS_STAGING) return 'Cityborn (Staging)';
   return 'Cityborn';
 };
-
-console.log(process.env.NODE_ENV);
-console.log(process.env.APP_VARIANT);
-console.log(process.env.GOOGLE_MAPS_API_KEY);
 
 export default {
   expo: {
