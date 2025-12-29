@@ -6,7 +6,6 @@
   },
   "build": {
     "preview": {
-      "environment": "preview",
       "distribution": "internal",
       "channel": "preview",
       "env": {
