@@ -12,6 +12,9 @@ jobs:
       matrix:
         node: [20.x]
     steps:
+      - name: Delete unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
