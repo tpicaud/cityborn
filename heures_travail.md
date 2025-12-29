@@ -1,4 +1,4 @@
-# Heure de travail
+z# Heure de travail
 
 | Date       | Nb d'heures | Tâche                                                                                |
 | ---------- | ----------- | ------------------------------------------------------------------------------------ |
@@ -122,3 +122,26 @@
 | 05/11/2025 | 8h          | Passage prod                                                                         |
 | 06/11/2025 | 5h          | Résolution problème mmigration database                                              |
 | 12/11/2025 | 7h          | Prise en main Expo                                                                   |
+| 13/11/2025 | 7h          | Initialisation projet Expo migration api dans un package partagé                     |
+| 14/11/2025 | 7h          | Migration api dans un package partagé                                                |
+| 17/11/2025 | 7h          | Projet expo - Création des tabs                                                      |
+| 18/11/2025 | 6h          | Sign in et user context partagés                                                     |
+| 19/11/2025 | 6h          | Intégration du context partagée dans l'app et le web                                 |
+| 20/11/2025 | 4h          | Gestion du theme de couleurs partagé et gestion de la navbar/statusbar               |
+| 23/11/2025 | 1h          | Début sign up                                                                        |
+| 24/11/2025 | 6h          | Finalisation sign up/in + gestion rendu erreurs + début session solo                 |
+| 25/11/2025 | 7h          | Lobby + game                                                                         |
+| 26/11/2025 | 7h          | Game overlay                                                                         |
+| 28/11/2025 | 7h          | Finalisation intégration solo                                                        |
+| 04/12/2025 | 2h          | Début intégration multi                                                              |
+| 05/12/2025 | 8h          | Intégration multi                                                                    |
+| 12/12/2025 | 5h          | Test du multi et correction de bugs                                                  |
+| 15/12/2025 | 5h          | Détails sur l'ui/ux marges, icons, map zoom, headers                                 |
+| 16/12/2025 | 4h          | Gestion des problèmes d'authentification en partie sur mobile                        |
+| 17/12/2025 | 8h          | Gestion des problèmes de longueur des noms de dossier sous windows                   |
+| 18/12/2025 | 8h          | Forcer la thème clair de google map, ajout du splash screen et de l'icon             |
+| 19/12/2025 | 8h          | Ajout du Sign in with Google                                                         |
+| 22/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
+| 23/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
+| 24/12/2025 | 8h          | Prise en main Expo eas + workflows                                                   |
+| 29/12/2025 | 7h          | Workflows eas et gestion des environnements android                                  |
