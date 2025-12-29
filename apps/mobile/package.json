@@ -6,7 +6,7 @@
     "dev": "expo start",
     "start": "expo start",
     "prebuild": "expo prebuild --clean",
-    "build-preview": ". .env.local && NODE_ENV=staging eas build --profile preview --platform android --local --output app-builds/cityborn-preview.apk",
+    "build-preview": "npx dotenv -c staging -- eas build --profile preview --platform android --local --output app-builds/cityborn-preview.apk",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -70,6 +70,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
     "@types/react": "~19.1.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "postcss": "^8.5.6",
