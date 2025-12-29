@@ -1,14 +1,36 @@
 @theme {
-  --color-primary: oklch(82.86% 0.22417 149.83);
-  --color-primary-50: oklch(94.089% 0.0675 158.63);
-  --color-primary-100: oklch(92.476% 0.0895 158.37);
-  --color-primary-200: oklch(89.318% 0.13142 156.54);
-  --color-primary-300: oklch(86.675% 0.16855 154.41);
-  --color-primary-400: oklch(84.521% 0.19947 152.39);
-  --color-primary-500: oklch(82.86% 0.22417 149.83);
-  --color-primary-600: oklch(71.205% 0.19628 149.37);
-  --color-primary-700: oklch(56.617% 0.15421 149.63);
-  --color-primary-800: oklch(41.031% 0.10788 150.56);
-  --color-primary-900: oklch(23.726% 0.05667 153.01);
-  --color-primary-950: oklch(13.767% 0.02824 158.05);
+  /* Primary */
+  --color-primary: oklch(63.939% 0.13338 235.43);
+  --color-primary-50: oklch(86.806% 0.07157 226.25);
+  --color-primary-100: oklch(84.213% 0.08451 226.68);
+  --color-primary-200: oklch(79.52% 0.10878 227.81);
+  --color-primary-300: oklch(75.03% 0.12985 231.13);
+  --color-primary-400: oklch(71.181% 0.1443 234.4);
+  --color-primary-500: oklch(63.939% 0.13338 235.43);
+  --color-primary-600: oklch(51.855% 0.10708 235.25);
+  --color-primary-700: oklch(39.291% 0.07823 233.73);
+  --color-primary-800: oklch(25.305% 0.04723 231.87);
+  --color-primary-900: oklch(3.0377% 0.02105 264.05);
+  --color-primary-950: oklch(0% 0 none);
+
+  /* Destructive */
+  --color-destructive: oklch(54.023% 0.21901 26.279);
+  --color-destructive-50: oklch(76.701% 0.1382 13.058);
+  --color-destructive-100: oklch(73.354% 0.1635 14.618);
+  --color-destructive-200: oklch(67.546% 0.20908 18.068);
+  --color-destructive-300: oklch(63.995% 0.24078 22.509);
+  --color-destructive-400: oklch(61.645% 0.25038 26.585);
+  --color-destructive-500: oklch(54.023% 0.21901 26.279);
+  --color-destructive-600: oklch(42.842% 0.17331 25.46);
+  --color-destructive-700: oklch(31.14% 0.12481 23.777);
+  --color-destructive-800: oklch(17.799% 0.07134 18.411);
+  --color-destructive-900: oklch(0% 0 none);
+  --color-destructive-950: oklch(0% 0 none);
+
+  /* Foreground */
+  --color-foreground: var(--color-neutral-700);
+  --color-foreground-on-primary: var(--color-zinc-50);
+
+  /* Background */
+  --color-background: var(--color-zinc-50);
 }

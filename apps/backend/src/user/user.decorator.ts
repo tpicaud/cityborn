@@ -1,10 +1,21 @@
-// user.decorator.ts
 import { User } from '@cityborn/types';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return (request['user'] as User) || undefined;
+  (_data: unknown, ctx: ExecutionContext): User | undefined => {
+    const type = ctx.getType<'http' | 'ws'>();
+
+    if (type === 'http') {
+      const request = ctx.switchToHttp().getRequest();
+      return request.user as User | undefined;
+    }
+
+    if (type === 'ws') {
+      const client = ctx.switchToWs().getClient();
+
+      return client.user as User | undefined;
+    }
+
+    return undefined;
   },
 );

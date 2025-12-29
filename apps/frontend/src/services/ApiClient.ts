@@ -157,7 +157,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.gameRecords as GameRecord[];
+    return data as GameRecord[];
   }
 
   async saveGameRecords(gameRecord: GameRecord): Promise<void> {
@@ -194,8 +194,7 @@ export class ApiClient {
     if (!response.ok) {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
-
-    return data.session as Session;
+    return data as Session;
   }
 
   async fetchSession(sessionId: string): Promise<Session> {
@@ -209,7 +208,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.session as Session;
+    return data as Session;
   }
 
   async fetchCategories(): Promise<Category[]> {
@@ -225,8 +224,7 @@ export class ApiClient {
     if (!response.ok) {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
-
-    return data.categories;
+    return data;
   }
 
   async fetchGuessObjects(guessObjectsIds: string[]): Promise<GuessObject[]> {
@@ -251,7 +249,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.guessObjects;
+    return data;
   }
 
   async getEndSentence(score_type: string): Promise<string> {
@@ -265,7 +263,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.sentence.message ?? '';
+    return data.message ?? '';
   }
 
   //////////////////
@@ -286,7 +284,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    const game: Game = data.game;
+    const game: Game = data;
 
     return game;
   }
