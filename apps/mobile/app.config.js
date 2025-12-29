@@ -12,6 +12,9 @@ const getAppName = () => {
   return 'Cityborn';
 };
 
+console.log(process.env.NODE_ENV);
+console.log(process.env.APP_VARIANT);
+
 export default {
   expo: {
     name: getAppName(),
