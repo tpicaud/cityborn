@@ -95,8 +95,7 @@ export default {
       [
         'expo-navigation-bar',
         {
-          backgroundColor: '#ffffff',
-          barStyle: 'light',
+          barStyle: 'dark',
           visibility: 'visible',
         },
       ],
