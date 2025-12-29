@@ -12,10 +12,9 @@ import {
   createEvent,
   defaultGuess,
   Game,
-  GameConfig,
-  GameRecord,
   GameStatus,
   OnlinePlayer,
+  PlayerResults,
   Round,
   RoundStatus,
   Session,
@@ -78,7 +77,7 @@ export class SessionService {
       gameConfig: {
         categories: [],
         timer: 20,
-        nbOfObjects: 6,
+        nbOfObjects: 2,
       },
       players:
         mode === SessionMode.SOLO
@@ -339,10 +338,17 @@ export class SessionService {
 
     const game: Game = {
       id: await this.generateUniqueGameID(),
+      config: session.gameConfig,
       status: GameStatus.STARTING,
       state: {
         guessObjectsIds: guessObjectIds,
-        results: {},
+        results: session.players.reduce(
+          (acc, player) => {
+            acc[player.username] = { results: [] };
+            return acc;
+          },
+          {} as Record<string, PlayerResults>,
+        ),
         guessObjects: guessObjects,
       },
     };

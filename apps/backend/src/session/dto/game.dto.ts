@@ -109,6 +109,9 @@ export class GameDto implements Game {
   @IsString()
   id: string;
 
+  @Type(() => GameConfigDto)
+  config: GameConfigDto;
+
   @IsEnum(GameStatus)
   status: GameStatus;
 

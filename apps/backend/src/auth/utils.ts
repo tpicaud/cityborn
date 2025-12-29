@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import * as cookie from 'cookie';
+import { Socket } from 'socket.io';
 
 export function extractTokenFromHTTPHeader(
   request: Request,
@@ -9,12 +10,19 @@ export function extractTokenFromHTTPHeader(
 }
 
 export function extractAccessTokenFromWsClient(
-  client?: any,
+  client: Socket,
 ): string | undefined {
   const cookies = client.handshake.headers.cookie;
-  if (!cookies) return undefined;
+  const auth = client.handshake.auth;
 
-  const parsedCookies = cookie.parse(cookies);
+  if (cookies) {
+    const parsedCookies = cookie.parse(cookies);
+    return parsedCookies['access_token'];
+  }
 
-  return parsedCookies['access_token'];
+  if (auth) {
+    return auth.access_token;
+  }
+
+  return undefined;
 }

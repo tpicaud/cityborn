@@ -62,6 +62,9 @@ export enum ErrorCode {
   // Classic error codes
   BAD_REQUEST = 'BAD_REQUEST',
 
+  //Token
+  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+
   // Default
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
