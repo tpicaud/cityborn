@@ -14,6 +14,7 @@ const getAppName = () => {
 
 console.log(process.env.NODE_ENV);
 console.log(process.env.APP_VARIANT);
+console.log(process.env.GOOGLE_MAPS_API_KEY);
 
 export default {
   expo: {
