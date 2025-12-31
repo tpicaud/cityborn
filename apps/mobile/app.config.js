@@ -1,4 +1,4 @@
-if (!process.env.APP_VARIANT | !process.env.GOOGLE_MAPS_API_KEY) {
+if (!process.env.APP_VARIANT || !process.env.GOOGLE_MAPS_API_KEY) {
   throw new Error('Environment not loaded');
 }
 
