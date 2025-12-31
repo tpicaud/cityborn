@@ -5,8 +5,12 @@ import { cookies } from 'next/headers';
 import { getBaseUrl, throwApiError } from '../../utils';
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ sessionId: string }> },
+  _req: NextRequest,
+  {
+    params,
+  }: {
+    params: Promise<{ sessionId: string }>;
+  },
 ) {
   const tokenStorage = new WebTokenStorage(await cookies());
   const apiClient = new ApiClient(getBaseUrl(), tokenStorage);

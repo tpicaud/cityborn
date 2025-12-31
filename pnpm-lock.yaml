@@ -337,6 +337,9 @@ importers:
       '@turf/turf':
         specifier: ^7.1.0
         version: 7.3.1
+      '@types/google.maps':
+        specifier: ^3.58.1
+        version: 3.58.1
       '@types/leaflet':
         specifier: ^1.9.12
         version: 1.9.21
