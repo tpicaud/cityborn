@@ -10,12 +10,19 @@ import { User } from '@cityborn/types';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import ErrorDialog from '@/components/ui/ErrorDialog';
-import { StatusBar, TouchableOpacity } from 'react-native';
+import { Platform, StatusBar, TouchableOpacity } from 'react-native';
 import { Icon } from '@/components/ui/Icon';
+import * as NavigationBar from 'expo-navigation-bar';
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setStyle('light');
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
