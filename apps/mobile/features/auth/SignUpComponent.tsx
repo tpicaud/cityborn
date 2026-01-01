@@ -7,13 +7,8 @@ import { getFriendlyErrorMessage } from '@cityborn/errors';
 import TextInput from '@/components/ui/TextInput';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-} from 'react-native';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 interface FormValues {
   username: string;
@@ -167,137 +162,137 @@ export const SignUpComponent = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View className="flex-1 flex-col gap-8 items-center justify-center w-70 self-center">
-          <Text className="text-2xl font-bold text-foreground">
-            INSCRIPTION
-          </Text>
+    <KeyboardAwareScrollView
+      contentContainerStyle={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      enableOnAndroid
+    >
+      <View className="flex-col gap-8 items-center w-70 self-center">
+        <Text className="text-2xl font-bold text-foreground">INSCRIPTION</Text>
 
-          <View className="flex-col items-center justify-center gap-0 w-70">
-            <View className="flex-col items-center justify-center gap-6">
-              <View className="w-full relative">
-                <TextInput
-                  placeholder="Nom d'utilisateur"
-                  value={formValues.username}
-                  onChangeText={(text) => handleChange('username', text)}
-                  onBlur={() => validateInput('username', formValues.username)}
-                  autoCapitalize="none"
-                  error={!!errors.username}
-                />
+        <View className="flex-col items-center justify-center gap-0 w-70">
+          <View className="flex-col items-center justify-center gap-6">
+            <View className="w-full relative">
+              <TextInput
+                placeholder="Nom d'utilisateur"
+                value={formValues.username}
+                onChangeText={(text) => handleChange('username', text)}
+                onBlur={() => validateInput('username', formValues.username)}
+                autoCapitalize="none"
+                error={!!errors.username}
+              />
 
-                {errors.username && (
-                  <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                    {errors.username}
-                  </Text>
-                )}
-              </View>
-
-              <View className="w-full relative">
-                <TextInput
-                  placeholder="Email"
-                  value={formValues.email}
-                  onChangeText={(text) => handleChange('email', text)}
-                  onBlur={() => validateInput('email', formValues.email)}
-                  autoCapitalize="none"
-                  error={!!errors.email}
-                />
-                {errors.email && (
-                  <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                    {errors.email}
-                  </Text>
-                )}
-              </View>
-
-              <View className="w-full relative">
-                <TextInput
-                  onPress={() => setShowDatePicker(true)}
-                  onBlur={(text) => validateInput('birthdate', text)}
-                  placeholder="Sélectionner une date"
-                  value={
-                    formValues.birthdate
-                      ? formValues.birthdate.toLocaleDateString()
-                      : ''
-                  }
-                  error={!!errors.birthdate}
-                />
-                {showDatePicker && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={formValues.birthdate ?? new Date(Date.now())}
-                    is24Hour={true}
-                    onChange={(_event: any, selectedDate: Date | undefined) => {
-                      if (selectedDate) handleChange('birthdate', selectedDate);
-                      setShowDatePicker(false);
-                    }}
-                  />
-                )}
-                {errors.birthdate && (
-                  <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                    {errors.birthdate}
-                  </Text>
-                )}
-              </View>
-
-              <View className="w-full relative">
-                <TextInput
-                  placeholder="Mot de passe"
-                  value={formValues.password}
-                  onChangeText={(text) => handleChange('password', text)}
-                  onBlur={() => validateInput('password', formValues.password)}
-                  autoCapitalize="none"
-                  secureTextEntry
-                  error={!!errors.password}
-                />
-                {errors.password && (
-                  <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                    {errors.password}
-                  </Text>
-                )}
-              </View>
-
-              <View className="w-full relative">
-                <TextInput
-                  placeholder="Confirmez le mot de passe"
-                  value={formValues.confirmPassword}
-                  onChangeText={(text) => handleChange('confirmPassword', text)}
-                  onBlur={() =>
-                    validateInput('confirmPassword', formValues.confirmPassword)
-                  }
-                  autoCapitalize="none"
-                  secureTextEntry
-                  error={!!errors.confirmPassword}
-                />
-                {errors.confirmPassword && (
-                  <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                    {errors.confirmPassword}
-                  </Text>
-                )}
-              </View>
-
-              <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
-                {errorMessage}
-              </Text>
+              {errors.username && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.username}
+                </Text>
+              )}
             </View>
-            <Button
-              variant="filled"
-              color="primary"
-              size="large"
-              label="S'INSCRIRE"
-              onPress={handleSubmit}
-            />
+
+            <View className="w-full relative">
+              <TextInput
+                placeholder="Email"
+                value={formValues.email}
+                onChangeText={(text) => handleChange('email', text)}
+                onBlur={() => validateInput('email', formValues.email)}
+                autoCapitalize="none"
+                error={!!errors.email}
+              />
+              {errors.email && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.email}
+                </Text>
+              )}
+            </View>
+
+            <View className="w-full relative">
+              <TextInput
+                onPress={() => setShowDatePicker(true)}
+                onBlur={(text) => validateInput('birthdate', text)}
+                placeholder="Sélectionner une date"
+                value={
+                  formValues.birthdate
+                    ? formValues.birthdate.toLocaleDateString()
+                    : ''
+                }
+                error={!!errors.birthdate}
+              />
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={formValues.birthdate ?? new Date(Date.now())}
+                  is24Hour={true}
+                  onChange={(_event: any, selectedDate: Date | undefined) => {
+                    if (selectedDate) handleChange('birthdate', selectedDate);
+                    setShowDatePicker(false);
+                  }}
+                />
+              )}
+              {errors.birthdate && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.birthdate}
+                </Text>
+              )}
+            </View>
+
+            <View className="w-full relative">
+              <TextInput
+                placeholder="Mot de passe"
+                value={formValues.password}
+                onChangeText={(text) => handleChange('password', text)}
+                onBlur={() => validateInput('password', formValues.password)}
+                autoCapitalize="none"
+                secureTextEntry
+                error={!!errors.password}
+              />
+              {errors.password && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.password}
+                </Text>
+              )}
+            </View>
+
+            <View className="w-full relative">
+              <TextInput
+                placeholder="Confirmez le mot de passe"
+                value={formValues.confirmPassword}
+                onChangeText={(text) => handleChange('confirmPassword', text)}
+                onBlur={() =>
+                  validateInput('confirmPassword', formValues.confirmPassword)
+                }
+                autoCapitalize="none"
+                secureTextEntry
+                error={!!errors.confirmPassword}
+              />
+              {errors.confirmPassword && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.confirmPassword}
+                </Text>
+              )}
+            </View>
+
+            <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
+              {errorMessage}
+            </Text>
           </View>
-          <View className="flex flex-row items-center gap-2 w-full">
-            <View className="flex-1  h-px bg-foreground" />
-            <Text>OU</Text>
-            <View className="flex-1 h-px bg-foreground" />
-          </View>
-          <SignInWithGoogleButton />
+          <Button
+            variant="filled"
+            color="primary"
+            size="large"
+            label="S'INSCRIRE"
+            onPress={handleSubmit}
+          />
         </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+        <View className="flex flex-row items-center gap-2 w-full">
+          <View className="flex-1  h-px bg-foreground" />
+          <Text>OU</Text>
+          <View className="flex-1 h-px bg-foreground" />
+        </View>
+        <SignInWithGoogleButton />
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
