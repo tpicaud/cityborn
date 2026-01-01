@@ -16,7 +16,7 @@ export function Text({ children, className = '', ...props }: NativeTextProps) {
 
 export function View({ children, className = '', ...props }: NativeViewProps) {
   return (
-    <NativeView className={cn(`bg-transparent`, className)} {...props}>
+    <NativeView className={cn(className)} {...props}>
       {children}
     </NativeView>
   );
