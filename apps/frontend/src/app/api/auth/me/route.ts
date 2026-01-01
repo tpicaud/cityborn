@@ -1,13 +1,13 @@
 'use server';
 
 // app/api/auth/me/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getBaseUrl, throwApiError } from '../../utils';
 import { WebTokenStorage } from '@/lib/tokenStorage';
 import { ApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const tokenStorage = new WebTokenStorage(await cookies());
   const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
 

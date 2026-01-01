@@ -1,8 +1,6 @@
-if (
-  !process.env.APP_VARIANT |
-  !process.env.NODE_ENV |
-  !process.env.GOOGLE_MAPS_API_KEY
-) {
+require('dotenv').config();
+
+if (!process.env.APP_VARIANT || !process.env.GOOGLE_MAPS_API_KEY) {
   throw new Error('Environment not loaded');
 }
 const IS_DEVELOPMENT = process.env.APP_VARIANT === 'development';

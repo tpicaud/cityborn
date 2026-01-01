@@ -31,6 +31,7 @@
     "@react-navigation/native": "^7.1.8",
     "@turf/turf": "^7.2.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "expo": "^54.0.30",
     "expo-build-properties": "~1.0.10",
     "expo-clipboard": "~8.0.8",
