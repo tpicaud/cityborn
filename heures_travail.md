@@ -145,3 +145,5 @@ z# Heure de travail
 | 23/12/2025 | 7h          | Prise en main Expo eas + set up déploiement de l'application                         |
 | 24/12/2025 | 8h          | Prise en main Expo eas + workflows                                                   |
 | 29/12/2025 | 7h          | Workflows eas et gestion des environnements android                                  |
+| 31/12/2025 | 5h          | Workflows eas test & ajustements, publication de l'app en staging                    |
+| 01/01/2026 | 4h          | fixation des problèmes de l'app en staging                                           |
