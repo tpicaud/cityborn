@@ -36,7 +36,11 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     ) {
       handleJoinSession(localPlayerID);
     }
-  }, [multiSession.session, multiSession.socket]);
+  }, [
+    multiSession.session,
+    multiSession.socket,
+    multiSession.socket?.connected,
+  ]);
 
   //////////////////////////
   // Session interactions //

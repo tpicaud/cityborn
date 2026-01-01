@@ -3,16 +3,18 @@ require('dotenv').config();
 if (!process.env.APP_VARIANT || !process.env.GOOGLE_MAPS_API_KEY) {
   throw new Error('Environment not loaded');
 }
-
+const IS_DEVELOPMENT = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 const IS_STAGING = process.env.APP_VARIANT === 'staging';
 
 const getUniqueIdentifier = () => {
+  if (IS_DEVELOPMENT) return 'com.app.cityborn.dev';
   if (IS_PREVIEW) return 'com.app.cityborn.preview';
   return 'com.app.cityborn';
 };
 
 const getAppName = () => {
+  if (IS_DEVELOPMENT) return 'Cityborn (Dev)';
   if (IS_PREVIEW) return 'Cityborn (Preview)';
   if (IS_STAGING) return 'Cityborn (Staging)';
   return 'Cityborn';
