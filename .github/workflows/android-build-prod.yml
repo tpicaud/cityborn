@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/types/**'
+      - 'package/errors/**'
   workflow_dispatch:
 
 jobs:
