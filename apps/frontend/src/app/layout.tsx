@@ -29,9 +29,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  children,
 }: Readonly<{
-  children: React.ReactNode;
   children: React.ReactNode;
 }>) {
   let user = null;
@@ -51,6 +49,10 @@ export default async function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Geist&family=Poppins:wght@400;700&display=swap"
           rel="stylesheet"
+        />
+        <meta
+          name="google-site-verification"
+          content="gFNaiS_8H0_ADBty1p6PsNfeYmrO2Z9Cf2pZQOj6Pqs"
         />
         <Script
           src="https://accounts.google.com/gsi/client"
