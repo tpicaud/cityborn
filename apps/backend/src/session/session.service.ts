@@ -64,7 +64,6 @@ export class SessionService {
     user?: User,
     visitorId?: string,
   ): Promise<Session> {
-    this.logger.log('creating solo session');
     const { mode } = dto;
 
     const sessionID: string = await this.generateUniqueSessionID();
@@ -77,7 +76,7 @@ export class SessionService {
       gameConfig: {
         categories: [],
         timer: 20,
-        nbOfObjects: 2,
+        nbOfObjects: 6,
       },
       players:
         mode === SessionMode.SOLO
