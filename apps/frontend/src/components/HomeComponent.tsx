@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import MenuComponent from "./menu/MenuComponent";
 import { useEffect, useState } from "react";
