@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import MenuComponent from './menu/MenuComponent';
 import { useEffect, useState } from 'react';
@@ -30,6 +30,9 @@ declare global {
   interface Window {
     google: any;
   }
+  interface Window {
+    google: any;
+  }
 }
 
 export default function HomeComponent() {
@@ -48,6 +51,7 @@ export default function HomeComponent() {
     }
   }, [user]);
 
+  let content;
   let content;
 
   switch (state) {
@@ -84,7 +88,32 @@ export default function HomeComponent() {
         />
       );
   }
+    default:
+      content = (
+        <MenuComponent
+          setState={setState}
+          setSentVerificationEmail={setSentVerificationEmail}
+          sentVerificationEmail={sentVerificationEmail}
+        />
+      );
+  }
 
+  return (
+    <div className="relative h-screen">
+      <div className="absolute inset-0">
+        <MapContainer
+          center={[0, 0]}
+          zoom={3}
+          zoomControl={false}
+          className="h-full w-full z-0"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+        </MapContainer>
+        <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
+      </div>
   return (
     <div className="relative h-screen">
       <div className="absolute inset-0">
@@ -184,3 +213,4 @@ export default function HomeComponent() {
     </div>
   );
 }
+
