@@ -16,7 +16,6 @@ import IconButton from "./ui/buttons/IconButton";
 import { useError } from "@/contexts/ErrorContext";
 import { ProfileComponent } from "./menu/ProfileComponent";
 import { useApi } from "@/contexts/ApiContext";
-import Link from "next/link";
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
