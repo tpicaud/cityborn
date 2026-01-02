@@ -5,13 +5,17 @@ on:
     branches:
       - master
     paths:
-      - 'apps/frontend/**'
-      - 'packages/types/**'
+      - "apps/frontend/**"
+      - "packages/types/**"
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID }}
 
     steps:
       - uses: actions/checkout@v3
