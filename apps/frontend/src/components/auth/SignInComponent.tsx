@@ -2,15 +2,15 @@
 
 import * as React from 'react';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
-import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import Button from '../ui/buttons/Button';
 import { useError } from '@/contexts/ErrorContext';
 import { useApi } from '@/contexts/ApiContext';
+import { useRouter } from 'next/navigation';
 
 export const SignInComponent = () => {
-  const { refreshUser } = useAuth();
   const { invokeError } = useError();
+  const router = useRouter();
   const apiClient = useApi();
   const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
@@ -40,7 +40,7 @@ export const SignInComponent = () => {
     try {
       setIsGoogleSignInFormSubmitting(true);
       await apiClient.signInWithGoogle(response.credential);
-      await refreshUser();
+      window.location.reload();
     } catch (error: any) {
       invokeError(error);
     } finally {
@@ -66,7 +66,7 @@ export const SignInComponent = () => {
       setIsSignInFormSubmitting(true);
       e.preventDefault();
       await apiClient.signIn(formValues.username, formValues.password);
-      await refreshUser();
+      window.location.reload();
     } catch (error: any) {
       invokeError(error);
     } finally {
