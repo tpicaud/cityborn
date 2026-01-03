@@ -71,6 +71,15 @@ const Results = ({
     try {
       message = (await apiClient.getEndSentence(scoreType)).message ?? '';
     } catch (error) {
+      switch (scoreType) {
+        case ScoreType.GOOD:
+          message = 'Tu es le croissant le plus doré de la boulangerie !';
+        case ScoreType.AVERAGE:
+          message =
+            'Ce n’est pas la tarte aux fraises de grand-mère, mais ça se mange.';
+        case ScoreType.BAD:
+          message = "Tu n'es pas la tortue la plus ninja des égouts.";
+      }
       console.error(error);
     }
 
