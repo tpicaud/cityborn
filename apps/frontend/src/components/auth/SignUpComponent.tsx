@@ -23,7 +23,6 @@ export const SignUpComponent = ({
 }: {
   setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const { refreshUser } = useAuth();
   const { invokeError } = useError();
   const apiClient = useApi();
   const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
@@ -51,7 +50,7 @@ export const SignUpComponent = ({
   const handleCredentialResponse = async (response: any) => {
     try {
       await apiClient.signInWithGoogle(response.credential);
-      await refreshUser();
+      window.location.reload();
     } catch (error: any) {
       invokeError(error);
     }
@@ -114,7 +113,7 @@ export const SignUpComponent = ({
         formValues.password,
       );
       setSentVerificationEmail(true);
-      await refreshUser();
+      window.location.reload();
     } catch (error: any) {
       invokeError(error);
     } finally {
