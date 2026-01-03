@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { DialogContent, DialogTitle, Typography } from "@mui/material";
-import { useRouter } from "next/navigation";
-import "leaflet/dist/leaflet.css";
-import { Dispatch, SetStateAction, useState } from "react";
-import { SessionMode } from "@cityborn/types";
-import { useAuth } from "@/contexts/AuthContext";
-import Button from "../ui/buttons/Button";
-import LoadingButton from "../ui/buttons/LoadingButton";
-import { Dialog } from "../ui/dialogs/Dialog";
-import { useError } from "@/contexts/ErrorContext";
-import Image from "next/image";
-import { useApi } from "@/contexts/ApiContext";
-import Link from "next/link";
+import { DialogContent, DialogTitle, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import 'leaflet/dist/leaflet.css';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { SessionMode } from '@cityborn/types';
+import { useAuth } from '@/contexts/AuthContext';
+import Button from '../ui/buttons/Button';
+import LoadingButton from '../ui/buttons/LoadingButton';
+import { Dialog } from '../ui/dialogs/Dialog';
+import { useError } from '@/contexts/ErrorContext';
+import Image from 'next/image';
+import { useApi } from '@/contexts/ApiContext';
+import Link from 'next/link';
 
 export default function MenuComponent({
   setState,
@@ -20,7 +20,7 @@ export default function MenuComponent({
   sentVerificationEmail,
 }: {
   setState: Dispatch<
-    SetStateAction<"menu" | "sign-in" | "sign-up" | "profile">
+    SetStateAction<'menu' | 'sign-in' | 'sign-up' | 'profile'>
   >;
   setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
   sentVerificationEmail: boolean;
@@ -30,7 +30,7 @@ export default function MenuComponent({
   const { invokeError } = useError();
   const apiClient = useApi();
 
-  const [code, setCode] = useState<string>("");
+  const [code, setCode] = useState<string>('');
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
   const handleSoloPlay = () => {
@@ -74,7 +74,7 @@ export default function MenuComponent({
           alt="Logo"
           width={256}
           height={256}
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: 'contain' }}
           className="object-contain w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40"
           priority
         />
@@ -99,9 +99,9 @@ export default function MenuComponent({
                   sendNewVerificationEmail();
                 }}
                 style={{
-                  color: "blue",
-                  cursor: "pointer",
-                  textDecoration: "underline",
+                  color: 'blue',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
                 }}
               >
                 Vérifie ton email
@@ -113,9 +113,9 @@ export default function MenuComponent({
           <Button
             variant="contained"
             color="primary"
-            className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+            className="text-white px-6 w-full rounded"
             onClick={async () => {
-              setState("sign-in");
+              setState('sign-in');
             }}
           >
             <p className="px-3">Connexion</p>
@@ -123,9 +123,9 @@ export default function MenuComponent({
           <Button
             variant="contained"
             color="primary"
-            className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
+            className="text-white px-6 w-full rounded"
             onClick={async () => {
-              setState("sign-up");
+              setState('sign-up');
             }}
           >
             <p className="px-3">Inscription</p>
@@ -150,7 +150,7 @@ export default function MenuComponent({
           <LoadingButton
             variant="contained"
             color="primary"
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+            className="text-white px-6 py-2 rounded"
             onClick={handleJoin}
             disabled={!code}
           >
@@ -182,7 +182,7 @@ export default function MenuComponent({
           >
             Politique de confidentialité
           </Link>
-        </p>{" "}
+        </p>{' '}
       </div>
 
       <Dialog
@@ -199,7 +199,7 @@ export default function MenuComponent({
               color="primary"
               className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
               onClick={async () => {
-                setState("sign-in");
+                setState('sign-in');
               }}
             >
               <p className="px-3">Se connecter</p>
@@ -209,7 +209,7 @@ export default function MenuComponent({
               color="primary"
               className="bg-green-500 hover:bg-green-600 text-white px-6 w-full rounded"
               onClick={async () => {
-                setState("sign-up");
+                setState('sign-up');
               }}
             >
               <p className="px-3">S'inscrire</p>
