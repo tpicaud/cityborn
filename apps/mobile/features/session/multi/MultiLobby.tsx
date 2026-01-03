@@ -58,7 +58,7 @@ export function MultiLobby({
   };
 
   const handleCopy = async () => {
-    await Clipboard.setStringAsync('hello world');
+    await Clipboard.setStringAsync(session.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
