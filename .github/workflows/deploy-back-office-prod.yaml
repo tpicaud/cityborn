@@ -1,4 +1,4 @@
-name: Deploy Prod Back Office to Vercel
+name: Deploy Production Back Office to Vercel
 
 on:
   push:
