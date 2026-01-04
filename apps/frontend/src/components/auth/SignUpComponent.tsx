@@ -4,7 +4,6 @@ import * as React from 'react';
 import { Box, FormControl, TextField, Button, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { useAuth } from '@/contexts/AuthContext';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { LocalizationProvider } from 'node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider';
 import { useError } from '@/contexts/ErrorContext';
