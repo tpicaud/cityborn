@@ -70,3 +70,7 @@ jobs:
         with:
           name: app-release
           path: ${{ github.workspace }}/app-staging-release.aab
+
+      - name: Submit
+        working-directory: apps/mobile
+        run: eas submit --platform android --profile staging --path ${{ github.workspace }}/app-staging-release.aab
