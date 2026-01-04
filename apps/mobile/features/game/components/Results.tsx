@@ -120,7 +120,7 @@ const Results = ({
         <Text>{sentence.sub_message_1}</Text>
         <Text>{sentence.message}</Text>
       </View>
-      {playersResults.size === 1 ? (
+      {playersResults.size > 1 ? (
         <View className="flex flex-col p-4">
           {/* Classement */}
           <Text className="font-bold text-center text-lg">Classement</Text>
