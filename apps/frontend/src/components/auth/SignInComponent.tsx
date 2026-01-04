@@ -6,11 +6,9 @@ import { useEffect, useState } from 'react';
 import Button from '../ui/buttons/Button';
 import { useError } from '@/contexts/ErrorContext';
 import { useApi } from '@/contexts/ApiContext';
-import { useRouter } from 'next/navigation';
 
 export const SignInComponent = () => {
   const { invokeError } = useError();
-  const router = useRouter();
   const apiClient = useApi();
   const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
