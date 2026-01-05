@@ -61,6 +61,12 @@ jobs:
         working-directory: apps/mobile
         run: eas build:version:sync --platform android --profile production
 
+      - name: Debug EAS config
+        working-directory: apps/mobile
+        run: eas config --profile production
+
+      - run: ls -la apps/mobile
+
       - name: Build Android app
         working-directory: apps/mobile
         run: eas build --platform android --profile production --local --output ${{ github.workspace }}/app-production-release.aab
