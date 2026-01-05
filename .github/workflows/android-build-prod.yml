@@ -38,6 +38,8 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      - run: ls -la apps/mobile
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -60,12 +62,6 @@ jobs:
       - name: Syncing app version code
         working-directory: apps/mobile
         run: eas build:version:sync --platform android --profile production
-
-      - name: Debug EAS config
-        working-directory: apps/mobile
-        run: eas config --profile production
-
-      - run: ls -la apps/mobile
 
       - name: Build Android app
         working-directory: apps/mobile
