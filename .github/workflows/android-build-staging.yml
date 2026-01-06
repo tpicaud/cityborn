@@ -71,6 +71,6 @@ jobs:
           name: app-release
           path: ${{ github.workspace }}/app-staging-release.aab
 
-      - name: Submit
-        working-directory: apps/mobile
-        run: eas submit --platform android --profile staging --non-interactive --path ${{ github.workspace }}/app-staging-release.aab
+      # - name: Submit
+      #   working-directory: apps/mobile
+      #   run: eas submit --platform android --profile staging --non-interactive --path ${{ github.workspace }}/app-staging-release.aab
