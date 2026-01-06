@@ -1,29 +1,29 @@
 'use client';
 
-import MenuComponent from "./menu/MenuComponent";
-import { useEffect, useState } from "react";
-import { SignInComponent } from "./auth/SignInComponent";
-import { SignUpComponent } from "./auth/SignUpComponent";
-import dynamic from "next/dynamic";
-import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useAuth } from "@/contexts/AuthContext";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import CloseIcon from "@mui/icons-material/Close";
-import LoadingIconButton from "./ui/buttons/LoadingIconButton";
-import IconButton from "./ui/buttons/IconButton";
-import { useError } from "@/contexts/ErrorContext";
-import { ProfileComponent } from "./menu/ProfileComponent";
-import { useApi } from "@/contexts/ApiContext";
+import MenuComponent from './menu/MenuComponent';
+import { useEffect, useState } from 'react';
+import { SignInComponent } from './auth/SignInComponent';
+import { SignUpComponent } from './auth/SignUpComponent';
+import dynamic from 'next/dynamic';
+import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '@/contexts/AuthContext';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import LoadingIconButton from './ui/buttons/LoadingIconButton';
+import IconButton from './ui/buttons/IconButton';
+import { useError } from '@/contexts/ErrorContext';
+import { ProfileComponent } from './menu/ProfileComponent';
+import { useApi } from '@/contexts/ApiContext';
 
 const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false },
 );
 const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false },
 );
 
 declare global {
@@ -37,31 +37,31 @@ export default function HomeComponent() {
   const apiClient = useApi();
   const { invokeError } = useError();
   const [state, setState] = useState<
-    "menu" | "sign-in" | "sign-up" | "profile"
-  >("menu");
+    'menu' | 'sign-in' | 'sign-up' | 'profile'
+  >('menu');
   const [openProfile, setOpenProfile] = useState(false);
   const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setState("menu");
+      setState('menu');
     }
   }, [user]);
 
   let content;
 
   switch (state) {
-    case "sign-in":
+    case 'sign-in':
       content = <SignInComponent />;
       break;
 
-    case "sign-up":
+    case 'sign-up':
       content = (
         <SignUpComponent setSentVerificationEmail={setSentVerificationEmail} />
       );
       break;
 
-    case "menu":
+    case 'menu':
       content = (
         <MenuComponent
           setState={setState}
@@ -71,7 +71,7 @@ export default function HomeComponent() {
       );
       break;
 
-    case "profile":
+    case 'profile':
       content = <ProfileComponent user={user!} />;
       break;
 
@@ -107,9 +107,9 @@ export default function HomeComponent() {
           <div className="absolute self-center top-2 flex flex-col h-[15%] w-[95%]">
             <div className="flex flex-row items-start justify-between w-full">
               <IconButton
-                onClick={() => setState("menu")}
+                onClick={() => setState('menu')}
                 sx={{
-                  visibility: state === "menu" ? "hidden" : "visible",
+                  visibility: state === 'menu' ? 'hidden' : 'visible',
                 }}
                 className="z-10"
               >
@@ -119,11 +119,11 @@ export default function HomeComponent() {
               <div className="flex flex-row justify-end">
                 <IconButton
                   onClick={async () => {
-                    setState("profile");
+                    setState('profile');
                     //setOpenProfile(true);
                   }}
                   sx={{
-                    visibility: user && state === "menu" ? "visible" : "hidden",
+                    visibility: user && state === 'menu' ? 'visible' : 'hidden',
                   }}
                   className="z-10"
                 >
@@ -134,13 +134,13 @@ export default function HomeComponent() {
                     try {
                       await apiClient.signOut();
                       await refreshUser();
-                      setState("menu");
+                      setState('menu');
                     } catch (error: any) {
                       invokeError(error);
                     }
                   }}
                   sx={{
-                    visibility: user ? "visible" : "hidden",
+                    visibility: user ? 'visible' : 'hidden',
                   }}
                   className="z-10"
                 >
@@ -158,7 +158,7 @@ export default function HomeComponent() {
           aria-label="close"
           onClick={() => setOpenProfile(false)}
           sx={{
-            position: "absolute",
+            position: 'absolute',
             right: 0,
             color: (theme) => theme.palette.grey[500],
           }}

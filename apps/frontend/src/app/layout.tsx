@@ -1,31 +1,30 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
-import * as ApiServiceServer from "@/services/ApiServiceServer";
-import AuthProvider from "@/contexts/AuthContext";
-import { Roboto } from "next/font/google";
-import Script from "next/script";
-import ErrorProvider from "@/contexts/ErrorContext";
+import type { Metadata } from 'next';
+import './globals.css';
+import * as ApiServiceServer from '@/services/ApiServiceServer';
+import AuthProvider from '@/contexts/AuthContext';
+import Script from 'next/script';
+import ErrorProvider from '@/contexts/ErrorContext';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+// const geistSans = localFont({
+// 	src: "./fonts/GeistVF.woff",
+// 	variable: "--font-geist-sans",
+// 	weight: "100 900",
+// });
+// const geistMono = localFont({
+// 	src: "./fonts/GeistMonoVF.woff",
+// 	variable: "--font-geist-mono",
+// 	weight: "100 900",
+// });
 
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
+// const roboto = Roboto({
+// 	subsets: ['latin'],
+// 	weight: ['400', '500', '700'],
+// });
 
 export const metadata: Metadata = {
-  title: "CityBorn",
-  description: "Trouvez le lieu de naissances des personnalités",
+  title: 'CityBorn',
+  description: 'Trouvez le lieu de naissances des personnalités',
 };
 
 export default async function RootLayout({
@@ -39,12 +38,12 @@ export default async function RootLayout({
     try {
       user = await ApiServiceServer.getCurrentUser();
     } catch (error) {
-      console.error("Failed to fetch user:", error);
+      console.error('Failed to fetch user:', error);
     }
   }
 
   return (
-    <html lang="en">
+    <html lang="fr" className="h-full">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
@@ -59,17 +58,15 @@ export default async function RootLayout({
           src="https://accounts.google.com/gsi/client"
           strategy="beforeInteractive"
         />
-        <meta
-          name="google-site-verification"
-          content="gFNaiS_8H0_ADBty1p6PsNfeYmrO2Z9Cf2pZQOj6Pqs"
-        />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${roboto.className} antialiased`}
-      >
-        <AuthProvider initialValue={user}>
-          <ErrorProvider>{children}</ErrorProvider>
-        </AuthProvider>
+      <body className="h-full antialiased font-sans">
+        <main className="min-h-screen h-full">
+          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+            <AuthProvider initialValue={user}>
+              <ErrorProvider>{children}</ErrorProvider>
+            </AuthProvider>
+          </AppRouterCacheProvider>
+        </main>
       </body>
     </html>
   );
