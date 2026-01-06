@@ -63,14 +63,14 @@ jobs:
 
       - name: Build Android app
         working-directory: apps/mobile
-        run: eas build --platform android --profile staging --local --output ${{ github.workspace }}/app-staging-release.aab
+        run: eas build --platform android --profile staging --local --output ${{ github.workspace }}/cityborn-staging-release.aab
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: ${{ github.workspace }}/app-staging-release.aab
+          path: ${{ github.workspace }}/cityborn-staging-release.aab
 
-      # - name: Submit
-      #   working-directory: apps/mobile
-      #   run: eas submit --platform android --profile staging --non-interactive --path ${{ github.workspace }}/app-staging-release.aab
+      - name: Submit
+        working-directory: apps/mobile
+        run: eas submit --platform android --profile staging --non-interactive --path ${{ github.workspace }}/cityborn-staging-release.aab

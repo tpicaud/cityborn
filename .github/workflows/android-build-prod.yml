@@ -63,10 +63,10 @@ jobs:
 
       - name: Build Android app
         working-directory: apps/mobile
-        run: eas build --platform android --profile production --local --output ${{ github.workspace }}/app-production-release.aab
+        run: eas build --platform android --profile production --local --output ${{ github.workspace }}/cityborn-production-release.aab
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: ${{ github.workspace }}/app-production-release.aab
+          path: ${{ github.workspace }}/cityborn-production-release.aab
