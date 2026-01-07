@@ -31,7 +31,7 @@ jobs:
 
       - name: Check environment variables
         working-directory: apps/mobile
-        run: node scripts/check-end.js
+        run: node scripts/check-env.js
 
       - name: Install pnpm
         run: npm install -g pnpm
