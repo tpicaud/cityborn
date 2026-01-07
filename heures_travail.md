@@ -148,3 +148,8 @@ z# Heure de travail
 | 31/12/2025 | 5h          | Workflows eas test & ajustements, publication de l'app en staging                                                            |
 | 01/01/2026 | 4h          | fixation des problèmes de l'app en staging                                                                                   |
 | 02/01/2026 | 4h          | Détection des problèmes d'affichage de carte + création de la politique de confidentialité + branding pour prod OAuth Google |
+| 03/01/2026 | 3h          | Fix effets de bords frontend staging                                                                                         |
+| 04/01/2026 | 5h          | Fix erreurs de build et conflits avec master + back office workflow                                                          |
+| 05/01/2026 | 4h          | Mise à jour des workflows et préparation Mise En Prod (MEP)                                                                  |
+| 06/01/2026 | 7h          | MEP pour back office front et back + workflow eas                                                                            |
+| 07/01/2026 | 8h          | Publication play store prod + continuation workflows                                                                         |
