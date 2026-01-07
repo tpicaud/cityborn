@@ -10,6 +10,7 @@
     },
     "staging": {
       "distribution": "store",
+      "environment": "preview",
       "channel": "staging",
       "autoIncrement": true
     },
