@@ -6,7 +6,7 @@
     "dev": "expo start",
     "start": "expo start",
     "prebuild": "expo prebuild --clean",
-    "build-staging-preview": "npx dotenv -e .env.staging -- eas build --profile preview --platform android --local --output app-builds/cityborn-staging-preview.apk",
+    "build-staging-preview": "EXPO_NO_DOTENV=1 npx dotenv -e .env.staging -- eas build --profile preview --platform android --local --output app-builds/cityborn-staging-preview.apk",
     "build-production-preview": "npx dotenv -e .env.production -- eas build --profile preview --platform android --local --output app-builds/cityborn-production-preview.apk",
     "android": "expo run:android",
     "ios": "expo run:ios",
