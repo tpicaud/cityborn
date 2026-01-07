@@ -6,12 +6,8 @@
   },
   "build": {
     "preview": {
-      "environment": "preview",
       "distribution": "internal",
-      "channel": "preview",
-      "env": {
-        "APP_VARIANT": "preview"
-      }
+      "channel": "preview"
     },
     "staging": {
       "distribution": "store",
