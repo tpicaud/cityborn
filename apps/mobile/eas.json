@@ -11,21 +11,13 @@
     },
     "staging": {
       "distribution": "store",
-      "environment": "preview",
       "channel": "staging",
-      "autoIncrement": true,
-      "env": {
-        "APP_VARIANT": "staging"
-      }
+      "autoIncrement": true
     },
     "production": {
       "distribution": "store",
-      "environment": "production",
       "channel": "production",
-      "autoIncrement": true,
-      "env": {
-        "APP_VARIANT": "production"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
