@@ -6,12 +6,14 @@
     "dev": "expo start",
     "start": "expo start",
     "prebuild": "expo prebuild --clean",
+    "eas-build-pre-install": "pnpm check-env",
     "build-staging-preview": "EXPO_NO_DOTENV=1 npx dotenv -e .env.staging -- eas build --profile preview --platform android --local --output app-builds/cityborn-staging-preview.apk",
     "build-production-preview": "npx dotenv -e .env.production -- eas build --profile preview --platform android --local --output app-builds/cityborn-production-preview.apk",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "check-env": "node scripts/check-env.js",
     "postinstall": "cd ../.. && pnpm packages:build"
   },
   "dependencies": {
