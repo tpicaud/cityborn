@@ -46,6 +46,10 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      - name: Check environment variables
+        working-directory: apps/mobile
+        run: pnpm check-env
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
