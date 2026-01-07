@@ -29,6 +29,10 @@ jobs:
         with:
           node-version: 20.x
 
+      - name: Check environment variables
+        working-directory: apps/mobile
+        run: node scripts/check-end.js
+
       - name: Install pnpm
         run: npm install -g pnpm
 
