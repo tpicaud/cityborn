@@ -54,9 +54,6 @@ const ResultsComponent = ({
     const currentPlayerResults = playersResults.get(localPlayerID);
     if (!currentPlayerResults) return;
 
-    // Remplacement des IDs dans tous les résultats
-    //replaceIdsWithNames(playersResults, game.state.guessObjects!);
-
     setLocalPlayerResults(currentPlayerResults);
 
     let isMounted = true;
@@ -76,27 +73,32 @@ const ResultsComponent = ({
     return guessObject ? guessObject.name : id;
   }
 
-  async function generateEndSentence(
-    playerResults: PlayerResults,
-  ): Promise<{
+  async function generateEndSentence(playerResults: PlayerResults): Promise<{
     message: string;
     sub_message_1: string;
     sub_message_2: string;
   }> {
     const totalPoints = calculateTotalPoints(playerResults);
     const getScoreType = (points: number): ScoreType => {
-      const avg_score = points / game.state.guessObjectsIds.length;
-      if (avg_score < 500) return ScoreType.BAD;
-      if (avg_score < 833) return ScoreType.AVERAGE;
+      if (points < 3000) return ScoreType.BAD;
+      if (points < 5000) return ScoreType.AVERAGE;
       return ScoreType.GOOD;
     };
 
     const scoreType = getScoreType(totalPoints);
-    let message = '';
+    let message: string;
     try {
       message = (await apiClient.getEndSentence(scoreType)) ?? '';
-    } catch (error) {
-      console.error(error);
+    } catch {
+      switch (scoreType) {
+        case ScoreType.GOOD:
+          message = 'Tu es le croissant le plus doré de la boulangerie !';
+        case ScoreType.AVERAGE:
+          message =
+            'Ce n’est pas la tarte aux fraises de grand-mère, mais ça se mange.';
+        case ScoreType.BAD:
+          message = "Tu n'es pas la tortue la plus ninja des égouts.";
+      }
     }
 
     let sub_message_1 = '';
@@ -113,10 +115,6 @@ const ResultsComponent = ({
 
     return { message, sub_message_1, sub_message_2 };
   }
-
-  useEffect(() => {
-    console.log(sentence, localPlayerResults);
-  }, [sentence, localPlayerResults]);
 
   if (!sentence || !localPlayerResults) {
     return <LoadingComponent message="Chargement des résultats" />;
@@ -259,7 +257,7 @@ const ResultsComponent = ({
                                   }}
                                 >
                                   <TableCell component="th" scope="row">
-                                    {result.guessObjectId}
+                                    {getGuessObjectName(result.guessObjectId)}
                                   </TableCell>
                                   <TableCell align="right">
                                     {result.distance !== -1 ? (

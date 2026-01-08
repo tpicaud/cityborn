@@ -7,6 +7,8 @@ import {
   GameRecord,
   GuessObject,
   PublicUser,
+  ScoreType,
+  Sentence,
   Session,
   SessionMode,
 } from '@cityborn/types';
@@ -252,7 +254,7 @@ export class ApiClient {
     return data;
   }
 
-  async getEndSentence(score_type: string): Promise<string> {
+  async getEndSentence(score_type: ScoreType): Promise<string> {
     const response = await this.apiFetch(
       `/api/sentence?score_type=${encodeURIComponent(score_type)}`,
     );
@@ -263,7 +265,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return data.message ?? '';
+    return (data as Sentence).message ?? '';
   }
 
   //////////////////

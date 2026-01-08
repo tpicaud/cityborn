@@ -50,6 +50,10 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Geist&family=Poppins:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        <meta
+          name="google-site-verification"
+          content="gFNaiS_8H0_ADBty1p6PsNfeYmrO2Z9Cf2pZQOj6Pqs"
+        />
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="beforeInteractive"
