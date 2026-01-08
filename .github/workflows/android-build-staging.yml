@@ -17,6 +17,10 @@ jobs:
     env:
       APP_VARIANT: ${{ vars.APP_VARIANT }}
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      EXPO_PUBLIC_REST_BACKEND_URL: ${{vars.EXPO_PUBLIC_REST_BACKEND_URL}}
+      EXPO_PUBLIC_WEBSOCKET_BACKEND_URL: ${{vars.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL}}
+      EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{vars.EXPO_PUBLIC_GOOGLE_CLIENT_ID}}
+
     steps:
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
@@ -37,6 +41,10 @@ jobs:
         with:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Check environment variables
+        working-directory: apps/mobile
+        run: pnpm check-env
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -61,12 +69,27 @@ jobs:
         working-directory: apps/mobile
         run: eas build:version:sync --platform android --profile staging
 
+      - name: Compute APK name
+        id: apk
+        working-directory: apps/mobile
+        run: |
+          VERSION=$(npx expo config --json | jq -r '.version')
+          VERSION_CODE=$(eas build:version:get -p android --json --non-interactive | jq -r '.versionCode')
+
+          APK_NAME=cityborn_staging_v${VERSION}_${VERSION_CODE}.apk
+          APK_PATH=${{ github.workspace }}/${APK_NAME}
+
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+
+          echo "Computed APK name: $APK_NAME"
+
       - name: Build Android app
         working-directory: apps/mobile
-        run: eas build --platform android --profile staging --local --output ${{ github.workspace }}/app-staging-release.aab
+        run: eas build --platform android --profile staging --local --output ${{steps.apk.outputs.apk_path}}
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: ${{ github.workspace }}/app-staging-release.aab
+          name: ${{steps.apk.outputs.apk_name}}
+          path: ${{steps.apk.outputs.apk_path}}

@@ -13,3 +13,7 @@ apps/*
 db_script
 docs
 infra
+
+.DS_Store
+**/.DS_Store
+**/._*

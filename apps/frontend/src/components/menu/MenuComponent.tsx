@@ -12,6 +12,7 @@ import { Dialog } from '../ui/dialogs/Dialog';
 import { useError } from '@/contexts/ErrorContext';
 import Image from 'next/image';
 import { useApi } from '@/contexts/ApiContext';
+import Link from 'next/link';
 
 export default function MenuComponent({
   setState,
@@ -138,7 +139,6 @@ export default function MenuComponent({
           <Typography variant="h6">Jouer</Typography>
           <div className="flex-1 h-px bg-black rounded-full"></div>
         </div>
-
         <div className="flex flex-row gap-2 items-center justify-center w-full">
           <input
             type="text"
@@ -157,7 +157,6 @@ export default function MenuComponent({
             <p className="px-3">Rejoindre</p>
           </LoadingButton>
         </div>
-
         <div className="flex flex-row gap-2 items-center justify-between w-full">
           <LoadingButton
             variant="contained"
@@ -176,6 +175,14 @@ export default function MenuComponent({
             <b>MULTI</b>
           </LoadingButton>
         </div>
+        <p className="w-full text-center">
+          <Link
+            href="/terms-and-policies"
+            className="text-sm text-gray-600 hover:underline text-center"
+          >
+            Politique de confidentialité
+          </Link>
+        </p>{' '}
       </div>
 
       <Dialog
