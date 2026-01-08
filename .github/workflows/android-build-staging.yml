@@ -69,16 +69,27 @@ jobs:
         working-directory: apps/mobile
         run: eas build:version:sync --platform android --profile staging
 
+      - name: Compute APK name
+        id: apk
+        working-directory: apps/mobile
+        run: |
+          VERSION=$(npx expo config --json | jq -r '.expo.version')
+          VERSION_CODE=$(npx expo config --json | jq -r '.expo.android.versionCode')
+
+          APK_NAME=cityborn-staging-v${VERSION}-${VERSION_CODE}.apk
+          APK_PATH=${{ github.workspace }}/${APK_NAME}
+
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+
+          echo "Computed APK name: $APK_NAME"
+
       - name: Build Android app
         working-directory: apps/mobile
-        run: eas build --platform android --profile staging --local --output ${{ github.workspace }}/cityborn-staging-release.aab
+        run: eas build --platform android --profile staging --local --output ${{steps.apk.outputs.apk_path}}
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: ${{ github.workspace }}/cityborn-staging-release.aab
-
-      - name: Submit
-        working-directory: apps/mobile
-        run: eas submit --platform android --profile staging --non-interactive --path ${{ github.workspace }}/cityborn-staging-release.aab
+          name: ${{steps.apk.outputs.apk_name}}
+          path: ${{steps.apk.outputs.apk_path}}
