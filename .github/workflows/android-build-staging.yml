@@ -73,8 +73,8 @@ jobs:
         id: apk
         working-directory: apps/mobile
         run: |
-          VERSION=$(npx expo config --json | jq -r '.expo.version')
-          VERSION_CODE=$(npx expo config --json | jq -r '.expo.android.versionCode')
+          VERSION=$(npx expo config --json | jq -r '.version')
+          VERSION_CODE=$(eas build:version:get -p android --json --non-interactive | jq -r '.versionCode')
 
           APK_NAME=cityborn-staging-v${VERSION}-${VERSION_CODE}.apk
           APK_PATH=${{ github.workspace }}/${APK_NAME}
