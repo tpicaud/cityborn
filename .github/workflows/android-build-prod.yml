@@ -17,6 +17,10 @@ jobs:
     env:
       APP_VARIANT: ${{ vars.APP_VARIANT }}
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      EXPO_PUBLIC_REST_BACKEND_URL: ${{vars.EXPO_PUBLIC_REST_BACKEND_URL}}
+      EXPO_PUBLIC_WEBSOCKET_BACKEND_URL: ${{vars.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL}}
+      EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{vars.EXPO_PUBLIC_GOOGLE_CLIENT_ID}}
+
     steps:
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
@@ -70,3 +74,7 @@ jobs:
         with:
           name: app-release
           path: ${{ github.workspace }}/cityborn-production-release.aab
+
+      - name: Submit
+        working-directory: apps/mobile
+        run: eas submit --platform android --profile production --non-interactive --path ${{ github.workspace }}/cityborn-production-release.aab
