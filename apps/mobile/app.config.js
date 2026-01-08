@@ -10,6 +10,7 @@ const IS_STAGING = process.env.APP_VARIANT === 'staging';
 const getUniqueIdentifier = () => {
   if (IS_DEVELOPMENT) return 'com.app.cityborn.dev';
   if (IS_PREVIEW) return 'com.app.cityborn.preview';
+  if (IS_STAGING) return 'com.app.cityborn.staging';
   return 'com.app.cityborn';
 };
 

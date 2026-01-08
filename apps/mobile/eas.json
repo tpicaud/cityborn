@@ -9,10 +9,9 @@
       "channel": "preview"
     },
     "staging": {
-      "distribution": "store",
+      "distribution": "internal",
       "environment": "preview",
-      "channel": "staging",
-      "autoIncrement": true
+      "channel": "staging"
     },
     "production": {
       "distribution": "store",
@@ -21,14 +20,9 @@
     }
   },
   "submit": {
-    "staging": {
-      "android": {
-        "track": "alpha"
-      }
-    },
     "production": {
       "android": {
-        "track": "production"
+        "track": "internal"
       }
     }
   }
