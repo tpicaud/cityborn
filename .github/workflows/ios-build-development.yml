@@ -55,7 +55,7 @@ jobs:
         working-directory: apps/mobile
         run: |
           VERSION=$(npx expo config --json | jq -r '.version')
-          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.versionCode')
+          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.buildNumber')
 
           IPA_NAME=cityborn_development_v${VERSION}_${VERSION_CODE}.ipa
           IPA_PATH=${{ github.workspace }}/${IPA_NAME}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Build iOS app
         working-directory: apps/mobile
-        run: eas build --platform ios --profile development --local --output ${{ steps.ipa.outputs.ipa_path }}
+        run: eas build --platform ios --profile development --local --non-interactive --output ${{ steps.ipa.outputs.ipa_path }}
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
