@@ -108,17 +108,19 @@ const Results = ({
   }
 
   return (
-    <View className="flex-1 w-full">
+    <View className="flex-1 w-full gap-4">
       {/* Titre + messages */}
       <View className="p-4 w-full items-center">
-        <Text className="text-2xl p-2">
+        <Text className="text-2xl p-2 mb-2">
           <Text className="font-bold text-4xl">
             {calculateTotalPoints(localPlayerResults)}
           </Text>{' '}
           pts
         </Text>
-        <Text>{sentence.sub_message_1}</Text>
-        <Text>{sentence.message}</Text>
+        <Text className="text-center">
+          {sentence.sub_message_1}
+          {sentence.message}
+        </Text>
       </View>
       {playersResults.size > 1 ? (
         <View className="flex flex-col p-4">
