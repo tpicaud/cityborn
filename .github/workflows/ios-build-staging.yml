@@ -1,4 +1,4 @@
-name: Build Development iOS App
+name: Build Staging iOS App
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    environment: Mobile - Development
+    environment: Mobile - Staging
     env:
       APP_VARIANT: ${{ vars.APP_VARIANT }}
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
@@ -32,10 +32,6 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Check environment variables
-        working-directory: apps/mobile
-        run: pnpm check-env
-
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
@@ -48,16 +44,16 @@ jobs:
 
       - name: Syncing app version code
         working-directory: apps/mobile
-        run: eas build:version:sync --platform ios --profile development
+        run: eas build:version:sync --platform ios --profile staging
 
       - name: Compute IPA name
         id: ipa
         working-directory: apps/mobile
         run: |
           VERSION=$(npx expo config --json | jq -r '.version')
-          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.versionCode')
+          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.buildNumber')
 
-          IPA_NAME=cityborn_development_v${VERSION}_${VERSION_CODE}.ipa
+          IPA_NAME=cityborn_staging_v${VERSION}_${VERSION_CODE}.ipa
           IPA_PATH=${{ github.workspace }}/${IPA_NAME}
 
           echo "ipa_name=$IPA_NAME" >> $GITHUB_OUTPUT
@@ -67,7 +63,7 @@ jobs:
 
       - name: Build iOS app
         working-directory: apps/mobile
-        run: eas build --platform ios --profile development --local --output ${{ steps.ipa.outputs.ipa_path }}
+        run: eas build --platform ios --profile staging --local --non-interactive --output ${{ steps.ipa.outputs.ipa_path }}
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
