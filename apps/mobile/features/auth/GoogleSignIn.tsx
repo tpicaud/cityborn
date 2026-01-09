@@ -11,7 +11,8 @@ import { useState } from 'react';
 import { Pressable, Image } from 'react-native';
 
 GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
 });
 
 export const SignInWithGoogleButton = () => {
