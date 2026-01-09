@@ -153,3 +153,4 @@ z# Heure de travail
 | 05/01/2026 | 4h          | Mise à jour des workflows et préparation Mise En Prod (MEP)                                                                  |
 | 06/01/2026 | 7h          | MEP pour back office front et back + workflow eas                                                                            |
 | 07/01/2026 | 8h          | Publication play store prod + continuation workflows                                                                         |
+| 08/01/2026 | 8h          | Réarrangement des testing tracks Google Play Console + préparation déploiement iOS                                           |
