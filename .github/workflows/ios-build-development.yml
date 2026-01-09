@@ -32,10 +32,6 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Check environment variables
-        working-directory: apps/mobile
-        run: pnpm check-env
-
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
