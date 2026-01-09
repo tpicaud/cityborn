@@ -82,3 +82,7 @@ jobs:
         with:
           name: ${{ steps.ipa.outputs.ipa_name }}
           path: ${{ steps.ipa.outputs.ipa_path }}
+
+      - name: Submit
+        working-directory: apps/mobile
+        run: eas submit --platform ios --profile production --non-interactive --path ${{ steps.ipa.outputs.ipa_path }}
