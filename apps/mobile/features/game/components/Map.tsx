@@ -217,6 +217,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         userInterfaceStyle="light"
         rotateEnabled={false}
         poiClickEnabled={false}
+        onPanDrag={() => {}}
         initialCamera={{
           center: {
             latitude: 15,
