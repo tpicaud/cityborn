@@ -227,6 +227,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           pitch: 0,
           heading: 0,
         }}
+        onPoiClick={(e) => handleMapPress(e)}
         onPress={(e) => {
           if (currentRound.status === RoundStatus.GUESSING && !localGuess)
             handleMapPress(e);
