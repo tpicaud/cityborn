@@ -87,4 +87,4 @@ jobs:
 
       - name: Submit
         working-directory: apps/mobile
-        run: eas submit --platform ios --profile production --non-interactive --path ${{ steps.ipa.outputs.ipa_path }}
+        run: eas submit --platform ios --profile production --non-interactive --path ${{ steps.ipa.outputs.ipa_path }} --no-wait
