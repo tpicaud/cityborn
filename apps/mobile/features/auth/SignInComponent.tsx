@@ -115,8 +115,11 @@ export const SignInComponent = () => {
           <Text>OU</Text>
           <View className="flex-1 h-px bg-foreground" />
         </View>
-        <SignInWithGoogleButton />
-        {Platform.OS === 'ios' && <SignInWithAppleButton />}
+
+        <View className="flex flex-col gap-4 justify-center items-center">
+          <SignInWithGoogleButton />
+          {Platform.OS === 'ios' && <SignInWithAppleButton />}
+        </View>
       </View>
     </KeyboardAwareScrollView>
   );
