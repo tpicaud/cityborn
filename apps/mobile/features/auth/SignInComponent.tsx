@@ -8,6 +8,8 @@ import TextInput from '@/components/ui/TextInput';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { SignInWithAppleButton } from './AppleSignIn';
+import { Platform } from 'react-native';
 
 interface FormValues {
   username: string;
@@ -114,6 +116,7 @@ export const SignInComponent = () => {
           <View className="flex-1 h-px bg-foreground" />
         </View>
         <SignInWithGoogleButton />
+        {Platform.OS === 'ios' && <SignInWithAppleButton />}
       </View>
     </KeyboardAwareScrollView>
   );
