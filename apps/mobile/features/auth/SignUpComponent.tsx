@@ -9,6 +9,8 @@ import { View, Text } from '@/components/ui/native/NativeComponents';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Platform } from 'react-native';
+import { SignInWithAppleButton } from './AppleSignIn';
 
 interface FormValues {
   username: string;
@@ -291,7 +293,11 @@ export const SignUpComponent = () => {
           <Text>OU</Text>
           <View className="flex-1 h-px bg-foreground" />
         </View>
-        <SignInWithGoogleButton />
+
+        <View className="flex flex-col gap-4 justify-center items-center">
+          <SignInWithGoogleButton />
+          {Platform.OS === 'ios' && <SignInWithAppleButton />}
+        </View>
       </View>
     </KeyboardAwareScrollView>
   );
