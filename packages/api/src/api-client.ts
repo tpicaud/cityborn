@@ -88,9 +88,13 @@ export class ApiClient {
 
   async signInWithApple(
     apple_user_id: string,
-    email: string,
-    family_name: string,
-    given_name: string,
+    details:
+      | {
+          email: string;
+          family_name: string;
+          given_name: string;
+        }
+      | undefined,
   ) {
     const res = await this.authFetch.post<{
       access_token: string;
@@ -98,7 +102,7 @@ export class ApiClient {
       user: User;
     }>(
       '/auth/sign-in-with-apple',
-      { apple_user_id, email, family_name, given_name },
+      { apple_user_id, details },
       { includeAuth: false },
     );
 
