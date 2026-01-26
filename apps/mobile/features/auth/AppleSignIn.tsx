@@ -1,10 +1,15 @@
 import { apiClient } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@cityborn/contexts';
+import { ApiError, ErrorCode } from '@cityborn/errors';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 export const SignInWithAppleButton = () => {
+  const { setUser } = useAuth();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const signIn = async () => {
@@ -17,17 +22,44 @@ export const SignInWithAppleButton = () => {
       });
       console.log(credential);
 
-      apiClient.signInWithApple(
+      let user_details:
+        | {
+            email: string;
+            family_name: string;
+            given_name: string;
+          }
+        | undefined = undefined;
+
+      if (
+        credential.email &&
+        credential.fullName &&
+        credential.fullName.familyName &&
+        credential.fullName.givenName
+      ) {
+        user_details = {
+          email: credential.email,
+          family_name: credential.fullName.familyName,
+          given_name: credential.fullName.givenName,
+        };
+      }
+
+      const user = await apiClient.signInWithApple(
         credential.user,
-        credential.email || '',
-        credential.fullName?.familyName || '',
-        credential.fullName?.givenName || '',
+        user_details,
       );
+
+      setUser(user);
+      router.push('/');
     } catch (e: any) {
       if (e.code === 'ERR_REQUEST_CANCELED') {
         console.log('Apple sign in canceled by user');
       } else {
         console.error(e);
+        throw new ApiError(
+          ErrorCode.USER_INVALID_CREDENTIALS,
+          'Google sign in failed',
+          401,
+        );
       }
     }
   };
