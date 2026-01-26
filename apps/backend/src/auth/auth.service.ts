@@ -23,6 +23,7 @@ import { ErrorCode } from '@cityborn/errors';
 import { createEvent, CreateEvent } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
 import { EventService } from 'src/event/event.service';
+import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
 
 @Injectable()
 export class AuthService {
@@ -194,6 +195,81 @@ export class AuthService {
             },
           }),
         );
+      }
+    } else {
+      // Send event
+      if (visitorId) {
+        await this.eventService.trackEvent(
+          createEvent({
+            name: 'user_signed_in',
+            visitorId,
+            properties: {
+              method: 'google',
+            },
+          }),
+        );
+      }
+    }
+
+    const access_token = await this.generateToken(
+      'access',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+    const refresh_token = await this.generateToken(
+      'refresh',
+      user.id,
+      user.username,
+      user.email,
+      user.isVerified,
+    );
+
+    return {
+      access_token,
+      refresh_token,
+      user: UserMapper.toUserDto(user),
+    };
+  }
+
+  async signInWithApple(dto: SignInWithAppleDto, visitorId?: string) {
+    // Vérifie si l’utilisateur existe déjà
+    let user = await this.userService.findByAppleId(dto.apple_user_id);
+
+    if (!user) {
+      if (!dto.details) {
+        throw new UnauthorizedException({
+          code: ErrorCode.USER_INVALID_CREDENTIALS,
+          message: `Invalid credentials`,
+        });
+      }
+
+      user = await this.userService.findByIdentifier(dto.details.email);
+      if (!user) {
+        const uniqueUsername = await this.generateUniqueUsername(
+          `${dto.details.family_name}${dto.details.given_name}`,
+        );
+
+        user = await this.userService.createUser({
+          email: dto.details.email,
+          username: uniqueUsername,
+          type: 'google',
+          isVerified: true,
+        });
+
+        // Send event
+        if (visitorId) {
+          await this.eventService.trackEvent(
+            createEvent({
+              name: 'user_signed_up',
+              visitorId,
+              properties: {
+                method: 'google',
+              },
+            }),
+          );
+        }
       }
     } else {
       // Send event
