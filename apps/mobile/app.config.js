@@ -52,6 +52,7 @@ export default {
       bundleIdentifier: getUniqueIdentifier(),
       supportsTablet: true,
       userInterfaceStyle: 'light',
+      usesAppleSignIn: true,
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY,
       },
@@ -81,6 +82,7 @@ export default {
     plugins: [
       'expo-router',
       ['./expo-plugins/withGradleProperties'],
+      ['expo-apple-authentication'],
       [
         'expo-build-properties',
         {

@@ -86,6 +86,34 @@ export class ApiClient {
     return res.user;
   }
 
+  async signInWithApple(
+    identity_token: string,
+    apple_user_id: string,
+    details:
+      | {
+          email: string;
+          family_name: string;
+          given_name: string;
+        }
+      | undefined,
+  ) {
+    const res = await this.authFetch.post<{
+      access_token: string;
+      refresh_token: string;
+      user: User;
+    }>(
+      '/auth/sign-in-with-apple',
+      { identity_token, apple_user_id, details },
+      { includeAuth: false },
+    );
+
+    await this.authFetch.tokenStorage.setTokens(
+      res.access_token,
+      res.refresh_token,
+    );
+    return res.user;
+  }
+
   async sendVerificationEmail() {
     await this.authFetch.post<void>('/auth/send-verification-email');
   }

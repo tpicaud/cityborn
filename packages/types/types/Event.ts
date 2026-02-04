@@ -3,6 +3,7 @@
 
 import { SessionMode } from '../enums/SessionMode.js';
 import { Category } from './Category.js';
+import { AccountType } from './User.js';
 
 ///////////////////
 export interface EventMap {
@@ -10,10 +11,10 @@ export interface EventMap {
   // Connection //
   ////////////////
   user_signed_up: {
-    method: 'email' | 'google';
+    method: AccountType;
   };
   user_signed_in: {
-    method: 'email' | 'google';
+    method: AccountType;
   };
   user_new_connection: {};
 
