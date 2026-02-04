@@ -87,6 +87,7 @@ export class ApiClient {
   }
 
   async signInWithApple(
+    identity_token: string,
     apple_user_id: string,
     details:
       | {
@@ -102,7 +103,7 @@ export class ApiClient {
       user: User;
     }>(
       '/auth/sign-in-with-apple',
-      { apple_user_id, details },
+      { identity_token, apple_user_id, details },
       { includeAuth: false },
     );
 

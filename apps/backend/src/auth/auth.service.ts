@@ -24,6 +24,7 @@ import { createEvent, CreateEvent } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
 import { EventService } from 'src/event/event.service';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import { verifyAppleIdToken } from './utils';
 
 @Injectable()
 export class AuthService {
@@ -234,27 +235,37 @@ export class AuthService {
   }
 
   async signInWithApple(dto: SignInWithAppleDto, visitorId?: string) {
+    const { identity_token, apple_user_id, details } = dto;
+
+    if (!(await verifyAppleIdToken(identity_token, process.env.APP_ID!))) {
+      throw new UnauthorizedException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'Bad request',
+      });
+    }
+
     // Vérifie si l’utilisateur existe déjà
-    let user = await this.userService.findByAppleId(dto.apple_user_id);
+    let user = await this.userService.findByAppleId(apple_user_id);
 
     if (!user) {
-      if (!dto.details) {
+      if (!details) {
         throw new UnauthorizedException({
           code: ErrorCode.USER_INVALID_CREDENTIALS,
           message: `Invalid credentials`,
         });
       }
 
-      user = await this.userService.findByIdentifier(dto.details.email);
+      user = await this.userService.findByIdentifier(details.email);
       if (!user) {
         const uniqueUsername = await this.generateUniqueUsername(
-          `${dto.details.family_name}${dto.details.given_name}`,
+          `${details.given_name}${details.family_name}`,
         );
 
         user = await this.userService.createUser({
-          email: dto.details.email,
+          email: details.email,
           username: uniqueUsername,
-          type: 'google',
+          type: 'apple',
+          appleId: apple_user_id,
           isVerified: true,
         });
 
@@ -265,7 +276,7 @@ export class AuthService {
               name: 'user_signed_up',
               visitorId,
               properties: {
-                method: 'google',
+                method: 'apple',
               },
             }),
           );
@@ -279,7 +290,7 @@ export class AuthService {
             name: 'user_signed_in',
             visitorId,
             properties: {
-              method: 'google',
+              method: 'apple',
             },
           }),
         );

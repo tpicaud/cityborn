@@ -1,7 +1,9 @@
 import { Request } from 'express';
 import * as cookie from 'cookie';
 import { Socket } from 'socket.io';
-
+import * as jwksRsa from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
+import { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
 export function extractTokenFromHTTPHeader(
   request: Request,
 ): string | undefined {
@@ -25,4 +27,50 @@ export function extractAccessTokenFromWsClient(
   }
 
   return undefined;
+}
+
+// Configuration optimale
+const client = jwksRsa({
+  jwksUri: 'https://appleid.apple.com/auth/keys',
+  cache: true,
+  cacheMaxAge: 86400000, // 24h
+  rateLimit: true,
+  jwksRequestsPerMinute: 10,
+});
+
+function getKey(header: JwtHeader, callback: SigningKeyCallback): void {
+  client.getSigningKey(header.kid, (err, key?: jwksRsa.SigningKey) => {
+    if (err) {
+      return callback(err);
+    }
+
+    if (!key) {
+      return callback(new Error('No signing key found'));
+    }
+
+    const signingKey = key.getPublicKey();
+    callback(null, signingKey);
+  });
+}
+
+export async function verifyAppleIdToken(
+  idToken: string,
+  audience: string,
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    jwt.verify(
+      idToken,
+      getKey,
+      {
+        issuer: 'https://appleid.apple.com',
+        audience: audience,
+        algorithms: ['RS256'],
+      },
+      (err, decoded) => {
+        if (err) return reject(err);
+        console.log(decoded);
+        resolve(decoded);
+      },
+    );
+  });
 }
