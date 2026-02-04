@@ -1,6 +1,6 @@
 import { GameRecord } from './Game.js';
 
-export type AccountType = 'email' | 'google';
+export type AccountType = 'email' | 'google' | 'apple';
 
 export class PublicUser {
   /////////////

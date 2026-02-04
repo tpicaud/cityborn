@@ -15,6 +15,9 @@ export class AppleUserDetailsDto {
 
 export class SignInWithAppleDto {
   @IsString()
+  identity_token: string;
+
+  @IsString()
   apple_user_id: string;
 
   @Optional()

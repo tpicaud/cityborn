@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@cityborn/contexts';
 import { ApiError, ErrorCode } from '@cityborn/errors';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -20,48 +21,79 @@ export const SignInWithAppleButton = () => {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      console.log(credential);
 
-      let user_details:
-        | {
-            email: string;
-            family_name: string;
-            given_name: string;
-          }
-        | undefined = undefined;
-
-      if (
-        credential.email &&
-        credential.fullName &&
-        credential.fullName.familyName &&
-        credential.fullName.givenName
-      ) {
-        user_details = {
-          email: credential.email,
-          family_name: credential.fullName.familyName,
-          given_name: credential.fullName.givenName,
-        };
+      // Validation : identityToken est requis
+      if (!credential.identityToken) {
+        throw new ApiError(
+          ErrorCode.USER_INVALID_CREDENTIALS,
+          'Apple did not provide an identity token',
+          401,
+        );
       }
 
+      // Extraire les détails utilisateur (seulement première connexion)
+      const userDetails = extractAppleUserDetails(credential);
+
+      // Authentification via l'API
       const user = await apiClient.signInWithApple(
+        credential.identityToken,
         credential.user,
-        user_details,
+        userDetails,
       );
 
       setUser(user);
       router.push('/');
     } catch (e: any) {
-      if (e.code === 'ERR_REQUEST_CANCELED') {
-        console.log('Apple sign in canceled by user');
-      } else {
-        console.error(e);
-        throw new ApiError(
-          ErrorCode.USER_INVALID_CREDENTIALS,
-          'Google sign in failed',
-          401,
-        );
-      }
+      handleAppleSignInError(e);
     }
+  };
+
+  // Fonction helper pour extraire les détails utilisateur
+  function extractAppleUserDetails(
+    credential: AppleAuthenticationCredential,
+  ): AppleUserDetails | undefined {
+    const { email, fullName } = credential;
+
+    // Retourner undefined si les infos sont incomplètes
+    if (!email || !fullName?.familyName || !fullName?.givenName) {
+      return undefined;
+    }
+
+    return {
+      email,
+      family_name: fullName.familyName,
+      given_name: fullName.givenName,
+    };
+  }
+
+  // Fonction helper pour la gestion d'erreur
+  function handleAppleSignInError(error: any): never {
+    if (error.code === 'ERR_REQUEST_CANCELED') {
+      // L'utilisateur a annulé - ne pas afficher d'erreur
+      console.log('Apple sign in canceled by user');
+      throw error; // Ou return si tu veux gérer différemment
+    }
+
+    console.error('Apple sign in error:', error);
+
+    // Si c'est déjà une ApiError, la relancer
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    // Sinon, créer une nouvelle ApiError
+    throw new ApiError(
+      ErrorCode.USER_INVALID_CREDENTIALS,
+      'Apple sign in failed',
+      401,
+    );
+  }
+
+  // Types
+  type AppleUserDetails = {
+    email: string;
+    family_name: string;
+    given_name: string;
   };
 
   const handlePress = async () => {
