@@ -18,6 +18,7 @@ import { CurrentUser } from 'src/user/user.decorator';
 import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
 import { User } from '@cityborn/types';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
+import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +47,18 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     return await this.authService.signInWithGoogle(
       signInWithGoogleDto,
+      visitorId,
+    );
+  }
+
+  @Post('sign-in-with-apple')
+  async signInWithApple(
+    @Body() signInWithAppleDto: SignInWithAppleDto,
+    @VisitorId() visitorId?: string,
+  ): Promise<AuthResponseDto> {
+    console.log('in');
+    return await this.authService.signInWithApple(
+      signInWithAppleDto,
       visitorId,
     );
   }

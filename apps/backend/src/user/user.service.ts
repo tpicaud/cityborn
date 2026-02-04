@@ -24,6 +24,7 @@ export class UserService {
     isVerified?: boolean;
     password?: string;
     birthdate?: string;
+    appleId?: string;
   }): Promise<PrismaUser> {
     return await this.prisma.user.create({ data });
   }
@@ -38,6 +39,14 @@ export class UserService {
 
   async findById(id: string): Promise<PrismaUser | null> {
     return await this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async findByAppleId(apple_user_id): Promise<PrismaUser | null> {
+    return await this.prisma.user.findFirst({
+      where: {
+        appleId: apple_user_id,
+      },
+    });
   }
 
   async validateIdentifiers(username: string, email: string): Promise<void> {
