@@ -23,6 +23,7 @@ jobs:
       EXPO_PUBLIC_WEBSOCKET_BACKEND_URL: ${{vars.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL}}
       EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: ${{vars.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID}}
       EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{vars.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID}}
+
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
@@ -86,4 +87,4 @@ jobs:
 
       - name: Submit
         working-directory: apps/mobile
-        run: eas submit --platform ios --profile production --non-interactive --path ${{ steps.ipa.outputs.ipa_path }}
+        run: eas submit --platform ios --profile production --non-interactive --path ${{ steps.ipa.outputs.ipa_path }} --no-wait
