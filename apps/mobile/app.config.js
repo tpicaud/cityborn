@@ -58,6 +58,8 @@ export default {
       },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSLocationWhenInUseUsageDescription:
+          'Nous n’utilisons pas votre position actuellement.',
       },
     },
 
