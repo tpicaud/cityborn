@@ -5,15 +5,26 @@ import {
   Request,
   Post,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Delete()
+  @UseGuards(AuthGuard)
+  async deleteUser(
+    @Request() req,
+    @Body() deleteUserDto: DeleteUserDto,
+  ): Promise<void> {
+    return this.userService.deleteUser(req.user.id, deleteUserDto);
+  }
 
   @Get('game-records')
   @UseGuards(AuthGuard)
