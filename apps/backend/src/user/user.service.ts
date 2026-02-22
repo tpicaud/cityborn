@@ -12,8 +12,6 @@ import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
 import { AccountType, SessionMode } from '@cityborn/types';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
-import { DeleteUserDto } from './dto/delete-user.dto';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -31,35 +29,7 @@ export class UserService {
     return await this.prisma.user.create({ data });
   }
 
-  async deleteUser(
-    user_id: string,
-    delete_user_dto: DeleteUserDto,
-  ): Promise<void> {
-    const { password } = delete_user_dto;
-
-    // Find user
-    const user = await this.findById(user_id);
-    if (!user)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: `Invalid credentials`,
-      });
-
-    // Check if vanilla account
-    if (!user.password)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: `Invalid credentials`,
-      });
-
-    // Validate password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: `Invalid credentials`,
-      });
-
+  async deleteUser(user_id: string): Promise<void> {
     await this.prisma.user.delete({
       where: { id: user_id },
     });

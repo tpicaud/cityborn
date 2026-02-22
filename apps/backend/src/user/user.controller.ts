@@ -11,7 +11,6 @@ import { UserService } from './user.service';
 import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
-import { DeleteUserDto } from './dto/delete-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -19,11 +18,8 @@ export class UserController {
 
   @Delete()
   @UseGuards(AuthGuard)
-  async deleteUser(
-    @Request() req,
-    @Body() deleteUserDto: DeleteUserDto,
-  ): Promise<void> {
-    return this.userService.deleteUser(req.user.id, deleteUserDto);
+  async deleteUser(@Request() req): Promise<void> {
+    return this.userService.deleteUser(req.user.id);
   }
 
   @Get('game-records')

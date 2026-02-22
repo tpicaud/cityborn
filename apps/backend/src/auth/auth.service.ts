@@ -20,7 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
-import { createEvent, CreateEvent } from '@cityborn/types';
+import { createEvent } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
 import { EventService } from 'src/event/event.service';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
