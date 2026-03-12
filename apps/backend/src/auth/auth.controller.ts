@@ -19,6 +19,7 @@ import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
 import { User } from '@cityborn/types';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import { DeleteUserDto } from 'src/user/dto/delete-user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -86,5 +87,11 @@ export class AuthController {
   async getProfile(@Request() req): Promise<PublicUserResponseDto> {
     const identifier = req.user.username || req.user.email;
     return await this.authService.getProfile(identifier);
+  }
+
+  @Post('delete-user')
+  @UseGuards(NotVerifiedAuthGuard)
+  async deleteUser(@CurrentUser() user?: User): Promise<void> {
+    return await this.authService.deleteUser(user);
   }
 }
