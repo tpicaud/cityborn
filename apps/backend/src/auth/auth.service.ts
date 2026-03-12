@@ -20,11 +20,12 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
-import { createEvent } from '@cityborn/types';
+import { createEvent, User } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
 import { EventService } from 'src/event/event.service';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
 import { verifyAppleIdToken } from './utils';
+import { DeleteUserDto } from 'src/user/dto/delete-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -382,6 +383,15 @@ export class AuthService {
     return {
       user: UserMapper.toUserDto(user),
     };
+  }
+
+  async deleteUser(user?: User): Promise<void> {
+    if (!user)
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User not found`,
+      });
+    await this.userService.deleteUser(user.id);
   }
 
   // Auxiliary
