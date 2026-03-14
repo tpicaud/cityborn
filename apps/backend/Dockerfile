@@ -31,7 +31,6 @@ FROM node:23-alpine AS runner
 WORKDIR /app
 
 RUN npm install -g pnpm
-RUN pnpm install turbo
 
 # Copier les fichiers nécessaires au runtime
 COPY --from=builder /app/apps /app/apps
