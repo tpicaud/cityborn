@@ -124,6 +124,10 @@ export class ApiClient {
     });
   }
 
+  async deleteUser() {
+    await this.authFetch.post<void>('/auth/delete-user');
+  }
+
   //////////////////
   // User service //
   //////////////////

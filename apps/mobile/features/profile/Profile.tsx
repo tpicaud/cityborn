@@ -1,21 +1,27 @@
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import Dialog from '@/components/ui/Dialog';
+import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View, Text } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
-import { useAuth } from '@cityborn/contexts';
+import { useAuth, useError } from '@cityborn/contexts';
+import { colors } from '@cityborn/design-system';
 import { GameRecord } from '@cityborn/types';
 import { calculateTotalPoints, isoToLocalDate } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const { invokeError } = useError();
   const router = useRouter();
   const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] =
+    useState<boolean>(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,6 +33,7 @@ export default function Profile() {
 
   const fetchGameRecords = async () => {
     if (!user) return;
+    console.log('Fetching game records for user:', user);
     try {
       setLoading(true);
       const gameRecords = await apiClient.getGameRecords();
@@ -35,6 +42,19 @@ export default function Profile() {
       console.error('Failed to fetch game records:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    try {
+      await apiClient.deleteUser();
+      await apiClient.signOut();
+      setUser(null);
+      setDeleteAccountModalOpen(false);
+      router.replace('/');
+    } catch (error: any) {
+      invokeError(error);
     }
   };
 
@@ -62,7 +82,7 @@ export default function Profile() {
         </View>
       ) : (
         <View className="flex-1 gap-8 mt-10">
-          <View className="flex-1">
+          <View className="flex-1 gap-4">
             <Text className="text-5xl font-bold text-center py-15 pb-8">
               {user.username}
             </Text>
@@ -102,6 +122,12 @@ export default function Profile() {
                 </View>
               </View>
             </Card>
+            <Button
+              variant="default"
+              label="Supprimer mon compte"
+              className="self-center"
+              onPress={() => setDeleteAccountModalOpen(true)}
+            />
           </View>
           <View className="flex-1">
             <Text className="text-center text-xl font-bold mb-2">
@@ -146,6 +172,34 @@ export default function Profile() {
           </View>
         </View>
       )}
+      <Dialog
+        visible={deleteAccountModalOpen}
+        onClose={() => setDeleteAccountModalOpen(false)}
+        className="h-auto"
+      >
+        <View className="flex justify-center items-center gap-4">
+          <View className="flex justify-center items-center gap-4">
+            <Icon name="alert_fill" size={40} color={colors.destructive[500]} />
+            <Text className="text-lg text-center">
+              Voux-tu vraiment supprimer ton compte ?
+            </Text>
+          </View>
+          <View className="flex flex- gap-2">
+            <Button
+              variant="outlined"
+              color="destructive"
+              label="Annuler"
+              onPress={() => setDeleteAccountModalOpen(false)}
+            />
+            <Button
+              variant="filled"
+              color="destructive"
+              label="Supprimer"
+              onPress={async () => await handleDeleteAccount()}
+            />
+          </View>
+        </View>
+      </Dialog>
     </View>
   );
 }
