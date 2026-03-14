@@ -29,6 +29,12 @@ export class UserService {
     return await this.prisma.user.create({ data });
   }
 
+  async deleteUser(user_id: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id: user_id },
+    });
+  }
+
   async findByIdentifier(identifier: string): Promise<PrismaUser | null> {
     return await this.prisma.user.findFirst({
       where: {
