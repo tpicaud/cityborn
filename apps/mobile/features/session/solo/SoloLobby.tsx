@@ -38,6 +38,14 @@ export function SoloLobby({
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    handleUpdateGameConfig({
+      categories: categories.filter((cat) =>
+        selectedCategories.includes(cat.id),
+      ),
+    });
+  }, [selectedCategories]);
+
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
