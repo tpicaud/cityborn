@@ -1,0 +1,22 @@
+name: Deploy Staging Backend to Railway
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy
+        run: railway up --service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID }} --environment=staging --dockerfile=apps/backend/Dockerfile
+
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
