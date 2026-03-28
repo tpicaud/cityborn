@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: Mobile - Staging
+    environment: staging
     steps:
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
