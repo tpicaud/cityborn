@@ -8,7 +8,7 @@ on:
     paths:
       - 'apps/backend/**'
       - 'packages/types/**'
-      - 'package/errors/**'
+      - 'packages/errors/**'
 
 jobs:
   deploy:
