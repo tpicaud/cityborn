@@ -5,10 +5,16 @@ on:
   push:
     branches:
       - staging
+    paths:
+      - 'apps/backend/**'
+      - 'packages/types/**'
+      - 'package/errors/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: staging
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,6 +23,5 @@ jobs:
 
       - name: Deploy
         run: railway up --service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID }} --environment=staging --ci
-
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
