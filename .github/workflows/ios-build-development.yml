@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    environment: Mobile - Development
+    environment: development
     env:
       APP_VARIANT: ${{ vars.APP_VARIANT }}
       GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
