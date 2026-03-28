@@ -9,10 +9,6 @@ export class UserDto extends PublicUserDto {
 
   @IsString()
   @IsOptional()
-  birthdate?: string;
-
-  @IsString()
-  @IsOptional()
   createdAt?: string;
 
   @IsString()

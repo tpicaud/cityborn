@@ -96,20 +96,6 @@ export default function Profile() {
                     {user.email}
                   </Text>
                 </View>
-                {user.birthdate && (
-                  <View className="flex flex-col justify-center items-center bg-transparent">
-                    <Text className="font-bold text-foreground-on-primary">
-                      Date de naissance
-                    </Text>
-                    <Text className="text-foreground-on-primary">
-                      {new Date(user.birthdate).toLocaleDateString('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </Text>
-                  </View>
-                )}
                 <View className="flex flex-col justify-center items-center bg-transparent">
                   <Text className="font-bold text-foreground-on-primary">
                     Status
