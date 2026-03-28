@@ -21,7 +21,6 @@ export class UserMapper {
       id: prismaUser.id,
       email: prismaUser.email,
       username: prismaUser.username,
-      birthdate: prismaUser.birthdate?.toISOString(),
       createdAt: prismaUser.createdAt.toISOString(),
       updatedAt: prismaUser.updatedAt
         ? prismaUser.updatedAt.toISOString()

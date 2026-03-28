@@ -15,7 +15,6 @@ import { SignInWithAppleButton } from './AppleSignIn';
 interface FormValues {
   username: string;
   email: string;
-  birthdate: Date | null;
   password: string;
   confirmPassword: string;
 }
@@ -26,7 +25,6 @@ export const SignUpComponent = () => {
   const [formValues, setFormValues] = useState<FormValues>({
     username: '',
     email: '',
-    birthdate: null,
     password: '',
     confirmPassword: '',
   });
@@ -41,7 +39,7 @@ export const SignUpComponent = () => {
   const handleChange = (key: keyof FormValues, value: any) => {
     setFormValues({
       ...formValues,
-      [key]: key === 'birthdate' ? new Date(value) : value,
+      [key]: value,
     });
     setErrors({ ...errors, [key]: null });
   };
@@ -66,14 +64,6 @@ export const SignUpComponent = () => {
             newErrors.email = 'Email invalide';
           } else {
             delete newErrors.email;
-          }
-          break;
-
-        case 'birthdate':
-          if (!value) {
-            newErrors.birthdate = 'La date de naissance est obligatoire';
-          } else {
-            delete newErrors.birthdate;
           }
           break;
 
@@ -124,7 +114,6 @@ export const SignUpComponent = () => {
   const validateForm = (): boolean => {
     validateInput('username', formValues.username);
     validateInput('email', formValues.email);
-    validateInput('birthdate', formValues.birthdate);
     validateInput('password', formValues.password);
     validateInput('confirmPassword', formValues.confirmPassword);
 
@@ -139,7 +128,6 @@ export const SignUpComponent = () => {
     if (
       !formValues.username ||
       !formValues.email ||
-      !formValues.birthdate ||
       !formValues.password ||
       !formValues.confirmPassword
     ) {
@@ -152,7 +140,6 @@ export const SignUpComponent = () => {
     try {
       const user = await apiClient.signUp({
         ...formValues,
-        birthdate: formValues.birthdate!.toISOString(),
       });
       setUser(user);
       router.push('/');
@@ -206,36 +193,6 @@ export const SignUpComponent = () => {
               {errors.email && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
                   {errors.email}
-                </Text>
-              )}
-            </View>
-
-            <View className="w-full relative">
-              <TextInput
-                onPress={() => setShowDatePicker(true)}
-                onBlur={(text) => validateInput('birthdate', text)}
-                placeholder="Sélectionner une date"
-                value={
-                  formValues.birthdate
-                    ? formValues.birthdate.toLocaleDateString()
-                    : ''
-                }
-                error={!!errors.birthdate}
-              />
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={formValues.birthdate ?? new Date(Date.now())}
-                  is24Hour={true}
-                  onChange={(_event: any, selectedDate: Date | undefined) => {
-                    if (selectedDate) handleChange('birthdate', selectedDate);
-                    setShowDatePicker(false);
-                  }}
-                />
-              )}
-              {errors.birthdate && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.birthdate}
                 </Text>
               )}
             </View>
