@@ -7,7 +7,7 @@ on:
     paths:
       - 'apps/mobile/**'
       - 'packages/types/**'
-      - 'package/errors/**'
+      - 'packages/errors/**'
   workflow_dispatch:
 
 jobs:
