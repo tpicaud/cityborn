@@ -62,11 +62,6 @@ export const ProfileComponent = ({ user }: { user: User }) => {
         <Typography>
           <strong>Email:</strong> {user.email}
         </Typography>
-        {user.birthdate && (
-          <Typography>
-            <strong>Date de naissance:</strong> {user.birthdate.split('T')[0]}
-          </Typography>
-        )}
         <Typography>
           <strong>Email vérifié:</strong>{' '}
           {user.isVerified ? '✅ Oui' : '❌ Non'}

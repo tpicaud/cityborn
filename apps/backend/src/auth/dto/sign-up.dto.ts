@@ -17,9 +17,6 @@ export class SignUpDto {
   @IsEmail()
   email: string;
 
-  @IsDateString()
-  birthdate: string;
-
   @IsString()
   @MinLength(6)
   @MaxLength(32)

@@ -48,7 +48,6 @@ export class ApiClient {
   async signUp(
     username: string,
     email: string,
-    birthdate: Date,
     password: string,
   ): Promise<void> {
     const response = await this.apiFetch(`/api/auth/sign-up`, {
@@ -56,7 +55,7 @@ export class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, email, birthdate, password }),
+      body: JSON.stringify({ username, email, password }),
     });
 
     const data = await response.json();
