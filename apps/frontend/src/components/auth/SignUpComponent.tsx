@@ -2,17 +2,13 @@
 
 import * as React from 'react';
 import { Box, FormControl, TextField, Button, Typography } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { LocalizationProvider } from 'node_modules/@mui/x-date-pickers/esm/LocalizationProvider/LocalizationProvider';
 import { useError } from '@/contexts/ErrorContext';
 import { useApi } from '@/contexts/ApiContext';
 
 interface FormValues {
   username: string;
   email: string;
-  birthdate: Date | null; // ✅ corrige le type
   password: string;
   confirmPassword: string;
 }
@@ -59,7 +55,6 @@ export const SignUpComponent = ({
   const [formValues, setFormValues] = React.useState<FormValues>({
     username: '',
     email: '',
-    birthdate: null,
     password: '',
     confirmPassword: '',
   });
@@ -67,7 +62,6 @@ export const SignUpComponent = ({
   const [touched, setTouched] = React.useState({
     username: false,
     email: false,
-    birthdate: false,
     password: false,
     confirmPassword: false,
   });
@@ -89,11 +83,6 @@ export const SignUpComponent = ({
       setIsSignUpFormSubmitting(false);
       return;
     }
-    if (!formValues.birthdate) {
-      alert("La date de naissance n'est pas rempli");
-      setIsSignUpFormSubmitting(false);
-      return;
-    }
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
     if (!passwordRegex.test(formValues.password)) {
@@ -108,7 +97,6 @@ export const SignUpComponent = ({
       await apiClient.signUp(
         formValues.username,
         formValues.email,
-        formValues.birthdate,
         formValues.password,
       );
       setSentVerificationEmail(true);
@@ -159,29 +147,6 @@ export const SignUpComponent = ({
           error={touched.email && !formValues.email}
         />
       </FormControl>
-
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <FormControl>
-          <DatePicker
-            label="Date de naissance"
-            value={formValues.birthdate}
-            onChange={(newValue) =>
-              setFormValues((prev) => ({ ...prev, birthdate: newValue }))
-            }
-            minDate={new Date('1900-01-01')}
-            maxDate={new Date()}
-            slotProps={{
-              textField: {
-                required: true,
-                fullWidth: true,
-                error: touched.birthdate && !formValues.birthdate,
-                onBlur: () =>
-                  setTouched((prev) => ({ ...prev, birthdate: true })),
-              },
-            }}
-          />
-        </FormControl>
-      </LocalizationProvider>
 
       <FormControl>
         <TextField
