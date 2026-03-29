@@ -57,7 +57,6 @@ export class AuthController {
     @Body() signInWithAppleDto: SignInWithAppleDto,
     @VisitorId() visitorId?: string,
   ): Promise<AuthResponseDto> {
-    console.log('in');
     return await this.authService.signInWithApple(
       signInWithAppleDto,
       visitorId,

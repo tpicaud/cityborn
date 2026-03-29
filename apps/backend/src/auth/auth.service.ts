@@ -41,7 +41,7 @@ export class AuthService {
   ) {}
 
   async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
-    const { email, username, birthdate, password } = dto;
+    const { email, username, password } = dto;
 
     // Validate identifiers
     await this.userService.validateIdentifiers(username, email);
@@ -53,7 +53,6 @@ export class AuthService {
       email,
       username,
       type: 'email',
-      birthdate,
       password: hash,
     });
     if (!user)
