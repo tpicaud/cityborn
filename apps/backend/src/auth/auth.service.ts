@@ -362,7 +362,8 @@ export class AuthService {
         user.email,
         verification_token,
       );
-    } catch {
+    } catch(error) {
+      console.log("Error sending verification email:", error);
       return; // no error for security
     }
   }
