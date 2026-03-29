@@ -20,8 +20,6 @@ export class User extends PublicUser {
 
   email: string;
 
-  birthdate?: string;
-
   type: AccountType;
 
   createdAt?: string;
@@ -40,8 +38,6 @@ export class CreateUser {
   username: string;
 
   email: string;
-
-  birthdate: string;
 
   password: string;
 }

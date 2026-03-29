@@ -22,7 +22,6 @@ model User {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique
   username   String    @unique
-  birthdate  DateTime? @db.Date
   type       String    @default("unknown")
   password   String?
   createdAt  DateTime  @default(now())
