@@ -23,7 +23,6 @@ export class UserService {
     type: AccountType;
     isVerified?: boolean;
     password?: string;
-    birthdate?: string;
     appleId?: string;
   }): Promise<PrismaUser> {
     return await this.prisma.user.create({ data });
