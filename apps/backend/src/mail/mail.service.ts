@@ -11,11 +11,20 @@ export class MailService {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST'),
       port: Number(this.configService.get<string>('SMTP_PORT')),
-      secure: false, // true pour 465
+      secure: true, // true pour 465
       auth: {
         user: this.configService.get<string>('SMTP_USER'),
         pass: this.configService.get<string>('SMTP_PASS'),
       },
+
+    });
+
+    this.transporter.verify((error: any) => {
+      if (error) {
+        console.error('SMTP connection failed:', error);
+      } else {
+        console.log('SMTP server is ready');
+      }
     });
   }
 
