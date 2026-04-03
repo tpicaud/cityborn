@@ -1,25 +1,23 @@
+import { User } from '@cityborn/types';
 import {
   Body,
   Controller,
   Get,
   Post,
-  UseGuards,
   Request,
+  UseGuards,
 } from '@nestjs/common';
+import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
+import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import { CurrentUser } from 'src/user/user.decorator';
 import { AuthService } from './auth.service';
+import { AuthResponseDto } from './dto/auth.response.dto';
+import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { AuthResponseDto } from './dto/auth.response.dto';
-import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
-import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { RefreshGuard } from './guards/refresh.guard';
-import { VerifyEmailDto } from './dto/verify-email.dto';
-import { CurrentUser } from 'src/user/user.decorator';
-import { NotVerifiedAuthGuard } from './guards/auth-not-verified.guard';
-import { User } from '@cityborn/types';
-import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
-import { DeleteUserDto } from 'src/user/dto/delete-user.dto';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -70,26 +68,15 @@ export class AuthController {
     return await this.authService.refresh(identifier);
   }
 
-  @Post('send-verification-email')
-  @UseGuards(NotVerifiedAuthGuard)
-  async sendVerificationEmail(@CurrentUser() user?: User): Promise<void> {
-    return await this.authService.sendVerificationEmail(user);
-  }
-
-  @Post('verify-email')
-  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<void> {
-    return await this.authService.verifyEmail(verifyEmailDto);
-  }
-
   @Get('me')
-  @UseGuards(NotVerifiedAuthGuard)
+  @UseGuards(AuthGuard)
   async getProfile(@Request() req): Promise<PublicUserResponseDto> {
     const identifier = req.user.username || req.user.email;
     return await this.authService.getProfile(identifier);
   }
 
   @Post('delete-user')
-  @UseGuards(NotVerifiedAuthGuard)
+  @UseGuards(AuthGuard)
   async deleteUser(@CurrentUser() user?: User): Promise<void> {
     return await this.authService.deleteUser(user);
   }

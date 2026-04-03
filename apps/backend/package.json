@@ -8,6 +8,7 @@
   "scripts": {
     "migrate": "prisma migrate deploy",
     "build": "nest build",
+    "typecheck": "tsc -noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "npm run migrate && nest start",
     "dev": "nest start --watch",

@@ -6,7 +6,8 @@
   "type": "module",
   "author": "Tom Picaud",
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": {

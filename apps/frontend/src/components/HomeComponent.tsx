@@ -40,7 +40,6 @@ export default function HomeComponent() {
     'menu' | 'sign-in' | 'sign-up' | 'profile'
   >('menu');
   const [openProfile, setOpenProfile] = useState(false);
-  const [sentVerificationEmail, setSentVerificationEmail] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,7 +56,7 @@ export default function HomeComponent() {
 
     case 'sign-up':
       content = (
-        <SignUpComponent setSentVerificationEmail={setSentVerificationEmail} />
+        <SignUpComponent />
       );
       break;
 
@@ -65,8 +64,6 @@ export default function HomeComponent() {
       content = (
         <MenuComponent
           setState={setState}
-          setSentVerificationEmail={setSentVerificationEmail}
-          sentVerificationEmail={sentVerificationEmail}
         />
       );
       break;
@@ -79,8 +76,6 @@ export default function HomeComponent() {
       content = (
         <MenuComponent
           setState={setState}
-          setSentVerificationEmail={setSentVerificationEmail}
-          sentVerificationEmail={sentVerificationEmail}
         />
       );
   }

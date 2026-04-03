@@ -125,48 +125,4 @@ export class UserService {
       },
     });
   }
-
-  ////////////////////////
-  // Email verification //
-  ////////////////////////
-  async createVerificationToken(user: PrismaUser): Promise<string> {
-    const token = uuidv4();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24);
-
-    await this.prisma.emailVerificationToken.create({
-      data: {
-        token,
-        userId: user.id,
-        expiresAt,
-      },
-    });
-
-    return token;
-  }
-
-  async verifyEmail(token: string) {
-    const record = await this.prisma.emailVerificationToken.findUnique({
-      where: { token },
-      include: { user: true },
-    });
-
-    if (!record || record.expiresAt < new Date()) {
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-        message: 'Token expired',
-      });
-    }
-
-    if (record?.user.isVerified) return;
-
-    await this.prisma.user.update({
-      where: { id: record.userId },
-      data: { isVerified: true },
-    });
-
-    await this.prisma.emailVerificationToken.delete({
-      where: { id: record.id },
-    });
-  }
 }
