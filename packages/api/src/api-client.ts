@@ -114,16 +114,6 @@ export class ApiClient {
     return res.user;
   }
 
-  async sendVerificationEmail() {
-    await this.authFetch.post<void>('/auth/send-verification-email');
-  }
-
-  async verifyEmail(verification_token: string) {
-    await this.authFetch.post<void>('/auth/verify-email', {
-      verification_token,
-    });
-  }
-
   async deleteUser() {
     await this.authFetch.post<void>('/auth/delete-user');
   }

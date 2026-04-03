@@ -32,7 +32,7 @@ export class SessionController {
   ): Promise<SessionResponseDto> {
     if (
       createSessionDto.mode === SessionMode.MULTI &&
-      (!user || (user && !user.isVerified))
+      (!user)
     )
       throw new UnauthorizedException({
         code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED,

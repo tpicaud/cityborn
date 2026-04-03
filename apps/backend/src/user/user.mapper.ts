@@ -25,7 +25,6 @@ export class UserMapper {
       updatedAt: prismaUser.updatedAt
         ? prismaUser.updatedAt.toISOString()
         : undefined,
-      isVerified: prismaUser.isVerified,
       relations: {
         games: prismaUser.gameRecords?.map((game) => ({
           id: game.id,
@@ -44,7 +43,6 @@ export class UserMapper {
     return {
       id: user.id,
       username: user.username,
-      isVerified: user.isVerified,
     };
   }
 }
