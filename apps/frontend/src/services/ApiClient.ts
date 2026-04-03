@@ -109,37 +109,6 @@ export class ApiClient {
     }
   }
 
-  async sendVerificationEmail(): Promise<void> {
-    const response = await this.apiFetch(`/api/auth/send-verification-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new ApiError(data.code, data.message, data.statusCode);
-    }
-  }
-
-  async verifyEmail(verification_token: string): Promise<void> {
-    const response = await this.apiFetch(`/api/auth/verify-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ verification_token }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new ApiError(data.code, data.message, data.statusCode);
-    }
-  }
-
   //////////////////
   // User service //
   //////////////////

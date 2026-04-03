@@ -43,12 +43,6 @@ export class AuthGuard implements CanActivate {
         getJwtConstants(this.configService).jwt_access_secret,
       );
 
-      if (!user.isVerified)
-        throw new UnauthorizedException({
-          code: ErrorCode.USER_NOT_VERIFIED,
-          message: 'User email not verified',
-        });
-
       request['user'] = user;
     }
 
