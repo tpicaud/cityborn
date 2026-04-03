@@ -10,7 +10,6 @@ export class PublicUser {
 
   username: string;
 
-  isVerified: boolean;
 }
 
 export class User extends PublicUser {

@@ -24,7 +24,6 @@ export const ProfileComponent = ({ user }: { user: User }) => {
 
   useEffect(() => {
     const getGameRecords = async () => {
-      if (user.isVerified) {
         try {
           const games = await apiClient.getGameRecords();
           setGames(games);
@@ -34,7 +33,6 @@ export const ProfileComponent = ({ user }: { user: User }) => {
           setLoading(false);
         }
       }
-    };
     getGameRecords();
   }, []);
 
@@ -62,13 +60,8 @@ export const ProfileComponent = ({ user }: { user: User }) => {
         <Typography>
           <strong>Email:</strong> {user.email}
         </Typography>
-        <Typography>
-          <strong>Email vérifié:</strong>{' '}
-          {user.isVerified ? '✅ Oui' : '❌ Non'}
-        </Typography>
       </Box>
 
-      {user.isVerified && (
         <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
           <AccordionSummary
             expandIcon={!loading ? <ExpandMoreIcon /> : null}
@@ -164,7 +157,6 @@ export const ProfileComponent = ({ user }: { user: User }) => {
             )}
           </AccordionDetails>
         </Accordion>
-      )}
     </Box>
   );
 };

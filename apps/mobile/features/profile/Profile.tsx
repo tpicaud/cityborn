@@ -25,7 +25,7 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user && user.isVerified) {
+      if (user) {
         fetchGameRecords();
       }
     }, []),
@@ -100,11 +100,6 @@ export default function Profile() {
                   <Text className="font-bold text-foreground-on-primary">
                     Status
                   </Text>
-                  <Text className="text-foreground-on-primary">
-                    {user.isVerified
-                      ? '✅ Email vérifié'
-                      : '❌ Email à vérifier'}
-                  </Text>
                 </View>
               </View>
             </Card>
@@ -126,9 +121,7 @@ export default function Profile() {
                 </View>
               ) : gamesRecords.length === 0 ? (
                 <Text className="text-center mt-2 text-neutral-600 italic">
-                  {user.isVerified
-                    ? 'Aucunes parties trouvées.'
-                    : 'Vérifiez votre email pour voir votre historique de parties.'}
+                    Aucunes parties trouvées.
                 </Text>
               ) : (
                 <ScrollView
