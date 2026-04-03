@@ -16,6 +16,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "start": "turbo run start",
+    "typecheck": "turbo run typecheck",
     "packages:build": "turbo run build --filter=./packages/*",
     "backend:build": "turbo run build --filter=cityborn-backend",
     "backend:dev": "turbo run dev --filter=cityborn-backend",

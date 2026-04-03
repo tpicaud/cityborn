@@ -13,6 +13,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
     "check-env": "node scripts/check-env.js",
     "postinstall": "cd ../.. && pnpm packages:build"
   },
