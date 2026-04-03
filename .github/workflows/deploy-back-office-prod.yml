@@ -3,7 +3,7 @@ name: Deploy Production Back Office to Vercel
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'apps/back-office/**'
       - 'packages/types/**'

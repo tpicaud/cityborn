@@ -3,7 +3,7 @@ name: Deploy Production Frontend to Vercel
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "apps/frontend/**"
       - "packages/types/**"
