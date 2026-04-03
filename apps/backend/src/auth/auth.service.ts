@@ -17,15 +17,12 @@ import { OAuth2Client } from 'google-auth-library';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
 import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
-import { MailService } from 'src/mail/mail.service';
-import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ErrorCode } from '@cityborn/errors';
 import { createEvent, User } from '@cityborn/types';
 import { UserMapper } from 'src/user/user.mapper';
 import { EventService } from 'src/event/event.service';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
 import { verifyAppleIdToken } from './utils';
-import { DeleteUserDto } from 'src/user/dto/delete-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +32,6 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly mailService: MailService,
     private readonly eventService: EventService,
     @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
   ) {}
@@ -61,25 +57,18 @@ export class AuthService {
         message: `Error creating user in database`,
       });
 
-    // Send verification email
-    const verification_token =
-      await this.userService.createVerificationToken(user);
-    await this.mailService.sendVerificationEmail(email, verification_token);
-
     // Create JWT
     const access_token = await this.generateToken(
       'access',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
 
     // Send event
@@ -134,14 +123,12 @@ export class AuthService {
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
 
     // Send event
@@ -217,14 +204,12 @@ export class AuthService {
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
 
     return {
@@ -302,14 +287,12 @@ export class AuthService {
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
 
     return {
@@ -332,14 +315,12 @@ export class AuthService {
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
-      user.isVerified,
     );
 
     return {
@@ -347,29 +328,6 @@ export class AuthService {
       refresh_token,
       user: UserMapper.toUserDto(user),
     };
-  }
-
-  async sendVerificationEmail(currentUser: any): Promise<void> {
-    try {
-      const user = await this.userService.findByIdentifier(currentUser.email);
-      if (!user) return; // no error for security
-
-      // Send verification email
-      const verification_token =
-        await this.userService.createVerificationToken(user);
-      await this.mailService.sendVerificationEmail(
-        user.email,
-        verification_token,
-      );
-    } catch(error) {
-      console.log("Error sending verification email:", error);
-      return; // no error for security
-    }
-  }
-
-  async verifyEmail(dto: VerifyEmailDto): Promise<void> {
-    const { verification_token } = dto;
-    return await this.userService.verifyEmail(verification_token);
   }
 
   async getProfile(identifier: string): Promise<PublicUserResponseDto> {
@@ -400,13 +358,11 @@ export class AuthService {
     id: string,
     username: string,
     email: string,
-    isVerified: boolean,
   ): Promise<string> {
     const payload = {
       id,
       username,
       email,
-      isVerified,
     };
 
     switch (type) {

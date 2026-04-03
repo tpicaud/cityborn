@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Box, FormControl, TextField, Button, Typography } from '@mui/material';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
 import { useApi } from '@/contexts/ApiContext';
 
@@ -13,11 +13,7 @@ interface FormValues {
   confirmPassword: string;
 }
 
-export const SignUpComponent = ({
-  setSentVerificationEmail,
-}: {
-  setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
-}) => {
+export const SignUpComponent = () => {
   const { invokeError } = useError();
   const apiClient = useApi();
   const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
@@ -99,7 +95,6 @@ export const SignUpComponent = ({
         formValues.email,
         formValues.password,
       );
-      setSentVerificationEmail(true);
       window.location.reload();
     } catch (error: any) {
       invokeError(error);

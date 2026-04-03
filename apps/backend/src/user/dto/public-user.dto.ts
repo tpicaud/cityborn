@@ -7,7 +7,4 @@ export class PublicUserDto implements PublicUser {
 
   @IsString()
   username: string;
-
-  @IsBoolean()
-  isVerified: boolean;
 }

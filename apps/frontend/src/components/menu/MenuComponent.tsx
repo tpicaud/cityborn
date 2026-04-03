@@ -16,14 +16,10 @@ import Link from 'next/link';
 
 export default function MenuComponent({
   setState,
-  setSentVerificationEmail,
-  sentVerificationEmail,
 }: {
   setState: Dispatch<
     SetStateAction<'menu' | 'sign-in' | 'sign-up' | 'profile'>
   >;
-  setSentVerificationEmail: Dispatch<SetStateAction<boolean>>;
-  sentVerificationEmail: boolean;
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -59,13 +55,6 @@ export default function MenuComponent({
     }
   };
 
-  const sendNewVerificationEmail = async () => {
-    try {
-      apiClient.sendVerificationEmail();
-      setSentVerificationEmail(true);
-    } catch {}
-  };
-
   return (
     <div className="flex flex-col items-center gap-5">
       <div className="relative flex flex-col gap-1 items-center w-full">
@@ -88,25 +77,6 @@ export default function MenuComponent({
           <Typography variant="h5" className="text-center">
             Bienvenue <b>{user.username}</b> !
           </Typography>
-          {!user.isVerified &&
-            (sentVerificationEmail ? (
-              <p className="text-green-600">Email de vérification envoyé</p>
-            ) : (
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  sendNewVerificationEmail();
-                }}
-                style={{
-                  color: 'blue',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-              >
-                Vérifie ton email
-              </a>
-            ))}
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center justify-center w-full">

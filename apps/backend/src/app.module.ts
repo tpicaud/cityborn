@@ -12,7 +12,6 @@ import { PlayerModule } from './player/player.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
-import { MailModule } from './mail/mail.module';
 import { EventModule } from './event/event.module';
 import { WikidataModule } from './wikidata/wikidata.module';
 import { NominatimModule } from './nominatim/nominatim.module';
@@ -37,7 +36,6 @@ import { SearchModule } from './search/search.module';
     AuthModule,
     PrismaModule,
     UserModule,
-    MailModule,
     EventModule,
     WikidataModule,
     NominatimModule,

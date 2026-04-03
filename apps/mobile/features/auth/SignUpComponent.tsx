@@ -28,8 +28,6 @@ export const SignUpComponent = () => {
     password: '',
     confirmPassword: '',
   });
-  // Date picker
-  const [showDatePicker, setShowDatePicker] = useState(false);
   // validation
   const [errors, setErrors] = useState<
     Partial<Record<keyof FormValues, string>>

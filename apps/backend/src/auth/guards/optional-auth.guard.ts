@@ -34,7 +34,6 @@ export class OptionalAuthGuard implements CanActivate {
       this.jwtService,
       getJwtConstants(this.configService).jwt_access_secret,
     );
-    if (!user.isVerified) return true;
 
     const fullUser = await this.userService.findById(user.id);
 
