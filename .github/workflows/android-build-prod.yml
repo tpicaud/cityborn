@@ -3,7 +3,7 @@ name: Build and Deploy Production Android App
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'apps/mobile/**'
       - 'packages/types/**'
