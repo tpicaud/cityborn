@@ -1,0 +1,30 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    uses: ./.github/workflows/generate-version-number.yml
+
+  tag:
+    needs: version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/create-tag.yml
+    with:
+      tag: ${{ needs.version.outputs.version }}
+
+  create-wip-pre-release:
+    needs:
+      - version
+      - tag
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      release_tag: ${{ needs.version.outputs.version_rc }}
+      prerelease: true
