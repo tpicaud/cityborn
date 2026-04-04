@@ -1,0 +1,25 @@
+name: Generate version number
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Version number"
+        value: ${{ jobs.generate.outputs.version }}
+      version_rc:
+        description: "Version RC number"
+        value: ${{ jobs.generate.outputs.version_rc }}
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+      version_rc: ${{ steps.set-version.outputs.version_rc }}
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          VERSION="v${{ github.run_number }}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_rc=${VERSION}-rc" >> $GITHUB_OUTPUT
