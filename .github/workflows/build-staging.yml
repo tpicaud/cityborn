@@ -1,0 +1,17 @@
+on:
+  workflow_call:
+
+jobs:
+  build-ios:
+    uses: ./.github/workflows/build-ios.yml
+    secrets: inherit
+    with:
+      environment: staging
+      profile: staging
+
+  build-android:
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
+    with:
+      environment: staging
+      profile: staging
