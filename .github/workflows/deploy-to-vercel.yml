@@ -1,0 +1,74 @@
+name: Deploy to Vercel
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      project_id:
+        description: 'Vercel Project ID'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: string
+      project_id:
+        description: 'Vercel Project ID'
+        required: true
+        type: string
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_TEAM_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+      VERCEL_PROJECT_ID: ${{ inputs.project_id }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set environment variables
+        run: |
+          case "${{ inputs.environment }}" in
+            production)
+              echo "VERCEL_ENV=production" >> $GITHUB_ENV
+              echo "VERCEL_PROD_FLAG=--prod" >> $GITHUB_ENV
+              ;;
+            staging)
+              echo "VERCEL_ENV=preview" >> $GITHUB_ENV
+              echo "VERCEL_PROD_FLAG=" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "Unknown environment: ${{ inputs.environment }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ env.VERCEL_ENV }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build ${{ env.VERCEL_PROD_FLAG }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy ${{ env.VERCEL_PROD_FLAG }} --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
