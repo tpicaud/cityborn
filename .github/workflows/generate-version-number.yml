@@ -12,6 +12,7 @@ on:
 
 jobs:
   generate:
+    name: Generate version number
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-version.outputs.version }}
