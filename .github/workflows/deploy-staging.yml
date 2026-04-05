@@ -1,0 +1,25 @@
+name: Deploy Staging
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-frontend-staging:
+    uses: ./.github/workflows/deploy-frontend-staging.yml
+    secrets: inherit
+
+  deploy-backend-staging:
+    uses: ./.github/workflows/deploy-backend-staging.yml
+    secrets: inherit
+
+  deploy-back-office-staging:
+    uses: ./.github/workflows/deploy-back-office-staging.yml
+    secrets: inherit
+
+  build-ios-staging:
+    uses: ./.github/workflows/ios-build-staging.yml
+    secrets: inherit
+
+  build-android-staging:
+    uses: ./.github/workflows/android-build-staging.yml
+    secrets: inherit
