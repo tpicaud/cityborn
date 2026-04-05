@@ -1,14 +1,8 @@
 name: Build Staging iOS App
 
 on:
-  push:
-    branches:
-      - staging
-    paths:
-      - 'apps/mobile/**'
-      - 'packages/types/**'
-      - 'package/errors/**'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:

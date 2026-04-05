@@ -28,3 +28,8 @@ jobs:
     with:
       release_tag: ${{ needs.version.outputs.version_rc }}
       prerelease: true
+
+  deploy-staging:
+    needs: tag
+    secrets: inherit
+    uses: ./.github/workflows/deploy-staging.yml
