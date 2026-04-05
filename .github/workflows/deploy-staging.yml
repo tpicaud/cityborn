@@ -13,7 +13,9 @@ jobs:
     secrets: inherit
 
   deploy-back-office-staging:
-    uses: ./.github/workflows/deploy-back-office-staging.yml
+    uses: ./.github/workflows/deploy-back-office.yml
+    with:
+      environment: staging
     secrets: inherit
 
   build-ios-staging:
