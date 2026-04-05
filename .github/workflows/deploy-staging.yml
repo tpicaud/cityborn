@@ -19,8 +19,11 @@ jobs:
       project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
 
   deploy-backend-staging:
-    uses: ./.github/workflows/deploy-backend-staging.yml
+    uses: ./.github/workflows/deploy-to-railway.yml
     secrets: inherit
+    with:
+      environment: staging
+      service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
 
   build-ios-staging:
     uses: ./.github/workflows/ios-build-staging.yml
