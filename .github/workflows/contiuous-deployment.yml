@@ -8,9 +8,11 @@ on:
 
 jobs:
   version:
+    name: Version
     uses: ./.github/workflows/generate-version-number.yml
 
   tag:
+    name: Tag
     needs: version
     permissions:
       contents: write
@@ -19,6 +21,7 @@ jobs:
       tag: ${{ needs.version.outputs.version }}
 
   create-wip-pre-release:
+    name: Pre-release
     needs:
       - version
       - tag
@@ -30,10 +33,12 @@ jobs:
       prerelease: true
 
   build-staging:
+    name: Build staging
     needs: tag
     secrets: inherit
     uses: ./.github/workflows/build-staging.yml
   deploy-staging:
+    name: Deploy staging
     needs: build-staging
     secrets: inherit
     uses: ./.github/workflows/deploy-staging.yml

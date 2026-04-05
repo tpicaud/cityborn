@@ -32,12 +32,11 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
-
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
       VERCEL_PROJECT_ID: ${{ inputs.project_id }}
-
     steps:
       - uses: actions/checkout@v3
 

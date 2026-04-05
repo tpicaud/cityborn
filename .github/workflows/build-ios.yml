@@ -37,6 +37,7 @@ on:
 
 jobs:
   build:
+    name: Build app
     runs-on: macos-latest
     environment: ${{ inputs.environment }}
     env:

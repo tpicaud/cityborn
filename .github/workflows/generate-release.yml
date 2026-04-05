@@ -12,7 +12,7 @@ on:
 
 jobs:
   tag-version:
-    name: Create release ${{ inputs.release_tag }}
+    name: Generate ${{ inputs.release_tag }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
