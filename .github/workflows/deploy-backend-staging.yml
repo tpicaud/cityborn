@@ -2,13 +2,7 @@ name: Deploy Staging Backend to Railway
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - staging
-    paths:
-      - 'apps/backend/**'
-      - 'packages/types/**'
-      - 'packages/errors/**'
+  workflow_call:
 
 jobs:
   deploy:

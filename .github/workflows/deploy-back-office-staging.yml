@@ -1,14 +1,8 @@
 name: Deploy Staging Back Office to Vercel
 
 on:
-  push:
-    branches:
-      - staging
-    paths:
-      - "apps/back-office/**"
-      - "packages/types/**"
-      - "packages/errors/**"
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   deploy:

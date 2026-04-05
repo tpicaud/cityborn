@@ -1,14 +1,8 @@
 name: Build Staging Android App
 
 on:
-  push:
-    branches:
-      - staging
-    paths:
-      - 'apps/mobile/**'
-      - 'packages/types/**'
-      - 'packages/errors/**'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
