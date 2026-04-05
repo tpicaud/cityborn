@@ -1,13 +1,8 @@
 name: Deploy Production Frontend to Vercel
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "apps/frontend/**"
-      - "packages/types/**"
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   deploy:

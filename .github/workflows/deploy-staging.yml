@@ -5,17 +5,21 @@ on:
 
 jobs:
   deploy-frontend-staging:
-    uses: ./.github/workflows/deploy-frontend-staging.yml
+    uses: ./.github/workflows/deploy-to-vercel.yml
     secrets: inherit
+    with:
+      environment: staging
+      project_id: ${{ vars.VERCEL_FRONTEND_PROJECT_ID }}
+
+  deploy-back-office-staging:
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: staging
+      project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
 
   deploy-backend-staging:
     uses: ./.github/workflows/deploy-backend-staging.yml
-    secrets: inherit
-
-  deploy-back-office-staging:
-    uses: ./.github/workflows/deploy-back-office.yml
-    with:
-      environment: staging
     secrets: inherit
 
   build-ios-staging:
