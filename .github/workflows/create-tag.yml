@@ -9,7 +9,7 @@ on:
 
 jobs:
   push_tag:
-    name: Create & push ${{ inputs.tag }}
+    name: Generate ${{ inputs.tag }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

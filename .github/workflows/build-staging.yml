@@ -2,14 +2,16 @@ on:
   workflow_call:
 
 jobs:
-  build-ios:
+  ios:
+    name: Build iOS
     uses: ./.github/workflows/build-ios.yml
     secrets: inherit
     with:
       environment: staging
       profile: staging
 
-  build-android:
+  android:
+    name: Build Android
     uses: ./.github/workflows/build-android.yml
     secrets: inherit
     with:
