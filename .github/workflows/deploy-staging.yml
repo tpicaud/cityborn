@@ -26,9 +26,15 @@ jobs:
       service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
 
   build-ios-staging:
-    uses: ./.github/workflows/ios-build-staging.yml
+    uses: ./.github/workflows/build-ios.yml
     secrets: inherit
+    with:
+      environment: staging
+      profile: staging
 
   build-android-staging:
-    uses: ./.github/workflows/android-build-staging.yml
+    uses: ./.github/workflows/build-android.yml
     secrets: inherit
+    with:
+      environment: staging
+      profile: staging

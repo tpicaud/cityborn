@@ -8,12 +8,23 @@ on:
         required: true
         type: choice
         options:
+          - development
+          - staging
+          - production
+      profile:
+        description: 'EAS profile to use'
+        required: true
+        type: choice
+        options:
+          - development
           - staging
           - production
   workflow_call:
     inputs:
       environment:
-        description: "Environment to build"
+        required: true
+        type: string
+      profile:
         required: true
         type: string
     secrets:
@@ -57,6 +68,7 @@ jobs:
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Check environment variables
+        if: inputs.profile != 'development'
         working-directory: apps/mobile
         run: pnpm check-env
 
@@ -72,7 +84,7 @@ jobs:
 
       - name: Syncing app version code
         working-directory: apps/mobile
-        run: eas build:version:sync --platform ios --profile ${{ inputs.environment }}
+        run: eas build:version:sync --platform ios --profile ${{ inputs.profile }}
 
       - name: Compute IPA name
         id: ipa
@@ -81,7 +93,7 @@ jobs:
           VERSION=$(npx expo config --json | jq -r '.version')
           VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.buildNumber')
 
-          IPA_NAME=cityborn_${{ inputs.environment }}_v${VERSION}_${VERSION_CODE}.ipa
+          IPA_NAME=cityborn_${{ inputs.profile }}_v${VERSION}_${VERSION_CODE}.ipa
           IPA_PATH=${{ github.workspace }}/${IPA_NAME}
 
           echo "ipa_name=$IPA_NAME" >> $GITHUB_OUTPUT
@@ -91,7 +103,7 @@ jobs:
 
       - name: Build iOS app
         working-directory: apps/mobile
-        run: eas build --platform ios --profile ${{ inputs.environment }} --local --non-interactive --output ${{ steps.ipa.outputs.ipa_path }}
+        run: eas build --platform ios --profile ${{ inputs.profile }} --local --non-interactive --output ${{ steps.ipa.outputs.ipa_path }}
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -100,6 +112,6 @@ jobs:
           path: ${{ steps.ipa.outputs.ipa_path }}
 
       - name: Submit
-        if: inputs.environment == 'production'
+        if: inputs.profile == 'production'
         working-directory: apps/mobile
-        run: eas submit --platform ios --profile ${{ inputs.environment }} --non-interactive --path ${{ steps.ipa.outputs.ipa_path }} --no-wait
+        run: eas submit --platform ios --profile ${{ inputs.profile }} --non-interactive --path ${{ steps.ipa.outputs.ipa_path }} --no-wait
