@@ -1,9 +1,23 @@
 on:
   workflow_call:
+    inputs:
+      backendHasChanged:
+        type: string
+        required: true
+      frontendHasChanged:
+        type: string
+        required: true
+      backofficeHasChanged:
+        type: string
+        required: true
+      mobileHasChanged:
+        type: string
+        required: true
 
 jobs:
   ios:
     name: Build iOS
+    if: ${{ inputs.mobileHasChanged == 'true' }}
     uses: ./.github/workflows/build-ios.yml
     secrets: inherit
     with:
@@ -12,6 +26,7 @@ jobs:
 
   android:
     name: Build Android
+    if: ${{ inputs.mobileHasChanged == 'true' }}
     uses: ./.github/workflows/build-android.yml
     secrets: inherit
     with:
