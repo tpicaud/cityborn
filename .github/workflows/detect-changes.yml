@@ -2,6 +2,15 @@ name: Detect changes
 
 on:
   workflow_call:
+    outputs:
+      backendHasChanged:
+        value: ${{ jobs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged:
+        value: ${{ jobs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged:
+        value: ${{ jobs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged:
+        value: ${{ jobs.detect-changes.outputs.mobileHasChanged }}
 
 jobs:
   detect-changes:
@@ -30,7 +39,7 @@ jobs:
               - 'packages/**'
 
             backofficeHasChanged:
-              - 'apps/backoffice/**'
+              - 'apps/back-office/**'
               - 'packages/**'
 
             mobileHasChanged:
