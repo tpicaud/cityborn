@@ -29,7 +29,7 @@ jobs:
       contents: write
     uses: ./.github/workflows/generate-release.yml
     with:
-      release_tag: ${{ needs.version.outputs.version_rc }}
+      releaseTag: ${{ needs.version.outputs.version_rc }}
       prerelease: true
       
   detect-changes:
@@ -51,6 +51,13 @@ jobs:
 
   deploy-staging:
     name: Deploy staging
-    needs: build-staging
+    needs:
+      - build-staging
+      - detect-changes
     secrets: inherit
     uses: ./.github/workflows/deploy-staging.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}

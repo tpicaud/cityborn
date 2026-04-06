@@ -32,3 +32,27 @@ jobs:
     with:
       environment: staging
       profile: staging
+    
+  frontend:
+    name: Build Frontend
+    if: ${{ inputs.frontendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Frontend
+        run: echo "✅ Nothing to build"
+  
+  backend:
+    name: Build Backend
+    if: ${{ inputs.backendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Backend
+        run: echo "✅ Nothing to build"
+
+  back-office:
+    name: Build Back Office
+    if: ${{ inputs.backofficeHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Back Office
+        run: echo "✅ Nothing to build"
