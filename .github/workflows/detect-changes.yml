@@ -1,0 +1,38 @@
+name: Detect changes
+
+on:
+  workflow_call:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backendHasChanged: ${{ steps.filter.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ steps.filter.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ steps.filter.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ steps.filter.outputs.mobileHasChanged }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontendHasChanged:
+              - 'apps/frontend/**'
+              - 'packages/**'
+
+            backendHasChanged:
+              - 'apps/backend/**'
+              - 'packages/**'
+
+            backofficeHasChanged:
+              - 'apps/backoffice/**'
+              - 'packages/**'
+
+            mobileHasChanged:
+              - 'apps/mobile/**'
+              - 'packages/**'
