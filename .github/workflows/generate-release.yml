@@ -3,7 +3,7 @@ name: Generate new release (from latest release)
 on:
   workflow_call:
     inputs:
-      release_tag:
+      releaseTag:
         type: string
         required: true
       prerelease:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   tag-version:
-    name: Generate ${{ inputs.release_tag }}
+    name: Generate ${{ inputs.releaseTag }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,8 +23,8 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git tag -a "${{ inputs.release_tag }}" -m "${{ inputs.release_tag }} - $(date +'%Y-%m-%d')"
-          git push origin "${{ inputs.release_tag }}"
+          git tag -a "${{ inputs.releaseTag }}" -m "${{ inputs.releaseTag }} - $(date +'%Y-%m-%d')"
+          git push origin "${{ inputs.releaseTag }}"
       - name: Generate release notes from latest release
         uses: actions/github-script@v8
         with:
@@ -32,7 +32,7 @@ jobs:
           script: |
             const latestRelease = await github.request(`GET /repos/${{ github.repository }}/releases/latest`);
             const latestTag = latestRelease.data.tag_name;
-            const releaseTag = "${{ inputs.release_tag }}";
+            const releaseTag = "${{ inputs.releaseTag }}";
 
             const releaseNotes = await github.request(`POST /repos/${{ github.repository }}/releases/generate-notes`, {
               tag_name: releaseTag,
@@ -59,7 +59,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const lastPreReleaseTag = '${{ inputs.release_tag }}';
+            const lastPreReleaseTag = '${{ inputs.releaseTag }}';
             const releases = await github.request(`GET /repos/${{ github.repository }}/releases`);
 
             const oldPrereleases = releases.data
@@ -78,7 +78,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prerelease = await github.request(`GET /repos/${{ github.repository }}/releases/tags/${{ inputs.release_tag }}-rc`);
+            const prerelease = await github.request(`GET /repos/${{ github.repository }}/releases/tags/${{ inputs.releaseTag }}-rc`);
             if (prerelease.data && prerelease.data.id) {
               await github.request(`DELETE /repos/${{ github.repository }}/releases/${prerelease.data.id}`);
               await github.request(`DELETE /repos/${{ github.repository }}/git/refs/tags/${prerelease.data.tag_name}`);
