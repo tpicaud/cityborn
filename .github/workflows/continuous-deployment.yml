@@ -90,6 +90,7 @@ jobs:
     needs:
       - build-prod
       - approve-prod
+      - detect-changes
     secrets: inherit
     uses: ./.github/workflows/deploy-prod.yml
     with:
