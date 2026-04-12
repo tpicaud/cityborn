@@ -1,0 +1,45 @@
+name: Deploy production
+
+on:
+  workflow_call:
+    inputs:
+      backendHasChanged:
+        type: string
+        required: true
+      frontendHasChanged:
+        type: string
+        required: true
+      backofficeHasChanged:
+        type: string
+        required: true
+      mobileHasChanged:
+        type: string
+        required: true
+
+jobs:
+  frontend:
+    name: Deploy Frontend
+    if: ${{ inputs.frontendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: production
+      project_id: ${{ vars.VERCEL_FRONTEND_PROJECT_ID }}
+
+  back-office:
+    name: Deploy Back Office
+    if: ${{ inputs.backofficeHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: production
+      project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
+
+  backend:
+    name: Deploy Backend
+    if: ${{ inputs.backendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-railway.yml
+    secrets: inherit
+    with:
+      environment: production
+      service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}

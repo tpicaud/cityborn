@@ -31,7 +31,7 @@ jobs:
     with:
       releaseTag: ${{ needs.version.outputs.version_rc }}
       prerelease: true
-      
+
   detect-changes:
     name: Detect changes
     uses: ./.github/workflows/detect-changes.yml
@@ -56,6 +56,41 @@ jobs:
       - detect-changes
     secrets: inherit
     uses: ./.github/workflows/deploy-staging.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  build-prod:
+    name: Build prod
+    needs:
+      - deploy-staging
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/build-prod.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  approve-prod:
+    name: Approve prod
+    environment: production
+    runs-on: ubuntu-latest
+    needs:
+      - build-prod
+    steps:
+      - run: echo "Approved"
+
+  deploy-prod:
+    name: Deploy prod
+    needs:
+      - build-prod
+      - approve-prod
+    secrets: inherit
+    uses: ./.github/workflows/deploy-prod.yml
     with:
       backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
