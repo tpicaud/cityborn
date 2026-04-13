@@ -13,6 +13,9 @@ on:
       mobileHasChanged:
         type: string
         required: true
+    outputs:
+      ios_ipa_artifact_name:
+        value: ${{ jobs.ios.outputs.ipa_artifact_name }}
 
 jobs:
   ios:
