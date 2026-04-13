@@ -1,0 +1,45 @@
+name: Deploy to Expo
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      profile:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+    secrets:
+      EXPO_TOKEN:
+        required: true
+
+jobs:
+  submit:
+    name: Submit app
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download IPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+
+      - name: Submit
+        working-directory: apps/mobile
+        run: eas submit --platform ios --profile ${{ inputs.profile }} --non-interactive --path ${{ github.workspace }}/${{ inputs.artifact_name }} --no-wait

@@ -50,19 +50,6 @@ jobs:
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
       mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
 
-  build-prod:
-    name: Build prod
-    needs:
-      - tag
-      - detect-changes
-    secrets: inherit
-    uses: ./.github/workflows/build-prod.yml
-    with:
-      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
-      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
-      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
-      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
-
   deploy-staging:
     name: Deploy staging
     needs:
@@ -81,9 +68,22 @@ jobs:
     environment: production
     runs-on: ubuntu-latest
     needs:
-      - build-prod
+      - deploy-staging
     steps:
       - run: echo "Approved"
+
+  build-prod:
+    name: Build prod
+    needs:
+      - approve-prod
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/build-prod.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
 
   deploy-prod:
     name: Deploy prod
@@ -94,6 +94,7 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/deploy-prod.yml
     with:
+      iosIpaArtifactName: ${{ needs.build-prod.outputs.ios_ipa_artifact_name }}
       backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}

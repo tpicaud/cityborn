@@ -3,6 +3,9 @@ name: Deploy production
 on:
   workflow_call:
     inputs:
+      iosIpaArtifactName:
+        type: string
+        required: false
       backendHasChanged:
         type: string
         required: true
@@ -43,3 +46,14 @@ jobs:
     with:
       environment: production
       service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
+
+  submit-ios:
+    name: Submit iOS
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: ios
+      profile: production
+      artifact_name: ${{ inputs.iosIpaArtifactName }}

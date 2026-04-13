@@ -49,6 +49,8 @@ jobs:
       EXPO_PUBLIC_WEBSOCKET_BACKEND_URL: ${{ vars.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL }}
       EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID }}
       EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID }}
+    outputs:
+      ipa_artifact_name: ${{ steps.ipa.outputs.ipa_name }}
 
     steps:
       - name: Setup repo
