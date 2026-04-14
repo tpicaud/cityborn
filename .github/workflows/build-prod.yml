@@ -14,8 +14,10 @@ on:
         type: string
         required: true
     outputs:
-      ios_ipa_artifact_name:
+      ipa_artifact_name:
         value: ${{ jobs.ios.outputs.ipa_artifact_name }}
+      apk_artifact_name:
+        value: ${{ jobs.android.outputs.apk_artifact_name }}
 
 jobs:
   ios:

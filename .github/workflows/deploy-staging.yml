@@ -43,3 +43,19 @@ jobs:
     with:
       environment: staging
       service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
+
+  submit-ios:
+    name: Submit iOS
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit ios
+        run: echo "✅ Nothing to submit"
+
+  submit-android:
+    name: Submit Android
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit Android
+        run: echo "✅ Nothing to submit"
