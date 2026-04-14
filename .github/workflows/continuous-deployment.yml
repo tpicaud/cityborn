@@ -105,7 +105,7 @@ jobs:
     name: Release
     needs:
       - version
-      - tag
+      - deploy-prod
     permissions:
       contents: write
     uses: ./.github/workflows/generate-release.yml
