@@ -50,6 +50,8 @@ jobs:
       EXPO_PUBLIC_WEBSOCKET_BACKEND_URL: ${{ vars.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL }}
       EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID }}
       EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID }}
+    outputs:
+      apk_artifact_name: ${{ steps.apk.outputs.apk_name }}
 
     steps:
       - name: Delete unnecessary tools folder
@@ -130,8 +132,3 @@ jobs:
         with:
           name: ${{ steps.apk.outputs.apk_name }}
           path: ${{ steps.apk.outputs.apk_path }}
-
-      - name: Submit
-        if: inputs.profile == 'production'
-        working-directory: apps/mobile
-        run: eas submit --platform android --profile ${{ inputs.profile }} --non-interactive --path ${{ steps.apk.outputs.apk_path }}
