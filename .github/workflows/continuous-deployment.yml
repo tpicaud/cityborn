@@ -105,7 +105,6 @@ jobs:
     name: Release
     needs:
       - version
-      - tag
       - deploy-prod
     permissions:
       contents: write
