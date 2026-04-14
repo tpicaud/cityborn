@@ -3,7 +3,10 @@ name: Deploy production
 on:
   workflow_call:
     inputs:
-      iosIpaArtifactName:
+      ipaArtifactName:
+        type: string
+        required: false
+      apkArtifactName:
         type: string
         required: false
       backendHasChanged:
@@ -56,4 +59,15 @@ jobs:
       environment: production
       platform: ios
       profile: production
-      artifact_name: ${{ inputs.iosIpaArtifactName }}
+      artifact_name: ${{ inputs.ipaArtifactName }}
+
+  submit-android:
+    name: Submit Android
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: android
+      profile: production
+      artifact_name: ${{ inputs.apkArtifactName }}

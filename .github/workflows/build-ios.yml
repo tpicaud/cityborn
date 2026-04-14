@@ -1,4 +1,4 @@
-name: Build and Deploy iOS App
+name: Build iOS App
 
 on:
   workflow_dispatch:
@@ -113,8 +113,3 @@ jobs:
         with:
           name: ${{ steps.ipa.outputs.ipa_name }}
           path: ${{ steps.ipa.outputs.ipa_path }}
-
-      - name: Submit
-        if: inputs.profile == 'production'
-        working-directory: apps/mobile
-        run: eas submit --platform ios --profile ${{ inputs.profile }} --non-interactive --path ${{ steps.ipa.outputs.ipa_path }} --no-wait
