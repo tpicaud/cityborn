@@ -100,3 +100,15 @@ jobs:
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
       mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  create-release:
+    name: Release
+    needs:
+      - version
+      - tag
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: ${{ needs.version.outputs.version }}
+      prerelease: false
