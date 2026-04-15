@@ -28,6 +28,9 @@ on:
         description: 'EAS profile to use'
         required: true
         type: string
+    outputs:
+      apk_artifact_name:
+        value: ${{ jobs.build.outputs.apk_name }}
     secrets:
       EXPO_TOKEN:
         required: true
