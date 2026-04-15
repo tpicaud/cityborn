@@ -27,6 +27,9 @@ on:
       profile:
         required: true
         type: string
+    outputs:
+      ipa_artifact_name:
+        value: ${{ jobs.build.outputs.ipa_name }}
     secrets:
       EXPO_TOKEN:
         required: true
