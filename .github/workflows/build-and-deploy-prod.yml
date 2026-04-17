@@ -1,0 +1,120 @@
+name: Build + Deploy - Production
+
+on:
+  workflow_call:
+    inputs:
+      backendHasChanged:
+        type: string
+        required: true
+      frontendHasChanged:
+        type: string
+        required: true
+      backofficeHasChanged:
+        type: string
+        required: true
+      mobileHasChanged:
+        type: string
+        required: true
+
+jobs:
+  build-ios:
+    name: Build iOS
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/build-ios.yml
+    secrets: inherit
+    with:
+      environment: production
+      profile: production
+
+  build-android:
+    name: Build Android
+    if: ${{ inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
+    with:
+      environment: production
+      profile: production
+
+  build-frontend:
+    name: Build Frontend
+    if: ${{ inputs.frontendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Frontend
+        run: echo "✅ Nothing to build"
+
+  build-backend:
+    name: Build Backend
+    if: ${{ inputs.backendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Backend
+        run: echo "✅ Nothing to build"
+
+  build-back-office:
+    name: Build Back Office
+    if: ${{ inputs.backofficeHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Back Office
+        run: echo "✅ Nothing to build"
+
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs:
+        - build-frontend
+    if: ${{ !failure() && !cancelled() && inputs.frontendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: production
+      project_id: ${{ vars.VERCEL_FRONTEND_PROJECT_ID }}
+
+  deploy-back-office:
+    name: Deploy Back Office
+    needs:
+        - build-back-office
+    if: ${{ !failure() && !cancelled() && inputs.backofficeHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: production
+      project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
+
+  deploy-backend:
+    name: Deploy Backend
+    needs:
+        - build-backend
+    if: ${{ !failure() && !cancelled() && inputs.backendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-railway.yml
+    secrets: inherit
+    with:
+      environment: production
+      service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
+
+  submit-ios:
+    name: Submit iOS
+    needs:
+        - build-ios
+    if: ${{ !failure() && !cancelled() && inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: ios
+      profile: production
+      artifact_name: ${{ needs.build-ios.outputs.ipa_artifact_name }}
+
+  submit-android:
+    name: Submit Android
+    needs:
+        - build-android
+    if: ${{ !failure() && !cancelled() && inputs.mobileHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: android
+      profile: production
+      artifact_name: ${{ needs.build-android.outputs.apk_artifact_name }}
