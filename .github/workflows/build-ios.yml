@@ -116,3 +116,4 @@ jobs:
         with:
           name: ${{ steps.ipa.outputs.ipa_name }}
           path: ${{ steps.ipa.outputs.ipa_path }}
+          retention-days: 14
