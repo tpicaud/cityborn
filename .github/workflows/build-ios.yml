@@ -97,7 +97,7 @@ jobs:
         working-directory: apps/mobile
         run: |
           VERSION=$(npx expo config --json | jq -r '.version')
-          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive | jq -r '.buildNumber')
+          VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive --profile production | jq -r '.buildNumber')
 
           IPA_NAME=cityborn_${{ inputs.profile }}_v${VERSION}_${VERSION_CODE}.ipa
           IPA_PATH=${{ github.workspace }}/${IPA_NAME}

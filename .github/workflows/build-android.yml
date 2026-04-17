@@ -113,9 +113,20 @@ jobs:
           if [ "${{ inputs.profile }}" = "preview" ]; then
             echo "apk_name=app-release" >> $GITHUB_OUTPUT
             echo "apk_path=${{ github.workspace }}/app-preview-release.apk" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.profile }}" = "production" ]; then
+            VERSION=$(npx expo config --json | jq -r '.version')
+            VERSION_CODE=$(eas build:version:get -p android --json --non-interactive --profile production | jq -r '.versionCode')
+
+            AAB_NAME=cityborn_${{ inputs.profile }}_v${VERSION}_${VERSION_CODE}.aab
+            AAB_PATH=${{ github.workspace }}/${AAB_NAME}
+
+            echo "apk_name=$AAB_NAME" >> $GITHUB_OUTPUT
+            echo "apk_path=$AAB_PATH" >> $GITHUB_OUTPUT
+
+            echo "Computed AAB name: $AAB_NAME"
           else
             VERSION=$(npx expo config --json | jq -r '.version')
-            VERSION_CODE=$(eas build:version:get -p android --json --non-interactive | jq -r '.versionCode')
+            VERSION_CODE=$(eas build:version:get -p android --json --non-interactive --profile production | jq -r '.versionCode')
 
             APK_NAME=cityborn_${{ inputs.profile }}_v${VERSION}_${VERSION_CODE}.apk
             APK_PATH=${{ github.workspace }}/${APK_NAME}
@@ -125,6 +136,10 @@ jobs:
 
             echo "Computed APK name: $APK_NAME"
           fi
+
+      - name: Build Android app
+        working-directory: apps/mobile
+        run: eas build --platform android --profile ${{ inputs.profile }} --local --output ${{ steps.apk.outputs.apk_path }}
 
       - name: Build Android app
         working-directory: apps/mobile
