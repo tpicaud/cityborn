@@ -15,6 +15,7 @@
     "format:mobile": "prettier --write apps/mobile",
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:mobile": "turbo run dev --filter=./apps/mobile --filter=./apps/backend",
     "dev:back-office": "turbo run dev --filter=./apps/back-office --filter=./apps/backend",
     "start": "turbo run start",
     "typecheck": "turbo run typecheck",
