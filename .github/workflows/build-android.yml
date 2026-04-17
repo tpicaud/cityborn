@@ -135,3 +135,4 @@ jobs:
         with:
           name: ${{ steps.apk.outputs.apk_name }}
           path: ${{ steps.apk.outputs.apk_path }}
+          retention-days: 14

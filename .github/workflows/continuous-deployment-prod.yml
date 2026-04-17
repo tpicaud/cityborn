@@ -24,6 +24,8 @@ jobs:
 
   detect-changes:
     name: Detect changes
+    needs:
+      - get-tag
     uses: ./.github/workflows/detect-changes.yml
 
   build-and-deploy-prod:
