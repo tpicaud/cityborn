@@ -26,29 +26,13 @@ jobs:
     name: Detect changes
     uses: ./.github/workflows/detect-changes.yml
 
-  build-prod:
-    name: Build prod
-    needs: 
-      - get-tag
-      - detect-changes
-    secrets: inherit
-    uses: ./.github/workflows/build-prod.yml
-    with:
-      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
-      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
-      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
-      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
-
-  deploy-prod:
-    name: Deploy prod
+  build-and-deploy-prod:
+    name: Build + Deploy - Prod
     needs:
       - detect-changes
-      - build-prod
     secrets: inherit
-    uses: ./.github/workflows/deploy-prod.yml
+    uses: ./.github/workflows/build-and-deploy-prod.yml
     with:
-      ipaArtifactName: ${{ needs.build-prod.outputs.ipa_artifact_name }}
-      apkArtifactName: ${{ needs.build-prod.outputs.apk_artifact_name }}
       backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
@@ -58,7 +42,7 @@ jobs:
     name: Release
     needs:
       - get-tag
-      - deploy-prod
+      - build-and-deploy-prod
     permissions:
       contents: write
     uses: ./.github/workflows/generate-release.yml

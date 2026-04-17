@@ -1,0 +1,41 @@
+name: Build + Deploy - Mobile - Staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS
+    uses: ./.github/workflows/build-ios.yml
+    secrets: inherit
+    with:
+      environment: staging
+      profile: staging
+
+  build-android:
+    name: Build Android
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
+    with:
+      environment: staging
+      profile: staging
+
+  submit-ios:
+    name: Submit iOS
+    needs:
+      - build-ios
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit iOS
+        run: echo "✅ Staging app cannot be submitted"
+
+  submit-android:
+    name: Submit Android
+    needs:
+      - build-android
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit Android
+        run: echo "✅ Staging app cannot be submitted"
