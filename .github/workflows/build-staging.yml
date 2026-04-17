@@ -1,6 +1,12 @@
 name: Build for staging
 
 on:
+  workflow_dispatch:
+    inputs:
+      mobileHasChanged:
+        type: string
+        default: "true"
+        required: true
   workflow_call:
     inputs:
       backendHasChanged:
