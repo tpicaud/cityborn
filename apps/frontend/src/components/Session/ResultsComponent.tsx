@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionMode, PlayerResults, ScoreType } from '@cityborn/types';
+import { SessionMode, PlayerResults } from '@cityborn/types';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 import {
   Table,
@@ -21,7 +21,6 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Game } from '@cityborn/types';
 import { getGameResult } from '@/utils/getGameResult';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import { useApi } from '@/contexts/ApiContext';
 
 const ResultsComponent = ({
   game,
@@ -40,14 +39,7 @@ const ResultsComponent = ({
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
 }) => {
-  const apiClient = useApi();
-
   const playersResults = new Map<string, PlayerResults>(getGameResult(game));
-  const [sentence, setSentence] = useState<{
-    message: string;
-    sub_message_1: string;
-    sub_message_2: string;
-  }>();
   const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
 
   useEffect(() => {
@@ -55,17 +47,6 @@ const ResultsComponent = ({
     if (!currentPlayerResults) return;
 
     setLocalPlayerResults(currentPlayerResults);
-
-    let isMounted = true;
-    generateEndSentence(currentPlayerResults).then((sentence) => {
-      if (isMounted) {
-        setSentence(sentence);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   function getGuessObjectName(id: string): string {
@@ -73,50 +54,7 @@ const ResultsComponent = ({
     return guessObject ? guessObject.name : id;
   }
 
-  async function generateEndSentence(playerResults: PlayerResults): Promise<{
-    message: string;
-    sub_message_1: string;
-    sub_message_2: string;
-  }> {
-    const totalPoints = calculateTotalPoints(playerResults);
-    const getScoreType = (points: number): ScoreType => {
-      if (points < 3000) return ScoreType.BAD;
-      if (points < 5000) return ScoreType.AVERAGE;
-      return ScoreType.GOOD;
-    };
-
-    const scoreType = getScoreType(totalPoints);
-    let message: string;
-    try {
-      message = (await apiClient.getEndSentence(scoreType)) ?? '';
-    } catch {
-      switch (scoreType) {
-        case ScoreType.GOOD:
-          message = 'Tu es le croissant le plus doré de la boulangerie !';
-        case ScoreType.AVERAGE:
-          message =
-            'Ce n’est pas la tarte aux fraises de grand-mère, mais ça se mange.';
-        case ScoreType.BAD:
-          message = "Tu n'es pas la tortue la plus ninja des égouts.";
-      }
-    }
-
-    let sub_message_1 = '';
-    let sub_message_2 = '';
-
-    if (scoreType === ScoreType.BAD) {
-      sub_message_1 = 'Bon... ';
-      sub_message_2 = 'Essaie encore !';
-    } else if (scoreType === ScoreType.GOOD) {
-      sub_message_1 = 'Félicitation ! ';
-    } else if (scoreType === ScoreType.AVERAGE) {
-      sub_message_2 = 'Essaie encore !';
-    }
-
-    return { message, sub_message_1, sub_message_2 };
-  }
-
-  if (!sentence || !localPlayerResults) {
+  if (!localPlayerResults) {
     return <LoadingComponent message="Chargement des résultats" />;
   }
 
@@ -131,11 +69,6 @@ const ResultsComponent = ({
               </p>
               <p className="ml-2 mb-1 text-xl">pts</p>
             </h1>
-            <h2 className="text-center text-base md:text-xl">
-              {sentence.sub_message_1}
-              {sentence.message}
-            </h2>
-            <h2 className="text-center text-xl">{sentence.sub_message_2}</h2>
           </div>
 
           <div className="w-full max-h-[40vh] overflow-auto flex flex-col justify-start items-center">
