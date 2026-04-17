@@ -1,0 +1,63 @@
+name: Staging - Continuous Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    name: Version
+    uses: ./.github/workflows/generate-version-number.yml
+
+  create-wip-pre-release:
+    name: Pre-release
+    needs:
+      - version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: ${{ needs.version.outputs.version_rc }}
+      prerelease: true
+
+  tag:
+    name: Tag
+    needs: version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/create-tag.yml
+    with:
+      tag: ${{ needs.version.outputs.version }}
+
+  detect-changes:
+    name: Detect changes
+    needs: version
+    uses: ./.github/workflows/detect-changes.yml
+
+  build-staging:
+    name: Build staging
+    needs:
+      - tag
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/build-staging.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  deploy-staging:
+    name: Deploy staging
+    needs:
+      - build-staging
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/deploy-staging.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}

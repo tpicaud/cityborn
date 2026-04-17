@@ -1,0 +1,67 @@
+name: Prod - Continuous Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get-tag:
+    name: Get latest tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0 --match "v[0-9]*" --exclude "*-rc")
+          echo $TAG
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+  detect-changes:
+    name: Detect changes
+    uses: ./.github/workflows/detect-changes.yml
+
+  build-prod:
+    name: Build prod
+    needs: 
+      - get-tag
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/build-prod.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  deploy-prod:
+    name: Deploy prod
+    needs:
+      - detect-changes
+      - build-prod
+    secrets: inherit
+    uses: ./.github/workflows/deploy-prod.yml
+    with:
+      ipaArtifactName: ${{ needs.build-prod.outputs.ipa_artifact_name }}
+      apkArtifactName: ${{ needs.build-prod.outputs.apk_artifact_name }}
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+
+  create-release:
+    name: Release
+    needs:
+      - get-tag
+      - deploy-prod
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: ${{ needs.version.outputs.version }}
+      prerelease: false
