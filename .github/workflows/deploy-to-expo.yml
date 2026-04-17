@@ -28,6 +28,19 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: pnpm install
+        
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
