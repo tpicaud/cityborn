@@ -1,0 +1,72 @@
+name: Build + Deploy - Web - Staging
+
+on:
+  workflow_call:
+    inputs:
+      backendHasChanged:
+        type: string
+        required: true
+      frontendHasChanged:
+        type: string
+        required: true
+      backofficeHasChanged:
+        type: string
+        required: true
+
+jobs:
+  build-frontend:
+    name: Build Front
+    if: ${{ inputs.frontendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Front
+        run: echo "✅ Nothing to build"
+
+  build-backend:
+    name: Build Back
+    if: ${{ inputs.backendHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Back
+        run: echo "✅ Nothing to build"
+
+  build-back-office:
+    name: Build Back Office
+    if: ${{ inputs.backofficeHasChanged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Back Office
+        run: echo "✅ Nothing to build"
+
+  deploy-frontend:
+    name: Deploy Front
+    needs:
+      - build-frontend
+    if: ${{ !failure() && !cancelled() && inputs.frontendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: staging
+      project_id: ${{ vars.VERCEL_FRONTEND_PROJECT_ID }}
+
+  deploy-back-office:
+    name: Deploy Back Office
+    needs:
+      - build-back-office
+    if: ${{ !failure() && !cancelled() && inputs.backofficeHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-vercel.yml
+    secrets: inherit
+    with:
+      environment: staging
+      project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
+
+  deploy-backend:
+    name: Deploy Back
+    needs:
+      - build-backend
+    if: ${{ !failure() && !cancelled() && inputs.backendHasChanged == 'true' }}
+    uses: ./.github/workflows/deploy-to-railway.yml
+    secrets: inherit
+    with:
+      environment: staging
+      service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
