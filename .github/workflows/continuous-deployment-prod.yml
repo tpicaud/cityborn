@@ -45,7 +45,7 @@ jobs:
       - detect-changes
       - build-prod
     secrets: inherit
-    uses: ./.github/workflows/deploy-prod.yml
+    uses: ./.github/workflows/build-and-deploy-prod.yml
     with:
       ipaArtifactName: ${{ needs.build-prod.outputs.ipa_artifact_name }}
       apkArtifactName: ${{ needs.build-prod.outputs.apk_artifact_name }}

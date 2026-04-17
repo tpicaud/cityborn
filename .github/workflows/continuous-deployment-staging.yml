@@ -52,14 +52,13 @@ jobs:
   #     backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
   #     mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
 
-  deploy-staging:
-    name: Deploy staging
+  deploy-web-staging:
+    name: Build + Deploy - Web - Staging
     needs:
       - detect-changes
     secrets: inherit
-    uses: ./.github/workflows/deploy-staging.yml
+    uses: ./.github/workflows/build-and-deploy-web-staging.yml
     with:
       backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
-      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
