@@ -1,6 +1,21 @@
 name: Deploy to Expo
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      profile:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+
   workflow_call:
     inputs:
       environment:
@@ -27,6 +42,10 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
+
+      - name: Install dotenv
+        run: npm install dotenv
+        working-directory: apps/mobile
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
