@@ -74,4 +74,8 @@ jobs:
 
       - name: Submit
         working-directory: apps/mobile
+        env: 
+          APP_VARIANT: ${{ vars.APP_VARIANT }}
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
+          GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
         run: eas submit --platform ios --profile ${{ inputs.profile }} --non-interactive --path ${{ github.workspace }}/${{ inputs.artifact_name }} --no-wait
