@@ -36,23 +36,25 @@ jobs:
     needs: version
     uses: ./.github/workflows/detect-changes.yml
 
-  build-staging:
-    name: Build staging
-    needs:
-      - tag
-      - detect-changes
-    secrets: inherit
-    uses: ./.github/workflows/build-staging.yml
-    with:
-      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
-      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
-      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
-      mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
+  ###########################################
+  ## Disabled to limit Github Action usage ##
+  ###########################################
+  # build-staging:
+  #   name: Build staging
+  #   needs:
+  #     - tag
+  #     - detect-changes
+  #   secrets: inherit
+  #   uses: ./.github/workflows/build-staging.yml
+  #   with:
+  #     backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+  #     frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+  #     backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+  #     mobileHasChanged: ${{ needs.detect-changes.outputs.mobileHasChanged }}
 
   deploy-staging:
     name: Deploy staging
     needs:
-      - build-staging
       - detect-changes
     secrets: inherit
     uses: ./.github/workflows/deploy-staging.yml
