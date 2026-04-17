@@ -99,7 +99,7 @@ jobs:
           VERSION=$(npx expo config --json | jq -r '.version')
           VERSION_CODE=$(eas build:version:get -p ios --json --non-interactive --profile production | jq -r '.buildNumber')
 
-          IPA_NAME=cityborn_${{ inputs.profile }}_v${VERSION}_${VERSION_CODE}.ipa
+          IPA_NAME=cityborn_v${VERSION}+${VERSION_CODE}_${{ inputs.profile }}.ipa
           IPA_PATH=${{ github.workspace }}/${IPA_NAME}
 
           echo "ipa_name=$IPA_NAME" >> $GITHUB_OUTPUT
