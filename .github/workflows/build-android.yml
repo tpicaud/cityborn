@@ -30,7 +30,7 @@ on:
         type: string
     outputs:
       apk_artifact_name:
-        value: ${{ jobs.build.outputs.apk_name }}
+        value: ${{ jobs.build.outputs.apk_artifact_name }}
     secrets:
       EXPO_TOKEN:
         required: true
