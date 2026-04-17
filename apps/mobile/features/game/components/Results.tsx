@@ -1,8 +1,7 @@
-import { SessionMode, PlayerResults, ScoreType } from '@cityborn/types';
+import { PlayerResults } from '@cityborn/types';
 import { useEffect, useState } from 'react';
 import { Game } from '@cityborn/types';
 import { getGameResult, calculateTotalPoints } from '@cityborn/utils';
-import { apiClient } from '@/lib/apiClient';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { ScrollView } from 'react-native';
@@ -23,11 +22,6 @@ const Results = ({
   handleExitGame: () => Promise<void>;
 }) => {
   const playersResults = new Map<string, PlayerResults>(getGameResult(game));
-  const [sentence, setSentence] = useState<{
-    message: string;
-    sub_message_1: string;
-    sub_message_2: string;
-  }>();
   const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
 
   useEffect(() => {
@@ -35,17 +29,6 @@ const Results = ({
     if (!currentPlayerResults) return;
 
     setLocalPlayerResults(currentPlayerResults);
-
-    let isMounted = true;
-    generateEndSentence(currentPlayerResults).then((sentence) => {
-      if (isMounted) {
-        setSentence(sentence);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   function getGuessObjectName(id: string): string {
@@ -53,52 +36,7 @@ const Results = ({
     return guessObject ? guessObject.name : id;
   }
 
-  async function generateEndSentence(playerResults: PlayerResults): Promise<{
-    message: string;
-    sub_message_1: string;
-    sub_message_2: string;
-  }> {
-    const totalPoints = calculateTotalPoints(playerResults);
-    const getScoreType = (points: number): ScoreType => {
-      const avg_score = points / game.state.guessObjectsIds.length;
-      if (avg_score < 500) return ScoreType.BAD;
-      if (avg_score < 833) return ScoreType.AVERAGE;
-      return ScoreType.GOOD;
-    };
-
-    const scoreType = getScoreType(totalPoints);
-    let message = '';
-    try {
-      message = (await apiClient.getEndSentence(scoreType)).message ?? '';
-    } catch (error) {
-      switch (scoreType) {
-        case ScoreType.GOOD:
-          message = 'Tu es le croissant le plus doré de la boulangerie !';
-        case ScoreType.AVERAGE:
-          message =
-            'Ce n’est pas la tarte aux fraises de grand-mère, mais ça se mange.';
-        case ScoreType.BAD:
-          message = "Tu n'es pas la tortue la plus ninja des égouts.";
-      }
-      console.error(error);
-    }
-
-    let sub_message_1 = '';
-    let sub_message_2 = '';
-
-    if (scoreType === ScoreType.BAD) {
-      sub_message_1 = 'Bon... ';
-      sub_message_2 = 'Essaie encore !';
-    } else if (scoreType === ScoreType.GOOD) {
-      sub_message_1 = 'Félicitation ! ';
-    } else if (scoreType === ScoreType.AVERAGE) {
-      sub_message_2 = 'Essaie encore !';
-    }
-
-    return { message, sub_message_1, sub_message_2 };
-  }
-
-  if (!sentence || !localPlayerResults) {
+  if (!localPlayerResults) {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
@@ -116,10 +54,6 @@ const Results = ({
             {calculateTotalPoints(localPlayerResults)}
           </Text>{' '}
           pts
-        </Text>
-        <Text className="text-center">
-          {sentence.sub_message_1}
-          {sentence.message}
         </Text>
       </View>
       {playersResults.size > 1 ? (
