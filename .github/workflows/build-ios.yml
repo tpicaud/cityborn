@@ -29,7 +29,7 @@ on:
         type: string
     outputs:
       ipa_artifact_name:
-        value: ${{ jobs.build.outputs.ipa_name }}
+        value: ${{ jobs.build.outputs.ipa_artifact_name }}
     secrets:
       EXPO_TOKEN:
         required: true
