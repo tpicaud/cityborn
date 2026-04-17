@@ -1,3 +1,5 @@
+name: Build for production
+
 on:
   workflow_call:
     inputs:
