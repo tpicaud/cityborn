@@ -78,7 +78,7 @@ jobs:
       - name: Set custom domain alias
         run: |
           if [ "${{ inputs.environment }}" = "production" ]; then
-            vercel alias set "$DEPLOY_URL" cityborn.com --token=${{ secrets.VERCEL_TOKEN }}
+            vercel alias set "$DEPLOY_URL" cityborn.app --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel alias set "$DEPLOY_URL" staging.cityborn.com --token=${{ secrets.VERCEL_TOKEN }}
+            vercel alias set "$DEPLOY_URL" staging.cityborn.app --token=${{ secrets.VERCEL_TOKEN }}
           fi
