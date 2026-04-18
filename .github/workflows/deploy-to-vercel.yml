@@ -38,7 +38,7 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
       VERCEL_PROJECT_ID: ${{ inputs.project_id }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set environment variables
         run: |
@@ -70,4 +70,15 @@ jobs:
         run: vercel build ${{ env.VERCEL_PROD_FLAG }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
-        run: vercel deploy ${{ env.VERCEL_PROD_FLAG }} --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOY_URL=$(vercel deploy ${{ env.VERCEL_PROD_FLAG }} --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --yes 2>/dev/null | tail -1)
+          echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
+          echo "Deployed to: $DEPLOY_URL"
+
+      - name: Set custom domain alias
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            vercel alias set "$DEPLOY_URL" cityborn.com --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel alias set "$DEPLOY_URL" staging.cityborn.com --token=${{ secrets.VERCEL_TOKEN }}
+          fi
