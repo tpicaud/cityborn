@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "dotenv -e .env -- next dev",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "dotenv -e .env -- next start"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.19",
@@ -32,6 +32,7 @@
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "tailwindcss": "^4.1.13",
     "typescript": "^5"
   }
