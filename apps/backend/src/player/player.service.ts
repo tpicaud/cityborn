@@ -1,6 +1,6 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import type { RedisService } from 'src/redis/redis.service';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class PlayerService {

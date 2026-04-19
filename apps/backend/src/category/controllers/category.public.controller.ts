@@ -7,9 +7,9 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import type { CategoriesResponseDto } from '../dto/categories.response.dto';
-import type { CategoryDto } from '../dto/category.dto';
-import type { PublicCategoryService } from '../services/category.public.service';
+import { CategoriesResponseDto } from '../dto/categories.response.dto';
+import { CategoryDto } from '../dto/category.dto';
+import { PublicCategoryService } from '../services/category.public.service';
 
 @Controller('category')
 export class PublicCategoryController {

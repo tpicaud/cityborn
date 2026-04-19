@@ -13,13 +13,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import type {
+import {
   CreateGuessObjectDto,
   CreateGuessObjectResponseDto,
 } from '../dto/create-guess-object.dto';
-import type { GuessObjectDto } from '../dto/guess-object.dto';
-import type { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
-import type { GuessObjectService } from '../guess-object.service';
+import { GuessObjectDto } from '../dto/guess-object.dto';
+import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
+import { GuessObjectService } from '../guess-object.service';
 
 @UseGuards(AdminGuard)
 @Controller('admin/guess-objects')

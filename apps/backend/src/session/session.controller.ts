@@ -12,12 +12,12 @@ import {
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 import { CurrentUser } from 'src/user/user.decorator';
-import type { CreateGameDto } from './dto/create-game.dto';
-import type { CreateSessionDto } from './dto/create-session.dto';
-import type { GameResponseDto } from './dto/game.response.dto';
-import type { SessionDto } from './dto/session.dto';
-import type { SessionResponseDto } from './dto/session.response.dto';
-import type { SessionService } from './session.service';
+import { CreateGameDto } from './dto/create-game.dto';
+import { CreateSessionDto } from './dto/create-session.dto';
+import { GameResponseDto } from './dto/game.response.dto';
+import { SessionDto } from './dto/session.dto';
+import { SessionResponseDto } from './dto/session.response.dto';
+import { SessionService } from './session.service';
 
 @Controller('session')
 export class SessionController {

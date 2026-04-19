@@ -1,7 +1,7 @@
-import type { ScoreType } from '@cityborn/types';
+import { ScoreType } from '@cityborn/types';
 import { Controller, Get, Query } from '@nestjs/common';
-import type { SentenceDto } from './dto/sentence.dto';
-import type { SentenceService } from './sentence.service';
+import { SentenceDto } from './dto/sentence.dto';
+import { SentenceService } from './sentence.service';
 
 @Controller('sentence')
 export class SentenceController {

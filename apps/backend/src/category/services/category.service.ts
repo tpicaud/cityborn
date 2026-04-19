@@ -1,10 +1,10 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import pLimit from 'p-limit';
-import type { GuessObjectService } from 'src/guess-object/guess-object.service';
-import type { PrismaService } from 'src/prisma/prisma.service';
-import type { CreateCategoryDto } from '../dto/create-category.dto';
-import type { UpdateCategoryDto } from '../dto/update-category.dto';
+import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateCategoryDto } from '../dto/create-category.dto';
+import { UpdateCategoryDto } from '../dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {

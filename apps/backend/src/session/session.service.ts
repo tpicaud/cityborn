@@ -23,16 +23,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-import type { EventService } from 'src/event/event.service';
-import type { GuessObjectService } from 'src/guess-object/guess-object.service';
-import type { IdService } from 'src/id/id.service';
-import type { LockService } from 'src/lock/lock.service';
-import type { PlayerService } from 'src/player/player.service';
-import type { PrismaService } from 'src/prisma/prisma.service';
-import type { RedisService } from 'src/redis/redis.service';
-import type { CreateSessionDto } from './dto/create-session.dto';
-import type { SessionDto } from './dto/session.dto';
+import { Prisma } from '@prisma/client';
+import { EventService } from 'src/event/event.service';
+import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { IdService } from 'src/id/id.service';
+import { LockService } from 'src/lock/lock.service';
+import { PlayerService } from 'src/player/player.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/redis/redis.service';
+import { CreateSessionDto } from './dto/create-session.dto';
+import { SessionDto } from './dto/session.dto';
 
 @Injectable()
 export class SessionService {

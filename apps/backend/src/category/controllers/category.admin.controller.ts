@@ -12,11 +12,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import type { CategoriesResponseDto } from '../dto/categories.response.dto';
-import type { CategoryDto } from '../dto/category.dto';
-import type { CreateCategoryDto } from '../dto/create-category.dto';
-import type { UpdateCategoryDto } from '../dto/update-category.dto';
-import type { AdminCategoryService } from '../services/category.admin.service';
+import { CategoriesResponseDto } from '../dto/categories.response.dto';
+import { CategoryDto } from '../dto/category.dto';
+import { CreateCategoryDto } from '../dto/create-category.dto';
+import { UpdateCategoryDto } from '../dto/update-category.dto';
+import { AdminCategoryService } from '../services/category.admin.service';
 
 @UseGuards(AdminGuard)
 @Controller('admin/category')
