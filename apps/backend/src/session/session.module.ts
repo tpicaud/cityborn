@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { SessionController } from './session.controller';
-import { SessionService } from './session.service';
-import { SessionGateway } from './session.gateway';
-import { LockModule } from 'src/lock/lock.module';
-import { RedisModule } from 'src/redis/redis.module';
-import { PlayerModule } from 'src/player/player.module';
-import { IdModule } from 'src/id/id.module';
-import { GuessObjectModule } from 'src/guess-object/guess-object.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
 import { EventModule } from 'src/event/event.module';
+import { GuessObjectModule } from 'src/guess-object/guess-object.module';
+import { IdModule } from 'src/id/id.module';
+import { LockModule } from 'src/lock/lock.module';
+import { PlayerModule } from 'src/player/player.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { RedisModule } from 'src/redis/redis.module';
+import { SessionController } from './session.controller';
+import { SessionGateway } from './session.gateway';
+import { SessionService } from './session.service';
 
 @Module({
   imports: [

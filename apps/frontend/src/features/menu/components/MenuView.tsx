@@ -1,12 +1,12 @@
 'use client';
 
-import Button from '@/components/ui/buttons/NewButton';
-import { useState } from 'react';
-import { WordCarousel } from './WordCarousel';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
+import { useState } from 'react';
+import Button from '@/components/ui/buttons/NewButton';
 import Card from '@/components/ui/cards/Card';
 import Input from '@/components/ui/inputs/TextInput';
-import { motion, AnimatePresence } from 'motion/react';
+import { WordCarousel } from './WordCarousel';
 
 export const MenuView = () => {
   const [view, setView] = useState<'home' | 'play'>('home');

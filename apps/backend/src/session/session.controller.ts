@@ -1,3 +1,5 @@
+import { ErrorCode } from '@cityborn/errors';
+import { SessionMode, type User } from '@cityborn/types';
 import {
   Body,
   Controller,
@@ -7,17 +9,15 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { SessionService } from './session.service';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { SessionResponseDto } from './dto/session.response.dto';
-import { CurrentUser } from 'src/user/user.decorator';
 import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
-import { ErrorCode } from '@cityborn/errors';
-import { SessionMode, User } from '@cityborn/types';
-import { CreateGameDto } from './dto/create-game.dto';
-import { GameResponseDto } from './dto/game.response.dto';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { SessionDto } from './dto/session.dto';
+import { CurrentUser } from 'src/user/user.decorator';
+import type { CreateGameDto } from './dto/create-game.dto';
+import type { CreateSessionDto } from './dto/create-session.dto';
+import type { GameResponseDto } from './dto/game.response.dto';
+import type { SessionDto } from './dto/session.dto';
+import type { SessionResponseDto } from './dto/session.response.dto';
+import type { SessionService } from './session.service';
 
 @Controller('session')
 export class SessionController {

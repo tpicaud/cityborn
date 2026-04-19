@@ -1,13 +1,17 @@
-import { IUseSession } from './IUseSession';
-import { useEffect, useState } from 'react';
-import { useSocket } from './useSocket';
-import { Guess, Session, SessionStatus } from '@cityborn/types';
-import { GameConfig } from '@cityborn/types';
-import { Socket } from 'socket.io-client';
-import { useError } from '@/contexts/ErrorContext';
 import { ApiError } from '@cityborn/errors';
+import {
+  type GameConfig,
+  type Guess,
+  type Session,
+  SessionStatus,
+} from '@cityborn/types';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import type { Socket } from 'socket.io-client';
 import { useApi } from '@/contexts/ApiContext';
+import { useError } from '@/contexts/ErrorContext';
+import type { IUseSession } from './IUseSession';
+import { useSocket } from './useSocket';
 
 export function useMultiSession(
   localPlayerID: string | undefined,

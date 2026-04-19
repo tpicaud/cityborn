@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { WebTokenStorage } from '@/lib/tokenStorage';
 import { ApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { WebTokenStorage } from '@/lib/tokenStorage';
 import { getBaseUrl, throwApiError } from '../utils';
 
 export async function GET(req: NextRequest) {

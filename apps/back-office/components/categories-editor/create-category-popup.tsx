@@ -1,8 +1,8 @@
-import { CreateCategory } from '@cityborn/types';
 import * as Ariakit from '@ariakit/react';
-import { Button } from '../ui/Button';
+import type { CreateCategory } from '@cityborn/types';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '../ui/Button';
 
 export function CreateCategoryDialog({
   handleCreateCategory,

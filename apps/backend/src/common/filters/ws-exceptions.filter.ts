@@ -1,6 +1,6 @@
 import { ErrorCode } from '@cityborn/errors';
 import {
-  ArgumentsHost,
+  type ArgumentsHost,
   Catch,
   HttpException,
   HttpStatus,

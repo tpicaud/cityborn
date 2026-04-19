@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { WorldLocationService } from './world-location.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { WorldLocationService } from './world-location.service';
 
 @Module({
   imports: [PrismaModule],

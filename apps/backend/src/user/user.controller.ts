@@ -1,15 +1,15 @@
 import {
+  Body,
   Controller,
   Get,
-  UseGuards,
-  Request,
   Post,
-  Body,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
+import type { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
+import type { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
+import type { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {

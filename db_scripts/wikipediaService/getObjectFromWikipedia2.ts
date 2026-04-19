@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { fetchWikipediaData } from './fetchWikipediaData';
-import { GuessObject } from '../database/models/celebrity';
 import osmtogeojson from 'osmtogeojson';
+import type { GuessObject } from '../database/models/celebrity';
+import { fetchWikipediaData } from './fetchWikipediaData';
 
 interface WikipediaPage {
   extract: string;

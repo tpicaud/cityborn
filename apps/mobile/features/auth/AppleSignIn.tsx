@@ -1,12 +1,12 @@
-import { apiClient } from '@/lib/apiClient';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@cityborn/contexts';
 import { ApiError, ErrorCode } from '@cityborn/errors';
+import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { apiClient } from '@/lib/apiClient';
+import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
   const { setUser } = useAuth();

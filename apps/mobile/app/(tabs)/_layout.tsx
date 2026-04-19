@@ -1,7 +1,7 @@
+import { colors } from '@cityborn/design-system';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { colors } from '@cityborn/design-system';
 
 export default function TabLayout() {
   return (

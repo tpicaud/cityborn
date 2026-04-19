@@ -1,5 +1,5 @@
-import { IconButton, IconButtonProps } from '@mui/material';
-import { ReactNode, useState } from 'react';
+import { IconButton, type IconButtonProps } from '@mui/material';
+import { type ReactNode, useState } from 'react';
 
 interface LoadingIconButtonProps extends IconButtonProps {
   onClick: () => Promise<void> | void;

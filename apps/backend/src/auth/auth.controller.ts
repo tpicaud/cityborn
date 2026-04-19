@@ -1,4 +1,4 @@
-import { User } from '@cityborn/types';
+import type { User } from '@cityborn/types';
 import {
   Body,
   Controller,
@@ -8,16 +8,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import type { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { CurrentUser } from 'src/user/user.decorator';
-import { AuthService } from './auth.service';
-import { AuthResponseDto } from './dto/auth.response.dto';
-import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
-import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { SignUpDto } from './dto/sign-up.dto';
-import { RefreshGuard } from './guards/refresh.guard';
+import type { AuthService } from './auth.service';
+import type { AuthResponseDto } from './dto/auth.response.dto';
+import type { SignInDto } from './dto/sign-in.dto';
+import type { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import type { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
+import type { SignUpDto } from './dto/sign-up.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RefreshGuard } from './guards/refresh.guard';
 
 @Controller('auth')
 export class AuthController {

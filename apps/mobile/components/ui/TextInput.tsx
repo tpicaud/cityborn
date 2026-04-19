@@ -1,5 +1,8 @@
+import {
+  TextInput as NativeTextInput,
+  type TextInputProps,
+} from 'react-native';
 import { cn } from '@/lib/utils';
-import { TextInput as NativeTextInput, TextInputProps } from 'react-native';
 
 interface InputProps extends TextInputProps {
   className?: string;

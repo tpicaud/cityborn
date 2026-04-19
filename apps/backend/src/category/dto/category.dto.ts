@@ -1,3 +1,4 @@
+import type { Category } from '@cityborn/types';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -7,7 +8,6 @@ import {
   IsUUID,
 } from 'class-validator';
 import { GuessObjectDto } from 'src/guess-object/dto/guess-object.dto';
-import { Category } from '@cityborn/types';
 
 export class CategoryDto implements Category {
   @IsUUID()

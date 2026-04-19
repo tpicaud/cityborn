@@ -1,5 +1,5 @@
 import { client } from '../dbConnect';
-import { Sentence, sentenceCollection } from '../models/sentence';
+import { type Sentence, sentenceCollection } from '../models/sentence';
 
 export async function addSentences(sentences: Sentence[]) {
   try {

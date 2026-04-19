@@ -1,7 +1,7 @@
 'use server';
 
+import type { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
 import { apiFetch } from '@/lib/apiFetch';
-import { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
 
 export async function searchGuessObjectByName(
   query: string,

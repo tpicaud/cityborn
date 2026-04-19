@@ -1,4 +1,4 @@
-import { GameRecord } from './Game.js';
+import type { GameRecord } from './Game.js';
 
 export type AccountType = 'email' | 'google' | 'apple';
 

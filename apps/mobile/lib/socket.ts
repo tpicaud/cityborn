@@ -1,6 +1,6 @@
-import { io, Socket } from 'socket.io-client';
-import { getOrCreateVisitorId } from './visitorId';
+import { io, type Socket } from 'socket.io-client';
 import { tokenStorage } from './tokenStorage';
+import { getOrCreateVisitorId } from './visitorId';
 
 const WEBSOCKET_URL =
   process.env.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL || 'ws://localhost:3001';

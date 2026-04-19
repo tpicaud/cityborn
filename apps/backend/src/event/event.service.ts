@@ -1,8 +1,8 @@
+import type { CreateEvent, EventMap } from '@cityborn/types';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateEvent, EventMap } from '@cityborn/types';
-import { CreateEventDto } from './dto/create-event.dto';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import type { PrismaService } from 'src/prisma/prisma.service';
+import type { CreateEventDto } from './dto/create-event.dto';
 
 @Injectable()
 export class EventService {

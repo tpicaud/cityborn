@@ -1,13 +1,13 @@
 'use client';
 
-import { Category, CreateCategory } from '@cityborn/types';
-import { useEffect, useMemo, useState } from 'react';
-import { CategoriesList } from './categories-list';
-import { createCategory, getAllCategories } from './action';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
+import type { Category, CreateCategory } from '@cityborn/types';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '../ui/Button';
+import Loader from '../ui/Loader';
+import { createCategory, getAllCategories } from './action';
+import { CategoriesList } from './categories-list';
 import { CreateCategoryDialog } from './create-category-popup';
 
 export function CategoriesEditor() {

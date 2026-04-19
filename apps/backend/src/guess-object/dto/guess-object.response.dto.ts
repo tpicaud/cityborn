@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
-import { GuessObjectDto } from './guess-object.dto';
 import { IsArray, ValidateNested } from 'class-validator';
+import { GuessObjectDto } from './guess-object.dto';
 
 export class GuessObjectResponseDto {
   @Type(() => GuessObjectDto)

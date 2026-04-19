@@ -1,5 +1,5 @@
-import fs from 'fs';
 import csvParser from 'csv-parser';
+import fs from 'fs';
 
 export interface Celebrity {
   name: string;

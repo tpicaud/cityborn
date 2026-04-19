@@ -1,4 +1,4 @@
-import { Player } from '@cityborn/types';
+import type { Player } from '@cityborn/types';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class PlayerDto implements Player {

@@ -1,7 +1,7 @@
-import { DialogContent, DialogTitle } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { DialogContent, DialogTitle } from '@mui/material';
+import type { Dispatch, SetStateAction } from 'react';
 import { Dialog } from './Dialog';
-import { Dispatch, SetStateAction } from 'react';
 
 interface ErrorDialogProps {
   errorMessage: string;

@@ -1,15 +1,18 @@
 'use client';
 
-import { Guess, Session } from '@cityborn/types';
+import {
+  type Game,
+  type Guess,
+  type GuessObject,
+  type Round,
+  RoundStatus,
+  type Session,
+} from '@cityborn/types';
 import { Box } from '@mui/material';
+import { useEffect, useState } from 'react';
+import LoadingButton from '../ui/buttons/LoadingButton';
 import GuessObjectComponent from './GuessObjectComponent';
 import TimerComponent from './TimerComponent';
-import { Round } from '@cityborn/types';
-import { RoundStatus } from '@cityborn/types';
-import { Game } from '@cityborn/types';
-import { useEffect, useState } from 'react';
-import { GuessObject } from '@cityborn/types';
-import LoadingButton from '../ui/buttons/LoadingButton';
 
 function GuessButton({
   preGuess,

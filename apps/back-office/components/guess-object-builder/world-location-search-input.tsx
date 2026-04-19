@@ -1,12 +1,12 @@
 import * as Ariakit from '@ariakit/react';
+import type { WorldLocation } from '@cityborn/types';
 import {
-  ChangeEventHandler,
+  type ChangeEventHandler,
   startTransition,
   useEffect,
   useState,
 } from 'react';
 import { searchWorldLocationByName } from './action';
-import { WorldLocation } from '@cityborn/types';
 
 export function WorldLocationSearchInput({
   type = 'text',

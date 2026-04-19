@@ -1,16 +1,16 @@
-import {
+import type {
   GameConfig,
   Player,
   PlayerResults,
   SessionMode,
   User,
 } from '@cityborn/types';
-import {
-  User as PrismaUser,
+import type {
   GameRecord as PrismaGameRecord,
+  User as PrismaUser,
 } from '@prisma/client';
-import { UserDto } from './dto/user.dto';
-import { PublicUserDto } from './dto/public-user.dto';
+import type { PublicUserDto } from './dto/public-user.dto';
+import type { UserDto } from './dto/user.dto';
 
 type PrismaUserWithRelations = PrismaUser & {
   gameRecords?: PrismaGameRecord[];

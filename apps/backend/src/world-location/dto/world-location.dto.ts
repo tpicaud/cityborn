@@ -1,11 +1,11 @@
-import { WorldLocation } from '@cityborn/types';
+import type { WorldLocation } from '@cityborn/types';
 import { Type } from 'class-transformer';
 import {
-  IsEnum,
   IsArray,
-  IsUUID,
-  IsString,
+  IsEnum,
   IsOptional,
+  IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 

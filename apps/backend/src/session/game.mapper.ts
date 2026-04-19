@@ -1,8 +1,8 @@
-import { GameRecord as PrismaGameRecord } from '@prisma/client';
-import { GameRecordDto, PlayerResultsDto } from './dto/game.dto';
-import { SessionMode } from '@cityborn/types';
-import { PlayerDto } from 'src/player/dto/player.dto';
-import { GameConfigDto } from './dto/session.dto';
+import type { SessionMode } from '@cityborn/types';
+import type { GameRecord as PrismaGameRecord } from '@prisma/client';
+import type { PlayerDto } from 'src/player/dto/player.dto';
+import type { GameRecordDto, PlayerResultsDto } from './dto/game.dto';
+import type { GameConfigDto } from './dto/session.dto';
 
 export class GameMapper {
   static toGameRecordDto(gameRecords: PrismaGameRecord[]): GameRecordDto[] {

@@ -1,7 +1,8 @@
 // shared/errorHandler.ts
-import { ERROR_MESSAGES } from './ErrorMessages.js';
-import { ErrorCode } from './ErrorCodes.js';
+
 import { ApiError } from './class/ApiError.js';
+import { ErrorCode } from './ErrorCodes.js';
+import { ERROR_MESSAGES } from './ErrorMessages.js';
 
 export const getFriendlyErrorMessage = (
   error: ApiError | any,

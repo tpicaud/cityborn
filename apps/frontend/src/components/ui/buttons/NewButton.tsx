@@ -1,8 +1,8 @@
 'use client';
 
 import { CircularProgress, Button as MuiButton } from '@mui/material';
-import { ReactNode, useState } from 'react';
 import clsx from 'clsx';
+import { type ReactNode, useState } from 'react';
 
 interface ButtonProps {
   children: ReactNode;

@@ -1,10 +1,10 @@
-import { WorldLocation as PrismaWorldLocation } from '@prisma/client';
+import type { WorldLocation as PrismaWorldLocation } from '@prisma/client';
 import {
-  NominatimItemResponse,
+  type NominatimItemResponse,
   NominatimSearchResponse,
 } from 'src/nominatim/nominatim.service';
 import {
-  WorldLocationDto,
+  type WorldLocationDto,
   WorldLocationSearchResponseDto,
 } from '../dto/world-location.dto';
 
