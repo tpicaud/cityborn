@@ -27,6 +27,18 @@
       "tailwindDirectives": true
     }
   },
+  "overrides": [
+    {
+      "includes": ["apps/backend/src/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": ["**", "!**/.next/", "!**/dist/", "!**/build/", "!**/coverage/"]
   }
