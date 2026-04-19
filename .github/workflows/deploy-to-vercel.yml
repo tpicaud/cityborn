@@ -77,8 +77,16 @@ jobs:
 
       - name: Set custom domain alias
         run: |
-          if [ "${{ inputs.environment }}" = "production" ]; then
-            vercel alias set "$DEPLOY_URL" cityborn.app --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel alias set "$DEPLOY_URL" staging.cityborn.app --token=${{ secrets.VERCEL_TOKEN }}
+          ALIAS=$(jq -r \
+            --arg pid "${{ inputs.project_id }}" \
+            --arg env "${{ inputs.environment }}" \
+            '.[$pid][$env] // empty' \
+            .github/vercel-projects.json)
+
+          if [ -z "$ALIAS" ]; then
+            echo "No alias found for project '${{ inputs.project_id }}' / env '${{ inputs.environment }}'"
+            exit 1
           fi
+
+          echo "Setting alias: $DEPLOY_URL → $ALIAS"
+          vercel alias set "$DEPLOY_URL" "$ALIAS" --token=${{ secrets.VERCEL_TOKEN }}
