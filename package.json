@@ -35,7 +35,18 @@
     "db:start": "cd apps/backend && pnpm db:start && cd ../..",
     "db:up": "pnpm backend db:up",
     "db:migrate": "pnpm backend db:migrate",
-    "db:reset": "pnpm backend db:reset"
+    "db:reset": "pnpm backend db:reset",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "backend:format": "pnpm --dir apps/backend format",
+    "backend:check": "pnpm --dir apps/backend check",
+    "frontend:format": "pnpm --dir apps/frontend format",
+    "frontend:check": "pnpm --dir apps/frontend check",
+    "back-office:format": "pnpm --dir apps/back-office format",
+    "back-office:check": "pnpm --dir apps/back-office check",
+    "mobile:format": "pnpm --dir apps/mobile format",
+    "mobile:check": "pnpm --dir apps/mobile check"
   },
   "pnpm": {
     "overrides": {
@@ -43,6 +54,7 @@
     }
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "turbo": "^2.5.4"
   }
 }
