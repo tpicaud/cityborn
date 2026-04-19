@@ -1,5 +1,5 @@
-import Button from '@/components/ui/buttons/NewButton';
 import Link from 'next/link';
+import Button from '@/components/ui/buttons/NewButton';
 
 export default function Header() {
   return (

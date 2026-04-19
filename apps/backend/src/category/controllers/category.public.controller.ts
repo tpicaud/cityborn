@@ -1,3 +1,4 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   Controller,
@@ -6,10 +7,9 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { PublicCategoryService } from '../services/category.public.service';
-import { ErrorCode } from '@cityborn/errors';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
-import { CategoryDto } from '../dto/category.dto';
+import type { CategoriesResponseDto } from '../dto/categories.response.dto';
+import type { CategoryDto } from '../dto/category.dto';
+import type { PublicCategoryService } from '../services/category.public.service';
 
 @Controller('category')
 export class PublicCategoryController {

@@ -1,7 +1,7 @@
 import {
-  ContextType,
+  type ContextType,
   createParamDecorator,
-  ExecutionContext,
+  type ExecutionContext,
 } from '@nestjs/common';
 
 export const VisitorId = createParamDecorator(

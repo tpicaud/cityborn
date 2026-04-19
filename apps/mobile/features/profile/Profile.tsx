@@ -1,18 +1,18 @@
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Dialog from '@/components/ui/Dialog';
-import { Icon } from '@/components/ui/Icon';
-import LoaderIcon from '@/components/ui/LoaderIcon';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
 import { useAuth, useError } from '@cityborn/contexts';
 import { colors } from '@cityborn/design-system';
-import { GameRecord } from '@cityborn/types';
+import type { GameRecord } from '@cityborn/types';
 import { calculateTotalPoints, isoToLocalDate } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Dialog from '@/components/ui/Dialog';
+import { Icon } from '@/components/ui/Icon';
+import LoaderIcon from '@/components/ui/LoaderIcon';
+import { Text, View } from '@/components/ui/native/NativeComponents';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Profile() {
   const { user, setUser } = useAuth();

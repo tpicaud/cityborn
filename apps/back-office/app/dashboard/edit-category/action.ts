@@ -1,6 +1,6 @@
 'use server';
 
-import { Category } from '@cityborn/types';
+import type { Category } from '@cityborn/types';
 import { apiFetch } from '../../../lib/apiFetch';
 
 export async function getCategory(id: string): Promise<Category> {

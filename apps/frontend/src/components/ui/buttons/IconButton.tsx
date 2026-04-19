@@ -1,8 +1,8 @@
 import {
   IconButton as MuiIconButton,
-  IconButtonProps as MuiIconButtonProps,
+  type IconButtonProps as MuiIconButtonProps,
 } from '@mui/material';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface IconButtonProps extends MuiIconButtonProps {
   onClick?: () => Promise<void> | void;

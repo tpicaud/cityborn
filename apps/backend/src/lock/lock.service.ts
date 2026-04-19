@@ -1,6 +1,6 @@
 // lock.service.ts
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common';
+import type { Redis } from 'ioredis';
 import Redlock from 'redlock';
 
 @Injectable()

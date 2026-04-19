@@ -1,9 +1,9 @@
 import {
-  GameConfig,
+  type Coord,
+  type GameConfig,
+  type Session,
   SessionMode,
-  Session,
   SessionStatus,
-  Coord,
 } from '@cityborn/types';
 import { Type } from 'class-transformer';
 import {
@@ -15,9 +15,9 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
+import { CategoryDto } from 'src/category/dto/category.dto';
 import { PlayerDto } from 'src/player/dto/player.dto';
 import { GameDto } from './game.dto';
-import { CategoryDto } from 'src/category/dto/category.dto';
 
 export class GameConfigDto implements GameConfig {
   @IsArray()

@@ -1,25 +1,24 @@
 'use client';
 
-import { SessionMode, PlayerResults } from '@cityborn/types';
-import { calculateTotalPoints } from '@/utils/calculateScore';
+import { type Game, type PlayerResults, SessionMode } from '@cityborn/types';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import LoadingComponent from '../others/LoadingComponent';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Game } from '@cityborn/types';
+import { calculateTotalPoints } from '@/utils/calculateScore';
 import { getGameResult } from '@/utils/getGameResult';
+import LoadingComponent from '../others/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 const ResultsComponent = ({

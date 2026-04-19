@@ -1,9 +1,9 @@
 ///////////////////
 // Event mapping //
 
-import { SessionMode } from '../enums/SessionMode.js';
-import { Category } from './Category.js';
-import { AccountType } from './User.js';
+import type { SessionMode } from '../enums/SessionMode.js';
+import type { Category } from './Category.js';
+import type { AccountType } from './User.js';
 
 ///////////////////
 export interface EventMap {

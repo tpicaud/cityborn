@@ -1,9 +1,9 @@
-import Button from '@/components/ui/Button';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { Image } from 'react-native';
+import Button from '@/components/ui/Button';
+import { Text, View } from '@/components/ui/native/NativeComponents';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Home() {
   const router = useRouter();

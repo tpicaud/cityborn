@@ -1,4 +1,4 @@
-import { Category } from '@cityborn/types';
+import type { Category } from '@cityborn/types';
 
 export function CategoriesList({
   categories,

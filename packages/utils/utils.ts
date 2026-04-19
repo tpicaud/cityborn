@@ -1,4 +1,4 @@
-import { Game, PlayerResults } from '@cityborn/types';
+import type { Game, PlayerResults } from '@cityborn/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Game

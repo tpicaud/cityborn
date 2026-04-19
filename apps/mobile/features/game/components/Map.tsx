@@ -1,23 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Image, Appearance } from 'react-native';
-import MapView, {
-  Marker,
-  Polygon,
-  Polyline,
-  LatLng,
-  PROVIDER_GOOGLE,
-} from 'react-native-maps';
-import * as turf from '@turf/turf';
+import { colors } from '@cityborn/design-system';
 import {
-  MapProps,
-  Coord,
-  Guess,
-  GuessObject,
-  Round,
+  type Coord,
+  type Guess,
+  type GuessObject,
+  type MapProps,
+  type Round,
   RoundStatus,
 } from '@cityborn/types';
 import { calculatePoints } from '@cityborn/utils';
-import { colors } from '@cityborn/design-system';
+import * as turf from '@turf/turf';
+import React, { useEffect, useRef } from 'react';
+import { Appearance, Image, View } from 'react-native';
+import MapView, {
+  type LatLng,
+  Marker,
+  Polygon,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from 'react-native-maps';
 
 export default function Map({ mapProps }: { mapProps: MapProps }) {
   const { center, zoom, preGuess, game, localPlayerID, handlePreGuess } =

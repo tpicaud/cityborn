@@ -1,8 +1,8 @@
 import {
   Dialog as MuiDialog,
-  DialogProps as MuiDialogProps,
+  type DialogProps as MuiDialogProps,
 } from '@mui/material';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface DialogProps extends MuiDialogProps {
   open: boolean;

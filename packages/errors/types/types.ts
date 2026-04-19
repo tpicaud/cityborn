@@ -1,4 +1,4 @@
-import { ErrorCode } from '../errors/ErrorCodes.js';
+import type { ErrorCode } from '../errors/ErrorCodes.js';
 
 export type ErrorPayload = {
   statusCode: number;

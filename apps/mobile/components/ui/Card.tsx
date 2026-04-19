@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '@/lib/utils';
 
 type CardProps = {
   children: ReactNode;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { tennis_dictionary } from './custom_dictionnaries';
-import { uniqueNamesGenerator } from 'unique-names-generator';
 import { customAlphabet } from 'nanoid';
+import { uniqueNamesGenerator } from 'unique-names-generator';
+import { tennis_dictionary } from './custom_dictionnaries';
 
 @Injectable()
 export class IdService {

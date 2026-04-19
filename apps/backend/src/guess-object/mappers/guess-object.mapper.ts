@@ -1,14 +1,14 @@
-import {
-  WikidataItemResponse,
-  WikidataSearchResponse,
-} from 'src/wikidata/wikidata.service';
-import { GuessObjectDto } from '../dto/guess-object.dto';
-import {
+import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
-import { GuessObjectCandidateDto } from '../dto/search-guess-object.response.dto';
+import type {
+  WikidataItemResponse,
+  WikidataSearchResponse,
+} from 'src/wikidata/wikidata.service';
 import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
+import type { GuessObjectDto } from '../dto/guess-object.dto';
+import type { GuessObjectCandidateDto } from '../dto/search-guess-object.response.dto';
 
 type PrismaGuessObjectWithRelations = PrismaGuessObject & {
   world_location?: PrismaWorldLocation;
@@ -80,6 +80,8 @@ export class GuessObjectMapper {
   static toGuessObjectsSearchResponseDto(
     response: WikidataSearchResponse,
   ): GuessObjectCandidateDto[] {
-    return response.results.map((item) => this.toGuessObjectCandidateDto(item));
+    return response.results.map((item) =>
+      GuessObjectMapper.toGuessObjectCandidateDto(item),
+    );
   }
 }

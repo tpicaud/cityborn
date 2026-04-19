@@ -1,11 +1,11 @@
 'use server';
 
-import { apiFetch } from '@/lib/apiFetch';
-import {
+import type {
   CreateGuessObject,
   GuessObject,
   UpdateCategory,
 } from '@cityborn/types';
+import { apiFetch } from '@/lib/apiFetch';
 
 export async function getGuessObject(id: string, includes?: string[]) {
   const query =

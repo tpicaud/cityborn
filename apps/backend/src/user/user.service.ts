@@ -1,17 +1,17 @@
+import { ErrorCode } from '@cityborn/errors';
+import { type AccountType, SessionMode } from '@cityborn/types';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { v4 as uuidv4 } from 'uuid';
-import { ErrorCode } from '@cityborn/errors';
-import { Prisma, User as PrismaUser } from '@prisma/client';
-import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
+import type { Prisma, User as PrismaUser } from '@prisma/client';
+import type { PrismaService } from 'src/prisma/prisma.service';
+import type { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
+import type { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
-import { AccountType, SessionMode } from '@cityborn/types';
-import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserService {

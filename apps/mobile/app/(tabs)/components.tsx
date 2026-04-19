@@ -1,7 +1,7 @@
+import { ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { ScrollView } from 'react-native';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 
 export default function ComponentsScreen() {
   return (

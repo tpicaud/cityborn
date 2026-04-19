@@ -1,4 +1,4 @@
-import { EventMap } from '@cityborn/types';
+import type { EventMap } from '@cityborn/types';
 import { IsObject, IsString } from 'class-validator';
 
 export class CreateEventDto<Name extends keyof EventMap = keyof EventMap> {

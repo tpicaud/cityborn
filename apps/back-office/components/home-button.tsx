@@ -1,8 +1,8 @@
 'use client';
 
 import { House } from 'lucide-react';
-import { Button } from './ui/Button';
 import Link from 'next/link';
+import { Button } from './ui/Button';
 
 export default function HomeButton() {
   return (

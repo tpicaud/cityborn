@@ -1,5 +1,4 @@
-import { Game } from '@cityborn/types';
-import { PlayerResults } from '@cityborn/types';
+import type { Game, PlayerResults } from '@cityborn/types';
 
 export const getGameResult = (game: Game): Map<string, PlayerResults> => {
   const resultsMap = new Map<string, PlayerResults>();
