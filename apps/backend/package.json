@@ -24,7 +24,9 @@
     "db:up": "npx prisma migrate deploy",
     "db:migrate": "npx prisma migrate dev --name",
     "db:reset": "npx prisma migrate reset",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/errors": "workspace:*",

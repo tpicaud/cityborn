@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.12.3",
