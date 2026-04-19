@@ -7,11 +7,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import type {
+import {
   SearchGuessObjectResponseDto,
   SearchWorldLocationResponseDto,
 } from './dto/search.response.dto';
-import type { SearchService } from './search.service';
+import { SearchService } from './search.service';
 
 @UseGuards(AdminGuard)
 @Controller('admin/search')

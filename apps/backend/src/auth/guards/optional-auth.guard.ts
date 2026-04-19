@@ -5,10 +5,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
-import type { JwtService } from '@nestjs/jwt';
-import type { Request } from 'express';
-import type { UserService } from 'src/user/user.service';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { UserService } from 'src/user/user.service';
 import { getJwtConstants } from '../constants';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { validateAccessToken } from './utils';

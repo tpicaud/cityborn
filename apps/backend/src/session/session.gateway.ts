@@ -1,13 +1,13 @@
 import { ErrorCode } from '@cityborn/errors';
-import type { GameConfig, Guess, User } from '@cityborn/types';
+import { GameConfig, Guess, User } from '@cityborn/types';
 import {
   BadRequestException,
   type HttpStatus,
   Logger,
   UseFilters,
 } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
-import type { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -17,14 +17,14 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import type { Server, Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { getJwtConstants } from 'src/auth/constants';
 import { validateAccessToken } from 'src/auth/guards/utils';
 import { extractAccessTokenFromWsClient } from 'src/auth/utils';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
 import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 import { CurrentUser } from 'src/user/user.decorator';
-import type { SessionService } from './session.service';
+import { SessionService } from './session.service';
 
 interface WSResponse {
   success: boolean;

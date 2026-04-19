@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { NominatimService } from 'src/nominatim/nominatim.service';
-import type { PrismaService } from 'src/prisma/prisma.service';
-import type { WorldLocationDto } from './dto/world-location.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { WorldLocationDto } from './dto/world-location.dto';
 import { WorldLocationMapper } from './mapper/world-location.mapper';
 
 @Injectable()

@@ -5,7 +5,7 @@ import {
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class VisitorIdInterceptor implements NestInterceptor {
