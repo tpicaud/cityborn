@@ -8,20 +8,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
-import type { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { OAuth2Client } from 'google-auth-library';
-import type { EventService } from 'src/event/event.service';
-import type { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import { OAuth2Client } from 'google-auth-library';
+import { EventService } from 'src/event/event.service';
+import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { UserMapper } from 'src/user/user.mapper';
-import type { UserService } from 'src/user/user.service';
+import { UserService } from 'src/user/user.service';
 import { getJwtConstants } from './constants';
-import type { AuthResponseDto } from './dto/auth.response.dto';
-import type { SignInDto } from './dto/sign-in.dto';
-import type { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
-import type { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import type { SignUpDto } from './dto/sign-up.dto';
+import { AuthResponseDto } from './dto/auth.response.dto';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 import { verifyAppleIdToken } from './utils';
 
 @Injectable()
