@@ -1,13 +1,17 @@
-import { IUseSession } from './IUseSession';
-import { useEffect, useState } from 'react';
-import { useSocket } from './useSocket';
-import { Guess, Session, SessionStatus } from '@cityborn/types';
-import { GameConfig } from '@cityborn/types';
-import { Socket } from 'socket.io-client';
 import { useError } from '@cityborn/contexts';
 import { ApiError } from '@cityborn/errors';
+import {
+  type GameConfig,
+  type Guess,
+  type Session,
+  SessionStatus,
+} from '@cityborn/types';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import type { Socket } from 'socket.io-client';
 import { apiClient } from '@/lib/apiClient';
+import type { IUseSession } from './IUseSession';
+import { useSocket } from './useSocket';
 
 export function useMultiSession(
   localPlayerID: string | undefined,

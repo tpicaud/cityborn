@@ -1,10 +1,10 @@
-import {
-  GuessObject as PrismaGuessObject,
+import type {
   Category as PrismaCategory,
+  GuessObject as PrismaGuessObject,
 } from '@prisma/client';
-import { CategoryDto } from '../dto/category.dto';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
 import { GuessObjectMapper } from 'src/guess-object/mappers/guess-object.mapper';
+import type { CategoriesResponseDto } from '../dto/categories.response.dto';
+import type { CategoryDto } from '../dto/category.dto';
 
 type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: PrismaGuessObject[];
@@ -32,7 +32,7 @@ export class CategoryMapper {
   ): CategoriesResponseDto {
     return {
       categories: prismaCategories.map((category) =>
-        this.toCategoryDto(category),
+        CategoryMapper.toCategoryDto(category),
       ),
     };
   }

@@ -1,5 +1,5 @@
-import { useError } from '@/contexts/ErrorContext';
-import { GameRecord, User } from '@cityborn/types';
+import type { GameRecord, User } from '@cityborn/types';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
   AccordionDetails,
@@ -12,9 +12,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { calculateTotalPoints } from '@/utils/calculateScore';
 import { useApi } from '@/contexts/ApiContext';
+import { useError } from '@/contexts/ErrorContext';
+import { calculateTotalPoints } from '@/utils/calculateScore';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { invokeError } = useError();

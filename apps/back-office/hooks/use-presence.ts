@@ -1,7 +1,7 @@
 // src/hooks/use-presence.ts
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 
 interface ActiveUser {

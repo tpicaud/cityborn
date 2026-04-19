@@ -1,6 +1,6 @@
-import { Coord } from './Coord.js';
-import { Guess } from './Guess.js';
-import { Game } from './Game.js';
+import type { Coord } from './Coord.js';
+import type { Game } from './Game.js';
+import type { Guess } from './Guess.js';
 
 export interface MapProps {
   center: Coord;

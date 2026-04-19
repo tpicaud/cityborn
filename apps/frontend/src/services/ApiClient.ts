@@ -1,6 +1,5 @@
-import { getOrCreateVisitorId } from '@/lib/visitorId';
 import { ApiError } from '@cityborn/errors';
-import {
+import type {
   Category,
   CreateEvent,
   Game,
@@ -12,6 +11,7 @@ import {
   Session,
   SessionMode,
 } from '@cityborn/types';
+import { getOrCreateVisitorId } from '@/lib/visitorId';
 
 export class ApiClient {
   constructor() {}

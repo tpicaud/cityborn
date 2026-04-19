@@ -1,8 +1,8 @@
 import { useError } from '@cityborn/contexts';
-import { initSocket } from '@/lib/socket';
 import { ApiError } from '@cityborn/errors';
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { Socket } from 'socket.io-client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Socket } from 'socket.io-client';
+import { initSocket } from '@/lib/socket';
 
 export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);

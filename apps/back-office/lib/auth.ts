@@ -1,8 +1,9 @@
 // src/lib/auth.ts
-import { User } from '@/types';
-import { SignJWT, jwtVerify } from 'jose';
+
+import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
+import type { User } from '@/types';
 
 const secretKey =
   process.env.AUTH_SECRET || 'your-secret-key-change-in-production';

@@ -1,23 +1,25 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import {
+  type Coord,
+  type Guess,
+  type GuessObject,
+  type MapProps,
+  type Round,
+  RoundStatus,
+} from '@cityborn/types';
+import * as turf from '@turf/turf';
 import {
   AdvancedMarker,
   AdvancedMarkerAnchorPoint,
   APIProvider,
   Map,
-  MapMouseEvent,
+  type MapMouseEvent,
   useMap,
 } from '@vis.gl/react-google-maps';
-import { calculatePoints } from '@/utils/calculateScore';
-import { MapProps } from '@cityborn/types';
-import { Coord } from '@cityborn/types';
-import { Guess } from '@cityborn/types';
-import { GuessObject } from '@cityborn/types';
-import { RoundStatus } from '@cityborn/types';
-import { Round } from '@cityborn/types';
-import * as turf from '@turf/turf';
 import Image from 'next/image';
+import React, { useEffect } from 'react';
+import { calculatePoints } from '@/utils/calculateScore';
 
 type GoogleMapProps = {
   API_KEY: string;

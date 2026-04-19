@@ -1,5 +1,5 @@
+import { Box, CircularProgress } from '@mui/material';
 import React from 'react';
-import { CircularProgress, Box } from '@mui/material';
 import { Dialog } from '../dialogs/Dialog';
 
 const LoadingComponent = ({ message }: { message?: string }) => {

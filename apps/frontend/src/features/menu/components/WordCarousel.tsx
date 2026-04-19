@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 const words = [
   'Roger Federer',

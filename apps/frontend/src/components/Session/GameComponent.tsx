@@ -1,15 +1,18 @@
 'use client';
 
-import GuessComponent from '@/components/guess/GuessComponent';
+import {
+  type Game,
+  GameStatus,
+  type Guess,
+  RoundStatus,
+  type Session,
+} from '@cityborn/types';
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
-import { RoundStatus, Session } from '@cityborn/types';
+import GuessComponent from '@/components/guess/GuessComponent';
 import LoadingComponent from '@/components/others/LoadingComponent';
-import { Game } from '@cityborn/types';
-import { Guess } from '@cityborn/types';
-import { GameStatus } from '@cityborn/types';
-import ResultsComponent from './ResultsComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
+import ResultsComponent from './ResultsComponent';
 
 export const GameComponent = ({
   localPlayerID,

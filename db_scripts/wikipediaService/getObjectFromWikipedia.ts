@@ -1,6 +1,6 @@
 import axios from 'axios';
+import type { GuessObject } from '../database/models/celebrity';
 import { fetchWikipediaData } from './fetchWikipediaData';
-import { GuessObject } from '../database/models/celebrity';
 
 const getObjectFromWikipedia = async (
   name: string,

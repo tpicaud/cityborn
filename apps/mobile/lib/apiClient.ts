@@ -1,5 +1,5 @@
 import { ApiClient } from '@cityborn/api';
-import { getBaseUrl } from './utils';
 import { tokenStorage } from './tokenStorage';
+import { getBaseUrl } from './utils';
 
 export const apiClient = new ApiClient(getBaseUrl(), tokenStorage);

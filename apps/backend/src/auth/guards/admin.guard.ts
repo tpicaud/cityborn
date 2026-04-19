@@ -1,11 +1,11 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { ErrorCode } from '@cityborn/errors';
 
 @Injectable()
 export class AdminGuard implements CanActivate {

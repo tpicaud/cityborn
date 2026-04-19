@@ -1,6 +1,7 @@
 // src/components/ui/button.tsx
-import * as React from 'react';
+
 import { Button as AriaButton } from '@ariakit/react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 import Loader from './Loader';
 

@@ -1,6 +1,6 @@
 import { LoaderCircle } from 'lucide-react-native';
-import { View } from 'react-native';
 import { styled } from 'nativewind';
+import { View } from 'react-native';
 import { cn } from '@/lib/utils';
 
 const AnimatedView = styled(View);

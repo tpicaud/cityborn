@@ -1,17 +1,17 @@
+import {
+  GameStatus,
+  type Game as GameType,
+  type Guess as GuessType,
+} from '@cityborn/types';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text } from '@/components/ui/native/NativeComponents';
-import {
-  Game as GameType,
-  GameStatus,
-  Guess as GuessType,
-} from '@cityborn/types';
-import Results from './components/Results';
 import Guess from './components/Guess';
-import { StyleSheet, View } from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect, useNavigation } from 'expo-router';
+import Results from './components/Results';
 
 export const Game = ({
   localPlayerID,

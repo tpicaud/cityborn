@@ -1,3 +1,4 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   Controller,
@@ -6,12 +7,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import { SearchService } from './search.service';
-import { ErrorCode } from '@cityborn/errors';
-import {
+import type {
   SearchGuessObjectResponseDto,
   SearchWorldLocationResponseDto,
 } from './dto/search.response.dto';
+import type { SearchService } from './search.service';
 
 @UseGuards(AdminGuard)
 @Controller('admin/search')

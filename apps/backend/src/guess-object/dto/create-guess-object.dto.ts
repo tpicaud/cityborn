@@ -1,8 +1,8 @@
-import { CreateGuessObject, WorldLocation } from '@cityborn/types';
-import { IsOptional, IsString } from 'class-validator';
-import { GuessObjectSourceDto } from './guess-object.dto';
+import type { CreateGuessObject, WorldLocation } from '@cityborn/types';
 import { Type } from 'class-transformer';
+import { IsOptional, IsString } from 'class-validator';
 import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
+import { GuessObjectSourceDto } from './guess-object.dto';
 
 export class CreateGuessObjectDto implements CreateGuessObject {
   @IsString()

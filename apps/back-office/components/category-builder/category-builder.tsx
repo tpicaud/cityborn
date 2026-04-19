@@ -1,14 +1,16 @@
 'use client';
 
-import {
+import type {
   Category,
   GuessObject,
   GuessObjectCandidate,
   UpdateCategory,
 } from '@cityborn/types';
-import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
 import { Button } from '../ui/Button';
+import Loader from '../ui/Loader';
 import {
   deleteCategory,
   getGuessObject,
@@ -16,12 +18,10 @@ import {
   saveCategory,
   saveGuessObject,
 } from './action';
-import { GuessObjectsList } from './guess-objects-list';
-import Loader from '../ui/Loader';
 import { DeleteCategoryPopup } from './delete-category-popup';
-import { useRouter } from 'next/navigation';
-import { PublishCategoryPopup } from './publish-category-popup';
+import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
+import { PublishCategoryPopup } from './publish-category-popup';
 
 interface CategoryBuilderProps {
   fetchedCategory: Category;

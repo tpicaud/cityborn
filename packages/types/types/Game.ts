@@ -1,10 +1,10 @@
-import { GuessObject } from './GuessObject.js';
-import { GameStatus } from '../enums/GameStatus.js';
-import { Round } from './Round.js';
-import { PlayerResults } from './Results.js';
-import { SessionMode } from '../enums/SessionMode.js';
-import { GameConfig } from './GameConfig.js';
-import { Player } from './Player.js';
+import type { GameStatus } from '../enums/GameStatus.js';
+import type { SessionMode } from '../enums/SessionMode.js';
+import type { GameConfig } from './GameConfig.js';
+import type { GuessObject } from './GuessObject.js';
+import type { Player } from './Player.js';
+import type { PlayerResults } from './Results.js';
+import type { Round } from './Round.js';
 
 export interface Game {
   id: string;

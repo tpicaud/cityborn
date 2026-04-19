@@ -1,16 +1,16 @@
 'use client';
 
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
-import { GuessObjectSearchInput } from './guess-object-search-input';
+import type { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { getGuessObject } from '../category-builder/action';
 import {
   searchGuessObjectByExternalId,
   searchWorldLocationById,
 } from './action';
+import GuessObjectCard from './guess-object-card';
+import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';
 import { WorldLocationViewer } from './world-location-viewer';
-import GuessObjectCard from './guess-object-card';
-import { getGuessObject } from '../category-builder/action';
 
 export function GuessObjectBuilder({
   guessObjectCandidate,

@@ -1,10 +1,10 @@
 'use client';
 
+import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
-import { Box, FormControl, TextField, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useError } from '@/contexts/ErrorContext';
 import { useApi } from '@/contexts/ApiContext';
+import { useError } from '@/contexts/ErrorContext';
 
 interface FormValues {
   username: string;

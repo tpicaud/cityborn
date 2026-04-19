@@ -1,15 +1,15 @@
 import {
-  Coord,
-  Game,
+  type Coord,
+  type Game,
   GameConfig,
-  GameRecord,
-  GameState,
+  type GameRecord,
+  type GameState,
   GameStatus,
-  Guess,
+  type Guess,
   Player,
-  PlayerResults,
-  Result,
-  Round,
+  type PlayerResults,
+  type Result,
+  type Round,
   RoundStatus,
   SessionMode,
 } from '@cityborn/types';
@@ -25,8 +25,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { GuessObjectDto } from 'src/guess-object/dto/guess-object.dto';
-import { GameConfigDto } from './session.dto';
 import { PlayerDto } from 'src/player/dto/player.dto';
+import { GameConfigDto } from './session.dto';
 
 export class ResultDto implements Result {
   @IsString()

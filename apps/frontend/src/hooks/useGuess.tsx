@@ -1,5 +1,5 @@
+import { defaultGuess, type Guess } from '@cityborn/types';
 import { useState } from 'react';
-import { defaultGuess, Guess } from '@cityborn/types';
 
 const useGuess = (handleGuess: (guess: Guess) => void) => {
   const [preGuess, setPreGuess] = useState<Guess>();

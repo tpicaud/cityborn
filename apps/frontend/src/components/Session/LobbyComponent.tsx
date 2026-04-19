@@ -1,34 +1,38 @@
 'use client';
 
 import {
-  Typography,
+  type Category,
+  type GameConfig,
+  type OnlinePlayer,
+  type Session,
+  SessionMode,
+} from '@cityborn/types';
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import {
+  Box,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
   List,
   ListItem,
   ListItemText,
-  TextField,
-  Checkbox,
-  FormControl,
-  InputLabel,
   MenuItem,
   OutlinedInput,
   Select,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
+  TextField,
+  Typography,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { useEffect, useState } from 'react';
-import { SessionMode, Session, Category } from '@cityborn/types';
-import { GameConfig } from '@cityborn/types';
-import { OnlinePlayer } from '@cityborn/types';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useApi } from '@/contexts/ApiContext';
+import { useError } from '@/contexts/ErrorContext';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import { useError } from '@/contexts/ErrorContext';
-import { useApi } from '@/contexts/ApiContext';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),

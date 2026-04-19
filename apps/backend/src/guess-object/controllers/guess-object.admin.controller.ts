@@ -1,3 +1,4 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   Body,
@@ -11,15 +12,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GuessObjectService } from '../guess-object.service';
-import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
-import {
+import { AdminGuard } from 'src/auth/guards/admin.guard';
+import type {
   CreateGuessObjectDto,
   CreateGuessObjectResponseDto,
 } from '../dto/create-guess-object.dto';
-import { ErrorCode } from '@cityborn/errors';
-import { GuessObjectDto } from '../dto/guess-object.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import type { GuessObjectDto } from '../dto/guess-object.dto';
+import type { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
+import type { GuessObjectService } from '../guess-object.service';
 
 @UseGuards(AdminGuard)
 @Controller('admin/guess-objects')

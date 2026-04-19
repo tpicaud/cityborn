@@ -1,7 +1,7 @@
 'use server';
 
+import type { Category, CreateCategory } from '@cityborn/types';
 import { apiFetch } from '@/lib/apiFetch';
-import { Category, CreateCategory } from '@cityborn/types';
 
 export async function getAllCategories(): Promise<Category[]> {
   const response = await apiFetch(
