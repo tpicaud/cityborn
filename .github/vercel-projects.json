@@ -1,0 +1,10 @@
+{
+  "prj_CRhwCNJN1TJvEvN8y4ovxqQzcFHs": {
+    "production": "cityborn.app",
+    "staging": "staging.cityborn.app"
+  },
+  "prj_EAGHNYtdfPDNrDMmVj77em6NTLgg": {
+    "production": "admin.cityborn.app",
+    "staging": "admin.staging.cityborn.app"
+  }
+}
