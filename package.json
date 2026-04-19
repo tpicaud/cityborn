@@ -13,12 +13,6 @@
     "typecheck": "turbo run typecheck",
     "dev:mobile": "turbo run dev --filter=./apps/mobile --filter=./apps/backend",
     "dev:web": "turbo run dev --filter=./apps/back-office --filter=./apps/backend --filter=./apps/frontend",
-    "format": "prettier --write .",
-    "format:packages": "prettier --write packages",
-    "format:frontend": "prettier --write apps/frontend",
-    "format:backend": "prettier --write apps/backend",
-    "format:back-office": "prettier --write apps/back-office",
-    "format:mobile": "prettier --write apps/mobile",
     "packages:build": "turbo run build --filter=./packages/*",
     "backend": "pnpm --dir apps/backend",
     "backend:build": "turbo run build --filter=cityborn-backend",
@@ -49,8 +43,6 @@
     }
   },
   "devDependencies": {
-    "eslint-config-prettier": "^10.1.5",
-    "prettier": "^3.6.2",
     "turbo": "^2.5.4"
   }
 }
