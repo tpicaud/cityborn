@@ -55,17 +55,11 @@ export default function HomeComponent() {
       break;
 
     case 'sign-up':
-      content = (
-        <SignUpComponent />
-      );
+      content = <SignUpComponent />;
       break;
 
     case 'menu':
-      content = (
-        <MenuComponent
-          setState={setState}
-        />
-      );
+      content = <MenuComponent setState={setState} />;
       break;
 
     case 'profile':
@@ -73,11 +67,7 @@ export default function HomeComponent() {
       break;
 
     default:
-      content = (
-        <MenuComponent
-          setState={setState}
-        />
-      );
+      content = <MenuComponent setState={setState} />;
   }
 
   return (

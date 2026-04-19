@@ -30,10 +30,7 @@ export class SessionController {
     @CurrentUser() user?: User,
     @VisitorId() visitorId?: string,
   ): Promise<SessionResponseDto> {
-    if (
-      createSessionDto.mode === SessionMode.MULTI &&
-      (!user)
-    )
+    if (createSessionDto.mode === SessionMode.MULTI && !user)
       throw new UnauthorizedException({
         code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED,
         message: 'User does not have an account or is no verified',

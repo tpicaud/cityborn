@@ -9,7 +9,6 @@ export class PublicUser {
   id: string;
 
   username: string;
-
 }
 
 export class User extends PublicUser {
