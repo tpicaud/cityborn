@@ -7,8 +7,10 @@
   "author": "Tom Picaud",
   "scripts": {
     "build": "tsc --build",
-    "typecheck": "tsc --noEmit"
-},
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write .",
+    "check": "biome check ."
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",

@@ -15,7 +15,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "check-env": "node scripts/check-env.js",
-    "postinstall": "cd ../.. && pnpm packages:build"
+    "postinstall": "cd ../.. && pnpm packages:build",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

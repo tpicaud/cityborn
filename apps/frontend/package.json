@@ -7,7 +7,9 @@
     "build": "next build",
     "typecheck": "tsc -noEmit",
     "start": "dotenv -e .env -- next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "dependencies": {
     "@capacitor/android": "^7.2.0",
