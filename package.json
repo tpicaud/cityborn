@@ -33,6 +33,7 @@
     "mobile:start": "pnpm mobile start",
     "mobile": "pnpm --dir apps/mobile",
     "db:start": "cd apps/backend && pnpm db:start && cd ../..",
+    "db:stop": "cd apps/backend && pnpm db:stop && cd ../..",
     "db:up": "pnpm backend db:up",
     "db:migrate": "pnpm backend db:migrate",
     "db:reset": "pnpm backend db:reset",

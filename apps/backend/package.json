@@ -21,6 +21,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:start": "docker compose -f docker-compose.resources.yml up --build --remove-orphans -d",
+    "db:stop": "docker compose -f docker-compose.resources.yml down",
     "db:up": "npx prisma migrate deploy",
     "db:migrate": "npx prisma migrate dev --name",
     "db:reset": "npx prisma migrate reset",
