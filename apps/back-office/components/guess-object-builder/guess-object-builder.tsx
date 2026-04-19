@@ -110,7 +110,7 @@ export function GuessObjectBuilder({
   return (
     <div className="flex flex-col gap-8 w-full h-full min-h-0">
       <form className="flex flex-col z-10 h-full w-full">
-        <div className='flex flex-col gap-4'>
+        <div className="flex flex-col gap-4">
           <div className="flex flex-row gap-12">
             <div className="h-full w-[30%] min-w-40 flex flex-col">
               <label htmlFor="name">Nom</label>
@@ -154,26 +154,26 @@ export function GuessObjectBuilder({
             </div>
           </div>
           <div>
-              <label htmlFor="short_description">Lien de l'image</label>
-              <input
-                type="text"
-                name="short_description"
-                id="short_description"
-                placeholder="e.g. Tennisman"
-                value={guessObjectCandidate?.image ?? ''}
-                disabled={isLoadingFullObject}
-                onChange={(e) =>
-                  updateGuessObjectCandidate({
-                    image: e.target.value,
-                  })
-                }
-                className={`text-gray-800 rounded-md mt-3 p-2 w-full
+            <label htmlFor="short_description">Lien de l'image</label>
+            <input
+              type="text"
+              name="short_description"
+              id="short_description"
+              placeholder="e.g. Tennisman"
+              value={guessObjectCandidate?.image ?? ''}
+              disabled={isLoadingFullObject}
+              onChange={(e) =>
+                updateGuessObjectCandidate({
+                  image: e.target.value,
+                })
+              }
+              className={`text-gray-800 rounded-md mt-3 p-2 w-full
                                           ${isLoadingFullObject ? 'bg-neutral-300' : 'bg-white'}`}
-              />
+            />
           </div>
         </div>
 
-        <div className='flex-1 min-h-0 flex flex-col'>
+        <div className="flex-1 min-h-0 flex flex-col">
           <label htmlFor="short_description" className="flex items-center h-14">
             Localisation
           </label>

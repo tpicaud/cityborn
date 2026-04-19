@@ -121,7 +121,7 @@ export default function Profile() {
                 </View>
               ) : gamesRecords.length === 0 ? (
                 <Text className="text-center mt-2 text-neutral-600 italic">
-                    Aucunes parties trouvées.
+                  Aucunes parties trouvées.
                 </Text>
               ) : (
                 <ScrollView

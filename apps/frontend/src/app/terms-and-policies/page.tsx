@@ -11,7 +11,7 @@ export default function TermsAndPolicies() {
             1. Introduction
           </h2>
           <p className="text-gray-700">
-            La présente politique de confidentialité décrit comment{" "}
+            La présente politique de confidentialité décrit comment{' '}
             <strong>Cityborn</strong> (ci-après « l’Application ») collecte,
             utilise et protège les données personnelles des utilisateurs lors de
             l’utilisation de l’application web et mobile.
@@ -20,7 +20,7 @@ export default function TermsAndPolicies() {
             Nous accordons une grande importance à la protection de votre vie
             privée et nous nous engageons à traiter vos données personnelles de
             manière transparente, sécurisée et conforme à la réglementation
-            applicable, notamment le{" "}
+            applicable, notamment le{' '}
             <strong>
               Règlement Général sur la Protection des Données (RGPD)
             </strong>
@@ -40,7 +40,7 @@ export default function TermsAndPolicies() {
               <strong>Nom de la société :</strong> Cityborn Games
             </li>
             <li>
-              <strong>Adresse e-mail de contact :</strong>{" "}
+              <strong>Adresse e-mail de contact :</strong>{' '}
               cityborn.contact@gmail.com
             </li>
             <li>
@@ -124,7 +124,7 @@ export default function TermsAndPolicies() {
             7. Partage des données
           </h2>
           <p className="text-gray-700">
-            Les données personnelles ne sont{" "}
+            Les données personnelles ne sont{' '}
             <strong>ni vendues, ni louées, ni cédées</strong> à des tiers.
           </p>
           <p className="text-gray-700">
