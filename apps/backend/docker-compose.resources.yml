@@ -1,3 +1,5 @@
+name: cityborn_resources
+
 services:
   postgis:
     image: postgis/postgis:16-3.4
