@@ -1,13 +1,17 @@
-import { Guess, GuessObject, Round } from '@cityborn/types';
+import {
+  type Game,
+  type Guess,
+  type GuessObject,
+  type Round,
+  RoundStatus,
+} from '@cityborn/types';
+import { useEffect, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 import GuessObjectCard from './GuessObjectCard';
 import Timer from './Timer';
-import { RoundStatus } from '@cityborn/types';
-import { Game } from '@cityborn/types';
-import { useEffect, useState } from 'react';
-import { Text, View } from '@/components/ui/native/NativeComponents';
-import Button from '@/components/ui/Button';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Card from '@/components/ui/Card';
 
 function GuessResult({
   currentRound,

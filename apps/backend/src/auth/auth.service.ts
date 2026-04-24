@@ -1,3 +1,5 @@
+import { ErrorCode } from '@cityborn/errors';
+import { createEvent, type User } from '@cityborn/types';
 import {
   Inject,
   Injectable,
@@ -6,22 +8,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SignUpDto } from './dto/sign-up.dto';
-import * as bcrypt from 'bcrypt';
-import { SignInDto } from './dto/sign-in.dto';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { AuthResponseDto } from './dto/auth.response.dto';
-import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
-import { OAuth2Client } from 'google-auth-library';
-import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import { getJwtConstants } from './constants';
 import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '@cityborn/errors';
-import { createEvent, User } from '@cityborn/types';
-import { UserMapper } from 'src/user/user.mapper';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import { EventService } from 'src/event/event.service';
+import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
+import { UserMapper } from 'src/user/user.mapper';
+import { UserService } from 'src/user/user.service';
+import { getJwtConstants } from './constants';
+import { AuthResponseDto } from './dto/auth.response.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
+import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 import { verifyAppleIdToken } from './utils';
 
 @Injectable()

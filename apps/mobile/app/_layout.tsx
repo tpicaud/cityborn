@@ -2,17 +2,17 @@ import { Stack, useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { apiClient } from '@/lib/apiClient';
 import { AuthProvider, ErrorProvider } from '@cityborn/contexts';
+import type { User } from '@cityborn/types';
+import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect, useState } from 'react';
-import { User } from '@cityborn/types';
+import { Platform, StatusBar, TouchableOpacity } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ErrorDialog from '@/components/ui/ErrorDialog';
+import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
-import ErrorDialog from '@/components/ui/ErrorDialog';
-import { Platform, StatusBar, TouchableOpacity } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
-import * as NavigationBar from 'expo-navigation-bar';
+import { apiClient } from '@/lib/apiClient';
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);

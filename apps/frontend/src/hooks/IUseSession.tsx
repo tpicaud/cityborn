@@ -1,5 +1,4 @@
-import { GameConfig, Guess } from '@cityborn/types';
-import { Session } from '@cityborn/types';
+import type { GameConfig, Guess, Session } from '@cityborn/types';
 
 export interface IUseSession {
   session: Session | undefined;

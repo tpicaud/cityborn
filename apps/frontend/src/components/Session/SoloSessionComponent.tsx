@@ -1,12 +1,12 @@
 'use client';
 
+import type { GameConfig, Guess } from '@cityborn/types';
+import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import LoadingComponent from '@/components/others/LoadingComponent';
-import { useSoloSession } from '@/hooks/useSoloSession';
-import { GameConfig, Guess } from '@cityborn/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { useSoloSession } from '@/hooks/useSoloSession';
 
 export default function SoloSessionComponent() {
   const { user } = useAuth();

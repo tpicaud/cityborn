@@ -1,16 +1,16 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { getJwtConstants } from '../constants';
-import { Request } from 'express';
-import { extractTokenFromHTTPHeader } from '../utils';
 import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '@cityborn/errors';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 import { UserService } from 'src/user/user.service';
+import { getJwtConstants } from '../constants';
+import { extractTokenFromHTTPHeader } from '../utils';
 import { validateAccessToken } from './utils';
 
 @Injectable()

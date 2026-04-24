@@ -3,16 +3,16 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { Dispatch, SetStateAction, useState } from 'react';
 import { SessionMode } from '@cityborn/types';
+import Image from 'next/image';
+import Link from 'next/link';
+import { type Dispatch, type SetStateAction, useState } from 'react';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useError } from '@/contexts/ErrorContext';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
-import { useError } from '@/contexts/ErrorContext';
-import Image from 'next/image';
-import { useApi } from '@/contexts/ApiContext';
-import Link from 'next/link';
 
 export default function MenuComponent({
   setState,

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { ErrorCode } from '@cityborn/errors';
+import { ScoreType } from '@cityborn/types';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SentenceDto } from './dto/sentence.dto';
-import { ScoreType } from '@cityborn/types';
 import { SentenceMapper } from './mapper/sentence.mapper';
 
 @Injectable()

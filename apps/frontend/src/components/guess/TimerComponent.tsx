@@ -1,11 +1,12 @@
 'use client';
 
-import React, {
+import type React from 'react';
+import {
+  type Dispatch,
+  type SetStateAction,
   useEffect,
-  useState,
   useRef,
-  Dispatch,
-  SetStateAction,
+  useState,
 } from 'react';
 
 interface TimerComponentProps {

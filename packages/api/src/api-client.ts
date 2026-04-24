@@ -1,15 +1,15 @@
-import {
-  TokenStorage,
-  User,
-  CreateUser,
-  GameRecord,
-  SessionMode,
-  Session,
+import type {
   Category,
   CreateEvent,
+  CreateUser,
   Game,
+  GameRecord,
   GuessObject,
   Sentence,
+  Session,
+  SessionMode,
+  TokenStorage,
+  User,
 } from '@cityborn/types';
 import { AuthFetch } from './auth-fetch.js';
 

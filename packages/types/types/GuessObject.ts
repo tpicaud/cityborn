@@ -1,4 +1,4 @@
-import { WorldLocation } from './WorldLocation.js';
+import type { WorldLocation } from './WorldLocation.js';
 
 export interface GuessObject {
   id: string;

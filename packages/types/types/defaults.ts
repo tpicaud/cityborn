@@ -1,4 +1,4 @@
-import { Guess } from './Guess.js';
+import type { Guess } from './Guess.js';
 
 export const defaultGuess: Readonly<Guess> = {
   coordinates: { lat: 0, lng: 0 },

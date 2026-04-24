@@ -1,9 +1,9 @@
+import { ErrorCode } from '@cityborn/errors';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CategoriesResponseDto } from '../dto/categories.response.dto';
+import { CategoryDto } from '../dto/category.dto';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
-import { ErrorCode } from '@cityborn/errors';
-import { CategoryDto } from '../dto/category.dto';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
 
 @Injectable()
 export class PublicCategoryService {

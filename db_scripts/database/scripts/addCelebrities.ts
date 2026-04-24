@@ -1,5 +1,5 @@
 import { client } from '../dbConnect';
-import { celebrityCollection, GuessObject } from '../models/celebrity';
+import { celebrityCollection, type GuessObject } from '../models/celebrity';
 
 export async function addCelebrities(celebrities: GuessObject[]) {
   try {

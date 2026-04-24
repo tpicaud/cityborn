@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
 import { useAuth } from '@cityborn/contexts';
-import { apiClient } from '@/lib/apiClient';
-import Button from '@/components/ui/Button';
-import { useRouter } from 'expo-router';
 import { getFriendlyErrorMessage } from '@cityborn/errors';
-import TextInput from '@/components/ui/TextInput';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { SignInWithGoogleButton } from './GoogleSignIn';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { SignInWithAppleButton } from './AppleSignIn';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Button from '@/components/ui/Button';
+import { Text, View } from '@/components/ui/native/NativeComponents';
+import TextInput from '@/components/ui/TextInput';
+import { apiClient } from '@/lib/apiClient';
+import { SignInWithAppleButton } from './AppleSignIn';
+import { SignInWithGoogleButton } from './GoogleSignIn';
 
 interface FormValues {
   username: string;

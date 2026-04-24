@@ -1,13 +1,13 @@
 'use client';
 
+import type { User } from '@cityborn/types';
 import {
-  useState,
-  useContext,
   createContext,
-  ReactNode,
+  type ReactNode,
   useCallback,
+  useContext,
+  useState,
 } from 'react';
-import { User } from '@cityborn/types';
 
 interface AuthContextType {
   user: User | null;

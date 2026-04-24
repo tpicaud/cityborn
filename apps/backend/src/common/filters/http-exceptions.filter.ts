@@ -1,13 +1,13 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
-  ExceptionFilter,
+  type ArgumentsHost,
   Catch,
-  ArgumentsHost,
-  HttpException,
+  type ExceptionFilter,
+  type HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ErrorCode } from '@cityborn/errors';
 
 @Catch()
 export class HTTPExceptionsFilter implements ExceptionFilter {

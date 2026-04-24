@@ -1,10 +1,10 @@
-import { cn } from '@/lib/utils';
 import {
   Text as NativeText,
-  TextProps as NativeTextProps,
+  type TextProps as NativeTextProps,
   View as NativeView,
-  ViewProps as NativeViewProps,
+  type ViewProps as NativeViewProps,
 } from 'react-native';
+import { cn } from '@/lib/utils';
 
 export function Text({ children, className = '', ...props }: NativeTextProps) {
   return (

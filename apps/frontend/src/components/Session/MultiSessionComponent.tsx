@@ -1,15 +1,14 @@
 'use client';
 
+import { type GameConfig, type Guess, SessionStatus } from '@cityborn/types';
+import { useParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
 import { useMultiSession } from '@/hooks/useMultiSession';
-import { GameConfig, SessionStatus } from '@cityborn/types';
-import { Guess } from '@cityborn/types';
-import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
 
 export default function MultiSessionComponent() {
   const { user } = useAuth();

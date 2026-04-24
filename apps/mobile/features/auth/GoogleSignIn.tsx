@@ -1,5 +1,3 @@
-import { apiClient } from '@/lib/apiClient';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@cityborn/contexts';
 import { ApiError, ErrorCode } from '@cityborn/errors';
 import {
@@ -8,7 +6,9 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Image } from 'react-native';
+import { Image, Pressable } from 'react-native';
+import { apiClient } from '@/lib/apiClient';
+import { cn } from '@/lib/utils';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID,

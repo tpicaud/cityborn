@@ -1,9 +1,9 @@
-import { Request } from 'express';
 import * as cookie from 'cookie';
-import { Socket } from 'socket.io';
-import * as jwksRsa from 'jwks-rsa';
+import type { Request } from 'express';
+import type { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
-import { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
+import * as jwksRsa from 'jwks-rsa';
+import type { Socket } from 'socket.io';
 export function extractTokenFromHTTPHeader(
   request: Request,
 ): string | undefined {

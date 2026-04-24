@@ -12,12 +12,12 @@ import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { CurrentUser } from 'src/user/user.decorator';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth.response.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
 import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { RefreshGuard } from './guards/refresh.guard';
 import { AuthGuard } from './guards/auth.guard';
+import { RefreshGuard } from './guards/refresh.guard';
 
 @Controller('auth')
 export class AuthController {

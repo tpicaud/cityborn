@@ -1,7 +1,7 @@
-import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { PublicUserDto } from './public-user.dto';
 import { Type } from 'class-transformer';
+import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { GameRecordDto } from 'src/session/dto/game.dto';
+import { PublicUserDto } from './public-user.dto';
 
 export class UserDto extends PublicUserDto {
   @IsString()

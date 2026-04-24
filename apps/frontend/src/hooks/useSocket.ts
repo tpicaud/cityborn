@@ -1,8 +1,8 @@
+import { ApiError } from '@cityborn/errors';
+import { useCallback, useEffect, useState } from 'react';
+import type { Socket } from 'socket.io-client';
 import { useError } from '@/contexts/ErrorContext';
 import { getSocket } from '@/lib/socket';
-import { ApiError } from '@cityborn/errors';
-import { useEffect, useState, useCallback } from 'react';
-import { Socket } from 'socket.io-client';
 
 export const useSocket = () => {
   const socket: Socket = getSocket();

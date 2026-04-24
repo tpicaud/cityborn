@@ -1,10 +1,10 @@
 import { useAuth, useError } from '@cityborn/contexts';
-import { GameConfig, Guess } from '@cityborn/types';
-import { SoloLobby } from './SoloLobby';
-import { View } from '@/components/ui/native/NativeComponents';
+import type { GameConfig, Guess } from '@cityborn/types';
 import LoaderIcon from '@/components/ui/LoaderIcon';
+import { View } from '@/components/ui/native/NativeComponents';
 import { Game } from '../../game/Game';
 import { useSoloSession } from '../hooks/useSoloSession';
+import { SoloLobby } from './SoloLobby';
 
 export default function SoloSession() {
   const { user } = useAuth();

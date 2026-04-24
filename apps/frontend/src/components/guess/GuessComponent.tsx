@@ -1,13 +1,16 @@
 'use client';
 
-import OverlayComponent from '@/components/guess/OverlayComponent';
-import useGuess from '@/hooks/useGuess';
+import {
+  type Game,
+  type Guess,
+  RoundStatus,
+  type Session,
+} from '@cityborn/types';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import OverlayComponent from '@/components/guess/OverlayComponent';
+import useGuess from '@/hooks/useGuess';
 import RoundCountdownComponent from './RoundCountdown';
-import { Guess, Session } from '@cityborn/types';
-import { Game } from '@cityborn/types';
-import { RoundStatus } from '@cityborn/types';
 
 const GoogleMapComponent = dynamic(
   () => import('@/components/guess/maps/GoogleMapComponent'),

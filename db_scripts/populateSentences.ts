@@ -1,5 +1,5 @@
 import { addSentences } from './database/scripts/addSentences';
-import { parseSentencesCSV, Sentence } from './utils/parseSentencesCSV';
+import { parseSentencesCSV, type Sentence } from './utils/parseSentencesCSV';
 
 const populateDB = async () => {
   const sentences: Sentence[] = [];

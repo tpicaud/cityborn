@@ -1,8 +1,8 @@
 // src/components/logout-button.tsx
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { logout } from '@/app/logout/action';
 import { Button } from './ui/Button';
 

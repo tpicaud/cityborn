@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils';
 import {
   Modal,
-  View,
+  type ModalProps,
   Text,
   TouchableWithoutFeedback,
-  ModalProps,
+  View,
 } from 'react-native';
+import { cn } from '@/lib/utils';
 
 interface DialogProps extends ModalProps {
   visible: boolean;

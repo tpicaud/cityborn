@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable, Text } from 'react-native';
+import { cn } from '@/lib/utils';
 import LoaderIcon from './LoaderIcon';
 
 type Props = {

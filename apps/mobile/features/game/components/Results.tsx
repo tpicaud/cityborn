@@ -1,10 +1,9 @@
-import { PlayerResults } from '@cityborn/types';
+import type { Game, PlayerResults } from '@cityborn/types';
+import { calculateTotalPoints, getGameResult } from '@cityborn/utils';
 import { useEffect, useState } from 'react';
-import { Game } from '@cityborn/types';
-import { getGameResult, calculateTotalPoints } from '@cityborn/utils';
-import { Text, View } from '@/components/ui/native/NativeComponents';
-import LoaderIcon from '@/components/ui/LoaderIcon';
 import { ScrollView } from 'react-native';
+import LoaderIcon from '@/components/ui/LoaderIcon';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 
 const Results = ({
   game,

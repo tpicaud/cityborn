@@ -1,8 +1,8 @@
 'use client';
 
-import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 import { ApiError, getFriendlyErrorMessage } from '@cityborn/errors';
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, type ReactNode, useContext, useState } from 'react';
+import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 
 type ui_type = 'dialog';
 
