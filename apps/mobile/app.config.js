@@ -33,7 +33,7 @@ export default {
     version: '0.0.1',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
-    icon: './assets/images/icon.png',
+    icon: './assets/stores/icons/universal_icon.png',
     newArchEnabled: true,
 
     android: {
@@ -98,10 +98,10 @@ export default {
       [
         'expo-splash-screen',
         {
-          image: './assets/images/splash-icon.png',
-          imageWidth: 200,
+          image: './assets/stores/icons/universal_splash_icon.png',
           resizeMode: 'contain',
-          backgroundColor: '#fafafa',
+          imageWidth: 200,
+          backgroundColor: '#008988',
         },
       ],
       [
