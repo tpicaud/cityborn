@@ -1,6 +1,6 @@
 import { Card as MuiCard } from '@mui/material';
-import { ReactNode } from 'react';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
 interface CardProps {
   children: ReactNode;

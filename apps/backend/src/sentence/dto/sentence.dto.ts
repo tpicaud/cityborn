@@ -1,4 +1,4 @@
-import { ScoreType, Sentence } from '@cityborn/types';
+import type { ScoreType, Sentence } from '@cityborn/types';
 import { IsString, IsUUID } from 'class-validator';
 
 export class SentenceDto implements Sentence {

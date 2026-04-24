@@ -1,11 +1,11 @@
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
 import { useError } from '@cityborn/contexts';
-import { Category, GameConfig, Session } from '@cityborn/types';
+import type { Category, GameConfig, Session } from '@cityborn/types';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import { Text, View } from '@/components/ui/native/NativeComponents';
+import { apiClient } from '@/lib/apiClient';
 
 interface SoloLobbyProps {
   localPlayerID: string | undefined;

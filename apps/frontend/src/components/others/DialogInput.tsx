@@ -1,5 +1,6 @@
 'use client';
 
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import {
   Button,
   Card,
@@ -8,7 +9,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 
 export const DialogInput = ({
   message,

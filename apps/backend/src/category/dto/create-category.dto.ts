@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsArray, IsUUID } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
 import { GuessObjectDto } from 'src/guess-object/dto/guess-object.dto';
 
 export class CreateCategoryDto {

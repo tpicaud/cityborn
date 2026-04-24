@@ -1,7 +1,7 @@
 'use client';
 
 import { Backdrop, Typography } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TimerComponentProps {
   onCountdownEnd: () => void;

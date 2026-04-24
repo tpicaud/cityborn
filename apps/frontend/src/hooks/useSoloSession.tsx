@@ -1,19 +1,19 @@
-import { IUseSession } from './IUseSession';
 import {
-  Game,
+  type Game,
+  type GameConfig,
   GameStatus,
-  Guess,
-  Result,
+  type Guess,
+  type Result,
   RoundStatus,
-  Session,
+  type Session,
   SessionMode,
   SessionStatus,
 } from '@cityborn/types';
-import { GameConfig } from '@cityborn/types';
-import { useEffect, useState } from 'react';
-import { useError } from '@/contexts/ErrorContext';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useApi } from '@/contexts/ApiContext';
+import { useError } from '@/contexts/ErrorContext';
+import type { IUseSession } from './IUseSession';
 
 export function useSoloSession(localPlayerID: string): IUseSession {
   const router = useRouter();

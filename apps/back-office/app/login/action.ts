@@ -1,13 +1,13 @@
 // src/app/login/action.ts
 'use server';
 
+import { redirect } from 'next/navigation';
 import { setSession } from '@/lib/auth';
 import {
   checkRateLimit,
   recordFailedAttempt,
   resetAttempts,
 } from '@/lib/rate-limit';
-import { redirect } from 'next/navigation';
 
 export async function login(formData: FormData) {
   // Check rate limit first

@@ -1,6 +1,6 @@
+import csvParser from 'csv-parser';
 import fs from 'fs';
 import path from 'path';
-import csvParser from 'csv-parser';
 
 // Définition de l'interface Sentence
 export interface Sentence {

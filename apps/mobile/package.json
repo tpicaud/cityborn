@@ -15,7 +15,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "check-env": "node scripts/check-env.js",
-    "postinstall": "cd ../.. && pnpm packages:build"
+    "postinstall": "cd ../.. && pnpm packages:build",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
@@ -81,7 +83,6 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "postcss": "^8.5.6",
-    "prettier-plugin-tailwindcss": "^0.7.1",
     "tailwindcss": "^4.1.13",
     "typescript": "~5.9.2"
   },

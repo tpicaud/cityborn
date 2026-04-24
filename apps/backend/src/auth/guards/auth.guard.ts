@@ -1,18 +1,18 @@
+import { ErrorCode } from '@cityborn/errors';
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import {
-  extractTokenFromHTTPHeader,
-  extractAccessTokenFromWsClient,
-} from '../utils';
 import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '@cityborn/errors';
-import { validateAccessToken } from './utils';
+import { JwtService } from '@nestjs/jwt';
 import { getJwtConstants } from '../constants';
+import {
+  extractAccessTokenFromWsClient,
+  extractTokenFromHTTPHeader,
+} from '../utils';
+import { validateAccessToken } from './utils';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

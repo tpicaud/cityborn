@@ -1,4 +1,7 @@
 // create-session.dto.ts
+
+import { type CreateGameRecord, SessionMode } from '@cityborn/types';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -6,11 +9,9 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { GameConfigDto, SessionDto } from './session.dto';
-import { CreateGameRecord, SessionMode } from '@cityborn/types';
 import { PlayerDto } from 'src/player/dto/player.dto';
-import { PlayerResultsDto } from './game.dto';
+import type { PlayerResultsDto } from './game.dto';
+import { GameConfigDto, SessionDto } from './session.dto';
 
 export class CreateGameDto {
   @IsObject()

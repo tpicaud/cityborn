@@ -1,5 +1,5 @@
-import { Button, ButtonProps } from '@mui/material';
-import { ReactNode, useState } from 'react';
+import { Button, type ButtonProps } from '@mui/material';
+import { type ReactNode, useState } from 'react';
 
 interface LoadingButtonProps extends ButtonProps {
   onClick: () => Promise<void> | void;

@@ -1,6 +1,6 @@
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { GuessObject } from '@cityborn/types';
+import type { GuessObject } from '@cityborn/types';
 import { Image } from 'expo-image';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 
 export default function GuessObjectCard({
   guessObject,

@@ -1,5 +1,5 @@
-import { IsEnum } from 'class-validator';
 import { SessionMode } from '@cityborn/types';
+import { IsEnum } from 'class-validator';
 
 export class CreateSessionDto {
   @IsEnum(SessionMode)

@@ -1,6 +1,6 @@
 import * as Ariakit from '@ariakit/react';
-import { Button } from '../ui/Button';
 import { CircleAlert } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 export function PublishCategoryPopup({
   isPublished,

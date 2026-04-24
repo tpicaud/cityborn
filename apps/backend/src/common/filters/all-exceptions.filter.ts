@@ -1,12 +1,12 @@
+import { ErrorCode, type ErrorPayload } from '@cityborn/errors';
 import {
-  ExceptionFilter,
+  type ArgumentsHost,
   Catch,
-  ArgumentsHost,
+  type ExceptionFilter,
+  HttpException,
   HttpStatus,
   Logger,
-  HttpException,
 } from '@nestjs/common';
-import { ErrorCode, ErrorPayload } from '@cityborn/errors';
 import { WsException } from '@nestjs/websockets';
 
 @Catch()

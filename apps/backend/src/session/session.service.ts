@@ -1,3 +1,18 @@
+import { ErrorCode } from '@cityborn/errors';
+import {
+  createEvent,
+  defaultGuess,
+  type Game,
+  GameStatus,
+  type OnlinePlayer,
+  type PlayerResults,
+  type Round,
+  RoundStatus,
+  type Session,
+  SessionMode,
+  SessionStatus,
+  type User,
+} from '@cityborn/types';
 import {
   BadRequestException,
   ConflictException,
@@ -8,30 +23,15 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  createEvent,
-  defaultGuess,
-  Game,
-  GameStatus,
-  OnlinePlayer,
-  PlayerResults,
-  Round,
-  RoundStatus,
-  Session,
-  SessionMode,
-  SessionStatus,
-  User,
-} from '@cityborn/types';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { RedisService } from 'src/redis/redis.service';
-import { LockService } from 'src/lock/lock.service';
-import { PlayerService } from 'src/player/player.service';
-import { IdService } from 'src/id/id.service';
-import { ErrorCode } from '@cityborn/errors';
-import { GuessObjectService } from 'src/guess-object/guess-object.service';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { EventService } from 'src/event/event.service';
+import { GuessObjectService } from 'src/guess-object/guess-object.service';
+import { IdService } from 'src/id/id.service';
+import { LockService } from 'src/lock/lock.service';
+import { PlayerService } from 'src/player/player.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/redis/redis.service';
+import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionDto } from './dto/session.dto';
 
 @Injectable()
@@ -446,7 +446,8 @@ export class SessionService {
           );
           const allConnectedPlayersGuessed = connectedPlayers.every(
             (player: any) =>
-              game.state.currentRound!.playersGuesses!.hasOwnProperty(
+              Object.hasOwn(
+                game.state.currentRound!.playersGuesses!,
                 player.username,
               ),
           );

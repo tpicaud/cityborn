@@ -1,5 +1,5 @@
-import { ErrorPayload } from '../../types/types.js';
-import { ErrorCode } from '../ErrorCodes.js';
+import type { ErrorPayload } from '../../types/types.js';
+import type { ErrorCode } from '../ErrorCodes.js';
 
 export class ApiError extends Error implements ErrorPayload {
   code: ErrorCode;

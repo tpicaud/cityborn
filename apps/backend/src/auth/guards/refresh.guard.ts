@@ -1,14 +1,15 @@
 // jwt-refresh.guard.ts
+
+import { ErrorCode } from '@cityborn/errors';
 import {
+  type CanActivate,
+  type ExecutionContext,
   Injectable,
-  ExecutionContext,
   UnauthorizedException,
-  CanActivate,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { getJwtConstants } from '../constants';
-import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '@cityborn/errors';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { validateRefreshToken } from './utils';
 

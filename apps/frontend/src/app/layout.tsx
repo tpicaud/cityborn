@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import * as ApiServiceServer from '@/services/ApiServiceServer';
-import AuthProvider from '@/contexts/AuthContext';
-import Script from 'next/script';
-import ErrorProvider from '@/contexts/ErrorContext';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
+import Script from 'next/script';
+import AuthProvider from '@/contexts/AuthContext';
+import ErrorProvider from '@/contexts/ErrorContext';
+import * as ApiServiceServer from '@/services/ApiServiceServer';
 
 // const geistSans = localFont({
 // 	src: "./fonts/GeistVF.woff",

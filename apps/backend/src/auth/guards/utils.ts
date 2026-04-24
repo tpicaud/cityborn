@@ -1,7 +1,10 @@
 import { ErrorCode } from '@cityborn/errors';
 import { UnauthorizedException } from '@nestjs/common';
-import { TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
-import { JwtService } from '@nestjs/jwt';
+import {
+  JsonWebTokenError,
+  type JwtService,
+  TokenExpiredError,
+} from '@nestjs/jwt';
 
 export async function validateAccessToken(
   token: string,

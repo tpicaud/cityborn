@@ -1,4 +1,4 @@
-import { GuessObject } from './GuessObject.js';
+import type { GuessObject } from './GuessObject.js';
 
 export interface Category {
   id: string;

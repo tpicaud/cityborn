@@ -1,21 +1,21 @@
 'use client';
 
-import MenuComponent from './menu/MenuComponent';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import { useApi } from '@/contexts/ApiContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useError } from '@/contexts/ErrorContext';
 import { SignInComponent } from './auth/SignInComponent';
 import { SignUpComponent } from './auth/SignUpComponent';
-import dynamic from 'next/dynamic';
-import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { useAuth } from '@/contexts/AuthContext';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import CloseIcon from '@mui/icons-material/Close';
-import LoadingIconButton from './ui/buttons/LoadingIconButton';
-import IconButton from './ui/buttons/IconButton';
-import { useError } from '@/contexts/ErrorContext';
+import MenuComponent from './menu/MenuComponent';
 import { ProfileComponent } from './menu/ProfileComponent';
-import { useApi } from '@/contexts/ApiContext';
+import IconButton from './ui/buttons/IconButton';
+import LoadingIconButton from './ui/buttons/LoadingIconButton';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -55,17 +55,11 @@ export default function HomeComponent() {
       break;
 
     case 'sign-up':
-      content = (
-        <SignUpComponent />
-      );
+      content = <SignUpComponent />;
       break;
 
     case 'menu':
-      content = (
-        <MenuComponent
-          setState={setState}
-        />
-      );
+      content = <MenuComponent setState={setState} />;
       break;
 
     case 'profile':
@@ -73,11 +67,7 @@ export default function HomeComponent() {
       break;
 
     default:
-      content = (
-        <MenuComponent
-          setState={setState}
-        />
-      );
+      content = <MenuComponent setState={setState} />;
   }
 
   return (

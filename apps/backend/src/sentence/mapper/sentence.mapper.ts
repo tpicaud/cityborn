@@ -1,6 +1,6 @@
-import { EndGameSentence } from '@prisma/client';
-import { SentenceDto } from '../dto/sentence.dto';
-import { ScoreType } from '@cityborn/types';
+import type { ScoreType } from '@cityborn/types';
+import type { EndGameSentence } from '@prisma/client';
+import type { SentenceDto } from '../dto/sentence.dto';
 
 export class SentenceMapper {
   static toSentenceDto(prismaSentence: EndGameSentence): SentenceDto {

@@ -1,16 +1,21 @@
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
 import { useError } from '@cityborn/contexts';
-import { Category, GameConfig, OnlinePlayer, Session } from '@cityborn/types';
+import { colors } from '@cityborn/design-system';
+import type {
+  Category,
+  GameConfig,
+  OnlinePlayer,
+  Session,
+} from '@cityborn/types';
+import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
-import * as Clipboard from 'expo-clipboard';
-import { colors } from '@cityborn/design-system';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
+import { Icon } from '@/components/ui/Icon';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { apiClient } from '@/lib/apiClient';
 
 interface MultiLobbyProps {
   localPlayerID: string | undefined;

@@ -1,11 +1,11 @@
 import {
-  IsString,
-  IsEmail,
-  MinLength,
-  MaxLength,
-  Matches,
   IsDateString,
+  IsEmail,
   IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class SignUpDto {

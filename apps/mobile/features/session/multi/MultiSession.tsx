@@ -1,11 +1,11 @@
 import { useAuth, useError } from '@cityborn/contexts';
-import { GameConfig, Guess, SessionStatus } from '@cityborn/types';
-import { View, Text } from '@/components/ui/native/NativeComponents';
-import LoaderIcon from '@/components/ui/LoaderIcon';
-import { Game } from '@/features/game/Game';
-import { MultiLobby } from './MultiLobby';
-import { useMultiSession } from '../hooks/useMultiSession';
+import { type GameConfig, type Guess, SessionStatus } from '@cityborn/types';
 import { useEffect, useRef, useState } from 'react';
+import LoaderIcon from '@/components/ui/LoaderIcon';
+import { Text, View } from '@/components/ui/native/NativeComponents';
+import { Game } from '@/features/game/Game';
+import { useMultiSession } from '../hooks/useMultiSession';
+import { MultiLobby } from './MultiLobby';
 
 interface MultiSessionProps {
   sessionID: string;

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { WebTokenStorage } from '@/lib/tokenStorage';
 import { ApiClient } from '@cityborn/api';
+import type { Session } from '@cityborn/types';
 import { cookies } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { WebTokenStorage } from '@/lib/tokenStorage';
 import { getBaseUrl, throwApiError } from '../../utils';
-import { Session } from '@cityborn/types';
 
 export async function POST(req: NextRequest) {
   const tokenStorage = new WebTokenStorage(await cookies());

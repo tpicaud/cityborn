@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { View } from './ui/native/NativeComponents';
 
 export default function ScreenLayout({ children }: { children: ReactNode }) {

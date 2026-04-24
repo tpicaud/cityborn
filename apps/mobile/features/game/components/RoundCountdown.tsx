@@ -1,7 +1,7 @@
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import Dialog from '@/components/ui/Dialog';
 import { Text } from '@/components/ui/native/NativeComponents';
-import { useState, useEffect } from 'react';
-import { View } from 'react-native';
 
 interface RoundCountdownProps {
   onCountdownEnd: () => void;

@@ -1,13 +1,13 @@
 import * as Ariakit from '@ariakit/react';
 import Papa from 'papaparse';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '../ui/Button';
 import {
   searchGuessObjectByExternalId,
   searchGuessObjectByName,
 } from '../guess-object-builder/action';
-import { saveGuessObject } from './action';
+import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
+import { saveGuessObject } from './action';
 
 interface Objects {
   name: string;

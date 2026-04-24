@@ -1,12 +1,16 @@
+import {
+  type Game,
+  GameConfig,
+  type Guess as GuessType,
+  type MapProps,
+  RoundStatus,
+} from '@cityborn/types';
 import { useEffect, useState } from 'react';
-import { GameConfig, Guess as GuessType, MapProps } from '@cityborn/types';
-import { Game } from '@cityborn/types';
-import { RoundStatus } from '@cityborn/types';
-import RoundCountdown from './RoundCountdown';
-import useGuess from '../hooks/useGuess';
-import Overlay from './Overlay';
-import Map from './Map';
 import { View } from 'react-native';
+import useGuess from '../hooks/useGuess';
+import Map from './Map';
+import Overlay from './Overlay';
+import RoundCountdown from './RoundCountdown';
 
 interface GuessProps {
   localPlayerID: string;

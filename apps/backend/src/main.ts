@@ -1,12 +1,12 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { RedisIoAdapter } from './redis/redis.adapter';
+import { NestFactory } from '@nestjs/core';
+import * as bodyParser from 'body-parser';
+import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
-import * as compression from 'compression';
-import * as bodyParser from 'body-parser';
+import { RedisIoAdapter } from './redis/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -1,6 +1,7 @@
 import { colors } from '@cityborn/design-system';
-import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
-import { View, Text } from 'react-native';
+import type React from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 
 interface TimerProps {
   totalTime: number;

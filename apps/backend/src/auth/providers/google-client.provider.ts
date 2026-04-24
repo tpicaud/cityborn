@@ -1,4 +1,4 @@
-import { Provider } from '@nestjs/common';
+import type { Provider } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
 
 export const GoogleClientProvider: Provider = {

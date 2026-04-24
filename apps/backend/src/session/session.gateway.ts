@@ -1,30 +1,30 @@
+import { ErrorCode } from '@cityborn/errors';
+import { GameConfig, Guess, User } from '@cityborn/types';
+import {
+  BadRequestException,
+  type HttpStatus,
+  Logger,
+  UseFilters,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  type OnGatewayConnection,
+  type OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { SessionService } from './session.service';
 import { Server, Socket } from 'socket.io';
-import { GameConfig, Guess, User } from '@cityborn/types';
-import {
-  BadRequestException,
-  HttpStatus,
-  Logger,
-  UseFilters,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '@cityborn/errors';
-import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
-import { extractAccessTokenFromWsClient } from 'src/auth/utils';
 import { getJwtConstants } from 'src/auth/constants';
-import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { CurrentUser } from 'src/user/user.decorator';
 import { validateAccessToken } from 'src/auth/guards/utils';
+import { extractAccessTokenFromWsClient } from 'src/auth/utils';
+import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
+import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
+import { CurrentUser } from 'src/user/user.decorator';
+import { SessionService } from './session.service';
 
 interface WSResponse {
   success: boolean;

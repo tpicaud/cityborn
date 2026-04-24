@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
-import { CategoryDto } from './category.dto';
 import { IsArray, ValidateNested } from 'class-validator';
+import { CategoryDto } from './category.dto';
 
 export class CategoriesResponseDto {
   @IsArray()

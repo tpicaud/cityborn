@@ -1,4 +1,4 @@
-import { GuessObject } from './database/models/celebrity';
+import type { GuessObject } from './database/models/celebrity';
 import { addCelebrities } from './database/scripts/addCelebrities';
 import { parseCelebritiesCSV } from './utils/parseCelebritiesCSV';
 import { getObjectFromWikipedia } from './wikipediaService/getObjectFromWikipedia2';

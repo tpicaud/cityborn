@@ -1,12 +1,12 @@
 import * as Ariakit from '@ariakit/react';
+import type { GuessObjectCandidate } from '@cityborn/types';
 import {
-  ChangeEventHandler,
+  type ChangeEventHandler,
   startTransition,
   useEffect,
   useState,
 } from 'react';
 import { searchGuessObjectByName } from './action';
-import { GuessObjectCandidate } from '@cityborn/types';
 
 export function GuessObjectSearchInput({
   type = 'text',

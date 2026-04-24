@@ -1,6 +1,6 @@
-import { GuessObject, WorldLocation } from '@cityborn/types';
+import { type GuessObject, WorldLocation } from '@cityborn/types';
 import { Type } from 'class-transformer';
-import { IsUUID, IsString, IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 
 export class GuessObjectSourceDto {
