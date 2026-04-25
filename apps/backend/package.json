@@ -53,6 +53,7 @@
     "compression": "^1.8.1",
     "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
     "google-auth-library": "^10.6.2",
     "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
