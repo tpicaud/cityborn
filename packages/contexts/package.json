@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "react": "19.1.0",
