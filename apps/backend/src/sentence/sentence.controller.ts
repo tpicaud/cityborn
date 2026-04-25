@@ -8,9 +8,9 @@ import { SentenceService } from './sentence.service';
 export class SentenceController {
   constructor(private readonly sentenceService: SentenceService) {}
 
-  @TsRestHandler(contract.session.getSentence)
+  @TsRestHandler(contract.sentence.getSentence)
   async getSentence() {
-    return tsRestHandler(contract.session.getSentence, async ({ query }) => {
+    return tsRestHandler(contract.sentence.getSentence, async ({ query }) => {
       return {
         status: 200 as const,
         body: await this.sentenceService.findRandomOne(query.score_type as ScoreType),

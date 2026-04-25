@@ -2,7 +2,6 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { SessionModeSchema } from '../schemas/common.schema.js';
 import { GameSchema } from '../schemas/game.schema.js';
-import { SentenceSchema } from '../schemas/sentence.schema.js';
 import { SessionSchema } from '../schemas/session.schema.js';
 
 const c = initContract();
@@ -31,11 +30,5 @@ export const sessionContract = c.router({
     path: '/session/end-solo-game',
     body: SessionSchema,
     responses: { 200: z.object({}) },
-  },
-  getSentence: {
-    method: 'GET',
-    path: '/sentence',
-    query: z.object({ score_type: z.string() }),
-    responses: { 200: SentenceSchema },
   },
 });

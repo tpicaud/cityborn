@@ -11,4 +11,11 @@ export const guessObjectContract = c.router({
     query: z.object({ guessObjectsIds: z.string() }),
     responses: { 200: z.object({ guessObjects: z.array(GuessObjectSchema) }) },
   },
+  getGuessObject: {
+    method: 'GET',
+    path: '/guess-objects/:id',
+    pathParams: z.object({ id: z.string() }),
+    query: z.object({ include: z.string().optional() }),
+    responses: { 200: GuessObjectSchema },
+  },
 });
