@@ -17,12 +17,12 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { getJwtConstants } from 'src/auth/constants';
-import { validateAccessToken } from 'src/auth/guards/utils';
-import { extractAccessTokenFromWsClient } from 'src/auth/utils';
-import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
-import { CurrentUser } from 'src/user/user.decorator';
+import { getJwtConstants } from '../auth/constants';
+import { validateAccessToken } from '../auth/guards/utils';
+import { extractAccessTokenFromWsClient } from '../auth/utils';
+import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { AllExceptionsFilter } from '../common/filters/all-exceptions.filter';
+import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
 
 interface WSResponse {
@@ -109,7 +109,7 @@ export class SessionGateway
 
       this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -142,7 +142,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -175,7 +175,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -203,7 +203,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -233,7 +233,7 @@ export class SessionGateway
 
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -259,7 +259,7 @@ export class SessionGateway
 
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -284,7 +284,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -328,7 +328,7 @@ export class SessionGateway
 
       this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
       return {
         success: false,
@@ -351,7 +351,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       this.logger.log(`Socket ${socket.id} déconnecté`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
     }
   }
@@ -359,7 +359,7 @@ export class SessionGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     try {
       await this.disconnect(socket);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(error.message);
     }
   }

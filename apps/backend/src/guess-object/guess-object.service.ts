@@ -11,8 +11,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { WorldLocationService } from 'src/world-location/world-location.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 
 @Injectable()

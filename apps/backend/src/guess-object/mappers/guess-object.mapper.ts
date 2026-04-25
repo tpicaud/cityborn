@@ -6,8 +6,8 @@ import type {
 import type {
   WikidataItemResponse,
   WikidataSearchResponse,
-} from 'src/wikidata/wikidata.service';
-import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
+} from '../../wikidata/wikidata.service';
+import { WorldLocationMapper } from '../../world-location/mapper/world-location.mapper';
 
 type PrismaGuessObjectWithRelations = PrismaGuessObject & {
   world_location?: PrismaWorldLocation;

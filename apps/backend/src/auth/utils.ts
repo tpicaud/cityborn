@@ -2,7 +2,7 @@ import * as cookie from 'cookie';
 import type { Request } from 'express';
 import type { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
-import * as jwksRsa from 'jwks-rsa';
+import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
 export function extractTokenFromHTTPHeader(
   request: Request,

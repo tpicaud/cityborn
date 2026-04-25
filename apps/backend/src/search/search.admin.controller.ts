@@ -1,7 +1,7 @@
 import { contract, ErrorCode } from '@cityborn/api';
 import { BadRequestException, Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { SearchService } from './search.service';
 
 @UseGuards(AdminGuard)
