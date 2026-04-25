@@ -3,10 +3,10 @@ import { z } from 'zod';
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  PublicUserSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
-  UserSchema,
 } from '../schemas/user.schema.js';
 
 const c = initContract();
@@ -47,7 +47,7 @@ export const authContract = c.router({
   me: {
     method: 'GET',
     path: '/auth/me',
-    responses: { 200: z.object({ user: UserSchema }) },
+    responses: { 200: z.object({ user: PublicUserSchema }) },
   },
   deleteUser: {
     method: 'POST',

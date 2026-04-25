@@ -669,9 +669,6 @@ importers:
       '@cityborn/errors':
         specifier: workspace:*
         version: link:../errors
-      '@cityborn/types':
-        specifier: workspace:*
-        version: link:../types
       '@ts-rest/core':
         specifier: ^3.51.0
         version: 3.52.1(@types/node@22.19.3)(zod@3.25.76)
@@ -733,6 +730,9 @@ importers:
 
   packages/types:
     dependencies:
+      '@cityborn/api':
+        specifier: workspace:*
+        version: link:../api
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

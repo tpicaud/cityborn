@@ -19,6 +19,7 @@
     }
   },
   "dependencies": {
+    "@cityborn/api": "workspace:*",
     "typescript": "^5.8.3"
   }
 }

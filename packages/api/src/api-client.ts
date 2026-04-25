@@ -1,3 +1,4 @@
+import { AuthFetch } from './auth-fetch.js';
 import type {
   Category,
   CreateEvent,
@@ -8,10 +9,9 @@ import type {
   Sentence,
   Session,
   SessionMode,
-  TokenStorage,
   User,
-} from '@cityborn/types';
-import { AuthFetch } from './auth-fetch.js';
+} from './schemas/index.js';
+import type { TokenStorage } from './types/token-storage.js';
 
 export class ApiClient {
   private authFetch: AuthFetch;

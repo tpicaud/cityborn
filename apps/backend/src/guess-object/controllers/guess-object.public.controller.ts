@@ -1,3 +1,4 @@
+import { contract } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
@@ -8,32 +9,30 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { GuessObjectDto } from '../dto/guess-object.dto';
-import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
 import { GuessObjectService } from '../guess-object.service';
 
-@Controller('guess-objects')
+@Controller()
 export class PublicGuessObjectController {
   private readonly logger = new Logger(PublicGuessObjectController.name);
 
   constructor(private readonly guessObjectsService: GuessObjectService) {}
 
+  @TsRestHandler(contract.guessObjects.getGuessObjects)
   @UseGuards(AuthGuard)
-  @Get()
-  async getGuessObjectsFromIds(
-    @Query('guessObjectsIds') guessObjectsIds: string | string[],
-  ): Promise<GuessObjectsResponseDto> {
-    const idsArray = Array.isArray(guessObjectsIds)
-      ? guessObjectsIds
-      : guessObjectsIds.split(',');
-
-    return {
-      guessObjects: await this.guessObjectsService.findSome(idsArray),
-    };
+  async getGuessObjectsFromIds() {
+    return tsRestHandler(contract.guessObjects.getGuessObjects, async ({ query }) => {
+      const idsArray = query.guessObjectsIds.split(',');
+      return {
+        status: 200 as const,
+        body: { guessObjects: await this.guessObjectsService.findSome(idsArray) },
+      };
+    });
   }
 
-  @Get(':id')
+  @Get('guess-objects/:id')
   async getGuessObject(
     @Param('id') id: string,
     @Query('include') include?: string,

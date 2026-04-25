@@ -1,4 +1,1 @@
-export enum SessionMode {
-  SOLO = 'solo',
-  MULTI = 'multi',
-}
+export { SessionMode } from '@cityborn/api';

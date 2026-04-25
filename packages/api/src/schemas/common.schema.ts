@@ -1,10 +1,16 @@
 import { z } from 'zod';
+import {
+  GameStatus,
+  RoundStatus,
+  SessionMode,
+  SessionStatus,
+} from './enums.js';
 
 // Enums
-export const SessionModeSchema = z.enum(['solo', 'multi']);
-export const SessionStatusSchema = z.enum(['IN_LOBBY', 'IN_GAME', 'FINISHED']);
-export const GameStatusSchema = z.enum(['STARTING', 'IN_GAME', 'IN_RESULTS', 'FINISHED']);
-export const RoundStatusSchema = z.enum(['GUESSING', 'SHOWING_RESULTS']);
+export const SessionModeSchema = z.nativeEnum(SessionMode);
+export const SessionStatusSchema = z.nativeEnum(SessionStatus);
+export const GameStatusSchema = z.nativeEnum(GameStatus);
+export const RoundStatusSchema = z.nativeEnum(RoundStatus);
 
 // Primitives
 export const CoordSchema = z.object({
@@ -51,10 +57,6 @@ export const PlayerResultsSchema = z.object({
 });
 
 // Inferred types
-export type SessionMode = z.infer<typeof SessionModeSchema>;
-export type SessionStatus = z.infer<typeof SessionStatusSchema>;
-export type GameStatus = z.infer<typeof GameStatusSchema>;
-export type RoundStatus = z.infer<typeof RoundStatusSchema>;
 export type Coord = z.infer<typeof CoordSchema>;
 export type Player = z.infer<typeof PlayerSchema>;
 export type OnlinePlayer = z.infer<typeof OnlinePlayerSchema>;

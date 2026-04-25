@@ -1,8 +1,1 @@
-import type { Coord } from './Coord.js';
-
-export interface Guess {
-  coordinates: Coord;
-  distance: number;
-  points: number;
-  win: boolean;
-}
+export type { Guess } from '@cityborn/api';

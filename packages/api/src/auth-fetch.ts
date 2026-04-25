@@ -1,5 +1,5 @@
 import { ApiError, ErrorCode, type ErrorPayload } from '@cityborn/errors';
-import type { TokenStorage } from '@cityborn/types';
+import type { TokenStorage } from './types/token-storage.js';
 
 type RequestInitWithAuth = RequestInit & { includeAuth?: boolean };
 

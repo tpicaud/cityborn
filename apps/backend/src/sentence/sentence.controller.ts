@@ -1,16 +1,20 @@
+import { contract } from '@cityborn/api';
 import { ScoreType } from '@cityborn/types';
-import { Controller, Get, Query } from '@nestjs/common';
-import { SentenceDto } from './dto/sentence.dto';
+import { Controller } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { SentenceService } from './sentence.service';
 
-@Controller('sentence')
+@Controller()
 export class SentenceController {
   constructor(private readonly sentenceService: SentenceService) {}
 
-  @Get()
-  async getSentence(
-    @Query('score_type') score_type: ScoreType,
-  ): Promise<SentenceDto> {
-    return await this.sentenceService.findRandomOne(score_type);
+  @TsRestHandler(contract.session.getSentence)
+  async getSentence() {
+    return tsRestHandler(contract.session.getSentence, async ({ query }) => {
+      return {
+        status: 200 as const,
+        body: await this.sentenceService.findRandomOne(query.score_type as ScoreType),
+      };
+    });
   }
 }

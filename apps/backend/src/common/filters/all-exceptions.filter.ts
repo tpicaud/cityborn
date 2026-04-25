@@ -1,6 +1,7 @@
 import { ErrorCode, type ErrorPayload } from '@cityborn/errors';
 import {
   type ArgumentsHost,
+  BadRequestException,
   Catch,
   type ExceptionFilter,
   HttpException,
@@ -34,9 +35,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const error: any =
       exception instanceof HttpException ? exception.getResponse() : null;
 
+    const fallbackCode =
+      exception instanceof BadRequestException
+        ? ErrorCode.BAD_REQUEST
+        : ErrorCode.UNKNOWN_ERROR;
+
     const payload: ErrorPayload = {
       statusCode: status,
-      code: error?.code ?? ErrorCode.UNKNOWN_ERROR,
+      code: error?.code ?? fallbackCode,
       message: error?.message ?? exception.message ?? 'Unexpected error',
     };
 

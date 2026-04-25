@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { ScoreType } from './enums.js';
 
-export const ScoreTypeSchema = z.enum(['GOOD', 'AVERAGE', 'BAD']);
+export const ScoreTypeSchema = z.nativeEnum(ScoreType);
 
 export const SentenceSchema = z.object({
   id: z.string(),
@@ -8,5 +9,4 @@ export const SentenceSchema = z.object({
   score_type: ScoreTypeSchema,
 });
 
-export type ScoreType = z.infer<typeof ScoreTypeSchema>;
 export type Sentence = z.infer<typeof SentenceSchema>;

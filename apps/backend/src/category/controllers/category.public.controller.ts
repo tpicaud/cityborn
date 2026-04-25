@@ -1,3 +1,4 @@
+import { contract } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
@@ -5,36 +6,30 @@ import {
   Get,
   Param,
   Query,
-  Req,
 } from '@nestjs/common';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { CategoryDto } from '../dto/category.dto';
 import { PublicCategoryService } from '../services/category.public.service';
 
-@Controller('category')
+@Controller()
 export class PublicCategoryController {
   constructor(private readonly publicCategoryService: PublicCategoryService) {}
 
-  @Get()
-  async findAll(
-    @Query('include') include?: string,
-  ): Promise<CategoriesResponseDto> {
-    let includes: string[];
-    try {
-      includes = include ? include.split(',').map((i) => i.trim()) : [];
-    } catch {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad query',
-      });
-    }
-    return this.publicCategoryService.findAll({ includes });
+  @TsRestHandler(contract.category.getCategories)
+  async findAll(@Query('include') include?: string) {
+    return tsRestHandler(contract.category.getCategories, async () => {
+      const includes = include ? include.split(',').map((i) => i.trim()) : [];
+      return {
+        status: 200 as const,
+        body: await this.publicCategoryService.findAll({ includes }),
+      };
+    });
   }
 
-  @Get(':id')
+  @Get('category/:id')
   async findOne(
     @Param('id') id: string,
-    @Query('include') include: string,
+    @Query('include') include?: string,
   ): Promise<CategoryDto> {
     let includes: string[];
     try {

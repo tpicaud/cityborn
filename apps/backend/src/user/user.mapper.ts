@@ -19,6 +19,7 @@ export class UserMapper {
   static toUserDto(prismaUser: PrismaUserWithRelations): UserDto {
     return {
       id: prismaUser.id,
+      type: prismaUser.type as import('@cityborn/types').AccountType,
       email: prismaUser.email,
       username: prismaUser.username,
       createdAt: prismaUser.createdAt.toISOString(),

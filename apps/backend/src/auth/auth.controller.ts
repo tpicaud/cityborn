@@ -1,83 +1,69 @@
-import { User } from '@cityborn/types';
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { contract } from '@cityborn/api';
+import type { User } from '@cityborn/types';
+import { Controller, UseGuards } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { CurrentUser } from 'src/user/user.decorator';
 import { AuthService } from './auth.service';
-import { AuthResponseDto } from './dto/auth.response.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
-import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import { SignUpDto } from './dto/sign-up.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { RefreshGuard } from './guards/refresh.guard';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('sign-up')
-  async signUp(
-    @Body() signUpDto: SignUpDto,
-    @VisitorId() visitorId?: string,
-  ): Promise<AuthResponseDto> {
-    return await this.authService.signUp(signUpDto, visitorId);
+  @TsRestHandler(contract.auth.signUp)
+  async signUp(@VisitorId() visitorId?: string) {
+    return tsRestHandler(contract.auth.signUp, async ({ body }) => {
+      return { status: 201 as const, body: await this.authService.signUp(body, visitorId) };
+    });
   }
 
-  @Post('sign-in')
-  async signIn(
-    @Body() signInDto: SignInDto,
-    @VisitorId() visitorId?: string,
-  ): Promise<AuthResponseDto> {
-    return await this.authService.signIn(signInDto, visitorId);
+  @TsRestHandler(contract.auth.signIn)
+  async signIn(@VisitorId() visitorId?: string) {
+    return tsRestHandler(contract.auth.signIn, async ({ body }) => {
+      return { status: 200 as const, body: await this.authService.signIn(body, visitorId) };
+    });
   }
 
-  @Post('sign-in-with-google')
-  async signInWithGoogle(
-    @Body() signInWithGoogleDto: SignInWithGoogleDto,
-    @VisitorId() visitorId?: string,
-  ): Promise<AuthResponseDto> {
-    return await this.authService.signInWithGoogle(
-      signInWithGoogleDto,
-      visitorId,
-    );
+  @TsRestHandler(contract.auth.signInWithGoogle)
+  async signInWithGoogle(@VisitorId() visitorId?: string) {
+    return tsRestHandler(contract.auth.signInWithGoogle, async ({ body }) => {
+      return { status: 200 as const, body: await this.authService.signInWithGoogle(body, visitorId) };
+    });
   }
 
-  @Post('sign-in-with-apple')
-  async signInWithApple(
-    @Body() signInWithAppleDto: SignInWithAppleDto,
-    @VisitorId() visitorId?: string,
-  ): Promise<AuthResponseDto> {
-    return await this.authService.signInWithApple(
-      signInWithAppleDto,
-      visitorId,
-    );
+  @TsRestHandler(contract.auth.signInWithApple)
+  async signInWithApple(@VisitorId() visitorId?: string) {
+    return tsRestHandler(contract.auth.signInWithApple, async ({ body }) => {
+      return { status: 200 as const, body: await this.authService.signInWithApple(body, visitorId) };
+    });
   }
 
-  @Post('refresh')
+  @TsRestHandler(contract.auth.refresh)
   @UseGuards(RefreshGuard)
-  async refresh(@Request() req): Promise<AuthResponseDto> {
-    const identifier = req.user.username || req.user.email;
-    return await this.authService.refresh(identifier);
+  async refresh(@CurrentUser() user: User) {
+    return tsRestHandler(contract.auth.refresh, async () => {
+      const identifier = user.username || user.email;
+      return { status: 200 as const, body: await this.authService.refresh(identifier) };
+    });
   }
 
-  @Get('me')
+  @TsRestHandler(contract.auth.me)
   @UseGuards(AuthGuard)
-  async getProfile(@Request() req): Promise<PublicUserResponseDto> {
-    const identifier = req.user.username || req.user.email;
-    return await this.authService.getProfile(identifier);
+  async getProfile(@CurrentUser() user: User) {
+    return tsRestHandler(contract.auth.me, async () => {
+      const identifier = user.username || user.email;
+      return { status: 200 as const, body: await this.authService.getProfile(identifier) };
+    });
   }
 
-  @Post('delete-user')
+  @TsRestHandler(contract.auth.deleteUser)
   @UseGuards(AuthGuard)
-  async deleteUser(@CurrentUser() user?: User): Promise<void> {
-    return await this.authService.deleteUser(user);
+  async deleteUser(@CurrentUser() user?: User) {
+    return tsRestHandler(contract.auth.deleteUser, async () => {
+      await this.authService.deleteUser(user);
+      return { status: 200 as const, body: {} };
+    });
   }
 }
