@@ -16,7 +16,6 @@
     "allowImportingTsExtensions": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": "./",
     "plugins": [
       {
         "name": "next"
@@ -24,7 +23,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@types/*": ["src/types/*"]
+      "@types/*": ["./src/types/*"]
     },
     "target": "ES2017"
   },
