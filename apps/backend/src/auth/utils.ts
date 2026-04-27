@@ -18,7 +18,7 @@ export function extractAccessTokenFromWsClient(
   const auth = client.handshake.auth;
 
   if (cookies) {
-    const parsedCookies = cookie.parse(cookies);
+    const parsedCookies = cookie.parseCookie(cookies);
     return parsedCookies['access_token'];
   }
 

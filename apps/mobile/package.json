@@ -17,7 +17,8 @@
     "check-env": "node scripts/check-env.js",
     "postinstall": "cd ../.. && pnpm packages:build",
     "format": "biome check --write .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "fullcheck": "pnpm typecheck && pnpm check"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

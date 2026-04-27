@@ -8,8 +8,9 @@
     "typecheck": "tsc -noEmit",
     "start": "dotenv -e .env -- next start",
     "lint": "next lint",
-    "format": "biome check --write .",
-    "check": "biome check ."
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "fullcheck": "pnpm typecheck && pnpm check"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

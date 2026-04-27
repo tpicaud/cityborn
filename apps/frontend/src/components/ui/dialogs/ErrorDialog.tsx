@@ -1,4 +1,4 @@
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DialogContent, DialogTitle } from '@mui/material';
 import type { Dispatch, SetStateAction } from 'react';
 import { Dialog } from './Dialog';
