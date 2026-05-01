@@ -5,28 +5,34 @@ on:
 
 jobs:
   get-tag:
-    name: Get latest tag
+    name: Get tags
     runs-on: ubuntu-latest
     outputs:
-      releaseTag: ${{ steps.get_tag.outputs.tag }}
+      lastProdTag: ${{ steps.get_tag.outputs.lastProdTag }}
+      newReleaseTag: ${{ steps.get_tag.outputs.newReleaseTag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get latest tag
+      - name: Get tags
         id: get_tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=$(git describe --tags --abbrev=0 --match "v[0-9]*" --exclude "*-rc")
-          echo $TAG
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          LAST_PROD=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName')
+          NEW_RELEASE=$(git describe --tags --abbrev=0 --match "v[0-9]*" --exclude "*-rc")
+          echo "lastProdTag=$LAST_PROD" >> $GITHUB_OUTPUT
+          echo "newReleaseTag=$NEW_RELEASE" >> $GITHUB_OUTPUT
 
   detect-changes:
     name: Detect changes
     needs:
       - get-tag
     uses: ./.github/workflows/detect-changes.yml
+    with:
+      base: ${{ needs.get-tag.outputs.lastProdTag }}
 
   build-and-deploy-prod:
     name: Build + Deploy - Prod
@@ -49,5 +55,5 @@ jobs:
       contents: write
     uses: ./.github/workflows/generate-release.yml
     with:
-      releaseTag: ${{ needs.get-tag.outputs.releaseTag }}
+      releaseTag: ${{ needs.get-tag.outputs.newReleaseTag }}
       prerelease: false

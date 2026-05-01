@@ -2,6 +2,11 @@ name: Detect changes
 
 on:
   workflow_call:
+    inputs:
+      base:
+        type: string
+        required: false
+        default: ''
     outputs:
       backendHasChanged:
         value: ${{ jobs.detect-changes.outputs.backendHasChanged }}
@@ -29,6 +34,7 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          base: ${{ inputs.base }}
           filters: |
             frontendHasChanged:
               - 'apps/frontend/**'
