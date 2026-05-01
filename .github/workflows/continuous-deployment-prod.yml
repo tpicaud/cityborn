@@ -27,6 +27,8 @@ jobs:
     needs:
       - get-tag
     uses: ./.github/workflows/detect-changes.yml
+    with:
+      base: ${{ needs.get-tag.outputs.releaseTag }}
 
   build-and-deploy-prod:
     name: Build + Deploy - Prod
