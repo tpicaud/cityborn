@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import {
-  PlayerSchema,
-  SessionModeSchema,
-  SessionStatusSchema,
-} from './common.schema.js';
+import { SessionModeSchema, SessionStatusSchema } from './enums.js';
 import { GameConfigSchema, GameSchema } from './game.schema.js';
+import { PlayerSchema } from './player.schema.js';
+
+export const CreateSessionSchema = z.object({ mode: SessionModeSchema });
 
 export const SessionSchema = z.object({
   id: z.string(),
@@ -16,4 +15,5 @@ export const SessionSchema = z.object({
   currentGame: GameSchema.optional(),
 });
 
+export type CreateSession = z.infer<typeof CreateSessionSchema>;
 export type Session = z.infer<typeof SessionSchema>;

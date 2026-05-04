@@ -1,6 +1,9 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { CategorySchema } from '../schemas/category.schema.js';
+import {
+  CategoriesSchema,
+  CategorySchema,
+} from '../schemas/category.schema.js';
 
 const c = initContract();
 
@@ -9,7 +12,7 @@ export const categoryContract = c.router({
     method: 'GET',
     path: '/category',
     query: z.object({ include: z.string().optional() }),
-    responses: { 200: z.object({ categories: z.array(CategorySchema) }) },
+    responses: { 200: CategoriesSchema },
   },
   getCategory: {
     method: 'GET',

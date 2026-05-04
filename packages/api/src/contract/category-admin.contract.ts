@@ -1,10 +1,12 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import {
+  CategoriesSchema,
   CategorySchema,
   CreateCategorySchema,
   UpdateCategorySchema,
 } from '../schemas/category.schema.js';
+import { emptyResponseSchema } from '../schemas/common.schema.js';
 
 const c = initContract();
 
@@ -13,7 +15,7 @@ export const categoryAdminContract = c.router({
     method: 'GET',
     path: '/admin/category',
     query: z.object({ include: z.string().optional() }),
-    responses: { 200: z.object({ categories: z.array(CategorySchema) }) },
+    responses: { 200: CategoriesSchema },
   },
   getCategory: {
     method: 'GET',
@@ -40,6 +42,6 @@ export const categoryAdminContract = c.router({
     path: '/admin/category/:id',
     pathParams: z.object({ id: z.string() }),
     body: z.object({}),
-    responses: { 200: z.object({}) },
+    responses: { 204: emptyResponseSchema },
   },
 });

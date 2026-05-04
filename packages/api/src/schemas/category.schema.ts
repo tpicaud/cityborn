@@ -10,6 +10,8 @@ export const CategorySchema = z.object({
   guessObjects: z.array(GuessObjectSchema).optional(),
 });
 
+export const CategoriesSchema = z.array(CategorySchema);
+
 export const CreateCategorySchema = CategorySchema.omit({ id: true });
 
 export const UpdateCategorySchema = CategorySchema.extend({

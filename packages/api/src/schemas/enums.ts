@@ -1,3 +1,5 @@
+import z from 'zod';
+
 export enum SessionMode {
   SOLO = 'solo',
   MULTI = 'multi',
@@ -26,3 +28,9 @@ export enum ScoreType {
   AVERAGE = 'AVERAGE',
   BAD = 'BAD',
 }
+
+export const SessionModeSchema = z.nativeEnum(SessionMode);
+export const SessionStatusSchema = z.nativeEnum(SessionStatus);
+export const GameStatusSchema = z.nativeEnum(GameStatus);
+export const RoundStatusSchema = z.nativeEnum(RoundStatus);
+export const ScoreTypeSchema = z.nativeEnum(ScoreType);

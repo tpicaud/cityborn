@@ -1,14 +1,24 @@
 import { z } from 'zod';
-import {
-  GameStatusSchema,
-  PlayerResultsSchema,
-  PlayerSchema,
-  RoundStatusSchema,
-  GuessSchema,
-  SessionModeSchema,
-} from './common.schema.js';
 import { CategorySchema } from './category.schema.js';
 import { GuessObjectSchema } from './guess-object.schema.js';
+import { PlayerResultsSchema, PlayerSchema } from './player.schema.js';
+import {
+  GameStatusSchema,
+  RoundStatusSchema,
+  SessionModeSchema,
+} from './enums.js';
+
+export const CoordSchema = z.object({
+  lat: z.number(),
+  lng: z.number(),
+});
+
+export const GuessSchema = z.object({
+  coordinates: CoordSchema,
+  distance: z.number(),
+  points: z.number(),
+  win: z.boolean(),
+});
 
 export const GameConfigSchema = z.object({
   categories: z.array(CategorySchema),
@@ -46,11 +56,15 @@ export const GameRecordSchema = z.object({
   createdAt: z.string(),
 });
 
+export const GameRecordsSchema = z.array(GameRecordSchema);
+
 export const CreateGameRecordSchema = GameRecordSchema.omit({
   id: true,
   createdAt: true,
 });
 
+export type Coord = z.infer<typeof CoordSchema>;
+export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 export type Round = z.infer<typeof RoundSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;

@@ -17,6 +17,8 @@ export const GuessObjectSchema = z.object({
   world_location: WorldLocationSchema.optional(),
 });
 
+export const GuessObjectsSchema = z.array(GuessObjectSchema);
+
 export const CreateGuessObjectSchema = GuessObjectSchema.omit({
   id: true,
   world_location: true,
@@ -30,6 +32,9 @@ export const GuessObjectCandidateSchema = GuessObjectSchema.omit({
   world_location_id: z.string().optional(),
 });
 
+export const GuessObjectCandidatesSchema = z.array(GuessObjectCandidateSchema);
+
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
 export type CreateGuessObject = z.infer<typeof CreateGuessObjectSchema>;
 export type GuessObjectCandidate = z.infer<typeof GuessObjectCandidateSchema>;
+export type GuessObjectCandidates = z.infer<typeof GuessObjectCandidatesSchema>;

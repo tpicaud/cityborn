@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { ScoreTypeSchema, SentenceSchema } from '../schemas/sentence.schema.js';
+import { ScoreTypeSchema } from '../schemas/enums.js';
+import { SentenceSchema } from '../schemas/sentence.schema.js';
 
 const c = initContract();
 

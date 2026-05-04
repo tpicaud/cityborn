@@ -1,6 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import {
+  emptyRequestBodySchema,
+  emptyResponseSchema,
+} from '../schemas/common.schema.js';
+import {
   AuthResponseSchema,
   CreateUserSchema,
   PublicUserSchema,
@@ -12,6 +16,19 @@ import {
 const c = initContract();
 
 export const authContract = c.router({
+  me: {
+    method: 'GET',
+    path: '/auth/me',
+    responses: { 200: PublicUserSchema },
+  },
+  refresh: {
+    method: 'POST',
+    path: '/auth/refresh',
+    body: emptyRequestBodySchema,
+    responses: {
+      200: AuthResponseSchema,
+    },
+  },
   signUp: {
     method: 'POST',
     path: '/auth/sign-up',
@@ -36,23 +53,10 @@ export const authContract = c.router({
     body: SignInWithAppleSchema,
     responses: { 200: AuthResponseSchema },
   },
-  refresh: {
-    method: 'POST',
-    path: '/auth/refresh',
-    body: z.object({}),
-    responses: {
-      200: z.object({ access_token: z.string(), refresh_token: z.string() }),
-    },
-  },
-  me: {
-    method: 'GET',
-    path: '/auth/me',
-    responses: { 200: z.object({ user: PublicUserSchema }) },
-  },
   deleteUser: {
     method: 'POST',
     path: '/auth/delete-user',
     body: z.object({}),
-    responses: { 200: z.object({}) },
+    responses: { 204: emptyResponseSchema },
   },
 });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CategorySchema } from './category.schema.js';
-import { SessionModeSchema } from './common.schema.js';
+import { SessionModeSchema } from './enums.js';
 
 const accountMethodSchema = z.enum(['email', 'google', 'apple']);
 

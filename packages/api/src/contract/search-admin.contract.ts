@@ -1,12 +1,9 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { GuessObjectCandidateSchema } from '../schemas/guess-object.schema.js';
-import { WorldLocationSchema } from '../schemas/world-location.schema.js';
+import { GuessObjectCandidatesSchema } from '../schemas/guess-object.schema.js';
+import { WorldLocationsSchema } from '../schemas/world-location.schema.js';
 
 const c = initContract();
-
-const oneOrMany = <T extends z.ZodTypeAny>(schema: T) =>
-  z.union([schema, z.array(schema)]);
 
 export const searchAdminContract = c.router({
   searchGuessObject: {
@@ -17,7 +14,7 @@ export const searchAdminContract = c.router({
       external_id: z.string().optional(),
     }),
     responses: {
-      200: z.object({ results: oneOrMany(GuessObjectCandidateSchema) }),
+      200: GuessObjectCandidatesSchema,
     },
   },
   searchWorldLocation: {
@@ -28,6 +25,6 @@ export const searchAdminContract = c.router({
       id: z.string().optional(),
       osm_type: z.string().optional(),
     }),
-    responses: { 200: z.object({ results: oneOrMany(WorldLocationSchema) }) },
+    responses: { 200: WorldLocationsSchema },
   },
 });

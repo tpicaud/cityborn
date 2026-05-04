@@ -1,8 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { SessionModeSchema } from '../schemas/common.schema.js';
 import { GameSchema } from '../schemas/game.schema.js';
-import { SessionSchema } from '../schemas/session.schema.js';
+import {
+  CreateSessionSchema,
+  SessionSchema,
+} from '../schemas/session.schema.js';
+import { emptyResponseSchema } from '../schemas/common.schema.js';
 
 const c = initContract();
 
@@ -10,25 +13,25 @@ export const sessionContract = c.router({
   createSession: {
     method: 'POST',
     path: '/session',
-    body: z.object({ mode: SessionModeSchema }),
-    responses: { 201: z.object({ session: SessionSchema }) },
+    body: CreateSessionSchema,
+    responses: { 201: SessionSchema },
   },
   getSession: {
     method: 'GET',
     path: '/session/:id',
     pathParams: z.object({ id: z.string() }),
-    responses: { 200: z.object({ session: SessionSchema }) },
+    responses: { 200: SessionSchema },
   },
   createGame: {
     method: 'POST',
     path: '/session/create-game',
-    body: z.object({ session: SessionSchema }),
-    responses: { 201: z.object({ game: GameSchema }) },
+    body: SessionSchema,
+    responses: { 200: GameSchema },
   },
   endSoloGame: {
     method: 'POST',
     path: '/session/end-solo-game',
     body: SessionSchema,
-    responses: { 200: z.object({}) },
+    responses: { 204: emptyResponseSchema },
   },
 });

@@ -34,5 +34,8 @@ export const WorldLocationPreviewSchema = WorldLocationSchema.pick({
   display_name: true,
 });
 
+export const WorldLocationsSchema = z.array(WorldLocationSchema);
+
 export type WorldLocation = z.infer<typeof WorldLocationSchema>;
 export type WorldLocationPreview = z.infer<typeof WorldLocationPreviewSchema>;
+export type WorldLocations = z.infer<typeof WorldLocationsSchema>;
