@@ -1,78 +1,35 @@
-import { ErrorCode } from '@cityborn/errors';
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { contract } from '@cityborn/api';
+import { Controller, UseGuards } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
-import { CategoryDto } from '../dto/category.dto';
-import { CreateCategoryDto } from '../dto/create-category.dto';
-import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { AdminCategoryService } from '../services/category.admin.service';
 
 @UseGuards(AdminGuard)
-@Controller('admin/category')
+@Controller()
 export class AdminCategoryController {
   constructor(private readonly adminCategoryService: AdminCategoryService) {}
 
-  @Get()
-  async findAll(
-    @Query('include') include?: string,
-  ): Promise<CategoriesResponseDto> {
-    let includes: string[];
-    try {
-      includes = include ? include.split(',').map((i) => i.trim()) : [];
-    } catch {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad query',
-      });
-    }
-    return this.adminCategoryService.findAll({ includes });
-  }
-
-  @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Query('include') include: string,
-  ): Promise<CategoryDto> {
-    let includes: string[];
-    try {
-      includes = include ? include.split(',').map((i) => i.trim()) : [];
-    } catch {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad query',
-      });
-    }
-    return await this.adminCategoryService.findOne(id, { includes });
-  }
-
-  @Post()
-  async create(
-    @Body() createCategoryDto: CreateCategoryDto,
-  ): Promise<CategoryDto> {
-    return this.adminCategoryService.create(createCategoryDto);
-  }
-
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updatedCategory: UpdateCategoryDto,
-  ) {
-    return this.adminCategoryService.update(id, updatedCategory);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.adminCategoryService.delete(id);
+  @TsRestHandler(contract.categoryAdmin)
+  async handler() {
+    return tsRestHandler(contract.categoryAdmin, {
+      listCategories: async ({ query }) => {
+        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
+        return { status: 200 as const, body: await this.adminCategoryService.findAll({ includes }) };
+      },
+      getCategory: async ({ params, query }) => {
+        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
+        return { status: 200 as const, body: await this.adminCategoryService.findOne(params.id, { includes }) };
+      },
+      createCategory: async ({ body }) => {
+        return { status: 201 as const, body: await this.adminCategoryService.create(body) };
+      },
+      updateCategory: async ({ params, body }) => {
+        return { status: 200 as const, body: await this.adminCategoryService.update(params.id, body) };
+      },
+      deleteCategory: async ({ params }) => {
+        await this.adminCategoryService.delete(params.id);
+        return { status: 200 as const, body: {} };
+      },
+    });
   }
 }

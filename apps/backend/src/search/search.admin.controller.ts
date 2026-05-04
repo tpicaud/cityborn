@@ -1,64 +1,54 @@
+import { contract } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { BadRequestException, Controller, UseGuards } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import {
-  SearchGuessObjectResponseDto,
-  SearchWorldLocationResponseDto,
-} from './dto/search.response.dto';
 import { SearchService } from './search.service';
 
 @UseGuards(AdminGuard)
-@Controller('admin/search')
+@Controller()
 export class AdminSearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  @Get('guess-object')
-  async searchGuessObject(
-    @Query('q') q?: string,
-    @Query('external_id') external_id?: string,
-  ): Promise<SearchGuessObjectResponseDto> {
-    if (external_id) {
-      return {
-        results:
-          await this.searchService.searchGuessObjectByExternalId(external_id),
-      };
-    } else if (q) {
-      return {
-        results: await this.searchService.searchGuessObjectByName(q),
-      };
-    } else {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: `Either 'q' or 'source_id' must be provided`,
-      });
-    }
-  }
-
-  @Get('world-location')
-  async searchWorldLocation(
-    @Query('q') q?: string,
-    @Query('id') id?: string,
-    @Query('osm_type') osm_type?: string,
-  ): Promise<SearchWorldLocationResponseDto> {
-    if (id && osm_type) {
-      return {
-        results: await this.searchService.searchWorldLocationById(id, osm_type),
-      };
-    } else if (q) {
-      return {
-        results: await this.searchService.searchWorldLocationByName(q),
-      };
-    } else {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: `Either 'q' or 'id' must be provided`,
-      });
-    }
+  @TsRestHandler(contract.searchAdmin)
+  async handler() {
+    return tsRestHandler(contract.searchAdmin, {
+      searchGuessObject: async ({ query }) => {
+        if (query.external_id) {
+          return {
+            status: 200 as const,
+            body: { results: await this.searchService.searchGuessObjectByExternalId(query.external_id) },
+          };
+        } else if (query.q) {
+          return {
+            status: 200 as const,
+            body: { results: await this.searchService.searchGuessObjectByName(query.q) },
+          };
+        } else {
+          throw new BadRequestException({
+            code: ErrorCode.BAD_REQUEST,
+            message: `Either 'q' or 'source_id' must be provided`,
+          });
+        }
+      },
+      searchWorldLocation: async ({ query }) => {
+        if (query.id && query.osm_type) {
+          return {
+            status: 200 as const,
+            body: { results: await this.searchService.searchWorldLocationById(query.id, query.osm_type) },
+          };
+        } else if (query.q) {
+          return {
+            status: 200 as const,
+            body: { results: await this.searchService.searchWorldLocationByName(query.q) },
+          };
+        } else {
+          throw new BadRequestException({
+            code: ErrorCode.BAD_REQUEST,
+            message: `Either 'q' or 'id' must be provided`,
+          });
+        }
+      },
+    });
   }
 }

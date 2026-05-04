@@ -1,84 +1,38 @@
-import { ErrorCode } from '@cityborn/errors';
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Logger,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { contract } from '@cityborn/api';
+import { Controller, UseGuards } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
-import {
-  CreateGuessObjectDto,
-  CreateGuessObjectResponseDto,
-} from '../dto/create-guess-object.dto';
-import { GuessObjectDto } from '../dto/guess-object.dto';
-import { GuessObjectsResponseDto } from '../dto/guess-object.response.dto';
 import { GuessObjectService } from '../guess-object.service';
 
 @UseGuards(AdminGuard)
-@Controller('admin/guess-objects')
+@Controller()
 export class AdminGuessObjectController {
-  private readonly logger = new Logger(AdminGuessObjectController.name);
-
   constructor(private readonly guessObjectsService: GuessObjectService) {}
 
-  @Get()
-  async getGuessObjectsFromIds(
-    @Query('guessObjectsIds') guessObjectsIds: string | string[],
-  ): Promise<GuessObjectsResponseDto> {
-    const idsArray = Array.isArray(guessObjectsIds)
-      ? guessObjectsIds
-      : guessObjectsIds.split(',');
-
-    return {
-      guessObjects: await this.guessObjectsService.findSome(idsArray),
-    };
-  }
-
-  @Get(':id')
-  async getGuessObject(
-    @Param('id') id: string,
-    @Query('include') include?: string,
-  ): Promise<GuessObjectDto> {
-    let includes: string[];
-    try {
-      includes = include ? include.split(',').map((i) => i.trim()) : [];
-    } catch {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad query',
-      });
-    }
-    return await this.guessObjectsService.findById(id, includes);
-  }
-
-  @Patch(':id')
-  async patchGuessObject(
-    @Param('id') id: string,
-    @Body() updatedFields: Partial<GuessObjectDto>,
-  ): Promise<{ id: string }> {
-    return {
-      id: await this.guessObjectsService.update(id, updatedFields),
-    };
-  }
-
-  @Post()
-  async createGuessObject(
-    @Body() createGuessObjectDto: CreateGuessObjectDto,
-  ): Promise<CreateGuessObjectResponseDto> {
-    return {
-      id: await this.guessObjectsService.create(createGuessObjectDto),
-    };
-  }
-
-  @Delete(':id')
-  async deleteGuessObjects(@Param('id') id: string): Promise<void> {
-    await this.guessObjectsService.delete(id);
+  @TsRestHandler(contract.guessObjectsAdmin)
+  async handler() {
+    return tsRestHandler(contract.guessObjectsAdmin, {
+      listGuessObjects: async ({ query }) => {
+        const idsArray = query.guessObjectsIds.split(',');
+        return {
+          status: 200 as const,
+          body: { guessObjects: await this.guessObjectsService.findSome(idsArray) },
+        };
+      },
+      getGuessObject: async ({ params, query }) => {
+        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
+        return { status: 200 as const, body: await this.guessObjectsService.findById(params.id, includes) };
+      },
+      createGuessObject: async ({ body }) => {
+        return { status: 201 as const, body: { id: await this.guessObjectsService.create(body) } };
+      },
+      updateGuessObject: async ({ params, body }) => {
+        return { status: 200 as const, body: { id: await this.guessObjectsService.update(params.id, body) } };
+      },
+      deleteGuessObject: async ({ params }) => {
+        await this.guessObjectsService.delete(params.id);
+        return { status: 200 as const, body: {} };
+      },
+    });
   }
 }
