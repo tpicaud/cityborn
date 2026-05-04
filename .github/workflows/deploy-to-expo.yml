@@ -67,7 +67,7 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Download IPA artifact
+      - name: Download bundle artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
@@ -78,4 +78,4 @@ jobs:
           APP_VARIANT: ${{ vars.APP_VARIANT }}
           GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
           GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
-        run: eas submit --platform ios --profile ${{ inputs.profile }} --non-interactive --path ${{ github.workspace }}/${{ inputs.artifact_name }} --no-wait
+        run: eas submit --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --path ${{ github.workspace }}/${{ inputs.artifact_name }} --no-wait
