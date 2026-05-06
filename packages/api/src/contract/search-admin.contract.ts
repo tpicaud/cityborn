@@ -8,7 +8,7 @@ const c = initContract();
 export const searchAdminContract = c.router({
   searchGuessObject: {
     method: 'GET',
-    path: '/admin/search/guess-object',
+    path: '/search/guess-object',
     query: z.object({
       q: z.string().optional(),
       external_id: z.string().optional(),
@@ -19,7 +19,7 @@ export const searchAdminContract = c.router({
   },
   searchWorldLocation: {
     method: 'GET',
-    path: '/admin/search/world-location',
+    path: '/search/world-location',
     query: z.object({
       q: z.string().optional(),
       id: z.string().optional(),
