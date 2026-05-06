@@ -6,7 +6,11 @@ import {
   CreateCategorySchema,
   UpdateCategorySchema,
 } from '../schemas/category.schema.js';
-import { emptyResponseSchema } from '../schemas/common.schema.js';
+import {
+  emptyResponseSchema,
+  IdParamSchema,
+  IncludeQuerySchema,
+} from '../schemas/common.schema.js';
 
 const c = initContract();
 
@@ -14,14 +18,14 @@ export const categoryAdminContract = c.router({
   listCategories: {
     method: 'GET',
     path: '/category',
-    query: z.object({ include: z.string().optional() }),
+    query: IncludeQuerySchema,
     responses: { 200: CategoriesSchema },
   },
   getCategory: {
     method: 'GET',
     path: '/category/:id',
-    pathParams: z.object({ id: z.string() }),
-    query: z.object({ include: z.string().optional() }),
+    pathParams: IdParamSchema,
+    query: IncludeQuerySchema,
     responses: { 200: CategorySchema },
   },
   createCategory: {
@@ -33,14 +37,14 @@ export const categoryAdminContract = c.router({
   updateCategory: {
     method: 'PUT',
     path: '/category/:id',
-    pathParams: z.object({ id: z.string() }),
+    pathParams: IdParamSchema,
     body: UpdateCategorySchema,
     responses: { 200: CategorySchema },
   },
   deleteCategory: {
     method: 'DELETE',
     path: '/category/:id',
-    pathParams: z.object({ id: z.string() }),
+    pathParams: IdParamSchema,
     body: z.object({}),
     responses: { 204: emptyResponseSchema },
   },

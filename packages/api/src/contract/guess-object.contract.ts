@@ -1,5 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
+import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema.js';
 import {
   GuessObjectSchema,
   GuessObjectsSchema,
@@ -17,8 +18,8 @@ export const guessObjectContract = c.router({
   getGuessObject: {
     method: 'GET',
     path: '/guess-objects/:id',
-    pathParams: z.object({ id: z.string() }),
-    query: z.object({ include: z.string().optional() }),
+    pathParams: IdParamSchema,
+    query: IncludeQuerySchema,
     responses: { 200: GuessObjectSchema },
   },
 });

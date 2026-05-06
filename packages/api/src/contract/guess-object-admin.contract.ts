@@ -1,6 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { emptyResponseSchema, IdSchema } from '../schemas/common.schema.js';
+import {
+  emptyResponseSchema,
+  IdParamSchema,
+  IdSchema,
+  IncludeQuerySchema,
+} from '../schemas/common.schema.js';
 import {
   CreateGuessObjectSchema,
   GuessObjectSchema,
@@ -19,8 +24,8 @@ export const guessObjectAdminContract = c.router({
   getGuessObject: {
     method: 'GET',
     path: '/guess-objects/:id',
-    pathParams: z.object({ id: z.string() }),
-    query: z.object({ include: z.string().optional() }),
+    pathParams: IdParamSchema,
+    query: IncludeQuerySchema,
     responses: { 200: GuessObjectSchema },
   },
   createGuessObject: {
@@ -32,14 +37,14 @@ export const guessObjectAdminContract = c.router({
   updateGuessObject: {
     method: 'PATCH',
     path: '/guess-objects/:id',
-    pathParams: z.object({ id: z.string() }),
+    pathParams: IdParamSchema,
     body: GuessObjectSchema.partial(),
     responses: { 200: IdSchema },
   },
   deleteGuessObject: {
     method: 'DELETE',
     path: '/guess-objects/:id',
-    pathParams: z.object({ id: z.string() }),
+    pathParams: IdParamSchema,
     body: z.object({}),
     responses: { 204: emptyResponseSchema },
   },

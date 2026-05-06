@@ -1,11 +1,13 @@
 import { initContract } from '@ts-rest/core';
-import { z } from 'zod';
+import {
+  emptyResponseSchema,
+  IdParamSchema,
+} from '../schemas/common.schema.js';
 import { GameSchema } from '../schemas/game.schema.js';
 import {
   CreateSessionSchema,
   SessionSchema,
 } from '../schemas/session.schema.js';
-import { emptyResponseSchema } from '../schemas/common.schema.js';
 
 const c = initContract();
 
@@ -19,7 +21,7 @@ export const sessionContract = c.router({
   getSession: {
     method: 'GET',
     path: '/session/:id',
-    pathParams: z.object({ id: z.string() }),
+    pathParams: IdParamSchema,
     responses: { 200: SessionSchema },
   },
   createGame: {
