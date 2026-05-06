@@ -7,6 +7,7 @@ import {
   UpdateCategorySchema,
 } from '../schemas/category.schema.js';
 import {
+  emptyRequestBodySchema,
   emptyResponseSchema,
   IdParamSchema,
   IncludeQuerySchema,
@@ -45,7 +46,7 @@ export const categoryAdminContract = c.router({
     method: 'DELETE',
     path: '/category/:id',
     pathParams: IdParamSchema,
-    body: z.object({}),
+    body: emptyRequestBodySchema,
     responses: { 204: emptyResponseSchema },
   },
 });

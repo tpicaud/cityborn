@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import {
+  emptyRequestBodySchema,
   emptyResponseSchema,
   IdParamSchema,
   IdSchema,
@@ -32,7 +33,7 @@ export const guessObjectAdminContract = c.router({
     method: 'POST',
     path: '/guess-objects',
     body: CreateGuessObjectSchema,
-    responses: { 200: IdSchema },
+    responses: { 201: IdSchema },
   },
   updateGuessObject: {
     method: 'PATCH',
@@ -45,7 +46,7 @@ export const guessObjectAdminContract = c.router({
     method: 'DELETE',
     path: '/guess-objects/:id',
     pathParams: IdParamSchema,
-    body: z.object({}),
+    body: emptyRequestBodySchema,
     responses: { 204: emptyResponseSchema },
   },
 });

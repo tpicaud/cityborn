@@ -56,7 +56,7 @@ export const authContract = c.router({
   deleteUser: {
     method: 'POST',
     path: '/auth/delete-user',
-    body: z.object({}),
+    body: emptyRequestBodySchema,
     responses: { 204: emptyResponseSchema },
   },
 });
