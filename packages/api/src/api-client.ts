@@ -1,16 +1,12 @@
 import { AuthFetch } from './auth-fetch.js';
-import type {
-  Category,
-  CreateEvent,
-  CreateUser,
-  Game,
-  GameRecord,
-  GuessObject,
-  Sentence,
-  Session,
-  SessionMode,
-  User,
-} from './schemas/index.js';
+import type { Category } from './schemas/category.schema.js';
+import type { SessionMode } from './schemas/enums.js';
+import type { CreateEvent } from './schemas/event.schema.js';
+import type { Game, GameRecord } from './schemas/game.schema.js';
+import type { GuessObject } from './schemas/guess-object.schema.js';
+import type { Sentence } from './schemas/sentence.schema.js';
+import type { Session } from './schemas/session.schema.js';
+import type { CreateUser, User } from './schemas/user.schema.js';
 import type { TokenStorage } from './types/token-storage.js';
 
 export class ApiClient {

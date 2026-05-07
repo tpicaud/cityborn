@@ -2,6 +2,7 @@ import type {
   GameConfig,
   Player,
   PlayerResults,
+  PublicUser,
   SessionMode,
   User,
 } from '@cityborn/types';
@@ -9,14 +10,12 @@ import type {
   GameRecord as PrismaGameRecord,
   User as PrismaUser,
 } from '@prisma/client';
-import type { PublicUserDto } from './dto/public-user.dto';
-import type { UserDto } from './dto/user.dto';
 
 type PrismaUserWithRelations = PrismaUser & {
   gameRecords?: PrismaGameRecord[];
 };
 export class UserMapper {
-  static toUserDto(prismaUser: PrismaUserWithRelations): UserDto {
+  static toUser(prismaUser: PrismaUserWithRelations): User {
     return {
       id: prismaUser.id,
       type: prismaUser.type as import('@cityborn/types').AccountType,
@@ -40,7 +39,7 @@ export class UserMapper {
     };
   }
 
-  static toPublicUserDto(user: User): PublicUserDto {
+  static toPublicUser(user: { id: string; username: string }): PublicUser {
     return {
       id: user.id,
       username: user.username,

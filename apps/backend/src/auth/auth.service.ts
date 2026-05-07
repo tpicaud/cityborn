@@ -1,3 +1,11 @@
+import {
+  type AuthResponse,
+  type CreateUser,
+  type PublicUser,
+  type SignIn,
+  type SignInWithApple,
+  type SignInWithGoogle,
+} from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import { createEvent, type User } from '@cityborn/types';
 import {
@@ -13,15 +21,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { EventService } from 'src/event/event.service';
-import { PublicUserResponseDto } from 'src/user/dto/public-user.response.dto';
 import { UserMapper } from 'src/user/user.mapper';
 import { UserService } from 'src/user/user.service';
 import { getJwtConstants } from './constants';
-import { AuthResponseDto } from './dto/auth.response.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { SignInWithAppleDto } from './dto/sign-in-with-apple.dto';
-import { SignInWithGoogleDto } from './dto/sign-in-with-google.dto';
-import { SignUpDto } from './dto/sign-up.dto';
 import { verifyAppleIdToken } from './utils';
 
 @Injectable()
@@ -36,7 +38,7 @@ export class AuthService {
     @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
   ) {}
 
-  async signUp(dto: SignUpDto, visitorId?: string): Promise<AuthResponseDto> {
+  async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
     const { email, username, password } = dto;
 
     // Validate identifiers
@@ -87,11 +89,11 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUserDto(user),
+      user: UserMapper.toUser(user),
     };
   }
 
-  async signIn(dto: SignInDto, visitorId?: string): Promise<AuthResponseDto> {
+  async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
     const { identifier, password } = dto;
 
     // Find user
@@ -147,14 +149,14 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUserDto(user),
+      user: UserMapper.toUser(user),
     };
   }
 
   async signInWithGoogle(
-    dto: SignInWithGoogleDto,
+    dto: SignInWithGoogle,
     visitorId?: string,
-  ): Promise<AuthResponseDto> {
+  ): Promise<AuthResponse> {
     const { idToken } = dto;
 
     const { email, name } = await this.verifyGoogleToken(idToken);
@@ -215,11 +217,11 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUserDto(user),
+      user: UserMapper.toUser(user),
     };
   }
 
-  async signInWithApple(dto: SignInWithAppleDto, visitorId?: string) {
+  async signInWithApple(dto: SignInWithApple, visitorId?: string): Promise<AuthResponse> {
     const { identity_token, apple_user_id, details } = dto;
 
     if (!(await verifyAppleIdToken(identity_token, process.env.APP_ID!))) {
@@ -298,11 +300,11 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUserDto(user),
+      user: UserMapper.toUser(user),
     };
   }
 
-  async refresh(identifier: string): Promise<AuthResponseDto> {
+  async refresh(identifier: string): Promise<AuthResponse> {
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new UnauthorizedException({
@@ -326,11 +328,11 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUserDto(user),
+      user: UserMapper.toUser(user),
     };
   }
 
-  async getProfile(identifier: string): Promise<PublicUserResponseDto> {
+  async getProfile(identifier: string): Promise<PublicUser> {
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new NotFoundException({
@@ -338,9 +340,7 @@ export class AuthService {
         message: `User not found`,
       });
 
-    return {
-      user: UserMapper.toUserDto(user),
-    };
+    return UserMapper.toPublicUser(user);
   }
 
   async deleteUser(user?: User): Promise<void> {

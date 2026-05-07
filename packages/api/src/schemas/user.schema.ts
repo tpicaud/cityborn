@@ -57,4 +57,7 @@ export type AccountType = z.infer<typeof AccountTypeSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
+export type SignIn = z.infer<typeof SignInSchema>;
+export type SignInWithGoogle = z.infer<typeof SignInWithGoogleSchema>;
+export type SignInWithApple = z.infer<typeof SignInWithAppleSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
