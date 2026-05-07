@@ -1,3 +1,5 @@
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/utils';
+
 export default function TermsAndPolicies() {
   return (
     <div className="flex justify-center bg-gray-50 px-4 py-12">
@@ -41,7 +43,7 @@ export default function TermsAndPolicies() {
             </li>
             <li>
               <strong>Adresse e-mail de contact :</strong>{' '}
-              cityborn.contact@gmail.com
+              {CITYBORN_CONTACT_EMAIL}
             </li>
             <li>
               <strong>Pays de résidence :</strong> France
@@ -161,7 +163,7 @@ export default function TermsAndPolicies() {
           </ul>
           <p className="text-gray-700">
             Pour exercer ces droits, vous pouvez nous contacter à l’adresse
-            suivante : <strong>cityborn.contact@gmail.com</strong>
+            suivante : <strong>{CITYBORN_CONTACT_EMAIL}</strong>
           </p>
         </section>
 
@@ -194,7 +196,7 @@ export default function TermsAndPolicies() {
             confidentialité ou le traitement de vos données personnelles :
           </p>
           <p className="font-medium text-gray-800">
-            📧 cityborn.contact@gmail.com
+            📧 {CITYBORN_CONTACT_EMAIL}
           </p>
         </section>
       </div>

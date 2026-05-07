@@ -30,8 +30,6 @@ FROM node:23-alpine AS runner
 
 WORKDIR /app
 
-RUN npm install -g pnpm
-
 # Copier les fichiers nécessaires au runtime
 COPY --from=builder /app/apps /app/apps
 COPY --from=builder /app/packages /app/packages
@@ -43,5 +41,4 @@ EXPOSE 4000
 
 WORKDIR /app/apps/backend
 
-# Démarrage : à ajuster selon app
-CMD ["pnpm", "start:prod"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main"]
