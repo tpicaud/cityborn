@@ -1,4 +1,5 @@
 import { ApiError, ErrorCode, type ErrorPayload } from '@cityborn/errors';
+import type { ApiFetcherArgs } from '@ts-rest/core';
 import type { TokenStorage } from './types/token-storage.js';
 
 type RequestInitWithAuth = RequestInit & { includeAuth?: boolean };
@@ -176,6 +177,87 @@ export class AuthFetch {
       return await fetch(input, { ...init, signal: controller.signal });
     } finally {
       clearTimeout(id);
+    }
+  }
+
+  // ------- ts-rest api function -------
+  buildApiFunction() {
+    return (args: ApiFetcherArgs) => this.tsRestFetch(args);
+  }
+
+  private async tsRestFetch(
+    args: ApiFetcherArgs,
+    isRetry = false,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    const token = await this.tokenStorage.getAccessToken();
+
+    const headers: Record<string, string> = { ...args.headers };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await this.timeoutFetch(args.path, {
+      method: args.method,
+      headers,
+      body: args.body,
+      credentials: 'include',
+    });
+
+    let body: unknown = null;
+    const contentType = response.headers.get('Content-Type') ?? '';
+    if (response.status !== 204 && contentType.includes('application/json')) {
+      try {
+        body = await response.json();
+      } catch {
+        body = null;
+      }
+    }
+
+    if (
+      response.status === 401 &&
+      !isRetry &&
+      body !== null &&
+      typeof body === 'object' &&
+      (body as Record<string, unknown>).code === ErrorCode.TOKEN_EXPIRED
+    ) {
+      return this.handleTsRest401(args);
+    }
+
+    return { status: response.status, body, headers: response.headers };
+  }
+
+  private async handleTsRest401(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    if (this.isRefreshing) {
+      return new Promise((resolve, reject) => {
+        this.refreshQueue.push(async (newToken) => {
+          if (!newToken) {
+            reject(
+              new ApiError(ErrorCode.USER_REFRESH_FAILED, 'Refresh failed', 500),
+            );
+            return;
+          }
+          try {
+            resolve(await this.tsRestFetch(args, true));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+    }
+
+    this.isRefreshing = true;
+    try {
+      const newToken = await this.refreshToken();
+      this.processQueue(newToken);
+      return await this.tsRestFetch(args, true);
+    } catch (err) {
+      this.processQueue(null);
+      await this.tokenStorage.clearTokens();
+      throw err;
+    } finally {
+      this.isRefreshing = false;
     }
   }
 
