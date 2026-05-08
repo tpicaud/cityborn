@@ -17,7 +17,7 @@ export class UserController {
       }),
       saveSoloGameRecord: async ({ body }) => {
         await this.userService.saveSoloGameRecord(user.id, body);
-        return { status: 204 as const, body: {} };
+        return { status: 200 as const, body: {} };
       },
     });
   }

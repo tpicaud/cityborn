@@ -34,6 +34,6 @@ export const sessionContract = c.router({
     method: 'POST',
     path: '/session/end-solo-game',
     body: SessionSchema,
-    responses: { 204: emptyResponseSchema },
+    responses: { 200: emptyResponseSchema },
   },
 });

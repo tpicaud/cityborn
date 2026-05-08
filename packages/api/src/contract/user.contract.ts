@@ -17,6 +17,6 @@ export const userContract = c.router({
     method: 'POST',
     path: '/user/game-records',
     body: CreateGameRecordSchema,
-    responses: { 204: emptyResponseSchema },
+    responses: { 200: emptyResponseSchema },
   },
 });

@@ -49,7 +49,7 @@ export class AuthFetch {
 
     const contentType = response.headers.get('Content-Type') ?? '';
 
-    if (response.status !== 204 && contentType.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       try {
         data = await response.json();
       } catch {
@@ -205,7 +205,7 @@ export class AuthFetch {
 
     let body: unknown = null;
     const contentType = response.headers.get('Content-Type') ?? '';
-    if (response.status !== 204 && contentType.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       try {
         body = await response.json();
       } catch {
@@ -234,7 +234,11 @@ export class AuthFetch {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
             reject(
-              new ApiError(ErrorCode.USER_REFRESH_FAILED, 'Refresh failed', 500),
+              new ApiError(
+                ErrorCode.USER_REFRESH_FAILED,
+                'Refresh failed',
+                500,
+              ),
             );
             return;
           }

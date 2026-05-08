@@ -13,22 +13,40 @@ export class AdminCategoryController {
   async handler() {
     return tsRestHandler(contract.admin.category, {
       listCategories: async ({ query }) => {
-        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
-        return { status: 200 as const, body: await this.adminCategoryService.findAll({ includes }) };
+        const includes = query.include
+          ? query.include.split(',').map((i) => i.trim())
+          : [];
+        return {
+          status: 200 as const,
+          body: await this.adminCategoryService.findAll({ includes }),
+        };
       },
       getCategory: async ({ params, query }) => {
-        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
-        return { status: 200 as const, body: await this.adminCategoryService.findOne(params.id, { includes }) };
+        const includes = query.include
+          ? query.include.split(',').map((i) => i.trim())
+          : [];
+        return {
+          status: 200 as const,
+          body: await this.adminCategoryService.findOne(params.id, {
+            includes,
+          }),
+        };
       },
       createCategory: async ({ body }) => {
-        return { status: 201 as const, body: await this.adminCategoryService.create(body) };
+        return {
+          status: 201 as const,
+          body: await this.adminCategoryService.create(body),
+        };
       },
       updateCategory: async ({ params, body }) => {
-        return { status: 200 as const, body: await this.adminCategoryService.update(params.id, body) };
+        return {
+          status: 200 as const,
+          body: await this.adminCategoryService.update(params.id, body),
+        };
       },
       deleteCategory: async ({ params }) => {
         await this.adminCategoryService.delete(params.id);
-        return { status: 204 as const, body: {} };
+        return { status: 200 as const, body: {} };
       },
     });
   }

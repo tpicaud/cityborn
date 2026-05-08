@@ -1,5 +1,4 @@
 import { initContract } from '@ts-rest/core';
-import { z } from 'zod';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -57,6 +56,6 @@ export const authContract = c.router({
     method: 'POST',
     path: '/auth/delete-user',
     body: emptyRequestBodySchema,
-    responses: { 204: emptyResponseSchema },
+    responses: { 200: emptyResponseSchema },
   },
 });

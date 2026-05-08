@@ -10,6 +10,5 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const result = await client.session.endSoloGame({ body });
-  if (result.status === 204) return new NextResponse(null, { status: 204 });
   return NextResponse.json(result.body, { status: result.status });
 }

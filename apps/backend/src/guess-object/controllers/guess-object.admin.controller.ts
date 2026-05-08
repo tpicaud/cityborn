@@ -20,18 +20,29 @@ export class AdminGuessObjectController {
         };
       },
       getGuessObject: async ({ params, query }) => {
-        const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
-        return { status: 200 as const, body: await this.guessObjectsService.findById(params.id, includes) };
+        const includes = query.include
+          ? query.include.split(',').map((i) => i.trim())
+          : [];
+        return {
+          status: 200 as const,
+          body: await this.guessObjectsService.findById(params.id, includes),
+        };
       },
       createGuessObject: async ({ body }) => {
-        return { status: 201 as const, body: await this.guessObjectsService.create(body) };
+        return {
+          status: 201 as const,
+          body: await this.guessObjectsService.create(body),
+        };
       },
       updateGuessObject: async ({ params, body }) => {
-        return { status: 200 as const, body: await this.guessObjectsService.update(params.id, body) };
+        return {
+          status: 200 as const,
+          body: await this.guessObjectsService.update(params.id, body),
+        };
       },
       deleteGuessObject: async ({ params }) => {
         await this.guessObjectsService.delete(params.id);
-        return { status: 204 as const, body: {} };
+        return { status: 200 as const, body: {} };
       },
     });
   }

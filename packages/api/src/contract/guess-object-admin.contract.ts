@@ -47,6 +47,6 @@ export const guessObjectAdminContract = c.router({
     path: '/guess-objects/:id',
     pathParams: IdParamSchema,
     body: emptyRequestBodySchema,
-    responses: { 204: emptyResponseSchema },
+    responses: { 200: emptyResponseSchema },
   },
 });

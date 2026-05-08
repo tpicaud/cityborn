@@ -58,7 +58,7 @@ export class SessionController {
       }),
       endSoloGame: async ({ body }) => {
         await this.sessionService.endSoloGame(body, visitorId);
-        return { status: 204 as const, body: {} };
+        return { status: 200 as const, body: {} };
       },
     });
   }
