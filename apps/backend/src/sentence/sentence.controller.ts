@@ -9,11 +9,13 @@ export class SentenceController {
   constructor(private readonly sentenceService: SentenceService) {}
 
   @TsRestHandler(contract.sentence.getSentence)
-  async getSentence() {
+  async handler() {
     return tsRestHandler(contract.sentence.getSentence, async ({ query }) => {
       return {
         status: 200 as const,
-        body: await this.sentenceService.findRandomOne(query.score_type as ScoreType),
+        body: await this.sentenceService.findRandomOne(
+          query.score_type as ScoreType,
+        ),
       };
     });
   }

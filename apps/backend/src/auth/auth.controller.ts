@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { RefreshGuard } from './guards/refresh.guard';
 
-const c = initContract();
+const c = initContract(); // TODO delete to use only shared contract
 
 const publicAuthRoutes = c.router({
   signUp: contract.auth.signUp,

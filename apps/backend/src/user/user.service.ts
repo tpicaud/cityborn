@@ -1,4 +1,4 @@
-import { GameRecord } from '@cityborn/api';
+import { type CreateGameRecord, GameRecord } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import { type AccountType, SessionMode } from '@cityborn/types';
 import {
@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { Prisma, User as PrismaUser } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
 import { GameMapper } from 'src/session/game.mapper';
 
 @Injectable()
@@ -101,7 +100,7 @@ export class UserService {
 
   async saveSoloGameRecord(
     user_id: string,
-    createGameRecord: CreateGameRecordDto,
+    createGameRecord: CreateGameRecord,
   ): Promise<void> {
     if (createGameRecord.mode !== SessionMode.SOLO) {
       throw new BadRequestException({

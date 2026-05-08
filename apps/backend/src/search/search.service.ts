@@ -8,10 +8,6 @@ import { WikidataService } from 'src/wikidata/wikidata.service';
 import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
 import { WorldLocationService } from 'src/world-location/world-location.service';
-import {
-  SearchGuessObjectResponseDto,
-  SearchWorldLocationResponseDto,
-} from './dto/search.response.dto';
 
 @Injectable()
 export class SearchService {

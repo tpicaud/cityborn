@@ -8,7 +8,7 @@ export class EventController {
   constructor(private readonly eventService: EventService) {}
 
   @TsRestHandler(contract.event.trackEvent)
-  async track() {
+  async handler() {
     return tsRestHandler(contract.event.trackEvent, async ({ body }) => {
       await this.eventService.trackEvent(body);
       return { status: 201 as const, body: {} };

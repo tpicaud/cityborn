@@ -1,3 +1,4 @@
+import { type CreateSession } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import {
   createEvent,
@@ -31,8 +32,6 @@ import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { SessionDto } from './dto/session.dto';
 
 @Injectable()
 export class SessionService {
@@ -60,7 +59,7 @@ export class SessionService {
   ////////////////////
 
   async create(
-    dto: CreateSessionDto,
+    dto: CreateSession,
     user?: User,
     visitorId?: string,
   ): Promise<Session> {
@@ -561,7 +560,7 @@ export class SessionService {
     return session;
   }
 
-  async endSoloGame(sessionDto: SessionDto, visitorId?: string) {
+  async endSoloGame(sessionDto: Session, visitorId?: string) {
     if (!sessionDto.currentGame) return;
     await this.endGame(sessionDto, sessionDto.currentGame, visitorId);
   }
