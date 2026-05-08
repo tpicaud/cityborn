@@ -1,7 +1,8 @@
 import { contract } from '@cityborn/api';
 import type { User } from '@cityborn/types';
-import { Controller } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CurrentUser } from './user.decorator';
 import { UserService } from './user.service';
 
@@ -9,6 +10,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
   @TsRestHandler(contract.user)
+  @UseGuards(AuthGuard)
   async handler(@CurrentUser() user: User) {
     return tsRestHandler(contract.user, {
       getGameRecords: async () => ({

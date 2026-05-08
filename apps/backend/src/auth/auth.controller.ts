@@ -53,8 +53,8 @@ export class AuthController {
     });
   }
 
-  @UseGuards(AuthGuard)
   @TsRestHandler(protectedAuthRoutes)
+  @UseGuards(AuthGuard)
   async protectedHandler(@CurrentUser() user: User) {
     return tsRestHandler(protectedAuthRoutes, {
       me: async () => ({
@@ -63,13 +63,13 @@ export class AuthController {
       }),
       deleteUser: async () => {
         await this.authService.deleteUser(user);
-        return { status: 204 as const, body: {} };
+        return { status: 200 as const, body: {} };
       },
     });
   }
 
-  @UseGuards(RefreshGuard)
   @TsRestHandler(refreshRoutes)
+  @UseGuards(RefreshGuard)
   async refreshHandler(@CurrentUser() user: User) {
     return tsRestHandler(refreshRoutes, {
       refresh: async () => ({

@@ -37,7 +37,7 @@ export async function getCurrentUser(): Promise<User | null> {
       return null;
     }
 
-    return data.user;
+    return data as User;
   } catch {
     return null;
   }

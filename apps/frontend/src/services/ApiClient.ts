@@ -42,7 +42,7 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
 
-    return (data.user as PublicUser) || null;
+    return (data as PublicUser) || null;
   }
 
   async signUp(
