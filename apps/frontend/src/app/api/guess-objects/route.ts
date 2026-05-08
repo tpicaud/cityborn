@@ -1,24 +1,16 @@
-import { ApiClient } from '@cityborn/api';
+import { createApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
 import { WebTokenStorage } from '@/lib/tokenStorage';
-import { getBaseUrl, throwApiError } from '../utils';
+import { getBaseUrl } from '../utils';
 
 export async function GET(req: NextRequest) {
   const tokenStorage = new WebTokenStorage(await cookies());
-  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+  const client = createApiClient(getBaseUrl(), tokenStorage);
 
-  try {
-    const searchParams = req.nextUrl.searchParams;
-    const guessObjectsIdsParam = searchParams.get('guessObjectsIds');
-
-    const guessObjectsIds: string[] = guessObjectsIdsParam
-      ? guessObjectsIdsParam.split(',')
-      : [];
-
-    const guessObjects = await apiClient.fetchGuessObjects(guessObjectsIds);
-    return NextResponse.json(guessObjects, { status: 200 });
-  } catch (error: any) {
-    return throwApiError(error);
-  }
+  const guessObjectsIds = req.nextUrl.searchParams.get('guessObjectsIds') ?? '';
+  const result = await client.guessObjects.getGuessObjects({
+    query: { guessObjectsIds },
+  });
+  return NextResponse.json(result.body, { status: result.status });
 }

@@ -1,17 +1,13 @@
-import { ApiClient } from '@cityborn/api';
+import { createApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { WebTokenStorage } from '@/lib/tokenStorage';
-import { getBaseUrl, throwApiError } from '../utils';
+import { getBaseUrl } from '../utils';
 
 export async function GET() {
   const tokenStorage = new WebTokenStorage(await cookies());
-  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+  const client = createApiClient(getBaseUrl(), tokenStorage);
 
-  try {
-    const categories = await apiClient.fetchCategories();
-    return NextResponse.json(categories, { status: 200 });
-  } catch (error: any) {
-    return throwApiError(error);
-  }
+  const result = await client.category.getCategories({ query: {} });
+  return NextResponse.json(result.body, { status: result.status });
 }

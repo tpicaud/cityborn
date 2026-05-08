@@ -1,20 +1,14 @@
-import { ApiClient } from '@cityborn/api';
+import { createApiClient, type ScoreType } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
 import { WebTokenStorage } from '@/lib/tokenStorage';
-import { getBaseUrl, throwApiError } from '../utils';
+import { getBaseUrl } from '../utils';
 
 export async function GET(req: NextRequest) {
   const tokenStorage = new WebTokenStorage(await cookies());
-  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+  const client = createApiClient(getBaseUrl(), tokenStorage);
 
-  try {
-    const searchParams = req.nextUrl.searchParams;
-    const scoreType = searchParams.get('score_type');
-
-    const sentence = await apiClient.getEndSentence(scoreType || '');
-    return NextResponse.json(sentence, { status: 200 });
-  } catch (error: any) {
-    return throwApiError(error);
-  }
+  const score_type = (req.nextUrl.searchParams.get('score_type') ?? '') as ScoreType;
+  const result = await client.sentence.getSentence({ query: { score_type } });
+  return NextResponse.json(result.body, { status: result.status });
 }

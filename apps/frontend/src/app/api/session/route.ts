@@ -1,19 +1,14 @@
-import { ApiClient } from '@cityborn/api';
+import { createApiClient } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { WebTokenStorage } from '@/lib/tokenStorage';
-import { getBaseUrl, throwApiError } from '../utils';
+import { getBaseUrl } from '../utils';
 
 export async function POST(req: Request) {
   const tokenStorage = new WebTokenStorage(await cookies());
-  const apiClient = new ApiClient(getBaseUrl(), tokenStorage);
+  const client = createApiClient(getBaseUrl(), tokenStorage);
 
-  try {
-    const body = await req.json();
-
-    const session = await apiClient.createSession(body.mode);
-    return NextResponse.json(session, { status: 200 });
-  } catch (error: any) {
-    return throwApiError(error);
-  }
+  const body = await req.json();
+  const result = await client.session.createSession({ body: { mode: body.mode } });
+  return NextResponse.json(result.body, { status: result.status });
 }
