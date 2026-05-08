@@ -18,7 +18,7 @@ export class CategoryMapper {
       description: prismaCategory.description ?? undefined,
       guessObjects: prismaCategory.guessObjects
         ? prismaCategory.guessObjects.map((obj) =>
-            GuessObjectMapper.toGuessObjectDto(obj),
+            GuessObjectMapper.toGuessObject(obj),
           )
         : undefined,
     };

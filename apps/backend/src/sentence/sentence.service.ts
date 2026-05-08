@@ -1,15 +1,14 @@
+import { ScoreType, Sentence } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
-import { ScoreType } from '@cityborn/types';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SentenceDto } from './dto/sentence.dto';
 import { SentenceMapper } from './mapper/sentence.mapper';
 
 @Injectable()
 export class SentenceService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findRandomOne(score_type: ScoreType): Promise<SentenceDto> {
+  async findRandomOne(score_type: ScoreType): Promise<Sentence> {
     const sentences = await this.prisma.endGameSentence.findMany({
       where: {
         score_type,

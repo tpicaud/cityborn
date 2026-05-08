@@ -21,7 +21,6 @@ export const GuessObjectsSchema = z.array(GuessObjectSchema);
 
 export const CreateGuessObjectSchema = GuessObjectSchema.omit({
   id: true,
-  world_location: true,
 });
 
 export const GuessObjectCandidateSchema = GuessObjectSchema.omit({

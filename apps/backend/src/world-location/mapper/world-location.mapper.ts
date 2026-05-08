@@ -1,12 +1,6 @@
+import { WorldLocation } from '@cityborn/api';
 import type { WorldLocation as PrismaWorldLocation } from '@prisma/client';
-import {
-  type NominatimItemResponse,
-  NominatimSearchResponse,
-} from 'src/nominatim/nominatim.service';
-import {
-  type WorldLocationDto,
-  WorldLocationSearchResponseDto,
-} from '../dto/world-location.dto';
+import { type NominatimItemResponse } from 'src/nominatim/nominatim.service';
 
 type PrismaWorldLocationWithRelations = PrismaWorldLocation & {
   parent?: PrismaWorldLocation;
@@ -14,9 +8,9 @@ type PrismaWorldLocationWithRelations = PrismaWorldLocation & {
 };
 
 export class WorldLocationMapper {
-  static toWorldLocationDto(
+  static toWorldLocation(
     prismaWorldLocation: PrismaWorldLocationWithRelations,
-  ): WorldLocationDto {
+  ): WorldLocation {
     return {
       id: prismaWorldLocation.id,
       osm_type: prismaWorldLocation.osm_type,
@@ -29,7 +23,6 @@ export class WorldLocationMapper {
       },
       level: prismaWorldLocation.level ?? undefined,
       iso_code: prismaWorldLocation.iso_code ?? undefined,
-      parent: prismaWorldLocation.parent,
       centroid:
         (prismaWorldLocation.centroid as unknown as [number, number]) ??
         undefined,
@@ -41,9 +34,9 @@ export class WorldLocationMapper {
     };
   }
 
-  static toWorldLocationDtoFromNominatimItem(
+  static toWorldLocationFromNominatimItem(
     nominatimItem: NominatimItemResponse,
-  ): WorldLocationDto {
+  ): WorldLocation {
     return {
       id: nominatimItem.osm_id.toString(),
       osm_type: nominatimItem.osm_type,

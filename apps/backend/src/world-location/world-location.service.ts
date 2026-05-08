@@ -1,15 +1,14 @@
+import { WorldLocation } from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { NominatimService } from 'src/nominatim/nominatim.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WorldLocationDto } from './dto/world-location.dto';
 import { WorldLocationMapper } from './mapper/world-location.mapper';
 
 @Injectable()
 export class WorldLocationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async get(id: string): Promise<WorldLocationDto | null> {
+  async get(id: string): Promise<WorldLocation | null> {
     const prisma_world_location = await this.prisma.worldLocation.findUnique({
       where: {
         id: id,
@@ -17,12 +16,10 @@ export class WorldLocationService {
     });
 
     if (!prisma_world_location) return null;
-    return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
+    return WorldLocationMapper.toWorldLocation(prisma_world_location);
   }
 
-  async create(
-    world_location_dto: WorldLocationDto,
-  ): Promise<WorldLocationDto> {
+  async create(world_location_dto: WorldLocation): Promise<WorldLocation> {
     const prisma_world_location = await this.prisma.worldLocation.create({
       data: {
         id: world_location_dto.id.toString(),
@@ -39,13 +36,13 @@ export class WorldLocationService {
       },
     });
 
-    return WorldLocationMapper.toWorldLocationDto(prisma_world_location);
+    return WorldLocationMapper.toWorldLocation(prisma_world_location);
   }
 
-  async delete(id: string): Promise<WorldLocationDto> {
+  async delete(id: string): Promise<WorldLocation> {
     const world_location = await this.prisma.worldLocation.delete({
       where: { id },
     });
-    return WorldLocationMapper.toWorldLocationDto(world_location);
+    return WorldLocationMapper.toWorldLocation(world_location);
   }
 }
