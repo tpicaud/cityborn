@@ -59,12 +59,12 @@ export default function MenuComponent({
     <div className="flex flex-col items-center gap-5">
       <div className="relative flex flex-col gap-1 items-center w-full">
         <Image
-          src="/cityborn_transparent_new_logo.png"
+          src="/logo.png"
           alt="Logo"
-          width={256}
-          height={256}
+          width={200}
+          height={200}
           style={{ objectFit: 'contain' }}
-          className="object-contain w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40"
+          className="object-contain w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl"
           priority
         />
         <p className="text-base md:text-lg text-center ">
