@@ -15,7 +15,7 @@ export class PublicGuessObjectController {
       const idsArray = query.guessObjectsIds.split(',');
       return {
         status: 200 as const,
-        body: { guessObjects: await this.guessObjectsService.findSome(idsArray) },
+        body: await this.guessObjectsService.findSome(idsArray),
       };
     });
   }

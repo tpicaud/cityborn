@@ -9,14 +9,14 @@ import { GuessObjectService } from '../guess-object.service';
 export class AdminGuessObjectController {
   constructor(private readonly guessObjectsService: GuessObjectService) {}
 
-  @TsRestHandler(contract.guessObjectsAdmin)
+  @TsRestHandler(contract.admin.guessObjects)
   async handler() {
-    return tsRestHandler(contract.guessObjectsAdmin, {
+    return tsRestHandler(contract.admin.guessObjects, {
       listGuessObjects: async ({ query }) => {
         const idsArray = query.guessObjectsIds.split(',');
         return {
           status: 200 as const,
-          body: { guessObjects: await this.guessObjectsService.findSome(idsArray) },
+          body: await this.guessObjectsService.findSome(idsArray),
         };
       },
       getGuessObject: async ({ params, query }) => {
@@ -24,14 +24,14 @@ export class AdminGuessObjectController {
         return { status: 200 as const, body: await this.guessObjectsService.findById(params.id, includes) };
       },
       createGuessObject: async ({ body }) => {
-        return { status: 201 as const, body: { id: await this.guessObjectsService.create(body) } };
+        return { status: 201 as const, body: await this.guessObjectsService.create(body) };
       },
       updateGuessObject: async ({ params, body }) => {
-        return { status: 200 as const, body: { id: await this.guessObjectsService.update(params.id, body) } };
+        return { status: 200 as const, body: await this.guessObjectsService.update(params.id, body) };
       },
       deleteGuessObject: async ({ params }) => {
         await this.guessObjectsService.delete(params.id);
-        return { status: 200 as const, body: {} };
+        return { status: 204 as const, body: {} };
       },
     });
   }

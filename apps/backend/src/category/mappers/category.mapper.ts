@@ -1,19 +1,16 @@
+import { Category } from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
 } from '@prisma/client';
 import { GuessObjectMapper } from 'src/guess-object/mappers/guess-object.mapper';
-import type { CategoriesResponseDto } from '../dto/categories.response.dto';
-import type { CategoryDto } from '../dto/category.dto';
 
 type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: PrismaGuessObject[];
 };
 
 export class CategoryMapper {
-  static toCategoryDto(
-    prismaCategory: PrismaCategoryWithRelations,
-  ): CategoryDto {
+  static toCategory(prismaCategory: PrismaCategoryWithRelations): Category {
     return {
       id: prismaCategory.id,
       name: prismaCategory.name,
@@ -27,13 +24,9 @@ export class CategoryMapper {
     };
   }
 
-  static toCategoriesResponseDto(
-    prismaCategories: PrismaCategory[],
-  ): CategoriesResponseDto {
-    return {
-      categories: prismaCategories.map((category) =>
-        CategoryMapper.toCategoryDto(category),
-      ),
-    };
+  static toCategories(prismaCategories: PrismaCategory[]): Category[] {
+    return prismaCategories.map((category) =>
+      CategoryMapper.toCategory(category),
+    );
   }
 }

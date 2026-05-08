@@ -10,19 +10,19 @@ import { SearchService } from './search.service';
 export class AdminSearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  @TsRestHandler(contract.searchAdmin)
+  @TsRestHandler(contract.admin.search)
   async handler() {
-    return tsRestHandler(contract.searchAdmin, {
+    return tsRestHandler(contract.admin.search, {
       searchGuessObject: async ({ query }) => {
         if (query.external_id) {
           return {
             status: 200 as const,
-            body: { results: await this.searchService.searchGuessObjectByExternalId(query.external_id) },
+            body: [await this.searchService.searchGuessObjectByExternalId(query.external_id)],
           };
         } else if (query.q) {
           return {
             status: 200 as const,
-            body: { results: await this.searchService.searchGuessObjectByName(query.q) },
+            body: await this.searchService.searchGuessObjectByName(query.q),
           };
         } else {
           throw new BadRequestException({
@@ -35,12 +35,12 @@ export class AdminSearchController {
         if (query.id && query.osm_type) {
           return {
             status: 200 as const,
-            body: { results: await this.searchService.searchWorldLocationById(query.id, query.osm_type) },
+            body: [await this.searchService.searchWorldLocationById(query.id, query.osm_type)],
           };
         } else if (query.q) {
           return {
             status: 200 as const,
-            body: { results: await this.searchService.searchWorldLocationByName(query.q) },
+            body: await this.searchService.searchWorldLocationByName(query.q),
           };
         } else {
           throw new BadRequestException({

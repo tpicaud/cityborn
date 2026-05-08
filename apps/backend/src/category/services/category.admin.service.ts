@@ -1,9 +1,6 @@
+import { Category, CreateCategory, UpdateCategory } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
-import { CategoryDto } from '../dto/category.dto';
-import { CreateCategoryDto } from '../dto/create-category.dto';
-import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
 
@@ -15,9 +12,9 @@ export class AdminCategoryService {
     includes = [],
   }: {
     includes?: string[];
-  }): Promise<CategoriesResponseDto> {
+  }): Promise<Category[]> {
     const categories = await this.categoryService.findAll({ includes });
-    return CategoryMapper.toCategoriesResponseDto(categories);
+    return CategoryMapper.toCategories(categories);
   }
 
   async findOne(
@@ -27,7 +24,7 @@ export class AdminCategoryService {
     }: {
       includes: string[];
     },
-  ): Promise<CategoryDto> {
+  ): Promise<Category> {
     const category = await this.categoryService.findOne(id, { includes });
 
     if (!category) {
@@ -37,17 +34,17 @@ export class AdminCategoryService {
       });
     }
 
-    return CategoryMapper.toCategoryDto(category);
+    return CategoryMapper.toCategory(category);
   }
 
-  async create(data: CreateCategoryDto) {
+  async create(data: CreateCategory) {
     const category = await this.categoryService.create(data);
-    return CategoryMapper.toCategoryDto(category);
+    return CategoryMapper.toCategory(category);
   }
 
-  async update(id: string, data: UpdateCategoryDto) {
+  async update(id: string, data: UpdateCategory) {
     const updated_category = await this.categoryService.update(id, data);
-    return CategoryMapper.toCategoryDto(updated_category);
+    return CategoryMapper.toCategory(updated_category);
   }
 
   async delete(id: string) {

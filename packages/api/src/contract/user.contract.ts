@@ -1,6 +1,9 @@
 import { initContract } from '@ts-rest/core';
 import { emptyResponseSchema } from '../schemas/common.schema.js';
-import { GameRecordSchema, GameRecordsSchema } from '../schemas/game.schema.js';
+import {
+  CreateGameRecordSchema,
+  GameRecordsSchema,
+} from '../schemas/game.schema.js';
 
 const c = initContract();
 
@@ -13,7 +16,7 @@ export const userContract = c.router({
   saveSoloGameRecord: {
     method: 'POST',
     path: '/user/game-records',
-    body: GameRecordSchema,
+    body: CreateGameRecordSchema,
     responses: { 204: emptyResponseSchema },
   },
 });

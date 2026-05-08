@@ -9,9 +9,9 @@ import { AdminCategoryService } from '../services/category.admin.service';
 export class AdminCategoryController {
   constructor(private readonly adminCategoryService: AdminCategoryService) {}
 
-  @TsRestHandler(contract.categoryAdmin)
+  @TsRestHandler(contract.admin.category)
   async handler() {
-    return tsRestHandler(contract.categoryAdmin, {
+    return tsRestHandler(contract.admin.category, {
       listCategories: async ({ query }) => {
         const includes = query.include ? query.include.split(',').map((i) => i.trim()) : [];
         return { status: 200 as const, body: await this.adminCategoryService.findAll({ includes }) };
@@ -28,7 +28,7 @@ export class AdminCategoryController {
       },
       deleteCategory: async ({ params }) => {
         await this.adminCategoryService.delete(params.id);
-        return { status: 200 as const, body: {} };
+        return { status: 204 as const, body: {} };
       },
     });
   }
