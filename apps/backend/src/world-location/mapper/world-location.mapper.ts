@@ -54,7 +54,7 @@ export class WorldLocationMapper {
       centroid: [Number(nominatimItem.lat), Number(nominatimItem.lon)],
       source: {
         provider: 'nominatim',
-        external_id: nominatimItem.place_id,
+        external_id: String(nominatimItem.place_id),
       },
     };
   }

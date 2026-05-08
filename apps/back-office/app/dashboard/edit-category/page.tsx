@@ -4,7 +4,7 @@ import { getCategory } from './action';
 export default async function EditCategory({
   searchParams,
 }: {
-  searchParams: { id: string };
+  searchParams: Promise<{ id: string }>;
 }) {
   const { id } = await searchParams;
   const category = await getCategory(id);

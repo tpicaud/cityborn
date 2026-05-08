@@ -1,23 +1,13 @@
 'use server';
 
-import type { Category } from '@cityborn/types';
-import { apiFetch } from '../../../lib/apiFetch';
+import { adminClient, throwOnError } from '../../../lib/adminApiClient';
 
-export async function getCategory(id: string): Promise<Category> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/category/${id}?include=guessObjects,world_location_preview`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to search guess objects');
-  }
-  return data as Category;
+export async function getCategory(id: string) {
+  const result = await adminClient.category.getCategory({
+    params: { id },
+    query: { include: 'guessObjects,world_location_preview' },
+  });
+  throwOnError(result);
+  if (result.status === 200) return result.body;
+  throw new Error('Failed to get category');
 }

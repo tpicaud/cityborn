@@ -8,11 +8,7 @@ export const WorldLocationSchema = z.object({
   geometry: z
     .object({
       type: z.enum(['Point', 'Polygon', 'MultiPolygon']),
-      coordinates: z.union([
-        z.array(z.number()),
-        z.array(z.array(z.number())),
-        z.array(z.array(z.array(z.number()))),
-      ]),
+      coordinates: z.array(z.unknown()),
     })
     .optional(),
   display_name: z.string().optional(),
@@ -23,7 +19,7 @@ export const WorldLocationSchema = z.object({
   source: z
     .object({
       provider: z.string(),
-      external_id: z.string(),
+      external_id: z.coerce.string(),
     })
     .optional(),
 });

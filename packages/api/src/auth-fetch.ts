@@ -211,6 +211,12 @@ export class AuthFetch {
       } catch {
         body = null;
       }
+    } else if (contentType.includes('text/')) {
+      try {
+        body = await response.text();
+      } catch {
+        body = null;
+      }
     }
 
     if (

@@ -1,110 +1,36 @@
 'use server';
 
-import type { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
-import { apiFetch } from '@/lib/apiFetch';
+import { adminClient, throwOnError } from '@/lib/adminApiClient';
 
-export async function searchGuessObjectByName(
-  query: string,
-): Promise<GuessObjectCandidate[]> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/search/guess-object?q=${encodeURIComponent(query)}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to search guess objects');
-  }
-
-  return (data.results as GuessObjectCandidate[]) ?? [];
+export async function searchGuessObjectByName(query: string) {
+  const result = await adminClient.search.searchGuessObject({ query: { q: query } });
+  throwOnError(result);
+  if (result.status === 200) return result.body;
+  throw new Error('Failed to search guess objects');
 }
 
-export async function searchGuessObjectByExternalId(
-  external_id: string,
-): Promise<GuessObjectCandidate> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/search/guess-object?external_id=${external_id}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to search guess objects');
-  }
-
-  return (data.results as GuessObjectCandidate) ?? {};
+export async function searchGuessObjectByExternalId(external_id: string) {
+  const result = await adminClient.search.searchGuessObject({ query: { external_id } });
+  throwOnError(result);
+  if (result.status === 200) return result.body[0];
+  throw new Error('Failed to search guess object by external id');
 }
 
-export async function searchWorldLocationByName(
-  query: string,
-): Promise<WorldLocation[]> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/search/world-location?q=${encodeURIComponent(query)}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to search world locations');
-  }
-
-  return (data.results as WorldLocation[]) ?? [];
+export async function searchWorldLocationByName(query: string) {
+  const result = await adminClient.search.searchWorldLocation({ query: { q: query } });
+  throwOnError(result);
+  if (result.status === 200) return result.body;
+  throw new Error('Failed to search world locations');
 }
 
-export async function searchWorldLocationById(
-  id: string,
-  osm_type: string,
-): Promise<WorldLocation> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/search/world-location?id=${id}&osm_type=${osm_type}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to search world location');
-  }
-
-  return (data.results as WorldLocation) ?? {};
+export async function searchWorldLocationById(id: string, osm_type: string) {
+  const result = await adminClient.search.searchWorldLocation({ query: { id, osm_type } });
+  throwOnError(result);
+  if (result.status === 200) return result.body[0];
+  throw new Error('Failed to search world location');
 }
 
 export async function deleteGuessObject(id: string): Promise<void> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/guess-objects/${id}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.message || 'Failed to delete guess object');
-  }
+  const result = await adminClient.guessObjects.deleteGuessObject({ params: { id }, body: {} });
+  throwOnError(result);
 }

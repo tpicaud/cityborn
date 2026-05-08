@@ -91,9 +91,10 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
           guessObjectCandidate,
         );
       } else {
+        const { id: _id, ...rest } = guessObjectCandidate;
         id = await saveGuessObject({
-          world_location_id: guessObjectCandidate.world_location_id.toString(),
-          ...guessObjectCandidate,
+          ...rest,
+          world_location_id: String(guessObjectCandidate.world_location_id),
         });
       }
 

@@ -1,44 +1,18 @@
 'use server';
 
-import type { Category, CreateCategory } from '@cityborn/types';
-import { apiFetch } from '@/lib/apiFetch';
+import type { CreateCategory } from '@cityborn/api';
+import { adminClient, throwOnError } from '@/lib/adminApiClient';
 
-export async function getAllCategories(): Promise<Category[]> {
-  const response = await apiFetch(
-    `${process.env.BACKEND_URL}/admin/category?include=guessObjects`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to get all categories');
-  }
-
-  return (data.categories as Category[]) ?? [];
+export async function getAllCategories() {
+  const result = await adminClient.category.listCategories({ query: { include: 'guessObjects' } });
+  throwOnError(result);
+  if (result.status === 200) return result.body;
+  throw new Error('Failed to get all categories');
 }
 
-export async function createCategory(
-  createCategory: CreateCategory,
-): Promise<Category> {
-  const response = await apiFetch(`${process.env.BACKEND_URL}/admin/category`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(createCategory),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to create category');
-  }
-
-  return data as Category;
+export async function createCategory(createCategory: CreateCategory) {
+  const result = await adminClient.category.createCategory({ body: createCategory });
+  throwOnError(result);
+  if (result.status === 201) return result.body;
+  throw new Error('Failed to create category');
 }
