@@ -1,3 +1,4 @@
+import { GameRecord } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
 import { type AccountType, SessionMode } from '@cityborn/types';
 import {
@@ -9,9 +10,7 @@ import {
 import { Prisma, User as PrismaUser } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
-import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
 import { GameMapper } from 'src/session/game.mapper';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -81,7 +80,7 @@ export class UserService {
   ///////////////
   // Relations //
   ///////////////
-  async getGameRecords(user_id: string): Promise<GameRecordsResponseDto> {
+  async getGameRecords(user_id: string): Promise<GameRecord[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: user_id },
       include: {
@@ -97,7 +96,7 @@ export class UserService {
         message: `Invalid credentials`,
       });
 
-    return { gameRecords: GameMapper.toGameRecordDto(user.gameRecords) };
+    return GameMapper.toGameRecord(user.gameRecords);
   }
 
   async saveSoloGameRecord(

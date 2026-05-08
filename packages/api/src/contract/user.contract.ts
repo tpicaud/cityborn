@@ -10,7 +10,7 @@ export const userContract = c.router({
     path: '/user/game-records',
     responses: { 200: GameRecordsSchema },
   },
-  saveGameRecord: {
+  saveSoloGameRecord: {
     method: 'POST',
     path: '/user/game-records',
     body: GameRecordSchema,

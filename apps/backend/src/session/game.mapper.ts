@@ -5,7 +5,7 @@ import type { GameRecordDto, PlayerResultsDto } from './dto/game.dto';
 import type { GameConfigDto } from './dto/session.dto';
 
 export class GameMapper {
-  static toGameRecordDto(gameRecords: PrismaGameRecord[]): GameRecordDto[] {
+  static toGameRecord(gameRecords: PrismaGameRecord[]): GameRecordDto[] {
     return gameRecords.map((record) => ({
       id: record.id,
       mode: record.mode as SessionMode,
