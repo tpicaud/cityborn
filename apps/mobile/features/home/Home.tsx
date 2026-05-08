@@ -14,7 +14,8 @@ export default function Home() {
       <View className=" flex-1 flex flex-col justify-center items-center gap-6">
         <Image
           source={require('../../assets/images/logo.png')}
-          className="mb-6"
+          resizeMode="contain"
+          className="mb-6 rounded-xl w-40 h-40 md:w-48 md:h-48 lg:w-64 lg:h-64"
         />
         {user ? (
           <View className="flex flex-col justify-center items-center gap-8">
