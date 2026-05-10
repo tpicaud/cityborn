@@ -1,5 +1,5 @@
 import { useAuth, useError } from '@cityborn/contexts';
-import { SessionMode } from '@cityborn/types';
+import { SessionMode } from '@cityborn/api';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';

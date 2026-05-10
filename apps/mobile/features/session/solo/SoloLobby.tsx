@@ -1,5 +1,5 @@
 import { useError } from '@cityborn/contexts';
-import type { Category, GameConfig, Session } from '@cityborn/types';
+import type { Category, GameConfig, Session } from '@cityborn/api';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import Button from '@/components/ui/Button';

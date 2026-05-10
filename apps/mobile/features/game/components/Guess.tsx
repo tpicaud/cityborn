@@ -2,9 +2,9 @@ import {
   type Game,
   GameConfig,
   type Guess as GuessType,
-  type MapProps,
   RoundStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import type { MapProps } from '@cityborn/client';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import useGuess from '../hooks/useGuess';

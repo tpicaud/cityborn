@@ -1,4 +1,4 @@
-import type { GuessObject } from '@cityborn/types';
+import type { GuessObject } from '@cityborn/api';
 import { Image } from 'expo-image';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 

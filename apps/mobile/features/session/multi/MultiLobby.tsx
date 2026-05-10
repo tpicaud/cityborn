@@ -5,7 +5,7 @@ import type {
   GameConfig,
   OnlinePlayer,
   Session,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';

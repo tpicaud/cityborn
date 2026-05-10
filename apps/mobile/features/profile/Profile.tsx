@@ -1,6 +1,6 @@
 import { useAuth, useError } from '@cityborn/contexts';
 import { colors } from '@cityborn/design-system';
-import type { GameRecord } from '@cityborn/types';
+import type { GameRecord } from '@cityborn/api';
 import { calculateTotalPoints, isoToLocalDate } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';

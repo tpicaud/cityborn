@@ -5,7 +5,7 @@ import {
   type Guess,
   type Session,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';

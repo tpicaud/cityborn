@@ -9,7 +9,7 @@ import {
   type Session,
   SessionMode,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
