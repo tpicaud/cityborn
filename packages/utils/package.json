@@ -20,7 +20,7 @@
   },
   "packageManager": "pnpm@10.12.3",
   "dependencies": {
-    "@cityborn/types": "workspace:*",
+    "@cityborn/api": "workspace:*",
     "typescript": "^5.9.3",
     "uuid": "^11.1.0"
   }
