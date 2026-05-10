@@ -1,7 +1,6 @@
 import {
   type AuthResponse,
   type CreateUser,
-  type PublicUser,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
@@ -336,7 +335,7 @@ export class AuthService {
     };
   }
 
-  async getProfile(identifier: string): Promise<PublicUser> {
+  async getProfile(identifier: string): Promise<User> {
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new NotFoundException({
@@ -344,7 +343,7 @@ export class AuthService {
         message: `User not found`,
       });
 
-    return UserMapper.toPublicUser(user);
+    return UserMapper.toUser(user);
   }
 
   async deleteUser(user?: User): Promise<void> {

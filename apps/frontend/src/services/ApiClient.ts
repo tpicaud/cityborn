@@ -4,7 +4,6 @@ import type {
   Game,
   GameRecord,
   GuessObject,
-  PublicUser,
   ScoreType,
   Sentence,
   Session,
@@ -30,19 +29,6 @@ export class ApiClient {
   //////////////////
   // Auth service //
   //////////////////
-
-  async getCurrentUser(): Promise<PublicUser | null> {
-    const response = await this.apiFetch(`/api/auth/me`, { method: 'GET' });
-
-    const data = await response.json();
-    if (!data) throw new Error('Invalid server response');
-
-    if (!response.ok) {
-      throw new ApiError(data.code, data.message, data.statusCode);
-    }
-
-    return (data as PublicUser) || null;
-  }
 
   async signUp(
     username: string,

@@ -6,10 +6,10 @@ import {
 import {
   AuthResponseSchema,
   CreateUserSchema,
-  PublicUserSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UserSchema,
 } from '../schemas/user.schema.js';
 
 const c = initContract();
@@ -18,7 +18,7 @@ export const authContract = c.router({
   me: {
     method: 'GET',
     path: '/auth/me',
-    responses: { 200: PublicUserSchema },
+    responses: { 200: UserSchema },
   },
   refresh: {
     method: 'POST',
