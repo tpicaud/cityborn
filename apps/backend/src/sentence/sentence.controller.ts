@@ -1,5 +1,4 @@
-import { contract } from '@cityborn/api';
-import { ScoreType } from '@cityborn/types';
+import { contract, ScoreType } from '@cityborn/api';
 import { Controller } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { SentenceService } from './sentence.service';

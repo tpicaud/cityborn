@@ -3,8 +3,8 @@ import {
   GameRecord,
   PlayerResults,
   PlayerSchema,
+  SessionMode,
 } from '@cityborn/api';
-import type { SessionMode } from '@cityborn/types';
 import type { GameRecord as PrismaGameRecord } from '@prisma/client';
 import { z } from 'zod';
 export class GameMapper {

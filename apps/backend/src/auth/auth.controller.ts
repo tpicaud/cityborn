@@ -1,5 +1,4 @@
-import { contract } from '@cityborn/api';
-import type { User } from '@cityborn/types';
+import { contract, User } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';

@@ -1,11 +1,12 @@
-import type {
+import {
+  AccountType,
   GameConfig,
   Player,
   PlayerResults,
   PublicUser,
   SessionMode,
   User,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import type {
   GameRecord as PrismaGameRecord,
   User as PrismaUser,
@@ -18,7 +19,7 @@ export class UserMapper {
   static toUser(prismaUser: PrismaUserWithRelations): User {
     return {
       id: prismaUser.id,
-      type: prismaUser.type as import('@cityborn/types').AccountType,
+      type: prismaUser.type as AccountType,
       email: prismaUser.email,
       username: prismaUser.username,
       createdAt: prismaUser.createdAt.toISOString(),

@@ -1,26 +1,13 @@
-///////////////////
-// Event mapping //
+import type { AccountType, Category, SessionMode } from '@cityborn/api';
 
-import type { SessionMode } from '../enums/SessionMode.js';
-import type { Category } from './Category.js';
-import type { AccountType } from './User.js';
-
-///////////////////
 export interface EventMap {
-  ////////////////
-  // Connection //
-  ////////////////
   user_signed_up: {
     method: AccountType;
   };
   user_signed_in: {
     method: AccountType;
   };
-  user_new_connection: {};
 
-  /////////////
-  // Session //
-  /////////////
   session_created: {
     mode: SessionMode;
   };
@@ -37,9 +24,6 @@ export interface EventMap {
   };
 }
 
-//////////////////////
-// Type Event
-//////////////////////
 export type Event<Name extends keyof EventMap = keyof EventMap> = {
   id: string;
   visitorId: string;
@@ -48,9 +32,6 @@ export type Event<Name extends keyof EventMap = keyof EventMap> = {
   created_at: string;
 };
 
-/////////////////////////
-// Type création event //
-/////////////////////////
 export type CreateEvent<Name extends keyof EventMap = keyof EventMap> = Omit<
   Event<Name>,
   'id' | 'created_at'

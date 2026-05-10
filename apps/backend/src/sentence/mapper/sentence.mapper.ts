@@ -1,5 +1,4 @@
-import { Sentence } from '@cityborn/api';
-import type { ScoreType } from '@cityborn/types';
+import { ScoreType, Sentence } from '@cityborn/api';
 import type { EndGameSentence } from '@prisma/client';
 
 export class SentenceMapper {

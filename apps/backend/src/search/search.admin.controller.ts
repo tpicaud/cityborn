@@ -17,7 +17,11 @@ export class AdminSearchController {
         if (query.external_id) {
           return {
             status: 200 as const,
-            body: [await this.searchService.searchGuessObjectByExternalId(query.external_id)],
+            body: [
+              await this.searchService.searchGuessObjectByExternalId(
+                query.external_id,
+              ),
+            ],
           };
         } else if (query.q) {
           return {
@@ -35,7 +39,12 @@ export class AdminSearchController {
         if (query.id && query.osm_type) {
           return {
             status: 200 as const,
-            body: [await this.searchService.searchWorldLocationById(query.id, query.osm_type)],
+            body: [
+              await this.searchService.searchWorldLocationById(
+                query.id,
+                query.osm_type,
+              ),
+            ],
           };
         } else if (query.q) {
           return {

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { CategorySchema } from './category.schema.js';
-import { GuessObjectSchema } from './guess-object.schema.js';
-import { PlayerResultsSchema, PlayerSchema } from './player.schema.js';
 import {
   GameStatusSchema,
   RoundStatusSchema,
   SessionModeSchema,
 } from './enums.js';
+import { GuessObjectSchema } from './guess-object.schema.js';
+import { PlayerResultsSchema, PlayerSchema } from './player.schema.js';
 
 export const CoordSchema = z.object({
   lat: z.number(),
@@ -62,6 +62,13 @@ export const CreateGameRecordSchema = GameRecordSchema.omit({
   id: true,
   createdAt: true,
 });
+
+export const defaultGuess: Readonly<Guess> = {
+  coordinates: { lat: 0, lng: 0 },
+  distance: -1,
+  points: 0,
+  win: false,
+};
 
 export type Coord = z.infer<typeof CoordSchema>;
 export type Guess = z.infer<typeof GuessSchema>;

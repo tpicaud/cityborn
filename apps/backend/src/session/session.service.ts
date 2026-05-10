@@ -1,7 +1,5 @@
-import { type CreateSession } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
 import {
-  createEvent,
+  type CreateSession,
   defaultGuess,
   type Game,
   GameStatus,
@@ -13,7 +11,8 @@ import {
   SessionMode,
   SessionStatus,
   type User,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   ConflictException,
@@ -26,6 +25,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { EventService } from 'src/event/event.service';
+import { createEvent } from 'src/event/event.types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { IdService } from 'src/id/id.service';
 import { LockService } from 'src/lock/lock.service';

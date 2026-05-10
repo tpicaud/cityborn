@@ -3,7 +3,6 @@ export * from './src/create-api-client.js';
 export * from './src/schemas/category.schema.js';
 export * from './src/schemas/common.schema.js';
 export * from './src/schemas/enums.js';
-export * from './src/schemas/event.schema.js';
 export * from './src/schemas/game.schema.js';
 export * from './src/schemas/guess-object.schema.js';
 export * from './src/schemas/player.schema.js';

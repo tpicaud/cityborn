@@ -1,6 +1,10 @@
-import { type CreateGameRecord, GameRecord } from '@cityborn/api';
+import {
+  AccountType,
+  type CreateGameRecord,
+  GameRecord,
+  SessionMode,
+} from '@cityborn/api';
 import { ErrorCode } from '@cityborn/errors';
-import { type AccountType, SessionMode } from '@cityborn/types';
 import {
   BadRequestException,
   ConflictException,

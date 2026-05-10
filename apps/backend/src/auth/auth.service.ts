@@ -5,9 +5,10 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type User,
 } from '@cityborn/api';
+import { createEvent } from 'src/event/event.types';
 import { ErrorCode } from '@cityborn/errors';
-import { createEvent, type User } from '@cityborn/types';
 import {
   Inject,
   Injectable,
@@ -221,7 +222,10 @@ export class AuthService {
     };
   }
 
-  async signInWithApple(dto: SignInWithApple, visitorId?: string): Promise<AuthResponse> {
+  async signInWithApple(
+    dto: SignInWithApple,
+    visitorId?: string,
+  ): Promise<AuthResponse> {
     const { identity_token, apple_user_id, details } = dto;
 
     if (!(await verifyAppleIdToken(identity_token, process.env.APP_ID!))) {
