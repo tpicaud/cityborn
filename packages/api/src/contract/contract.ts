@@ -2,7 +2,6 @@ import { initContract } from '@ts-rest/core';
 import { authContract } from './auth.contract.js';
 import { categoryContract } from './category.contract.js';
 import { categoryAdminContract } from './category-admin.contract.js';
-import { eventContract } from './event.contract.js';
 import { guessObjectContract } from './guess-object.contract.js';
 import { guessObjectAdminContract } from './guess-object-admin.contract.js';
 import { searchAdminContract } from './search-admin.contract.js';
@@ -19,7 +18,6 @@ export const contract = c.router({
   category: categoryContract,
   guessObjects: guessObjectContract,
   sentence: sentenceContract,
-  event: eventContract,
   admin: c.router(
     {
       category: categoryAdminContract,

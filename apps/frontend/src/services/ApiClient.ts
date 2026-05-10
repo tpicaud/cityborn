@@ -1,7 +1,6 @@
 import { ApiError } from '@cityborn/errors';
 import type {
   Category,
-  CreateEvent,
   Game,
   GameRecord,
   GuessObject,
@@ -288,22 +287,4 @@ export class ApiClient {
     }
   }
 
-  //////////////////
-  // Event service //
-  //////////////////
-  async trackEvent(event: CreateEvent): Promise<void> {
-    const response = await this.apiFetch(`/api/event/track`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(event),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new ApiError(data.code, data.message, data.statusCode);
-    }
-  }
 }
