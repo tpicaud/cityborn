@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
   const client = createApiClient(getBaseUrl(), tokenStorage);
 
   const body = await req.json();
-  const result = await client.user.saveSoloGameRecord({ body: body.gameRecord });
+  const result = await client.user.saveSoloGameRecord({
+    body: body.gameRecord,
+  });
   return NextResponse.json(result.body, { status: result.status });
 }

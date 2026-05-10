@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
       result.body.access_token,
       result.body.refresh_token,
     );
-    return NextResponse.json({ message: 'Signed up successfully' }, { status: 200 });
+    return NextResponse.json(
+      { message: 'Signed up successfully' },
+      { status: 200 },
+    );
   }
   return NextResponse.json(result.body, { status: result.status });
 }

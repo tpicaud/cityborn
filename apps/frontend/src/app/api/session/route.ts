@@ -9,6 +9,8 @@ export async function POST(req: Request) {
   const client = createApiClient(getBaseUrl(), tokenStorage);
 
   const body = await req.json();
-  const result = await client.session.createSession({ body: { mode: body.mode } });
+  const result = await client.session.createSession({
+    body: { mode: body.mode },
+  });
   return NextResponse.json(result.body, { status: result.status });
 }

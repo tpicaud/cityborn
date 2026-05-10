@@ -7,7 +7,11 @@ const client = createApiClient(getBaseUrl(), tokenStorage);
 
 function throwOnError(result: { status: number; body: unknown }): void {
   if (result.status < 200 || result.status >= 300) {
-    const body = result.body as { code?: string; message?: string; statusCode?: number };
+    const body = result.body as {
+      code?: string;
+      message?: string;
+      statusCode?: number;
+    };
     throw new ApiError(
       (body?.code ?? ErrorCode.UNKNOWN_ERROR) as ErrorCode,
       body?.message ?? 'Unexpected error',
@@ -30,20 +34,34 @@ export const apiClient = {
     const result = await client.auth.signIn({ body: { identifier, password } });
     throwOnError(result);
     if (result.status === 200) {
-      await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+      await tokenStorage.setTokens(
+        result.body.access_token,
+        result.body.refresh_token,
+      );
       return result.body.user;
     }
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async signUp(data: { username: string; email: string; password: string }) {
     const result = await client.auth.signUp({ body: data });
     throwOnError(result);
     if (result.status === 201) {
-      await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+      await tokenStorage.setTokens(
+        result.body.access_token,
+        result.body.refresh_token,
+      );
       return result.body.user;
     }
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async signOut() {
@@ -54,10 +72,17 @@ export const apiClient = {
     const result = await client.auth.signInWithGoogle({ body: { idToken } });
     throwOnError(result);
     if (result.status === 200) {
-      await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+      await tokenStorage.setTokens(
+        result.body.access_token,
+        result.body.refresh_token,
+      );
       return result.body.user;
     }
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async signInWithApple(
@@ -70,10 +95,17 @@ export const apiClient = {
     });
     throwOnError(result);
     if (result.status === 200) {
-      await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+      await tokenStorage.setTokens(
+        result.body.access_token,
+        result.body.refresh_token,
+      );
       return result.body.user;
     }
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async deleteUser() {
@@ -88,14 +120,22 @@ export const apiClient = {
     const result = await client.session.createSession({ body: { mode } });
     throwOnError(result);
     if (result.status === 201) return result.body;
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async fetchSession(id: string) {
     const result = await client.session.getSession({ params: { id } });
     throwOnError(result);
     if (result.status === 200) return result.body;
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async createSoloGame(
@@ -104,7 +144,11 @@ export const apiClient = {
     const result = await client.session.createGame({ body: session });
     throwOnError(result);
     if (result.status === 200) return result.body;
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   async endSoloGame(
@@ -119,7 +163,11 @@ export const apiClient = {
     const result = await client.category.getCategories({ query: {} });
     throwOnError(result);
     if (result.status === 200) return result.body;
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 
   // User
@@ -127,6 +175,10 @@ export const apiClient = {
     const result = await client.user.getGameRecords();
     throwOnError(result);
     if (result.status === 200) return result.body;
-    throw new ApiError(ErrorCode.UNKNOWN_ERROR, 'Unexpected response', result.status);
+    throw new ApiError(
+      ErrorCode.UNKNOWN_ERROR,
+      'Unexpected response',
+      result.status,
+    );
   },
 };

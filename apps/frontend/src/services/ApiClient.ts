@@ -272,5 +272,4 @@ export class ApiClient {
       throw new ApiError(data.code, data.message, data.statusCode);
     }
   }
-
 }
