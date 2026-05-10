@@ -1,4 +1,3 @@
-import { createEvent } from '@cityborn/types';
 import {
   getAccessToken,
   getRefreshToken,
@@ -40,9 +39,6 @@ export async function apiFetch(
   let res = await fetch(baseUrl + endpoint, options);
 
   if (res.status === 401) {
-    // Send event
-    if (!access_token) await sendFirstSignInEvent(headers);
-
     // try refresh
     const tokens = await refreshTokens();
     if (!tokens) return res;
@@ -85,27 +81,4 @@ async function refreshTokens() {
     refreshed_access_token: data.access_token,
     refreshed_refresh_token: data.refresh_token,
   };
-}
-
-async function sendFirstSignInEvent(headers: Record<string, string> = {}) {
-  if (!headers['x-visitor-id']) return;
-  try {
-    const event = createEvent({
-      name: 'user_new_connection',
-      visitorId: headers['x-visitor-id'],
-      properties: {},
-    });
-
-    const response = await fetch(`${baseUrl}/event/track`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(event),
-    });
-
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-  } catch (error) {
-    console.error('Error sending first sign-in event:', error);
-  }
 }

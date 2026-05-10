@@ -1,4 +1,4 @@
-import type { GuessObject } from '@cityborn/types';
+import type { GuessObject } from '@cityborn/api';
 import { Button } from '../ui/Button';
 
 export function GuessObjectsList({

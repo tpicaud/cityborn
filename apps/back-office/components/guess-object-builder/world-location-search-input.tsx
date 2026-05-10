@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { WorldLocation } from '@cityborn/types';
+import type { WorldLocation } from '@cityborn/api';
 import {
   type ChangeEventHandler,
   startTransition,

@@ -3,7 +3,7 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { SessionMode } from '@cityborn/types';
+import { SessionMode } from '@cityborn/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';

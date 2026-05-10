@@ -7,7 +7,7 @@ import {
   type Round,
   RoundStatus,
   type Session,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import LoadingButton from '../ui/buttons/LoadingButton';

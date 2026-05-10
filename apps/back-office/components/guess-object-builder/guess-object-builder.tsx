@@ -1,6 +1,6 @@
 'use client';
 
-import type { GuessObjectCandidate, WorldLocation } from '@cityborn/types';
+import type { GuessObjectCandidate, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { getGuessObject } from '../category-builder/action';
 import {

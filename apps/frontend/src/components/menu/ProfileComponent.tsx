@@ -1,4 +1,4 @@
-import type { GameRecord, User } from '@cityborn/types';
+import type { GameRecord, User } from '@cityborn/api';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,

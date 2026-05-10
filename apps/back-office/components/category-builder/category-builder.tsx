@@ -5,7 +5,7 @@ import type {
   GuessObject,
   GuessObjectCandidate,
   UpdateCategory,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';

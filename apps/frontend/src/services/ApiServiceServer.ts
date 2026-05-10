@@ -1,6 +1,6 @@
 'use server';
 
-import type { User } from '@cityborn/types';
+import type { User } from '@cityborn/api';
 import { cookies } from 'next/headers';
 import { apiFetch } from '@/app/api/apiFetch';
 import { getAccessToken, getRefreshToken } from '@/app/api/auth/utils';

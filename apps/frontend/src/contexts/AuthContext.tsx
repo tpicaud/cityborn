@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from '@cityborn/types';
+import type { User } from '@cityborn/api';
 import {
   createContext,
   type ReactNode,

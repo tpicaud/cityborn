@@ -1,6 +1,6 @@
 'use client';
 
-import type { Category, CreateCategory } from '@cityborn/types';
+import type { Category, CreateCategory } from '@cityborn/api';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';

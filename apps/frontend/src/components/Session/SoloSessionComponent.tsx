@@ -1,6 +1,6 @@
 'use client';
 
-import type { GameConfig, Guess } from '@cityborn/types';
+import type { GameConfig, Guess } from '@cityborn/api';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';

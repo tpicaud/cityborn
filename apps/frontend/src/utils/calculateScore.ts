@@ -1,4 +1,4 @@
-import type { PlayerResults } from '@cityborn/types';
+import type { PlayerResults } from '@cityborn/api';
 
 // Calculates points based on distance
 const calculatePoints = (distance: number) => {

@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { GuessObjectCandidate } from '@cityborn/types';
+import type { GuessObjectCandidate } from '@cityborn/api';
 import {
   type ChangeEventHandler,
   startTransition,

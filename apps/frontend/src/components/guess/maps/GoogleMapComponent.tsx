@@ -4,10 +4,10 @@ import {
   type Coord,
   type Guess,
   type GuessObject,
-  type MapProps,
   type Round,
   RoundStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import type { MapProps } from '@cityborn/client';
 import * as turf from '@turf/turf';
 import {
   AdvancedMarker,
@@ -32,7 +32,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 }) => {
   const currentRound = game.state.currentRound!;
   const guessObject = game.state.guessObjects!.find(
-    (obj) => obj.id === currentRound.guessObjectId,
+    (obj: any) => obj.id === currentRound.guessObjectId,
   )!;
 
   const mapOptions = {

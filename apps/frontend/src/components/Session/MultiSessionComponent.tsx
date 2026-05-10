@@ -1,6 +1,6 @@
 'use client';
 
-import { type GameConfig, type Guess, SessionStatus } from '@cityborn/types';
+import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';

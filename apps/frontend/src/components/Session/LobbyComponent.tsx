@@ -6,7 +6,7 @@ import {
   type OnlinePlayer,
   type Session,
   SessionMode,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {

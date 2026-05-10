@@ -4,7 +4,7 @@ import {
   type Guess,
   type Session,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';

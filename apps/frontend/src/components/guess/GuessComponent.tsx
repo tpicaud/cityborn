@@ -5,7 +5,7 @@ import {
   type Guess,
   RoundStatus,
   type Session,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import OverlayComponent from '@/components/guess/OverlayComponent';

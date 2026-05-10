@@ -1,4 +1,4 @@
-import type { Game, Guess } from '@cityborn/types';
+import type { Game, Guess } from '@cityborn/api';
 
 export interface IUseGame {
   game: Game | undefined;

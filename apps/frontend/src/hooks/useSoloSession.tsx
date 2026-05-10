@@ -8,7 +8,7 @@ import {
   type Session,
   SessionMode,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/contexts/ApiContext';

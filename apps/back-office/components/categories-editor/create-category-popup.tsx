@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { CreateCategory } from '@cityborn/types';
+import type { CreateCategory } from '@cityborn/api';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/Button';

@@ -9,7 +9,7 @@ import type {
   Sentence,
   Session,
   SessionMode,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { getOrCreateVisitorId } from '@/lib/visitorId';
 
 export class ApiClient {
