@@ -231,7 +231,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleSaveCategory()}
+                onClick={() => handleSaveCategory(category.isPublished)}
               >
                 {isSaveLoading ? <Loader /> : <p>Enregistrer</p>}
               </Button>

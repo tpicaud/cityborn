@@ -79,7 +79,7 @@ export class WikidataService {
       // Build image
       const rawImageName = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
       const imageUrl = rawImageName
-        ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(rawImageName)}`
+        ? await this.resolveWikimediaImageUrl(rawImageName)
         : undefined;
 
       // Build osm id
@@ -136,5 +136,27 @@ export class WikidataService {
           osm_type: 'node',
         };
     return osmIdClaim ?? undefined;
+  }
+
+  private async resolveWikimediaImageUrl(
+    rawImageName: string,
+  ): Promise<string | undefined> {
+    const params = new URLSearchParams({
+      action: 'query',
+      titles: `File:${rawImageName}`,
+      prop: 'imageinfo',
+      iiprop: 'url',
+      format: 'json',
+    });
+
+    const response = await fetch(
+      `https://commons.wikimedia.org/w/api.php?${params}`,
+    );
+    if (!response.ok) return undefined;
+
+    const data = await response.json();
+    const pages = data.query?.pages;
+    const page = pages?.[Object.keys(pages)[0]];
+    return page?.imageinfo?.[0]?.url ?? undefined;
   }
 }
