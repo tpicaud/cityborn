@@ -21,8 +21,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          LAST_PROD=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName')
-          NEW_RELEASE=$(git describe --tags --abbrev=0 --match "v[0-9]*" --exclude "*-rc")
+          LAST_PROD=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --limit 10 --json tagName --jq '[.[] | select(.tagName | startswith("web-v"))] | .[0].tagName')
+          NEW_RELEASE=$(git describe --tags --abbrev=0 --match "web-v[0-9]*" --exclude "*-rc")
           echo "lastProdTag=$LAST_PROD" >> $GITHUB_OUTPUT
           echo "newReleaseTag=$NEW_RELEASE" >> $GITHUB_OUTPUT
 
@@ -55,4 +55,7 @@ jobs:
     uses: ./.github/workflows/generate-release.yml
     with:
       releaseTag: ${{ needs.get-tag.outputs.newReleaseTag }}
+      previousTag: ${{ needs.get-tag.outputs.lastProdTag }}
+      filterMode: exclude
+      filterPaths: apps/mobile
       prerelease: false

@@ -17,7 +17,7 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          VERSION="v${{ github.run_number }}"
+          VERSION="web-v${{ github.run_number }}"
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "version_rc=${VERSION}-rc" >> $GITHUB_OUTPUT
 

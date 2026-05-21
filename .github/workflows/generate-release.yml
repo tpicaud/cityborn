@@ -9,6 +9,18 @@ on:
       prerelease:
         type: boolean
         required: true
+      previousTag:
+        type: string
+        required: false
+        default: ''
+      filterMode:
+        type: string
+        required: false
+        default: ''       # '' → generate-notes API, 'include' → mobile, 'exclude' → web
+      filterPaths:
+        type: string
+        required: false
+        default: ''
 
 jobs:
   tag-version:
@@ -25,34 +37,74 @@ jobs:
           git config --local user.name "GitHub Actions"
           git tag -a "${{ inputs.releaseTag }}" -m "${{ inputs.releaseTag }} - $(date +'%Y-%m-%d')"
           git push origin "${{ inputs.releaseTag }}"
-      - name: Generate release notes from latest release
+
+      - name: Generate release notes
         uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const latestRelease = await github.request(`GET /repos/${{ github.repository }}/releases/latest`);
-            const latestTag = latestRelease.data.tag_name;
-            const releaseTag = "${{ inputs.releaseTag }}";
-
-            const releaseNotes = await github.request(`POST /repos/${{ github.repository }}/releases/generate-notes`, {
-              tag_name: releaseTag,
-              previous_tag_name: latestTag
-            });
-            
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const filterMode = '${{ inputs.filterMode }}';
+            const filterPaths = '${{ inputs.filterPaths }}';
+            const previousTag = '${{ inputs.previousTag }}';
+            const releaseTag = '${{ inputs.releaseTag }}';
             const isPrerelease = ${{ inputs.prerelease }};
-            
-            console.log({
-              latestTag,
-              releaseTag,
-              isPrerelease,
-            })
 
-            const result = await github.request(`POST /repos/${{ github.repository }}/releases`, {
+            let body;
+
+            if (filterMode === '') {
+              // Standard mode (staging) — GitHub generate-notes API
+              let latestTag = previousTag;
+              if (!latestTag) {
+                const { data: latest } = await github.rest.repos.getLatestRelease({ owner, repo });
+                latestTag = latest.tag_name;
+              }
+              const { data: notes } = await github.request(
+                'POST /repos/{owner}/{repo}/releases/generate-notes',
+                { owner, repo, tag_name: releaseTag, previous_tag_name: latestTag }
+              );
+              body = notes.body;
+            } else {
+              // Filtered mode (web: exclude / mobile: include)
+              const { data: comparison } = await github.rest.repos.compareCommitsWithBasehead({
+                owner, repo,
+                basehead: `${previousTag}...HEAD`,
+              });
+
+              const prNumbers = new Set();
+              const prs = [];
+              for (const commit of comparison.commits) {
+                const { data: commitPRs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner, repo, commit_sha: commit.sha,
+                });
+                for (const pr of commitPRs) {
+                  if (!prNumbers.has(pr.number) && pr.merged_at) {
+                    prNumbers.add(pr.number);
+                    const { data: files } = await github.rest.pulls.listFiles({
+                      owner, repo, pull_number: pr.number,
+                    });
+                    const touchesPath = files.some(f => f.filename.startsWith(filterPaths));
+                    const onlyTouchesPath = files.every(f => f.filename.startsWith(filterPaths));
+                    const include = filterMode === 'include' ? touchesPath : !onlyTouchesPath;
+                    if (include) prs.push(pr);
+                  }
+                }
+              }
+              body = prs.length > 0
+                ? prs.map(pr => `- ${pr.title} (#${pr.number})`).join('\n')
+                : 'No changes.';
+            }
+
+            console.log(`Creating release ${releaseTag} with filterMode="${filterMode}"`);
+
+            await github.rest.repos.createRelease({
+              owner, repo,
               tag_name: releaseTag,
+              name: releaseTag,
+              body,
               prerelease: isPrerelease,
-              name: releaseNotes.data.name,
-              body: releaseNotes.data.body,
             });
+
       - name: Delete old prereleases (if pre-release)
         if: ${{ inputs.prerelease }}
         uses: actions/github-script@v8
@@ -63,7 +115,11 @@ jobs:
             const releases = await github.request(`GET /repos/${{ github.repository }}/releases`);
 
             const oldPrereleases = releases.data
-              .filter(release => release.prerelease && release.tag_name !== lastPreReleaseTag);
+              .filter(release =>
+                release.prerelease &&
+                release.tag_name !== lastPreReleaseTag &&
+                !release.tag_name.startsWith('mobile-v')
+              );
 
             console.info(`Found ${oldPrereleases.length} old prereleases. Deleting them...`);
 
@@ -72,14 +128,23 @@ jobs:
               await github.request(`DELETE /repos/${{ github.repository }}/releases/${release.id}`);
               await github.request(`DELETE /repos/${{ github.repository }}/git/refs/tags/${release.tag_name}`);
             }
-      - name: "Delete corresponding pre-release (if NOT pre-release)"
+
+      - name: Delete corresponding pre-release (if NOT pre-release)
         if: ${{ !inputs.prerelease }}
         uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prerelease = await github.request(`GET /repos/${{ github.repository }}/releases/tags/${{ inputs.releaseTag }}-rc`);
-            if (prerelease.data && prerelease.data.id) {
-              await github.request(`DELETE /repos/${{ github.repository }}/releases/${prerelease.data.id}`);
-              await github.request(`DELETE /repos/${{ github.repository }}/git/refs/tags/${prerelease.data.tag_name}`);
+            try {
+              const prerelease = await github.request(`GET /repos/${{ github.repository }}/releases/tags/${{ inputs.releaseTag }}-rc`);
+              if (prerelease.data && prerelease.data.id) {
+                await github.request(`DELETE /repos/${{ github.repository }}/releases/${prerelease.data.id}`);
+                await github.request(`DELETE /repos/${{ github.repository }}/git/refs/tags/${prerelease.data.tag_name}`);
+              }
+            } catch (e) {
+              if (e.status === 404) {
+                console.log('No corresponding pre-release found, skipping.');
+              } else {
+                throw e;
+              }
             }

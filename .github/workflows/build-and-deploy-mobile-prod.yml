@@ -21,6 +21,7 @@ jobs:
       contents: write
     outputs:
       version: ${{ steps.version.outputs.version }}
+      lastMobileTag: ${{ steps.last_mobile_tag.outputs.lastMobileTag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -98,6 +99,18 @@ jobs:
         run: |
           git push origin HEAD
 
+      - name: Find last mobile release tag
+        id: last_mobile_tag
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const last = releases.find(r => r.tag_name.startsWith('mobile-v'));
+            core.setOutput('lastMobileTag', last?.tag_name ?? '');
+
   build-ios:
     name: Build iOS
     needs: [bump-version]
@@ -141,3 +154,20 @@ jobs:
       platform: android
       profile: production
       artifact_name: ${{ needs.build-android.outputs.apk_artifact_name }}
+
+  create-release:
+    name: Release
+    needs:
+      - bump-version
+      - submit-ios
+      - submit-android
+    if: ${{ !failure() && !cancelled() }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: mobile-v${{ needs.bump-version.outputs.version }}
+      previousTag: ${{ needs.bump-version.outputs.lastMobileTag }}
+      filterMode: include
+      filterPaths: apps/mobile
+      prerelease: false
