@@ -1,5 +1,6 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { USER_AGENT } from '../common/constants';
 
 export interface NominatimSearchResponse {
   results: NominatimItemResponse[];
@@ -42,7 +43,7 @@ export class NominatimService {
 
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Cityborn/1.0 (cityborn.contact@gmail.app)',
+          'User-Agent': USER_AGENT,
         },
       });
 
@@ -133,7 +134,7 @@ export class NominatimService {
         `${this.NOMINATIM_API_URL}/lookup?${queryString}`,
         {
           headers: {
-            'User-Agent': 'Cityborn/1.0 (cityborn.contact@gmail.app)',
+            'User-Agent': USER_AGENT,
           },
         },
       );
