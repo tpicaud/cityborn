@@ -1,4 +1,4 @@
-name: Build + Deploy - Production
+name: Build + Deploy - Web - Production
 
 on:
   workflow_call:
@@ -12,29 +12,8 @@ on:
       backofficeHasChanged:
         type: string
         required: true
-      mobileHasChanged:
-        type: string
-        required: true
 
 jobs:
-  build-ios:
-    name: Build iOS
-    if: ${{ inputs.mobileHasChanged == 'true' }}
-    uses: ./.github/workflows/build-ios.yml
-    secrets: inherit
-    with:
-      environment: production
-      profile: production
-
-  build-android:
-    name: Build Android
-    if: ${{ inputs.mobileHasChanged == 'true' }}
-    uses: ./.github/workflows/build-android.yml
-    secrets: inherit
-    with:
-      environment: production
-      profile: production
-
   build-frontend:
     name: Build Frontend
     if: ${{ inputs.frontendHasChanged == 'true' }}
@@ -92,29 +71,3 @@ jobs:
     with:
       environment: production
       service_id: ${{ vars.RAILWAY_BACKEND_SERVICE_ID }}
-
-  submit-ios:
-    name: Submit iOS
-    needs:
-        - build-ios
-    if: ${{ !failure() && !cancelled() && inputs.mobileHasChanged == 'true' }}
-    uses: ./.github/workflows/deploy-to-expo.yml
-    secrets: inherit
-    with:
-      environment: production
-      platform: ios
-      profile: production
-      artifact_name: ${{ needs.build-ios.outputs.ipa_artifact_name }}
-
-  submit-android:
-    name: Submit Android
-    needs:
-        - build-android
-    if: ${{ !failure() && !cancelled() && inputs.mobileHasChanged == 'true' }}
-    uses: ./.github/workflows/deploy-to-expo.yml
-    secrets: inherit
-    with:
-      environment: production
-      platform: android
-      profile: production
-      artifact_name: ${{ needs.build-android.outputs.apk_artifact_name }}
