@@ -1,0 +1,143 @@
+name: Build + Deploy - Mobile - Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Type of release to create"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump-version:
+    name: Bump Mobile Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Bump Expo version
+        id: version
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+
+          const releaseType = '${{ inputs.release_type }}';
+
+          const filePath = 'apps/mobile/app.config.js';
+          const content = fs.readFileSync(filePath, 'utf8');
+
+          const match = content.match(/version:\s*['"](\d+)\.(\d+)\.(\d+)['"]/);
+
+          if (!match) {
+            throw new Error('Version not found in app.config.js');
+          }
+
+          let [, major, minor, patch] = match;
+
+          major = Number(major);
+          minor = Number(minor);
+          patch = Number(patch);
+
+          switch (releaseType) {
+            case 'major':
+              major++;
+              minor = 0;
+              patch = 0;
+              break;
+
+            case 'minor':
+              minor++;
+              patch = 0;
+              break;
+
+            case 'patch':
+            default:
+              patch++;
+              break;
+          }
+
+          const newVersion = `${major}.${minor}.${patch}`;
+
+          const updated = content.replace(
+            /version:\s*['"](\d+)\.(\d+)\.(\d+)['"]/,
+            `version: '${newVersion}'`
+          );
+
+          fs.writeFileSync(filePath, updated);
+
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `version=${newVersion}\n`
+          );
+
+          console.log(`Updated version to ${newVersion}`);
+          EOF
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+
+      - name: Push changes
+        run: |
+          git push origin HEAD
+
+  build-ios:
+    name: Build iOS
+    needs: [bump-version]
+    uses: ./.github/workflows/build-ios.yml
+    secrets: inherit
+    with:
+      environment: production
+      profile: production
+
+  build-android:
+    name: Build Android
+    needs: [bump-version]
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
+    with:
+      environment: production
+      profile: production
+
+  submit-ios:
+    name: Submit iOS
+    needs:
+      - build-ios
+    if: ${{ !failure() && !cancelled() }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: ios
+      profile: production
+      artifact_name: ${{ needs.build-ios.outputs.ipa_artifact_name }}
+
+  submit-android:
+    name: Submit Android
+    needs:
+      - build-android
+    if: ${{ !failure() && !cancelled() }}
+    uses: ./.github/workflows/deploy-to-expo.yml
+    secrets: inherit
+    with:
+      environment: production
+      platform: android
+      profile: production
+      artifact_name: ${{ needs.build-android.outputs.apk_artifact_name }}
