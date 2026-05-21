@@ -9,7 +9,17 @@ on:
 jobs:
   version:
     name: Version
-    uses: ./.github/workflows/generate-version-number.yml
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+      version_rc: ${{ steps.set-version.outputs.version_rc }}
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          VERSION="v${{ github.run_number }}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_rc=${VERSION}-rc" >> $GITHUB_OUTPUT
 
   create-wip-pre-release:
     name: Pre-release
@@ -25,11 +35,17 @@ jobs:
   tag:
     name: Tag
     needs: version
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    uses: ./.github/workflows/create-tag.yml
-    with:
-      tag: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create tag
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git tag -a "${{ needs.version.outputs.version }}" -m "${{ needs.version.outputs.version }} - $(date +'%Y-%m-%d')"
+          git push origin "${{ needs.version.outputs.version }}"
 
   detect-changes:
     name: Detect changes

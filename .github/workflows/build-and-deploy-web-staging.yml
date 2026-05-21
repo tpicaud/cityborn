@@ -15,19 +15,19 @@ on:
 
 jobs:
   build-frontend:
-    name: Build Front
+    name: Build Frontend
     if: ${{ inputs.frontendHasChanged == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Build Front
+      - name: Build Frontend
         run: echo "✅ Nothing to build"
 
   build-backend:
-    name: Build Back
+    name: Build Backend
     if: ${{ inputs.backendHasChanged == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Build Back
+      - name: Build Backend
         run: echo "✅ Nothing to build"
 
   build-back-office:
@@ -39,7 +39,7 @@ jobs:
         run: echo "✅ Nothing to build"
 
   deploy-frontend:
-    name: Deploy Front
+    name: Deploy Frontend
     needs:
       - build-frontend
     if: ${{ !failure() && !cancelled() && inputs.frontendHasChanged == 'true' }}
@@ -61,7 +61,7 @@ jobs:
       project_id: ${{ vars.VERCEL_BACK_OFFICE_PROJECT_ID }}
 
   deploy-backend:
-    name: Deploy Back
+    name: Deploy Backend
     needs:
       - build-backend
     if: ${{ !failure() && !cancelled() && inputs.backendHasChanged == 'true' }}
