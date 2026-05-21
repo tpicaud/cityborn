@@ -1,5 +1,6 @@
 import { ErrorCode } from '@cityborn/errors';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { USER_AGENT } from '../common/constants';
 
 export interface WikidataSearchResponse {
   results: WikidataItemResponse[];
@@ -35,7 +36,9 @@ export class WikidataService {
     });
 
     try {
-      const response = await fetch(`${this.WIKIDATA_API_URL}?${params}`);
+      const response = await fetch(`${this.WIKIDATA_API_URL}?${params}`, {
+        headers: { 'User-Agent': USER_AGENT },
+      });
       if (!response.ok) {
         throw new Error(`Erreur Wikidata: ${response.statusText}`);
       }
@@ -68,6 +71,7 @@ export class WikidataService {
     try {
       const response = await fetch(
         `${this.WIKIDATA_URL}/Special:EntityData/${id}.json`,
+        { headers: { 'User-Agent': USER_AGENT } },
       );
       if (!response.ok) {
         throw new Error(`Erreur Wikidata: ${response.statusText}`);
@@ -115,6 +119,7 @@ export class WikidataService {
 
     const response = await fetch(
       `https://www.wikidata.org/wiki/Special:EntityData/${place_id}.json`,
+      { headers: { 'User-Agent': USER_AGENT } },
     );
 
     if (!response.ok) {
@@ -151,6 +156,7 @@ export class WikidataService {
 
     const response = await fetch(
       `https://commons.wikimedia.org/w/api.php?${params}`,
+      { headers: { 'User-Agent': USER_AGENT } },
     );
     if (!response.ok) return undefined;
 
