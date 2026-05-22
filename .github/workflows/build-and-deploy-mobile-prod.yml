@@ -168,6 +168,6 @@ jobs:
     with:
       releaseTag: mobile-v${{ needs.bump-version.outputs.version }}
       previousTag: ${{ needs.bump-version.outputs.lastMobileTag }}
-      filterMode: include
-      filterPaths: apps/mobile
+      filterPaths: apps/mobile, packages
+      prereleaseTagToDelete: mobile-pre-release
       prerelease: false

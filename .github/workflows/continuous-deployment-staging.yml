@@ -7,49 +7,53 @@ on:
       - main
 
 jobs:
-  version:
-    name: Version
+  get-tags:
+    name: Get last prod tags
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.set-version.outputs.version }}
-      version_rc: ${{ steps.set-version.outputs.version_rc }}
+      lastWebTag: ${{ steps.tags.outputs.lastWebTag }}
+      lastMobileTag: ${{ steps.tags.outputs.lastMobileTag }}
     steps:
-      - name: Set version
-        id: set-version
+      - name: Get last prod tags
+        id: tags
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="web-v${{ github.run_number }}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "version_rc=${VERSION}-rc" >> $GITHUB_OUTPUT
+          LAST_WEB=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("web-v"))] | .[0].tagName // ""')
+          LAST_MOBILE=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("mobile-v"))] | .[0].tagName // ""')
+          echo "lastWebTag=$LAST_WEB" >> $GITHUB_OUTPUT
+          echo "lastMobileTag=$LAST_MOBILE" >> $GITHUB_OUTPUT
 
-  create-wip-pre-release:
-    name: Pre-release
-    needs:
-      - version
+  create-web-pre-release:
+    name: Pre-release Web
+    needs: [get-tags]
     permissions:
       contents: write
     uses: ./.github/workflows/generate-release.yml
     with:
-      releaseTag: ${{ needs.version.outputs.version_rc }}
+      releaseTag: web-pre-release
+      previousTag: ${{ needs.get-tags.outputs.lastWebTag }}
+      filterPaths: apps/backend, apps/frontend, apps/back-office, packages
       prerelease: true
 
-  tag:
-    name: Tag
-    needs: version
-    runs-on: ubuntu-latest
+  create-mobile-pre-release:
+    name: Pre-release Mobile
+    needs: [get-tags]
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create tag
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git tag -a "${{ needs.version.outputs.version }}" -m "${{ needs.version.outputs.version }} - $(date +'%Y-%m-%d')"
-          git push origin "${{ needs.version.outputs.version }}"
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: mobile-pre-release
+      previousTag: ${{ needs.get-tags.outputs.lastMobileTag }}
+      filterPaths: apps/mobile, packages
+      prerelease: true
 
   detect-changes:
     name: Detect changes
-    needs: version
     uses: ./.github/workflows/detect-changes.yml
 
   deploy-web-staging:
