@@ -2,6 +2,16 @@ name: Prod - Continuous Deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Type of release to create"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   get-tag:
@@ -11,20 +21,25 @@ jobs:
       lastProdTag: ${{ steps.get_tag.outputs.lastProdTag }}
       newReleaseTag: ${{ steps.get_tag.outputs.newReleaseTag }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Get tags
         id: get_tag
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          LAST_PROD=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName')
-          NEW_RELEASE=$(git describe --tags --abbrev=0 --match "v[0-9]*" --exclude "*-rc")
-          echo "lastProdTag=$LAST_PROD" >> $GITHUB_OUTPUT
-          echo "newReleaseTag=$NEW_RELEASE" >> $GITHUB_OUTPUT
+          LAST_PROD=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("web-v"))] | .[0].tagName // ""')
+
+          VERSION=${LAST_PROD#web-v}
+          IFS='.' read -r major minor patch <<< "${VERSION:-0.0.0}"
+          case "${{ inputs.release_type }}" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            *)     patch=$((patch+1)) ;;
+          esac
+
+          echo "lastProdTag=${LAST_PROD}" >> $GITHUB_OUTPUT
+          echo "newReleaseTag=web-v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
 
   detect-changes:
     name: Detect changes
@@ -55,4 +70,7 @@ jobs:
     uses: ./.github/workflows/generate-release.yml
     with:
       releaseTag: ${{ needs.get-tag.outputs.newReleaseTag }}
+      previousTag: ${{ needs.get-tag.outputs.lastProdTag }}
+      filterPaths: apps/backend, apps/frontend, apps/back-office, packages
+      prereleaseTagToDelete: web-pre-release
       prerelease: false
