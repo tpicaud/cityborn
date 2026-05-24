@@ -36,6 +36,7 @@ export default function RootLayout() {
       })
       .catch((error) => console.error('Failed to fetch user:', error))
       .finally(() => isMounted && setLoading(false));
+
     return () => {
       isMounted = false;
     };
