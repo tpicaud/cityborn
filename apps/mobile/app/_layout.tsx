@@ -15,6 +15,7 @@ import { View } from '@/components/ui/native/NativeComponents';
 import { apiClient } from '@/lib/apiClient';
 
 export default function RootLayout() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +63,6 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: 'transparent' },
                 animation: 'none',
                 headerLeft: () => {
-                  const router = useRouter();
                   return (
                     <TouchableOpacity onPressIn={router.back} className="mt-4">
                       <Icon name="arrow_back_outline" size={28} />
