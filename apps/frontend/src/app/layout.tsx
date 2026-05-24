@@ -6,22 +6,6 @@ import AuthProvider from '@/contexts/AuthContext';
 import ErrorProvider from '@/contexts/ErrorContext';
 import * as ApiServiceServer from '@/services/ApiServiceServer';
 
-// const geistSans = localFont({
-// 	src: "./fonts/GeistVF.woff",
-// 	variable: "--font-geist-sans",
-// 	weight: "100 900",
-// });
-// const geistMono = localFont({
-// 	src: "./fonts/GeistMonoVF.woff",
-// 	variable: "--font-geist-mono",
-// 	weight: "100 900",
-// });
-
-// const roboto = Roboto({
-// 	subsets: ['latin'],
-// 	weight: ['400', '500', '700'],
-// });
-
 export const metadata: Metadata = {
   title: 'CityBorn',
   description: 'Trouvez le lieu de naissances des personnalités',
