@@ -34,6 +34,7 @@ export default async function RootLayout({
 }>) {
   let user = null;
   const hasToken = await ApiServiceServer.hasToken();
+
   if (hasToken) {
     try {
       user = await ApiServiceServer.getCurrentUser();
