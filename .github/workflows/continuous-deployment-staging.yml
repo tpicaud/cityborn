@@ -54,15 +54,19 @@ jobs:
 
   detect-changes:
     name: Detect changes
+    if: ${{ github.event_name == 'push' }}
     uses: ./.github/workflows/detect-changes.yml
+    with:
+      base: ${{ github.event.before }}
 
   deploy-web-staging:
     name: Build + Deploy - Web - Staging
     needs:
       - detect-changes
+    if: ${{ always() && !cancelled() && !failure() }}
     secrets: inherit
     uses: ./.github/workflows/build-and-deploy-web-staging.yml
     with:
-      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
-      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
-      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      backendHasChanged: ${{ github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backendHasChanged == 'true' }}
+      frontendHasChanged: ${{ github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.frontendHasChanged == 'true' }}
+      backofficeHasChanged: ${{ github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backofficeHasChanged == 'true' }}

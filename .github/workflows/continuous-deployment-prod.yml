@@ -41,24 +41,16 @@ jobs:
           echo "lastProdTag=${LAST_PROD}" >> $GITHUB_OUTPUT
           echo "newReleaseTag=web-v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
 
-  detect-changes:
-    name: Detect changes
-    needs:
-      - get-tag
-    uses: ./.github/workflows/detect-changes.yml
-    with:
-      base: ${{ needs.get-tag.outputs.lastProdTag }}
-
   build-and-deploy-web-prod:
     name: Build + Deploy - Web - Prod
     needs:
-      - detect-changes
+      - get-tag
     secrets: inherit
     uses: ./.github/workflows/build-and-deploy-web-prod.yml
     with:
-      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
-      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
-      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      backendHasChanged: 'true'
+      frontendHasChanged: 'true'
+      backofficeHasChanged: 'true'
 
   create-release:
     name: Release
