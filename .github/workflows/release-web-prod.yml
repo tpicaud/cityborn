@@ -1,0 +1,76 @@
+name: Release - Web - Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Type of release to create"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  get-tag:
+    name: Get tags
+    runs-on: ubuntu-latest
+    outputs:
+      lastProdTag: ${{ steps.get_tag.outputs.lastProdTag }}
+      newReleaseTag: ${{ steps.get_tag.outputs.newReleaseTag }}
+    steps:
+      - name: Get tags
+        id: get_tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LAST_PROD=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("web-v"))] | .[0].tagName // ""')
+
+          VERSION=${LAST_PROD#web-v}
+          IFS='.' read -r major minor patch <<< "${VERSION:-0.0.0}"
+          case "${{ inputs.release_type }}" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            *)     patch=$((patch+1)) ;;
+          esac
+
+          echo "lastProdTag=${LAST_PROD}" >> $GITHUB_OUTPUT
+          echo "newReleaseTag=web-v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+
+  detect-changes:
+    name: Detect changes
+    needs:
+      - get-tag
+    uses: ./.github/workflows/detect-changes.yml
+    with:
+      base: ${{ needs.get-tag.outputs.lastProdTag }}
+
+  build-and-deploy-web-prod:
+    name: Build + Deploy - Web - Prod
+    needs:
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/_build-deploy-web-prod.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+
+  create-release:
+    name: Release
+    needs:
+      - get-tag
+      - build-and-deploy-web-prod
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: ${{ needs.get-tag.outputs.newReleaseTag }}
+      previousTag: ${{ needs.get-tag.outputs.lastProdTag }}
+      filterPaths: apps/backend, apps/frontend, apps/back-office, packages
+      prereleaseTagToDelete: web-pre-release
+      prerelease: false

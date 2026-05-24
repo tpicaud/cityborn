@@ -1,4 +1,4 @@
-name: Build + Deploy - Web - Staging
+name: (sub) Build + Deploy - Web - Staging
 
 on:
   workflow_call:

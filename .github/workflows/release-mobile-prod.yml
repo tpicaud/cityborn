@@ -1,4 +1,4 @@
-name: Build + Deploy - Mobile - Production
+name: Release - Mobile - Prod
 
 on:
   workflow_dispatch:

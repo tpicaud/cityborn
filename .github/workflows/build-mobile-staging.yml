@@ -1,4 +1,4 @@
-name: Build + Deploy - Mobile - Staging
+name: Build - Mobile - Staging
 
 on:
   workflow_dispatch:

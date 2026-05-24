@@ -1,4 +1,4 @@
-name: Build + Deploy - Web - Production
+name: (sub) Build + Deploy - Web - Prod
 
 on:
   workflow_call:

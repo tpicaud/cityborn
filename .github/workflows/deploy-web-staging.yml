@@ -1,0 +1,68 @@
+name: Deploy - Web - Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  get-tags:
+    name: Get last prod tags
+    runs-on: ubuntu-latest
+    outputs:
+      lastWebTag: ${{ steps.tags.outputs.lastWebTag }}
+      lastMobileTag: ${{ steps.tags.outputs.lastMobileTag }}
+    steps:
+      - name: Get last prod tags
+        id: tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LAST_WEB=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("web-v"))] | .[0].tagName // ""')
+          LAST_MOBILE=$(gh release list --repo ${{ github.repository }} \
+            --exclude-pre-releases --limit 10 --json tagName \
+            --jq '[.[] | select(.tagName | startswith("mobile-v"))] | .[0].tagName // ""')
+          echo "lastWebTag=$LAST_WEB" >> $GITHUB_OUTPUT
+          echo "lastMobileTag=$LAST_MOBILE" >> $GITHUB_OUTPUT
+
+  create-web-pre-release:
+    name: Pre-release Web
+    needs: [get-tags]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: web-pre-release
+      previousTag: ${{ needs.get-tags.outputs.lastWebTag }}
+      filterPaths: apps/backend, apps/frontend, apps/back-office, packages
+      prerelease: true
+
+  create-mobile-pre-release:
+    name: Pre-release Mobile
+    needs: [get-tags]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generate-release.yml
+    with:
+      releaseTag: mobile-pre-release
+      previousTag: ${{ needs.get-tags.outputs.lastMobileTag }}
+      filterPaths: apps/mobile, packages
+      prerelease: true
+
+  detect-changes:
+    name: Detect changes
+    uses: ./.github/workflows/detect-changes.yml
+
+  build-and-deploy-web-staging:
+    name: Build + Deploy - Web - Staging
+    needs:
+      - detect-changes
+    secrets: inherit
+    uses: ./.github/workflows/_build-deploy-web-staging.yml
+    with:
+      backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
+      frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
+      backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
