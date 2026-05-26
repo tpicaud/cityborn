@@ -1,13 +1,13 @@
 'use server';
 
 import type { User } from '@cityborn/api';
+import { ApiError, ErrorCode } from '@cityborn/errors';
 import { cookies } from 'next/headers';
-import { apiFetch } from '@/app/api/apiFetch';
-import { getAccessToken, getRefreshToken } from '@/app/api/auth/utils';
-
-//////////////////
-// Auth service //
-//////////////////
+import {
+  expireTokensInCookies,
+  storeTokensInCookies,
+} from '@/app/api/auth/utils';
+import { getServerClient } from '@/lib/serverClient';
 
 export async function hasToken(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -18,52 +18,13 @@ export async function hasToken(): Promise<boolean> {
 
 export async function getCurrentUser(): Promise<User | null> {
   try {
-    const access_token = await getAccessToken();
-    const refresh_token = await getRefreshToken();
-
-    if (!access_token && !refresh_token) return null;
-
-    const response = await apiFetch(`/auth/me`, {
-      requestOptions: {
-        method: 'GET',
-        cache: 'no-store',
-      },
-      noCookieStore: true,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return data as User;
+    if (!(await hasToken())) return null;
+    const client = await getServerClient();
+    const result = await client.auth.me();
+    return result.status === 200 ? result.body : null;
   } catch {
     return null;
   }
-
-  //////////////////
-  // const access_token = await getAccessToken();
-  // const refresh_token = await getRefreshToken();
-
-  // if (!access_token && !refresh_token) return null;
-
-  // const response = await fetch(`/api/auth/me`, {
-  //     method: 'GET',
-  //     headers: {
-  //         Cookie: `access_token=${access_token}; refresh_token=${refresh_token}`,
-  //     },
-  //     cache: 'no-store'
-  // });
-
-  // const data = await response.json();
-
-  // if (!response.ok) {
-  //     throw new ApiError(data.code, data.message, data.statusCode);
-  // }
-
-  // if (!data.user) return null;
-  // return data.user as PublicUser;
 }
 
 export async function signUp(
@@ -71,78 +32,50 @@ export async function signUp(
   email: string,
   password: string,
 ): Promise<void> {
-  const response = await fetch(`/auth/sign-up`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username, email, password }),
-  });
-
-  const data = await response.json().catch(() => null);
-  if (!data) throw new Error('Invalid server response');
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to sign up');
+  const client = await getServerClient();
+  const result = await client.auth.signUp({ body: { username, email, password } });
+  if (result.status !== 201) {
+    const body = result.body as { code?: string; message?: string; statusCode?: number };
+    throw new ApiError(
+      (body?.code ?? ErrorCode.UNKNOWN_ERROR) as ErrorCode,
+      body?.message ?? 'Failed to sign up',
+      body?.statusCode ?? result.status,
+    );
   }
-
-  if (!data.access_token)
-    throw new Error('No Access token returned from sign-up');
-
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: 'access_token',
-    value: data.access_token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 60 * 15,
-    path: '/',
-  });
+  await storeTokensInCookies(result.body.access_token, result.body.refresh_token);
 }
 
 export async function signIn(
   identifier: string,
   password: string,
 ): Promise<void> {
-  const response = await fetch(`/auth/sign-in`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ identifier, password }),
-  });
-
-  const data = await response.json().catch(() => null);
-  if (!data) throw new Error('Invalid server response');
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to sign in');
+  const client = await getServerClient();
+  const result = await client.auth.signIn({ body: { identifier, password } });
+  if (result.status !== 200) {
+    const body = result.body as { code?: string; message?: string; statusCode?: number };
+    throw new ApiError(
+      (body?.code ?? ErrorCode.UNKNOWN_ERROR) as ErrorCode,
+      body?.message ?? 'Failed to sign in',
+      body?.statusCode ?? result.status,
+    );
   }
+  await storeTokensInCookies(result.body.access_token, result.body.refresh_token);
+}
 
-  if (!data.access_token)
-    throw new Error('No Access token returned from sign-in');
-
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: 'access_token',
-    value: data.access_token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 60 * 15,
-    path: '/',
-  });
+export async function signInWithGoogle(idToken: string): Promise<void> {
+  const client = await getServerClient();
+  const result = await client.auth.signInWithGoogle({ body: { idToken } });
+  if (result.status !== 200) {
+    const body = result.body as { code?: string; message?: string; statusCode?: number };
+    throw new ApiError(
+      (body?.code ?? ErrorCode.UNKNOWN_ERROR) as ErrorCode,
+      body?.message ?? 'Failed to sign in with Google',
+      body?.statusCode ?? result.status,
+    );
+  }
+  await storeTokensInCookies(result.body.access_token, result.body.refresh_token);
 }
 
 export async function signOut(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: 'access_token',
-    value: '',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 0,
-  });
+  await expireTokensInCookies();
 }
