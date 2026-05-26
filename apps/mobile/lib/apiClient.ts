@@ -1,4 +1,12 @@
-import { createApiClient } from '@cityborn/api';
+import {
+  type Category,
+  createApiClient,
+  type Game,
+  type GameRecord,
+  type Session,
+  type SessionMode,
+  type User,
+} from '@cityborn/api';
 import { ApiError, ErrorCode } from '@cityborn/errors';
 import { tokenStorage } from './tokenStorage';
 import { getBaseUrl } from './utils';
@@ -20,9 +28,20 @@ function throwOnError(result: { status: number; body: unknown }): void {
   }
 }
 
+type OkResult<T extends { status: number; body: unknown }> = Extract<
+  T,
+  { status: 200 | 201 | 202 | 203 | 204 }
+>;
+
+function assertOk<T extends { status: number; body: unknown }>(
+  result: T,
+): asserts result is OkResult<T> {
+  throwOnError(result);
+}
+
 export const apiClient = {
   // Auth
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<User | null> {
     const access = await tokenStorage.getAccessToken();
     const refresh = await tokenStorage.getRefreshToken();
     if (!access && !refresh) return null;
@@ -30,155 +49,100 @@ export const apiClient = {
     return result.status === 200 ? result.body : null;
   },
 
-  async signIn(identifier: string, password: string) {
+  async signIn(identifier: string, password: string): Promise<User> {
     const result = await client.auth.signIn({ body: { identifier, password } });
-    throwOnError(result);
-    if (result.status === 200) {
-      await tokenStorage.setTokens(
-        result.body.access_token,
-        result.body.refresh_token,
-      );
-      return result.body.user;
-    }
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
+    assertOk(result);
+    await tokenStorage.setTokens(
+      result.body.access_token,
+      result.body.refresh_token,
     );
+    return result.body.user;
   },
 
-  async signUp(data: { username: string; email: string; password: string }) {
+  async signUp(data: {
+    username: string;
+    email: string;
+    password: string;
+  }): Promise<User> {
     const result = await client.auth.signUp({ body: data });
-    throwOnError(result);
-    if (result.status === 201) {
-      await tokenStorage.setTokens(
-        result.body.access_token,
-        result.body.refresh_token,
-      );
-      return result.body.user;
-    }
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
+    assertOk(result);
+    await tokenStorage.setTokens(
+      result.body.access_token,
+      result.body.refresh_token,
     );
+    return result.body.user;
   },
 
-  async signOut() {
+  async signOut(): Promise<void> {
     await tokenStorage.clearTokens();
   },
 
-  async signInWithGoogle(idToken: string) {
+  async signInWithGoogle(idToken: string): Promise<User> {
     const result = await client.auth.signInWithGoogle({ body: { idToken } });
-    throwOnError(result);
-    if (result.status === 200) {
-      await tokenStorage.setTokens(
-        result.body.access_token,
-        result.body.refresh_token,
-      );
-      return result.body.user;
-    }
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
+    assertOk(result);
+    await tokenStorage.setTokens(
+      result.body.access_token,
+      result.body.refresh_token,
     );
+    return result.body.user;
   },
 
   async signInWithApple(
     identity_token: string,
     apple_user_id: string,
     details?: { email: string; family_name: string; given_name: string },
-  ) {
+  ): Promise<User> {
     const result = await client.auth.signInWithApple({
       body: { identity_token, apple_user_id, details },
     });
-    throwOnError(result);
-    if (result.status === 200) {
-      await tokenStorage.setTokens(
-        result.body.access_token,
-        result.body.refresh_token,
-      );
-      return result.body.user;
-    }
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
+    assertOk(result);
+    await tokenStorage.setTokens(
+      result.body.access_token,
+      result.body.refresh_token,
     );
+    return result.body.user;
   },
 
-  async deleteUser() {
+  async deleteUser(): Promise<void> {
     const result = await client.auth.deleteUser({ body: {} });
     throwOnError(result);
   },
 
   // Session
-  async createSession(
-    mode: Parameters<typeof client.session.createSession>[0]['body']['mode'],
-  ) {
+  async createSession(mode: SessionMode): Promise<Session> {
     const result = await client.session.createSession({ body: { mode } });
-    throwOnError(result);
-    if (result.status === 201) return result.body;
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
-    );
+    assertOk(result);
+    return result.body;
   },
 
-  async fetchSession(id: string) {
+  async fetchSession(id: string): Promise<Session> {
     const result = await client.session.getSession({ params: { id } });
-    throwOnError(result);
-    if (result.status === 200) return result.body;
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
-    );
+    assertOk(result);
+    return result.body;
   },
 
-  async createSoloGame(
-    session: Parameters<typeof client.session.createGame>[0]['body'],
-  ) {
+  async createSoloGame(session: Session): Promise<Game> {
     const result = await client.session.createGame({ body: session });
-    throwOnError(result);
-    if (result.status === 200) return result.body;
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
-    );
+    assertOk(result);
+    return result.body;
   },
 
-  async endSoloGame(
-    session: Parameters<typeof client.session.endSoloGame>[0]['body'],
-  ) {
+  async endSoloGame(session: Session): Promise<void> {
     const result = await client.session.endSoloGame({ body: session });
     throwOnError(result);
   },
 
   // Category
-  async fetchCategories() {
+  async fetchCategories(): Promise<Category[]> {
     const result = await client.category.getCategories({ query: {} });
-    throwOnError(result);
-    if (result.status === 200) return result.body;
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
-    );
+    assertOk(result);
+    return result.body;
   },
 
   // User
-  async getGameRecords() {
+  async getGameRecords(): Promise<GameRecord[]> {
     const result = await client.user.getGameRecords();
-    throwOnError(result);
-    if (result.status === 200) return result.body;
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected response',
-      result.status,
-    );
+    assertOk(result);
+    return result.body;
   },
 };

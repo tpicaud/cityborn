@@ -41,7 +41,7 @@ export class AuthFetch {
 
     const headers: Record<string, string> = { ...args.headers };
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const response = await this.timeoutFetch(args.path, {
@@ -66,7 +66,7 @@ export class AuthFetch {
               new ApiError(
                 ErrorCode.USER_REFRESH_FAILED,
                 'Refresh failed',
-                500,
+                401,
               ),
             );
             return;
@@ -124,7 +124,7 @@ export class AuthFetch {
   }
 
   private processQueue(token: string | null) {
-    this.refreshQueue.forEach((cb) => cb(token));
+    this.refreshQueue.forEach((cb) => { cb(token); });
     this.refreshQueue = [];
   }
 

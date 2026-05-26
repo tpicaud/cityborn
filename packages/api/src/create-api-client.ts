@@ -9,6 +9,7 @@ export function createApiClient(baseURL: string, tokenStorage: TokenStorage) {
     baseUrl: baseURL,
     baseHeaders: {},
     api: authFetch.buildApiFunction(),
+    validateResponse: true,
   });
 }
 
