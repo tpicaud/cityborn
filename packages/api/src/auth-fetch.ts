@@ -124,7 +124,9 @@ export class AuthFetch {
   }
 
   private processQueue(token: string | null) {
-    this.refreshQueue.forEach((cb) => { cb(token); });
+    this.refreshQueue.forEach((cb) => {
+      cb(token);
+    });
     this.refreshQueue = [];
   }
 

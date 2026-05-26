@@ -3,21 +3,31 @@
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useError } from '@/contexts/ErrorContext';
+import { signIn, signInWithGoogle } from '@/server/actions/auth';
 import Button from '../ui/buttons/Button';
 
 export const SignInComponent = () => {
   const { invokeError } = useError();
-  const apiClient = useApi();
   const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
     useState(false);
 
-  /////////////////
-  // Google Auth //
-  /////////////////
   useEffect(() => {
+    const handleCredentialResponse = async (response: {
+      credential: string;
+    }) => {
+      try {
+        setIsGoogleSignInFormSubmitting(true);
+        await signInWithGoogle(response.credential);
+        window.location.reload();
+      } catch (error: unknown) {
+        invokeError(error);
+      } finally {
+        setIsGoogleSignInFormSubmitting(false);
+      }
+    };
+
     if (window.google) {
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -25,47 +35,27 @@ export const SignInComponent = () => {
       });
       window.google.accounts.id.renderButton(
         document.getElementById('googleSignInDiv'),
-        {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-        },
+        { theme: 'outline', size: 'large', text: 'signin_with' },
       );
     }
-  }, [window.google]);
-
-  const handleCredentialResponse = async (response: any) => {
-    try {
-      setIsGoogleSignInFormSubmitting(true);
-      await apiClient.signInWithGoogle(response.credential);
-      window.location.reload();
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      setIsGoogleSignInFormSubmitting(false);
-    }
-  };
-  /////////////////
+  }, [invokeError]);
 
   const [formValues, setFormValues] = React.useState({
     username: '',
     password: '',
   });
 
-  const handleChange = (e: any) => {
-    setFormValues({
-      ...formValues,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     try {
       setIsSignInFormSubmitting(true);
       e.preventDefault();
-      await apiClient.signIn(formValues.username, formValues.password);
+      await signIn(formValues.username, formValues.password);
       window.location.reload();
-    } catch (error: any) {
+    } catch (error: unknown) {
       invokeError(error);
     } finally {
       setIsSignInFormSubmitting(false);
@@ -76,12 +66,7 @@ export const SignInComponent = () => {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        maxWidth: 300,
-      }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
     >
       <Typography variant="h5" align="center">
         Connexion
@@ -127,6 +112,7 @@ export const SignInComponent = () => {
         {isGoogleSignInFormSubmitting && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
             <svg
+              aria-label="Chargement"
               className="animate-spin h-5 w-5 text-blue-500"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

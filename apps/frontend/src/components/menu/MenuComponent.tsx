@@ -7,9 +7,9 @@ import { SessionMode } from '@cityborn/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { createSession, fetchSession } from '@/server/actions/session';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
@@ -24,8 +24,6 @@ export default function MenuComponent({
   const router = useRouter();
   const { user } = useAuth();
   const { invokeError } = useError();
-  const apiClient = useApi();
-
   const [code, setCode] = useState<string>('');
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
@@ -38,9 +36,9 @@ export default function MenuComponent({
       setOpenConnectionAlert(true);
     } else {
       try {
-        const session = await apiClient.createSession(SessionMode.MULTI);
+        const session = await createSession(SessionMode.MULTI);
         router.push(`/session/multi/${session.id}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         invokeError(error);
       }
     }
@@ -48,9 +46,9 @@ export default function MenuComponent({
 
   const handleJoin = async () => {
     try {
-      await apiClient.fetchSession(code);
+      await fetchSession(code);
       router.push(`/session/multi/${code}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       invokeError(error);
     }
   };

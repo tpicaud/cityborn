@@ -7,7 +7,7 @@ import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 type ui_type = 'dialog';
 
 type ErrorContextType = {
-  invokeError: (error: ApiError | string) => void;
+  invokeError: (error: unknown) => void;
 };
 
 const ErrorContext = createContext<ErrorContextType>({
@@ -18,18 +18,15 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [openDialog, setOpenDialog] = useState(false);
 
-  const invokeError = (
-    error: ApiError | string | any,
-    ui_type: ui_type = 'dialog',
-  ) => {
+  const invokeError = (error: unknown, ui_type: ui_type = 'dialog') => {
     if (error instanceof ApiError) {
       const message = getFriendlyErrorMessage(error);
       setErrorMessage(message);
     } else if (typeof error === 'string') {
       setErrorMessage(error);
     } else {
-      const errorMessage = error.message ?? 'Unexpected error';
-      setErrorMessage(errorMessage);
+      const msg = error instanceof Error ? error.message : 'Unexpected error';
+      setErrorMessage(msg);
     }
 
     console.log(error);

@@ -12,29 +12,28 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useError } from '@/contexts/ErrorContext';
+import { getGameRecords } from '@/server/actions/user';
 import { calculateTotalPoints } from '@/utils/calculateScore';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { invokeError } = useError();
-  const apiClient = useApi();
   const [games, setGames] = useState<GameRecord[]>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getGameRecords = async () => {
+    const load = async () => {
       try {
-        const games = await apiClient.getGameRecords();
-        setGames(games);
-      } catch (error: any) {
+        const records = await getGameRecords();
+        setGames(records);
+      } catch (error: unknown) {
         invokeError(error);
       } finally {
         setLoading(false);
       }
     };
-    getGameRecords();
-  }, []);
+    load();
+  }, [invokeError]);
 
   return (
     <Box
@@ -77,9 +76,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
               <CircularProgress size={20} />
             </div>
           ) : (
-            <>
-              <Typography>Games ({games?.length ?? 0})</Typography>
-            </>
+            <Typography>Games ({games?.length ?? 0})</Typography>
           )}
         </AccordionSummary>
         <AccordionDetails

@@ -29,8 +29,8 @@ import {
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useError } from '@/contexts/ErrorContext';
+import { fetchCategories } from '@/server/actions/category';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
@@ -61,7 +61,6 @@ export const LobbyComponent = ({
   handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
   const { invokeError } = useError();
-  const apiClient = useApi();
 
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -75,34 +74,33 @@ export const LobbyComponent = ({
   const router = useRouter();
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const load = async () => {
       try {
-        const categories = await apiClient.fetchCategories();
-        setCategories(categories);
+        const cats = await fetchCategories();
+        setCategories(cats);
       } catch {
         invokeError('Aucunes catégories trouvées');
       }
     };
-    fetchCategories();
-  }, []);
+    load();
+  }, [invokeError]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // Réinitialise le message après 2 secondes
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const updateGameConfig = async () => {
-    // parse nb of objects
     const nbOfObjectsParsed = parseInt(tempNbOfObjects, 10);
     const nbOfObjects =
-      isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0
+      Number.isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0
         ? 6
         : nbOfObjectsParsed;
 
-    // parse timer
     const timerParsed = parseInt(tempTimer, 10);
-    const timer = isNaN(timerParsed) || timerParsed <= 0 ? 20 : timerParsed;
+    const timer =
+      Number.isNaN(timerParsed) || timerParsed <= 0 ? 20 : timerParsed;
 
     await handleUpdateGameConfig({ nbOfObjects, timer });
   };
