@@ -1,5 +1,4 @@
-import { Category } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
+import { Category, ErrorCode } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';

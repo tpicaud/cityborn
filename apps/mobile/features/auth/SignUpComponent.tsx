@@ -1,5 +1,5 @@
+import { getFriendlyErrorMessage } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import { getFriendlyErrorMessage } from '@cityborn/errors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';

@@ -1,10 +1,10 @@
 import {
   AccountType,
   type CreateGameRecord,
+  ErrorCode,
   GameRecord,
   SessionMode,
 } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   ConflictException,

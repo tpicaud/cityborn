@@ -1,6 +1,6 @@
 // jwt-refresh.guard.ts
 
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,

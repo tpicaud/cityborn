@@ -24,10 +24,10 @@ export const ProfileComponent = ({ user }: { user: User }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const records = await getGameRecords();
-        setGames(records);
-      } catch (error: unknown) {
-        invokeError(error);
+        const result = await getGameRecords();
+        if (!result.ok) return invokeError(result.error);
+        const gameRecords: GameRecord[] = result.data;
+        setGames(gameRecords);
       } finally {
         setLoading(false);
       }

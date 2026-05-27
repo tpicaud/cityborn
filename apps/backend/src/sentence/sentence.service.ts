@@ -1,5 +1,4 @@
-import { ScoreType, Sentence } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode, ScoreType, Sentence } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SentenceMapper } from './mapper/sentence.mapper';

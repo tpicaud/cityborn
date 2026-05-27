@@ -1,5 +1,4 @@
-import { CreateCategory, UpdateCategory } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
+import { CreateCategory, ErrorCode, UpdateCategory } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import pLimit from 'p-limit';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';

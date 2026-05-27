@@ -1,4 +1,3 @@
-import { useError } from '@cityborn/contexts';
 import {
   type Game,
   type GameConfig,
@@ -10,6 +9,7 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
+import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';

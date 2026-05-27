@@ -27,13 +27,11 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   useEffect(() => {
     const init = async () => {
-      try {
-        const s = await createSession(SessionMode.SOLO);
-        s.hostID = localPlayerID;
-        setSession(s);
-      } catch (error: unknown) {
-        invokeError(error);
-      }
+      const result = await createSession(SessionMode.SOLO);
+      if (!result.ok) return invokeError(result.error);
+      const session: Session = result.data;
+      session.hostID = localPlayerID;
+      setSession(session);
     };
     init();
   }, [localPlayerID, invokeError]);
@@ -60,26 +58,24 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const startGame = async () => {
     if (!session) return;
-    try {
-      const g = await createSoloGame(session);
-      setSession((prev) =>
-        prev ? { ...prev, status: SessionStatus.IN_GAME } : prev,
-      );
-      setGame({
-        ...g,
-        status: GameStatus.IN_GAME,
-        state: {
-          ...g.state,
-          currentRound: {
-            status: RoundStatus.GUESSING,
-            guessObjectId: g.state.guessObjectsIds[0],
-            playersGuesses: {},
-          },
+    const result = await createSoloGame(session);
+    if (!result.ok) return invokeError(result.error);
+    const game: Game = result.data;
+    setSession((prev) =>
+      prev ? { ...prev, status: SessionStatus.IN_GAME } : prev,
+    );
+    setGame({
+      ...game,
+      status: GameStatus.IN_GAME,
+      state: {
+        ...game.state,
+        currentRound: {
+          status: RoundStatus.GUESSING,
+          guessObjectId: game.state.guessObjectsIds[0],
+          playersGuesses: {},
         },
-      });
-    } catch (error: unknown) {
-      invokeError(error);
-    }
+      },
+    });
   };
 
   const guess = (g: Guess) => {
@@ -156,35 +152,23 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const endGame = async () => {
     if (!session?.currentGame) return;
-    try {
-      await endSoloGame(session);
-    } catch (error: unknown) {
-      invokeError(error);
-    } finally {
-      setSession((prev) => (prev ? { ...prev, currentGame: undefined } : prev));
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    setSession((prev) => (prev ? { ...prev, currentGame: undefined } : prev));
   };
 
   const playAgain = async () => {
     if (!session?.currentGame) return;
-    try {
-      await endSoloGame(session);
-    } catch (error: unknown) {
-      invokeError(error);
-    } finally {
-      await startGame();
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    await startGame();
   };
 
   const exitGame = async () => {
     if (!session?.currentGame) return;
-    try {
-      await endSoloGame(session);
-    } catch (error: unknown) {
-      invokeError(error);
-    } finally {
-      router.push('/');
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    router.push('/');
   };
 
   return {

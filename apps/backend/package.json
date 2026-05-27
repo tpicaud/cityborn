@@ -26,12 +26,11 @@
     "db:migrate": "npx prisma migrate dev --name",
     "db:reset": "npx prisma migrate reset",
     "postinstall": "prisma generate",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
-    "@cityborn/errors": "workspace:*",
     "@cityborn/types": "workspace:*",
     "@cityborn/utils": "workspace:*",
     "@nestjs/common": "^11.0.1",

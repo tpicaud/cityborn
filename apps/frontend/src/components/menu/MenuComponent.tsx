@@ -3,7 +3,7 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { SessionMode } from '@cityborn/api';
+import { type Session, SessionMode } from '@cityborn/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
@@ -35,22 +35,17 @@ export default function MenuComponent({
     if (!user) {
       setOpenConnectionAlert(true);
     } else {
-      try {
-        const session = await createSession(SessionMode.MULTI);
-        router.push(`/session/multi/${session.id}`);
-      } catch (error: unknown) {
-        invokeError(error);
-      }
+      const result = await createSession(SessionMode.MULTI);
+      if (!result.ok) return invokeError(result.error);
+      const session: Session = result.data;
+      router.push(`/session/multi/${session.id}`);
     }
   };
 
   const handleJoin = async () => {
-    try {
-      await fetchSession(code);
-      router.push(`/session/multi/${code}`);
-    } catch (error: unknown) {
-      invokeError(error);
-    }
+    const result = await fetchSession(code);
+    if (!result.ok) return invokeError(result.error);
+    router.push(`/session/multi/${code}`);
   };
 
   return (

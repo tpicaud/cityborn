@@ -1,4 +1,4 @@
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode } from '@cityborn/api';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { USER_AGENT } from '../common/constants';
 

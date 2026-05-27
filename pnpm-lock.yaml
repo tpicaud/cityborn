@@ -102,9 +102,6 @@ importers:
       '@cityborn/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@cityborn/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
       '@cityborn/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -307,9 +304,6 @@ importers:
       '@cityborn/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@cityborn/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
       '@cityborn/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -470,9 +464,6 @@ importers:
       '@cityborn/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@cityborn/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
       '@cityborn/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -651,9 +642,6 @@ importers:
 
   packages/api:
     dependencies:
-      '@cityborn/errors':
-        specifier: workspace:*
-        version: link:../errors
       '@ts-rest/core':
         specifier: ^3.51.0
         version: 3.52.1(@types/node@22.19.3)(zod@3.25.76)
@@ -678,9 +666,6 @@ importers:
       '@cityborn/api':
         specifier: workspace:*
         version: link:../api
-      '@cityborn/errors':
-        specifier: workspace:*
-        version: link:../errors
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.17
@@ -711,12 +696,6 @@ importers:
     devDependencies:
       typescript:
         specifier: ^5.9.3
-        version: 5.9.3
-
-  packages/errors:
-    dependencies:
-      typescript:
-        specifier: ^5.8.3
         version: 5.9.3
 
   packages/types:

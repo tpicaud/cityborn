@@ -1,6 +1,7 @@
 import {
   type CreateSession,
   defaultGuess,
+  ErrorCode,
   type Game,
   GameStatus,
   type OnlinePlayer,
@@ -12,7 +13,6 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   ConflictException,

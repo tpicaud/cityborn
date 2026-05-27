@@ -1,5 +1,4 @@
-import { contract } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
+import { contract, ErrorCode } from '@cityborn/api';
 import { BadRequestException, Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AdminGuard } from 'src/auth/guards/admin.guard';

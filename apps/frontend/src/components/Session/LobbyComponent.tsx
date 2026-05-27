@@ -75,12 +75,9 @@ export const LobbyComponent = ({
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const cats = await fetchCategories();
-        setCategories(cats);
-      } catch {
-        invokeError('Aucunes catégories trouvées');
-      }
+      const result = await fetchCategories();
+      if (!result.ok) return invokeError(result.error);
+      setCategories(result.data);
     };
     load();
   }, [invokeError]);

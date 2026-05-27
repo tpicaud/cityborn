@@ -1,4 +1,4 @@
-import { ErrorCode, type ErrorPayload } from '@cityborn/errors';
+import { ErrorCode, type ErrorPayload } from '@cityborn/api';
 import {
   type ArgumentsHost,
   BadRequestException,

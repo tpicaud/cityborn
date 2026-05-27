@@ -1,4 +1,3 @@
-import { ApiError } from '@cityborn/errors';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { useError } from '@/contexts/ErrorContext';
@@ -31,21 +30,19 @@ export const useSocket = () => {
     // handle errors
     socket.on('connect_error', (error: any) => {
       setHasDisconnected(false); // Avoid automatic reconnection
-      const api_error = new ApiError(
-        error.code,
-        error.message,
-        error.statusCode,
-      );
-      invokeError(api_error);
+      invokeError({
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+      });
     });
 
     socket.on('error', (error: any) => {
-      const api_error = new ApiError(
-        error.code,
-        error.message,
-        error.statusCode,
-      );
-      invokeError(api_error);
+      invokeError({
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+      });
     });
 
     return () => {

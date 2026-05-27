@@ -1,5 +1,5 @@
+import { ApiErrors } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import { ApiError, ErrorCode } from '@cityborn/errors';
 import {
   GoogleSignin,
   isSuccessResponse,
@@ -39,11 +39,7 @@ export const SignInWithGoogleButton = () => {
       }
     } catch (error) {
       console.error(error);
-      throw new ApiError(
-        ErrorCode.USER_INVALID_CREDENTIALS,
-        'Google sign in failed',
-        401,
-      );
+      throw ApiErrors.googleSignInFailed();
     }
   };
 

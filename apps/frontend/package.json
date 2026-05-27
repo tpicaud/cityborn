@@ -8,13 +8,12 @@
     "typecheck": "tsc -noEmit",
     "start": "dotenv -e .env -- next start",
     "lint": "next lint",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
     "@cityborn/client": "workspace:*",
-    "@cityborn/errors": "workspace:*",
     "@cityborn/utils": "workspace:*",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",

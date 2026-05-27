@@ -1,11 +1,11 @@
-import { useError } from '@cityborn/contexts';
-import { colors } from '@cityborn/design-system';
 import type {
   Category,
   GameConfig,
   OnlinePlayer,
   Session,
 } from '@cityborn/api';
+import { useError } from '@cityborn/contexts';
+import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';

@@ -7,7 +7,7 @@
     "dev": "dotenv -e .env -- next dev",
     "build": "next build --turbopack",
     "start": "dotenv -e .env -- next start",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {

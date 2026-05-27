@@ -1,10 +1,10 @@
 import {
   CreateGuessObject,
+  ErrorCode,
   GameConfig,
   GuessObject,
   GuessObjectCandidate,
 } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
 import {
   BadRequestException,
   Injectable,

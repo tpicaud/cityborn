@@ -1,13 +1,17 @@
 'use client';
 
-import { ApiError, getFriendlyErrorMessage } from '@cityborn/errors';
+import {
+  type ApiError,
+  getFriendlyErrorMessage,
+  isApiError,
+} from '@cityborn/api';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 
 type ui_type = 'dialog';
 
 type ErrorContextType = {
-  invokeError: (error: unknown) => void;
+  invokeError: (error: ApiError | string) => void;
 };
 
 const ErrorContext = createContext<ErrorContextType>({
@@ -18,18 +22,17 @@ const ErrorProvider = ({ children }: { children: ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [openDialog, setOpenDialog] = useState(false);
 
-  const invokeError = (error: unknown, ui_type: ui_type = 'dialog') => {
-    if (error instanceof ApiError) {
-      const message = getFriendlyErrorMessage(error);
-      setErrorMessage(message);
-    } else if (typeof error === 'string') {
-      setErrorMessage(error);
+  const invokeError = (
+    error: ApiError | string,
+    ui_type: ui_type = 'dialog',
+  ) => {
+    if (isApiError(error)) {
+      setErrorMessage(getFriendlyErrorMessage(error));
     } else {
-      const msg = error instanceof Error ? error.message : 'Unexpected error';
-      setErrorMessage(msg);
+      setErrorMessage(error);
     }
 
-    console.log(error);
+    console.error(error);
     if (ui_type === 'dialog') {
       setOpenDialog(true);
     }

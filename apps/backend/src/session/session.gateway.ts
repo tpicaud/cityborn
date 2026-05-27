@@ -1,5 +1,4 @@
-import { GameConfig, Guess, User } from '@cityborn/api';
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode, GameConfig, Guess, User } from '@cityborn/api';
 import {
   BadRequestException,
   type HttpStatus,

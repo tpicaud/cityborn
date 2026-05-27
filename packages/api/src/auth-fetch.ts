@@ -1,5 +1,7 @@
-import { ApiError, ErrorCode, type ErrorPayload } from '@cityborn/errors';
 import type { ApiFetcherArgs } from '@ts-rest/core';
+import { ApiErrors } from './api-errors.js';
+import { ErrorCode } from './errors/error-codes.js';
+import type { ApiError } from './schemas/api-error.schema.js';
 import type { TokenStorage } from './types/token-storage.js';
 
 export class AuthFetch {
@@ -62,13 +64,7 @@ export class AuthFetch {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
-            reject(
-              new ApiError(
-                ErrorCode.USER_REFRESH_FAILED,
-                'Refresh failed',
-                401,
-              ),
-            );
+            reject(ApiErrors.refreshFailed());
             return;
           }
           try {
@@ -97,11 +93,7 @@ export class AuthFetch {
   private async refreshToken(): Promise<string> {
     const refreshToken = await this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
-      throw new ApiError(
-        ErrorCode.USER_REFRESH_FAILED,
-        'No refresh token available',
-        401,
-      );
+      throw ApiErrors.noRefreshToken();
     }
 
     const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
@@ -113,8 +105,12 @@ export class AuthFetch {
     });
 
     if (!response.ok) {
-      const error: ErrorPayload = await response.json();
-      throw new ApiError(error.code, error.message, error.statusCode);
+      const error: ApiError = await response.json();
+      throw {
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+      };
     }
 
     const data = await response.json();

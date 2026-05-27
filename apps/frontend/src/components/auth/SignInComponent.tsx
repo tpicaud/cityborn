@@ -19,10 +19,9 @@ export const SignInComponent = () => {
     }) => {
       try {
         setIsGoogleSignInFormSubmitting(true);
-        await signInWithGoogle(response.credential);
+        const result = await signInWithGoogle(response.credential);
+        if (!result.ok) return invokeError(result.error);
         window.location.reload();
-      } catch (error: unknown) {
-        invokeError(error);
       } finally {
         setIsGoogleSignInFormSubmitting(false);
       }
@@ -53,10 +52,9 @@ export const SignInComponent = () => {
     try {
       setIsSignInFormSubmitting(true);
       e.preventDefault();
-      await signIn(formValues.username, formValues.password);
+      const result = await signIn(formValues.username, formValues.password);
+      if (!result.ok) return invokeError(result.error);
       window.location.reload();
-    } catch (error: unknown) {
-      invokeError(error);
     } finally {
       setIsSignInFormSubmitting(false);
     }

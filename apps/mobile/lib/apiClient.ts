@@ -1,13 +1,15 @@
 import {
+  type ApiError,
+  ApiErrorSchema,
   type Category,
   createApiClient,
+  ErrorCode,
   type Game,
   type GameRecord,
   type Session,
   type SessionMode,
   type User,
 } from '@cityborn/api';
-import { ApiError, ErrorCode } from '@cityborn/errors';
 import { tokenStorage } from './tokenStorage';
 import { getBaseUrl } from './utils';
 
@@ -15,16 +17,15 @@ const client = createApiClient(getBaseUrl(), tokenStorage);
 
 function throwOnError(result: { status: number; body: unknown }): void {
   if (result.status < 200 || result.status >= 300) {
-    const body = result.body as {
-      code?: string;
-      message?: string;
-      statusCode?: number;
-    };
-    throw new ApiError(
-      (body?.code ?? ErrorCode.UNKNOWN_ERROR) as ErrorCode,
-      body?.message ?? 'Unexpected error',
-      body?.statusCode ?? result.status,
-    );
+    const parsed = ApiErrorSchema.safeParse(result.body);
+    if (parsed.success) {
+      throw parsed.data;
+    }
+    throw {
+      code: ErrorCode.UNKNOWN_ERROR,
+      message: 'Unexpected error',
+      statusCode: result.status,
+    } satisfies ApiError;
   }
 }
 

@@ -1,13 +1,12 @@
 import {
   type AuthResponse,
   type CreateUser,
+  ErrorCode,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
 } from '@cityborn/api';
-import { createEvent } from 'src/event/event.types';
-import { ErrorCode } from '@cityborn/errors';
 import {
   Inject,
   Injectable,
@@ -21,6 +20,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { EventService } from 'src/event/event.service';
+import { createEvent } from 'src/event/event.types';
 import { UserMapper } from 'src/user/user.mapper';
 import { UserService } from 'src/user/user.service';
 import { getJwtConstants } from './constants';

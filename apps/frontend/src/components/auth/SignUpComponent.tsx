@@ -21,12 +21,9 @@ export const SignUpComponent = () => {
     const handleCredentialResponse = async (response: {
       credential: string;
     }) => {
-      try {
-        await signInWithGoogle(response.credential);
-        window.location.reload();
-      } catch (error: unknown) {
-        invokeError(error);
-      }
+      const result = await signInWithGoogle(response.credential);
+      if (!result.ok) return invokeError(result.error);
+      window.location.reload();
     };
 
     if (window.google) {
@@ -79,10 +76,13 @@ export const SignUpComponent = () => {
     }
 
     try {
-      await signUp(formValues.username, formValues.email, formValues.password);
+      const result = await signUp(
+        formValues.username,
+        formValues.email,
+        formValues.password,
+      );
+      if (!result.ok) return invokeError(result.error);
       window.location.reload();
-    } catch (error: unknown) {
-      invokeError(error);
     } finally {
       setIsSignUpFormSubmitting(false);
     }

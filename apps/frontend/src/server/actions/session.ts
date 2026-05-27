@@ -1,32 +1,37 @@
 'use server';
 
 import type { Game, Session, SessionMode } from '@cityborn/api';
-import { throwOnError } from '@/lib/actionUtils';
+import { type ActionResult, toActionResult } from '@/lib/actionUtils';
 import { getServerClient } from '@/lib/serverClient';
 
-export async function createSession(mode: SessionMode): Promise<Session> {
+export async function createSession(
+  mode: SessionMode,
+): Promise<ActionResult<Session>> {
   const client = await getServerClient();
   const result = await client.session.createSession({ body: { mode } });
-  throwOnError(result);
-  return result.body;
+  return toActionResult(result);
 }
 
-export async function fetchSession(sessionId: string): Promise<Session> {
+export async function fetchSession(
+  sessionId: string,
+): Promise<ActionResult<Session>> {
   const client = await getServerClient();
   const result = await client.session.getSession({ params: { id: sessionId } });
-  throwOnError(result);
-  return result.body;
+  return toActionResult(result);
 }
 
-export async function createSoloGame(session: Session): Promise<Game> {
+export async function createSoloGame(
+  session: Session,
+): Promise<ActionResult<Game>> {
   const client = await getServerClient();
   const result = await client.session.createGame({ body: session });
-  throwOnError(result);
-  return result.body;
+  return toActionResult(result);
 }
 
-export async function endSoloGame(session: Session): Promise<void> {
-  if (!session.currentGame) return;
+export async function endSoloGame(
+  session: Session,
+): Promise<ActionResult<void>> {
+  if (!session.currentGame) return { ok: true, data: undefined };
   const lightSession: Session = {
     ...session,
     currentGame: {
@@ -39,5 +44,5 @@ export async function endSoloGame(session: Session): Promise<void> {
   };
   const client = await getServerClient();
   const result = await client.session.endSoloGame({ body: lightSession });
-  throwOnError(result);
+  return toActionResult(result) as ActionResult<void>;
 }

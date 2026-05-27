@@ -1,10 +1,12 @@
 import {
+  type ApiError,
   type GameConfig,
   type Guess,
+  isApiError,
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { ApiError } from '@cityborn/errors';
+
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -23,11 +25,11 @@ function socketError(err?: {
   message: string;
   statusCode: number;
 }) {
-  return new ApiError(
-    (err?.code ?? 'UNKNOWN_ERROR') as never,
-    err?.message ?? 'Unexpected error',
-    err?.statusCode ?? 500,
-  );
+  return {
+    code: (err?.code ?? 'UNKNOWN_ERROR') as never,
+    message: err?.message ?? 'Unexpected error',
+    statusCode: err?.statusCode ?? 500,
+  } satisfies ApiError;
 }
 
 export function useMultiSession(
@@ -52,12 +54,9 @@ export function useMultiSession(
   // Fetch session on init
   useEffect(() => {
     const load = async () => {
-      try {
-        const s = await fetchSession(sessionID);
-        setSession(s);
-      } catch (error: unknown) {
-        invokeError(error);
-      }
+      const result = await fetchSession(sessionID);
+      if (!result.ok) return invokeError(result.error);
+      setSession(result.data);
     };
     load();
   }, [sessionID, invokeError]);
@@ -101,7 +100,7 @@ export function useMultiSession(
           await reconnect();
         }
       } catch (error: unknown) {
-        invokeError(error);
+        invokeError(isApiError(error) ? error : 'Une erreur est survenue');
       }
     };
     autoReconnect();
