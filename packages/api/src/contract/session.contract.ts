@@ -1,4 +1,5 @@
 import { initContract } from '@ts-rest/core';
+import { commonErrorResponses } from '../schemas/api-error.schema.js';
 import {
   emptyResponseSchema,
   IdParamSchema,
@@ -11,29 +12,32 @@ import {
 
 const c = initContract();
 
-export const sessionContract = c.router({
-  createSession: {
-    method: 'POST',
-    path: '/session',
-    body: CreateSessionSchema,
-    responses: { 201: SessionSchema },
+export const sessionContract = c.router(
+  {
+    createSession: {
+      method: 'POST',
+      path: '/',
+      body: CreateSessionSchema,
+      responses: { 201: SessionSchema, ...commonErrorResponses },
+    },
+    getSession: {
+      method: 'GET',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      responses: { 200: SessionSchema, ...commonErrorResponses },
+    },
+    createGame: {
+      method: 'POST',
+      path: '/create-game',
+      body: SessionSchema,
+      responses: { 200: GameSchema, ...commonErrorResponses },
+    },
+    endSoloGame: {
+      method: 'POST',
+      path: '/end-solo-game',
+      body: SessionSchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
   },
-  getSession: {
-    method: 'GET',
-    path: '/session/:id',
-    pathParams: IdParamSchema,
-    responses: { 200: SessionSchema },
-  },
-  createGame: {
-    method: 'POST',
-    path: '/session/create-game',
-    body: SessionSchema,
-    responses: { 200: GameSchema },
-  },
-  endSoloGame: {
-    method: 'POST',
-    path: '/session/end-solo-game',
-    body: SessionSchema,
-    responses: { 200: emptyResponseSchema },
-  },
-});
+  { pathPrefix: '/session' },
+);

@@ -1,5 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
+import { commonErrorResponses } from '../schemas/api-error.schema.js';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -15,38 +16,41 @@ import {
 
 const c = initContract();
 
-export const guessObjectAdminContract = c.router({
-  listGuessObjects: {
-    method: 'GET',
-    path: '/guess-objects',
-    query: z.object({ guessObjectsIds: z.string() }),
-    responses: { 200: GuessObjectsSchema },
+export const guessObjectAdminContract = c.router(
+  {
+    listGuessObjects: {
+      method: 'GET',
+      path: '/',
+      query: z.object({ guessObjectsIds: z.string() }),
+      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
+    },
+    getGuessObject: {
+      method: 'GET',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      query: IncludeQuerySchema,
+      responses: { 200: GuessObjectSchema, ...commonErrorResponses },
+    },
+    createGuessObject: {
+      method: 'POST',
+      path: '/',
+      body: CreateGuessObjectSchema,
+      responses: { 201: IdSchema, ...commonErrorResponses },
+    },
+    updateGuessObject: {
+      method: 'PATCH',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      body: GuessObjectSchema.partial(),
+      responses: { 200: IdSchema, ...commonErrorResponses },
+    },
+    deleteGuessObject: {
+      method: 'DELETE',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      body: emptyRequestBodySchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
   },
-  getGuessObject: {
-    method: 'GET',
-    path: '/guess-objects/:id',
-    pathParams: IdParamSchema,
-    query: IncludeQuerySchema,
-    responses: { 200: GuessObjectSchema },
-  },
-  createGuessObject: {
-    method: 'POST',
-    path: '/guess-objects',
-    body: CreateGuessObjectSchema,
-    responses: { 201: IdSchema },
-  },
-  updateGuessObject: {
-    method: 'PATCH',
-    path: '/guess-objects/:id',
-    pathParams: IdParamSchema,
-    body: GuessObjectSchema.partial(),
-    responses: { 200: IdSchema },
-  },
-  deleteGuessObject: {
-    method: 'DELETE',
-    path: '/guess-objects/:id',
-    pathParams: IdParamSchema,
-    body: emptyRequestBodySchema,
-    responses: { 200: emptyResponseSchema },
-  },
-});
+  { pathPrefix: '/guess-objects' },
+);

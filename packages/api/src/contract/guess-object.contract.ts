@@ -1,5 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
+import { commonErrorResponses } from '../schemas/api-error.schema.js';
 import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema.js';
 import {
   GuessObjectSchema,
@@ -8,18 +9,21 @@ import {
 
 const c = initContract();
 
-export const guessObjectContract = c.router({
-  getGuessObjects: {
-    method: 'GET',
-    path: '/guess-objects',
-    query: z.object({ guessObjectsIds: z.string() }),
-    responses: { 200: GuessObjectsSchema },
+export const guessObjectContract = c.router(
+  {
+    getGuessObjects: {
+      method: 'GET',
+      path: '/',
+      query: z.object({ guessObjectsIds: z.string() }),
+      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
+    },
+    getGuessObject: {
+      method: 'GET',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      query: IncludeQuerySchema,
+      responses: { 200: GuessObjectSchema, ...commonErrorResponses },
+    },
   },
-  getGuessObject: {
-    method: 'GET',
-    path: '/guess-objects/:id',
-    pathParams: IdParamSchema,
-    query: IncludeQuerySchema,
-    responses: { 200: GuessObjectSchema },
-  },
-});
+  { pathPrefix: '/guess-objects' },
+);

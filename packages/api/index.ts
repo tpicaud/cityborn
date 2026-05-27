@@ -1,5 +1,6 @@
 export * from './src/contract/contract.js';
 export * from './src/create-api-client.js';
+export * from './src/schemas/api-error.schema.js';
 export * from './src/schemas/category.schema.js';
 export * from './src/schemas/common.schema.js';
 export * from './src/schemas/enums.js';
