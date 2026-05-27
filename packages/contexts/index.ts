@@ -1,2 +1,2 @@
-export * from './AuthContext.js';
-export * from './ErrorContext.js';
+export * from './AuthContext';
+export * from './ErrorContext';

@@ -1,5 +1,5 @@
 import z from 'zod';
-import { ErrorCode } from '../errors/error-codes.js';
+import { ErrorCode } from '../errors/error-codes';
 
 export const ApiErrorSchema = z.object({
   code: z.nativeEnum(ErrorCode),

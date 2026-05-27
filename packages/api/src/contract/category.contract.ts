@@ -1,10 +1,10 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   CategoriesSchema,
   CategorySchema,
-} from '../schemas/category.schema.js';
-import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema.js';
+} from '../schemas/category.schema';
+import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema';
 
 const c = initContract();
 

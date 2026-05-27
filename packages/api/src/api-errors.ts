@@ -1,6 +1,6 @@
-import { ErrorCode } from './errors/error-codes.js';
-import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema.js';
-import type { HttpSuccessStatus } from './types/http.js';
+import { ErrorCode } from './errors/error-codes';
+import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema';
+import type { HttpSuccessStatus } from './types/http';
 
 export const ApiErrors = {
   refreshFailed: (): ApiError => ({

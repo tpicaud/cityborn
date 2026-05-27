@@ -2,9 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
+    "declarationMap": true,
+    "composite": true,
     "outDir": "dist",
     "module": "ESNext",
     "target": "ESNext"
   },
-  "include": ["src", "index.ts"]
+  "include": ["src", "index.ts"],
+  "exclude": ["dist", "node_modules"]
 }

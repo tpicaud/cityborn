@@ -1,9 +1,9 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
-} from '../schemas/common.schema.js';
+} from '../schemas/common.schema';
 import {
   AuthResponseSchema,
   CreateUserSchema,
@@ -13,7 +13,7 @@ import {
   SignInWithGoogleSchema,
   UserSchema,
   VerifyEmailDataSchema,
-} from '../schemas/user.schema.js';
+} from '../schemas/user.schema';
 
 const c = initContract();
 

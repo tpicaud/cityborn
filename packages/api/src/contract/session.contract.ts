@@ -1,14 +1,14 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   emptyResponseSchema,
   IdParamSchema,
-} from '../schemas/common.schema.js';
-import { GameSchema, GameStateSchema } from '../schemas/game.schema.js';
+} from '../schemas/common.schema';
+import { GameSchema, GameStateSchema } from '../schemas/game.schema';
 import {
   CreateSessionSchema,
   SessionSchema,
-} from '../schemas/session.schema.js';
+} from '../schemas/session.schema';
 
 const c = initContract();
 

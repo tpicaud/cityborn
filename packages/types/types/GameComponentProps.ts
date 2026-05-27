@@ -1,5 +1,5 @@
-import type { Game } from './Game.js';
-import type { Guess } from './Guess.js';
+import type { Game } from './Game';
+import type { Guess } from './Guess';
 
 export interface GameComponentProps {
   game: Game;

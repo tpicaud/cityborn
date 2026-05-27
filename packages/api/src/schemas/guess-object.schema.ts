@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WorldLocationSchema } from './world-location.schema.js';
+import { WorldLocationSchema } from './world-location.schema';
 
 export const GuessObjectSchema = z.object({
   id: z.string(),

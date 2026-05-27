@@ -1,2 +1,2 @@
-export * from './types/GameComponentProps.js';
-export * from './types/MapProps.js';
+export * from './types/GameComponentProps';
+export * from './types/MapProps';

@@ -1,11 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
-import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
+import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema';
 import {
   GuessObjectSchema,
   GuessObjectsSchema,
-} from '../schemas/guess-object.schema.js';
+} from '../schemas/guess-object.schema';
 
 const c = initContract();
 
