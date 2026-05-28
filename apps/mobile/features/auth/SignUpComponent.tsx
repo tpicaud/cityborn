@@ -8,7 +8,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { signUp } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -136,7 +136,7 @@ export const SignUpComponent = () => {
     if (!validateForm()) return;
 
     try {
-      const user = await apiClient.signUp({
+      const user = await signUp({
         ...formValues,
       });
       setUser(user);

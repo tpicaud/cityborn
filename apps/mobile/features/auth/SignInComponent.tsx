@@ -7,7 +7,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { signIn } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -48,7 +48,7 @@ export const SignInComponent = () => {
   const handleSubmit = async () => {
     try {
       setErrorMessage(null);
-      const user = await apiClient.signIn(
+      const user = await signIn(
         formValues.username,
         formValues.password,
       );

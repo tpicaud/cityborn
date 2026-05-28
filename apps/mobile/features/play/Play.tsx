@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { createSession, fetchSession } from '@/lib/api/session';
 
 export default function Play() {
   const { user } = useAuth();
@@ -25,7 +25,7 @@ export default function Play() {
       setOpenConnectionAlert(true);
     } else {
       try {
-        const session = await apiClient.createSession(SessionMode.MULTI);
+        const session = await createSession(SessionMode.MULTI);
         router.navigate(`/session/multi/${session.id}`);
       } catch (error: any) {
         invokeError(error);
@@ -35,7 +35,7 @@ export default function Play() {
 
   const handleJoin = async () => {
     try {
-      await apiClient.fetchSession(joinCode);
+      await fetchSession(joinCode);
       router.push(`/session/multi/${joinCode}`);
     } catch (error: any) {
       invokeError(error);

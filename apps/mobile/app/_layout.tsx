@@ -12,7 +12,7 @@ import ErrorDialog from '@/components/ui/ErrorDialog';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { getCurrentUser } from '@/lib/api/auth';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -27,8 +27,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     let isMounted = true;
-    apiClient
-      .getCurrentUser()
+    getCurrentUser()
       .then((fetchedUser) => {
         if (isMounted) {
           setUser(fetchedUser);
@@ -56,7 +55,7 @@ export default function RootLayout() {
         <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
           <AuthProvider
             initialValue={user}
-            getCurrentUser={apiClient.getCurrentUser}
+            getCurrentUser={getCurrentUser}
           >
             <StatusBar hidden={true} />
             <Stack

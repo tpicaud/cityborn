@@ -5,7 +5,7 @@ import { Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { fetchCategories } from '@/lib/api/category';
 
 interface SoloLobbyProps {
   localPlayerID: string | undefined;
@@ -27,15 +27,15 @@ export function SoloLobby({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       try {
-        const categories = await apiClient.fetchCategories();
+        const categories = await fetchCategories();
         setCategories(categories);
       } catch {
         invokeError('Aucunes catégories trouvées');
       }
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   useEffect(() => {

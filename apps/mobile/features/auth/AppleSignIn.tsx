@@ -5,7 +5,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { apiClient } from '@/lib/apiClient';
+import { signInWithApple } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
@@ -31,7 +31,7 @@ export const SignInWithAppleButton = () => {
       const userDetails = extractAppleUserDetails(credential);
 
       // Authentification via l'API
-      const user = await apiClient.signInWithApple(
+      const user = await signInWithApple(
         credential.identityToken,
         credential.user,
         userDetails,

@@ -14,5 +14,6 @@ export * from './src/schemas/sentence.schema.js';
 export * from './src/schemas/session.schema.js';
 export * from './src/schemas/user.schema.js';
 export * from './src/schemas/world-location.schema.js';
+export * from './src/session-helpers.js';
 export * from './src/types/http.js';
 export * from './src/types/token-storage.js';

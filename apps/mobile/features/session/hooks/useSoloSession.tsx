@@ -12,7 +12,7 @@ import {
 import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { apiClient } from '@/lib/apiClient';
+import { createSession, createSoloGame, endSoloGame } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 
 export function useSoloSession(localPlayerID: string): IUseSession {
@@ -29,7 +29,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const session: Session = await apiClient.createSession(
+        const session: Session = await createSession(
           SessionMode.SOLO,
         );
         session.hostID = localPlayerID;
@@ -93,7 +93,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!session) return;
     try {
       // Create  new game
-      const game = await apiClient.createSoloGame(session);
+      const game = await createSoloGame(session);
 
       setSession((prevSession) => {
         if (!prevSession) return;
@@ -236,7 +236,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!session || !session.currentGame) return;
 
     try {
-      await apiClient.endSoloGame(session);
+      await endSoloGame(session);
     } catch (error: any) {
       invokeError(error);
     } finally {
@@ -251,7 +251,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!session || !session.currentGame) return;
 
     try {
-      await apiClient.endSoloGame(session);
+      await endSoloGame(session);
     } catch (error: any) {
       invokeError(error);
     } finally {
@@ -263,7 +263,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!session || !session.currentGame) return;
 
     try {
-      await apiClient.endSoloGame(session);
+      await endSoloGame(session);
     } catch (error: any) {
       invokeError(error);
     } finally {

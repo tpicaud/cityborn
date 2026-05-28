@@ -8,7 +8,7 @@ import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { apiClient } from '@/lib/apiClient';
+import { fetchSession } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 import { useSocket } from './useSocket';
 
@@ -37,15 +37,15 @@ export function useMultiSession(
 
   // Fetch session on init
   useEffect(() => {
-    const fetchSession = async () => {
+    const loadSession = async () => {
       try {
-        const session: Session = await apiClient.fetchSession(sessionID);
+        const session: Session = await fetchSession(sessionID);
         setSession(session);
       } catch (error: any) {
         invokeError(error);
       }
     };
-    fetchSession();
+    loadSession();
   }, []);
 
   // Manage socket disconnection

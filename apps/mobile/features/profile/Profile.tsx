@@ -12,7 +12,8 @@ import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { deleteUser, signOut } from '@/lib/api/auth';
+import { getGameRecords } from '@/lib/api/user';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -36,7 +37,7 @@ export default function Profile() {
     console.log('Fetching game records for user:', user);
     try {
       setLoading(true);
-      const gameRecords = await apiClient.getGameRecords();
+      const gameRecords = await getGameRecords();
       setGamesRecords(gameRecords);
     } catch (error) {
       console.error('Failed to fetch game records:', error);
@@ -48,8 +49,8 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     if (!user) return;
     try {
-      await apiClient.deleteUser();
-      await apiClient.signOut();
+      await deleteUser();
+      await signOut();
       setUser(null);
       setDeleteAccountModalOpen(false);
       router.replace('/');

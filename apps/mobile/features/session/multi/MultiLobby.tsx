@@ -15,7 +15,7 @@ import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { fetchCategories } from '@/lib/api/category';
 
 interface MultiLobbyProps {
   localPlayerID: string | undefined;
@@ -45,15 +45,15 @@ export function MultiLobby({
   const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       try {
-        const categories = await apiClient.fetchCategories();
+        const categories = await fetchCategories();
         setCategories(categories);
       } catch {
         invokeError('Aucunes catégories trouvées');
       }
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   const toggleCategory = (id: string) => {

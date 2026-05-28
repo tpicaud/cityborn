@@ -7,7 +7,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
-import { apiClient } from '@/lib/apiClient';
+import { signInWithGoogle } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 GoogleSignin.configure({
@@ -30,7 +30,7 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const user = await apiClient.signInWithGoogle(idToken);
+        const user = await signInWithGoogle(idToken);
 
         setUser(user);
         router.push('/');

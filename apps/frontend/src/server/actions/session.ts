@@ -1,6 +1,6 @@
 'use server';
 
-import type { Game, Session, SessionMode } from '@cityborn/api';
+import { buildEndSoloGameBody, type Game, type Session, type SessionMode } from '@cityborn/api';
 import { type ActionResult, toActionResult } from '@/lib/actionUtils';
 import { getServerClient } from '@/lib/serverClient';
 
@@ -31,11 +31,9 @@ export async function createSoloGame(
 export async function endSoloGame(
   session: Session,
 ): Promise<ActionResult<void>> {
-  if (!session.currentGame) return { ok: true, data: undefined };
-  const { guessObjects: _removed, ...state } = session.currentGame.state;
+  const body = buildEndSoloGameBody(session);
+  if (!body) return { ok: true, data: undefined };
   const client = await getServerClient();
-  const result = await client.session.endSoloGame({
-    body: { ...session, currentGame: { ...session.currentGame, state } },
-  });
+  const result = await client.session.endSoloGame({ body });
   return toActionResult(result) as ActionResult<void>;
 }
