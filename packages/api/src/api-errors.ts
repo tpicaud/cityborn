@@ -1,5 +1,6 @@
 import { ErrorCode } from './errors/error-codes.js';
-import type { ApiError } from './schemas/api-error.schema.js';
+import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema.js';
+import type { HttpSuccessStatus } from './types/http.js';
 
 export const ApiErrors = {
   refreshFailed: (): ApiError => ({
@@ -28,3 +29,21 @@ export const ApiErrors = {
     statusCode: 401,
   }),
 } as const;
+
+export function throwOnError<T extends { status: number; body: unknown }>(
+  result: T,
+): asserts result is Extract<T, { status: HttpSuccessStatus }> {
+  if (result.status < 200 || result.status >= 300) {
+    const parsed = ApiErrorSchema.safeParse(result.body);
+
+    if (parsed.success) {
+      throw parsed.data;
+    }
+
+    throw {
+      code: ErrorCode.UNKNOWN_ERROR,
+      message: 'Unexpected error',
+      statusCode: result.status,
+    } satisfies ApiError;
+  }
+}

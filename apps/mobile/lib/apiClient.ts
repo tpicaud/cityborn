@@ -1,14 +1,12 @@
 import {
-  type ApiError,
-  ApiErrorSchema,
   type Category,
   createApiClient,
-  ErrorCode,
   type Game,
   type GameRecord,
   type HttpSuccessStatus,
   type Session,
   type SessionMode,
+  throwOnError,
   type User,
 } from '@cityborn/api';
 import { tokenStorage } from './tokenStorage';
@@ -16,28 +14,9 @@ import { getBaseUrl } from './utils';
 
 const client = createApiClient(getBaseUrl(), tokenStorage);
 
-function throwOnError(result: { status: number; body: unknown }): void {
-  if (result.status < 200 || result.status >= 300) {
-    const parsed = ApiErrorSchema.safeParse(result.body);
-    if (parsed.success) {
-      throw parsed.data;
-    }
-    throw {
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-      statusCode: result.status,
-    } satisfies ApiError;
-  }
-}
-
-type OkResult<T extends { status: number; body: unknown }> = Extract<
-  T,
-  { status: HttpSuccessStatus }
->;
-
 function assertOk<T extends { status: number; body: unknown }>(
   result: T,
-): asserts result is OkResult<T> {
+): asserts result is Extract<T, { status: HttpSuccessStatus }> {
   throwOnError(result);
 }
 
@@ -130,7 +109,11 @@ export const apiClient = {
   },
 
   async endSoloGame(session: Session): Promise<void> {
-    const result = await client.session.endSoloGame({ body: session });
+    if (!session.currentGame) return;
+    const { guessObjects: _removed, ...state } = session.currentGame.state;
+    const result = await client.session.endSoloGame({
+      body: { ...session, currentGame: { ...session.currentGame, state } },
+    });
     throwOnError(result);
   },
 

@@ -1,4 +1,9 @@
-import { type ApiError, ApiErrorSchema, ErrorCode, type HttpSuccessStatus } from '@cityborn/api';
+import {
+  type ApiError,
+  ApiErrorSchema,
+  ErrorCode,
+  type HttpSuccessStatus,
+} from '@cityborn/api';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -24,22 +29,4 @@ export function toActionResult<T extends { status: number; body: unknown }>(
     ok: true,
     data: result.body as Extract<T, { status: HttpSuccessStatus }>['body'],
   };
-}
-
-export function throwOnError<T extends { status: number; body: unknown }>(
-  result: T,
-): asserts result is Extract<T, { status: HttpSuccessStatus }> {
-  if (result.status < 200 || result.status >= 300) {
-    const parsed = ApiErrorSchema.safeParse(result.body);
-
-    if (parsed.success) {
-      throw parsed.data;
-    }
-
-    throw {
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-      statusCode: result.status,
-    } satisfies ApiError;
-  }
 }
