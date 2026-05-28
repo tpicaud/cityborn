@@ -32,17 +32,10 @@ export async function endSoloGame(
   session: Session,
 ): Promise<ActionResult<void>> {
   if (!session.currentGame) return { ok: true, data: undefined };
-  const lightSession: Session = {
-    ...session,
-    currentGame: {
-      ...session.currentGame,
-      state: {
-        ...session.currentGame.state,
-        guessObjects: undefined,
-      },
-    },
-  };
+  const { guessObjects: _removed, ...state } = session.currentGame.state;
   const client = await getServerClient();
-  const result = await client.session.endSoloGame({ body: lightSession });
+  const result = await client.session.endSoloGame({
+    body: { ...session, currentGame: { ...session.currentGame, state } },
+  });
   return toActionResult(result) as ActionResult<void>;
 }

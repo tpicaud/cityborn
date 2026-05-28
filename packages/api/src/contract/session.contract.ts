@@ -7,6 +7,7 @@ import {
 import { GameSchema } from '../schemas/game.schema.js';
 import {
   CreateSessionSchema,
+  EndSoloGameSchema,
   SessionSchema,
 } from '../schemas/session.schema.js';
 
@@ -35,7 +36,7 @@ export const sessionContract = c.router(
     endSoloGame: {
       method: 'POST',
       path: '/end-solo-game',
-      body: SessionSchema,
+      body: EndSoloGameSchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },

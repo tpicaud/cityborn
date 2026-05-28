@@ -2,6 +2,7 @@ import type { ApiFetcherArgs } from '@ts-rest/core';
 import { ApiErrors } from './api-errors.js';
 import { ErrorCode } from './errors/error-codes.js';
 import type { ApiError } from './schemas/api-error.schema.js';
+import { AuthResponseSchema } from './schemas/user.schema.js';
 import type { TokenStorage } from './types/token-storage.js';
 
 export class AuthFetch {
@@ -113,8 +114,16 @@ export class AuthFetch {
       };
     }
 
-    const data = await response.json();
-    const { access_token, refresh_token } = data;
+    const raw = await response.json();
+    const parsed = AuthResponseSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw {
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'Unexpected error',
+        statusCode: response.status,
+      } satisfies ApiError;
+    }
+    const { access_token, refresh_token } = parsed.data;
     await this.tokenStorage.setTokens(access_token, refresh_token);
     return access_token;
   }
