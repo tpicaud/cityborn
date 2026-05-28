@@ -29,9 +29,9 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const session: Session = await createSession(
-          SessionMode.SOLO,
-        );
+        const session: Session = await createSession({
+          mode: SessionMode.SOLO,
+        });
         session.hostID = localPlayerID;
         setSession(session);
       } catch (error: any) {
@@ -39,7 +39,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
       }
     };
     fetchSession();
-  }, []);
+  }, [invokeError, localPlayerID]);
 
   useEffect(() => {
     if (!game) return;
@@ -123,8 +123,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const guess = (guess: Guess) => {
     setGame((prevGame) => {
-      if (!prevGame || !prevGame.state.currentRound || !localPlayerID)
-        return prevGame;
+      if (!prevGame?.state.currentRound || !localPlayerID) return prevGame;
 
       return {
         ...prevGame,
@@ -147,7 +146,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
     // Record result of the round
     setGame((prevGame) => {
-      if (!prevGame || !prevGame.state.currentRound) return prevGame;
+      if (!prevGame?.state.currentRound) return prevGame;
 
       const { guessObjectId, playersGuesses } = prevGame.state.currentRound;
 
@@ -206,8 +205,8 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!game) return null;
 
     // get current index
-    const currentIndex = game.state.guessObjectsIds.findIndex(
-      (id) => game.state.currentRound?.guessObjectId === id,
+    const currentIndex = game.state.guessObjectsIds.indexOf(
+      game.state.currentRound?.guessObjectId ?? '',
     );
 
     // Vérifier que l'objet est dans la liste
@@ -233,7 +232,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const endGame = async () => {
-    if (!session || !session.currentGame) return;
+    if (!session?.currentGame) return;
 
     try {
       await endSoloGame(session);
@@ -248,7 +247,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const playAgain = async () => {
-    if (!session || !session.currentGame) return;
+    if (!session?.currentGame) return;
 
     try {
       await endSoloGame(session);
@@ -260,7 +259,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const exitGame = async () => {
-    if (!session || !session.currentGame) return;
+    if (!session?.currentGame) return;
 
     try {
       await endSoloGame(session);

@@ -1,7 +1,7 @@
 import { getFriendlyErrorMessage } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
@@ -23,35 +23,21 @@ export const SignInComponent = () => {
     username: '',
     password: '',
   });
-  const [isFormValid, setIsFormValid] = useState(true);
+  const isFormValid =
+    formValues.username.trim() !== '' && formValues.password.trim() !== '';
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    validateForm();
-  }, [formValues]);
 
   const handleChange = (key: string, value: string) => {
     setFormValues({ ...formValues, [key]: value });
   };
 
-  const validateForm = () => {
-    if (
-      formValues.username.trim() !== '' &&
-      formValues.password.trim() !== ''
-    ) {
-      setIsFormValid(true);
-    } else {
-      setIsFormValid(false);
-    }
-  };
-
   const handleSubmit = async () => {
     try {
       setErrorMessage(null);
-      const user = await signIn(
-        formValues.username,
-        formValues.password,
-      );
+      const user = await signIn({
+        identifier: formValues.username,
+        password: formValues.password,
+      });
       setUser(user);
       router.push('/');
     } catch (error: any) {

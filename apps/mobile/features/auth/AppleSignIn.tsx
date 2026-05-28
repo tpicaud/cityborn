@@ -31,11 +31,11 @@ export const SignInWithAppleButton = () => {
       const userDetails = extractAppleUserDetails(credential);
 
       // Authentification via l'API
-      const user = await signInWithApple(
-        credential.identityToken,
-        credential.user,
-        userDetails,
-      );
+      const user = await signInWithApple({
+        identity_token: credential.identityToken,
+        apple_user_id: credential.user,
+        details: userDetails,
+      });
 
       setUser(user);
       router.push('/');

@@ -1,4 +1,11 @@
-import { throwOnError, type User } from '@cityborn/api';
+import {
+  type CreateUser,
+  type SignIn,
+  type SignInWithApple,
+  type SignInWithGoogle,
+  throwOnError,
+  type User,
+} from '@cityborn/api';
 import { assertOk, client, tokenStorage } from './client';
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -9,21 +16,23 @@ export async function getCurrentUser(): Promise<User | null> {
   return result.status === 200 ? result.body : null;
 }
 
-export async function signIn(identifier: string, password: string): Promise<User> {
-  const result = await client.auth.signIn({ body: { identifier, password } });
+export async function signIn(data: SignIn): Promise<User> {
+  const result = await client.auth.signIn({ body: data });
   assertOk(result);
-  await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+  await tokenStorage.setTokens(
+    result.body.access_token,
+    result.body.refresh_token,
+  );
   return result.body.user;
 }
 
-export async function signUp(data: {
-  username: string;
-  email: string;
-  password: string;
-}): Promise<User> {
+export async function signUp(data: CreateUser): Promise<User> {
   const result = await client.auth.signUp({ body: data });
   assertOk(result);
-  await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+  await tokenStorage.setTokens(
+    result.body.access_token,
+    result.body.refresh_token,
+  );
   return result.body.user;
 }
 
@@ -31,23 +40,23 @@ export async function signOut(): Promise<void> {
   await tokenStorage.clearTokens();
 }
 
-export async function signInWithGoogle(idToken: string): Promise<User> {
-  const result = await client.auth.signInWithGoogle({ body: { idToken } });
+export async function signInWithGoogle(data: SignInWithGoogle): Promise<User> {
+  const result = await client.auth.signInWithGoogle({ body: data });
   assertOk(result);
-  await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+  await tokenStorage.setTokens(
+    result.body.access_token,
+    result.body.refresh_token,
+  );
   return result.body.user;
 }
 
-export async function signInWithApple(
-  identity_token: string,
-  apple_user_id: string,
-  details?: { email: string; family_name: string; given_name: string },
-): Promise<User> {
-  const result = await client.auth.signInWithApple({
-    body: { identity_token, apple_user_id, details },
-  });
+export async function signInWithApple(data: SignInWithApple): Promise<User> {
+  const result = await client.auth.signInWithApple({ body: data });
   assertOk(result);
-  await tokenStorage.setTokens(result.body.access_token, result.body.refresh_token);
+  await tokenStorage.setTokens(
+    result.body.access_token,
+    result.body.refresh_token,
+  );
   return result.body.user;
 }
 

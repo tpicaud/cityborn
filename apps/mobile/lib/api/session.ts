@@ -1,8 +1,14 @@
-import { buildEndSoloGameBody, throwOnError, type Game, type Session, type SessionMode } from '@cityborn/api';
+import {
+  buildEndSoloGameBody,
+  type CreateSession,
+  type Game,
+  type Session,
+  throwOnError,
+} from '@cityborn/api';
 import { assertOk, client } from './client';
 
-export async function createSession(mode: SessionMode): Promise<Session> {
-  const result = await client.session.createSession({ body: { mode } });
+export async function createSession(data: CreateSession): Promise<Session> {
+  const result = await client.session.createSession({ body: data });
   assertOk(result);
   return result.body;
 }

@@ -27,7 +27,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   useEffect(() => {
     const init = async () => {
-      const result = await createSession(SessionMode.SOLO);
+      const result = await createSession({ mode: SessionMode.SOLO });
       if (!result.ok) return invokeError(result.error);
       const session: Session = result.data;
       session.hostID = localPlayerID;

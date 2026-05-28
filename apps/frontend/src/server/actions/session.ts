@@ -1,14 +1,14 @@
 'use server';
 
-import { buildEndSoloGameBody, type Game, type Session, type SessionMode } from '@cityborn/api';
+import { buildEndSoloGameBody, type CreateSession, type Game, type Session } from '@cityborn/api';
 import { type ActionResult, toActionResult } from '@/lib/actionUtils';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function createSession(
-  mode: SessionMode,
+  data: CreateSession,
 ): Promise<ActionResult<Session>> {
   const client = await getServerClient();
-  const result = await client.session.createSession({ body: { mode } });
+  const result = await client.session.createSession({ body: data });
   return toActionResult(result);
 }
 

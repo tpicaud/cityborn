@@ -30,7 +30,7 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const user = await signInWithGoogle(idToken);
+        const user = await signInWithGoogle({ idToken });
 
         setUser(user);
         router.push('/');

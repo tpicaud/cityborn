@@ -4,10 +4,9 @@ import {
   emptyResponseSchema,
   IdParamSchema,
 } from '../schemas/common.schema.js';
-import { GameSchema } from '../schemas/game.schema.js';
+import { GameSchema, GameStateSchema } from '../schemas/game.schema.js';
 import {
   CreateSessionSchema,
-  EndSoloGameSchema,
   SessionSchema,
 } from '../schemas/session.schema.js';
 
@@ -36,7 +35,11 @@ export const sessionContract = c.router(
     endSoloGame: {
       method: 'POST',
       path: '/end-solo-game',
-      body: EndSoloGameSchema,
+      body: SessionSchema.extend({
+        currentGame: GameSchema.extend({
+          state: GameStateSchema.omit({ guessObjects: true }),
+        }),
+      }),
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },

@@ -25,7 +25,7 @@ export default function Play() {
       setOpenConnectionAlert(true);
     } else {
       try {
-        const session = await createSession(SessionMode.MULTI);
+        const session = await createSession({ mode: SessionMode.MULTI });
         router.navigate(`/session/multi/${session.id}`);
       } catch (error: any) {
         invokeError(error);

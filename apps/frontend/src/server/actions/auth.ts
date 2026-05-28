@@ -1,5 +1,6 @@
 'use server';
 
+import type { CreateUser, SignIn, SignInWithGoogle } from '@cityborn/api';
 import {
   expireTokensInCookies,
   storeTokensInCookies,
@@ -7,45 +8,34 @@ import {
 import { type ActionResult, toActionResult } from '@/lib/actionUtils';
 import { getServerClient } from '@/lib/serverClient';
 
-type AuthTokens = { access_token: string; refresh_token: string };
-
-export async function signUp(
-  username: string,
-  email: string,
-  password: string,
-): Promise<ActionResult<void>> {
+export async function signUp(data: CreateUser): Promise<ActionResult<void>> {
   const client = await getServerClient();
-  const result = await client.auth.signUp({
-    body: { username, email, password },
-  });
+  const result = await client.auth.signUp({ body: data });
   const actionResult = toActionResult(result);
   if (!actionResult.ok) return actionResult;
-  const { access_token, refresh_token } = result.body as AuthTokens;
+  const { access_token, refresh_token } = actionResult.data;
   await storeTokensInCookies(access_token, refresh_token);
   return { ok: true, data: undefined };
 }
 
-export async function signIn(
-  identifier: string,
-  password: string,
-): Promise<ActionResult<void>> {
+export async function signIn(data: SignIn): Promise<ActionResult<void>> {
   const client = await getServerClient();
-  const result = await client.auth.signIn({ body: { identifier, password } });
+  const result = await client.auth.signIn({ body: data });
   const actionResult = toActionResult(result);
   if (!actionResult.ok) return actionResult;
-  const { access_token, refresh_token } = result.body as AuthTokens;
+  const { access_token, refresh_token } = actionResult.data;
   await storeTokensInCookies(access_token, refresh_token);
   return { ok: true, data: undefined };
 }
 
 export async function signInWithGoogle(
-  idToken: string,
+  data: SignInWithGoogle,
 ): Promise<ActionResult<void>> {
   const client = await getServerClient();
-  const result = await client.auth.signInWithGoogle({ body: { idToken } });
+  const result = await client.auth.signInWithGoogle({ body: data });
   const actionResult = toActionResult(result);
   if (!actionResult.ok) return actionResult;
-  const { access_token, refresh_token } = result.body as AuthTokens;
+  const { access_token, refresh_token } = actionResult.data;
   await storeTokensInCookies(access_token, refresh_token);
   return { ok: true, data: undefined };
 }

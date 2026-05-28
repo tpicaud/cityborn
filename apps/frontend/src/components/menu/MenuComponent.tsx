@@ -35,7 +35,7 @@ export default function MenuComponent({
     if (!user) {
       setOpenConnectionAlert(true);
     } else {
-      const result = await createSession(SessionMode.MULTI);
+      const result = await createSession({ mode: SessionMode.MULTI });
       if (!result.ok) return invokeError(result.error);
       const session: Session = result.data;
       router.push(`/session/multi/${session.id}`);

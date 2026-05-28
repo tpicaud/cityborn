@@ -19,7 +19,7 @@ export const SignInComponent = () => {
     }) => {
       try {
         setIsGoogleSignInFormSubmitting(true);
-        const result = await signInWithGoogle(response.credential);
+        const result = await signInWithGoogle({ idToken: response.credential });
         if (!result.ok) return invokeError(result.error);
         window.location.reload();
       } finally {
@@ -52,7 +52,7 @@ export const SignInComponent = () => {
     try {
       setIsSignInFormSubmitting(true);
       e.preventDefault();
-      const result = await signIn(formValues.username, formValues.password);
+      const result = await signIn({ identifier: formValues.username, password: formValues.password });
       if (!result.ok) return invokeError(result.error);
       window.location.reload();
     } finally {
