@@ -10,13 +10,7 @@ export const ApiErrorSchema = z.object({
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export function isApiError(error: unknown): error is ApiError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    'statusCode' in error &&
-    'message' in error
-  );
+  return ApiErrorSchema.safeParse(error).success;
 }
 
 export const commonErrorResponses = {

@@ -1,6 +1,4 @@
-import { type ApiError, ApiErrorSchema, ErrorCode } from '@cityborn/api';
-
-type HttpSuccessStatus = 200 | 201 | 202 | 203 | 204 | 205 | 206;
+import { type ApiError, ApiErrorSchema, ErrorCode, type HttpSuccessStatus } from '@cityborn/api';
 
 export type ActionResult<T> =
   | { ok: true; data: T }

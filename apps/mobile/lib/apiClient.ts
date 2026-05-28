@@ -6,6 +6,7 @@ import {
   ErrorCode,
   type Game,
   type GameRecord,
+  type HttpSuccessStatus,
   type Session,
   type SessionMode,
   type User,
@@ -31,7 +32,7 @@ function throwOnError(result: { status: number; body: unknown }): void {
 
 type OkResult<T extends { status: number; body: unknown }> = Extract<
   T,
-  { status: 200 | 201 | 202 | 203 | 204 }
+  { status: HttpSuccessStatus }
 >;
 
 function assertOk<T extends { status: number; body: unknown }>(
