@@ -1,13 +1,13 @@
 import * as Ariakit from '@ariakit/react';
 import Papa from 'papaparse';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
+  saveGuessObject,
   searchGuessObjectByExternalId,
   searchGuessObjectByName,
-} from '../guess-object-builder/action';
+} from '@/server/actions/guess-object';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
-import { saveGuessObject } from './action';
 
 interface Objects {
   name: string;
@@ -102,23 +102,28 @@ export function ImportCSVPopup({
       if (cancelImportRef.current) break;
 
       try {
-        const resulsts = await searchGuessObjectByName(obj.name);
-        const candidate_obj = resulsts[0];
+        const searchResult = await searchGuessObjectByName(obj.name);
+        if (!searchResult.ok) throw new Error(searchResult.error.message);
+        const candidate_obj = searchResult.data[0];
 
-        const full_obj = await searchGuessObjectByExternalId(
-          candidate_obj.source?.external_id!,
-        );
+        const external_id = candidate_obj.source?.external_id;
+        if (!external_id) throw new Error('No external_id found');
+        const candidateResult = await searchGuessObjectByExternalId(external_id);
+        if (!candidateResult.ok) throw new Error(candidateResult.error.message);
+        const full_obj = candidateResult.data;
+        if (!full_obj) throw new Error('Object not found');
         if (obj.description) full_obj.short_description = obj.description;
 
         if (!full_obj.world_location_id)
           throw new Error('No world location found');
 
-        const id = await saveGuessObject({
-          world_location_id: full_obj.world_location_id?.toString()!,
+        const saveResult = await saveGuessObject({
+          world_location_id: full_obj.world_location_id.toString(),
           ...full_obj,
         });
+        if (!saveResult.ok) throw new Error(saveResult.error.message);
 
-        await addOrUpdateGuessObjectToCategory(id);
+        await addOrUpdateGuessObjectToCategory(saveResult.data);
 
         setImportRecap((prev) => {
           const newRecap = {

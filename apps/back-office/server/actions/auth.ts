@@ -1,8 +1,7 @@
-// src/app/login/action.ts
 'use server';
 
 import { redirect } from 'next/navigation';
-import { setSession } from '@/lib/auth';
+import { deleteSession, setSession } from '@/lib/auth';
 import {
   checkRateLimit,
   recordFailedAttempt,
@@ -10,7 +9,6 @@ import {
 } from '@/lib/rate-limit';
 
 export async function login(formData: FormData) {
-  // Check rate limit first
   const rateLimit = await checkRateLimit();
 
   if (rateLimit.isBlocked) {
@@ -28,7 +26,6 @@ export async function login(formData: FormData) {
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (password === adminPassword) {
-    // Reset attempts on successful login
     await resetAttempts();
 
     await setSession({
@@ -39,7 +36,6 @@ export async function login(formData: FormData) {
     redirect('/dashboard');
   }
 
-  // Record failed attempt
   await recordFailedAttempt();
 
   const newRateLimit = await checkRateLimit();
@@ -52,4 +48,8 @@ export async function login(formData: FormData) {
     success: false,
     error: `Mot de passe incorrect${remainingText}`,
   };
+}
+
+export async function logout() {
+  await deleteSession();
 }

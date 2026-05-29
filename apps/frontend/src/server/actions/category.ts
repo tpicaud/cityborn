@@ -1,7 +1,7 @@
 'use server';
 
 import type { Category } from '@cityborn/api';
-import { type ActionResult, toActionResult } from '@/lib/actionUtils';
+import { type ActionResult, toActionResult } from '@cityborn/api';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function fetchCategories(): Promise<ActionResult<Category[]>> {

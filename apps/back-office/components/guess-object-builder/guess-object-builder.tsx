@@ -2,11 +2,11 @@
 
 import type { GuessObjectCandidate, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
-import { getGuessObject } from '../category-builder/action';
 import {
+  getGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
-} from './action';
+} from '@/server/actions/guess-object';
 import GuessObjectCard from './guess-object-card';
 import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';
@@ -28,10 +28,14 @@ export function GuessObjectBuilder({
     const updateGuessObjectCandidate = async () => {
       if (guessObjectCandidate && guessObjectCandidate.id) {
         try {
-          const fullObject = await getGuessObject(guessObjectCandidate.id, [
+          const result = await getGuessObject(guessObjectCandidate.id, [
             'world_location',
           ]);
-          setGuessObjectCandidate(fullObject || guessObjectCandidate);
+          if (result && result.ok) {
+            setGuessObjectCandidate(result.data);
+          } else {
+            setGuessObjectCandidate(guessObjectCandidate);
+          }
         } catch {
           setGuessObjectCandidate(guessObjectCandidate);
         }
@@ -56,9 +60,11 @@ export function GuessObjectBuilder({
       setIsLoadingFullObject(true);
       if (!guessObjectCandidatePreview?.source?.external_id) return;
 
-      const fullCandidate = await searchGuessObjectByExternalId(
+      const result = await searchGuessObjectByExternalId(
         guessObjectCandidatePreview.source?.external_id,
       );
+      if (!result.ok) throw new Error(result.error.message);
+      const fullCandidate = result.data;
 
       if (fullCandidate) {
         setGuessObjectCandidate({
@@ -81,10 +87,12 @@ export function GuessObjectBuilder({
       setIsLoadingLocation(true);
       if (!world_location?.id) return;
 
-      const fullCandidate = await searchWorldLocationById(
+      const result = await searchWorldLocationById(
         world_location.id,
         world_location.osm_type,
       );
+      if (!result.ok) throw new Error(result.error.message);
+      const fullCandidate = result.data;
 
       if (fullCandidate) {
         updateGuessObjectCandidate({

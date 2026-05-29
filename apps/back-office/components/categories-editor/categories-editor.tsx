@@ -4,9 +4,9 @@ import type { Category, CreateCategory } from '@cityborn/api';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { createCategory, getAllCategories } from '@/server/actions/category';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
-import { createCategory, getAllCategories } from './action';
 import { CategoriesList } from './categories-list';
 import { CreateCategoryDialog } from './create-category-popup';
 
@@ -30,8 +30,9 @@ export function CategoriesEditor() {
   async function handleFetchCategories() {
     try {
       setIsLoading(true);
-      const categories = await getAllCategories();
-      setCategories(categories);
+      const result = await getAllCategories();
+      if (!result.ok) throw new Error(result.error.message);
+      setCategories(result.data);
     } catch (error) {
       alert('Erreur lors de la récupération des catégories');
       console.error(error);
@@ -43,7 +44,9 @@ export function CategoriesEditor() {
   async function handleCreateCategory(newCategory: CreateCategory) {
     try {
       setIsLoading(true);
-      const category = await createCategory(newCategory);
+      const result = await createCategory(newCategory);
+      if (!result.ok) throw new Error(result.error.message);
+      const category = result.data;
       categories.push(category);
       await onCategorySelect(category);
     } catch (error) {

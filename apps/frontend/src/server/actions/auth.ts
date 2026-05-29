@@ -5,7 +5,7 @@ import {
   expireTokensInCookies,
   storeTokensInCookies,
 } from '@/app/api/auth/utils';
-import { type ActionResult, toActionResult } from '@/lib/actionUtils';
+import { type ActionResult, toActionResult } from '@cityborn/api';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function signUp(data: CreateUser): Promise<ActionResult<void>> {

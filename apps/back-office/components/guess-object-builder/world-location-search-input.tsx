@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { searchWorldLocationByName } from './action';
+import { searchWorldLocationByName } from '@/server/actions/guess-object';
 
 export function WorldLocationSearchInput({
   type = 'text',
@@ -42,8 +42,9 @@ export function WorldLocationSearchInput({
 
     const timeoutId = setTimeout(async () => {
       try {
-        const candidates = await searchWorldLocationByName(searchValue);
-        setMatches(candidates);
+        const result = await searchWorldLocationByName(searchValue);
+        if (!result.ok) throw new Error(result.error.message);
+        setMatches(result.data);
       } catch (error) {
         console.error('Search error:', error);
         setMatches([]);
