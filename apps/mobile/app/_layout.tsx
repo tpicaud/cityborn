@@ -53,10 +53,7 @@ export default function RootLayout() {
     <ErrorProvider ErrorDialogComponent={ErrorDialog}>
       <SafeAreaProvider>
         <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-          <AuthProvider
-            initialValue={user}
-            getCurrentUser={getCurrentUser}
-          >
+          <AuthProvider initialValue={user} getCurrentUser={getCurrentUser}>
             <StatusBar hidden={true} />
             <Stack
               screenOptions={{

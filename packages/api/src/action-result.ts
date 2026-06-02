@@ -1,6 +1,6 @@
-import { ApiErrorSchema, type ApiError } from './schemas/api-error.schema.js';
 import { ErrorCode } from './errors/error-codes.js';
-import { type HttpSuccessStatus } from './types/http.js';
+import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema.js';
+import type { HttpSuccessStatus } from './types/http.js';
 
 export type ActionResult<T> =
   | { ok: true; data: T }

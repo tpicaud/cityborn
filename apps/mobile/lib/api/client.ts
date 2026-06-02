@@ -1,4 +1,8 @@
-import { createApiClient, throwOnError, type HttpSuccessStatus } from '@cityborn/api';
+import {
+  createApiClient,
+  type HttpSuccessStatus,
+  throwOnError,
+} from '@cityborn/api';
 import { tokenStorage } from '../tokenStorage';
 import { getBaseUrl } from '../utils';
 

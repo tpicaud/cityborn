@@ -11,7 +11,9 @@ import {
 import { WsException } from '@nestjs/websockets';
 
 function toPartialApiError(value: unknown): Partial<ApiError> | null {
-  return value && typeof value === 'object' ? (value as Partial<ApiError>) : null;
+  return value && typeof value === 'object'
+    ? (value as Partial<ApiError>)
+    : null;
 }
 
 @Catch()

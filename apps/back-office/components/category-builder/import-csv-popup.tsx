@@ -108,7 +108,8 @@ export function ImportCSVPopup({
 
         const external_id = candidate_obj.source?.external_id;
         if (!external_id) throw new Error('No external_id found');
-        const candidateResult = await searchGuessObjectByExternalId(external_id);
+        const candidateResult =
+          await searchGuessObjectByExternalId(external_id);
         if (!candidateResult.ok) throw new Error(candidateResult.error.message);
         const full_obj = candidateResult.data;
         if (!full_obj) throw new Error('Object not found');

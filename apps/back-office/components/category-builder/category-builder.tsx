@@ -8,10 +8,7 @@ import type {
 } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import {
-  deleteCategory,
-  saveCategory,
-} from '@/server/actions/category';
+import { deleteCategory, saveCategory } from '@/server/actions/category';
 import {
   getGuessObject,
   patchGuessObject,
@@ -38,7 +35,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
   const filteredGuessObjects = useMemo(() => {
-    if (category && category.guessObjects) {
+    if (category?.guessObjects) {
       return category.guessObjects.filter((category) =>
         category.name.toLowerCase().includes(searchObjectValue.toLowerCase()),
       );

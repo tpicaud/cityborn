@@ -1,11 +1,11 @@
 'use server';
 
 import type { CreateUser, SignIn, SignInWithGoogle } from '@cityborn/api';
+import { type ActionResult, toActionResult } from '@cityborn/api';
 import {
   expireTokensInCookies,
   storeTokensInCookies,
 } from '@/app/api/auth/utils';
-import { type ActionResult, toActionResult } from '@cityborn/api';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function signUp(data: CreateUser): Promise<ActionResult<void>> {

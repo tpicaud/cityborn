@@ -52,7 +52,10 @@ export const SignInComponent = () => {
     try {
       setIsSignInFormSubmitting(true);
       e.preventDefault();
-      const result = await signIn({ identifier: formValues.username, password: formValues.password });
+      const result = await signIn({
+        identifier: formValues.username,
+        password: formValues.password,
+      });
       if (!result.ok) return invokeError(result.error);
       window.location.reload();
     } finally {
