@@ -11,6 +11,7 @@ export const PublicUserSchema = z.object({
 export const UserSchema = PublicUserSchema.extend({
   email: z.string().email(),
   type: AccountTypeSchema,
+  is_verified: z.boolean(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   relations: z
@@ -53,6 +54,10 @@ export const AuthResponseSchema = z.object({
   user: UserSchema,
 });
 
+export const VerifyEmailDataSchema = z.object({
+  verification_token: z.string(),
+});
+
 export type AccountType = z.infer<typeof AccountTypeSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type User = z.infer<typeof UserSchema>;
@@ -61,3 +66,4 @@ export type SignIn = z.infer<typeof SignInSchema>;
 export type SignInWithGoogle = z.infer<typeof SignInWithGoogleSchema>;
 export type SignInWithApple = z.infer<typeof SignInWithAppleSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type VerifyEmailData = z.infer<typeof VerifyEmailDataSchema>;

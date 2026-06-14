@@ -37,7 +37,7 @@ export class OptionalAuthGuard implements CanActivate {
 
     const fullUser = await this.userService.findById(user.id);
 
-    request['user'] = fullUser;
+    request['user'] = fullUser?.isVerified ? fullUser : undefined;
     return true;
   }
 }

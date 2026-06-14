@@ -22,6 +22,7 @@ export class UserMapper {
       type: prismaUser.type as AccountType,
       email: prismaUser.email,
       username: prismaUser.username,
+      isVerified: prismaUser.isVerified,
       createdAt: prismaUser.createdAt.toISOString(),
       updatedAt: prismaUser.updatedAt
         ? prismaUser.updatedAt.toISOString()

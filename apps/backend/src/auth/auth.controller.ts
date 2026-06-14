@@ -1,5 +1,5 @@
 import { contract, User } from '@cityborn/api';
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
@@ -15,11 +15,13 @@ const publicAuthRoutes = c.router({
   signIn: contract.auth.signIn,
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
+  verifyEmail: contract.auth.verifyEmail,
 });
 
 const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
+  resendVerificationEmail: contract.auth.resendVerificationEmail,
 });
 
 const refreshRoutes = c.router({
@@ -49,6 +51,10 @@ export class AuthController {
         status: 200 as const,
         body: await this.authService.signInWithApple(body, visitorId),
       }),
+      verifyEmail: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.authService.verifyEmail(body),
+      }),
     });
   }
 
@@ -64,10 +70,15 @@ export class AuthController {
         await this.authService.deleteUser(user);
         return { status: 200 as const, body: {} };
       },
+      resendVerificationEmail: async () => {
+        await this.authService.resendVerificationEmail(user);
+        return { status: 200 as const, body: {} };
+      },
     });
   }
 
   @TsRestHandler(refreshRoutes)
+  @Post('refresh')
   @UseGuards(RefreshGuard)
   async refreshHandler(@CurrentUser() user: User) {
     return tsRestHandler(refreshRoutes, {

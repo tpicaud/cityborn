@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import {
   AccountType,
   type CreateGameRecord,
@@ -78,6 +79,79 @@ export class UserService {
         message: 'Email already taken',
       });
     }
+  }
+
+  async createEmailVerificationToken(
+    userId: string,
+    cooldownMs?: number,
+  ): Promise<string> {
+    if (cooldownMs) {
+      const existingToken = await this.prisma.emailVerificationToken.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (
+        existingToken &&
+        Date.now() - existingToken.createdAt.getTime() < cooldownMs
+      ) {
+        throw new BadRequestException({
+          code: ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON,
+          message: 'Please wait before requesting another verification email',
+        });
+      }
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.$transaction([
+      this.prisma.emailVerificationToken.deleteMany({
+        where: { userId },
+      }),
+      this.prisma.emailVerificationToken.create({
+        data: {
+          token,
+          expiresAt,
+          user: {
+            connect: { id: userId },
+          },
+        },
+      }),
+    ]);
+
+    return token;
+  }
+
+  async verifyEmail(verificationToken: string): Promise<PrismaUser> {
+    const token = await this.prisma.emailVerificationToken.findUnique({
+      where: { token: verificationToken },
+    });
+
+    if (!token || token.expiresAt < new Date()) {
+      if (token) {
+        await this.prisma.emailVerificationToken.delete({
+          where: { id: token.id },
+        });
+      }
+
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
+        message: 'Email verification token is invalid or expired',
+      });
+    }
+
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: token.userId },
+        data: { isVerified: true },
+      }),
+      this.prisma.emailVerificationToken.deleteMany({
+        where: { userId: token.userId },
+      }),
+    ]);
+
+    return user;
   }
 
   ///////////////

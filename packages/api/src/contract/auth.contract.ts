@@ -7,10 +7,12 @@ import {
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  PublicUserSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
   UserSchema,
+  VerifyEmailDataSchema,
 } from '../schemas/user.schema.js';
 
 const c = initContract();
@@ -51,6 +53,18 @@ export const authContract = c.router(
       path: '/sign-in-with-apple',
       body: SignInWithAppleSchema,
       responses: { 200: AuthResponseSchema, ...commonErrorResponses },
+    },
+    resendVerificationEmail: {
+      method: 'POST',
+      path: '/resend-verification-email',
+      body: emptyRequestBodySchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
+    verifyEmail: {
+      method: 'POST',
+      path: '/verify-email',
+      body: VerifyEmailDataSchema,
+      responses: { 200: PublicUserSchema, ...commonErrorResponses },
     },
     deleteUser: {
       method: 'POST',

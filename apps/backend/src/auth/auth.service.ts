@@ -2,16 +2,17 @@ import {
   type AuthResponse,
   type CreateUser,
   ErrorCode,
+  PublicUser,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  VerifyEmailData,
 } from '@cityborn/api';
 import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,6 +22,8 @@ import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
+import { MailService } from '../mail/mail.service';
+import { buildVerificationEmail } from '../mail/templates/verification-email.template';
 import { UserMapper } from '../user/user.mapper';
 import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
@@ -28,13 +31,12 @@ import { verifyAppleIdToken } from './utils';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly eventService: EventService,
+    private readonly mailService: MailService,
     @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
   ) {}
 
@@ -58,6 +60,8 @@ export class AuthService {
         code: ErrorCode.UNKNOWN_ERROR,
         message: `Error creating user in database`,
       });
+
+    await this.sendVerificationEmail(user);
 
     // Create JWT
     const access_token = await this.generateToken(
@@ -355,7 +359,59 @@ export class AuthService {
     await this.userService.deleteUser(user.id);
   }
 
+  async resendVerificationEmail(user?: User): Promise<void> {
+    if (!user)
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User not found`,
+      });
+
+    const fullUser = await this.userService.findById(user.id);
+    if (!fullUser)
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User not found`,
+      });
+
+    if (fullUser.isVerified) return;
+
+    await this.sendVerificationEmail(fullUser, 3 * 60 * 1000);
+  }
+
+  async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
+    const user = await this.userService.verifyEmail(
+      verifyEmailData.verification_token,
+    );
+
+    return UserMapper.toPublicUser(user);
+  }
+
   // Auxiliary
+  private async sendVerificationEmail(
+    user: {
+      id: string;
+      email: string;
+      username: string;
+    },
+    resendCooldownMs?: number,
+  ): Promise<void> {
+    const verificationToken =
+      await this.userService.createEmailVerificationToken(
+        user.id,
+        resendCooldownMs,
+      );
+    await this.mailService.sendMail(
+      buildVerificationEmail({
+        email: user.email,
+        frontendUrl:
+          this.configService.get<string>('FRONTEND_URL') ??
+          'http://localhost:3000',
+        verificationToken,
+        username: user.username,
+      }),
+    );
+  }
+
   private async generateToken(
     type: 'access' | 'refresh',
     id: string,
@@ -423,9 +479,7 @@ export class AuthService {
       const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
       username = `${sanitized}${suffix}`;
 
-      exists = (await this.userService.findByIdentifier(username))
-        ? true
-        : false;
+      exists = !!(await this.userService.findByIdentifier(username));
     }
 
     return username;
