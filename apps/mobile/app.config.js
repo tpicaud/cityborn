@@ -84,6 +84,7 @@ export default {
     plugins: [
       'expo-router',
       ['./expo-plugins/withGradleProperties'],
+      ['./expo-plugins/withModularHeaders'],
       ['expo-apple-authentication'],
       [
         'expo-build-properties',
@@ -93,9 +94,7 @@ export default {
             targetSdkVersion: 36,
             buildToolsVersion: '36.0.0',
           },
-          ios: {
-            useModularHeaders: true,
-          },
+          ios: {},
         },
       ],
       [
