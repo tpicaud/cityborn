@@ -1,6 +1,7 @@
-import { ErrorCode, type ErrorPayload } from '@cityborn/errors';
+import { type ApiError, ErrorCode } from '@cityborn/api';
 import {
   type ArgumentsHost,
+  BadRequestException,
   Catch,
   type ExceptionFilter,
   HttpException,
@@ -9,11 +10,17 @@ import {
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 
+function toPartialApiError(value: unknown): Partial<ApiError> | null {
+  return value && typeof value === 'object'
+    ? (value as Partial<ApiError>)
+    : null;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctxType = host.getType<'http' | 'ws'>();
 
     if (ctxType === 'http') {
@@ -25,78 +32,60 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  private handleHttpContextError(exception: any, host: ArgumentsHost) {
+  private buildPayload(exception: unknown, statusCode: number): ApiError {
+    const errorObj =
+      exception instanceof HttpException
+        ? toPartialApiError(exception.getResponse())
+        : exception instanceof WsException
+          ? toPartialApiError(exception.getError())
+          : null;
+
+    const fallbackCode =
+      exception instanceof BadRequestException
+        ? ErrorCode.BAD_REQUEST
+        : ErrorCode.UNKNOWN_ERROR;
+
+    return {
+      statusCode,
+      code: errorObj?.code ?? fallbackCode,
+      message:
+        errorObj?.message ??
+        (exception instanceof Error ? exception.message : 'Unexpected error'),
+    };
+  }
+
+  private logPayload(prefix: string, payload: ApiError, exception: unknown) {
+    if (payload.code === ErrorCode.UNKNOWN_ERROR) {
+      this.logger.error(
+        `${prefix}: ${payload.code} - ${payload.message}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else {
+      this.logger.warn(`${prefix}: ${payload.code} - ${payload.message}`);
+    }
+  }
+
+  private handleHttpContextError(exception: unknown, host: ArgumentsHost) {
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const error: any =
-      exception instanceof HttpException ? exception.getResponse() : null;
+    const payload = this.buildPayload(exception, status);
+    this.logPayload('HTTP Error', payload, exception);
 
-    const payload: ErrorPayload = {
-      statusCode: status,
-      code: error?.code ?? ErrorCode.UNKNOWN_ERROR,
-      message: error?.message ?? exception.message ?? 'Unexpected error',
-    };
-
-    if (payload.code === ErrorCode.UNKNOWN_ERROR) {
-      this.logger.error(
-        `HTTP Error: ${payload.code} - ${payload.message}`,
-        exception.stack,
-      );
-    } else {
-      this.logger.warn(`HTTP Error: ${payload.code} - ${payload.message}`);
-    }
-
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-
-    response.status(payload.statusCode).json({
-      ...payload,
-      //timestamp: new Date().toISOString(),
-    });
+    host.switchToHttp().getResponse().status(payload.statusCode).json(payload);
   }
 
-  private handleWsContextError(exception: any, host: ArgumentsHost) {
-    const client = host.switchToWs().getClient();
-    let payload: ErrorPayload;
+  private handleWsContextError(exception: unknown, host: ArgumentsHost) {
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (exception instanceof WsException) {
-      const error: any = exception.getError();
-      payload = {
-        statusCode: error?.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR,
-        code: error?.code ?? ErrorCode.UNKNOWN_ERROR,
-        message: error?.message ?? 'Unexpected error',
-      };
-    } else if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const error: any = exception.getResponse();
-      payload = {
-        statusCode: status,
-        code: error?.code ?? ErrorCode.UNKNOWN_ERROR,
-        message: error?.message ?? 'Unexpected error',
-      };
-    } else {
-      payload = {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: exception.message ?? 'Unexpected error',
-      };
-    }
+    const payload = this.buildPayload(exception, status);
+    this.logPayload('WS Error', payload, exception);
 
-    if (payload.code === ErrorCode.UNKNOWN_ERROR) {
-      this.logger.error(
-        `WS Error: ${payload.code} - ${payload.message}`,
-        exception.stack,
-      );
-    } else {
-      this.logger.warn(`WS Error: ${payload.code} - ${payload.message}`);
-    }
-
-    client.emit('error', {
-      ...payload,
-      //timestamp: new Date().toISOString(),
-    });
+    host.switchToWs().getClient().emit('error', payload);
   }
 }

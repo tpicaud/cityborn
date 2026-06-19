@@ -1,0 +1,25 @@
+{
+  "name": "@cityborn/client",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "type": "module",
+  "author": "Tom Picaud",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "format": "biome check --write .",
+    "check": "biome check ."
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@cityborn/api": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,15 +1,14 @@
-import { useError } from '@cityborn/contexts';
-import { ApiError } from '@cityborn/errors';
 import {
   type GameConfig,
   type Guess,
   type Session,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { apiClient } from '@/lib/apiClient';
+import { fetchSession } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 import { useSocket } from './useSocket';
 
@@ -38,15 +37,12 @@ export function useMultiSession(
 
   // Fetch session on init
   useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const session: Session = await apiClient.fetchSession(sessionID);
-        setSession(session);
-      } catch (error: any) {
-        invokeError(error);
-      }
+    const loadSession = async () => {
+      const result = await fetchSession(sessionID);
+      if (!result.ok) return invokeError(result.error);
+      setSession(result.data);
     };
-    fetchSession();
+    loadSession();
   }, []);
 
   // Manage socket disconnection
@@ -137,13 +133,11 @@ export function useMultiSession(
             setConnected(true);
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -163,13 +157,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -190,13 +182,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -216,13 +206,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -244,13 +232,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -270,13 +256,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -296,13 +280,11 @@ export function useMultiSession(
           if (response.success) {
             resolve();
           } else {
-            reject(
-              new ApiError(
-                response.error.code,
-                response.error.message,
-                response.error.statusCode,
-              ),
-            );
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
           }
         },
       );
@@ -331,13 +313,11 @@ export function useMultiSession(
             if (response.success) {
               resolve();
             } else {
-              reject(
-                new ApiError(
-                  response.error.code,
-                  response.error.message,
-                  response.error.statusCode,
-                ),
-              );
+              reject({
+                code: response.error.code,
+                message: response.error.message,
+                statusCode: response.error.statusCode,
+              });
             }
           },
         );
@@ -366,13 +346,11 @@ export function useMultiSession(
               setConnected(true);
               resolve();
             } else {
-              reject(
-                new ApiError(
-                  response.error.code,
-                  response.error.message,
-                  response.error.statusCode,
-                ),
-              );
+              reject({
+                code: response.error.code,
+                message: response.error.message,
+                statusCode: response.error.statusCode,
+              });
             }
           },
         );

@@ -1,5 +1,6 @@
 'use client';
 
+import { isApiError } from '@cityborn/api';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,9 +8,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { signOut } from '@/server/actions/auth';
 import { SignInComponent } from './auth/SignInComponent';
 import { SignUpComponent } from './auth/SignUpComponent';
 import MenuComponent from './menu/MenuComponent';
@@ -34,7 +35,6 @@ declare global {
 
 export default function HomeComponent() {
   const { user, refreshUser } = useAuth();
-  const apiClient = useApi();
   const { invokeError } = useError();
   const [state, setState] = useState<
     'menu' | 'sign-in' | 'sign-up' | 'profile'
@@ -117,11 +117,13 @@ export default function HomeComponent() {
                 <LoadingIconButton
                   onClick={async () => {
                     try {
-                      await apiClient.signOut();
+                      await signOut();
                       await refreshUser();
                       setState('menu');
-                    } catch (error: any) {
-                      invokeError(error);
+                    } catch (error: unknown) {
+                      invokeError(
+                        isApiError(error) ? error : 'Une erreur est survenue',
+                      );
                     }
                   }}
                   sx={{

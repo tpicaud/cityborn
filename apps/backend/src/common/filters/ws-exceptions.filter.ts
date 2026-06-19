@@ -1,4 +1,4 @@
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode } from '@cityborn/api';
 import {
   type ArgumentsHost,
   Catch,

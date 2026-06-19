@@ -1,25 +1,30 @@
 'use client';
 
-import type { Category, CreateCategory } from '@cityborn/types';
+import type { Category, CreateCategory } from '@cityborn/api';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
+import { createCategory } from '@/server/actions/category';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
-import { createCategory, getAllCategories } from './action';
 import { CategoriesList } from './categories-list';
 import { CreateCategoryDialog } from './create-category-popup';
 
-export function CategoriesEditor() {
+export function CategoriesEditor({
+  initialCategories,
+}: {
+  initialCategories: Category[];
+}) {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [searchValue, setSearchValue] = useState<string>('');
 
   useEffect(() => {
-    handleFetchCategories();
-  }, []);
+    setCategories(initialCategories);
+  }, [initialCategories]);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
@@ -27,23 +32,16 @@ export function CategoriesEditor() {
     );
   }, [categories, searchValue]);
 
-  async function handleFetchCategories() {
-    try {
-      setIsLoading(true);
-      const categories = await getAllCategories();
-      setCategories(categories);
-    } catch (error) {
-      alert('Erreur lors de la récupération des catégories');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+  function handleFetchCategories() {
+    startTransition(() => router.refresh());
   }
 
   async function handleCreateCategory(newCategory: CreateCategory) {
     try {
       setIsLoading(true);
-      const category = await createCategory(newCategory);
+      const result = await createCategory(newCategory);
+      if (!result.ok) throw new Error(result.error.message);
+      const category = result.data;
       categories.push(category);
       await onCategorySelect(category);
     } catch (error) {
@@ -83,7 +81,7 @@ export function CategoriesEditor() {
             <RefreshCcw />
           </Button>
         </div>
-        {!isLoading ? (
+        {!isLoading && !isPending ? (
           !filteredCategories || filteredCategories.length === 0 ? (
             <p className="text-center text-gray-300">
               Aucunes catégories trouvées

@@ -3,13 +3,13 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { SessionMode } from '@cityborn/types';
+import { type Session, SessionMode } from '@cityborn/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { createSession, fetchSession } from '@/server/actions/session';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
@@ -24,8 +24,6 @@ export default function MenuComponent({
   const router = useRouter();
   const { user } = useAuth();
   const { invokeError } = useError();
-  const apiClient = useApi();
-
   const [code, setCode] = useState<string>('');
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
 
@@ -37,22 +35,17 @@ export default function MenuComponent({
     if (!user) {
       setOpenConnectionAlert(true);
     } else {
-      try {
-        const session = await apiClient.createSession(SessionMode.MULTI);
-        router.push(`/session/multi/${session.id}`);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await createSession({ mode: SessionMode.MULTI });
+      if (!result.ok) return invokeError(result.error);
+      const session: Session = result.data;
+      router.push(`/session/multi/${session.id}`);
     }
   };
 
   const handleJoin = async () => {
-    try {
-      await apiClient.fetchSession(code);
-      router.push(`/session/multi/${code}`);
-    } catch (error: any) {
-      invokeError(error);
-    }
+    const result = await fetchSession(code);
+    if (!result.ok) return invokeError(result.error);
+    router.push(`/session/multi/${code}`);
   };
 
   return (

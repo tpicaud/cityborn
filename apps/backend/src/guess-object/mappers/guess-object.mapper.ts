@@ -1,3 +1,4 @@
+import { GuessObject, GuessObjectCandidate } from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
@@ -7,17 +8,15 @@ import type {
   WikidataSearchResponse,
 } from 'src/wikidata/wikidata.service';
 import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
-import type { GuessObjectDto } from '../dto/guess-object.dto';
-import type { GuessObjectCandidateDto } from '../dto/search-guess-object.response.dto';
 
 type PrismaGuessObjectWithRelations = PrismaGuessObject & {
   world_location?: PrismaWorldLocation;
 };
 
 export class GuessObjectMapper {
-  static toGuessObjectDto(
+  static toGuessObject(
     prismaGuessObject: PrismaGuessObjectWithRelations,
-  ): GuessObjectDto {
+  ): GuessObject {
     return {
       id: prismaGuessObject.id,
       name: prismaGuessObject.name,
@@ -31,16 +30,14 @@ export class GuessObjectMapper {
         }) ?? undefined,
       world_location_id: prismaGuessObject.world_location_id,
       world_location: prismaGuessObject.world_location
-        ? WorldLocationMapper.toWorldLocationDto(
-            prismaGuessObject.world_location,
-          )
+        ? WorldLocationMapper.toWorldLocation(prismaGuessObject.world_location)
         : undefined,
     };
   }
 
-  static toGuessObjectCandidateDto(
+  static toGuessObjectCandidate(
     response: WikidataItemResponse,
-  ): GuessObjectCandidateDto {
+  ): GuessObjectCandidate {
     return {
       source: {
         provider: 'wikidata',
@@ -55,9 +52,9 @@ export class GuessObjectMapper {
     };
   }
 
-  static toGuessObjectCandidateFromPrismaDto(
+  static toGuessObjectCandidateFromPrisma(
     prismaGuessObject: PrismaGuessObjectWithRelations,
-  ): GuessObjectCandidateDto {
+  ): GuessObjectCandidate {
     return {
       source:
         (prismaGuessObject.source as unknown as {
@@ -70,18 +67,16 @@ export class GuessObjectMapper {
       image: prismaGuessObject.image ?? undefined,
       world_location_id: prismaGuessObject.world_location_id,
       world_location: prismaGuessObject.world_location
-        ? WorldLocationMapper.toWorldLocationDto(
-            prismaGuessObject.world_location,
-          )
+        ? WorldLocationMapper.toWorldLocation(prismaGuessObject.world_location)
         : undefined,
     };
   }
 
-  static toGuessObjectsSearchResponseDto(
+  static toGuessObjectsSearchResponse(
     response: WikidataSearchResponse,
-  ): GuessObjectCandidateDto[] {
+  ): GuessObjectCandidate[] {
     return response.results.map((item) =>
-      GuessObjectMapper.toGuessObjectCandidateDto(item),
+      GuessObjectMapper.toGuessObjectCandidate(item),
     );
   }
 }

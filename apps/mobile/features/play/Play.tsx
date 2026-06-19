@@ -1,5 +1,5 @@
+import { SessionMode } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
-import { SessionMode } from '@cityborn/types';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { createSession, fetchSession } from '@/lib/api/session';
 
 export default function Play() {
   const { user } = useAuth();
@@ -24,22 +24,16 @@ export default function Play() {
     if (!user) {
       setOpenConnectionAlert(true);
     } else {
-      try {
-        const session = await apiClient.createSession(SessionMode.MULTI);
-        router.navigate(`/session/multi/${session.id}`);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await createSession({ mode: SessionMode.MULTI });
+      if (!result.ok) return invokeError(result.error);
+      router.navigate(`/session/multi/${result.data.id}`);
     }
   };
 
   const handleJoin = async () => {
-    try {
-      await apiClient.fetchSession(joinCode);
-      router.push(`/session/multi/${joinCode}`);
-    } catch (error: any) {
-      invokeError(error);
-    }
+    const result = await fetchSession(joinCode);
+    if (!result.ok) return invokeError(result.error);
+    router.push(`/session/multi/${joinCode}`);
   };
 
   return (

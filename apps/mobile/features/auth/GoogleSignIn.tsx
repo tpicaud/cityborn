@@ -1,5 +1,5 @@
+import { ApiErrors } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import { ApiError, ErrorCode } from '@cityborn/errors';
 import {
   GoogleSignin,
   isSuccessResponse,
@@ -7,7 +7,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
-import { apiClient } from '@/lib/apiClient';
+import { signInWithGoogle } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 GoogleSignin.configure({
@@ -30,20 +30,16 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const user = await apiClient.signInWithGoogle(idToken);
-
-        setUser(user);
+        const result = await signInWithGoogle({ idToken });
+        if (!result.ok) throw result.error;
+        setUser(result.data);
         router.push('/');
       } else {
         console.log('Google sign in modal closed by user');
       }
     } catch (error) {
       console.error(error);
-      throw new ApiError(
-        ErrorCode.USER_INVALID_CREDENTIALS,
-        'Google sign in failed',
-        401,
-      );
+      throw ApiErrors.googleSignInFailed();
     }
   };
 

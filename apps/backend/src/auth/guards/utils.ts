@@ -1,4 +1,4 @@
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode } from '@cityborn/api';
 import { UnauthorizedException } from '@nestjs/common';
 import {
   JsonWebTokenError,

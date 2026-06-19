@@ -3,8 +3,8 @@
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useError } from '@/contexts/ErrorContext';
+import { signInWithGoogle, signUp } from '@/server/actions/auth';
 
 interface FormValues {
   username: string;
@@ -15,13 +15,17 @@ interface FormValues {
 
 export const SignUpComponent = () => {
   const { invokeError } = useError();
-  const apiClient = useApi();
   const [isSignUpFormSubmitting, setIsSignUpFormSubmitting] = useState(false);
 
-  /////////////////
-  // Google Auth //
-  /////////////////
   useEffect(() => {
+    const handleCredentialResponse = async (response: {
+      credential: string;
+    }) => {
+      const result = await signInWithGoogle({ idToken: response.credential });
+      if (!result.ok) return invokeError(result.error);
+      window.location.reload();
+    };
+
     if (window.google) {
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -29,24 +33,10 @@ export const SignUpComponent = () => {
       });
       window.google.accounts.id.renderButton(
         document.getElementById('googleSignInDiv'),
-        {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-        },
+        { theme: 'outline', size: 'large', text: 'signin_with' },
       );
     }
-  }, []);
-
-  const handleCredentialResponse = async (response: any) => {
-    try {
-      await apiClient.signInWithGoogle(response.credential);
-      window.location.reload();
-    } catch (error: any) {
-      invokeError(error);
-    }
-  };
-  /////////////////
+  }, [invokeError]);
 
   const [formValues, setFormValues] = React.useState<FormValues>({
     username: '',
@@ -62,17 +52,13 @@ export const SignUpComponent = () => {
     confirmPassword: false,
   });
 
-  const handleChange = (e: any) => {
-    setFormValues({
-      ...formValues,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: any) => {
-    setIsSignUpFormSubmitting(true);
-
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSignUpFormSubmitting(true);
 
     if (formValues.password !== formValues.confirmPassword) {
       invokeError('Les mots de passe ne correspondent pas');
@@ -90,14 +76,13 @@ export const SignUpComponent = () => {
     }
 
     try {
-      await apiClient.signUp(
-        formValues.username,
-        formValues.email,
-        formValues.password,
-      );
+      const result = await signUp({
+        username: formValues.username,
+        email: formValues.email,
+        password: formValues.password,
+      });
+      if (!result.ok) return invokeError(result.error);
       window.location.reload();
-    } catch (error: any) {
-      invokeError(error);
     } finally {
       setIsSignUpFormSubmitting(false);
     }
@@ -107,12 +92,7 @@ export const SignUpComponent = () => {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        maxWidth: 300,
-      }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
     >
       <Typography variant="h5" align="center">
         Inscription

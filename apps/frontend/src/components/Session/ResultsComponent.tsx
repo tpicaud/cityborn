@@ -1,6 +1,6 @@
 'use client';
 
-import { type Game, type PlayerResults, SessionMode } from '@cityborn/types';
+import { type Game, type PlayerResults, SessionMode } from '@cityborn/api';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,

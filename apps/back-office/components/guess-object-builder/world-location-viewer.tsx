@@ -1,4 +1,4 @@
-import type { WorldLocation } from '@cityborn/types';
+import type { WorldLocation } from '@cityborn/api';
 import {
   AdvancedMarker,
   APIProvider,

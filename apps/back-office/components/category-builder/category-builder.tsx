@@ -5,19 +5,18 @@ import type {
   GuessObject,
   GuessObjectCandidate,
   UpdateCategory,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { deleteCategory, saveCategory } from '@/server/actions/category';
+import {
+  getGuessObject,
+  patchGuessObject,
+  saveGuessObject,
+} from '@/server/actions/guess-object';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
-import {
-  deleteCategory,
-  getGuessObject,
-  patchGuessObject,
-  saveCategory,
-  saveGuessObject,
-} from './action';
 import { DeleteCategoryPopup } from './delete-category-popup';
 import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
@@ -36,7 +35,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
   const filteredGuessObjects = useMemo(() => {
-    if (category && category.guessObjects) {
+    if (category?.guessObjects) {
       return category.guessObjects.filter((category) =>
         category.name.toLowerCase().includes(searchObjectValue.toLowerCase()),
       );
@@ -86,15 +85,20 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
       // If id, then update, else post
       let id: string;
       if (guessObjectCandidate.id) {
-        id = await patchGuessObject(
+        const result = await patchGuessObject(
           guessObjectCandidate.id,
           guessObjectCandidate,
         );
+        if (!result.ok) throw new Error(result.error.message);
+        id = result.data;
       } else {
-        id = await saveGuessObject({
-          world_location_id: guessObjectCandidate.world_location_id.toString(),
-          ...guessObjectCandidate,
+        const { id: _id, ...rest } = guessObjectCandidate;
+        const result = await saveGuessObject({
+          ...rest,
+          world_location_id: String(guessObjectCandidate.world_location_id),
         });
+        if (!result.ok) throw new Error(result.error.message);
+        id = result.data;
       }
 
       if (!id) throw new Error('Error saving or updating object');
@@ -120,7 +124,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         guessObjects: undefined,
         guessObjectsIds: undefined,
       };
-      await saveCategory(category.id, updatedCategory);
+      const result = await saveCategory(category.id, updatedCategory);
+      if (!result.ok) throw new Error(result.error.message);
     } catch (error) {
       alert("Erreur lors de l'enregistrement de la catégorie");
       console.error(error);
@@ -137,7 +142,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   async function handleDeleteCategory() {
     try {
       setIsSaveLoading(true);
-      await deleteCategory(category.id);
+      const result = await deleteCategory(category.id);
+      if (!result.ok) throw new Error(result.error.message);
       router.push('/dashboard');
     } catch (error) {
       alert('Erreur lors de la suppression de la catégorie');
@@ -152,8 +158,10 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
 
   async function addOrUpdateGuessObjectToCategory(id: string) {
     try {
-      const object = await getGuessObject(id, ['world_location_preview']);
-      if (!object) return;
+      const objectResult = await getGuessObject(id, ['world_location_preview']);
+      if (!objectResult) return;
+      if (!objectResult.ok) throw new Error(objectResult.error.message);
+      const object = objectResult.data;
 
       // Update remotely
       const updatedCategory: UpdateCategory = {
@@ -162,7 +170,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         isPublished: category.isPublished,
         connectIds: [id],
       };
-      await saveCategory(category.id, updatedCategory);
+      const saveResult = await saveCategory(category.id, updatedCategory);
+      if (!saveResult.ok) throw new Error(saveResult.error.message);
 
       // Update locally
       setCategory((prev) => {
@@ -171,7 +180,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         const index = prev.guessObjects.findIndex(
           (obj) => obj.id === object.id,
         );
-        let updatedGuessObjects;
+        let updatedGuessObjects: typeof prev.guessObjects;
 
         if (index === -1) {
           // ajout
@@ -213,7 +222,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         disconnectIds: [guessObject.id],
       };
       setCategory({ ...category, guessObjects: updatedGuessObjects });
-      await saveCategory(category.id, updated_category);
+      const removeResult = await saveCategory(category.id, updated_category);
+      if (!removeResult.ok) throw new Error(removeResult.error.message);
       setGuessObjectCandidate(undefined);
     } catch (error) {
       alert("Erreur lors de la suppression de l'objet");

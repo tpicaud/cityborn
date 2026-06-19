@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Image } from 'react-native';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { signOut } from '@/lib/api/auth';
 
 export default function Home() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function Home() {
                 variant="default"
                 label="Déconnexion"
                 onPress={async () => {
-                  await apiClient.signOut();
+                  await signOut();
                   setUser(null);
                 }}
               />

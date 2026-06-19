@@ -1,10 +1,10 @@
 import { CategoryBuilder } from '@/components/category-builder/category-builder';
-import { getCategory } from './action';
+import { getCategory } from '@/server/queries/category';
 
 export default async function EditCategory({
   searchParams,
 }: {
-  searchParams: { id: string };
+  searchParams: Promise<{ id: string }>;
 }) {
   const { id } = await searchParams;
   const category = await getCategory(id);

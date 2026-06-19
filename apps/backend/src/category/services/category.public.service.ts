@@ -1,7 +1,5 @@
-import { ErrorCode } from '@cityborn/errors';
+import { Category, ErrorCode } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CategoriesResponseDto } from '../dto/categories.response.dto';
-import { CategoryDto } from '../dto/category.dto';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
 
@@ -13,12 +11,12 @@ export class PublicCategoryService {
     includes = [],
   }: {
     includes?: string[];
-  }): Promise<CategoriesResponseDto> {
+  }): Promise<Category[]> {
     const categories = await this.categoryService.findAll({ includes });
     const filtered_categories = categories.filter(
       (category) => category.isPublished,
     );
-    return CategoryMapper.toCategoriesResponseDto(filtered_categories);
+    return CategoryMapper.toCategories(filtered_categories);
   }
 
   async findOne(
@@ -28,7 +26,7 @@ export class PublicCategoryService {
     }: {
       includes: string[];
     },
-  ): Promise<CategoryDto> {
+  ): Promise<Category> {
     const category = await this.categoryService.findOne(id, { includes });
 
     if (!category || !category.isPublished) {
@@ -38,6 +36,6 @@ export class PublicCategoryService {
       });
     }
 
-    return CategoryMapper.toCategoryDto(category);
+    return CategoryMapper.toCategory(category);
   }
 }

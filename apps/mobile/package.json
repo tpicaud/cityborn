@@ -16,15 +16,14 @@
     "typecheck": "tsc --noEmit",
     "check-env": "node scripts/check-env.js",
     "postinstall": "cd ../.. && pnpm packages:build",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
+    "@cityborn/client": "workspace:*",
     "@cityborn/contexts": "workspace:*",
     "@cityborn/design-system": "workspace:*",
-    "@cityborn/errors": "workspace:*",
-    "@cityborn/types": "workspace:*",
     "@cityborn/utils": "workspace:*",
     "@expo/config-plugins": "^54.0.4",
     "@expo/vector-icons": "^15.0.3",

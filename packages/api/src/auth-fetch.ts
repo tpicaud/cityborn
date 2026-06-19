@@ -1,113 +1,75 @@
-import { ApiError, ErrorCode, type ErrorPayload } from '@cityborn/errors';
-import type { TokenStorage } from '@cityborn/types';
-
-type RequestInitWithAuth = RequestInit & { includeAuth?: boolean };
+import type { ApiFetcherArgs } from '@ts-rest/core';
+import { ApiErrors } from './api-errors.js';
+import { ErrorCode } from './errors/error-codes.js';
+import type { ApiError } from './schemas/api-error.schema.js';
+import { AuthResponseSchema } from './schemas/user.schema.js';
+import type { TokenStorage } from './types/token-storage.js';
 
 export class AuthFetch {
   private isRefreshing = false;
   private refreshQueue: ((token: string | null) => void)[] = [];
-  private baseURL: string;
-  tokenStorage: TokenStorage;
+  private readonly baseURL: string;
+  private readonly tokenStorage: TokenStorage;
 
   constructor(baseURL: string, tokenStorage: TokenStorage) {
     this.baseURL = baseURL.replace(/\/+$/, '');
     this.tokenStorage = tokenStorage;
   }
 
-  private async authFetch<T>(
-    method: string,
-    url: string,
-    body?: any,
-    options: RequestInitWithAuth = {},
-  ): Promise<T> {
-    options.includeAuth = options.includeAuth ?? true;
-
-    const token = await this.tokenStorage.getAccessToken();
-
-    const headers: Record<string, any> = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    };
-
-    if (token && options.includeAuth) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await this.timeoutFetch(`${this.baseURL}${url}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      credentials: 'include',
-      ...options,
-    });
-
-    // -----------------------
-    // Parse JSON safely
-    // -----------------------
-    let data: any = null;
-
-    const contentType = response.headers.get('Content-Type') ?? '';
-
-    if (response.status !== 204 && contentType.includes('application/json')) {
-      try {
-        data = await response.json();
-      } catch {
-        // Don't throw — treat as no JSON response
-        data = null;
-      }
-    }
-
-    if (response.ok) {
-      return (data ?? {}) as T;
-    }
-
-    if (
-      response.status === 401 &&
-      data &&
-      data.code === ErrorCode.TOKEN_EXPIRED &&
-      options.includeAuth
-    ) {
-      return await this.handle401<T>(method, url, body, options);
-    }
-
-    if (data && data.code) {
-      throw new ApiError(
-        data.code,
-        data.message,
-        data.statusCode ?? response.status,
-      );
-    }
-
-    throw new ApiError(
-      ErrorCode.UNKNOWN_ERROR,
-      'Unexpected server response',
-      response.status,
-    );
+  buildApiFunction() {
+    return (args: ApiFetcherArgs) => this.tsRestFetch(args);
   }
 
-  // ------- Handle refresh -------
-  private async handle401<T>(
-    method: string,
-    url: string,
-    body?: any,
-    options?: RequestInit,
-  ): Promise<T> {
+  private async tsRestFetch(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    const result = await this.fetchOnce(args);
+
+    if (
+      result.status === 401 &&
+      result.body !== null &&
+      typeof result.body === 'object' &&
+      (result.body as Record<string, unknown>).code === ErrorCode.TOKEN_EXPIRED
+    ) {
+      return this.handle401(args);
+    }
+
+    return result;
+  }
+
+  private async fetchOnce(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
+    const token = await this.tokenStorage.getAccessToken();
+
+    const headers: Record<string, string> = { ...args.headers };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await this.timeoutFetch(args.path, {
+      method: args.method,
+      headers,
+      body: args.body,
+      credentials: 'include',
+    });
+
+    const body = await this.parseBody(response);
+    return { status: response.status, body, headers: response.headers };
+  }
+
+  private async handle401(
+    args: ApiFetcherArgs,
+  ): Promise<{ status: number; body: unknown; headers: Headers }> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
-            reject(
-              new ApiError(
-                ErrorCode.USER_REFRESH_FAILED,
-                'Refresh failed',
-                500,
-              ),
-            );
+            reject(ApiErrors.refreshFailed());
             return;
           }
           try {
-            const res = await this.authFetch<T>(method, url, body, options);
-            resolve(res);
+            resolve(await this.fetchOnce(args));
           } catch (err) {
             reject(err);
           }
@@ -116,11 +78,10 @@ export class AuthFetch {
     }
 
     this.isRefreshing = true;
-
     try {
       const newToken = await this.refreshToken();
       this.processQueue(newToken);
-      return this.authFetch<T>(method, url, body, options);
+      return await this.fetchOnce(args);
     } catch (err) {
       this.processQueue(null);
       await this.tokenStorage.clearTokens();
@@ -133,11 +94,7 @@ export class AuthFetch {
   private async refreshToken(): Promise<string> {
     const refreshToken = await this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
-      throw new ApiError(
-        ErrorCode.USER_REFRESH_FAILED,
-        'No refresh token available',
-        401,
-      );
+      throw ApiErrors.noRefreshToken();
     }
 
     const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
@@ -149,66 +106,65 @@ export class AuthFetch {
     });
 
     if (!response.ok) {
-      const error: ErrorPayload = await response.json();
-      throw new ApiError(error.code, error.message, error.statusCode);
+      const error: ApiError = await response.json();
+      throw {
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+      };
     }
 
-    const data = await response.json();
-    const { access_token, refresh_token } = data;
+    const raw = await response.json();
+    const parsed = AuthResponseSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw {
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'Unexpected error',
+        statusCode: response.status,
+      } satisfies ApiError;
+    }
+    const { access_token, refresh_token } = parsed.data;
     await this.tokenStorage.setTokens(access_token, refresh_token);
     return access_token;
   }
 
   private processQueue(token: string | null) {
-    this.refreshQueue.forEach((cb) => cb(token));
+    this.refreshQueue.forEach((cb) => {
+      cb(token);
+    });
     this.refreshQueue = [];
   }
 
-  private async timeoutFetch<T>(
+  private async parseBody(response: Response): Promise<unknown> {
+    const contentType = response.headers.get('Content-Type') ?? '';
+    if (contentType.includes('application/json')) {
+      try {
+        return await response.json();
+      } catch {
+        return null;
+      }
+    }
+    if (contentType.includes('text/')) {
+      try {
+        return await response.text();
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private async timeoutFetch(
     input: RequestInfo,
     init: RequestInit,
     timeoutMs = 10_000,
   ): Promise<Response> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
-
     try {
       return await fetch(input, { ...init, signal: controller.signal });
     } finally {
       clearTimeout(id);
     }
-  }
-
-  // ------- HTTP methods -------
-  async get<T>(url: string, options?: RequestInitWithAuth): Promise<T> {
-    return await this.authFetch<T>('GET', url, undefined, options);
-  }
-
-  async post<T>(
-    url: string,
-    body?: any,
-    options?: RequestInitWithAuth,
-  ): Promise<T> {
-    return await this.authFetch<T>('POST', url, body, options);
-  }
-
-  async put<T>(
-    url: string,
-    body?: any,
-    options?: RequestInitWithAuth,
-  ): Promise<T> {
-    return await this.authFetch<T>('PUT', url, body, options);
-  }
-
-  async patch<T>(
-    url: string,
-    body?: any,
-    options?: RequestInitWithAuth,
-  ): Promise<T> {
-    return await this.authFetch<T>('PATCH', url, body, options);
-  }
-
-  async delete<T>(url: string, options?: RequestInitWithAuth): Promise<T> {
-    return await this.authFetch<T>('DELETE', url, undefined, options);
   }
 }

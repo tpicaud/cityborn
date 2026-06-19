@@ -1,4 +1,4 @@
-import type { User } from '@cityborn/types';
+import type { User } from '@cityborn/api';
 import {
   createContext,
   type ReactNode,
@@ -21,7 +21,7 @@ export const AuthProvider = ({
   children,
 }: {
   initialValue: User | null;
-  getCurrentUser: () => Promise<User>;
+  getCurrentUser: () => Promise<User | null>;
   children: ReactNode;
 }) => {
   const [user, setUser] = useState<User | null>(initialValue);

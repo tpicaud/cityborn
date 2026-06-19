@@ -26,14 +26,16 @@
     "db:migrate": "npx prisma migrate dev --name",
     "db:reset": "npx prisma migrate reset",
     "postinstall": "prisma generate",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {
-    "@cityborn/errors": "workspace:*",
+    "@cityborn/api": "workspace:*",
     "@cityborn/types": "workspace:*",
     "@cityborn/utils": "workspace:*",
     "@nestjs/common": "^11.0.1",
+    "@ts-rest/core": "^3.51.0",
+    "@ts-rest/nest": "^3.51.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
@@ -65,7 +67,8 @@
     "socket.io": "^4.8.1",
     "socket.io-redis": "^6.1.1",
     "unique-names-generator": "^4.7.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

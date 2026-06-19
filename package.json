@@ -45,7 +45,7 @@
     "db:up": "pnpm backend db:up",
     "db:migrate": "pnpm backend db:migrate",
     "db:reset": "pnpm backend db:reset",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "format:check": "biome check .",
     "format:fix": "biome check --write ."
   },

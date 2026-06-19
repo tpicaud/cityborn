@@ -1,35 +1,25 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { contract, User } from '@cityborn/api';
+import { Controller, UseGuards } from '@nestjs/common';
+import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { CreateGameRecordDto } from 'src/session/dto/create-game.dto';
-import { GameRecordsResponseDto } from 'src/session/dto/game.response.dto';
+import { CurrentUser } from './user.decorator';
 import { UserService } from './user.service';
 
-@Controller('user')
+@Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Get('game-records')
+  @TsRestHandler(contract.user)
   @UseGuards(AuthGuard)
-  async getGameRecords(@Request() req): Promise<GameRecordsResponseDto> {
-    return this.userService.getGameRecords(req.user.id);
-  }
-
-  @Post('game-records')
-  @UseGuards(AuthGuard)
-  async saveSoloGameRecord(
-    @Request() req,
-    @Body() createGameRecordDto: CreateGameRecordDto,
-  ): Promise<void> {
-    return this.userService.saveSoloGameRecord(
-      req.user.id,
-      createGameRecordDto,
-    );
+  async handler(@CurrentUser() user: User) {
+    return tsRestHandler(contract.user, {
+      getGameRecords: async () => ({
+        status: 200 as const,
+        body: await this.userService.getGameRecords(user.id),
+      }),
+      saveSoloGameRecord: async ({ body }) => {
+        await this.userService.saveSoloGameRecord(user.id, body);
+        return { status: 200 as const, body: {} };
+      },
+    });
   }
 }

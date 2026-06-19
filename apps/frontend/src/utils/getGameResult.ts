@@ -1,4 +1,4 @@
-import type { Game, PlayerResults } from '@cityborn/types';
+import type { Game, PlayerResults } from '@cityborn/api';
 
 export const getGameResult = (game: Game): Map<string, PlayerResults> => {
   const resultsMap = new Map<string, PlayerResults>();
