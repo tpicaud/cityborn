@@ -2,13 +2,13 @@ import { ErrorCode } from './errors/error-codes.js';
 import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema.js';
 import type { HttpSuccessStatus } from './types/http.js';
 
-export type ActionResult<T> =
+export type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: ApiError };
 
-export function toActionResult<T extends { status: number; body: unknown }>(
+export function toApiResult<T extends { status: number; body: unknown }>(
   result: T,
-): ActionResult<Extract<T, { status: HttpSuccessStatus }>['body']> {
+): ApiResult<Extract<T, { status: HttpSuccessStatus }>['body']> {
   if (result.status < 200 || result.status >= 300) {
     const parsed = ApiErrorSchema.safeParse(result.body);
     return {

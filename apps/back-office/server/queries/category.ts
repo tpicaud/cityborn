@@ -1,4 +1,4 @@
-import { toActionResult } from '@cityborn/api';
+import { toApiResult } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
 export async function getCategory(id: string) {
@@ -6,5 +6,7 @@ export async function getCategory(id: string) {
     params: { id },
     query: { include: 'guessObjects,world_location_preview' },
   });
-  return toActionResult(result);
+  const action = toApiResult(result);
+  if (!action.ok) throw new Error(action.error.message);
+  return action.data;
 }

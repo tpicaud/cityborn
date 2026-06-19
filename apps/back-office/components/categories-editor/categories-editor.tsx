@@ -19,7 +19,7 @@ export function CategoriesEditor() {
 
   useEffect(() => {
     handleFetchCategories();
-  }, []);
+  });
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>

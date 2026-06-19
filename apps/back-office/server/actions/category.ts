@@ -1,43 +1,43 @@
 'use server';
 
 import type {
-  ActionResult,
+  ApiResult,
   Category,
   CreateCategory,
   UpdateCategory,
 } from '@cityborn/api';
-import { toActionResult } from '@cityborn/api';
+import { toApiResult } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
-export async function getAllCategories(): Promise<ActionResult<Category[]>> {
+export async function getAllCategories(): Promise<ApiResult<Category[]>> {
   const result = await adminClient.category.listCategories({
     query: { include: 'guessObjects' },
   });
-  return toActionResult(result);
+  return toApiResult(result);
 }
 
 export async function createCategory(
   data: CreateCategory,
-): Promise<ActionResult<Category>> {
+): Promise<ApiResult<Category>> {
   const result = await adminClient.category.createCategory({ body: data });
-  return toActionResult(result);
+  return toApiResult(result);
 }
 
 export async function saveCategory(
   id: string,
   updatedCategory: UpdateCategory,
-): Promise<ActionResult<Category>> {
+): Promise<ApiResult<Category>> {
   const result = await adminClient.category.updateCategory({
     params: { id },
     body: updatedCategory,
   });
-  return toActionResult(result);
+  return toApiResult(result);
 }
 
-export async function deleteCategory(id: string): Promise<ActionResult<{}>> {
+export async function deleteCategory(id: string): Promise<ApiResult<{}>> {
   const result = await adminClient.category.deleteCategory({
     params: { id },
     body: {},
   });
-  return toActionResult(result);
+  return toApiResult(result);
 }

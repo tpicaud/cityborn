@@ -7,7 +7,6 @@ export default async function EditCategory({
   searchParams: Promise<{ id: string }>;
 }) {
   const { id } = await searchParams;
-  const result = await getCategory(id);
-  if (!result.ok) throw new Error(result.error.message);
-  return <CategoryBuilder fetchedCategory={result.data} />;
+  const category = await getCategory(id);
+  return <CategoryBuilder fetchedCategory={category} />;
 }

@@ -1,5 +1,5 @@
-export * from './src/action-result.js';
 export * from './src/api-errors.js';
+export * from './src/api-result.js';
 export * from './src/contract/contract.js';
 export * from './src/create-api-client.js';
 export * from './src/errors/error-codes.js';
