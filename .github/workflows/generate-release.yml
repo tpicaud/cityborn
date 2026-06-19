@@ -97,10 +97,17 @@ jobs:
               const paths = filterPaths.split(',').map(p => p.trim()).filter(Boolean);
               const prs = [];
               for (const pr of allPrs) {
-                const { data: files } = await github.rest.pulls.listFiles({
-                  owner, repo, pull_number: pr.number, per_page: 100,
-                });
-                const include = files.some(f => paths.some(p => f.filename.startsWith(p)));
+                let filePage = 1;
+                let include = false;
+                while (!include) {
+                  const { data: files } = await github.rest.pulls.listFiles({
+                    owner, repo, pull_number: pr.number, per_page: 100, page: filePage,
+                  });
+                  if (files.length === 0) break;
+                  include = files.some(f => paths.some(p => f.filename.startsWith(p)));
+                  if (files.length < 100) break;
+                  filePage++;
+                }
                 if (include) prs.push(pr);
               }
               body = prs.length > 0
