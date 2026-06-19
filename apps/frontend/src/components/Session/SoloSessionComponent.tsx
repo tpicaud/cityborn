@@ -1,6 +1,6 @@
 'use client';
 
-import type { GameConfig, Guess } from '@cityborn/api';
+import type { Category, GameConfig, Guess } from '@cityborn/api';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
@@ -8,7 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
 import { useSoloSession } from '@/hooks/useSoloSession';
 
-export default function SoloSessionComponent() {
+export default function SoloSessionComponent({
+  categories,
+}: {
+  categories: Category[];
+}) {
   const { user } = useAuth();
   const { invokeError } = useError();
   const localPlayerID = user ? user.username : 'guest';
@@ -110,6 +114,7 @@ export default function SoloSessionComponent() {
         localPlayerID={localPlayerID}
         isHost={soloSession.isHost}
         session={soloSession.session}
+        categories={categories}
         handleUpdateGameConfig={handleUpdateGameConfig}
         handleStartGame={handleStartGame}
         handleJoinSession={handleJoinSession}

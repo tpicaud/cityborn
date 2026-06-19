@@ -28,9 +28,7 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useError } from '@/contexts/ErrorContext';
-import { fetchCategories } from '@/server/actions/category';
+import { useState } from 'react';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
@@ -47,12 +45,14 @@ const TileLayer = dynamic(
 export const LobbyComponent = ({
   localPlayerID,
   session,
+  categories,
   handleUpdateGameConfig,
   handleStartGame,
   handleJoinSession,
 }: {
   localPlayerID: string | undefined;
   session: Session;
+  categories: Category[];
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
@@ -60,10 +60,7 @@ export const LobbyComponent = ({
   handleKickPlayer?: (playerToKick: string) => Promise<void>;
   handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
-  const { invokeError } = useError();
-
   const [copied, setCopied] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [tempNbOfObjects, setTempNbOfObjects] = useState(
     session.gameConfig.nbOfObjects.toString(),
   );
@@ -72,15 +69,6 @@ export const LobbyComponent = ({
   );
   const [currentInput, setCurrentInput] = useState<string>('');
   const router = useRouter();
-
-  useEffect(() => {
-    const load = async () => {
-      const result = await fetchCategories();
-      if (!result.ok) return invokeError(result.error);
-      setCategories(result.data);
-    };
-    load();
-  }, [invokeError]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);

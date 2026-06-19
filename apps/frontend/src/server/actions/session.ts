@@ -41,5 +41,7 @@ export async function endSoloGame(
   if (!body) return { ok: true, data: undefined };
   const client = await getServerClient();
   const result = await client.session.endSoloGame({ body });
-  return toApiResult(result) as ApiResult<void>;
+  const r = toApiResult(result);
+  if (!r.ok) return r;
+  return { ok: true, data: undefined };
 }
