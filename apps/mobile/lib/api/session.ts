@@ -5,23 +5,23 @@ import {
   type Session,
   throwOnError,
 } from '@cityborn/api';
-import { assertOk, client } from './client';
+import { client } from './client';
 
 export async function createSession(data: CreateSession): Promise<Session> {
   const result = await client.session.createSession({ body: data });
-  assertOk(result);
+  throwOnError(result);
   return result.body;
 }
 
 export async function fetchSession(id: string): Promise<Session> {
   const result = await client.session.getSession({ params: { id } });
-  assertOk(result);
+  throwOnError(result);
   return result.body;
 }
 
 export async function createSoloGame(session: Session): Promise<Game> {
   const result = await client.session.createGame({ body: session });
-  assertOk(result);
+  throwOnError(result);
   return result.body;
 }
 

@@ -1,8 +1,9 @@
 import type { Category } from '@cityborn/api';
-import { assertOk, client } from './client';
+import { throwOnError } from '@cityborn/api';
+import { client } from './client';
 
 export async function fetchCategories(): Promise<Category[]> {
   const result = await client.category.getCategories({ query: {} });
-  assertOk(result);
+  throwOnError(result);
   return result.body;
 }

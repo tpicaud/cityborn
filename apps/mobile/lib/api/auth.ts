@@ -6,7 +6,7 @@ import {
   throwOnError,
   type User,
 } from '@cityborn/api';
-import { assertOk, client, tokenStorage } from './client';
+import { client, tokenStorage } from './client';
 
 export async function getCurrentUser(): Promise<User | null> {
   const access = await tokenStorage.getAccessToken();
@@ -18,7 +18,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function signIn(data: SignIn): Promise<User> {
   const result = await client.auth.signIn({ body: data });
-  assertOk(result);
+  throwOnError(result);
   await tokenStorage.setTokens(
     result.body.access_token,
     result.body.refresh_token,
@@ -28,7 +28,7 @@ export async function signIn(data: SignIn): Promise<User> {
 
 export async function signUp(data: CreateUser): Promise<User> {
   const result = await client.auth.signUp({ body: data });
-  assertOk(result);
+  throwOnError(result);
   await tokenStorage.setTokens(
     result.body.access_token,
     result.body.refresh_token,
@@ -42,7 +42,7 @@ export async function signOut(): Promise<void> {
 
 export async function signInWithGoogle(data: SignInWithGoogle): Promise<User> {
   const result = await client.auth.signInWithGoogle({ body: data });
-  assertOk(result);
+  throwOnError(result);
   await tokenStorage.setTokens(
     result.body.access_token,
     result.body.refresh_token,
@@ -52,7 +52,7 @@ export async function signInWithGoogle(data: SignInWithGoogle): Promise<User> {
 
 export async function signInWithApple(data: SignInWithApple): Promise<User> {
   const result = await client.auth.signInWithApple({ body: data });
-  assertOk(result);
+  throwOnError(result);
   await tokenStorage.setTokens(
     result.body.access_token,
     result.body.refresh_token,

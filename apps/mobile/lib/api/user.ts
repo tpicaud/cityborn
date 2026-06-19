@@ -1,8 +1,9 @@
 import type { GameRecord } from '@cityborn/api';
-import { assertOk, client } from './client';
+import { throwOnError } from '@cityborn/api';
+import { client } from './client';
 
 export async function getGameRecords(): Promise<GameRecord[]> {
   const result = await client.user.getGameRecords();
-  assertOk(result);
+  throwOnError(result);
   return result.body;
 }
