@@ -1,8 +1,7 @@
 import { getFriendlyErrorMessage } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
@@ -67,7 +66,7 @@ export const SignUpComponent = () => {
 
         case 'password': {
           const password = value;
-          if (!password || !password.trim()) {
+          if (!password?.trim()) {
             newErrors.password = 'Mot de passe obligatoire';
           } else if (password.length < 6) {
             newErrors.password = 'Minimum 6 caractères requis';
@@ -93,7 +92,7 @@ export const SignUpComponent = () => {
 
         case 'confirmPassword': {
           const confirm = value;
-          if (!confirm || !confirm.trim()) {
+          if (!confirm?.trim()) {
             newErrors.confirmPassword = 'Confirmation obligatoire';
           } else if (confirm !== formValues.password) {
             newErrors.confirmPassword =
@@ -135,17 +134,10 @@ export const SignUpComponent = () => {
 
     if (!validateForm()) return;
 
-    try {
-      const user = await signUp({
-        ...formValues,
-      });
-      setUser(user);
-      router.push('/');
-    } catch (error: any) {
-      console.error(error);
-      setErrorMessage(getFriendlyErrorMessage(error));
-      console.error(error);
-    }
+    const result = await signUp({ ...formValues });
+    if (!result.ok) return setErrorMessage(getFriendlyErrorMessage(result.error));
+    setUser(result.data);
+    router.push('/');
   };
 
   return (

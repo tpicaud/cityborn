@@ -24,22 +24,16 @@ export default function Play() {
     if (!user) {
       setOpenConnectionAlert(true);
     } else {
-      try {
-        const session = await createSession({ mode: SessionMode.MULTI });
-        router.navigate(`/session/multi/${session.id}`);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await createSession({ mode: SessionMode.MULTI });
+      if (!result.ok) return invokeError(result.error);
+      router.navigate(`/session/multi/${result.data.id}`);
     }
   };
 
   const handleJoin = async () => {
-    try {
-      await fetchSession(joinCode);
-      router.push(`/session/multi/${joinCode}`);
-    } catch (error: any) {
-      invokeError(error);
-    }
+    const result = await fetchSession(joinCode);
+    if (!result.ok) return invokeError(result.error);
+    router.push(`/session/multi/${joinCode}`);
   };
 
   return (

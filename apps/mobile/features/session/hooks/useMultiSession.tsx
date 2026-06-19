@@ -38,12 +38,9 @@ export function useMultiSession(
   // Fetch session on init
   useEffect(() => {
     const loadSession = async () => {
-      try {
-        const session: Session = await fetchSession(sessionID);
-        setSession(session);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await fetchSession(sessionID);
+      if (!result.ok) return invokeError(result.error);
+      setSession(result.data);
     };
     loadSession();
   }, []);

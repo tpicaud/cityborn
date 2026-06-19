@@ -46,12 +46,9 @@ export function MultiLobby({
 
   useEffect(() => {
     const loadCategories = async () => {
-      try {
-        const categories = await fetchCategories();
-        setCategories(categories);
-      } catch {
-        invokeError('Aucunes catégories trouvées');
-      }
+      const result = await fetchCategories();
+      if (!result.ok) return invokeError(result.error);
+      setCategories(result.data);
     };
     loadCategories();
   }, []);

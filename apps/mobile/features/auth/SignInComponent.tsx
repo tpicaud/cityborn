@@ -32,18 +32,14 @@ export const SignInComponent = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      setErrorMessage(null);
-      const user = await signIn({
-        identifier: formValues.username,
-        password: formValues.password,
-      });
-      setUser(user);
-      router.push('/');
-    } catch (error: any) {
-      setErrorMessage(getFriendlyErrorMessage(error));
-      console.error(error);
-    }
+    setErrorMessage(null);
+    const result = await signIn({
+      identifier: formValues.username,
+      password: formValues.password,
+    });
+    if (!result.ok) return setErrorMessage(getFriendlyErrorMessage(result.error));
+    setUser(result.data);
+    router.push('/');
   };
 
   return (

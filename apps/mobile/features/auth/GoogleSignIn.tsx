@@ -30,9 +30,9 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const user = await signInWithGoogle({ idToken });
-
-        setUser(user);
+        const result = await signInWithGoogle({ idToken });
+        if (!result.ok) throw result.error;
+        setUser(result.data);
         router.push('/');
       } else {
         console.log('Google sign in modal closed by user');

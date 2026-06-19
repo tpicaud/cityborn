@@ -28,15 +28,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   // Create session
   useEffect(() => {
     const fetchSession = async () => {
-      try {
-        const session: Session = await createSession({
-          mode: SessionMode.SOLO,
-        });
-        session.hostID = localPlayerID;
-        setSession(session);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await createSession({ mode: SessionMode.SOLO });
+      if (!result.ok) return invokeError(result.error);
+      result.data.hostID = localPlayerID;
+      setSession(result.data);
     };
     fetchSession();
   }, [invokeError, localPlayerID]);
@@ -91,34 +86,27 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const startGame = async () => {
     if (!session) return;
-    try {
-      // Create  new game
-      const game = await createSoloGame(session);
+    const result = await createSoloGame(session);
+    if (!result.ok) return invokeError(result.error);
+    const game = result.data;
 
-      setSession((prevSession) => {
-        if (!prevSession) return;
-        return {
-          ...prevSession,
-          status: SessionStatus.IN_GAME,
-        };
-      });
+    setSession((prevSession) => {
+      if (!prevSession) return;
+      return { ...prevSession, status: SessionStatus.IN_GAME };
+    });
 
-      // Start game
-      setGame({
-        ...game,
-        status: GameStatus.IN_GAME,
-        state: {
-          ...game.state,
-          currentRound: {
-            status: RoundStatus.GUESSING,
-            guessObjectId: game.state.guessObjectsIds[0],
-            playersGuesses: {},
-          },
+    setGame({
+      ...game,
+      status: GameStatus.IN_GAME,
+      state: {
+        ...game.state,
+        currentRound: {
+          status: RoundStatus.GUESSING,
+          guessObjectId: game.state.guessObjectsIds[0],
+          playersGuesses: {},
         },
-      });
-    } catch (error: any) {
-      invokeError(error);
-    }
+      },
+    });
   };
 
   const guess = (guess: Guess) => {
@@ -233,41 +221,23 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const endGame = async () => {
     if (!session?.currentGame) return;
-
-    try {
-      await endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      setSession({
-        ...session,
-        currentGame: undefined,
-      });
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    setSession({ ...session, currentGame: undefined });
   };
 
   const playAgain = async () => {
     if (!session?.currentGame) return;
-
-    try {
-      await endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      await startGame();
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    await startGame();
   };
 
   const exitGame = async () => {
     if (!session?.currentGame) return;
-
-    try {
-      await endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      router.replace('/');
-    }
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    router.replace('/');
   };
 
   return {

@@ -34,29 +34,21 @@ export default function Profile() {
 
   const fetchGameRecords = async () => {
     if (!user) return;
-    console.log('Fetching game records for user:', user);
-    try {
-      setLoading(true);
-      const gameRecords = await getGameRecords();
-      setGamesRecords(gameRecords);
-    } catch (error) {
-      console.error('Failed to fetch game records:', error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const result = await getGameRecords();
+    setLoading(false);
+    if (!result.ok) return invokeError(result.error);
+    setGamesRecords(result.data);
   };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    try {
-      await deleteUser();
-      await signOut();
-      setUser(null);
-      setDeleteAccountModalOpen(false);
-      router.replace('/');
-    } catch (error: any) {
-      invokeError(error);
-    }
+    const result = await deleteUser();
+    if (!result.ok) return invokeError(result.error);
+    await signOut();
+    setUser(null);
+    setDeleteAccountModalOpen(false);
+    router.replace('/');
   };
 
   return (
