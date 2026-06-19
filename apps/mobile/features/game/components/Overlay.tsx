@@ -4,7 +4,7 @@ import {
   type GuessObject,
   type Round,
   RoundStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';

@@ -6,7 +6,7 @@ import {
   type OnlinePlayer,
   type Session,
   SessionMode,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
@@ -28,9 +28,7 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
-import { useError } from '@/contexts/ErrorContext';
+import { useState } from 'react';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
@@ -47,12 +45,14 @@ const TileLayer = dynamic(
 export const LobbyComponent = ({
   localPlayerID,
   session,
+  categories,
   handleUpdateGameConfig,
   handleStartGame,
   handleJoinSession,
 }: {
   localPlayerID: string | undefined;
   session: Session;
+  categories: Category[];
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
@@ -60,11 +60,7 @@ export const LobbyComponent = ({
   handleKickPlayer?: (playerToKick: string) => Promise<void>;
   handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
-  const { invokeError } = useError();
-  const apiClient = useApi();
-
   const [copied, setCopied] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [tempNbOfObjects, setTempNbOfObjects] = useState(
     session.gameConfig.nbOfObjects.toString(),
   );
@@ -74,35 +70,22 @@ export const LobbyComponent = ({
   const [currentInput, setCurrentInput] = useState<string>('');
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await apiClient.fetchCategories();
-        setCategories(categories);
-      } catch {
-        invokeError('Aucunes catégories trouvées');
-      }
-    };
-    fetchCategories();
-  }, []);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // Réinitialise le message après 2 secondes
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const updateGameConfig = async () => {
-    // parse nb of objects
     const nbOfObjectsParsed = parseInt(tempNbOfObjects, 10);
     const nbOfObjects =
-      isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0
+      Number.isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0
         ? 6
         : nbOfObjectsParsed;
 
-    // parse timer
     const timerParsed = parseInt(tempTimer, 10);
-    const timer = isNaN(timerParsed) || timerParsed <= 0 ? 20 : timerParsed;
+    const timer =
+      Number.isNaN(timerParsed) || timerParsed <= 0 ? 20 : timerParsed;
 
     await handleUpdateGameConfig({ nbOfObjects, timer });
   };

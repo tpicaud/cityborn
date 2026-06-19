@@ -4,8 +4,6 @@ export * from './enums/SessionMode.js';
 export * from './enums/SessionStatus.js';
 export * from './types/Category.js';
 export * from './types/Coord.js';
-export * from './types/defaults.js';
-export * from './types/Event.js';
 export * from './types/Game.js';
 export * from './types/GameComponentProps.js';
 export * from './types/GameConfig.js';

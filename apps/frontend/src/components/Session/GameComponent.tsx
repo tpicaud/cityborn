@@ -6,7 +6,7 @@ import {
   type Guess,
   RoundStatus,
   type Session,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
 import GuessComponent from '@/components/guess/GuessComponent';

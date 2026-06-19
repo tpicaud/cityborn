@@ -1,5 +1,10 @@
-import { ErrorCode } from '@cityborn/errors';
-import { GameConfig } from '@cityborn/types';
+import {
+  CreateGuessObject,
+  ErrorCode,
+  GameConfig,
+  GuessObject,
+  GuessObjectCandidate,
+} from '@cityborn/api';
 import {
   BadRequestException,
   Injectable,
@@ -8,9 +13,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WorldLocationService } from 'src/world-location/world-location.service';
-import { CreateGuessObjectDto } from './dto/create-guess-object.dto';
-import { GuessObjectDto } from './dto/guess-object.dto';
-import { GuessObjectCandidateDto } from './dto/search-guess-object.response.dto';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 
 @Injectable()
@@ -43,7 +45,7 @@ export class GuessObjectService {
     return include;
   }
 
-  async findById(id: string, includes: string[] = []): Promise<GuessObjectDto> {
+  async findById(id: string, includes: string[] = []): Promise<GuessObject> {
     const guess_object = await this.prisma.guessObject.findUnique({
       where: { id },
       include: this.buildInclude(includes),
@@ -56,10 +58,10 @@ export class GuessObjectService {
       });
     }
 
-    return GuessObjectMapper.toGuessObjectDto(guess_object);
+    return GuessObjectMapper.toGuessObject(guess_object);
   }
 
-  async findSome(guessObjectsIds: string[]): Promise<GuessObjectDto[]> {
+  async findSome(guessObjectsIds: string[]): Promise<GuessObject[]> {
     try {
       const rawGuessObjects = await this.prisma.guessObject.findMany({
         where: {
@@ -78,7 +80,7 @@ export class GuessObjectService {
       }
 
       const guessObjects = rawGuessObjects.map((obj) =>
-        GuessObjectMapper.toGuessObjectDto(obj),
+        GuessObjectMapper.toGuessObject(obj),
       );
       return guessObjects;
     } catch (error) {
@@ -89,7 +91,7 @@ export class GuessObjectService {
     }
   }
 
-  async findByGameConfig(gameConfig: GameConfig): Promise<GuessObjectDto[]> {
+  async findByGameConfig(gameConfig: GameConfig): Promise<GuessObject[]> {
     try {
       const where: any = {};
 
@@ -113,8 +115,8 @@ export class GuessObjectService {
       const shuffled = allObjects.sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, gameConfig.nbOfObjects);
 
-      // Conversion en DTO
-      return selected.map((obj) => GuessObjectMapper.toGuessObjectDto(obj));
+      // Conversion en
+      return selected.map((obj) => GuessObjectMapper.toGuessObject(obj));
     } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
@@ -125,7 +127,7 @@ export class GuessObjectService {
 
   async update(
     id: string,
-    updatedFields: Partial<GuessObjectDto>,
+    updatedFields: Partial<GuessObject>,
   ): Promise<string> {
     const world_location_id = await this.resolveWorldLocationId(updatedFields);
     if (world_location_id) updatedFields.world_location_id = world_location_id;
@@ -146,7 +148,7 @@ export class GuessObjectService {
     return updated_object.id;
   }
 
-  async searchByName(name: string): Promise<GuessObjectCandidateDto[]> {
+  async searchByName(name: string): Promise<GuessObjectCandidate[]> {
     const prisma_guess_objects = await this.prisma.guessObject.findMany({
       where: {
         name: {
@@ -156,11 +158,11 @@ export class GuessObjectService {
       },
     });
     return prisma_guess_objects.map((obj) =>
-      GuessObjectMapper.toGuessObjectCandidateFromPrismaDto(obj),
+      GuessObjectMapper.toGuessObjectCandidateFromPrisma(obj),
     );
   }
 
-  async findByExternalId(external_id: string): Promise<GuessObjectDto | null> {
+  async findByExternalId(external_id: string): Promise<GuessObject | null> {
     const guessObject = await this.prisma.guessObject.findFirst({
       where: {
         source: {
@@ -174,16 +176,16 @@ export class GuessObjectService {
     });
     if (!guessObject) return null;
 
-    return GuessObjectMapper.toGuessObjectDto(guessObject);
+    return GuessObjectMapper.toGuessObject(guessObject);
   }
 
-  async create(createGuessObjectDto: CreateGuessObjectDto): Promise<string> {
+  async create(createGuessObject: CreateGuessObject): Promise<string> {
     // Récupérer la location dans la db
     let world_location = await this.worldLocationService.get(
-      createGuessObjectDto.world_location_id,
+      createGuessObject.world_location_id,
     );
     if (!world_location) {
-      if (!createGuessObjectDto.world_location) {
+      if (!createGuessObject.world_location) {
         throw new BadRequestException({
           code: ErrorCode.BAD_REQUEST,
           message: `No world location id found, and no world location provided`,
@@ -191,14 +193,14 @@ export class GuessObjectService {
       }
       // Si pas présente, utiliser la loc dans la requête
       world_location = await this.worldLocationService.create(
-        createGuessObjectDto.world_location,
+        createGuessObject.world_location,
       );
     }
 
     // Vérifier si un GuessObject avec le même nom et world_location_id existe déjà
     const existingGuessObject = await this.prisma.guessObject.findFirst({
       where: {
-        name: createGuessObjectDto.name,
+        name: createGuessObject.name,
         world_location_id: world_location.id,
       },
     });
@@ -210,10 +212,10 @@ export class GuessObjectService {
     // Créer le GuessObject avec l'id de la loc
     const prisma_guess_object = await this.prisma.guessObject.create({
       data: {
-        name: createGuessObjectDto.name,
-        image: createGuessObjectDto.image,
-        description: createGuessObjectDto.description,
-        short_description: createGuessObjectDto.short_description,
+        name: createGuessObject.name,
+        image: createGuessObject.image,
+        description: createGuessObject.description,
+        short_description: createGuessObject.short_description,
         world_location_id: world_location.id,
       },
     });
@@ -255,7 +257,7 @@ export class GuessObjectService {
   }
 
   private async resolveWorldLocationId(
-    updatedFields: Partial<GuessObjectDto>,
+    updatedFields: Partial<GuessObject>,
   ): Promise<string | undefined> {
     const { world_location_id, world_location } = updatedFields;
 

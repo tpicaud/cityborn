@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { login } from './action';
+import { login } from '@/server/actions/auth';
 
 export default function LoginPage() {
   const router = useRouter();

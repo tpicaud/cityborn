@@ -1,4 +1,8 @@
-import { ApiError, getFriendlyErrorMessage } from '@cityborn/errors';
+import {
+  type ApiError,
+  getFriendlyErrorMessage,
+  isApiError,
+} from '@cityborn/api';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 
 type ui_type = 'dialog';
@@ -29,17 +33,13 @@ export const ErrorProvider = ({
   const [openDialog, setOpenDialog] = useState(false);
 
   const invokeError = (
-    error: ApiError | string | any,
+    error: ApiError | string,
     ui_type: ui_type = 'dialog',
   ) => {
-    if (error instanceof ApiError) {
-      const message = getFriendlyErrorMessage(error);
-      setErrorMessage(message);
-    } else if (typeof error === 'string') {
-      setErrorMessage(error);
+    if (isApiError(error)) {
+      setErrorMessage(getFriendlyErrorMessage(error));
     } else {
-      const errorMessage = error.message ?? 'Unexpected error';
-      setErrorMessage(errorMessage);
+      setErrorMessage(error);
     }
 
     console.error(error);

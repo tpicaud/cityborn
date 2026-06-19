@@ -1,11 +1,11 @@
+import { ApiErrors, isApiError } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import { ApiError, ErrorCode } from '@cityborn/errors';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { apiClient } from '@/lib/apiClient';
+import { signInWithApple } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
@@ -24,24 +24,20 @@ export const SignInWithAppleButton = () => {
 
       // Validation : identityToken est requis
       if (!credential.identityToken) {
-        throw new ApiError(
-          ErrorCode.USER_INVALID_CREDENTIALS,
-          'Apple did not provide an identity token',
-          401,
-        );
+        throw ApiErrors.appleNoIdentityToken();
       }
 
       // Extraire les détails utilisateur (seulement première connexion)
       const userDetails = extractAppleUserDetails(credential);
 
       // Authentification via l'API
-      const user = await apiClient.signInWithApple(
-        credential.identityToken,
-        credential.user,
-        userDetails,
-      );
-
-      setUser(user);
+      const result = await signInWithApple({
+        identity_token: credential.identityToken,
+        apple_user_id: credential.user,
+        details: userDetails,
+      });
+      if (!result.ok) throw result.error;
+      setUser(result.data);
       router.push('/');
     } catch (e: any) {
       handleAppleSignInError(e);
@@ -77,16 +73,11 @@ export const SignInWithAppleButton = () => {
     console.error('Apple sign in error:', error);
 
     // Si c'est déjà une ApiError, la relancer
-    if (error instanceof ApiError) {
+    if (isApiError(error)) {
       throw error;
     }
 
-    // Sinon, créer une nouvelle ApiError
-    throw new ApiError(
-      ErrorCode.USER_INVALID_CREDENTIALS,
-      'Apple sign in failed',
-      401,
-    );
+    throw ApiErrors.appleSignInFailed();
   }
 
   // Types

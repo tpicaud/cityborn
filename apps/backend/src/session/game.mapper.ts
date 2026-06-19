@@ -1,18 +1,21 @@
-import type { SessionMode } from '@cityborn/types';
+import {
+  GameConfigSchema,
+  GameRecord,
+  PlayerResults,
+  PlayerSchema,
+  SessionMode,
+} from '@cityborn/api';
 import type { GameRecord as PrismaGameRecord } from '@prisma/client';
-import type { PlayerDto } from 'src/player/dto/player.dto';
-import type { GameRecordDto, PlayerResultsDto } from './dto/game.dto';
-import type { GameConfigDto } from './dto/session.dto';
-
+import { z } from 'zod';
 export class GameMapper {
-  static toGameRecordDto(gameRecords: PrismaGameRecord[]): GameRecordDto[] {
+  static toGameRecord(gameRecords: PrismaGameRecord[]): GameRecord[] {
     return gameRecords.map((record) => ({
       id: record.id,
       mode: record.mode as SessionMode,
-      gameConfig: record.gameConfig as unknown as GameConfigDto,
-      players: record.players as unknown as PlayerDto[],
+      gameConfig: GameConfigSchema.parse(record.gameConfig),
+      players: z.array(PlayerSchema).parse(record.players),
       guessObjectsIds: record.guessObjectsIds,
-      results: record.results as unknown as Record<string, PlayerResultsDto>,
+      results: record.results as unknown as Record<string, PlayerResults>,
       createdAt: record.createdAt.toISOString().split('T')[0],
     }));
   }

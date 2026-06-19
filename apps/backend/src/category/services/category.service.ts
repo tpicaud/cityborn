@@ -1,10 +1,8 @@
-import { ErrorCode } from '@cityborn/errors';
+import { CreateCategory, ErrorCode, UpdateCategory } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import pLimit from 'p-limit';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateCategoryDto } from '../dto/create-category.dto';
-import { UpdateCategoryDto } from '../dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -70,15 +68,15 @@ export class CategoryService {
     return category;
   }
 
-  async create(data: CreateCategoryDto) {
-    const { guessObjectIds, ...categoryData } = data;
+  async create(data: CreateCategory) {
+    const { guessObjectsIds, ...categoryData } = data;
 
     const category = await this.prisma.category.create({
       data: {
         ...categoryData,
-        guessObjects: guessObjectIds
+        guessObjects: guessObjectsIds
           ? {
-              connect: guessObjectIds.map((id) => ({ id })),
+              connect: guessObjectsIds.map((id) => ({ id })),
             }
           : undefined,
       },
@@ -87,7 +85,7 @@ export class CategoryService {
     return category;
   }
 
-  async update(categoryId: string, data: UpdateCategoryDto) {
+  async update(categoryId: string, data: UpdateCategory) {
     const { guessObjectsIds, connectIds, disconnectIds, id, ...categoryData } =
       data;
 

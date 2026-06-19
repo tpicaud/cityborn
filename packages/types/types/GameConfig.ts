@@ -1,7 +1,1 @@
-import type { Category } from './Category.js';
-
-export interface GameConfig {
-  categories: Category[];
-  timer: number;
-  nbOfObjects: number;
-}
+export type { GameConfig } from '@cityborn/api';

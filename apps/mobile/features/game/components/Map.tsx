@@ -1,12 +1,12 @@
-import { colors } from '@cityborn/design-system';
 import {
   type Coord,
   type Guess,
   type GuessObject,
-  type MapProps,
   type Round,
   RoundStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import type { MapProps } from '@cityborn/client';
+import { colors } from '@cityborn/design-system';
 import { calculatePoints } from '@cityborn/utils';
 import * as turf from '@turf/turf';
 import React, { useEffect, useRef } from 'react';

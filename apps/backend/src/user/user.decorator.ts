@@ -1,4 +1,4 @@
-import type { User } from '@cityborn/types';
+import type { User } from '@cityborn/api';
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 
 export const CurrentUser = createParamDecorator(

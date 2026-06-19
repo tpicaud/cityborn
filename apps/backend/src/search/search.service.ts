@@ -1,17 +1,11 @@
-import { ErrorCode } from '@cityborn/errors';
+import { ErrorCode, GuessObjectCandidate, WorldLocation } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { GuessObjectCandidateDto } from 'src/guess-object/dto/search-guess-object.response.dto';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { GuessObjectMapper } from 'src/guess-object/mappers/guess-object.mapper';
 import { NominatimService } from 'src/nominatim/nominatim.service';
 import { WikidataService } from 'src/wikidata/wikidata.service';
-import { WorldLocationDto } from 'src/world-location/dto/world-location.dto';
 import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
 import { WorldLocationService } from 'src/world-location/world-location.service';
-import {
-  SearchGuessObjectResponseDto,
-  SearchWorldLocationResponseDto,
-} from './dto/search.response.dto';
 
 @Injectable()
 export class SearchService {
@@ -24,7 +18,7 @@ export class SearchService {
 
   async searchGuessObjectByExternalId(
     source_id: string,
-  ): Promise<GuessObjectCandidateDto> {
+  ): Promise<GuessObjectCandidate> {
     const guessObjectInDB =
       await this.guessObjectService.findByExternalId(source_id);
     if (guessObjectInDB) {
@@ -34,7 +28,7 @@ export class SearchService {
       // else get from providers
       const wikidata_response = await this.wikidataService.findById(source_id);
       const guessObjectCandidate =
-        GuessObjectMapper.toGuessObjectCandidateDto(wikidata_response);
+        GuessObjectMapper.toGuessObjectCandidate(wikidata_response);
 
       if (guessObjectCandidate.world_location_id) {
         const world_location = await this.searchWorldLocationById(
@@ -51,11 +45,11 @@ export class SearchService {
 
   async searchGuessObjectByName(
     query: string,
-  ): Promise<GuessObjectCandidateDto[]> {
+  ): Promise<GuessObjectCandidate[]> {
     // Search in wikidata
     const wikidata_response = await this.wikidataService.searchByName(query);
     const guess_objects_candidates_from_wikidata =
-      GuessObjectMapper.toGuessObjectsSearchResponseDto(wikidata_response);
+      GuessObjectMapper.toGuessObjectsSearchResponse(wikidata_response);
 
     // search in db
     const guess_objects_candidates_from_db =
@@ -85,7 +79,7 @@ export class SearchService {
   async searchWorldLocationById(
     id: string,
     osm_type: string,
-  ): Promise<WorldLocationDto> {
+  ): Promise<WorldLocation> {
     // Search in db
     const db_world_location = await this.worldLocationService.get(id);
     if (db_world_location) {
@@ -106,17 +100,15 @@ export class SearchService {
     }
 
     const world_locations =
-      WorldLocationMapper.toWorldLocationDtoFromNominatimItem(
-        nominatim_response,
-      );
+      WorldLocationMapper.toWorldLocationFromNominatimItem(nominatim_response);
 
     return world_locations;
   }
 
-  async searchWorldLocationByName(query: string): Promise<WorldLocationDto[]> {
+  async searchWorldLocationByName(query: string): Promise<WorldLocation[]> {
     const nominatim_response = await this.nominatimService.searchByName(query);
     return nominatim_response.results.map((res) =>
-      WorldLocationMapper.toWorldLocationDtoFromNominatimItem(res),
+      WorldLocationMapper.toWorldLocationFromNominatimItem(res),
     );
   }
 }

@@ -1,4 +1,4 @@
-import { type GameRecord, SessionMode } from '@cityborn/types';
+import { type GameRecord, SessionMode } from '@cityborn/api';
 
 export const gameRecordsExample: GameRecord[] = [
   {

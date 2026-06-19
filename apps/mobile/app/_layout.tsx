@@ -2,8 +2,8 @@ import { Stack, useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
+import type { User } from '@cityborn/api';
 import { AuthProvider, ErrorProvider } from '@cityborn/contexts';
-import type { User } from '@cityborn/types';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect, useState } from 'react';
 import { Platform, StatusBar, TouchableOpacity } from 'react-native';
@@ -12,7 +12,7 @@ import ErrorDialog from '@/components/ui/ErrorDialog';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { getCurrentUser } from '@/lib/api/auth';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -27,8 +27,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     let isMounted = true;
-    apiClient
-      .getCurrentUser()
+    getCurrentUser()
       .then((fetchedUser) => {
         if (isMounted) {
           setUser(fetchedUser);
@@ -54,10 +53,7 @@ export default function RootLayout() {
     <ErrorProvider ErrorDialogComponent={ErrorDialog}>
       <SafeAreaProvider>
         <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-          <AuthProvider
-            initialValue={user}
-            getCurrentUser={apiClient.getCurrentUser}
-          >
+          <AuthProvider initialValue={user} getCurrentUser={getCurrentUser}>
             <StatusBar hidden={true} />
             <Stack
               screenOptions={{

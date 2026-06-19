@@ -1,5 +1,5 @@
+import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
-import { type GameConfig, type Guess, SessionStatus } from '@cityborn/types';
 import { useEffect, useRef, useState } from 'react';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';

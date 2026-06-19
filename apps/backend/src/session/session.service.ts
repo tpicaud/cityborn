@@ -1,7 +1,7 @@
-import { ErrorCode } from '@cityborn/errors';
 import {
-  createEvent,
+  type CreateSession,
   defaultGuess,
+  ErrorCode,
   type Game,
   GameStatus,
   type OnlinePlayer,
@@ -12,7 +12,7 @@ import {
   SessionMode,
   SessionStatus,
   type User,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import {
   BadRequestException,
   ConflictException,
@@ -25,14 +25,13 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { EventService } from 'src/event/event.service';
+import { createEvent } from 'src/event/event.types';
 import { GuessObjectService } from 'src/guess-object/guess-object.service';
 import { IdService } from 'src/id/id.service';
 import { LockService } from 'src/lock/lock.service';
 import { PlayerService } from 'src/player/player.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { SessionDto } from './dto/session.dto';
 
 @Injectable()
 export class SessionService {
@@ -60,7 +59,7 @@ export class SessionService {
   ////////////////////
 
   async create(
-    dto: CreateSessionDto,
+    dto: CreateSession,
     user?: User,
     visitorId?: string,
   ): Promise<Session> {
@@ -561,7 +560,7 @@ export class SessionService {
     return session;
   }
 
-  async endSoloGame(sessionDto: SessionDto, visitorId?: string) {
+  async endSoloGame(sessionDto: Session, visitorId?: string) {
     if (!sessionDto.currentGame) return;
     await this.endGame(sessionDto, sessionDto.currentGame, visitorId);
   }

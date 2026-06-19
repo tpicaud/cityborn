@@ -1,4 +1,4 @@
-import type { GameConfig, Guess, Session } from '@cityborn/types';
+import type { GameConfig, Guess, Session } from '@cityborn/api';
 
 export interface IUseSession {
   session: Session | undefined;

@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "dev": "dotenv -e .env -- next dev",
     "build": "next build --turbopack",
     "start": "dotenv -e .env -- next start",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "dependencies": {
     "@ariakit/react": "^0.4.19",
-    "@cityborn/types": "workspace:*",
+    "@cityborn/api": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.4",

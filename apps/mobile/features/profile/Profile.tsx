@@ -1,6 +1,6 @@
+import type { GameRecord } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
 import { colors } from '@cityborn/design-system';
-import type { GameRecord } from '@cityborn/types';
 import { calculateTotalPoints, isoToLocalDate } from '@cityborn/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -12,7 +12,8 @@ import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { deleteUser, signOut } from '@/lib/api/auth';
+import { getGameRecords } from '@/lib/api/user';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -33,29 +34,21 @@ export default function Profile() {
 
   const fetchGameRecords = async () => {
     if (!user) return;
-    console.log('Fetching game records for user:', user);
-    try {
-      setLoading(true);
-      const gameRecords = await apiClient.getGameRecords();
-      setGamesRecords(gameRecords);
-    } catch (error) {
-      console.error('Failed to fetch game records:', error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const result = await getGameRecords();
+    setLoading(false);
+    if (!result.ok) return invokeError(result.error);
+    setGamesRecords(result.data);
   };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    try {
-      await apiClient.deleteUser();
-      await apiClient.signOut();
-      setUser(null);
-      setDeleteAccountModalOpen(false);
-      router.replace('/');
-    } catch (error: any) {
-      invokeError(error);
-    }
+    const result = await deleteUser();
+    if (!result.ok) return invokeError(result.error);
+    await signOut();
+    setUser(null);
+    setDeleteAccountModalOpen(false);
+    router.replace('/');
   };
 
   return (

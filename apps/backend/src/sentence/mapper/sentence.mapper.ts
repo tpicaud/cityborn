@@ -1,9 +1,8 @@
-import type { ScoreType } from '@cityborn/types';
+import { ScoreType, Sentence } from '@cityborn/api';
 import type { EndGameSentence } from '@prisma/client';
-import type { SentenceDto } from '../dto/sentence.dto';
 
 export class SentenceMapper {
-  static toSentenceDto(prismaSentence: EndGameSentence): SentenceDto {
+  static toSentenceDto(prismaSentence: EndGameSentence): Sentence {
     return {
       id: prismaSentence.id,
       score_type: prismaSentence.score_type as ScoreType,

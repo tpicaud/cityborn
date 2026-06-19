@@ -1,4 +1,3 @@
-import { useError } from '@cityborn/contexts';
 import {
   type Game,
   type GameConfig,
@@ -9,10 +8,11 @@ import {
   type Session,
   SessionMode,
   SessionStatus,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { apiClient } from '@/lib/apiClient';
+import { createSession, createSoloGame, endSoloGame } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 
 export function useSoloSession(localPlayerID: string): IUseSession {
@@ -28,18 +28,13 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   // Create session
   useEffect(() => {
     const fetchSession = async () => {
-      try {
-        const session: Session = await apiClient.createSession(
-          SessionMode.SOLO,
-        );
-        session.hostID = localPlayerID;
-        setSession(session);
-      } catch (error: any) {
-        invokeError(error);
-      }
+      const result = await createSession({ mode: SessionMode.SOLO });
+      if (!result.ok) return invokeError(result.error);
+      result.data.hostID = localPlayerID;
+      setSession(result.data);
     };
     fetchSession();
-  }, []);
+  }, [invokeError, localPlayerID]);
 
   useEffect(() => {
     if (!game) return;
@@ -91,40 +86,32 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const startGame = async () => {
     if (!session) return;
-    try {
-      // Create  new game
-      const game = await apiClient.createSoloGame(session);
+    const result = await createSoloGame(session);
+    if (!result.ok) return invokeError(result.error);
+    const game = result.data;
 
-      setSession((prevSession) => {
-        if (!prevSession) return;
-        return {
-          ...prevSession,
-          status: SessionStatus.IN_GAME,
-        };
-      });
+    setSession((prevSession) => {
+      if (!prevSession) return;
+      return { ...prevSession, status: SessionStatus.IN_GAME };
+    });
 
-      // Start game
-      setGame({
-        ...game,
-        status: GameStatus.IN_GAME,
-        state: {
-          ...game.state,
-          currentRound: {
-            status: RoundStatus.GUESSING,
-            guessObjectId: game.state.guessObjectsIds[0],
-            playersGuesses: {},
-          },
+    setGame({
+      ...game,
+      status: GameStatus.IN_GAME,
+      state: {
+        ...game.state,
+        currentRound: {
+          status: RoundStatus.GUESSING,
+          guessObjectId: game.state.guessObjectsIds[0],
+          playersGuesses: {},
         },
-      });
-    } catch (error: any) {
-      invokeError(error);
-    }
+      },
+    });
   };
 
   const guess = (guess: Guess) => {
     setGame((prevGame) => {
-      if (!prevGame || !prevGame.state.currentRound || !localPlayerID)
-        return prevGame;
+      if (!prevGame?.state.currentRound || !localPlayerID) return prevGame;
 
       return {
         ...prevGame,
@@ -147,7 +134,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
     // Record result of the round
     setGame((prevGame) => {
-      if (!prevGame || !prevGame.state.currentRound) return prevGame;
+      if (!prevGame?.state.currentRound) return prevGame;
 
       const { guessObjectId, playersGuesses } = prevGame.state.currentRound;
 
@@ -206,8 +193,8 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!game) return null;
 
     // get current index
-    const currentIndex = game.state.guessObjectsIds.findIndex(
-      (id) => game.state.currentRound?.guessObjectId === id,
+    const currentIndex = game.state.guessObjectsIds.indexOf(
+      game.state.currentRound?.guessObjectId ?? '',
     );
 
     // Vérifier que l'objet est dans la liste
@@ -233,42 +220,24 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const endGame = async () => {
-    if (!session || !session.currentGame) return;
-
-    try {
-      await apiClient.endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      setSession({
-        ...session,
-        currentGame: undefined,
-      });
-    }
+    if (!session?.currentGame) return;
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    setSession({ ...session, currentGame: undefined });
   };
 
   const playAgain = async () => {
-    if (!session || !session.currentGame) return;
-
-    try {
-      await apiClient.endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      await startGame();
-    }
+    if (!session?.currentGame) return;
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    await startGame();
   };
 
   const exitGame = async () => {
-    if (!session || !session.currentGame) return;
-
-    try {
-      await apiClient.endSoloGame(session);
-    } catch (error: any) {
-      invokeError(error);
-    } finally {
-      router.replace('/');
-    }
+    if (!session?.currentGame) return;
+    const result = await endSoloGame(session);
+    if (!result.ok) invokeError(result.error);
+    router.replace('/');
   };
 
   return {

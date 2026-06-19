@@ -1,11 +1,11 @@
+import type { Category, GameConfig, Session } from '@cityborn/api';
 import { useError } from '@cityborn/contexts';
-import type { Category, GameConfig, Session } from '@cityborn/types';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { apiClient } from '@/lib/apiClient';
+import { fetchCategories } from '@/lib/api/category';
 
 interface SoloLobbyProps {
   localPlayerID: string | undefined;
@@ -27,15 +27,12 @@ export function SoloLobby({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await apiClient.fetchCategories();
-        setCategories(categories);
-      } catch {
-        invokeError('Aucunes catégories trouvées');
-      }
+    const loadCategories = async () => {
+      const result = await fetchCategories();
+      if (!result.ok) return invokeError(result.error);
+      setCategories(result.data);
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   useEffect(() => {

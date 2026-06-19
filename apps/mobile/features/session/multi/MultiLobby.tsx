@@ -1,11 +1,11 @@
-import { useError } from '@cityborn/contexts';
-import { colors } from '@cityborn/design-system';
 import type {
   Category,
   GameConfig,
   OnlinePlayer,
   Session,
-} from '@cityborn/types';
+} from '@cityborn/api';
+import { useError } from '@cityborn/contexts';
+import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
@@ -15,7 +15,7 @@ import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { fetchCategories } from '@/lib/api/category';
 
 interface MultiLobbyProps {
   localPlayerID: string | undefined;
@@ -45,15 +45,12 @@ export function MultiLobby({
   const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await apiClient.fetchCategories();
-        setCategories(categories);
-      } catch {
-        invokeError('Aucunes catégories trouvées');
-      }
+    const loadCategories = async () => {
+      const result = await fetchCategories();
+      if (!result.ok) return invokeError(result.error);
+      setCategories(result.data);
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   const toggleCategory = (id: string) => {

@@ -4,7 +4,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import Script from 'next/script';
 import AuthProvider from '@/contexts/AuthContext';
 import ErrorProvider from '@/contexts/ErrorContext';
-import * as ApiServiceServer from '@/services/ApiServiceServer';
+import { getCurrentUser, hasToken } from '@/server/queries/auth';
 
 export const metadata: Metadata = {
   title: 'CityBorn',
@@ -17,11 +17,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let user = null;
-  const hasToken = await ApiServiceServer.hasToken();
-
-  if (hasToken) {
+  const tokenExists = await hasToken();
+  if (tokenExists) {
     try {
-      user = await ApiServiceServer.getCurrentUser();
+      user = await getCurrentUser();
     } catch (error) {
       console.error('Failed to fetch user:', error);
     }

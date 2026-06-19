@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "check": "biome check ."
   },
   "exports": {
@@ -19,9 +19,7 @@
     }
   },
   "dependencies": {
-    "@cityborn/types": "workspace:*",
     "@cityborn/api": "workspace:*",
-    "@cityborn/errors": "workspace:*",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

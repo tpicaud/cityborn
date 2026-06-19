@@ -1,13 +1,13 @@
+import { getFriendlyErrorMessage } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
-import { getFriendlyErrorMessage } from '@cityborn/errors';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { apiClient } from '@/lib/apiClient';
+import { signIn } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -23,41 +23,23 @@ export const SignInComponent = () => {
     username: '',
     password: '',
   });
-  const [isFormValid, setIsFormValid] = useState(true);
+  const isFormValid =
+    formValues.username.trim() !== '' && formValues.password.trim() !== '';
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    validateForm();
-  }, [formValues]);
 
   const handleChange = (key: string, value: string) => {
     setFormValues({ ...formValues, [key]: value });
   };
 
-  const validateForm = () => {
-    if (
-      formValues.username.trim() !== '' &&
-      formValues.password.trim() !== ''
-    ) {
-      setIsFormValid(true);
-    } else {
-      setIsFormValid(false);
-    }
-  };
-
   const handleSubmit = async () => {
-    try {
-      setErrorMessage(null);
-      const user = await apiClient.signIn(
-        formValues.username,
-        formValues.password,
-      );
-      setUser(user);
-      router.push('/');
-    } catch (error: any) {
-      setErrorMessage(getFriendlyErrorMessage(error));
-      console.error(error);
-    }
+    setErrorMessage(null);
+    const result = await signIn({
+      identifier: formValues.username,
+      password: formValues.password,
+    });
+    if (!result.ok) return setErrorMessage(getFriendlyErrorMessage(result.error));
+    setUser(result.data);
+    router.push('/');
   };
 
   return (

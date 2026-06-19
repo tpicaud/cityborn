@@ -1,4 +1,1 @@
-export interface Coord {
-  lat: number;
-  lng: number;
-}
+export type { Coord } from '@cityborn/api';

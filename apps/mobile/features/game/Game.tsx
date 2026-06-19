@@ -2,7 +2,7 @@ import {
   GameStatus,
   type Game as GameType,
   type Guess as GuessType,
-} from '@cityborn/types';
+} from '@cityborn/api';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
