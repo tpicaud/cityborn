@@ -1,4 +1,4 @@
-import { Category } from '@cityborn/api';
+import { Category, FullCategory } from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
@@ -16,17 +16,35 @@ export class CategoryMapper {
       name: prismaCategory.name,
       isPublished: prismaCategory.isPublished,
       description: prismaCategory.description ?? undefined,
-      guessObjects: prismaCategory.guessObjects
-        ? prismaCategory.guessObjects.map((obj) =>
-            GuessObjectMapper.toGuessObject(obj),
-          )
-        : undefined,
     };
   }
 
   static toCategories(prismaCategories: PrismaCategory[]): Category[] {
     return prismaCategories.map((category) =>
       CategoryMapper.toCategory(category),
+    );
+  }
+
+  static toFullCategory(
+    prismaCategory: PrismaCategoryWithRelations,
+  ): FullCategory {
+    return {
+      id: prismaCategory.id,
+      name: prismaCategory.name,
+      isPublished: prismaCategory.isPublished,
+      description: prismaCategory.description ?? undefined,
+      guessObjects:
+        prismaCategory.guessObjects?.map((guessObject) =>
+          GuessObjectMapper.toGuessObject(guessObject),
+        ) ?? [],
+    };
+  }
+
+  static toFullCategories(
+    prismaCategories: PrismaCategoryWithRelations[],
+  ): FullCategory[] {
+    return prismaCategories.map((category) =>
+      CategoryMapper.toFullCategory(category),
     );
   }
 }

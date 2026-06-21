@@ -6,8 +6,10 @@ export const CategorySchema = z.object({
   name: z.string(),
   isPublished: z.boolean(),
   description: z.string().optional(),
-  guessObjectsIds: z.array(z.string()).optional(),
-  guessObjects: z.array(GuessObjectSchema).optional(),
+});
+
+export const FullCategorySchema = CategorySchema.extend({
+  guessObjects: z.array(GuessObjectSchema),
 });
 
 export const CategoriesSchema = z.array(CategorySchema);
@@ -20,5 +22,6 @@ export const UpdateCategorySchema = CategorySchema.extend({
 });
 
 export type Category = z.infer<typeof CategorySchema>;
+export type FullCategory = z.infer<typeof FullCategorySchema>;
 export type CreateCategory = z.infer<typeof CreateCategorySchema>;
 export type UpdateCategory = z.infer<typeof UpdateCategorySchema>;
