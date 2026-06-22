@@ -1,8 +1,16 @@
 import { CreateCategory, ErrorCode, UpdateCategory } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type {
+  Category as PrismaCategory,
+  GuessObject as PrismaGuessObject,
+} from '@prisma/client';
 import pLimit from 'p-limit';
 import { GuessObjectService } from '../../guess-object/guess-object.service';
 import { PrismaService } from '../../prisma/prisma.service';
+
+export type PrismaCategoryWithGuessObjects = PrismaCategory & {
+  guessObjects: PrismaGuessObject[];
+};
 
 @Injectable()
 export class CategoryService {
@@ -11,78 +19,47 @@ export class CategoryService {
     private readonly guessObjectService: GuessObjectService,
   ) {}
 
-  private buildInclude(includes: string[]) {
-    const include: any = {};
-
-    if (includes.includes('guessObjects')) {
-      include.guessObjects = {};
-
-      if (includes.includes('world_location')) {
-        include.guessObjects.include = { world_location: true };
-      }
-
-      if (includes.includes('world_location_preview')) {
-        include.guessObjects.include = {
-          world_location: {
-            select: {
-              id: true,
-              osm_type: true,
-              name: true,
-              display_name: true,
-            },
-          },
-        };
-      }
-    }
-
-    return include;
+  async findAll() {
+    return this.prisma.category.findMany();
   }
 
-  async findAll({ includes = [] }: { includes?: string[] }) {
-    const categories = await this.prisma.category.findMany({
-      include: this.buildInclude(includes),
+  async findBy(filter: { ids?: string[]; isPublished?: boolean }) {
+    return this.prisma.category.findMany({
+      where: {
+        ...(filter.ids && { id: { in: filter.ids } }),
+        ...(filter.isPublished !== undefined && {
+          isPublished: filter.isPublished,
+        }),
+      },
     });
-    return categories;
   }
 
-  async findOne(
-    id: string,
-    {
-      includes = [],
-    }: {
-      includes: string[];
-    },
-  ) {
-    const category = await this.prisma.category.findUnique({
-      where: { id },
-      include: this.buildInclude(includes),
+  async findFullBy(filter: {
+    ids?: string[];
+    isPublished?: boolean;
+  }): Promise<PrismaCategoryWithGuessObjects[]> {
+    return this.prisma.category.findMany({
+      where: {
+        ...(filter.ids && { id: { in: filter.ids } }),
+        ...(filter.isPublished !== undefined && {
+          isPublished: filter.isPublished,
+        }),
+      },
+      include: { guessObjects: true },
     });
-
-    if (!category) {
-      throw new NotFoundException({
-        code: ErrorCode.CATEGORY_NOT_FOUND,
-        message: `Category with id ${id} not found`,
-      });
-    }
-
-    return category;
   }
 
   async create(data: CreateCategory) {
     const { guessObjectsIds, ...categoryData } = data;
 
-    const category = await this.prisma.category.create({
+    return this.prisma.category.create({
       data: {
         ...categoryData,
         guessObjects: guessObjectsIds
-          ? {
-              connect: guessObjectsIds.map((id) => ({ id })),
-            }
+          ? { connect: guessObjectsIds.map((id) => ({ id })) }
           : undefined,
       },
     });
-
-    return category;
   }
 
   async update(categoryId: string, data: UpdateCategory) {
@@ -90,16 +67,12 @@ export class CategoryService {
       data;
 
     const relationUpdate: any = {};
-
     if (guessObjectsIds) {
       relationUpdate.set = guessObjectsIds.map((id) => ({ id }));
     } else {
-      if (connectIds) {
-        relationUpdate.connect = connectIds.map((id) => ({ id }));
-      }
-      if (disconnectIds) {
+      if (connectIds) relationUpdate.connect = connectIds.map((id) => ({ id }));
+      if (disconnectIds)
         relationUpdate.disconnect = disconnectIds.map((id) => ({ id }));
-      }
     }
 
     const updated_category = await this.prisma.category.update({
@@ -113,20 +86,15 @@ export class CategoryService {
       include: { guessObjects: true },
     });
 
-    // Delete guess objects
-    if (disconnectIds && disconnectIds.length >= 0) {
+    if (disconnectIds && disconnectIds.length > 0) {
       const limit = pLimit(5);
-
       await Promise.all(
         disconnectIds.map((id) =>
           limit(async () => {
             const count = await this.prisma.category.count({
               where: { guessObjects: { some: { id } } },
             });
-
-            if (count === 0) {
-              await this.guessObjectService.delete(id);
-            }
+            if (count === 0) await this.guessObjectService.delete(id);
           }),
         ),
       );
@@ -136,30 +104,27 @@ export class CategoryService {
   }
 
   async delete(id: string) {
-    // Check if exist
-    const category = await this.findOne(id, {
-      includes: ['guessObjects'],
-    });
+    const [category] = await this.findFullBy({ ids: [id] });
 
-    // Delete
-    await this.prisma.category.delete({
-      where: { id },
-    });
+    if (!category) {
+      throw new NotFoundException({
+        code: ErrorCode.CATEGORY_NOT_FOUND,
+        message: `Category with id ${id} not found`,
+      });
+    }
 
-    // Delete guess objects if orphelin
-    if (category.guessObjects && category.guessObjects.length >= 0) {
+    await this.prisma.category.delete({ where: { id } });
+
+    if (category.guessObjects.length > 0) {
       const limit = pLimit(5);
-
       await Promise.all(
         category.guessObjects.map((guessObject) =>
           limit(async () => {
             const count = await this.prisma.category.count({
               where: { guessObjects: { some: { id: guessObject.id } } },
             });
-
-            if (count === 0) {
+            if (count === 0)
               await this.guessObjectService.delete(guessObject.id);
-            }
           }),
         ),
       );

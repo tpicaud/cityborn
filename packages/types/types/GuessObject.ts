@@ -1,5 +1,5 @@
 export type {
   CreateGuessObject,
   GuessObject,
-  GuessObjectCandidate,
+  GuessObjectDraft,
 } from '@cityborn/api';

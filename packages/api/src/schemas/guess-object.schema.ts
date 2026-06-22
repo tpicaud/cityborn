@@ -13,27 +13,31 @@ export const GuessObjectSchema = z.object({
       external_id: z.string(),
     })
     .optional(),
-  world_location_id: z.string(),
-  world_location: WorldLocationSchema.optional(),
 });
-
 export const GuessObjectsSchema = z.array(GuessObjectSchema);
+
+export const FullGuessObjectSchema = GuessObjectSchema.extend({
+  world_location: WorldLocationSchema,
+});
+export const FullGuessObjectsSchema = z.array(FullGuessObjectSchema);
 
 export const CreateGuessObjectSchema = GuessObjectSchema.omit({
   id: true,
-});
-
-export const GuessObjectCandidateSchema = GuessObjectSchema.omit({
-  id: true,
-  world_location_id: true,
 }).extend({
-  id: z.string().optional(),
-  world_location_id: z.string().optional(),
+  world_location_id: z.string(),
+  world_location: WorldLocationSchema,
 });
 
-export const GuessObjectCandidatesSchema = z.array(GuessObjectCandidateSchema);
+export const GuessObjectDraftSchema = GuessObjectSchema.omit({
+  id: true,
+}).extend({
+  world_location_id: z.string().optional(),
+  world_location: WorldLocationSchema.optional(),
+});
+
+export const GuessObjectDraftsSchema = z.array(GuessObjectDraftSchema);
 
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
+export type FullGuessObject = z.infer<typeof FullGuessObjectSchema>;
+export type GuessObjectDraft = z.infer<typeof GuessObjectDraftSchema>;
 export type CreateGuessObject = z.infer<typeof CreateGuessObjectSchema>;
-export type GuessObjectCandidate = z.infer<typeof GuessObjectCandidateSchema>;
-export type GuessObjectCandidates = z.infer<typeof GuessObjectCandidatesSchema>;

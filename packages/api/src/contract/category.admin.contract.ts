@@ -4,6 +4,7 @@ import {
   CategoriesSchema,
   CategorySchema,
   CreateCategorySchema,
+  FullCategorySchema,
   UpdateCategorySchema,
 } from '../schemas/category.schema';
 import {
@@ -17,18 +18,24 @@ const c = initContract();
 
 export const categoryAdminContract = c.router(
   {
-    listCategories: {
-      method: 'GET',
-      path: '/',
-      query: IncludeQuerySchema,
-      responses: { 200: CategoriesSchema, ...commonErrorResponses },
-    },
     getCategory: {
       method: 'GET',
       path: '/:id',
       pathParams: IdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: CategorySchema, ...commonErrorResponses },
+    },
+    getAllCategories: {
+      method: 'GET',
+      path: '/',
+      query: IncludeQuerySchema,
+      responses: { 200: CategoriesSchema, ...commonErrorResponses },
+    },
+    getFullCategory: {
+      method: 'GET',
+      path: '/:id',
+      pathParams: IdParamSchema,
+      responses: { 200: FullCategorySchema, ...commonErrorResponses },
     },
     createCategory: {
       method: 'POST',

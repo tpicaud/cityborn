@@ -10,18 +10,18 @@ const c = initContract();
 
 export const categoryContract = c.router(
   {
-    getCategories: {
-      method: 'GET',
-      path: '/',
-      query: IncludeQuerySchema,
-      responses: { 200: CategoriesSchema, ...commonErrorResponses },
-    },
     getCategory: {
       method: 'GET',
       path: '/:id',
       pathParams: IdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: CategorySchema, ...commonErrorResponses },
+    },
+    getCategories: {
+      method: 'GET',
+      path: '/',
+      query: IncludeQuerySchema,
+      responses: { 200: CategoriesSchema, ...commonErrorResponses },
     },
   },
   { pathPrefix: '/category' },

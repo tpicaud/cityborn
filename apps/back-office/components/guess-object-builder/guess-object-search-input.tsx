@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { GuessObjectCandidate } from '@cityborn/api';
+import type { GuessObjectDraft } from '@cityborn/api';
 import {
   type ChangeEventHandler,
   startTransition,
@@ -27,12 +27,12 @@ export function GuessObjectSearchInput({
   value: string | undefined;
   disabled: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
-  onSelect: (candidate: GuessObjectCandidate | undefined) => void;
+  onSelect: (draft: GuessObjectDraft | undefined) => void;
   className?: string;
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<GuessObjectCandidate[]>([]);
+  const [matches, setMatches] = useState<GuessObjectDraft[]>([]);
 
   useEffect(() => {
     if (!searchValue) {
@@ -78,19 +78,19 @@ export function GuessObjectSearchInput({
         className={popoverClassName}
       >
         {matches.length ? (
-          matches.slice(0, 5).map((candidate) => (
+          matches.slice(0, 5).map((draft) => (
             <Ariakit.ComboboxItem
-              key={candidate.source?.external_id}
-              value={candidate.name}
-              onClick={() => onSelect(candidate)}
+              key={draft.source?.external_id}
+              value={draft.name}
+              onClick={() => onSelect(draft)}
               className="p-2 hover:bg-gray-300 hover:rounded-md hover:cursor-pointer"
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-900">
-                  {candidate.name}
+                  {draft.name}
                 </span>
                 <span className="text-xs text-gray-500">
-                  {candidate.short_description}
+                  {draft.short_description}
                 </span>
               </div>
             </Ariakit.ComboboxItem>

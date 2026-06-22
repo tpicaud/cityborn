@@ -1,5 +1,5 @@
-import { contract } from '@cityborn/api';
-import { Controller } from '@nestjs/common';
+import { contract, ErrorCode } from '@cityborn/api';
+import { Controller, NotFoundException } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { GuessObjectService } from '../guess-object.service';
 
@@ -10,20 +10,45 @@ export class PublicGuessObjectController {
   @TsRestHandler(contract.guessObjects)
   async handler() {
     return tsRestHandler(contract.guessObjects, {
+      getGuessObject: async ({ params }) => {
+        const [guessObject] = await this.guessObjectsService.findBy({
+          ids: [params.id],
+        });
+        if (!guessObject) {
+          throw new NotFoundException({
+            code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+            message: 'GuessObject not found',
+          });
+        }
+        return { status: 200 as const, body: guessObject };
+      },
+
       getGuessObjects: async ({ query }) => {
         const idsArray = query.guessObjectsIds.split(',');
         return {
           status: 200 as const,
-          body: await this.guessObjectsService.findSome(idsArray),
+          body: await this.guessObjectsService.findBy({ ids: idsArray }),
         };
       },
-      getGuessObject: async ({ params, query }) => {
-        const includes = query.include
-          ? query.include.split(',').map((i) => i.trim())
-          : [];
+
+      getFullGuessObject: async ({ params }) => {
+        const [guessObject] = await this.guessObjectsService.findFullBy({
+          ids: [params.id],
+        });
+        if (!guessObject) {
+          throw new NotFoundException({
+            code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+            message: 'GuessObject not found',
+          });
+        }
+        return { status: 200 as const, body: guessObject };
+      },
+
+      getFullGuessObjects: async ({ query }) => {
+        const idsArray = query.guessObjectsIds.split(',');
         return {
           status: 200 as const,
-          body: await this.guessObjectsService.findById(params.id, includes),
+          body: await this.guessObjectsService.findFullBy({ ids: idsArray }),
         };
       },
     });

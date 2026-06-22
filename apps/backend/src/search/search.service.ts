@@ -1,4 +1,4 @@
-import { ErrorCode, GuessObjectCandidate, WorldLocation } from '@cityborn/api';
+import { ErrorCode, GuessObjectDraft, WorldLocation } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { GuessObjectMapper } from '../guess-object/mappers/guess-object.mapper';
@@ -18,62 +18,63 @@ export class SearchService {
 
   async searchGuessObjectByExternalId(
     source_id: string,
-  ): Promise<GuessObjectCandidate> {
-    const guessObjectInDB =
-      await this.guessObjectService.findByExternalId(source_id);
+  ): Promise<GuessObjectDraft> {
+    const [guessObjectInDB] = await this.guessObjectService.findFullBy({
+      external_id: source_id,
+    });
     if (guessObjectInDB) {
       // return if in db
       return guessObjectInDB;
     } else {
       // else get from providers
       const wikidata_response = await this.wikidataService.findById(source_id);
-      const guessObjectCandidate =
-        GuessObjectMapper.toGuessObjectCandidate(wikidata_response);
+      const guessObjectDraft =
+        GuessObjectMapper.toGuessObjectDraft(wikidata_response);
 
-      if (guessObjectCandidate.world_location_id) {
+      if (guessObjectDraft.world_location_id) {
         const world_location = await this.searchWorldLocationById(
-          guessObjectCandidate.world_location_id,
+          guessObjectDraft.world_location_id,
           wikidata_response.osm_type!,
         );
         if (world_location)
-          guessObjectCandidate.world_location = world_location;
+          guessObjectDraft.world_location = world_location;
       }
 
-      return guessObjectCandidate;
+      return guessObjectDraft;
     }
   }
 
   async searchGuessObjectByName(
     query: string,
-  ): Promise<GuessObjectCandidate[]> {
+  ): Promise<GuessObjectDraft[]> {
     // Search in wikidata
     const wikidata_response = await this.wikidataService.searchByName(query);
-    const guess_objects_candidates_from_wikidata =
+    const drafts_from_wikidata =
       GuessObjectMapper.toGuessObjectsSearchResponse(wikidata_response);
 
     // search in db
-    const guess_objects_candidates_from_db =
-      await this.guessObjectService.searchByName(query);
+    const drafts_from_db =
+      await this.guessObjectService.searchDraftByName(query);
 
-    // Remplacer les candidats Wikidata par ceux de la DB quand l’external_id correspond
+    // Remplacer les drafts Wikidata par ceux de la DB quand l’external_id correspond
     const dbByExternalId = new Map(
-      guess_objects_candidates_from_db.map((obj) => [
+      drafts_from_db.map((obj) => [
         obj.source?.external_id,
         obj,
       ]),
     );
 
-    const merged_candidates = guess_objects_candidates_from_wikidata.map(
-      (wikiCandidate) => {
-        const dbObj = dbByExternalId.get(wikiCandidate.source?.external_id);
+    const merged_drafts = drafts_from_wikidata.map(
+      (wikiDraft) => {
+        const dbObj = dbByExternalId.get(wikiDraft.source?.external_id);
         if (dbObj) {
           return dbObj;
         }
-        return wikiCandidate;
+        return wikiDraft;
       },
     );
 
-    return merged_candidates;
+    return merged_drafts;
   }
 
   async searchWorldLocationById(

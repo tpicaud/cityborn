@@ -3,7 +3,7 @@
 import type {
   Category,
   GuessObject,
-  GuessObjectCandidate,
+  GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
@@ -29,8 +29,8 @@ interface CategoryBuilderProps {
 export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   const router = useRouter();
   const [category, setCategory] = useState<Category>(fetchedCategory);
-  const [guessObjectCandidate, setGuessObjectCandidate] =
-    useState<GuessObjectCandidate>();
+  const [guessObjectDraft, setGuessObjectDraft] =
+    useState<GuessObjectDraft>();
   const [isSaveLoading, setIsSaveLoading] = useState(false);
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
@@ -55,7 +55,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   ///////////////////////////
 
   function handleCreateGuessObject() {
-    setGuessObjectCandidate({
+    setGuessObjectDraft({
       name: '',
       id: '',
       world_location_id: '',
@@ -63,39 +63,39 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   }
 
   function handleSelectGuessObject(guessObject: GuessObject) {
-    if (guessObjectCandidate?.name === guessObject.name) {
-      setGuessObjectCandidate(undefined);
+    if (guessObjectDraft?.name === guessObject.name) {
+      setGuessObjectDraft(undefined);
     } else {
-      setGuessObjectCandidate(guessObject);
+      setGuessObjectDraft(guessObject);
     }
   }
 
-  async function handleSaveGuessObjectCandidate(): Promise<void> {
+  async function handleSaveGuessObjectDraft(): Promise<void> {
     try {
-      if (!guessObjectCandidate) {
+      if (!guessObjectDraft) {
         alert('Objet non valide');
         return;
       }
 
-      if (!guessObjectCandidate.world_location_id) {
+      if (!guessObjectDraft.world_location_id) {
         alert('Localisation non valide, veuillez resélectionner');
         return;
       }
 
       // If id, then update, else post
       let id: string;
-      if (guessObjectCandidate.id) {
+      if (guessObjectDraft.id) {
         const result = await patchGuessObject(
-          guessObjectCandidate.id,
-          guessObjectCandidate,
+          guessObjectDraft.id,
+          guessObjectDraft,
         );
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
       } else {
-        const { id: _id, ...rest } = guessObjectCandidate;
+        const { id: _id, ...rest } = guessObjectDraft;
         const result = await saveGuessObject({
           ...rest,
-          world_location_id: String(guessObjectCandidate.world_location_id),
+          world_location_id: String(guessObjectDraft.world_location_id),
         });
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
@@ -195,7 +195,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         return { ...prev, guessObjects: updatedGuessObjects };
       });
 
-      setGuessObjectCandidate(object);
+      setGuessObjectDraft(object);
     } catch (error) {
       alert("Erreur lors de l'ajout de l'objet");
       console.error(error);
@@ -224,7 +224,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
       setCategory({ ...category, guessObjects: updatedGuessObjects });
       const removeResult = await saveCategory(category.id, updated_category);
       if (!removeResult.ok) throw new Error(removeResult.error.message);
-      setGuessObjectCandidate(undefined);
+      setGuessObjectDraft(undefined);
     } catch (error) {
       alert("Erreur lors de la suppression de l'objet");
       console.error(error);
@@ -337,7 +337,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
                 <div className="p-3">
                   <GuessObjectsList
                     guessObjects={filteredGuessObjects}
-                    selectedGuessObject={guessObjectCandidate as GuessObject}
+                    selectedGuessObject={guessObjectDraft as GuessObject}
                     handleSelectGuessObject={handleSelectGuessObject}
                     handleRemoveFromCategory={handleRemoveFromCategory}
                   />
@@ -357,15 +357,15 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         <div className="flex flex-col w-full">
           <div className="flex flex-row gap-4 mb-2 items-center h-8">
             <h2 className="text-xl font-bold">Editeur d'objet</h2>
-            {guessObjectCandidate && (
+            {guessObjectDraft && (
               <div className="flex items-center">
                 <Button
                   size="sm"
-                  variant={`${guessObjectCandidate.id ? 'outline' : 'primary'}`}
-                  onClick={handleSaveGuessObjectCandidate}
+                  variant={`${guessObjectDraft.id ? 'outline' : 'primary'}`}
+                  onClick={handleSaveGuessObjectDraft}
                 >
                   <p className="font-bold">
-                    {!guessObjectCandidate.id
+                    {!guessObjectDraft.id
                       ? "Ajouter l'objet"
                       : "Mettre à jour l'objet"}
                   </p>
@@ -376,8 +376,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
           <span className="h-[2px] w-full bg-foreground"></span>
         </div>
         <GuessObjectBuilder
-          guessObjectCandidate={guessObjectCandidate}
-          setGuessObjectCandidate={setGuessObjectCandidate}
+          guessObjectDraft={guessObjectDraft}
+          setGuessObjectDraft={setGuessObjectDraft}
         />
       </div>
     </div>
