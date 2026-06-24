@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { MAIL_PROVIDER } from './mail.constants';
-import type { MailProvider, SendMailOptions } from './mail.types';
+import type { MailProvider, SendMailOptions } from './providers/mail.provider';
 
 @Injectable()
 export class MailService {

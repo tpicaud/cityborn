@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import type { MailProvider, SendMailOptions } from '../mail.types';
+import type { MailProvider, SendMailOptions } from './mail.provider';
 
 @Injectable()
 export class BrevoSmtpMailProvider implements MailProvider {
@@ -13,7 +13,7 @@ export class BrevoSmtpMailProvider implements MailProvider {
     const transporter = this.getTransporter();
     const fromEmail = this.getRequiredConfig('BREVO_SENDER_EMAIL');
     const fromName =
-      this.configService.get<string>('BREVO_SENDER_NAME') ?? 'CityBorn';
+      this.configService.get<string>('BREVO_SENDER_NAME') ?? 'Cityborn';
 
     await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
@@ -22,6 +22,7 @@ export class BrevoSmtpMailProvider implements MailProvider {
       html: options.html,
       text: options.text,
       replyTo: options.replyTo,
+      attachments: options.attachments,
     });
   }
 

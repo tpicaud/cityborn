@@ -23,7 +23,7 @@ export function VerifyEmailComponent({
   const hasVerified = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [message, setMessage] = useState(
-    'Validation de votre adresse mail en cours...',
+    'Validation de votre adresse e-mail en cours...',
   );
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export function VerifyEmailComponent({
         await apiClient.verifyEmail(verificationToken);
         await refreshUser();
         setStatus('success');
-        setMessage('Votre adresse mail est maintenant vérifiée.');
+        setMessage('Votre adresse e-mail est maintenant vérifiée.');
       } catch {
         setStatus('error');
         setMessage(
@@ -66,7 +66,7 @@ export function VerifyEmailComponent({
 
         <Typography variant="h5">
           {status === 'success'
-            ? 'Email vérifié'
+            ? 'E-mail vérifié'
             : status === 'error'
               ? 'Vérification impossible'
               : 'Vérification'}

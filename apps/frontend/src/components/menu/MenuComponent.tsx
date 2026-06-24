@@ -83,7 +83,7 @@ export default function MenuComponent({
           {user.isVerified === false && (
             <div className="flex flex-col items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-center w-full max-w-xs">
               <p className="text-sm font-medium text-amber-900">
-                Votre adresse mail n'est pas vérifiée
+                Votre adresse e-mail n'est pas vérifiée
               </p>
               <LoadingButton
                 variant="text"
@@ -94,8 +94,8 @@ export default function MenuComponent({
                 disabled={verificationEmailSent}
               >
                 {verificationEmailSent
-                  ? 'Mail de vérification envoyé'
-                  : 'Renvoyer un mail de vérification'}
+                  ? 'E-mail de vérification envoyé'
+                  : 'Renvoyer un e-mail de vérification'}
               </LoadingButton>
             </div>
           )}

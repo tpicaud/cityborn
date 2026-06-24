@@ -13,6 +13,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -22,15 +23,19 @@ import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
+import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
-import { buildVerificationEmail } from '../mail/templates/verification-email.template';
 import { UserMapper } from '../user/user.mapper';
 import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
 
+const verificationEmailCooldown = 3 * 60 * 1000;
+
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -61,7 +66,14 @@ export class AuthService {
         message: `Error creating user in database`,
       });
 
-    await this.sendVerificationEmail(user);
+    try {
+      await this.sendVerificationEmail(user);
+    } catch (error) {
+      this.logger.error(
+        'Failed to send verification email during sign-up',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
 
     // Create JWT
     const access_token = await this.generateToken(
@@ -375,7 +387,7 @@ export class AuthService {
 
     if (fullUser.isVerified) return;
 
-    await this.sendVerificationEmail(fullUser, 3 * 60 * 1000);
+    await this.sendVerificationEmail(fullUser, verificationEmailCooldown);
   }
 
   async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
@@ -401,7 +413,7 @@ export class AuthService {
         resendCooldownMs,
       );
     await this.mailService.sendMail(
-      buildVerificationEmail({
+      buildMailOptions('verification-email', {
         email: user.email,
         frontendUrl:
           this.configService.get<string>('FRONTEND_URL') ??
