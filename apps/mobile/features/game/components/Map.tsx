@@ -2,7 +2,6 @@ import {
   type Coord,
   type FullGuessObject,
   type Guess,
-  type GuessObject,
   type Round,
   RoundStatus,
 } from '@cityborn/api';
@@ -26,9 +25,9 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   const mapRef = useRef<MapView>(null);
   const currentRound: Round = game.state.currentRound!;
-  const guessObject: GuessObject = game.state.guessObjects?.find(
-    (obj: GuessObject) => obj.id === currentRound.guessObjectId,
-  )!;
+  const guessObject = (game.state.guessObjects ?? []).find(
+    (obj: FullGuessObject) => obj.id === currentRound.guessObjectId,
+  ) as FullGuessObject;
 
   const getCenterOfGuessObject = (guessObject: FullGuessObject): Coord => ({
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
@@ -68,12 +67,12 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
     handlePreGuess(newGuess);
   };
 
-  const isGeoJSON = (guessObject: GuessObject) => {
+  const isGeoJSON = (guessObject: FullGuessObject) => {
     const type = guessObject.world_location?.geometry?.type;
     return type === 'Polygon' || type === 'MultiPolygon';
   };
 
-  const hasWin = (point: Coord, guessObject: GuessObject) => {
+  const hasWin = (point: Coord, guessObject: FullGuessObject) => {
     try {
       const geoJson = guessObject.world_location?.geometry!;
       if (geoJson.type === 'Point') return false;

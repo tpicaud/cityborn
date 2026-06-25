@@ -1,7 +1,7 @@
 import {
+  type FullGuessObject,
   type Game,
   type Guess,
-  type GuessObject,
   type Round,
   RoundStatus,
 } from '@cityborn/api';
@@ -19,7 +19,7 @@ function GuessResult({
   localPlayerID,
 }: {
   currentRound: Round;
-  guessObject: GuessObject;
+  guessObject: FullGuessObject;
   localPlayerID: string;
 }) {
   if (
