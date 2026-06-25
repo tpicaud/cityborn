@@ -1,4 +1,11 @@
-import { Category, CreateCategory, ErrorCode, FullCategory, UpdateCategory } from '@cityborn/api';
+import {
+  Category,
+  CategoryTree,
+  CreateCategory,
+  ErrorCode,
+  FullCategory,
+  UpdateCategory,
+} from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
@@ -40,5 +47,10 @@ export class AdminCategoryService {
 
   async delete(id: string): Promise<void> {
     await this.categoryService.delete(id);
+  }
+
+  async getTrees(): Promise<CategoryTree[]> {
+    const roots = await this.categoryService.findTree({});
+    return CategoryMapper.toCategoryTrees(roots);
   }
 }

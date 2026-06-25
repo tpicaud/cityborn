@@ -1,10 +1,11 @@
-import { Category, FullCategory } from '@cityborn/api';
+import { Category, CategoryTree, FullCategory } from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
   WorldLocation,
 } from '@prisma/client';
 import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
+import { PrismaCategoryNode } from '../services/category.service';
 
 type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: (PrismaGuessObject & { world_location: WorldLocation })[];
@@ -17,6 +18,7 @@ export class CategoryMapper {
       name: prismaCategory.name,
       isPublished: prismaCategory.isPublished,
       description: prismaCategory.description ?? undefined,
+      parentId: prismaCategory.parentId ?? undefined,
     };
   }
 
@@ -34,6 +36,7 @@ export class CategoryMapper {
       name: prismaCategory.name,
       isPublished: prismaCategory.isPublished,
       description: prismaCategory.description ?? undefined,
+      parentId: prismaCategory.parentId ?? undefined,
       guessObjects:
         prismaCategory.guessObjects?.map((guessObject) =>
           GuessObjectMapper.toGuessObject(guessObject),
@@ -47,5 +50,20 @@ export class CategoryMapper {
     return prismaCategories.map((category) =>
       CategoryMapper.toFullCategory(category),
     );
+  }
+
+  static toCategoryTree(node: PrismaCategoryNode): CategoryTree {
+    return {
+      id: node.id,
+      name: node.name,
+      isPublished: node.isPublished,
+      description: node.description ?? undefined,
+      parentId: node.parentId ?? undefined,
+      children: node.children.map((c) => CategoryMapper.toCategoryTree(c)),
+    };
+  }
+
+  static toCategoryTrees(roots: PrismaCategoryNode[]): CategoryTree[] {
+    return roots.map((r) => CategoryMapper.toCategoryTree(r));
   }
 }

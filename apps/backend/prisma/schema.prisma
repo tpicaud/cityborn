@@ -120,8 +120,13 @@ model Category {
   name        String
   isPublished Boolean @default(false)
   description String?
+  parentId    String? @db.Uuid
 
+  parent       Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryChildren")
   guessObjects GuessObject[] @relation("CategoryGuessObjects")
+
+  @@index([parentId])
 }
 
 ///////////////////////

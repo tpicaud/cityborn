@@ -47,6 +47,7 @@ export enum ErrorCode {
 
   // Category
   CATEGORY_NOT_FOUND = 'CATEGORY_NOT_FOUND',
+  CATEGORY_HAS_CHILDREN = 'CATEGORY_HAS_CHILDREN',
 
   ///////////////
   // Technical //

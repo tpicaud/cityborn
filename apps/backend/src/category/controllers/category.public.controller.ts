@@ -10,6 +10,11 @@ export class PublicCategoryController {
   @TsRestHandler(contract.category)
   async handler() {
     return tsRestHandler(contract.category, {
+      getCategoryTrees: async () => ({
+        status: 200 as const,
+        body: await this.publicCategoryService.getTrees(),
+      }),
+
       getCategories: async () => {
         return {
           status: 200 as const,

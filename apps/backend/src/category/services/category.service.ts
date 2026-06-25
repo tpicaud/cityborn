@@ -1,5 +1,9 @@
 import { CreateCategory, ErrorCode, UpdateCategory } from '@cityborn/api';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
@@ -13,12 +17,37 @@ export type PrismaCategoryWithFullGuessObjects = PrismaCategory & {
   guessObjects: (PrismaGuessObject & { world_location: WorldLocation })[];
 };
 
+export type PrismaCategoryNode = PrismaCategory & {
+  children: PrismaCategoryNode[];
+};
+
+const TREE_DEPTH = 6;
+
+function buildChildrenInclude(depth: number): object {
+  if (depth === 0) return {};
+  return { children: { include: buildChildrenInclude(depth - 1) } };
+}
+
 @Injectable()
 export class CategoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly guessObjectService: GuessObjectService,
   ) {}
+
+  async findTree(filter: {
+    isPublished?: boolean;
+  }): Promise<PrismaCategoryNode[]> {
+    return this.prisma.category.findMany({
+      where: {
+        parentId: null,
+        ...(filter.isPublished !== undefined && {
+          isPublished: filter.isPublished,
+        }),
+      },
+      include: buildChildrenInclude(TREE_DEPTH),
+    }) as Promise<PrismaCategoryNode[]>;
+  }
 
   async findAll() {
     return this.prisma.category.findMany();
@@ -111,6 +140,16 @@ export class CategoryService {
       throw new NotFoundException({
         code: ErrorCode.CATEGORY_NOT_FOUND,
         message: `Category with id ${id} not found`,
+      });
+    }
+
+    const childrenCount = await this.prisma.category.count({
+      where: { parentId: id },
+    });
+    if (childrenCount > 0) {
+      throw new BadRequestException({
+        code: ErrorCode.CATEGORY_HAS_CHILDREN,
+        message: `Category with id ${id} has children and cannot be deleted`,
       });
     }
 

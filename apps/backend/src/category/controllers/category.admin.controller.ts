@@ -12,6 +12,11 @@ export class AdminCategoryController {
   @TsRestHandler(contract.admin.category)
   async handler() {
     return tsRestHandler(contract.admin.category, {
+      getCategoryTrees: async () => ({
+        status: 200 as const,
+        body: await this.adminCategoryService.getTrees(),
+      }),
+
       getCategory: async ({ params }) => {
         const [category] = await this.adminCategoryService.findBy({
           ids: [params.id],

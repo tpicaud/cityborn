@@ -3,6 +3,7 @@ import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   CategoriesSchema,
   CategorySchema,
+  CategoryTreesSchema,
   CreateCategorySchema,
   FullCategorySchema,
   UpdateCategorySchema,
@@ -18,6 +19,11 @@ const c = initContract();
 
 export const categoryAdminContract = c.router(
   {
+    getCategoryTrees: {
+      method: 'GET',
+      path: '/tree',
+      responses: { 200: CategoryTreesSchema, ...commonErrorResponses },
+    },
     getCategory: {
       method: 'GET',
       path: '/:id',
