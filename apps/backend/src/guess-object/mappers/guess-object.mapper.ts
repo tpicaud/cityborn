@@ -1,11 +1,8 @@
-import {
-  FullGuessObject,
-  GuessObject,
-  GuessObjectDraft,
-} from '@cityborn/api';
+import { FullGuessObject, GuessObject, GuessObjectDraft } from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
 } from '@prisma/client';
 import type {
   WikidataItemResponse,
@@ -13,12 +10,20 @@ import type {
 } from '../../wikidata/wikidata.service';
 import { WorldLocationMapper } from '../../world-location/mapper/world-location.mapper';
 
-type PrismaGuessObjectWithRelations = PrismaGuessObject & {
+type PrismaGuessObjectWithLocation = PrismaGuessObject & {
   world_location: PrismaWorldLocation;
 };
 
+export type PrismaGuessObjectWithFullLocation = PrismaGuessObject & {
+  world_location: PrismaWorldLocation & {
+    geometry: PrismaWorldLocationGeometry | null;
+  };
+};
+
 export class GuessObjectMapper {
-  static toGuessObject(prismaGuessObject: PrismaGuessObject): GuessObject {
+  static toGuessObject(
+    prismaGuessObject: PrismaGuessObjectWithLocation,
+  ): GuessObject {
     return {
       id: prismaGuessObject.id,
       name: prismaGuessObject.name,
@@ -30,11 +35,17 @@ export class GuessObjectMapper {
           provider: string;
           external_id: string;
         }) ?? undefined,
+      world_location_preview: {
+        id: prismaGuessObject.world_location.id,
+        name: prismaGuessObject.world_location.name,
+        display_name:
+          prismaGuessObject.world_location.display_name ?? undefined,
+      },
     };
   }
 
   static toFullGuessObject(
-    prismaGuessObject: PrismaGuessObjectWithRelations,
+    prismaGuessObject: PrismaGuessObjectWithFullLocation,
   ): FullGuessObject {
     return {
       id: prismaGuessObject.id,
@@ -53,9 +64,7 @@ export class GuessObjectMapper {
     };
   }
 
-  static toGuessObjectDraft(
-    response: WikidataItemResponse,
-  ): GuessObjectDraft {
+  static toGuessObjectDraft(response: WikidataItemResponse): GuessObjectDraft {
     return {
       source: {
         provider: 'wikidata',

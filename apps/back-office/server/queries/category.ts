@@ -1,18 +1,17 @@
-import { throwOnError } from '@cityborn/api';
+import { type Category, type FullCategory, throwOnError } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
-export async function getCategories() {
-  const result = await adminClient.category.listCategories({
+export async function getCategories(): Promise<Category[]> {
+  const result = await adminClient.category.getAllCategories({
     query: { include: 'guessObjects' },
   });
   throwOnError(result);
   return result.body;
 }
 
-export async function getCategory(id: string) {
-  const result = await adminClient.category.getCategory({
+export async function getFullCategory(id: string): Promise<FullCategory> {
+  const result = await adminClient.category.getFullCategory({
     params: { id },
-    query: { include: 'guessObjects,world_location_preview' },
   });
   throwOnError(result);
   return result.body;

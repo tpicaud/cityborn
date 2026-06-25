@@ -76,10 +76,10 @@ export function ImportCSVPopup({
     const objects: { name: string; description: string }[] = [];
 
     for (const row of result.data as any[]) {
-      if (row['Name'] && row['Name'].trim()) {
+      if (row.Name?.trim()) {
         objects.push({
-          name: row['Name'].trim(),
-          description: row['Description'].trim() ?? undefined,
+          name: row.Name.trim(),
+          description: row.Description.trim() ?? undefined,
         });
       }
     }
@@ -119,8 +119,8 @@ export function ImportCSVPopup({
           throw new Error('No world location found');
 
         const saveResult = await saveGuessObject({
-          world_location_id: full_obj.world_location_id.toString(),
           ...full_obj,
+          world_location_id: full_obj.world_location_id.toString(),
         });
         if (!saveResult.ok) throw new Error(saveResult.error.message);
 

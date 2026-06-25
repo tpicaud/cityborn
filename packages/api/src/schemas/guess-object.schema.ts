@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { WorldLocationSchema } from './world-location.schema';
+import {
+  WorldLocationPreviewSchema,
+  WorldLocationSchema,
+} from './world-location.schema';
 
-export const GuessObjectSchema = z.object({
+export const BaseGuessObjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   image: z.string().optional(),
@@ -14,23 +17,27 @@ export const GuessObjectSchema = z.object({
     })
     .optional(),
 });
+export const GuessObjectSchema = BaseGuessObjectSchema.extend({
+  world_location_preview: WorldLocationPreviewSchema,
+});
 export const GuessObjectsSchema = z.array(GuessObjectSchema);
 
-export const FullGuessObjectSchema = GuessObjectSchema.extend({
+export const FullGuessObjectSchema = BaseGuessObjectSchema.extend({
   world_location: WorldLocationSchema,
 });
 export const FullGuessObjectsSchema = z.array(FullGuessObjectSchema);
 
-export const CreateGuessObjectSchema = GuessObjectSchema.omit({
+export const CreateGuessObjectSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
-  world_location_id: z.string(),
-  world_location: WorldLocationSchema,
+  world_location_id: z.string().optional(),
+  world_location: WorldLocationSchema.optional(),
 });
 
-export const GuessObjectDraftSchema = GuessObjectSchema.omit({
+export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
+  id: z.string().optional(),
   world_location_id: z.string().optional(),
   world_location: WorldLocationSchema.optional(),
 });

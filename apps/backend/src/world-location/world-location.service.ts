@@ -8,25 +8,32 @@ import { WorldLocationMapper } from './mapper/world-location.mapper';
 export class WorldLocationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async get(id: string): Promise<WorldLocation | null> {
-    const prisma_world_location = await this.prisma.worldLocation.findUnique({
-      where: {
-        id: id,
-      },
-    });
+  async get(id: string): Promise<{ id: string } | null> {
+    const row = await this.prisma.worldLocation.findUnique({ where: { id } });
+    if (!row) return null;
+    return { id: row.id };
+  }
 
-    if (!prisma_world_location) return null;
-    return WorldLocationMapper.toWorldLocation(prisma_world_location);
+  async getWithGeometry(id: string): Promise<WorldLocation | null> {
+    const row = await this.prisma.worldLocation.findUnique({
+      where: { id },
+      include: { geometry: true },
+    });
+    if (!row) return null;
+    return WorldLocationMapper.toWorldLocation(row);
   }
 
   async create(world_location_dto: WorldLocation): Promise<WorldLocation> {
-    const prisma_world_location = await this.prisma.worldLocation.create({
+    const row = await this.prisma.worldLocation.create({
       data: {
         id: world_location_dto.id.toString(),
         name: world_location_dto.name,
         type: world_location_dto.type,
-        geometry:
-          world_location_dto.geometry as unknown as Prisma.InputJsonValue,
+        geometry: {
+          create: {
+            data: world_location_dto.geometry as unknown as Prisma.InputJsonValue,
+          },
+        },
         display_name: world_location_dto.display_name,
         addresstype: world_location_dto.addresstype,
         level: world_location_dto.level,
@@ -34,15 +41,13 @@ export class WorldLocationService {
         centroid: world_location_dto.centroid ?? [],
         source: world_location_dto.source as unknown as Prisma.InputJsonValue,
       },
+      include: { geometry: true },
     });
 
-    return WorldLocationMapper.toWorldLocation(prisma_world_location);
+    return WorldLocationMapper.toWorldLocation(row);
   }
 
-  async delete(id: string): Promise<WorldLocation> {
-    const world_location = await this.prisma.worldLocation.delete({
-      where: { id },
-    });
-    return WorldLocationMapper.toWorldLocation(world_location);
+  async delete(id: string): Promise<void> {
+    await this.prisma.worldLocation.delete({ where: { id } });
   }
 }

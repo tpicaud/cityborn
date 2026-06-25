@@ -3,13 +3,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
+  WorldLocation,
 } from '@prisma/client';
 import pLimit from 'p-limit';
 import { GuessObjectService } from '../../guess-object/guess-object.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
-export type PrismaCategoryWithGuessObjects = PrismaCategory & {
-  guessObjects: PrismaGuessObject[];
+export type PrismaCategoryWithFullGuessObjects = PrismaCategory & {
+  guessObjects: (PrismaGuessObject & { world_location: WorldLocation })[];
 };
 
 @Injectable()
@@ -37,7 +38,7 @@ export class CategoryService {
   async findFullBy(filter: {
     ids?: string[];
     isPublished?: boolean;
-  }): Promise<PrismaCategoryWithGuessObjects[]> {
+  }): Promise<PrismaCategoryWithFullGuessObjects[]> {
     return this.prisma.category.findMany({
       where: {
         ...(filter.ids && { id: { in: filter.ids } }),
@@ -45,7 +46,7 @@ export class CategoryService {
           isPublished: filter.isPublished,
         }),
       },
-      include: { guessObjects: true },
+      include: { guessObjects: { include: { world_location: true } } },
     });
   }
 
@@ -63,12 +64,12 @@ export class CategoryService {
   }
 
   async update(categoryId: string, data: UpdateCategory) {
-    const { guessObjectsIds, connectIds, disconnectIds, id, ...categoryData } =
+    const { guessObjects, connectIds, disconnectIds, id, ...categoryData } =
       data;
 
     const relationUpdate: any = {};
-    if (guessObjectsIds) {
-      relationUpdate.set = guessObjectsIds.map((id) => ({ id }));
+    if (guessObjects) {
+      relationUpdate.set = guessObjects.map((go) => ({ id: go.id }));
     } else {
       if (connectIds) relationUpdate.connect = connectIds.map((id) => ({ id }));
       if (disconnectIds)
@@ -83,7 +84,7 @@ export class CategoryService {
           ? { guessObjects: relationUpdate }
           : {}),
       },
-      include: { guessObjects: true },
+      include: { guessObjects: { include: { world_location: true } } },
     });
 
     if (disconnectIds && disconnectIds.length > 0) {

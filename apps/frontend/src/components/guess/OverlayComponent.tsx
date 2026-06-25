@@ -1,9 +1,9 @@
 'use client';
 
 import {
+  type FullGuessObject,
   type Game,
   type Guess,
-  type GuessObject,
   type Round,
   RoundStatus,
   type Session,
@@ -49,7 +49,7 @@ function GuessResult({
   localPlayerID,
 }: {
   currentRound: Round;
-  guessObject: GuessObject;
+  guessObject: FullGuessObject;
   localPlayerID: string;
 }) {
   return (
@@ -86,7 +86,7 @@ function GuessResult({
         <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full">
           <p>
             <b>{guessObject.name}</b> est né à{' '}
-            <b>{guessObject.world_location!.name}</b>
+            <b>{guessObject.world_location?.name}</b>
           </p>
           {currentRound.playersGuesses[localPlayerID].distance !== -1 ? (
             currentRound.playersGuesses[localPlayerID].distance === 0 ? (
@@ -137,26 +137,27 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
 
   useEffect(() => {
     setTimerEnded(false);
-  }, [game.state.currentRound?.guessObjectId]);
+  }, []);
 
   useEffect(() => {
     if (timerEnded) {
+      setTimerEnded(false);
       handleIsTimeUp();
     }
-  }, [timerEnded]);
+  }, [timerEnded, handleIsTimeUp]);
 
   return (
     <div>
       <GuessObjectComponent
         guessObject={
-          game.state.guessObjects!.find(
+          game.state.guessObjects?.find(
             (guessObject) =>
-              game.state.currentRound!.guessObjectId === guessObject.id,
+              game.state.currentRound?.guessObjectId === guessObject.id,
           )!
         }
       />
       <div className="absolute w-[27%] mx-6 my-14">
-        {game.state.currentRound!.status === RoundStatus.GUESSING && (
+        {game.state.currentRound?.status === RoundStatus.GUESSING && (
           <TimerComponent
             totalTime={session.gameConfig.timer}
             endMessage="Terminé !"
@@ -165,7 +166,7 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
         )}
       </div>
       <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-        {game.state.currentRound!.status === RoundStatus.GUESSING && (
+        {game.state.currentRound?.status === RoundStatus.GUESSING && (
           <div className="relative w-full flex justify-center items-center">
             <GuessButton
               preGuess={preGuess}
@@ -180,13 +181,13 @@ const OverlayComponent: React.FC<OverlayComponentProps> = ({
         )}
 
         {game.state.currentRound &&
-          game.state.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
+          game.state.currentRound?.status === RoundStatus.SHOWING_RESULTS && (
             <GuessResult
               currentRound={game.state.currentRound!}
               guessObject={
-                game.state.guessObjects!.find(
+                game.state.guessObjects?.find(
                   (guessObject) =>
-                    game.state.currentRound!.guessObjectId === guessObject.id,
+                    game.state.currentRound?.guessObjectId === guessObject.id,
                 )!
               }
               localPlayerID={localPlayerID}

@@ -5,12 +5,6 @@ export const WorldLocationSchema = z.object({
   osm_type: z.string(),
   name: z.string(),
   type: z.enum(['area', 'point']),
-  geometry: z
-    .object({
-      type: z.enum(['Point', 'Polygon', 'MultiPolygon']),
-      coordinates: z.array(z.unknown()),
-    })
-    .optional(),
   display_name: z.string().optional(),
   addresstype: z.string().optional(),
   level: z.enum(['ADM1', 'ADM2', 'ADM3', 'ADM4']).optional(),
@@ -22,6 +16,10 @@ export const WorldLocationSchema = z.object({
       external_id: z.coerce.string(),
     })
     .optional(),
+  geometry: z.object({
+    type: z.enum(['Point', 'Polygon', 'MultiPolygon']),
+    coordinates: z.array(z.unknown()),
+  }),
 });
 
 export const WorldLocationPreviewSchema = WorldLocationSchema.pick({

@@ -33,6 +33,9 @@ export class GuessObjectService {
           source: { path: ['external_id'], equals: filter.external_id },
         }),
       },
+      include: {
+        world_location: true,
+      },
     });
     return rowsGuessObject.map((obj) => GuessObjectMapper.toGuessObject(obj));
   }
@@ -48,17 +51,17 @@ export class GuessObjectService {
           source: { path: ['external_id'], equals: filter.external_id },
         }),
       },
-      include: { world_location: true },
+      include: { world_location: { include: { geometry: true } } },
     });
     return rows.map((obj) => GuessObjectMapper.toFullGuessObject(obj));
   }
 
   async findShuffledGuessObjectsByGameConfig(
     gameConfig: GameConfig,
-  ): Promise<GuessObject[]> {
+  ): Promise<FullGuessObject[]> {
     const where: any = {};
 
-    // Si des catégories sont spécifiées et qu’elles ne contiennent pas "TOUTES"
+    // Si des catégories sont spécifiées et qu'elles ne contiennent pas "TOUTES"
     if (gameConfig.categories && gameConfig.categories.length > 0) {
       const categoryIds = gameConfig.categories.map((cat) => cat.id);
       where.categories = {
@@ -71,20 +74,21 @@ export class GuessObjectService {
     // Récupération de tous les objets correspondants
     const allObjects = await this.prisma.guessObject.findMany({
       where,
-      include: { world_location: true },
+      include: { world_location: { include: { geometry: true } } },
     });
 
     // Mélange aléatoire et sélection
     const shuffled = allObjects.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, gameConfig.nbOfObjects);
 
-    return selected.map((obj) => GuessObjectMapper.toGuessObject(obj));
+    return selected.map((obj) => GuessObjectMapper.toFullGuessObject(obj));
   }
 
   async create(createGuessObject: CreateGuessObject): Promise<string> {
     // Récupérer la location dans la db
     let world_location = await this.worldLocationService.get(
-      createGuessObject.world_location_id,
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      createGuessObject.world_location_id!,
     );
     if (!world_location) {
       if (!createGuessObject.world_location) {

@@ -2,6 +2,7 @@ import {
   type CreateSession,
   defaultGuess,
   ErrorCode,
+  FullGuessObject,
   type Game,
   GameStatus,
   type OnlinePlayer,
@@ -329,7 +330,7 @@ export class SessionService {
   /////////////////////////
 
   async createGame(session: Session, visitorId?: string): Promise<Game> {
-    const guessObjects =
+    const guessObjects: FullGuessObject[] =
       await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
         session.gameConfig,
       );

@@ -1,13 +1,13 @@
 'use client';
 
-import type { GuessObject } from '@cityborn/api';
+import type { FullGuessObject } from '@cityborn/api';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 
 export default function GuessObjectComponent({
   guessObject,
-}: Readonly<{ guessObject: GuessObject }>) {
+}: Readonly<{ guessObject: FullGuessObject }>) {
   return (
     <Card className="absolute top-0 right-0 my-14 mx-5 w-[10%] min-w-[6em]">
       <CardMedia

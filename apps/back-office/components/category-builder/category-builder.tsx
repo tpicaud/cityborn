@@ -1,7 +1,7 @@
 'use client';
 
 import type {
-  Category,
+  FullCategory,
   GuessObject,
   GuessObjectDraft,
   UpdateCategory,
@@ -23,14 +23,13 @@ import { ImportCSVPopup } from './import-csv-popup';
 import { PublishCategoryPopup } from './publish-category-popup';
 
 interface CategoryBuilderProps {
-  fetchedCategory: Category;
+  fetchedCategory: FullCategory;
 }
 
 export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   const router = useRouter();
-  const [category, setCategory] = useState<Category>(fetchedCategory);
-  const [guessObjectDraft, setGuessObjectDraft] =
-    useState<GuessObjectDraft>();
+  const [category, setCategory] = useState<FullCategory>(fetchedCategory);
+  const [guessObjectDraft, setGuessObjectDraft] = useState<GuessObjectDraft>();
   const [isSaveLoading, setIsSaveLoading] = useState(false);
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
@@ -44,9 +43,9 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
     }
   }, [category, searchObjectValue]);
 
-  const updateCategory = (update: Partial<Category>) => {
+  const updateCategory = (update: Partial<FullCategory>) => {
     setCategory((prev) =>
-      prev ? { ...prev, ...update } : (update as Category),
+      prev ? { ...prev, ...update } : (update as FullCategory),
     );
   };
 
@@ -58,7 +57,6 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
     setGuessObjectDraft({
       name: '',
       id: '',
-      world_location_id: '',
     });
   }
 
@@ -121,8 +119,6 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
       const updatedCategory: UpdateCategory = {
         ...category,
         isPublished: publish ?? false,
-        guessObjects: undefined,
-        guessObjectsIds: undefined,
       };
       const result = await saveCategory(category.id, updatedCategory);
       if (!result.ok) throw new Error(result.error.message);
@@ -168,6 +164,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         id: category.id,
         name: category.name,
         isPublished: category.isPublished,
+        guessObjects: category.guessObjects,
         connectIds: [id],
       };
       const saveResult = await saveCategory(category.id, updatedCategory);
@@ -217,8 +214,6 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
 
       const updated_category: UpdateCategory = {
         ...category,
-        guessObjects: undefined,
-        guessObjectsIds: undefined,
         disconnectIds: [guessObject.id],
       };
       setCategory({ ...category, guessObjects: updatedGuessObjects });

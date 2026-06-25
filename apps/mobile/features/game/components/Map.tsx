@@ -1,5 +1,6 @@
 import {
   type Coord,
+  type FullGuessObject,
   type Guess,
   type GuessObject,
   type Round,
@@ -25,13 +26,15 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   const mapRef = useRef<MapView>(null);
   const currentRound: Round = game.state.currentRound!;
-  const guessObject: GuessObject = game.state.guessObjects!.find(
+  const guessObject: GuessObject = game.state.guessObjects?.find(
     (obj: GuessObject) => obj.id === currentRound.guessObjectId,
   )!;
 
-  const getCenterOfGuessObject = (guessObject: GuessObject): Coord => ({
-    lat: guessObject.world_location?.centroid![0]!,
-    lng: guessObject.world_location?.centroid![1]!,
+  const getCenterOfGuessObject = (guessObject: FullGuessObject): Coord => ({
+    // biome-ignore lint/style/noNonNullAssertion: <explanation>
+    lat: guessObject.world_location.centroid![0],
+    // biome-ignore lint/style/noNonNullAssertion: <explanation>
+    lng: guessObject.world_location.centroid![1],
   });
 
   const getDistanceTo = (lat: number, lng: number): number => {
@@ -84,7 +87,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
   const renderPolygons = () => {
     if (!isGeoJSON(guessObject)) return null;
 
-    const geometry = guessObject.world_location!.geometry!;
+    const geometry = guessObject.world_location?.geometry!;
     if (geometry.type === 'Polygon') {
       const polygonCoords = (geometry.coordinates[0] as number[][]).map(
         ([lng, lat]) => ({ latitude: lat, longitude: lng }),
@@ -201,8 +204,8 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   useEffect(() => {
     if (currentRound.status === RoundStatus.SHOWING_RESULTS) focusMap();
-  }, [currentRound]);
-  const theme = Appearance.getColorScheme();
+  }, [currentRound, focusMap]);
+  const _theme = Appearance.getColorScheme();
 
   return (
     <View style={{ flex: 1 }}>

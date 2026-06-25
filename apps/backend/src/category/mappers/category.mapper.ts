@@ -2,11 +2,12 @@ import { Category, FullCategory } from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
+  WorldLocation,
 } from '@prisma/client';
 import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
 
 type PrismaCategoryWithRelations = PrismaCategory & {
-  guessObjects?: PrismaGuessObject[];
+  guessObjects?: (PrismaGuessObject & { world_location: WorldLocation })[];
 };
 
 export class CategoryMapper {

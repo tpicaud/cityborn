@@ -42,16 +42,6 @@ export function CategoriesList({
               )}
             </div>
           </div>
-          <div className="flex flex-col justify-center items-center text-center gap-1">
-            <div className="text-2xl font-bold">
-              {category.guessObjects ? (
-                <h2>{category.guessObjects.length}</h2>
-              ) : (
-                <h2 className="">?</h2>
-              )}
-            </div>
-            <p>objets</p>
-          </div>
         </div>
       ))}
     </div>
