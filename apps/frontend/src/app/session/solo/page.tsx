@@ -1,7 +1,7 @@
 import SoloSessionComponent from '@/components/Session/SoloSessionComponent';
-import { getCategories } from '@/server/queries/category';
+import { getCategoryTrees } from '@/server/queries/category';
 
 export default async function SoloSessionPage() {
-  const categories = await getCategories();
-  return <SoloSessionComponent categories={categories} />;
+  const categoryTrees = await getCategoryTrees();
+  return <SoloSessionComponent categoryTrees={categoryTrees} />;
 }

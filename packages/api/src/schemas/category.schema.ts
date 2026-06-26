@@ -43,11 +43,9 @@ export const CategoryTreeSchema: z.ZodType<CategoryTree> = z.lazy(() =>
     children: z.array(CategoryTreeSchema),
   }),
 );
-
 export const CategoryTreesSchema = z.array(CategoryTreeSchema);
 
 export type Category = z.infer<typeof CategorySchema>;
 export type FullCategory = z.infer<typeof FullCategorySchema>;
 export type CreateCategory = z.infer<typeof CreateCategorySchema>;
 export type UpdateCategory = z.infer<typeof UpdateCategorySchema>;
-export type CategoryTrees = z.infer<typeof CategoryTreesSchema>;

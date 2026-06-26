@@ -1,7 +1,8 @@
 'use client';
 
 import {
-  type Category,
+  type CategoryTree,
+  type CategoryTrees,
   type GameConfig,
   type OnlinePlayer,
   type Session,
@@ -11,18 +12,12 @@ import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
-  Checkbox,
   Dialog,
   DialogContent,
   DialogTitle,
-  FormControl,
-  InputLabel,
   List,
   ListItem,
   ListItemText,
-  MenuItem,
-  OutlinedInput,
-  Select,
   TextField,
   Typography,
 } from '@mui/material';
@@ -45,14 +40,14 @@ const TileLayer = dynamic(
 export const LobbyComponent = ({
   localPlayerID,
   session,
-  categories,
+  categoryTrees,
   handleUpdateGameConfig,
   handleStartGame,
   handleJoinSession,
 }: {
   localPlayerID: string | undefined;
   session: Session;
-  categories: Category[];
+  categoryTrees: CategoryTrees;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
@@ -68,6 +63,7 @@ export const LobbyComponent = ({
     session.gameConfig.timer.toString(),
   );
   const [currentInput, setCurrentInput] = useState<string>('');
+  const [selectedPath, _setSelectedPath] = useState<CategoryTree[]>([]);
   const router = useRouter();
   useEffect(() => {
     if (
@@ -78,12 +74,17 @@ export const LobbyComponent = ({
       handleUpdateGameConfig({ categories });
     }
   }, [
-    categories,
-    session.gameConfig.categories.length,
-    handleUpdateGameConfig,
-    session.players,
-    localPlayerID,
+    session.gameConfig.categories.length, 
+    handleUpdateGameConfig, 
+    session.players, 
+    localPlayerID
   ]);
+
+  const categoryRows: CategoryTree[][] = [categoryTrees];
+  for (const node of selectedPath) {
+    if (node.children.length > 0) categoryRows.push(node.children);
+    else break;
+  }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
@@ -300,8 +301,8 @@ export const LobbyComponent = ({
                       <ListItemText primary={category.name} />
                     </MenuItem>
                   ))}
-                </Select>
-              </FormControl>
+                </div>
+              </div>
               <div className="w-full flex flex-row gap-x-2">
                 <TextField
                   type="number"
