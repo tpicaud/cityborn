@@ -1,5 +1,5 @@
 # Étape 1 — Base avec pnpm + deps
-FROM node:23-alpine AS deps
+FROM node:24-alpine AS deps
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ COPY . .
 RUN pnpm turbo run build --filter=cityborn-backend
 
 # Étape 3 — Image finale pour l'app (runtime only)
-FROM node:23-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 
