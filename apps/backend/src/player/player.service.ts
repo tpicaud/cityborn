@@ -1,6 +1,6 @@
 import { ErrorCode } from '@cityborn/api';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class PlayerService {
@@ -31,7 +31,7 @@ export class PlayerService {
         this.getKey(socketID),
         this.PLAYER_TTL,
       );
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_SET_FAILED,
         message: `Error saving player: ${error.message}`,
@@ -62,7 +62,7 @@ export class PlayerService {
       );
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_GET_FAILED,
         message: `Error getting player: ${error.message}`,

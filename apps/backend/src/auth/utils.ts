@@ -2,7 +2,7 @@ import * as cookie from 'cookie';
 import type { Request } from 'express';
 import type { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
-import * as jwksRsa from 'jwks-rsa';
+import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
 export function extractTokenFromHTTPHeader(
   request: Request,
@@ -18,7 +18,7 @@ export function extractAccessTokenFromWsClient(
   const auth = client.handshake.auth;
 
   if (cookies) {
-    const parsedCookies = cookie.parse(cookies);
+    const parsedCookies = cookie.parseCookie(cookies);
     return parsedCookies['access_token'];
   }
 

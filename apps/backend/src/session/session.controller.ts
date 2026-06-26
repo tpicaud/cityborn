@@ -2,9 +2,9 @@ import { contract, ErrorCode, User } from '@cityborn/api';
 import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { OptionalAuthGuard } from 'src/auth/guards/optional-auth.guard';
-import { VisitorId } from 'src/common/decorators/visitor-id.decorator';
-import { CurrentUser } from 'src/user/user.decorator';
+import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
+import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
 
 const c = initContract(); // TODO delete to use only shared contract

@@ -28,7 +28,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       } else {
         await this.redisClient.set(key, value);
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_SET_FAILED,
         message: `Error setting resource ${key}: ${error.message}`,
@@ -39,7 +39,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async get(key: string): Promise<string | null> {
     try {
       return await this.redisClient.get(key);
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_GET_FAILED,
         message: `Error getting resource ${key}: ${error.message}`,
@@ -51,7 +51,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       const serialized = JSON.stringify(value);
       await this.set(key, serialized, ttlSeconds);
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_SET_FAILED,
         message: `Error setting resource ${key}: ${error.message}`,
@@ -63,7 +63,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       const raw = await this.get(key);
       return raw ? (JSON.parse(raw) as T) : null;
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_GET_FAILED,
         message: `Error getting resource ${key}: ${error.message}`,
@@ -74,7 +74,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async del(key: string): Promise<number> {
     try {
       return this.redisClient.del(key);
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_DELETE_FAILED,
         message: `Error deleting resource ${key}: ${error.message}`,

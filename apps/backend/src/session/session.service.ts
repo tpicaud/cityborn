@@ -24,14 +24,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { EventService } from 'src/event/event.service';
-import { createEvent } from 'src/event/event.types';
-import { GuessObjectService } from 'src/guess-object/guess-object.service';
-import { IdService } from 'src/id/id.service';
-import { LockService } from 'src/lock/lock.service';
-import { PlayerService } from 'src/player/player.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { EventService } from '../event/event.service';
+import { createEvent } from '../event/event.types';
+import { GuessObjectService } from '../guess-object/guess-object.service';
+import { IdService } from '../id/id.service';
+import { LockService } from '../lock/lock.service';
+import { PlayerService } from '../player/player.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class SessionService {
