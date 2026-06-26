@@ -17,6 +17,13 @@ export class AdminCategoryController {
         body: await this.adminCategoryService.getTrees(),
       }),
 
+      getAllCategories: async () => {
+        return {
+          status: 200 as const,
+          body: await this.adminCategoryService.findAll(),
+        };
+      },
+
       getCategory: async ({ params }) => {
         const [category] = await this.adminCategoryService.findBy({
           ids: [params.id],
@@ -28,13 +35,6 @@ export class AdminCategoryController {
           });
         }
         return { status: 200 as const, body: category };
-      },
-
-      getAllCategories: async () => {
-        return {
-          status: 200 as const,
-          body: await this.adminCategoryService.findAll(),
-        };
       },
 
       getFullCategory: async ({ params }) => {

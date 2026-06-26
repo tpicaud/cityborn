@@ -5,6 +5,7 @@ import {
   GameConfig,
   GuessObject,
   GuessObjectDraft,
+  PatchGuessObject,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -131,13 +132,16 @@ export class GuessObjectService {
 
   async update(
     id: string,
-    updatedFields: Partial<GuessObject>,
+    updatedFields: PatchGuessObject,
   ): Promise<string> {
     const data = {
       name: updatedFields.name,
       image: updatedFields.image,
       description: updatedFields.description,
       short_description: updatedFields.short_description,
+      ...(updatedFields.world_location_id && {
+        world_location_id: updatedFields.world_location_id,
+      }),
     };
 
     const updated_object = await this.prisma.guessObject.update({

@@ -19,7 +19,7 @@ export const CreateCategorySchema = CategorySchema.omit({ id: true }).extend({
   guessObjectsIds: z.array(z.string()).optional(),
 });
 
-export const UpdateCategorySchema = FullCategorySchema.extend({
+export const UpdateCategorySchema = CategorySchema.extend({
   connectIds: z.array(z.string()).optional(),
   disconnectIds: z.array(z.string()).optional(),
 });

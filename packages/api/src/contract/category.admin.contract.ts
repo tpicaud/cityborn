@@ -24,22 +24,21 @@ export const categoryAdminContract = c.router(
       path: '/tree',
       responses: { 200: CategoryTreesSchema, ...commonErrorResponses },
     },
-    getCategory: {
-      method: 'GET',
-      path: '/:id',
-      pathParams: IdParamSchema,
-      query: IncludeQuerySchema,
-      responses: { 200: CategorySchema, ...commonErrorResponses },
-    },
     getAllCategories: {
       method: 'GET',
       path: '/',
       query: IncludeQuerySchema,
       responses: { 200: CategoriesSchema, ...commonErrorResponses },
     },
-    getFullCategory: {
+    getCategory: {
       method: 'GET',
       path: '/:id',
+      pathParams: IdParamSchema,
+      responses: { 200: CategorySchema, ...commonErrorResponses },
+    },
+    getFullCategory: {
+      method: 'GET',
+      path: '/:id/full',
       pathParams: IdParamSchema,
       responses: { 200: FullCategorySchema, ...commonErrorResponses },
     },

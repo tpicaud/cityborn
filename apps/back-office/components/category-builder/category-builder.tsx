@@ -117,8 +117,11 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
     try {
       setIsSaveLoading(true);
       const updatedCategory: UpdateCategory = {
-        ...category,
+        id: category.id,
+        name: category.name,
         isPublished: publish ?? false,
+        description: category.description,
+        parentId: category.parentId,
       };
       const result = await saveCategory(category.id, updatedCategory);
       if (!result.ok) throw new Error(result.error.message);
@@ -165,7 +168,6 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         id: category.id,
         name: category.name,
         isPublished: category.isPublished,
-        guessObjects: category.guessObjects ?? [],
         connectIds: [id],
       };
       console.log(updatedCategory);
@@ -215,7 +217,9 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
       );
 
       const updated_category: UpdateCategory = {
-        ...category,
+        id: category.id,
+        name: category.name,
+        isPublished: category.isPublished,
         disconnectIds: [guessObject.id],
       };
       setCategory({ ...category, guessObjects: updatedGuessObjects });

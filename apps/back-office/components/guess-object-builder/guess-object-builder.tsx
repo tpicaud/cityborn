@@ -3,7 +3,7 @@
 import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
-  getGuessObject,
+  getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
 } from '@/server/actions/guess-object';
@@ -26,19 +26,14 @@ export function GuessObjectBuilder({
 
   useEffect(() => {
     const updateGuessObjectDraft = async () => {
-      if (guessObjectDraft && guessObjectDraft.id) {
-        try {
-          const result = await getGuessObject(guessObjectDraft.id, [
-            'world_location',
-          ]);
-          if (result && result.ok) {
-            setGuessObjectDraft(result.data);
-          } else {
-            setGuessObjectDraft(guessObjectDraft);
-          }
-        } catch {
-          setGuessObjectDraft(guessObjectDraft);
+      if (!guessObjectDraft?.id) return;
+      try {
+        const result = await getFullGuessObject(guessObjectDraft.id);
+        if (result?.ok) {
+          setGuessObjectDraft(result.data as GuessObjectDraft);
         }
+      } catch {
+        // keep current draft as-is
       }
     };
 

@@ -93,17 +93,15 @@ export class CategoryService {
   }
 
   async update(categoryId: string, data: UpdateCategory) {
-    const { guessObjects, connectIds, disconnectIds, id, ...categoryData } =
-      data;
+    const { connectIds, disconnectIds, id, ...categoryData } = data;
 
-    const relationUpdate: any = {};
-    if (guessObjects) {
-      relationUpdate.set = guessObjects.map((go) => ({ id: go.id }));
-    } else {
-      if (connectIds) relationUpdate.connect = connectIds.map((id) => ({ id }));
-      if (disconnectIds)
-        relationUpdate.disconnect = disconnectIds.map((id) => ({ id }));
-    }
+    const relationUpdate: {
+      connect?: { id: string }[];
+      disconnect?: { id: string }[];
+    } = {};
+    if (connectIds) relationUpdate.connect = connectIds.map((id) => ({ id }));
+    if (disconnectIds)
+      relationUpdate.disconnect = disconnectIds.map((id) => ({ id }));
 
     const updated_category = await this.prisma.category.update({
       where: { id: categoryId },

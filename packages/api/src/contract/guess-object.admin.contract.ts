@@ -14,6 +14,7 @@ import {
   FullGuessObjectsSchema,
   GuessObjectSchema,
   GuessObjectsSchema,
+  PatchGuessObjectSchema,
 } from '../schemas/guess-object.schema';
 
 const c = initContract();
@@ -35,14 +36,13 @@ export const guessObjectAdminContract = c.router(
     },
     getFullGuessObject: {
       method: 'GET',
-      path: '/:id',
+      path: '/:id/full',
       pathParams: IdParamSchema,
-      query: IncludeQuerySchema,
       responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
     },
     getFullGuessObjects: {
       method: 'GET',
-      path: '/',
+      path: '/full',
       query: z.object({ guessObjectsIds: z.string() }),
       responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
     },
@@ -56,7 +56,7 @@ export const guessObjectAdminContract = c.router(
       method: 'PATCH',
       path: '/:id',
       pathParams: IdParamSchema,
-      body: GuessObjectSchema.partial(),
+      body: PatchGuessObjectSchema,
       responses: { 200: IdSchema, ...commonErrorResponses },
     },
     deleteGuessObject: {
