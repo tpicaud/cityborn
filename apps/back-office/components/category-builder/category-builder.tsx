@@ -155,6 +155,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   async function addOrUpdateGuessObjectToCategory(id: string) {
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
+      console.log(objectResult);
       if (!objectResult) return;
       if (!objectResult.ok) throw new Error(objectResult.error.message);
       const object = objectResult.data;
@@ -164,9 +165,10 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         id: category.id,
         name: category.name,
         isPublished: category.isPublished,
-        guessObjects: category.guessObjects,
+        guessObjects: category.guessObjects ?? [],
         connectIds: [id],
       };
+      console.log(updatedCategory);
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) throw new Error(saveResult.error.message);
 
