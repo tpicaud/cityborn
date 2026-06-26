@@ -11,8 +11,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { WorldLocationService } from 'src/world-location/world-location.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
 
 @Injectable()
@@ -86,7 +86,7 @@ export class GuessObjectService {
     } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
-        message: `Error retrieving guess objects : ${error.message}`,
+        message: `Error retrieving guess objects : ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }
@@ -120,7 +120,7 @@ export class GuessObjectService {
     } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_GET_FAILED,
-        message: `Error retrieving guess objects from game config: ${error.message}`,
+        message: `Error retrieving guess objects from game config: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }

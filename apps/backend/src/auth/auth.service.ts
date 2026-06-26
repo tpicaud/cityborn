@@ -19,10 +19,10 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
-import { EventService } from 'src/event/event.service';
-import { createEvent } from 'src/event/event.types';
-import { UserMapper } from 'src/user/user.mapper';
-import { UserService } from 'src/user/user.service';
+import { EventService } from '../event/event.service';
+import { createEvent } from '../event/event.types';
+import { UserMapper } from '../user/user.mapper';
+import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
 

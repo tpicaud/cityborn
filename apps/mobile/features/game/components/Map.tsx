@@ -212,7 +212,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         zoomTapEnabled={false}
-        showsPointsOfInterest={false}
+        showsPointsOfInterests={false}
         customMapStyle={lightMapStyle}
         userInterfaceStyle="light"
         rotateEnabled={false}

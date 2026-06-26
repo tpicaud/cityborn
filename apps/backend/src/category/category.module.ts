@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { GuessObjectModule } from 'src/guess-object/guess-object.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { GuessObjectModule } from '../guess-object/guess-object.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { AdminCategoryController } from './controllers/category.admin.controller';
 import { PublicCategoryController } from './controllers/category.public.controller';
 import { AdminCategoryService } from './services/category.admin.service';

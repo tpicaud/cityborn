@@ -1,6 +1,6 @@
 import { WorldLocation } from '@cityborn/api';
 import type { WorldLocation as PrismaWorldLocation } from '@prisma/client';
-import { type NominatimItemResponse } from 'src/nominatim/nominatim.service';
+import { type NominatimItemResponse } from '../../nominatim/nominatim.service';
 
 type PrismaWorldLocationWithRelations = PrismaWorldLocation & {
   parent?: PrismaWorldLocation;

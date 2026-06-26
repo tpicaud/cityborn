@@ -56,7 +56,7 @@ export class WikidataService {
       };
 
       return wikidata_response;
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
         message: `Error retrieving wikidata search results: ${error.message}`,
@@ -103,7 +103,7 @@ export class WikidataService {
       };
 
       return wikidataItem;
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
         message: `Error retrieving Wikidata entity ${id}: ${error.message}`,

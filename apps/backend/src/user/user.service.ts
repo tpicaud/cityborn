@@ -12,8 +12,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Prisma, User as PrismaUser } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { GameMapper } from 'src/session/game.mapper';
+import { PrismaService } from '../prisma/prisma.service';
+import { GameMapper } from '../session/game.mapper';
 
 @Injectable()
 export class UserService {

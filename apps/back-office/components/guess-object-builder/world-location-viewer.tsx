@@ -1,3 +1,4 @@
+/// <reference types="@types/google.maps" />
 import type { WorldLocation } from '@cityborn/api';
 import {
   AdvancedMarker,

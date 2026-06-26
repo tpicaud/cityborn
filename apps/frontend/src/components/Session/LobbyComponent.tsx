@@ -268,10 +268,11 @@ export const LobbyComponent = ({
                       vertical: 'top',
                       horizontal: 'left',
                     },
-                    PaperProps: {
-                      className:
-                        'max-h-72 overflow-y-auto rounded-lg shadow-lg border border-neutral-800',
-                      // max-h-72 => ~18rem, overflow-y-auto => scroll, arrondis + ombre
+                    slotProps: {
+                      paper: {
+                        className:
+                          'max-h-72 overflow-y-auto rounded-lg shadow-lg border border-neutral-800',
+                      },
                     },
                   }}
                   className="overflow-y-auto"

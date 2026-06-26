@@ -3,7 +3,7 @@ import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
 } from '@prisma/client';
-import { GuessObjectMapper } from 'src/guess-object/mappers/guess-object.mapper';
+import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
 
 type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: PrismaGuessObject[];

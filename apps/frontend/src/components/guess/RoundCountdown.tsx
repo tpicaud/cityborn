@@ -34,7 +34,7 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
       <Typography
         variant="h1"
         component="div"
-        fontFamily={'"Roboto", "Helvetica", "Arial", sans-serif'}
+        sx={{ fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif' }}
       >
         {countdown}
       </Typography>

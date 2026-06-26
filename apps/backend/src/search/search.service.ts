@@ -1,11 +1,11 @@
 import { ErrorCode, GuessObjectCandidate, WorldLocation } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { GuessObjectService } from 'src/guess-object/guess-object.service';
-import { GuessObjectMapper } from 'src/guess-object/mappers/guess-object.mapper';
-import { NominatimService } from 'src/nominatim/nominatim.service';
-import { WikidataService } from 'src/wikidata/wikidata.service';
-import { WorldLocationMapper } from 'src/world-location/mapper/world-location.mapper';
-import { WorldLocationService } from 'src/world-location/world-location.service';
+import { GuessObjectService } from '../guess-object/guess-object.service';
+import { GuessObjectMapper } from '../guess-object/mappers/guess-object.mapper';
+import { NominatimService } from '../nominatim/nominatim.service';
+import { WikidataService } from '../wikidata/wikidata.service';
+import { WorldLocationMapper } from '../world-location/mapper/world-location.mapper';
+import { WorldLocationService } from '../world-location/world-location.service';
 
 @Injectable()
 export class SearchService {
