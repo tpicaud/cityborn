@@ -49,14 +49,16 @@ export function MultiLobby({
       const result = await fetchCategories();
       if (!result.ok) return invokeError(result.error);
       setCategories(result.data);
+      setSelectedCategories(result.data.map((cat) => cat.id));
     };
     loadCategories();
   }, []);
 
   const toggleCategory = (id: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setSelectedCategories((prev) => {
+      if (prev.includes(id) && prev.length === 1) return prev;
+      return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+    });
   };
 
   const handleCopy = async () => {
@@ -121,21 +123,6 @@ export function MultiLobby({
             <Text>Aucune catégorie disponible</Text>
           ) : (
             <View className="flex flex-wrap flex-row gap-2">
-              {/* All categories chip */}
-              <Pressable onPress={() => setSelectedCategories([])} key={'all'}>
-                <Card
-                  variant="outline"
-                  className={`rounded-2xl border-2 border-primary w-34 flex items-center justify-center
-                      ${
-                        selectedCategories.length === 0
-                          ? 'opacity-100'
-                          : 'opacity-40'
-                      }`}
-                >
-                  <Text className="text-center font-bold">Toutes</Text>
-                </Card>
-              </Pressable>
-
               {/* Categories chips */}
               {categories.map((cat) => {
                 return (
