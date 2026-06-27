@@ -371,18 +371,16 @@ export class AuthService {
     await this.userService.deleteUser(user.id);
   }
 
-  async resendVerificationEmail(user: User): Promise<void> {
-    const fullUser = await this.userService.findById(user.id);
-    
-    if (!fullUser)
+  async resendVerificationEmail(user?: User): Promise<void> {
+    if (!user)
       throw new NotFoundException({
         code: ErrorCode.USER_NOT_FOUND,
         message: `User not found`,
       });
 
-    if (fullUser.isVerified) return;
+    if (user.isVerified) return;
 
-    await this.sendVerificationEmail(fullUser, verificationEmailCooldown);
+    await this.sendVerificationEmail(user, verificationEmailCooldown);
   }
 
   async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
