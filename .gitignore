@@ -3,6 +3,7 @@ dist
 docker-data
 .turbo
 .vscode
+*.tsbuildinfo
 
 .env*
 !.env.example

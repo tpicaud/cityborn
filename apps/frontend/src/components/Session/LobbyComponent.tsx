@@ -28,7 +28,7 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
@@ -69,6 +69,11 @@ export const LobbyComponent = ({
   );
   const [currentInput, setCurrentInput] = useState<string>('');
   const router = useRouter();
+  useEffect(() => {
+    if (categories.length > 0 && session.gameConfig.categories.length === 0) {
+      handleUpdateGameConfig({ categories });
+    }
+  }, [categories, session.gameConfig.categories.length, handleUpdateGameConfig]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
@@ -215,16 +220,13 @@ export const LobbyComponent = ({
                     const value = e.target.value as string[];
 
                     if (value.includes('toggle_all')) {
-                      // Si tout est déjà sélectionné, on désélectionne tout
                       if (
                         session.gameConfig.categories.length ===
                         categories.length
                       ) {
-                        handleUpdateGameConfig({ categories: [] });
-                      } else {
-                        // Sinon, on sélectionne tout
-                        handleUpdateGameConfig({ categories: [...categories] });
+                        return;
                       }
+                      handleUpdateGameConfig({ categories: [...categories] });
                       return;
                     }
 
@@ -235,6 +237,7 @@ export const LobbyComponent = ({
                         ),
                       )
                       .filter((category): category is Category => !!category);
+                    if (selected_categories.length === 0) return;
                     handleUpdateGameConfig({ categories: selected_categories });
                   }}
                   input={<OutlinedInput label="Categories" />}
@@ -256,7 +259,7 @@ export const LobbyComponent = ({
                                   ?.name,
                             )
                             .join(', ')
-                        : 'Toutes'}
+                        : 'Aucune catégorie'}
                     </Box>
                   )}
                   MenuProps={{
@@ -277,21 +280,6 @@ export const LobbyComponent = ({
                   }}
                   className="overflow-y-auto"
                 >
-                  {/* Bouton dynamique Select All / Unselect All */}
-                  <MenuItem
-                    value="toggle_all"
-                    className="ml-4 h-fit w-fit rounded-md border border-neutral-800"
-                  >
-                    <ListItemText
-                      primary={
-                        session.gameConfig.categories.length ===
-                        categories.length
-                          ? 'Tout désélectionner'
-                          : 'Tout sélectionner'
-                      }
-                    />
-                  </MenuItem>
-
                   {categories.map((category) => (
                     <MenuItem key={category.id} value={category.id}>
                       <Checkbox

@@ -95,7 +95,6 @@ export class GuessObjectService {
     try {
       const where: any = {};
 
-      // Si des catégories sont spécifiées et qu’elles ne contiennent pas "TOUTES"
       if (gameConfig.categories && gameConfig.categories.length > 0) {
         const categoryIds = gameConfig.categories.map((cat) => cat.id);
         where.categories = {
