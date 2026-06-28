@@ -46,7 +46,7 @@ const buildEmailTemplateHeader = ({
                   </tr>
 `;
 
-const emailTemplateFooter = `
+const buildEmailTemplateFooter = `
                   <tr>
                     <td align="center" style="padding:24px 32px; background-color:#006f6e;">
                       <p style="margin:0; color:#ffffff; font-size:13px; line-height:20px; font-weight:700;">
@@ -171,7 +171,7 @@ function buildVerificationEmail({
                       </p>
                     </td>
                   </tr>
-                  ${emailTemplateFooter}
+                  ${buildEmailTemplateFooter}
     `,
     attachments: [
       {
