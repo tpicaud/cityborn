@@ -1,12 +1,12 @@
 'use client';
 
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { verifyEmail } from '@/server/actions/auth';
 import Button from '../ui/buttons/Button';
 
 type VerifyEmailComponentProps = {
@@ -18,7 +18,6 @@ type VerificationStatus = 'loading' | 'success' | 'error';
 export function VerifyEmailComponent({
   verificationToken,
 }: VerifyEmailComponentProps) {
-  const apiClient = useApi();
   const { refreshUser } = useAuth();
   const hasVerified = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');
@@ -27,7 +26,7 @@ export function VerifyEmailComponent({
   );
 
   useEffect(() => {
-    const verifyEmail = async () => {
+    const handleVerifyEmail = async () => {
       if (hasVerified.current) return;
       hasVerified.current = true;
 
@@ -38,7 +37,7 @@ export function VerifyEmailComponent({
       }
 
       try {
-        await apiClient.verifyEmail(verificationToken);
+        await verifyEmail({ verification_token: verificationToken });
         await refreshUser();
         setStatus('success');
         setMessage('Votre adresse e-mail est maintenant vérifiée.');
@@ -50,8 +49,8 @@ export function VerifyEmailComponent({
       }
     };
 
-    verifyEmail();
-  }, [apiClient, refreshUser, verificationToken]);
+    handleVerifyEmail();
+  }, [refreshUser, verificationToken]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-100 px-4">

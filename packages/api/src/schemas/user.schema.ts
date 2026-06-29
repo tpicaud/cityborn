@@ -11,7 +11,7 @@ export const PublicUserSchema = z.object({
 export const UserSchema = PublicUserSchema.extend({
   email: z.string().email(),
   type: AccountTypeSchema,
-  is_verified: z.boolean(),
+  isVerified: z.boolean(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   relations: z

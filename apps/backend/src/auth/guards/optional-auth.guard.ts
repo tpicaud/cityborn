@@ -1,9 +1,7 @@
-import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -37,7 +35,7 @@ export class OptionalAuthGuard implements CanActivate {
 
     const fullUser = await this.userService.findById(user.id);
 
-    request['user'] = fullUser;
+    request.user = fullUser;
     return true;
   }
 }

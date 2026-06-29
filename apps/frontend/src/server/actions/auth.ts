@@ -4,7 +4,7 @@ import type {
   CreateUser,
   SignIn,
   SignInWithGoogle,
-  VerifyEmail,
+  VerifyEmailData,
 } from '@cityborn/api';
 import { type ApiResult, toApiResult } from '@cityborn/api';
 import {
@@ -54,10 +54,10 @@ export async function resendVerificationEmail(): Promise<ApiResult<void>> {
 }
 
 export async function verifyEmail(
-  verifyEmail: VerifyEmail,
+  verifyEmailData: VerifyEmailData,
 ): Promise<ApiResult<void>> {
   const client = await getServerClient();
-  const result = await client.auth.verifyEmail({ body: verifyEmail });
+  const result = await client.auth.verifyEmail({ body: verifyEmailData });
   const r = toApiResult(result);
   if (!r.ok) return r;
   return { ok: true, data: undefined };

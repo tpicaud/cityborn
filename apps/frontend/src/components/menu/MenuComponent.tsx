@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { resendVerificationEmail } from '@/server/actions/auth';
 import { createSession, fetchSession } from '@/server/actions/session';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -51,7 +52,7 @@ export default function MenuComponent({
 
   const handleResendVerificationEmail = async () => {
     try {
-      await apiClient.resendVerificationEmail();
+      await resendVerificationEmail();
       setVerificationEmailSent(true);
     } catch (error: any) {
       invokeError(error);
