@@ -70,10 +70,20 @@ export const LobbyComponent = ({
   const [currentInput, setCurrentInput] = useState<string>('');
   const router = useRouter();
   useEffect(() => {
-    if (categories.length > 0 && session.gameConfig.categories.length === 0) {
+    if (
+      categories.length > 0 &&
+      session.gameConfig.categories.length === 0 &&
+      session.players.find((p) => p.username === localPlayerID)
+    ) {
       handleUpdateGameConfig({ categories });
     }
-  }, [categories, session.gameConfig.categories.length, handleUpdateGameConfig]);
+  }, [
+    categories,
+    session.gameConfig.categories.length,
+    handleUpdateGameConfig,
+    session.players,
+    localPlayerID,
+  ]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);

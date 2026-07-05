@@ -93,6 +93,13 @@ export default function Profile() {
                   <Text className="font-bold text-foreground-on-primary">
                     Status
                   </Text>
+                  <Text
+                    className={
+                      user.isVerified ? 'text-primary-500' : 'text-destructive-500'
+                    }
+                  >
+                    {user.isVerified ? 'Vérifié' : 'Non vérifié'}
+                  </Text>
                 </View>
               </View>
             </Card>

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "dotenv -e .env -- next dev",
     "build": "next build",
-    "typecheck": "tsc -noEmit",
+    "typecheck": "next typegen && tsc -noEmit",
     "start": "dotenv -e .env -- next start",
     "lint": "next lint",
     "format": "biome format --write .",

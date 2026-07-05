@@ -1,4 +1,4 @@
-import { ErrorCode } from '@cityborn/api';
+import { ErrorCode, User } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -7,18 +7,20 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../../user/user.service';
 import { getJwtConstants } from '../constants';
 import {
   extractAccessTokenFromWsClient,
   extractTokenFromHTTPHeader,
 } from '../utils';
-import { validateAccessToken } from './utils';
+import { resolveFullUser, validateAccessToken } from './utils';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -43,7 +45,14 @@ export class AuthGuard implements CanActivate {
         getJwtConstants(this.configService).jwt_access_secret,
       );
 
-      request['user'] = user;
+      const fullUser = await resolveFullUser(user.id, this.userService);
+      if (!fullUser) {
+        throw new UnauthorizedException({
+          code: ErrorCode.USER_NOT_FOUND,
+          message: 'User not found',
+        });
+      }
+      request.user = fullUser satisfies User;
     }
 
     if (isWs) {
@@ -56,7 +65,7 @@ export class AuthGuard implements CanActivate {
         return false;
       }
       try {
-        const user = await validateAccessToken(
+        const _user = await validateAccessToken(
           token,
           this.jwtService,
           getJwtConstants(this.configService).jwt_access_secret,
