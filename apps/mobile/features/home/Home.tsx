@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { resendVerificationEmail, signOut } from '@/lib/api/auth';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const router = useRouter();
@@ -56,7 +57,14 @@ export default function Home() {
                   {isSendingVerificationEmail ? (
                     <LoaderIcon size={18} color="#92400e" />
                   ) : (
-                    <Text className="text-sm font-medium text-amber-900 underline">
+                    <Text
+                      className={cn(
+                        'text-sm font-medium',
+                        verificationEmailSent
+                          ? 'text-amber-900/50'
+                          : 'text-amber-900 underline',
+                      )}
+                    >
                       {verificationEmailSent
                         ? 'E-mail de vérification envoyé'
                         : 'Renvoyer un e-mail de vérification'}

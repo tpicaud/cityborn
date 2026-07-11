@@ -77,7 +77,7 @@ export async function deleteUser(): Promise<ApiResult<void>> {
 }
 
 export async function resendVerificationEmail(): Promise<ApiResult<void>> {
-  const result = await client.auth.resendVerificationEmail();
+  const result = await client.auth.resendVerificationEmail({ body: {} });
   const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   return { ok: true, data: undefined };

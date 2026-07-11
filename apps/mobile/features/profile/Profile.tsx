@@ -24,14 +24,6 @@ export default function Profile() {
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] =
     useState<boolean>(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (user) {
-        fetchGameRecords();
-      }
-    }, []),
-  );
-
   const fetchGameRecords = async () => {
     if (!user) return;
     setLoading(true);
@@ -40,6 +32,15 @@ export default function Profile() {
     if (!result.ok) return invokeError(result.error);
     setGamesRecords(result.data);
   };
+
+  useFocusEffect(
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    useCallback(() => {
+      if (user) {
+        fetchGameRecords();
+      }
+    }, [user]),
+  );
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -95,10 +96,12 @@ export default function Profile() {
                   </Text>
                   <Text
                     className={
-                      user.isVerified ? 'text-primary-500' : 'text-destructive-500'
+                      user.isVerified
+                        ? 'text-foreground-on-primary'
+                        : 'text-destructive-500'
                     }
                   >
-                    {user.isVerified ? 'Vérifié' : 'Non vérifié'}
+                    {user.isVerified ? 'Email vérifié' : 'Email non vérifié'}
                   </Text>
                 </View>
               </View>
