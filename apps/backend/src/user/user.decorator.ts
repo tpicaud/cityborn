@@ -1,13 +1,14 @@
 import type { User } from '@cityborn/api';
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+import type { Request } from 'express';
 
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): User | undefined => {
     const type = ctx.getType<'http' | 'ws'>();
 
     if (type === 'http') {
-      const request = ctx.switchToHttp().getRequest();
-      return request.user as User | undefined;
+      const request = ctx.switchToHttp().getRequest<Request>();
+      return request.user;
     }
 
     if (type === 'ws') {

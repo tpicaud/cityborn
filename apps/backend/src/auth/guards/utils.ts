@@ -1,10 +1,12 @@
-import { ErrorCode } from '@cityborn/api';
+import { ErrorCode, type User } from '@cityborn/api';
 import { UnauthorizedException } from '@nestjs/common';
 import {
   JsonWebTokenError,
   type JwtService,
   TokenExpiredError,
 } from '@nestjs/jwt';
+import { UserMapper } from '../../user/user.mapper';
+import type { UserService } from '../../user/user.service';
 
 export async function validateAccessToken(
   token: string,
@@ -30,6 +32,14 @@ export async function validateAccessToken(
       });
     }
   }
+}
+
+export async function resolveFullUser(
+  userId: string,
+  userService: UserService,
+): Promise<User | null> {
+  const fullUser = await userService.findById(userId);
+  return fullUser ? UserMapper.toUser(fullUser) : null;
 }
 
 export async function validateRefreshToken(

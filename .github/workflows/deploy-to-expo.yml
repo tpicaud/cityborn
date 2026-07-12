@@ -46,7 +46,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -56,7 +56,7 @@ jobs:
         with:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-      
+
       - name: Install dependencies
         run: pnpm install
 
@@ -74,7 +74,7 @@ jobs:
 
       - name: Submit
         working-directory: apps/mobile
-        env: 
+        env:
           APP_VARIANT: ${{ vars.APP_VARIANT }}
           GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
           GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}

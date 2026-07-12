@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
+import { resendVerificationEmail } from '@/server/actions/auth';
 import { createSession, fetchSession } from '@/server/actions/session';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -26,6 +27,7 @@ export default function MenuComponent({
   const { invokeError } = useError();
   const [code, setCode] = useState<string>('');
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
 
   const handleSoloPlay = () => {
     router.push(`/session/solo`);
@@ -48,6 +50,15 @@ export default function MenuComponent({
     router.push(`/session/multi/${code}`);
   };
 
+  const handleResendVerificationEmail = async () => {
+    try {
+      await resendVerificationEmail();
+      setVerificationEmailSent(true);
+    } catch (error: any) {
+      invokeError(error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-5">
       <div className="relative flex flex-col gap-1 items-center w-full">
@@ -66,10 +77,29 @@ export default function MenuComponent({
       </div>
 
       {user ? (
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-2 w-full">
           <Typography variant="h5" className="text-center">
             Bienvenue <b>{user.username}</b> !
           </Typography>
+          {user.isVerified === false && (
+            <div className="flex flex-col items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-center w-full max-w-xs">
+              <p className="text-sm font-medium text-amber-900">
+                Votre adresse e-mail n'est pas vérifiée
+              </p>
+              <LoadingButton
+                variant="text"
+                color="warning"
+                size="small"
+                className="normal-case underline"
+                onClick={handleResendVerificationEmail}
+                disabled={verificationEmailSent}
+              >
+                {verificationEmailSent
+                  ? 'E-mail de vérification envoyé'
+                  : 'Renvoyer un e-mail de vérification'}
+              </LoadingButton>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center justify-center w-full">

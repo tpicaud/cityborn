@@ -2,10 +2,12 @@ import {
   type AuthResponse,
   type CreateUser,
   ErrorCode,
+  PublicUser,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  VerifyEmailData,
 } from '@cityborn/api';
 import {
   Inject,
@@ -21,10 +23,14 @@ import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
+import { buildMailOptions } from '../mail/email-templates';
+import { MailService } from '../mail/mail.service';
 import { UserMapper } from '../user/user.mapper';
 import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
+
+const verificationEmailCooldown = 3 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -35,6 +41,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly eventService: EventService,
+    private readonly mailService: MailService,
     @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
   ) {}
 
@@ -58,6 +65,15 @@ export class AuthService {
         code: ErrorCode.UNKNOWN_ERROR,
         message: `Error creating user in database`,
       });
+
+    try {
+      await this.sendVerificationEmail(user);
+    } catch (error) {
+      this.logger.error(
+        'Failed to send verification email during sign-up',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
 
     // Create JWT
     const access_token = await this.generateToken(
@@ -355,7 +371,45 @@ export class AuthService {
     await this.userService.deleteUser(user.id);
   }
 
+  async resendVerificationEmail(user: User): Promise<void> {
+    if (user.isVerified) return;
+    await this.sendVerificationEmail(user, verificationEmailCooldown);
+  }
+
+  async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
+    const user = await this.userService.verifyEmail(
+      verifyEmailData.verification_token,
+    );
+
+    return UserMapper.toPublicUser(user);
+  }
+
   // Auxiliary
+  private async sendVerificationEmail(
+    user: {
+      id: string;
+      email: string;
+      username: string;
+    },
+    resendCooldownMs?: number,
+  ): Promise<void> {
+    const verificationToken =
+      await this.userService.createEmailVerificationToken(
+        user.id,
+        resendCooldownMs,
+      );
+    await this.mailService.sendMail(
+      buildMailOptions('verification-email', {
+        email: user.email,
+        frontendUrl:
+          this.configService.get<string>('FRONTEND_URL') ??
+          'http://localhost:3000',
+        verificationToken,
+        username: user.username,
+      }),
+    );
+  }
+
   private async generateToken(
     type: 'access' | 'refresh',
     id: string,
@@ -423,9 +477,7 @@ export class AuthService {
       const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
       username = `${sanitized}${suffix}`;
 
-      exists = (await this.userService.findByIdentifier(username))
-        ? true
-        : false;
+      exists = !!(await this.userService.findByIdentifier(username));
     }
 
     return username;

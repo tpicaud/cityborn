@@ -18,11 +18,12 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { getJwtConstants } from '../auth/constants';
-import { validateAccessToken } from '../auth/guards/utils';
+import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { AllExceptionsFilter } from '../common/filters/all-exceptions.filter';
 import { CurrentUser } from '../user/user.decorator';
+import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
 
 interface WSResponse {
@@ -50,6 +51,7 @@ export class SessionGateway
     private readonly sessionService: SessionService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {}
 
   @WebSocketServer()
@@ -74,7 +76,8 @@ export class SessionGateway
     ).catch(() => null);
 
     if (payload) {
-      (client as any).user = payload;
+      const fullUser = await resolveFullUser(payload.id, this.userService);
+      (client as any).user = fullUser;
     }
   }
 

@@ -1,6 +1,11 @@
 'use server';
 
-import type { CreateUser, SignIn, SignInWithGoogle } from '@cityborn/api';
+import type {
+  CreateUser,
+  SignIn,
+  SignInWithGoogle,
+  VerifyEmailData,
+} from '@cityborn/api';
 import { type ApiResult, toApiResult } from '@cityborn/api';
 import {
   expireTokensInCookies,
@@ -37,6 +42,24 @@ export async function signInWithGoogle(
   if (!apiResult.ok) return apiResult;
   const { access_token, refresh_token } = apiResult.data;
   await storeTokensInCookies(access_token, refresh_token);
+  return { ok: true, data: undefined };
+}
+
+export async function resendVerificationEmail(): Promise<ApiResult<void>> {
+  const client = await getServerClient();
+  const result = await client.auth.resendVerificationEmail();
+  const r = toApiResult(result);
+  if (!r.ok) return r;
+  return { ok: true, data: undefined };
+}
+
+export async function verifyEmail(
+  verifyEmailData: VerifyEmailData,
+): Promise<ApiResult<void>> {
+  const client = await getServerClient();
+  const result = await client.auth.verifyEmail({ body: verifyEmailData });
+  const r = toApiResult(result);
+  if (!r.ok) return r;
   return { ok: true, data: undefined };
 }
 

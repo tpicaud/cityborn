@@ -1,53 +1,26 @@
-// import { ErrorCode } from '@cityborn/api';
-// import { Injectable, InternalServerErrorException } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import * as nodemailer from 'nodemailer';
+import { ErrorCode } from '@cityborn/api';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { MAIL_PROVIDER } from './mail.constants';
+import type { MailProvider, SendMailOptions } from './providers/mail.provider';
 
-// @Injectable()
-// export class MailService {
-//   private transporter;
+@Injectable()
+export class MailService {
+  constructor(
+    @Inject(MAIL_PROVIDER) private readonly mailProvider: MailProvider,
+  ) {}
 
-//   constructor(private configService: ConfigService) {
-//     this.transporter = nodemailer.createTransport({
-//       host: this.configService.get<string>('SMTP_HOST'),
-//       port: Number(this.configService.get<string>('SMTP_PORT')),
-//       secure: true, // true pour 465
-//       auth: {
-//         user: this.configService.get<string>('SMTP_USER'),
-//         pass: this.configService.get<string>('SMTP_PASS'),
-//       },
-
-//     });
-
-//     this.transporter.verify((error: any) => {
-//       if (error) {
-//         console.error('SMTP connection failed:', error);
-//       } else {
-//         console.log('SMTP server is ready');
-//       }
-//     });
-//   }
-
-//   async sendVerificationEmail(email: string, token: string) {
-//     try {
-//       const frontendUrl = this.configService.get<string>('FRONTEND_URL');
-//       const url = `${frontendUrl}/verify-email?token=${token}`;
-
-//       await this.transporter.sendMail({
-//         from: `"CityBorn" <${this.configService.get<string>('SMTP_USER')}>`,
-//         to: email,
-//         idject: 'Vérification de votre email CityBorn',
-//         html: `
-//         <p>Bienvenue chez CityBorn !</p>
-//         <p>Cliquez sur le lien ci-dessous pour vérifier votre email :</p>
-//         <a href="${url}">Vérifier mon email</a>
-//       `,
-//       });
-//     } catch (error) {
-//       throw new InternalServerErrorException({
-//         code: ErrorCode.EMAIL_SEND_FAILED,
-//         message: `Error sending verification email: ${error.message}`,
-//       });
-//     }
-//   }
-// }
+  async sendMail(options: SendMailOptions): Promise<void> {
+    try {
+      await this.mailProvider.sendMail(options);
+    } catch (error: unknown) {
+      throw new InternalServerErrorException({
+        code: ErrorCode.EMAIL_SEND_FAILED,
+        message: `Error sending email: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    }
+  }
+}

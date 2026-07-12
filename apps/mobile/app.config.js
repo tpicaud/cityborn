@@ -38,7 +38,6 @@ export default {
 
     android: {
       package: getUniqueIdentifier(),
-      edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       userInterfaceStyle: 'light',
       config: {
