@@ -1,5 +1,5 @@
 import { contract, User } from '@cityborn/api';
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
@@ -78,7 +78,6 @@ export class AuthController {
   }
 
   @TsRestHandler(refreshRoutes)
-  @Post('refresh')
   @UseGuards(RefreshGuard)
   async refreshHandler(@CurrentUser() user: User) {
     return tsRestHandler(refreshRoutes, {
