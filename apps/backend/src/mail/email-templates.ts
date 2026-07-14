@@ -1,11 +1,9 @@
 import { resolve } from 'node:path';
 import type { SendMailOptions } from './providers/mail.provider';
 
-const logoContentId = 'cityborn-logo';
-const logoPath = resolve(
-  __dirname,
-  '../../../frontend/assets/logo-transparent.png',
-);
+const logoFilename = 'logo-transparent.png';
+const logoContentId = logoFilename;
+const logoPath = resolve(__dirname, '../../../frontend/assets/logo-transparent.png');
 
 type EmailTemplateHeaderParams = {
   preheader: string;

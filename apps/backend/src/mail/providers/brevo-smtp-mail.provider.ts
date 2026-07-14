@@ -1,54 +1,59 @@
+import { readFile } from 'node:fs/promises';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 import type { MailProvider, SendMailOptions } from './mail.provider';
+
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 @Injectable()
 export class BrevoSmtpMailProvider implements MailProvider {
-  private transporter?: nodemailer.Transporter;
-
   constructor(private readonly configService: ConfigService) {}
 
   async sendMail(options: SendMailOptions): Promise<void> {
-    const transporter = this.getTransporter();
+    const apiKey = this.getRequiredConfig('BREVO_API_KEY');
     const fromEmail = this.getRequiredConfig('BREVO_SENDER_EMAIL');
     const fromName =
       this.configService.get<string>('BREVO_SENDER_NAME') ?? 'Cityborn';
 
-    await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to: options.to,
+    const to = Array.isArray(options.to) ? options.to : [options.to];
+
+    const payload: Record<string, unknown> = {
+      sender: { name: fromName, email: fromEmail },
+      to: to.map((email) => ({ email })),
       subject: options.subject,
-      html: options.html,
-      text: options.text,
-      replyTo: options.replyTo,
-      attachments: options.attachments,
-    });
-  }
+      htmlContent: options.html,
+      textContent: options.text,
+    };
 
-  private getTransporter(): nodemailer.Transporter {
-    if (this.transporter) return this.transporter;
+    if (options.replyTo) {
+      payload.replyTo = { email: options.replyTo };
+    }
 
-    const host =
-      this.configService.get<string>('BREVO_SMTP_HOST') ??
-      'smtp-relay.brevo.com';
-    const port = Number(
-      this.configService.get<string>('BREVO_SMTP_PORT') ?? 587,
-    );
-    const user = this.getRequiredConfig('BREVO_SMTP_USER');
-    const pass = this.getRequiredConfig('BREVO_SMTP_KEY');
+    if (options.attachments?.length) {
+      payload.attachment = await Promise.all(
+        options.attachments.map(async (attachment) => ({
+          name: attachment.filename,
+          content: (await readFile(attachment.path)).toString('base64'),
+        })),
+      );
+    }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
+    const response = await fetch(BREVO_API_URL, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
+      body: JSON.stringify(payload),
     });
 
-    return this.transporter;
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        `Brevo API request failed (${response.status}): ${errorBody}`,
+      );
+    }
   }
 
   private getRequiredConfig(key: string): string {
