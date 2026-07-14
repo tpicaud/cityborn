@@ -104,13 +104,19 @@ export default function Play() {
                 label="CONNEXION"
                 size="medium"
                 variant="outlined"
-                onPress={() => router.navigate('/auth/sign-in')}
+                onPress={() => {
+                  setOpenConnectionAlert(false);
+                  router.navigate('/auth/sign-in');
+                }}
               />
               <Button
                 label="INSCRIPTION"
                 size="medium"
                 variant="filled"
-                onPress={() => router.navigate('/auth/sign-up')}
+                onPress={() => {
+                  setOpenConnectionAlert(false);
+                  router.navigate('/auth/sign-up');
+                }}
               />
             </View>
           </View>

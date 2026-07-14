@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
@@ -6,16 +6,15 @@ import type { User } from '@cityborn/api';
 import { AuthProvider, ErrorProvider } from '@cityborn/contexts';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect, useState } from 'react';
-import { Platform, StatusBar, TouchableOpacity } from 'react-native';
+import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
-import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { getCurrentUser } from '@/lib/api/auth';
 
 export default function RootLayout() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,13 +58,7 @@ export default function RootLayout() {
               screenOptions={{
                 contentStyle: { backgroundColor: 'transparent' },
                 animation: 'none',
-                headerLeft: () => {
-                  return (
-                    <TouchableOpacity onPressIn={router.back} className="mt-4">
-                      <Icon name="arrow_back_outline" size={28} />
-                    </TouchableOpacity>
-                  );
-                },
+                header: (props) => <CustomHeader {...props} />,
               }}
             >
               <Stack.Screen
@@ -75,42 +68,10 @@ export default function RootLayout() {
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-              <Stack.Screen
-                name="auth/sign-in"
-                options={{
-                  headerShown: true,
-                  headerTitle: '',
-                  headerTransparent: true,
-                  headerShadowVisible: false,
-                }}
-              />
-              <Stack.Screen
-                name="auth/sign-up"
-                options={{
-                  headerShown: true,
-                  headerTitle: '',
-                  headerTransparent: true,
-                  headerShadowVisible: false,
-                }}
-              />
-              <Stack.Screen
-                name="session/solo"
-                options={{
-                  headerShown: true,
-                  headerTitle: '',
-                  headerTransparent: true,
-                  headerShadowVisible: false,
-                }}
-              />
-              <Stack.Screen
-                name="session/multi/[sessionID]"
-                options={{
-                  headerShown: true,
-                  headerTitle: '',
-                  headerTransparent: true,
-                  headerShadowVisible: false,
-                }}
-              />
+              <Stack.Screen name="auth/sign-in" />
+              <Stack.Screen name="auth/sign-up" />
+              <Stack.Screen name="session/solo" />
+              <Stack.Screen name="session/multi/[sessionID]" />
             </Stack>
           </AuthProvider>
         </View>

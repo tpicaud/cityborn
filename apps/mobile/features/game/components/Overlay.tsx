@@ -135,7 +135,6 @@ const Overlay = ({
 
   return (
     <View
-      className="h-full w-full"
       style={{
         position: 'absolute',
         top: insets.top,
