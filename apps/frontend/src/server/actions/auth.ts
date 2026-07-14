@@ -47,7 +47,7 @@ export async function signInWithGoogle(
 
 export async function resendVerificationEmail(): Promise<ApiResult<void>> {
   const client = await getServerClient();
-  const result = await client.auth.resendVerificationEmail();
+  const result = await client.auth.resendVerificationEmail({ body: {} });
   const r = toApiResult(result);
   if (!r.ok) return r;
   return { ok: true, data: undefined };
