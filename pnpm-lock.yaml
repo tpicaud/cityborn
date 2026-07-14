@@ -21,6 +21,7 @@ overrides:
   uuid@<14.0.0: '>=14.0.0'
   postcss@<8.5.10: '>=8.5.10'
   '@xmldom/xmldom@<0.8.12': '>=0.8.12'
+  '@expo/plist>@xmldom/xmldom': 0.8.13
   next@>=16.0.0 <16.2.5: '>=16.2.5'
   next@>=16.0.0 <16.2.6: '>=16.2.6'
   js-yaml@<=4.1.1: '>=4.2.0'
@@ -4733,6 +4734,10 @@ packages:
 
   '@xml-tools/parser@1.0.11':
     resolution: {integrity: sha512-aKqQ077XnR+oQtHJlrAflaZaL7qZsulWc/i/ZEooar5JiWj1eLt0+Wg28cpa+XLney107wXqneC+oG1IZvxkTA==}
+
+  '@xmldom/xmldom@0.8.13':
+    resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
+    engines: {node: '>=10.0.0'}
 
   '@xmldom/xmldom@0.9.10':
     resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
@@ -12413,7 +12418,7 @@ snapshots:
 
   '@expo/plist@0.5.4':
     dependencies:
-      '@xmldom/xmldom': 0.9.10
+      '@xmldom/xmldom': 0.8.13
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
 
@@ -16916,6 +16921,8 @@ snapshots:
   '@xml-tools/parser@1.0.11':
     dependencies:
       chevrotain: 7.1.1
+
+  '@xmldom/xmldom@0.8.13': {}
 
   '@xmldom/xmldom@0.9.10': {}
 
