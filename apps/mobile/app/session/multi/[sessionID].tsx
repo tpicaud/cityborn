@@ -6,7 +6,7 @@ export default function MultiSessionScreen() {
   const { sessionID }: { sessionID: string } = useLocalSearchParams();
 
   return (
-    <ScreenLayout>
+    <ScreenLayout fullBleed>
       <MultiSession sessionID={sessionID} />
     </ScreenLayout>
   );

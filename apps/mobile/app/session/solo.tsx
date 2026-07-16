@@ -3,7 +3,7 @@ import SoloSession from '@/features/session/solo/SoloSession';
 
 export default function SoloSessionScreen() {
   return (
-    <ScreenLayout>
+    <ScreenLayout fullBleed>
       <SoloSession />
     </ScreenLayout>
   );
