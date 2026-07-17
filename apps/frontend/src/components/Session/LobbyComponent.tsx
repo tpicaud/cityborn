@@ -1,17 +1,19 @@
 'use client';
 
 import {
+  type Category,
   type CategoryTree,
-  type CategoryTrees,
   type GameConfig,
   type OnlinePlayer,
   type Session,
   SessionMode,
 } from '@cityborn/api';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -23,9 +25,29 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
+
+const flattenCategoryTree = (nodes: CategoryTree[]): Category[] =>
+  nodes.flatMap((node) => [
+    {
+      id: node.id,
+      name: node.name,
+      isPublished: node.isPublished,
+      description: node.description,
+      parentId: node.parentId,
+    },
+    ...flattenCategoryTree(node.children),
+  ]);
+
+const toCategory = (node: CategoryTree): Category => ({
+  id: node.id,
+  name: node.name,
+  isPublished: node.isPublished,
+  description: node.description,
+  parentId: node.parentId,
+});
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -47,7 +69,7 @@ export const LobbyComponent = ({
 }: {
   localPlayerID: string | undefined;
   session: Session;
-  categoryTrees: CategoryTrees;
+  categoryTrees: CategoryTree[];
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
@@ -56,54 +78,43 @@ export const LobbyComponent = ({
   handleJoinSession: (playerID: string) => Promise<void>;
 }) => {
   const [copied, setCopied] = useState(false);
-  const [tempNbOfObjects, setTempNbOfObjects] = useState(
-    session.gameConfig.nbOfObjects.toString(),
-  );
-  const [tempTimer, setTempTimer] = useState<string>(
-    session.gameConfig.timer.toString(),
-  );
   const [currentInput, setCurrentInput] = useState<string>('');
-  const [selectedPath, _setSelectedPath] = useState<CategoryTree[]>([]);
+  const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
   const router = useRouter();
+  const flatCategories = useMemo(
+    () => flattenCategoryTree(categoryTrees),
+    [categoryTrees],
+  );
   useEffect(() => {
     if (
-      categories.length > 0 &&
+      flatCategories.length > 0 &&
       session.gameConfig.categories.length === 0 &&
       session.players.find((p) => p.username === localPlayerID)
     ) {
-      handleUpdateGameConfig({ categories });
+      handleUpdateGameConfig({ categories: flatCategories });
     }
   }, [
-    session.gameConfig.categories.length, 
-    handleUpdateGameConfig, 
-    session.players, 
-    localPlayerID
+    flatCategories,
+    session.gameConfig.categories.length,
+    handleUpdateGameConfig,
+    session.players,
+    localPlayerID,
   ]);
 
-  const categoryRows: CategoryTree[][] = [categoryTrees];
-  for (const node of selectedPath) {
-    if (node.children.length > 0) categoryRows.push(node.children);
-    else break;
-  }
+  const currentCategoryNodes =
+    selectedPath.length === 0
+      ? categoryTrees
+      : selectedPath[selectedPath.length - 1].children;
+
+  const handlePlayCategory = async (node: CategoryTree) => {
+    await handleUpdateGameConfig({ categories: [toCategory(node)] });
+    await handleStartGame();
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const updateGameConfig = async () => {
-    const nbOfObjectsParsed = parseInt(tempNbOfObjects, 10);
-    const nbOfObjects =
-      Number.isNaN(nbOfObjectsParsed) || nbOfObjectsParsed <= 0
-        ? 6
-        : nbOfObjectsParsed;
-
-    const timerParsed = parseInt(tempTimer, 10);
-    const timer =
-      Number.isNaN(timerParsed) || timerParsed <= 0 ? 20 : timerParsed;
-
-    await handleUpdateGameConfig({ nbOfObjects, timer });
   };
 
   return (
@@ -128,9 +139,9 @@ export const LobbyComponent = ({
                             bg-transparent h-full w-full pointer-events-none"
       >
         <Box
-          className="flex flex-col items-center gap-2 p-6 
-                              bg-slate-100 shadow-xl rounded-2xl 
-                                max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] max-h-[80%] pointer-events-auto"
+          className="flex flex-col items-center gap-2 p-6
+                              bg-slate-100 shadow-xl rounded-2xl
+                                max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] lg:max-w-xl max-h-[80%] pointer-events-auto"
         >
           {/* Titre du lobby */}
           <Typography variant="h5">{session.mode.toUpperCase()}</Typography>
@@ -216,136 +227,84 @@ export const LobbyComponent = ({
               </List>
             )}
 
-            <div className="flex-1 flex flex-col gap-3 max-w-full">
-              <FormControl sx={{ width: '100%', marginTop: 2 }}>
-                <InputLabel id="categories-input" shrink={true}>
-                  Categories
-                </InputLabel>
-                <Select
-                  multiple
-                  displayEmpty
-                  value={
-                    session.gameConfig.categories.map((cat) => cat.id) ?? []
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value as string[];
-
-                    if (value.includes('toggle_all')) {
-                      if (
-                        session.gameConfig.categories.length ===
-                        categories.length
-                      ) {
-                        return;
-                      }
-                      handleUpdateGameConfig({ categories: [...categories] });
-                      return;
-                    }
-
-                    const selected_categories: Category[] = value
-                      .map((category_id) =>
-                        categories.find(
-                          (category) => category.id === category_id,
-                        ),
-                      )
-                      .filter((category): category is Category => !!category);
-                    if (selected_categories.length === 0) return;
-                    handleUpdateGameConfig({ categories: selected_categories });
-                  }}
-                  input={<OutlinedInput label="Categories" />}
-                  renderValue={(selected) => (
-                    <Box
+            <div className="w-[300px] max-w-full shrink-0 flex flex-col gap-3">
+              <div className="flex items-center gap-1">
+                {selectedPath.length > 0 && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setSelectedPath((path) => path.slice(0, -1))}
+                  >
+                    <ArrowBackIcon fontSize="small" />
+                  </IconButton>
+                )}
+                <Typography variant="subtitle1" noWrap>
+                  {selectedPath.length === 0
+                    ? 'Packs'
+                    : selectedPath[selectedPath.length - 1].name}
+                </Typography>
+              </div>
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  maxHeight: 220,
+                  overflowY: 'auto',
+                }}
+              >
+                {currentCategoryNodes.map((node) => (
+                  <Box
+                    key={node.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 3,
+                      minHeight: 80,
+                      px: 1,
+                      py: 1,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-of-type': { borderBottom: 0 },
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        display: 'block',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        width: '100%',
+                        fontSize: { xs: '1rem', md: '1.15rem' },
+                        fontWeight: 500,
+                        flex: 1,
+                        minWidth: 0,
+                        overflowWrap: 'break-word',
                       }}
                     >
-                      {(selected as string[]).length !== 0
-                        ? (selected as string[])
-                            .map(
-                              (cat_id) =>
-                                categories.find((cat) => cat.id === cat_id)
-                                  ?.name,
-                            )
-                            .join(', ')
-                        : 'Aucune catégorie'}
-                    </Box>
-                  )}
-                  MenuProps={{
-                    anchorOrigin: {
-                      vertical: 'bottom',
-                      horizontal: 'left',
-                    },
-                    transformOrigin: {
-                      vertical: 'top',
-                      horizontal: 'left',
-                    },
-                    slotProps: {
-                      paper: {
-                        className:
-                          'max-h-72 overflow-y-auto rounded-lg shadow-lg border border-neutral-800',
-                      },
-                    },
-                  }}
-                  className="overflow-y-auto"
-                >
-                  {categories.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      <Checkbox
-                        checked={session.gameConfig.categories.some(
-                          (c) => c.id === category.id,
-                        )}
-                      />
-                      <ListItemText primary={category.name} />
-                    </MenuItem>
-                  ))}
-                </div>
-              </div>
-              <div className="w-full flex flex-row gap-x-2">
-                <TextField
-                  type="number"
-                  label="Personnalités"
-                  variant="outlined"
-                  fullWidth
-                  value={tempNbOfObjects}
-                  size="small"
-                  onChange={(e) => {
-                    setTempNbOfObjects(e.target.value); // on garde la valeur saisie, même vide
-                  }}
-                  onBlur={updateGameConfig}
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: { xs: '0.85rem', md: '1rem' },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontSize: { xs: '0.85rem', md: '1rem' },
-                    },
-                  }}
-                />
-
-                <TextField
-                  type="number"
-                  label="Timer"
-                  variant="outlined"
-                  fullWidth
-                  value={tempTimer}
-                  size="small"
-                  onChange={(e) => {
-                    setTempTimer(e.target.value);
-                  }}
-                  onBlur={updateGameConfig}
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: { xs: '0.85rem', md: '1rem' },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontSize: { xs: '0.85rem', md: '1rem' },
-                    },
-                  }}
-                />
-              </div>
+                      {node.name}
+                    </Typography>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <LoadingButton
+                        size="small"
+                        variant="contained"
+                        disabled={session.hostID !== localPlayerID}
+                        onClick={() => handlePlayCategory(node)}
+                        sx={{ width: 96, fontSize: '0.7rem' }}
+                      >
+                        Jouer
+                      </LoadingButton>
+                      {node.children.length > 0 && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() =>
+                            setSelectedPath((path) => [...path, node])
+                          }
+                          sx={{ width: 96, fontSize: '0.7rem' }}
+                        >
+                          Sous-packs
+                        </Button>
+                      )}
+                    </div>
+                  </Box>
+                ))}
+              </Box>
             </div>
           </div>
 
@@ -355,10 +314,7 @@ export const LobbyComponent = ({
             color="primary"
             fullWidth
             disabled={session.hostID !== localPlayerID}
-            onClick={async () => {
-              await updateGameConfig();
-              await handleStartGame();
-            }}
+            onClick={handleStartGame}
           >
             Démarrer la partie
           </LoadingButton>
