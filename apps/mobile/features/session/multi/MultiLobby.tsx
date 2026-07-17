@@ -1,5 +1,5 @@
 import type {
-  Category,
+  CategoryTree,
   GameConfig,
   OnlinePlayer,
   Session,
@@ -10,12 +10,15 @@ import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { fetchCategories } from '@/lib/api/category';
+import {
+  categoryTreeToCategory,
+  fetchCategoryTrees,
+  flattenCategoryTree,
+} from '@/lib/api/category';
 
 interface MultiLobbyProps {
   localPlayerID: string | undefined;
@@ -39,26 +42,45 @@ export function MultiLobby({
   handleJoinSession,
 }: MultiLobbyProps) {
   const { invokeError } = useError();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categoryTrees, setCategoryTrees] = useState<CategoryTree[]>([]);
+  const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
   const [copied, setCopied] = useState(false);
   const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
 
   useEffect(() => {
-    const loadCategories = async () => {
-      const result = await fetchCategories();
+    const loadCategoryTrees = async () => {
+      const result = await fetchCategoryTrees();
       if (!result.ok) return invokeError(result.error);
-      setCategories(result.data);
-      setSelectedCategories(result.data.map((cat) => cat.id));
+      setCategoryTrees(result.data);
     };
-    loadCategories();
+    loadCategoryTrees();
   }, []);
 
-  const toggleCategory = (id: string) => {
-    setSelectedCategories((prev) => {
-      if (prev.includes(id) && prev.length === 1) return prev;
-      return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+  useEffect(() => {
+    if (
+      categoryTrees.length > 0 &&
+      session.gameConfig.categories.length === 0
+    ) {
+      handleUpdateGameConfig({
+        categories: flattenCategoryTree(categoryTrees),
+      });
+    }
+  }, [
+    categoryTrees,
+    session.gameConfig.categories.length,
+    handleUpdateGameConfig,
+  ]);
+
+  const currentCategoryNodes =
+    selectedPath.length === 0
+      ? categoryTrees
+      : selectedPath[selectedPath.length - 1].children;
+
+  const handlePlayCategory = async (node: CategoryTree) => {
+    await handleUpdateGameConfig({
+      categories: [categoryTreeToCategory(node)],
     });
+    await handleStartGame();
   };
 
   const handleCopy = async () => {
@@ -115,36 +137,64 @@ export function MultiLobby({
           </ScrollView>
         </View>
 
-        {/* Catégories */}
+        {/* Packs */}
         <View className="flex flex-col gap-2 w-full">
-          <Text className="text-xl">Catégories</Text>
-          <View className=" w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
-          {categories.length === 0 ? (
-            <Text>Aucune catégorie disponible</Text>
+          <View className="flex-row items-center gap-1">
+            {selectedPath.length > 0 && (
+              <Pressable
+                onPress={() => setSelectedPath((path) => path.slice(0, -1))}
+              >
+                <Icon
+                  name="chevron_back_outline"
+                  size={20}
+                  color={colors.primary[500]}
+                />
+              </Pressable>
+            )}
+            <Text className="text-xl">
+              {selectedPath.length === 0
+                ? 'Packs'
+                : selectedPath[selectedPath.length - 1].name}
+            </Text>
+          </View>
+          <View className="w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
+          {currentCategoryNodes.length === 0 ? (
+            <Text>Aucun pack disponible</Text>
           ) : (
-            <View className="flex flex-wrap flex-row gap-2">
-              {/* Categories chips */}
-              {categories.map((cat) => {
-                return (
-                  <Pressable
-                    onPress={() => toggleCategory(cat.id)}
-                    key={cat.id}
+            <ScrollView className="max-h-60">
+              <View className="flex flex-col gap-2 w-full">
+                {currentCategoryNodes.map((node) => (
+                  <View
+                    key={node.id}
+                    className="flex-row items-center justify-between gap-3 py-2 border-b border-foreground/10"
                   >
-                    <Card
-                      variant="outline"
-                      className={`rounded-2xl border-2 border-primary w-34 flex items-center justify-center
-                      ${
-                        selectedCategories.includes(cat.id)
-                          ? 'opacity-100'
-                          : 'opacity-40'
-                      }`}
-                    >
-                      <Text className="text-center font-bold">{cat.name}</Text>
-                    </Card>
-                  </Pressable>
-                );
-              })}
-            </View>
+                    <Text className="flex-1 text-lg font-semibold">
+                      {node.name}
+                    </Text>
+                    <View className="flex-col gap-1">
+                      <Button
+                        size="small"
+                        label="Jouer"
+                        disabled={!isHost}
+                        onPress={() => handlePlayCategory(node)}
+                        className="w-24 h-9 px-0"
+                      />
+                      {node.children.length > 0 && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          label="Sous-packs"
+                          onPress={() =>
+                            setSelectedPath((path) => [...path, node])
+                          }
+                          className="w-24 h-9 px-0"
+                        />
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
           )}
         </View>
 
@@ -152,15 +202,7 @@ export function MultiLobby({
           size="large"
           label="JOUER"
           disabled={!isHost}
-          onPress={async () => {
-            await handleUpdateGameConfig({
-              ...session.gameConfig,
-              categories: categories.filter((cat) =>
-                selectedCategories.includes(cat.id),
-              ),
-            });
-            await handleStartGame();
-          }}
+          onPress={handleStartGame}
         />
       </View>
       <Dialog visible={!localPlayerID} className="h-auto">
