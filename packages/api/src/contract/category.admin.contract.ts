@@ -1,17 +1,17 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   CategoriesSchema,
   CategorySchema,
   CreateCategorySchema,
   UpdateCategorySchema,
-} from '../schemas/category.schema.js';
+} from '../schemas/category.schema';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
   IdParamSchema,
   IncludeQuerySchema,
-} from '../schemas/common.schema.js';
+} from '../schemas/common.schema';
 
 const c = initContract();
 

@@ -1,7 +1,7 @@
 import { initClient } from '@ts-rest/core';
-import { AuthFetch } from './auth-fetch.js';
-import { contract } from './contract/contract.js';
-import type { TokenStorage } from './types/token-storage.js';
+import { AuthFetch } from './auth-fetch';
+import { contract } from './contract/contract';
+import type { TokenStorage } from './types/token-storage';
 
 export function createApiClient(baseURL: string, tokenStorage: TokenStorage) {
   const authFetch = new AuthFetch(baseURL, tokenStorage);

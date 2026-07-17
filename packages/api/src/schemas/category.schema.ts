@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GuessObjectSchema } from './guess-object.schema.js';
+import { GuessObjectSchema } from './guess-object.schema';
 
 export const CategorySchema = z.object({
   id: z.string(),

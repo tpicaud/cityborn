@@ -1,5 +1,5 @@
-import type { ApiError } from '../schemas/api-error.schema.js';
-import { ErrorCode } from './error-codes.js';
+import type { ApiError } from '../schemas/api-error.schema';
+import { ErrorCode } from './error-codes';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // User

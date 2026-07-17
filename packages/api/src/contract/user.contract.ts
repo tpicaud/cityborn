@@ -1,10 +1,10 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
-import { emptyResponseSchema } from '../schemas/common.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
+import { emptyResponseSchema } from '../schemas/common.schema';
 import {
   CreateGameRecordSchema,
   GameRecordsSchema,
-} from '../schemas/game.schema.js';
+} from '../schemas/game.schema';
 
 const c = initContract();
 

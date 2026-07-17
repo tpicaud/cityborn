@@ -1,17 +1,4 @@
 {
   "files": [],
-  "references": [
-    {
-      "path": "packages/types"
-    },
-    {
-      "path": "packages/errors"
-    },
-    {
-      "path": "apps/backend"
-    },
-    {
-      "path": "apps/frontend"
-    }
-  ]
+  "references": [{ "path": "packages/design-system" }]
 }

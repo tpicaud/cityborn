@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { SessionModeSchema, SessionStatusSchema } from './enums.js';
-import { GameConfigSchema, GameSchema } from './game.schema.js';
-import { PlayerSchema } from './player.schema.js';
+import { SessionModeSchema, SessionStatusSchema } from './enums';
+import { GameConfigSchema, GameSchema } from './game.schema';
+import { PlayerSchema } from './player.schema';
 
 export const CreateSessionSchema = z.object({ mode: SessionModeSchema });
 

@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { CategorySchema } from './category.schema.js';
+import { CategorySchema } from './category.schema';
 import {
   GameStatusSchema,
   RoundStatusSchema,
   SessionModeSchema,
-} from './enums.js';
-import { GuessObjectSchema } from './guess-object.schema.js';
-import { PlayerResultsSchema, PlayerSchema } from './player.schema.js';
+} from './enums';
+import { GuessObjectSchema } from './guess-object.schema';
+import { PlayerResultsSchema, PlayerSchema } from './player.schema';
 
 export const CoordSchema = z.object({
   lat: z.number(),

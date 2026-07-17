@@ -1,8 +1,8 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { commonErrorResponses } from '../schemas/api-error.schema.js';
-import { GuessObjectCandidatesSchema } from '../schemas/guess-object.schema.js';
-import { WorldLocationsSchema } from '../schemas/world-location.schema.js';
+import { commonErrorResponses } from '../schemas/api-error.schema';
+import { GuessObjectCandidatesSchema } from '../schemas/guess-object.schema';
+import { WorldLocationsSchema } from '../schemas/world-location.schema';
 
 const c = initContract();
 

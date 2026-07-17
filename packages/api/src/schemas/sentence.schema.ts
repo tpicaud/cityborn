@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ScoreTypeSchema } from './enums.js';
+import { ScoreTypeSchema } from './enums';
 
 export const SentenceSchema = z.object({
   id: z.string(),

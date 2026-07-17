@@ -1,9 +1,9 @@
 import type { ApiFetcherArgs } from '@ts-rest/core';
-import { ApiErrors } from './api-errors.js';
-import { ErrorCode } from './errors/error-codes.js';
-import type { ApiError } from './schemas/api-error.schema.js';
-import { AuthResponseSchema } from './schemas/user.schema.js';
-import type { TokenStorage } from './types/token-storage.js';
+import { ApiErrors } from './api-errors';
+import { ErrorCode } from './errors/error-codes';
+import type { ApiError } from './schemas/api-error.schema';
+import { AuthResponseSchema } from './schemas/user.schema';
+import type { TokenStorage } from './types/token-storage';
 
 export class AuthFetch {
   private isRefreshing = false;

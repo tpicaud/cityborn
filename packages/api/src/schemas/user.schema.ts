@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GameRecordSchema } from './game.schema.js';
+import { GameRecordSchema } from './game.schema';
 
 export const AccountTypeSchema = z.enum(['email', 'google', 'apple']);
 
