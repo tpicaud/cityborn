@@ -10,6 +10,9 @@ CREATE TABLE "WorldLocationGeometry" (
 -- CreateIndex
 CREATE UNIQUE INDEX "WorldLocationGeometry_world_location_id_key" ON "WorldLocationGeometry"("world_location_id");
 
+-- AlterTable
+ALTER TABLE "WorldLocationGeometry" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
+
 -- Backfill: copy existing geometry data to the new table before dropping the column
 INSERT INTO "WorldLocationGeometry" ("id", "data", "world_location_id")
 SELECT gen_random_uuid()::text, "geometry", "id"
