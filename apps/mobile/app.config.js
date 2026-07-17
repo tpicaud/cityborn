@@ -52,9 +52,6 @@ export default {
       supportsTablet: true,
       userInterfaceStyle: 'light',
       usesAppleSignIn: true,
-      config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY,
-      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSLocationWhenInUseUsageDescription:
@@ -117,6 +114,13 @@ export default {
         {
           iosUrlScheme:
             'com.googleusercontent.apps.871572964929-iajpene5iktr5isun4sg6dqnjri8po0p',
+        },
+      ],
+      [
+        'react-native-maps',
+        {
+          iosGoogleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY,
+          androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
         },
       ],
       '@react-native-community/datetimepicker',
