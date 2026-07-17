@@ -2,6 +2,7 @@ import {
   type CreateSession,
   defaultGuess,
   ErrorCode,
+  FullGuessObject,
   type Game,
   GameStatus,
   type OnlinePlayer,
@@ -82,7 +83,7 @@ export class SessionService {
           ? [
               {
                 username: user ? user.username : 'guest',
-                isGuest: user ? false : true,
+                isGuest: !user,
                 id: user ? user.id : undefined,
               },
             ]
@@ -158,14 +159,14 @@ export class SessionService {
           });
 
         // Register player socket
-        const isGuest = user ? false : true;
+        const isGuest = !user;
         await this.playerService.save(socketID, playerID, sessionID, isGuest);
 
         // Créer un nouveau joueur
         const newPlayer: OnlinePlayer = {
           username: playerID,
           isGuest,
-          id: isGuest ? undefined : user!.id,
+          id: isGuest ? undefined : user?.id,
           connected: true,
         };
         if (session.players.length === 0) session.hostID = playerID;
@@ -329,9 +330,10 @@ export class SessionService {
   /////////////////////////
 
   async createGame(session: Session, visitorId?: string): Promise<Game> {
-    const guessObjects = await this.guessObjectService.findByGameConfig(
-      session.gameConfig,
-    );
+    const guessObjects: FullGuessObject[] =
+      await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
+        session.gameConfig,
+      );
     const guessObjectIds = guessObjects.map((obj) => obj.id);
 
     const game: Game = {
@@ -446,7 +448,7 @@ export class SessionService {
           const allConnectedPlayersGuessed = connectedPlayers.every(
             (player: any) =>
               Object.hasOwn(
-                game.state.currentRound!.playersGuesses!,
+                game.state.currentRound?.playersGuesses!,
                 player.username,
               ),
           );
@@ -508,12 +510,12 @@ export class SessionService {
 
     // Trouver l'index du currentRound
     const currentIndex = game.state.guessObjectsIds.findIndex(
-      (id: string) => id === game.state.currentRound!.guessObjectId,
+      (id: string) => id === game.state.currentRound?.guessObjectId,
     );
 
     // Register result
     session.players.forEach((player: any) => {
-      const guess = game.state.currentRound!.playersGuesses![player.username];
+      const guess = game.state.currentRound?.playersGuesses?.[player.username];
       const playerResults = game.state.results[player.username];
 
       const newResult = {
@@ -522,7 +524,7 @@ export class SessionService {
         points: guess ? guess.points : 0,
       };
 
-      if (playerResults && playerResults.results) {
+      if (playerResults?.results) {
         playerResults.results.push(newResult);
       } else {
         game.state.results[player.username] = { results: [newResult] };
@@ -609,12 +611,7 @@ export class SessionService {
           });
 
         // Register new player socket
-        await this.playerService.save(
-          socketID,
-          playerID,
-          sessionID,
-          user ? false : true,
-        );
+        await this.playerService.save(socketID, playerID, sessionID, !user);
 
         // Reconnexion du joueur
         players[playerIndex].connected = true;
@@ -698,10 +695,6 @@ export class SessionService {
     ttl: number = this.TTL,
   ): Promise<void> {
     await this.redisService.setJSON(this.getKey(session.id), session, ttl);
-  }
-
-  private async deleteSession(sessionID: string): Promise<void> {
-    await this.redisService.del(this.getKey(sessionID));
   }
 
   //////////////////////

@@ -11,10 +11,9 @@ const useGuess = (handleGuess: (guess: Guess) => void) => {
   const handleIsTimeUp = () => {
     const fallbackGuess: Guess = {
       ...defaultGuess,
-      ...(preGuess ?? {}), // écrase les valeurs si `preGuess` existe
+      ...(preGuess ?? {}),
     };
 
-    handlePreGuess(fallbackGuess);
     handleGuess(fallbackGuess);
   };
 

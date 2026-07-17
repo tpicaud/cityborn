@@ -1,15 +1,17 @@
 import { WorldLocation } from '@cityborn/api';
-import type { WorldLocation as PrismaWorldLocation } from '@prisma/client';
+import type {
+  WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
+} from '@prisma/client';
 import { type NominatimItemResponse } from '../../nominatim/nominatim.service';
 
-type PrismaWorldLocationWithRelations = PrismaWorldLocation & {
-  parent?: PrismaWorldLocation;
-  children?: PrismaWorldLocation;
+export type PrismaWorldLocationWithGeometry = PrismaWorldLocation & {
+  geometry: PrismaWorldLocationGeometry | null;
 };
 
 export class WorldLocationMapper {
   static toWorldLocation(
-    prismaWorldLocation: PrismaWorldLocationWithRelations,
+    prismaWorldLocation: PrismaWorldLocationWithGeometry,
   ): WorldLocation {
     return {
       id: prismaWorldLocation.id,
@@ -17,7 +19,7 @@ export class WorldLocationMapper {
       name: prismaWorldLocation.name,
       display_name: prismaWorldLocation.display_name ?? undefined,
       type: prismaWorldLocation.type,
-      geometry: prismaWorldLocation.geometry as unknown as {
+      geometry: (prismaWorldLocation.geometry?.data ?? null) as unknown as {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];
       },

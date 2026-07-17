@@ -1,5 +1,5 @@
-import { contract } from '@cityborn/api';
-import { Controller } from '@nestjs/common';
+import { contract, ErrorCode } from '@cityborn/api';
+import { Controller, NotFoundException } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { PublicCategoryService } from '../services/category.public.service';
 
@@ -10,25 +10,28 @@ export class PublicCategoryController {
   @TsRestHandler(contract.category)
   async handler() {
     return tsRestHandler(contract.category, {
-      getCategories: async ({ query }) => {
-        const includes = query.include
-          ? query.include.split(',').map((i) => i.trim())
-          : [];
+      getCategoryTrees: async () => ({
+        status: 200 as const,
+        body: await this.publicCategoryService.getTrees(),
+      }),
+
+      getCategories: async () => {
         return {
           status: 200 as const,
-          body: await this.publicCategoryService.findAll({ includes }),
+          body: await this.publicCategoryService.findAll(),
         };
       },
-      getCategory: async ({ params, query }) => {
-        const includes = query.include
-          ? query.include.split(',').map((i) => i.trim())
-          : [];
-        return {
-          status: 200 as const,
-          body: await this.publicCategoryService.findOne(params.id, {
-            includes,
-          }),
-        };
+      getCategory: async ({ params }) => {
+        const [category] = await this.publicCategoryService.findBy({
+          ids: [params.id],
+        });
+        if (!category) {
+          throw new NotFoundException({
+            code: ErrorCode.CATEGORY_NOT_FOUND,
+            message: 'Category not found',
+          });
+        }
+        return { status: 200 as const, body: category };
       },
     });
   }

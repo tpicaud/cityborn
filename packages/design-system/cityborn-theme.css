@@ -1,17 +1,31 @@
 @theme {
-  /* Primary */
-  --color-primary: oklch(63.939% 0.13338 235.43);
-  --color-primary-50: oklch(86.806% 0.07157 226.25);
-  --color-primary-100: oklch(84.213% 0.08451 226.68);
-  --color-primary-200: oklch(79.52% 0.10878 227.81);
-  --color-primary-300: oklch(75.03% 0.12985 231.13);
-  --color-primary-400: oklch(71.181% 0.1443 234.4);
-  --color-primary-500: oklch(63.939% 0.13338 235.43);
-  --color-primary-600: oklch(51.855% 0.10708 235.25);
-  --color-primary-700: oklch(39.291% 0.07823 233.73);
-  --color-primary-800: oklch(25.305% 0.04723 231.87);
-  --color-primary-900: oklch(3.0377% 0.02105 264.05);
-  --color-primary-950: oklch(0% 0 none);
+  /* Primary (vert d'eau foncé) */
+  --color-primary: oklch(57.0112% 0.09747 193.86);
+  --color-primary-50: oklch(96.5% 0.04413 186.38);
+  --color-primary-100: oklch(91.014% 0.11329 186.38);
+  --color-primary-200: oklch(81.5% 0.11778 190.75);
+  --color-primary-300: oklch(71.9996% 0.1229 194.77);
+  --color-primary-400: oklch(64.5% 0.11018 194.37);
+  --color-primary-500: oklch(57.0112% 0.09747 193.86);
+  --color-primary-600: oklch(46% 0.07865 193.86);
+  --color-primary-700: oklch(35% 0.05984 193.86);
+  --color-primary-800: oklch(24.5% 0.04189 193.86);
+  --color-primary-900: oklch(14% 0.02394 193.86);
+  --color-primary-950: oklch(7% 0.01197 193.86);
+
+  /* Secondary (orange) */
+  --color-secondary: oklch(71.7266% 0.19241 49);
+  --color-secondary-50: oklch(96.5% 0.02382 49);
+  --color-secondary-100: oklch(93% 0.04764 49);
+  --color-secondary-200: oklch(87% 0.08847 49);
+  --color-secondary-300: oklch(81% 0.1293 49);
+  --color-secondary-400: oklch(76% 0.16333 49);
+  --color-secondary-500: oklch(71.7266% 0.19241 49);
+  --color-secondary-600: oklch(64.092% 0.24567 31.58);
+  --color-secondary-700: oklch(48% 0.18399 31.58);
+  --color-secondary-800: oklch(32% 0.12266 31.58);
+  --color-secondary-900: oklch(17% 0.06516 31.58);
+  --color-secondary-950: oklch(8% 0.03067 31.58);
 
   /* Destructive */
   --color-destructive: oklch(54.023% 0.21901 26.279);
@@ -29,7 +43,8 @@
 
   /* Foreground */
   --color-foreground: var(--color-neutral-700);
-  --color-foreground-on-primary: var(--color-zinc-50);
+  --color-foreground-on-primary: var(--color-neutral-900);
+  --color-foreground-on-secondary: var(--color-neutral-900);
 
   /* Background */
   --color-background: var(--color-zinc-50);

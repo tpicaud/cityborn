@@ -1,9 +1,9 @@
 'use client';
 
-import type { GuessObjectCandidate, WorldLocation } from '@cityborn/api';
+import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
-  getGuessObject,
+  getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
 } from '@/server/actions/guess-object';
@@ -13,63 +13,58 @@ import { WorldLocationSearchInput } from './world-location-search-input';
 import { WorldLocationViewer } from './world-location-viewer';
 
 export function GuessObjectBuilder({
-  guessObjectCandidate,
-  setGuessObjectCandidate,
+  guessObjectDraft,
+  setGuessObjectDraft,
 }: {
-  guessObjectCandidate: GuessObjectCandidate | undefined;
-  setGuessObjectCandidate: Dispatch<
-    SetStateAction<GuessObjectCandidate | undefined>
+  guessObjectDraft: GuessObjectDraft | undefined;
+  setGuessObjectDraft: Dispatch<
+    SetStateAction<GuessObjectDraft | undefined>
   >;
 }) {
   const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   useEffect(() => {
-    const updateGuessObjectCandidate = async () => {
-      if (guessObjectCandidate && guessObjectCandidate.id) {
-        try {
-          const result = await getGuessObject(guessObjectCandidate.id, [
-            'world_location',
-          ]);
-          if (result && result.ok) {
-            setGuessObjectCandidate(result.data);
-          } else {
-            setGuessObjectCandidate(guessObjectCandidate);
-          }
-        } catch {
-          setGuessObjectCandidate(guessObjectCandidate);
+    const updateGuessObjectDraft = async () => {
+      if (!guessObjectDraft?.id) return;
+      try {
+        const result = await getFullGuessObject(guessObjectDraft.id);
+        if (result?.ok) {
+          setGuessObjectDraft(result.data as GuessObjectDraft);
         }
+      } catch {
+        // keep current draft as-is
       }
     };
 
-    updateGuessObjectCandidate();
-  }, [guessObjectCandidate?.id]);
+    updateGuessObjectDraft();
+  }, [guessObjectDraft?.id]);
 
-  const updateGuessObjectCandidate = (
-    update: Partial<GuessObjectCandidate>,
+  const updateGuessObjectDraft = (
+    update: Partial<GuessObjectDraft>,
   ) => {
-    setGuessObjectCandidate((prev) =>
-      prev ? { ...prev, ...update } : (update as GuessObjectCandidate),
+    setGuessObjectDraft((prev) =>
+      prev ? { ...prev, ...update } : (update as GuessObjectDraft),
     );
   };
 
-  async function handleFetchGuessObjectCandidate(
-    guessObjectCandidatePreview: GuessObjectCandidate | undefined,
+  async function handleFetchGuessObjectDraft(
+    guessObjectDraftPreview: GuessObjectDraft | undefined,
   ) {
     try {
       setIsLoadingFullObject(true);
-      if (!guessObjectCandidatePreview?.source?.external_id) return;
+      if (!guessObjectDraftPreview?.source?.external_id) return;
 
       const result = await searchGuessObjectByExternalId(
-        guessObjectCandidatePreview.source?.external_id,
+        guessObjectDraftPreview.source?.external_id,
       );
       if (!result.ok) throw new Error(result.error.message);
-      const fullCandidate = result.data;
+      const fullDraft = result.data;
 
-      if (fullCandidate) {
-        setGuessObjectCandidate({
-          ...fullCandidate,
-          id: guessObjectCandidate ? guessObjectCandidate.id : fullCandidate.id,
+      if (fullDraft) {
+        setGuessObjectDraft({
+          ...fullDraft,
+          id: guessObjectDraft ? guessObjectDraft.id : fullDraft.id,
         });
       }
     } catch (error) {
@@ -95,7 +90,7 @@ export function GuessObjectBuilder({
       const fullCandidate = result.data;
 
       if (fullCandidate) {
-        updateGuessObjectCandidate({
+        updateGuessObjectDraft({
           world_location_id: fullCandidate.id,
           world_location: fullCandidate,
         });
@@ -108,7 +103,7 @@ export function GuessObjectBuilder({
     }
   }
 
-  if (!guessObjectCandidate)
+  if (!guessObjectDraft)
     return (
       <p className="text-base text-center text-gray-300">
         Veuillez sélectionner ou créer un objet
@@ -125,16 +120,16 @@ export function GuessObjectBuilder({
               <GuessObjectSearchInput
                 type="text"
                 id="name"
-                name={guessObjectCandidate?.name}
+                name={guessObjectDraft?.name}
                 placeholder="e.g. Justin Timberlake"
                 value={
-                  guessObjectCandidate ? guessObjectCandidate.name : undefined
+                  guessObjectDraft ? guessObjectDraft.name : undefined
                 }
                 disabled={isLoadingFullObject}
                 onChange={(e) =>
-                  updateGuessObjectCandidate({ name: e.target.value })
+                  updateGuessObjectDraft({ name: e.target.value })
                 }
-                onSelect={handleFetchGuessObjectCandidate}
+                onSelect={handleFetchGuessObjectDraft}
                 className={`rounded-md shadow-lg text-gray-800
                                       mt-3 p-2 h-10 w-full max-w-96
                                       ${isLoadingFullObject ? 'bg-neutral-300 ' : 'bg-white'}`}
@@ -149,10 +144,10 @@ export function GuessObjectBuilder({
                 name="short_description"
                 id="short_description"
                 placeholder="e.g. Tennisman"
-                value={guessObjectCandidate?.short_description ?? ''}
+                value={guessObjectDraft?.short_description ?? ''}
                 disabled={isLoadingFullObject}
                 onChange={(e) =>
-                  updateGuessObjectCandidate({
+                  updateGuessObjectDraft({
                     short_description: e.target.value,
                   })
                 }
@@ -168,10 +163,10 @@ export function GuessObjectBuilder({
               name="short_description"
               id="short_description"
               placeholder="e.g. Tennisman"
-              value={guessObjectCandidate?.image ?? ''}
+              value={guessObjectDraft?.image ?? ''}
               disabled={isLoadingFullObject}
               onChange={(e) =>
-                updateGuessObjectCandidate({
+                updateGuessObjectDraft({
                   image: e.target.value,
                 })
               }
@@ -189,17 +184,17 @@ export function GuessObjectBuilder({
             <WorldLocationSearchInput
               type="text"
               id="world_location_id"
-              name={guessObjectCandidate?.world_location_id}
+              name={guessObjectDraft?.world_location_id}
               placeholder="e.g. Paris"
               value={
-                guessObjectCandidate?.world_location
-                  ? (guessObjectCandidate.world_location.display_name ??
-                    guessObjectCandidate.world_location.name)
+                guessObjectDraft?.world_location
+                  ? (guessObjectDraft.world_location.display_name ??
+                    guessObjectDraft.world_location.name)
                   : ''
               }
               disabled={isLoadingFullObject}
               onChange={(e) =>
-                updateGuessObjectCandidate({
+                updateGuessObjectDraft({
                   world_location: {
                     id: '',
                     osm_type: 'relation',
@@ -223,12 +218,12 @@ export function GuessObjectBuilder({
             />
 
             <div className="flex justify-end absolute m-3 right-0 z-70 pointer-events-none">
-              <GuessObjectCard guessObject={guessObjectCandidate} />
+              <GuessObjectCard guessObject={guessObjectDraft} />
             </div>
 
             <div className="inset-0 z-0 h-full w-full">
               <WorldLocationViewer
-                world_location={guessObjectCandidate?.world_location}
+                world_location={guessObjectDraft?.world_location}
                 API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
               />
             </div>

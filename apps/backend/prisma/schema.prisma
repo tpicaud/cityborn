@@ -85,13 +85,21 @@ model WorldLocation {
   level        LocationLevel?
   iso_code     String?
   centroid     Float[]
-  geometry     Json           @db.JsonB
   source       Json?          @db.JsonB
 
+  geometry     WorldLocationGeometry?
   guessObjects GuessObject[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model WorldLocationGeometry {
+  id                String        @id @default(dbgenerated("gen_random_uuid()"))
+  data              Json          @db.JsonB
+
+  world_location_id String        @unique
+  world_location    WorldLocation @relation(fields: [world_location_id], references: [id], onDelete: Cascade)
 }
 
 model GuessObject {
@@ -112,8 +120,13 @@ model Category {
   name        String
   isPublished Boolean @default(false)
   description String?
+  parentId    String? @db.Uuid
 
+  parent       Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryChildren")
   guessObjects GuessObject[] @relation("CategoryGuessObjects")
+
+  @@index([parentId])
 }
 
 ///////////////////////

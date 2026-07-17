@@ -10,7 +10,7 @@ import {
   SessionStatus,
 } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
 import {
   createSession,
@@ -24,6 +24,16 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
   const [game, setGame] = useState<Game>();
+  // Source of truth for reads within this hook: kept in sync with `session`
+  // synchronously (not via a useEffect) so functions called back-to-back in
+  // the same tick (e.g. updateGameConfig then startGame) always see the
+  // latest value, regardless of React's render/effect scheduling.
+  const sessionRef = useRef<Session | undefined>(undefined);
+
+  const updateSession = useCallback((next: Session) => {
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -31,39 +41,39 @@ export function useSoloSession(localPlayerID: string): IUseSession {
       if (!result.ok) return invokeError(result.error);
       const session: Session = result.data;
       session.hostID = localPlayerID;
-      setSession(session);
+      updateSession(session);
     };
     init();
-  }, [localPlayerID, invokeError]);
+  }, [localPlayerID, invokeError, updateSession]);
 
   useEffect(() => {
     if (!game) return;
-    setSession((prev) => {
-      if (!prev) throw new Error('Cannot update game: session not initialized');
-      return { ...prev, currentGame: game };
-    });
-  }, [game]);
+    const prev = sessionRef.current;
+    if (!prev) throw new Error('Cannot update game: session not initialized');
+    updateSession({ ...prev, currentGame: game });
+  }, [game, updateSession]);
 
   useEffect(() => {
     console.log(session);
   }, [session]);
 
   const updateGameConfig = (newConfig: Partial<GameConfig>) => {
-    setSession((prev) => {
-      if (!prev)
-        throw new Error('Cannot update game config: session not initialized');
-      return { ...prev, gameConfig: { ...prev.gameConfig, ...newConfig } };
+    const prev = sessionRef.current;
+    if (!prev)
+      throw new Error('Cannot update game config: session not initialized');
+    updateSession({
+      ...prev,
+      gameConfig: { ...prev.gameConfig, ...newConfig },
     });
   };
 
   const startGame = async () => {
-    if (!session) return;
-    const result = await createSoloGame(session);
+    const current = sessionRef.current;
+    if (!current) return;
+    const result = await createSoloGame(current);
     if (!result.ok) return invokeError(result.error);
     const game: Game = result.data;
-    setSession((prev) =>
-      prev ? { ...prev, status: SessionStatus.IN_GAME } : prev,
-    );
+    updateSession({ ...current, status: SessionStatus.IN_GAME });
     setGame({
       ...game,
       status: GameStatus.IN_GAME,
@@ -151,22 +161,23 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   };
 
   const endGame = async () => {
-    if (!session?.currentGame) return;
-    const result = await endSoloGame(session);
+    const current = sessionRef.current;
+    if (!current?.currentGame) return;
+    const result = await endSoloGame(current);
     if (!result.ok) invokeError(result.error);
-    setSession((prev) => (prev ? { ...prev, currentGame: undefined } : prev));
+    updateSession({ ...current, currentGame: undefined });
   };
 
   const playAgain = async () => {
-    if (!session?.currentGame) return;
-    const result = await endSoloGame(session);
+    if (!sessionRef.current?.currentGame) return;
+    const result = await endSoloGame(sessionRef.current);
     if (!result.ok) invokeError(result.error);
     await startGame();
   };
 
   const exitGame = async () => {
-    if (!session?.currentGame) return;
-    const result = await endSoloGame(session);
+    if (!sessionRef.current?.currentGame) return;
+    const result = await endSoloGame(sessionRef.current);
     if (!result.ok) invokeError(result.error);
     router.push('/');
   };

@@ -10,26 +10,41 @@ import {
 } from '../schemas/common.schema';
 import {
   CreateGuessObjectSchema,
+  FullGuessObjectSchema,
+  FullGuessObjectsSchema,
   GuessObjectSchema,
   GuessObjectsSchema,
+  PatchGuessObjectSchema,
 } from '../schemas/guess-object.schema';
 
 const c = initContract();
 
 export const guessObjectAdminContract = c.router(
   {
-    listGuessObjects: {
-      method: 'GET',
-      path: '/',
-      query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
-    },
     getGuessObject: {
       method: 'GET',
       path: '/:id',
       pathParams: IdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: GuessObjectSchema, ...commonErrorResponses },
+    },
+    getGuessObjects: {
+      method: 'GET',
+      path: '/',
+      query: z.object({ guessObjectsIds: z.string() }),
+      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
+    },
+    getFullGuessObject: {
+      method: 'GET',
+      path: '/:id/full',
+      pathParams: IdParamSchema,
+      responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
+    },
+    getFullGuessObjects: {
+      method: 'GET',
+      path: '/full',
+      query: z.object({ guessObjectsIds: z.string() }),
+      responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
     },
     createGuessObject: {
       method: 'POST',
@@ -41,7 +56,7 @@ export const guessObjectAdminContract = c.router(
       method: 'PATCH',
       path: '/:id',
       pathParams: IdParamSchema,
-      body: GuessObjectSchema.partial(),
+      body: PatchGuessObjectSchema,
       responses: { 200: IdSchema, ...commonErrorResponses },
     },
     deleteGuessObject: {
@@ -52,5 +67,5 @@ export const guessObjectAdminContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/guess-objects' },
+  { pathPrefix: '/guess-object' },
 );

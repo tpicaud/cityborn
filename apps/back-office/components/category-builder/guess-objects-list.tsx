@@ -32,9 +32,9 @@ export function GuessObjectsList({
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-row gap-x-2 items-baseline">
                     <div className="text-base font-bold">{obj.name}</div>
-                    {obj.world_location?.display_name && (
+                    {obj.world_location_preview.display_name && (
                       <div className="text-xs text-gray-300">
-                        {obj.world_location.display_name}
+                        {obj.world_location_preview.display_name}
                       </div>
                     )}
                   </div>

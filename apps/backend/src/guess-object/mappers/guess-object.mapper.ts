@@ -1,7 +1,8 @@
-import { GuessObject, GuessObjectCandidate } from '@cityborn/api';
+import { FullGuessObject, GuessObject, GuessObjectDraft } from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
 } from '@prisma/client';
 import type {
   WikidataItemResponse,
@@ -9,13 +10,19 @@ import type {
 } from '../../wikidata/wikidata.service';
 import { WorldLocationMapper } from '../../world-location/mapper/world-location.mapper';
 
-type PrismaGuessObjectWithRelations = PrismaGuessObject & {
-  world_location?: PrismaWorldLocation;
+type PrismaGuessObjectWithLocation = PrismaGuessObject & {
+  world_location: PrismaWorldLocation;
+};
+
+export type PrismaGuessObjectWithFullLocation = PrismaGuessObject & {
+  world_location: PrismaWorldLocation & {
+    geometry: PrismaWorldLocationGeometry | null;
+  };
 };
 
 export class GuessObjectMapper {
   static toGuessObject(
-    prismaGuessObject: PrismaGuessObjectWithRelations,
+    prismaGuessObject: PrismaGuessObjectWithLocation,
   ): GuessObject {
     return {
       id: prismaGuessObject.id,
@@ -28,16 +35,36 @@ export class GuessObjectMapper {
           provider: string;
           external_id: string;
         }) ?? undefined,
-      world_location_id: prismaGuessObject.world_location_id,
-      world_location: prismaGuessObject.world_location
-        ? WorldLocationMapper.toWorldLocation(prismaGuessObject.world_location)
-        : undefined,
+      world_location_preview: {
+        id: prismaGuessObject.world_location.id,
+        name: prismaGuessObject.world_location.name,
+        display_name:
+          prismaGuessObject.world_location.display_name ?? undefined,
+      },
     };
   }
 
-  static toGuessObjectCandidate(
-    response: WikidataItemResponse,
-  ): GuessObjectCandidate {
+  static toFullGuessObject(
+    prismaGuessObject: PrismaGuessObjectWithFullLocation,
+  ): FullGuessObject {
+    return {
+      id: prismaGuessObject.id,
+      name: prismaGuessObject.name,
+      image: prismaGuessObject.image ?? undefined,
+      description: prismaGuessObject.description ?? undefined,
+      short_description: prismaGuessObject.short_description ?? undefined,
+      source:
+        (prismaGuessObject.source as unknown as {
+          provider: string;
+          external_id: string;
+        }) ?? undefined,
+      world_location: WorldLocationMapper.toWorldLocation(
+        prismaGuessObject.world_location,
+      ),
+    };
+  }
+
+  static toGuessObjectDraft(response: WikidataItemResponse): GuessObjectDraft {
     return {
       source: {
         provider: 'wikidata',
@@ -47,14 +74,12 @@ export class GuessObjectMapper {
       description: response.description ?? undefined,
       short_description: response.short_description ?? undefined,
       image: response.image ?? undefined,
-
-      world_location_id: response.world_location_id ?? undefined,
     };
   }
 
-  static toGuessObjectCandidateFromPrisma(
-    prismaGuessObject: PrismaGuessObjectWithRelations,
-  ): GuessObjectCandidate {
+  static toGuessObjectDraftFromPrisma(
+    prismaGuessObject: PrismaGuessObject,
+  ): GuessObjectDraft {
     return {
       source:
         (prismaGuessObject.source as unknown as {
@@ -65,18 +90,14 @@ export class GuessObjectMapper {
       description: prismaGuessObject.description ?? undefined,
       short_description: prismaGuessObject.short_description ?? undefined,
       image: prismaGuessObject.image ?? undefined,
-      world_location_id: prismaGuessObject.world_location_id,
-      world_location: prismaGuessObject.world_location
-        ? WorldLocationMapper.toWorldLocation(prismaGuessObject.world_location)
-        : undefined,
     };
   }
 
   static toGuessObjectsSearchResponse(
     response: WikidataSearchResponse,
-  ): GuessObjectCandidate[] {
+  ): GuessObjectDraft[] {
     return response.results.map((item) =>
-      GuessObjectMapper.toGuessObjectCandidate(item),
+      GuessObjectMapper.toGuessObjectDraft(item),
     );
   }
 }

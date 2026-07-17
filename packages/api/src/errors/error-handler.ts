@@ -66,6 +66,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // Category
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
+  [ErrorCode.CATEGORY_HAS_CHILDREN]:
+    'Cette catégorie contient des sous-catégories et ne peut pas être supprimée.',
 
   // Redis
   [ErrorCode.REDIS_GET_FAILED]: 'Erreur interne. Veuillez réessayer.',

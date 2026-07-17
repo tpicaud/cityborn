@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { WorldLocationSchema } from './world-location.schema';
+import {
+  WorldLocationPreviewSchema,
+  WorldLocationSchema,
+} from './world-location.schema';
 
-export const GuessObjectSchema = z.object({
+export const BaseGuessObjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   image: z.string().optional(),
@@ -13,27 +16,42 @@ export const GuessObjectSchema = z.object({
       external_id: z.string(),
     })
     .optional(),
-  world_location_id: z.string(),
+});
+export const GuessObjectSchema = BaseGuessObjectSchema.extend({
+  world_location_preview: WorldLocationPreviewSchema,
+});
+export const GuessObjectsSchema = z.array(GuessObjectSchema);
+
+export const FullGuessObjectSchema = BaseGuessObjectSchema.extend({
+  world_location: WorldLocationSchema,
+});
+export const FullGuessObjectsSchema = z.array(FullGuessObjectSchema);
+
+export const CreateGuessObjectSchema = BaseGuessObjectSchema.omit({
+  id: true,
+}).extend({
+  world_location_id: z.string().optional(),
   world_location: WorldLocationSchema.optional(),
 });
 
-export const GuessObjectsSchema = z.array(GuessObjectSchema);
-
-export const CreateGuessObjectSchema = GuessObjectSchema.omit({
+export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
   id: true,
-});
-
-export const GuessObjectCandidateSchema = GuessObjectSchema.omit({
-  id: true,
-  world_location_id: true,
 }).extend({
   id: z.string().optional(),
   world_location_id: z.string().optional(),
+  world_location: WorldLocationSchema.optional(),
 });
 
-export const GuessObjectCandidatesSchema = z.array(GuessObjectCandidateSchema);
+export const GuessObjectDraftsSchema = z.array(GuessObjectDraftSchema);
+
+export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
+  id: true,
+}).partial().extend({
+  world_location_id: z.string().optional(),
+});
 
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
+export type FullGuessObject = z.infer<typeof FullGuessObjectSchema>;
+export type GuessObjectDraft = z.infer<typeof GuessObjectDraftSchema>;
 export type CreateGuessObject = z.infer<typeof CreateGuessObjectSchema>;
-export type GuessObjectCandidate = z.infer<typeof GuessObjectCandidateSchema>;
-export type GuessObjectCandidates = z.infer<typeof GuessObjectCandidatesSchema>;
+export type PatchGuessObject = z.infer<typeof PatchGuessObjectSchema>;

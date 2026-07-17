@@ -1,10 +1,10 @@
-import type { GuessObject } from '@cityborn/api';
+import type { FullGuessObject } from '@cityborn/api';
 import { Image } from 'expo-image';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 
 export default function GuessObjectCard({
   guessObject,
-}: Readonly<{ guessObject: GuessObject }>) {
+}: Readonly<{ guessObject: FullGuessObject }>) {
   return (
     <View className="flex w-full min-h-40 max-h-70 min-w-25 max-w-40 rounded-xs bg-background">
       <Image

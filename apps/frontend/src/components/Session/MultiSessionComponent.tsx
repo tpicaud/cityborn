@@ -1,6 +1,6 @@
 'use client';
 
-import { type Category, type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
+import { type CategoryTree, type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
@@ -11,9 +11,9 @@ import { useError } from '@/contexts/ErrorContext';
 import { useMultiSession } from '@/hooks/useMultiSession';
 
 export default function MultiSessionComponent({
-  categories,
+  categoryTrees,
 }: {
-  categories: Category[];
+  categoryTrees: CategoryTree[];
 }) {
   const { user } = useAuth();
   const { invokeError } = useError();
@@ -163,7 +163,7 @@ export default function MultiSessionComponent({
           localPlayerID={localPlayerID}
           isHost={multiSession.isHost}
           session={multiSession.session}
-          categories={categories}
+          categoryTrees={categoryTrees}
           handleUpdateHost={handleUpdateHost}
           handleUpdateGameConfig={handleUpdateGameConfig}
           handleKickPlayer={handleKickPlayer}

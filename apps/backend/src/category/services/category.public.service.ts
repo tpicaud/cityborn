@@ -1,5 +1,5 @@
-import { Category, ErrorCode } from '@cityborn/api';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Category, CategoryTree } from '@cityborn/api';
+import { Injectable } from '@nestjs/common';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
 
@@ -7,35 +7,21 @@ import { CategoryService } from './category.service';
 export class PublicCategoryService {
   constructor(private readonly categoryService: CategoryService) {}
 
-  async findAll({
-    includes = [],
-  }: {
-    includes?: string[];
-  }): Promise<Category[]> {
-    const categories = await this.categoryService.findAll({ includes });
-    const filtered_categories = categories.filter(
-      (category) => category.isPublished,
-    );
-    return CategoryMapper.toCategories(filtered_categories);
+  async findAll(): Promise<Category[]> {
+    const categories = await this.categoryService.findBy({ isPublished: true });
+    return CategoryMapper.toCategories(categories);
   }
 
-  async findOne(
-    id: string,
-    {
-      includes = [],
-    }: {
-      includes: string[];
-    },
-  ): Promise<Category> {
-    const category = await this.categoryService.findOne(id, { includes });
+  async findBy(filter: { ids?: string[] }): Promise<Category[]> {
+    const categories = await this.categoryService.findBy({
+      ...filter,
+      isPublished: true,
+    });
+    return CategoryMapper.toCategories(categories);
+  }
 
-    if (!category || !category.isPublished) {
-      throw new NotFoundException({
-        code: ErrorCode.CATEGORY_NOT_FOUND,
-        message: `Category with id ${id} not found`,
-      });
-    }
-
-    return CategoryMapper.toCategory(category);
+  async getTrees(): Promise<CategoryTree[]> {
+    const roots = await this.categoryService.findTree({ isPublished: true });
+    return CategoryMapper.toCategoryTrees(roots);
   }
 }

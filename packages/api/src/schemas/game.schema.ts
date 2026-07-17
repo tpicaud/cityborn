@@ -5,7 +5,7 @@ import {
   RoundStatusSchema,
   SessionModeSchema,
 } from './enums';
-import { GuessObjectSchema } from './guess-object.schema';
+import { FullGuessObjectSchema } from './guess-object.schema';
 import { PlayerResultsSchema, PlayerSchema } from './player.schema';
 
 export const CoordSchema = z.object({
@@ -36,7 +36,7 @@ export const GameStateSchema = z.object({
   guessObjectsIds: z.array(z.string()),
   results: z.record(z.string(), PlayerResultsSchema),
   currentRound: RoundSchema.optional(),
-  guessObjects: z.array(GuessObjectSchema).optional(),
+  guessObjects: z.array(FullGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({

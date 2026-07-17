@@ -1,9 +1,9 @@
 'use client';
 
 import type {
-  Category,
+  FullCategory,
   GuessObject,
-  GuessObjectCandidate,
+  GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
@@ -23,14 +23,13 @@ import { ImportCSVPopup } from './import-csv-popup';
 import { PublishCategoryPopup } from './publish-category-popup';
 
 interface CategoryBuilderProps {
-  fetchedCategory: Category;
+  fetchedCategory: FullCategory;
 }
 
 export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   const router = useRouter();
-  const [category, setCategory] = useState<Category>(fetchedCategory);
-  const [guessObjectCandidate, setGuessObjectCandidate] =
-    useState<GuessObjectCandidate>();
+  const [category, setCategory] = useState<FullCategory>(fetchedCategory);
+  const [guessObjectDraft, setGuessObjectDraft] = useState<GuessObjectDraft>();
   const [isSaveLoading, setIsSaveLoading] = useState(false);
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
@@ -44,9 +43,9 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
     }
   }, [category, searchObjectValue]);
 
-  const updateCategory = (update: Partial<Category>) => {
+  const updateCategory = (update: Partial<FullCategory>) => {
     setCategory((prev) =>
-      prev ? { ...prev, ...update } : (update as Category),
+      prev ? { ...prev, ...update } : (update as FullCategory),
     );
   };
 
@@ -55,47 +54,46 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   ///////////////////////////
 
   function handleCreateGuessObject() {
-    setGuessObjectCandidate({
+    setGuessObjectDraft({
       name: '',
       id: '',
-      world_location_id: '',
     });
   }
 
   function handleSelectGuessObject(guessObject: GuessObject) {
-    if (guessObjectCandidate?.name === guessObject.name) {
-      setGuessObjectCandidate(undefined);
+    if (guessObjectDraft?.name === guessObject.name) {
+      setGuessObjectDraft(undefined);
     } else {
-      setGuessObjectCandidate(guessObject);
+      setGuessObjectDraft(guessObject);
     }
   }
 
-  async function handleSaveGuessObjectCandidate(): Promise<void> {
+  async function handleSaveGuessObjectDraft(): Promise<void> {
     try {
-      if (!guessObjectCandidate) {
+      if (!guessObjectDraft) {
         alert('Objet non valide');
         return;
       }
 
-      if (!guessObjectCandidate.world_location_id) {
+      if (!guessObjectDraft.world_location_id) {
         alert('Localisation non valide, veuillez resélectionner');
         return;
       }
 
       // If id, then update, else post
       let id: string;
-      if (guessObjectCandidate.id) {
+      if (guessObjectDraft.id) {
         const result = await patchGuessObject(
-          guessObjectCandidate.id,
-          guessObjectCandidate,
+          guessObjectDraft.id,
+          guessObjectDraft,
         );
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
       } else {
-        const { id: _id, ...rest } = guessObjectCandidate;
+        const { id: _id, ...rest } = guessObjectDraft;
         const result = await saveGuessObject({
           ...rest,
-          world_location_id: String(guessObjectCandidate.world_location_id),
+          world_location_id: String(guessObjectDraft.world_location_id),
         });
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
@@ -119,10 +117,11 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
     try {
       setIsSaveLoading(true);
       const updatedCategory: UpdateCategory = {
-        ...category,
+        id: category.id,
+        name: category.name,
         isPublished: publish ?? false,
-        guessObjects: undefined,
-        guessObjectsIds: undefined,
+        description: category.description,
+        parentId: category.parentId,
       };
       const result = await saveCategory(category.id, updatedCategory);
       if (!result.ok) throw new Error(result.error.message);
@@ -159,6 +158,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
   async function addOrUpdateGuessObjectToCategory(id: string) {
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
+      console.log(objectResult);
       if (!objectResult) return;
       if (!objectResult.ok) throw new Error(objectResult.error.message);
       const object = objectResult.data;
@@ -170,6 +170,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         isPublished: category.isPublished,
         connectIds: [id],
       };
+      console.log(updatedCategory);
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) throw new Error(saveResult.error.message);
 
@@ -195,7 +196,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         return { ...prev, guessObjects: updatedGuessObjects };
       });
 
-      setGuessObjectCandidate(object);
+      setGuessObjectDraft(object);
     } catch (error) {
       alert("Erreur lors de l'ajout de l'objet");
       console.error(error);
@@ -216,15 +217,15 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
       );
 
       const updated_category: UpdateCategory = {
-        ...category,
-        guessObjects: undefined,
-        guessObjectsIds: undefined,
+        id: category.id,
+        name: category.name,
+        isPublished: category.isPublished,
         disconnectIds: [guessObject.id],
       };
       setCategory({ ...category, guessObjects: updatedGuessObjects });
       const removeResult = await saveCategory(category.id, updated_category);
       if (!removeResult.ok) throw new Error(removeResult.error.message);
-      setGuessObjectCandidate(undefined);
+      setGuessObjectDraft(undefined);
     } catch (error) {
       alert("Erreur lors de la suppression de l'objet");
       console.error(error);
@@ -337,7 +338,7 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
                 <div className="p-3">
                   <GuessObjectsList
                     guessObjects={filteredGuessObjects}
-                    selectedGuessObject={guessObjectCandidate as GuessObject}
+                    selectedGuessObject={guessObjectDraft as GuessObject}
                     handleSelectGuessObject={handleSelectGuessObject}
                     handleRemoveFromCategory={handleRemoveFromCategory}
                   />
@@ -357,15 +358,15 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
         <div className="flex flex-col w-full">
           <div className="flex flex-row gap-4 mb-2 items-center h-8">
             <h2 className="text-xl font-bold">Editeur d'objet</h2>
-            {guessObjectCandidate && (
+            {guessObjectDraft && (
               <div className="flex items-center">
                 <Button
                   size="sm"
-                  variant={`${guessObjectCandidate.id ? 'outline' : 'primary'}`}
-                  onClick={handleSaveGuessObjectCandidate}
+                  variant={`${guessObjectDraft.id ? 'outline' : 'primary'}`}
+                  onClick={handleSaveGuessObjectDraft}
                 >
                   <p className="font-bold">
-                    {!guessObjectCandidate.id
+                    {!guessObjectDraft.id
                       ? "Ajouter l'objet"
                       : "Mettre à jour l'objet"}
                   </p>
@@ -376,8 +377,8 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
           <span className="h-[2px] w-full bg-foreground"></span>
         </div>
         <GuessObjectBuilder
-          guessObjectCandidate={guessObjectCandidate}
-          setGuessObjectCandidate={setGuessObjectCandidate}
+          guessObjectDraft={guessObjectDraft}
+          setGuessObjectDraft={setGuessObjectDraft}
         />
       </div>
     </div>

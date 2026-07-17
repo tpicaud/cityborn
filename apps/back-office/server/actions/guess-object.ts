@@ -13,6 +13,14 @@ export async function getGuessObject(id: string, includes?: string[]) {
   return toApiResult(result);
 }
 
+export async function getFullGuessObject(id: string) {
+  const result = await adminClient.guessObjects.getFullGuessObject({
+    params: { id },
+  });
+  if (result.status === 404) return null;
+  return toApiResult(result);
+}
+
 export async function saveGuessObject(createGuessObject: CreateGuessObject) {
   const result = await adminClient.guessObjects.createGuessObject({
     body: createGuessObject,
