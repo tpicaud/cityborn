@@ -1,6 +1,7 @@
 'use client';
 
 import type {
+  Category,
   FullCategory,
   GuessObject,
   GuessObjectDraft,
@@ -24,9 +25,13 @@ import { PublishCategoryPopup } from './publish-category-popup';
 
 interface CategoryBuilderProps {
   fetchedCategory: FullCategory;
+  categories: Category[];
 }
 
-export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
+export function CategoryBuilder({
+  fetchedCategory,
+  categories,
+}: CategoryBuilderProps) {
   const router = useRouter();
   const [category, setCategory] = useState<FullCategory>(fetchedCategory);
   const [guessObjectDraft, setGuessObjectDraft] = useState<GuessObjectDraft>();
@@ -289,15 +294,39 @@ export function CategoryBuilder({ fetchedCategory }: CategoryBuilderProps) {
             </div>
           </div>
           <div className="flex flex-col">
-            <label>Visibilité</label>
-            <p
-              className={`
+            <div className="w-full flex flex-row gap-12">
+              <div className="h-full flex flex-col w-[70%] min-w-40">
+                <label htmlFor="parent">Parent</label>
+                <select
+                  id="parent"
+                  value={category.parentId ?? ''}
+                  onChange={(e) =>
+                    updateCategory({ parentId: e.target.value || null })
+                  }
+                  className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
+                >
+                  <option value="">Aucun</option>
+                  {categories
+                    .filter((c) => c.id !== category.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="h-full flex flex-col w-[30%] min-w-40">
+                <label>Visibilité</label>
+                <p
+                  className={`
                             w-fit p-2 mt-3 text-xs rounded-md border
                             ${category.isPublished ? 'text-green-600 border-green-500' : 'text-orange-500 border-orange-500'}
                             `}
-            >
-              {category.isPublished ? 'Publiée' : 'Non publiée'}
-            </p>
+                >
+                  {category.isPublished ? 'Publiée' : 'Non publiée'}
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex-1 min-h-0 flex flex-col h-full gap-2 ">
             <div className="flex flex-row gap-2 items-center h-7">

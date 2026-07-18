@@ -1,5 +1,5 @@
 import { CategoryBuilder } from '@/components/category-builder/category-builder';
-import { getFullCategory } from '@/server/queries/category';
+import { getCategories, getFullCategory } from '@/server/queries/category';
 
 export default async function EditCategory({
   searchParams,
@@ -7,6 +7,9 @@ export default async function EditCategory({
   searchParams: Promise<{ id: string }>;
 }) {
   const { id } = await searchParams;
-  const category = await getFullCategory(id);
-  return <CategoryBuilder fetchedCategory={category} />;
+  const [category, categories] = await Promise.all([
+    getFullCategory(id),
+    getCategories(),
+  ]);
+  return <CategoryBuilder fetchedCategory={category} categories={categories} />;
 }
