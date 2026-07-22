@@ -37,7 +37,7 @@ export function GuessObjectBuilder({
     };
 
     updateGuessObjectDraft();
-  }, [guessObjectDraft?.id]);
+  }, [guessObjectDraft?.id, setGuessObjectDraft]);
 
   const updateGuessObjectDraft = (update: Partial<GuessObjectDraft>) => {
     setGuessObjectDraft((prev) =>
@@ -59,9 +59,20 @@ export function GuessObjectBuilder({
       const fullDraft = result.data;
 
       if (fullDraft) {
+        let world_location_id = fullDraft.world_location_id;
+        if (fullDraft.world_location?.source) {
+          const created = await createWorldLocation({
+            ...fullDraft.world_location,
+            source: fullDraft.world_location.source,
+          });
+          if (!created.ok) throw new Error(created.error.message);
+          world_location_id = created.data;
+        }
+
         setGuessObjectDraft({
           ...fullDraft,
           id: guessObjectDraft ? guessObjectDraft.id : fullDraft.id,
+          world_location_id,
         });
       }
     } catch (error) {
