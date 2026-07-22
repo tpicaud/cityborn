@@ -95,7 +95,11 @@ export function CategoryBuilder({
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
       } else {
-        const { id: _id, ...rest } = guessObjectDraft;
+        const {
+          id: _id,
+          world_location: _world_location,
+          ...rest
+        } = guessObjectDraft;
         const result = await saveGuessObject({
           ...rest,
           world_location_id: String(guessObjectDraft.world_location_id),

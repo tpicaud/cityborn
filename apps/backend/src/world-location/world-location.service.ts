@@ -1,5 +1,5 @@
-import { WorldLocation } from '@cityborn/api';
-import { Injectable } from '@nestjs/common';
+import { CreateWorldLocation, ErrorCode, WorldLocation } from '@cityborn/api';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorldLocationMapper } from './mapper/world-location.mapper';
@@ -23,10 +23,31 @@ export class WorldLocationService {
     return WorldLocationMapper.toWorldLocation(row);
   }
 
-  async create(world_location_dto: WorldLocation): Promise<WorldLocation> {
+  async findOrCreate(
+    world_location_dto: CreateWorldLocation,
+  ): Promise<WorldLocation> {
+    if (!world_location_dto.source) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: `World location source (provider + external_id) is required`,
+      });
+    }
+
+    const existing = await this.prisma.worldLocation.findUnique({
+      where: {
+        osm_type_external_id: {
+          osm_type: world_location_dto.osm_type,
+          external_id: world_location_dto.source.external_id,
+        },
+      },
+      include: { geometry: true },
+    });
+    if (existing) return WorldLocationMapper.toWorldLocation(existing);
+
     const row = await this.prisma.worldLocation.create({
       data: {
-        id: world_location_dto.id.toString(),
+        osm_type: world_location_dto.osm_type,
+        external_id: world_location_dto.source.external_id,
         name: world_location_dto.name,
         type: world_location_dto.type,
         geometry: {

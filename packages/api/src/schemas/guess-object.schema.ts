@@ -30,8 +30,7 @@ export const FullGuessObjectsSchema = z.array(FullGuessObjectSchema);
 export const CreateGuessObjectSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
-  world_location_id: z.string().optional(),
-  world_location: WorldLocationSchema.optional(),
+  world_location_id: z.string(),
 });
 
 export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
@@ -46,9 +45,11 @@ export const GuessObjectDraftsSchema = z.array(GuessObjectDraftSchema);
 
 export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
   id: true,
-}).partial().extend({
-  world_location_id: z.string().optional(),
-});
+})
+  .partial()
+  .extend({
+    world_location_id: z.string().optional(),
+  });
 
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
 export type FullGuessObject = z.infer<typeof FullGuessObjectSchema>;

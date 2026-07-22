@@ -86,22 +86,14 @@ export class GuessObjectService {
   }
 
   async create(createGuessObject: CreateGuessObject): Promise<string> {
-    // Récupérer la location dans la db
-    let world_location = await this.worldLocationService.get(
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      createGuessObject.world_location_id!,
+    const world_location = await this.worldLocationService.get(
+      createGuessObject.world_location_id,
     );
     if (!world_location) {
-      if (!createGuessObject.world_location) {
-        throw new BadRequestException({
-          code: ErrorCode.BAD_REQUEST,
-          message: `No world location id found, and no world location provided`,
-        });
-      }
-      // Si pas présente, utiliser la loc dans la requête
-      world_location = await this.worldLocationService.create(
-        createGuessObject.world_location,
-      );
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: `World location ${createGuessObject.world_location_id} not found`,
+      });
     }
 
     // Vérifier si un GuessObject avec le même nom et world_location_id existe déjà
@@ -130,10 +122,7 @@ export class GuessObjectService {
     return prisma_guess_object.id;
   }
 
-  async update(
-    id: string,
-    updatedFields: PatchGuessObject,
-  ): Promise<string> {
+  async update(id: string, updatedFields: PatchGuessObject): Promise<string> {
     const data = {
       name: updatedFields.name,
       image: updatedFields.image,

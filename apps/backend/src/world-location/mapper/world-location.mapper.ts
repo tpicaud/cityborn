@@ -54,9 +54,11 @@ export class WorldLocationMapper {
       //iso_code: nominatimItem.iso_code ?? undefined,
       //parent: nominatimItem.parent,
       centroid: [Number(nominatimItem.lat), Number(nominatimItem.lon)],
+      // osm_id (not place_id) is the stable identifier: Nominatim's own docs
+      // note place_id can change between searches/instances for the same place.
       source: {
         provider: 'nominatim',
-        external_id: String(nominatimItem.place_id),
+        external_id: String(nominatimItem.osm_id),
       },
     };
   }

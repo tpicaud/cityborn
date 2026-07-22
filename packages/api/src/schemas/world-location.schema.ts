@@ -30,6 +30,17 @@ export const WorldLocationPreviewSchema = WorldLocationSchema.pick({
 
 export const WorldLocationsSchema = z.array(WorldLocationSchema);
 
+export const CreateWorldLocationSchema = WorldLocationSchema.omit({
+  id: true,
+}).extend({
+  // required here: find-or-create dedups on (osm_type, source.external_id)
+  source: z.object({
+    provider: z.string(),
+    external_id: z.coerce.string(),
+  }),
+});
+
 export type WorldLocation = z.infer<typeof WorldLocationSchema>;
 export type WorldLocationPreview = z.infer<typeof WorldLocationPreviewSchema>;
 export type WorldLocations = z.infer<typeof WorldLocationsSchema>;
+export type CreateWorldLocation = z.infer<typeof CreateWorldLocationSchema>;

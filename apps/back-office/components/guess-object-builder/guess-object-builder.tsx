@@ -3,6 +3,7 @@
 import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
+  createWorldLocation,
   getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
@@ -17,9 +18,7 @@ export function GuessObjectBuilder({
   setGuessObjectDraft,
 }: {
   guessObjectDraft: GuessObjectDraft | undefined;
-  setGuessObjectDraft: Dispatch<
-    SetStateAction<GuessObjectDraft | undefined>
-  >;
+  setGuessObjectDraft: Dispatch<SetStateAction<GuessObjectDraft | undefined>>;
 }) {
   const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -40,9 +39,7 @@ export function GuessObjectBuilder({
     updateGuessObjectDraft();
   }, [guessObjectDraft?.id]);
 
-  const updateGuessObjectDraft = (
-    update: Partial<GuessObjectDraft>,
-  ) => {
+  const updateGuessObjectDraft = (update: Partial<GuessObjectDraft>) => {
     setGuessObjectDraft((prev) =>
       prev ? { ...prev, ...update } : (update as GuessObjectDraft),
     );
@@ -88,13 +85,18 @@ export function GuessObjectBuilder({
       );
       if (!result.ok) throw new Error(result.error.message);
       const fullCandidate = result.data;
+      if (!fullCandidate?.source) return;
 
-      if (fullCandidate) {
-        updateGuessObjectDraft({
-          world_location_id: fullCandidate.id,
-          world_location: fullCandidate,
-        });
-      }
+      const created = await createWorldLocation({
+        ...fullCandidate,
+        source: fullCandidate.source,
+      });
+      if (!created.ok) throw new Error(created.error.message);
+
+      updateGuessObjectDraft({
+        world_location_id: created.data,
+        world_location: fullCandidate,
+      });
     } catch (error) {
       alert('Erreur lors de la récupération de la localisation');
       console.error(error);
@@ -122,9 +124,7 @@ export function GuessObjectBuilder({
                 id="name"
                 name={guessObjectDraft?.name}
                 placeholder="e.g. Justin Timberlake"
-                value={
-                  guessObjectDraft ? guessObjectDraft.name : undefined
-                }
+                value={guessObjectDraft ? guessObjectDraft.name : undefined}
                 disabled={isLoadingFullObject}
                 onChange={(e) =>
                   updateGuessObjectDraft({ name: e.target.value })
