@@ -17,6 +17,8 @@ const GoogleMapComponent = dynamic(
   { ssr: false },
 );
 
+const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
+
 interface GuessComponentProps {
   localPlayerID: string;
   session: Session;
@@ -40,7 +42,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 
   // Map properties
   const mapProps = {
-    center: { lat: 48.8566, lng: 2.3522 },
+    center: DEFAULT_MAP_CENTER,
     zoom: 2,
     preGuess,
     localPlayerID,
@@ -64,7 +66,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
         setInternalRoundStatus('countdown');
         break;
     }
-  }, [game.state.currentRound?.status]);
+  }, [game.state.currentRound?.status, resetPreGuess]);
 
   return (
     <div>

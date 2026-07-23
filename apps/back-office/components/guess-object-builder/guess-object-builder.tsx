@@ -210,7 +210,9 @@ export function GuessObjectBuilder({
                     id: '',
                     osm_type: 'relation',
                     name: e.target.value,
-                    type: 'point',
+                    display_name: e.target.value,
+                    centroid: [0, 0],
+                    source: { provider: '', external_id: '' },
                     geometry: {
                       type: 'Point',
                       coordinates: [],

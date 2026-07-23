@@ -32,7 +32,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
   mapProps: { center, zoom, preGuess, localPlayerID, game, handlePreGuess },
 }) => {
   const currentRound = game.state.currentRound!;
-  const guessObject = game.state.guessObjects?.find(
+  const guessObject = (game.state.guessObjects ?? []).find(
     (obj: any) => obj.id === currentRound.guessObjectId,
   )!;
 
@@ -41,7 +41,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
     defaultCenter: center || { lat: 22.54992, lng: 0 },
     defaultZoom: zoom || 3,
     zoomControl: false,
-    clickableIcons: false, // désactive les icônes cliquables (restaurants, etc.)
+    clickableIcons: false,
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,
@@ -320,7 +320,7 @@ const AnswerDisplay: React.FC<{ guessObject: FullGuessObject }> = ({
     if (!map) return;
 
     if (isGeoJSON(guessObject)) {
-      const geojson = convertToGeoJson(guessObject.world_location?.geometry!);
+      const geojson = convertToGeoJson(guessObject.world_location.geometry);
       map.data.addGeoJson(geojson);
       map.data.setStyle({
         fillColor: '#FF0000',
@@ -336,8 +336,8 @@ const AnswerDisplay: React.FC<{ guessObject: FullGuessObject }> = ({
   }, [map, guessObject]);
 
   const point: Coord = {
-    lat: guessObject.world_location?.centroid?.[0]!,
-    lng: guessObject.world_location?.centroid?.[1]!,
+    lat: guessObject.world_location.centroid[0],
+    lng: guessObject.world_location.centroid[1],
   };
 
   return (
@@ -357,8 +357,8 @@ const AnswerDisplay: React.FC<{ guessObject: FullGuessObject }> = ({
 
 const getCenterOfGuessObject = (guessObject: FullGuessObject): Coord => {
   return {
-    lat: guessObject.world_location?.centroid?.[0]!,
-    lng: guessObject.world_location?.centroid?.[1]!,
+    lat: guessObject.world_location.centroid[0],
+    lng: guessObject.world_location.centroid[1],
   };
 };
 
@@ -367,7 +367,7 @@ const hasWin = (
   guessObject: FullGuessObject,
 ): boolean => {
   try {
-    const geoJson = guessObject.world_location?.geometry!;
+    const geoJson = guessObject.world_location.geometry;
     if (geoJson.type === 'Point') return false;
     const turfPoint = turf.point([point.lng(), point.lat()]);
     return turf.booleanPointInPolygon(turfPoint, geoJson as any);
@@ -378,8 +378,8 @@ const hasWin = (
 
 const isGeoJSON = (guessObject: FullGuessObject): boolean => {
   return (
-    guessObject.world_location?.geometry?.type! === 'MultiPolygon' ||
-    guessObject.world_location?.geometry?.type! === 'Polygon'
+    guessObject.world_location.geometry.type === 'MultiPolygon' ||
+    guessObject.world_location.geometry.type === 'Polygon'
   );
 };
 

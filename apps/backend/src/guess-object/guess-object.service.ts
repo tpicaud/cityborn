@@ -62,7 +62,6 @@ export class GuessObjectService {
   ): Promise<FullGuessObject[]> {
     const where: any = {};
 
-    // Si des catégories sont spécifiées et qu'elles ne contiennent pas "TOUTES"
     if (gameConfig.categories && gameConfig.categories.length > 0) {
       const categoryIds = gameConfig.categories.map((cat) => cat.id);
       where.categories = {
@@ -72,13 +71,11 @@ export class GuessObjectService {
       };
     }
 
-    // Récupération de tous les objets correspondants
     const allObjects = await this.prisma.guessObject.findMany({
       where,
       include: { world_location: { include: { geometry: true } } },
     });
 
-    // Mélange aléatoire et sélection
     const shuffled = allObjects.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, gameConfig.nbOfObjects);
 
@@ -96,7 +93,6 @@ export class GuessObjectService {
       });
     }
 
-    // Vérifier si un GuessObject avec le même nom et world_location_id existe déjà
     const existingGuessObject = await this.prisma.guessObject.findFirst({
       where: {
         name: createGuessObject.name,
@@ -108,7 +104,6 @@ export class GuessObjectService {
       return existingGuessObject.id;
     }
 
-    // Créer le GuessObject avec l'id de la loc
     const prisma_guess_object = await this.prisma.guessObject.create({
       data: {
         name: createGuessObject.name,

@@ -1,5 +1,5 @@
-import { CreateWorldLocation, ErrorCode, WorldLocation } from '@cityborn/api';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateWorldLocation, WorldLocation } from '@cityborn/api';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorldLocationMapper } from './mapper/world-location.mapper';
@@ -24,20 +24,13 @@ export class WorldLocationService {
   }
 
   async findOrCreate(
-    world_location_dto: CreateWorldLocation,
+    createWorldLocation: CreateWorldLocation,
   ): Promise<WorldLocation> {
-    if (!world_location_dto.source) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: `World location source (provider + external_id) is required`,
-      });
-    }
-
     const existing = await this.prisma.worldLocation.findUnique({
       where: {
         osm_type_external_id: {
-          osm_type: world_location_dto.osm_type,
-          external_id: world_location_dto.source.external_id,
+          osm_type: createWorldLocation.osm_type,
+          external_id: createWorldLocation.source.external_id,
         },
       },
       include: { geometry: true },
@@ -46,21 +39,18 @@ export class WorldLocationService {
 
     const row = await this.prisma.worldLocation.create({
       data: {
-        osm_type: world_location_dto.osm_type,
-        external_id: world_location_dto.source.external_id,
-        name: world_location_dto.name,
-        type: world_location_dto.type,
+        osm_type: createWorldLocation.osm_type,
+        external_id: createWorldLocation.source.external_id,
+        name: createWorldLocation.name,
         geometry: {
           create: {
-            data: world_location_dto.geometry as unknown as Prisma.InputJsonValue,
+            data: createWorldLocation.geometry as unknown as Prisma.InputJsonValue,
           },
         },
-        display_name: world_location_dto.display_name,
-        addresstype: world_location_dto.addresstype,
-        level: world_location_dto.level,
-        iso_code: world_location_dto.iso_code,
-        centroid: world_location_dto.centroid ?? [],
-        source: world_location_dto.source as unknown as Prisma.InputJsonValue,
+        display_name: createWorldLocation.display_name,
+        addresstype: createWorldLocation.addresstype,
+        centroid: createWorldLocation.centroid,
+        source: createWorldLocation.source as unknown as Prisma.InputJsonValue,
       },
       include: { geometry: true },
     });

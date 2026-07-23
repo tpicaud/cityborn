@@ -63,30 +63,15 @@ model GameRecord {
 // Location/GuessObject/Categories models //
 ////////////////////////////////////////////
 
-enum LocationType {
-  area
-  point
-}
-
-enum LocationLevel {
-  ADM1
-  ADM2
-  ADM3
-  ADM4
-}
-
 model WorldLocation {
-  id           String         @id @default(dbgenerated("gen_random_uuid()"))
-  osm_type     String         @default("relation")
+  id           String  @id @default(dbgenerated("gen_random_uuid()"))
+  osm_type     String  @default("relation")
   external_id  String
   name         String
-  display_name String?
+  display_name String
   addresstype  String?
-  type         LocationType
-  level        LocationLevel?
-  iso_code     String?
   centroid     Float[]
-  source       Json?          @db.JsonB
+  source       Json    @db.JsonB
 
   geometry     WorldLocationGeometry?
   guessObjects GuessObject[]

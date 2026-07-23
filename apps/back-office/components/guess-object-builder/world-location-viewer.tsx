@@ -46,11 +46,7 @@ const WorldLocationDisplay: React.FC<{
     if (!map) return;
     map.data.forEach((feature: any) => map.data.remove(feature));
 
-    if (
-      !world_location ||
-      (world_location.type === 'area' && !world_location.geometry) ||
-      (world_location.type === 'point' && !world_location.centroid)
-    ) {
+    if (!world_location) {
       map.setZoom(2); // par exemple niveau global
       map.setCenter({ lat: 0, lng: 0 }); // centre par défaut, ici équateur / Greenwich
       return;
@@ -69,10 +65,11 @@ const WorldLocationDisplay: React.FC<{
 
     // Centrage sur le centroid ou sur les bounds
     const point = world_location.centroid;
-    if (world_location.type === 'point' && world_location.centroid) {
-      map.panTo({ lat: point![0], lng: point![1] });
+    const isPoint = world_location.geometry.type === 'Point';
+    if (isPoint) {
+      map.panTo({ lat: point[0], lng: point[1] });
       map.setZoom(12);
-    } else if (world_location.type === 'area') {
+    } else {
       const bounds = new google.maps.LatLngBounds();
       const geojson = convertToGeoJson(world_location.geometry);
       const coords =
@@ -89,8 +86,8 @@ const WorldLocationDisplay: React.FC<{
 
   if (!map || !world_location) return;
 
-  const point: [number, number] | undefined = world_location.centroid;
-  return point && world_location.type !== 'point' ? (
+  const point = world_location.centroid;
+  return world_location.geometry.type !== 'Point' ? (
     <AdvancedMarker position={{ lat: point[0], lng: point[1] }} />
   ) : null;
 };
