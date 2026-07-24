@@ -22,6 +22,16 @@ export function GuessObjectBuilder({
 }) {
   const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [worldLocationQuery, setWorldLocationQuery] = useState('');
+
+  useEffect(() => {
+    setWorldLocationQuery(
+      guessObjectDraft?.world_location
+        ? (guessObjectDraft.world_location.display_name ??
+          guessObjectDraft.world_location.name)
+        : '',
+    );
+  }, [guessObjectDraft?.world_location]);
 
   useEffect(() => {
     const updateGuessObjectDraft = async () => {
@@ -195,29 +205,9 @@ export function GuessObjectBuilder({
               id="world_location_id"
               name={guessObjectDraft?.world_location_id}
               placeholder="e.g. Paris"
-              value={
-                guessObjectDraft?.world_location
-                  ? (guessObjectDraft.world_location.display_name ??
-                    guessObjectDraft.world_location.name)
-                  : ''
-              }
+              value={worldLocationQuery}
               disabled={isLoadingFullObject}
-              onChange={(e) =>
-                updateGuessObjectDraft({
-                  world_location: {
-                    id: '',
-                    osm_type: 'relation',
-                    name: e.target.value,
-                    display_name: e.target.value,
-                    centroid: [0, 0],
-                    source: { provider: '', external_id: '' },
-                    geometry: {
-                      type: 'Point',
-                      coordinates: [],
-                    },
-                  },
-                })
-              }
+              onChange={(e) => setWorldLocationQuery(e.target.value)}
               onSelect={handleFetchWorldLocationCandidate}
               className={`rounded-md shadow-xl text-gray-800
                                       p-2 h-10 w-full max-w-[50%]
