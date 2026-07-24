@@ -50,15 +50,7 @@ export const useSocket = () => {
       socket.off('error');
       socket.disconnect();
     };
-  }, [
-    invokeError,
-    socket.connect,
-    socket.connected,
-    socket.disconnect,
-    socket.id,
-    socket.off,
-    socket.on,
-  ]);
+  }, [socket, invokeError]);
 
   const emit = useCallback(
     (event: string, ...args: any[]) => {

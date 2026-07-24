@@ -7,7 +7,7 @@ import {
   SessionStatus,
 } from '@cityborn/api';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
@@ -30,6 +30,19 @@ export default function MultiSessionComponent({
 
   const multiSession = useMultiSession(localPlayerID, sessionID);
   const hasJoinedSession = useRef(false);
+
+  const handleJoinSession = useCallback(
+    async (playerID: string) => {
+      try {
+        hasJoinedSession.current = true;
+        await multiSession.join(playerID);
+        setLocalPlayerID(playerID);
+      } catch (error: any) {
+        invokeError(error);
+      }
+    },
+    [multiSession.join, invokeError],
+  );
 
   ////////////////
   // useEffects //
@@ -56,16 +69,6 @@ export default function MultiSessionComponent({
   //////////////////////////
   // Session interactions //
   //////////////////////////
-
-  const handleJoinSession = async (playerID: string) => {
-    try {
-      hasJoinedSession.current = true;
-      await multiSession.join(playerID);
-      setLocalPlayerID(playerID);
-    } catch (error: any) {
-      invokeError(error);
-    }
-  };
 
   const handleUpdateHost = async (newHostID: string) => {
     try {

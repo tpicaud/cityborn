@@ -6,7 +6,7 @@ import {
 } from '@cityborn/api';
 import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { fetchSession } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
@@ -30,6 +30,41 @@ export function useMultiSession(
   const [connected, setConnected] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const { socket, hasDisconnected, emit, on, off } = useSocket();
+
+  //////////////////////////
+  // Connection functions //
+  //////////////////////////
+
+  const reconnect = useCallback(async () => {
+    if (!session || !localPlayerID)
+      throw new Error('Reconnection failed: player or session not initialized');
+
+    try {
+      console.log('Reconnecting player to session...');
+      const sessionID = session.id;
+      return new Promise<void>((resolve, reject) => {
+        const body = { sessionID, playerID: localPlayerID };
+        emit(
+          'session:reconnect',
+          body,
+          (response: { success: boolean; error?: any }) => {
+            if (response.success) {
+              setConnected(true);
+              resolve();
+            } else {
+              reject({
+                code: response.error.code,
+                message: response.error.message,
+                statusCode: response.error.statusCode,
+              });
+            }
+          },
+        );
+      });
+    } catch (error) {
+      throw new Error(`Non connecté au serveur: ${error}`);
+    }
+  }, [session, localPlayerID, emit]);
 
   /////////////////
   // useEffects //
@@ -312,41 +347,6 @@ export function useMultiSession(
           },
         );
       });
-    }
-  };
-
-  //////////////////////////
-  // Connection functions //
-  //////////////////////////
-
-  const reconnect = async () => {
-    if (!session || !localPlayerID)
-      throw new Error('Reconnection failed: player or session not initialized');
-
-    try {
-      console.log('Reconnecting player to session...');
-      const sessionID = session.id;
-      return new Promise<void>((resolve, reject) => {
-        const body = { sessionID, playerID: localPlayerID };
-        emit(
-          'session:reconnect',
-          body,
-          (response: { success: boolean; error?: any }) => {
-            if (response.success) {
-              setConnected(true);
-              resolve();
-            } else {
-              reject({
-                code: response.error.code,
-                message: response.error.message,
-                statusCode: response.error.statusCode,
-              });
-            }
-          },
-        );
-      });
-    } catch (error) {
-      throw new Error(`Non connecté au serveur: ${error}`);
     }
   };
 

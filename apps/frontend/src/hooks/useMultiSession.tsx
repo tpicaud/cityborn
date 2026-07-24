@@ -139,24 +139,27 @@ export function useMultiSession(
     };
   }, [on, off]);
 
-  const join = async (playerID: string) => {
-    if (!session || !playerID)
-      throw new Error(
-        'Joining session failed: session or player not initialized',
-      );
-    return new Promise<void>((resolve, reject) => {
-      emit(
-        'session:join',
-        { sessionID: session.id, playerID },
-        (response: SocketResponse) => {
-          if (response.success) {
-            setConnected(true);
-            resolve();
-          } else reject(socketError(response.error));
-        },
-      );
-    });
-  };
+  const join = useCallback(
+    async (playerID: string) => {
+      if (!session || !playerID)
+        throw new Error(
+          'Joining session failed: session or player not initialized',
+        );
+      return new Promise<void>((resolve, reject) => {
+        emit(
+          'session:join',
+          { sessionID: session.id, playerID },
+          (response: SocketResponse) => {
+            if (response.success) {
+              setConnected(true);
+              resolve();
+            } else reject(socketError(response.error));
+          },
+        );
+      });
+    },
+    [session, emit],
+  );
 
   const updateHost = async (newHostID: string) => {
     if (!session)

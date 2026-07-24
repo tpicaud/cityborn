@@ -1,6 +1,6 @@
 import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
@@ -19,6 +19,23 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   );
   const multiSession = useMultiSession(localPlayerID, sessionID);
   const hasJoinedSession = useRef(false);
+
+  //////////////////////////
+  // Session interactions //
+  //////////////////////////
+
+  const handleJoinSession = useCallback(
+    async (playerID: string) => {
+      try {
+        hasJoinedSession.current = true;
+        await multiSession.join(playerID);
+        setLocalPlayerID(playerID);
+      } catch (error: any) {
+        invokeError(error);
+      }
+    },
+    [multiSession, invokeError],
+  );
 
   ////////////////
   // useEffects //
@@ -42,20 +59,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     localPlayerID,
     multiSession.connected,
   ]);
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
-
-  const handleJoinSession = async (playerID: string) => {
-    try {
-      hasJoinedSession.current = true;
-      await multiSession.join(playerID);
-      setLocalPlayerID(playerID);
-    } catch (error: any) {
-      invokeError(error);
-    }
-  };
 
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
