@@ -48,10 +48,8 @@ export class AuthService {
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
     const { email, username, password } = dto;
 
-    // Validate identifiers
     await this.userService.validateIdentifiers(username, email);
 
-    // Hash password
     const hash = await bcrypt.hash(password, 10);
 
     const user = await this.userService.createUser({
@@ -75,7 +73,6 @@ export class AuthService {
       );
     }
 
-    // Create JWT
     const access_token = await this.generateToken(
       'access',
       user.id,
@@ -89,7 +86,6 @@ export class AuthService {
       user.email,
     );
 
-    // Send event
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -112,7 +108,6 @@ export class AuthService {
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
     const { identifier, password } = dto;
 
-    // Find user
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new UnauthorizedException({
@@ -120,14 +115,12 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    // Check if vanilla account
     if (!user.password)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
 
-    // Validate password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
       throw new UnauthorizedException({
@@ -135,7 +128,6 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    // Create JWT
     const access_token = await this.generateToken(
       'access',
       user.id,
@@ -149,7 +141,6 @@ export class AuthService {
       user.email,
     );
 
-    // Send event
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -177,7 +168,6 @@ export class AuthService {
 
     const { email, name } = await this.verifyGoogleToken(idToken);
 
-    // Vérifie si l’utilisateur existe déjà
     let user = await this.userService.findByIdentifier(email);
 
     if (!user) {
@@ -190,7 +180,6 @@ export class AuthService {
         isVerified: true,
       });
 
-      // Send event
       if (visitorId) {
         await this.eventService.trackEvent(
           createEvent({
@@ -203,7 +192,6 @@ export class AuthService {
         );
       }
     } else {
-      // Send event
       if (visitorId) {
         await this.eventService.trackEvent(
           createEvent({
@@ -250,7 +238,6 @@ export class AuthService {
       });
     }
 
-    // Vérifie si l’utilisateur existe déjà
     let user = await this.userService.findByAppleId(apple_user_id);
 
     if (!user) {
@@ -275,7 +262,6 @@ export class AuthService {
           isVerified: true,
         });
 
-        // Send event
         if (visitorId) {
           await this.eventService.trackEvent(
             createEvent({
@@ -289,7 +275,6 @@ export class AuthService {
         }
       }
     } else {
-      // Send event
       if (visitorId) {
         await this.eventService.trackEvent(
           createEvent({
@@ -384,7 +369,6 @@ export class AuthService {
     return UserMapper.toPublicUser(user);
   }
 
-  // Auxiliary
   private async sendVerificationEmail(
     user: {
       id: string;
@@ -474,7 +458,7 @@ export class AuthService {
     let exists = true;
 
     while (exists) {
-      const suffix = Math.floor(1000 + Math.random() * 9000); // 4 chiffres
+      const suffix = Math.floor(1000 + Math.random() * 9000);
       username = `${sanitized}${suffix}`;
 
       exists = !!(await this.userService.findByIdentifier(username));

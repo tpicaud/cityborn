@@ -4,7 +4,6 @@ module.exports = function withGradlePropertiesModification(config) {
   return withGradleProperties(config, (config) => {
     const properties = config.modResults;
 
-    // Function to set or update a property
     const setProperty = (key, value) => {
       const existingProperty = properties.find((p) => p.key === key);
       if (existingProperty) {
@@ -14,7 +13,6 @@ module.exports = function withGradlePropertiesModification(config) {
       }
     };
 
-    // Set JVM arguments
     setProperty('org.gradle.jvmargs', '-Xmx4096m -XX:MaxMetaspaceSize=1024m');
 
     return config;

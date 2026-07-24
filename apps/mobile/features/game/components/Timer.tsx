@@ -34,7 +34,7 @@ const Timer: React.FC<TimerProps> = ({
     }, 7);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [setTimerEnded, totalTime]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -55,7 +55,6 @@ const Timer: React.FC<TimerProps> = ({
         }}
       />
 
-      {/* Texte */}
       <View
         className={`absolute inset-0 flex items-center justify-center font-semibold text-xl z-10`}
       >

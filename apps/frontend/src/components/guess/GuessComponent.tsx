@@ -40,7 +40,6 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     'countdown' | 'guessing' | 'results'
   >('countdown');
 
-  // Map properties
   const mapProps = {
     center: DEFAULT_MAP_CENTER,
     zoom: 2,

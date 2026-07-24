@@ -54,7 +54,7 @@ export function MultiLobby({
       setCategoryTrees(result.data);
     };
     loadCategoryTrees();
-  }, []);
+  }, [invokeError]);
 
   useEffect(() => {
     if (
@@ -94,7 +94,6 @@ export function MultiLobby({
       <View className="flex-1 flex items-center justify-center gap-10 w-70">
         <Text className="text-2xl  font-bold">MULTI</Text>
 
-        {/* Join code */}
         <View className="flex flex-col gap-1 justify-center items-center">
           <Text className="text-xl">Code</Text>
           <View className="flex flex-row items-center justify-center gap-2 h-14 bg-background w-auto rounded-xl py-1 px-5 border">
@@ -113,7 +112,6 @@ export function MultiLobby({
           </View>
         </View>
 
-        {/* Players */}
         <View className="flex flex-col gap-2 w-full">
           <Text className="text-xl">Joueurs</Text>
           <View className=" w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
@@ -137,7 +135,6 @@ export function MultiLobby({
           </ScrollView>
         </View>
 
-        {/* Packs */}
         <View className="flex flex-col gap-2 w-full">
           <View className="flex-row items-center gap-1">
             {selectedPath.length > 0 && (

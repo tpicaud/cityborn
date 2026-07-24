@@ -39,7 +39,6 @@ export const Game = ({
     setShowResults(game.status === GameStatus.IN_RESULTS);
   }, [game.status]);
 
-  // Hide header
   useFocusEffect(
     useCallback(() => {
       navigation.setOptions({ headerShown: false });
@@ -47,10 +46,9 @@ export const Game = ({
       return () => {
         navigation.setOptions({ headerShown: true });
       };
-    }, []),
+    }, [navigation.setOptions]),
   );
 
-  // Game starting or round loading
   if (
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
     game.status === GameStatus.STARTING
@@ -61,7 +59,6 @@ export const Game = ({
       </View>
     );
   }
-  // Player not in game and game already started
   if (!localPlayerID) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -71,10 +68,8 @@ export const Game = ({
     );
   }
 
-  // Game render
   return (
     <View style={StyleSheet.absoluteFill}>
-      {/* Guess */}
       <View style={StyleSheet.absoluteFill}>
         <Guess
           localPlayerID={localPlayerID}
@@ -85,7 +80,6 @@ export const Game = ({
         />
       </View>
 
-      {/* Results */}
       {game.status === GameStatus.IN_RESULTS && (
         <View>
           <Dialog

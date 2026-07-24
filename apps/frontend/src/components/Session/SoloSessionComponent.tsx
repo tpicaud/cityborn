@@ -88,11 +88,9 @@ export default function SoloSessionComponent({
   // Rendering //
   ///////////////
 
-  // si pas de session, chargement
   if (!soloSession.session)
     return <LoadingComponent message="Chargement de la session" />;
 
-  // Si game, display game
   if (soloSession.session.currentGame) {
     return (
       <GameComponent
@@ -108,7 +106,6 @@ export default function SoloSessionComponent({
       />
     );
   } else {
-    // display lobby
     return (
       <LobbyComponent
         localPlayerID={localPlayerID}

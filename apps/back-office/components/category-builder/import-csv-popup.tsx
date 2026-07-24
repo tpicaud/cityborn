@@ -155,7 +155,7 @@ export function ImportCSVPopup({
           return newRecap;
         });
       } finally {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // éviter rate limit
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 

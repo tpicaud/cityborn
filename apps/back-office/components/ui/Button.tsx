@@ -1,5 +1,3 @@
-// src/components/ui/button.tsx
-
 import { Button as AriaButton } from '@ariakit/react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -32,7 +30,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       if (!onClick) return;
       try {
         setLoading(true);
-        await onClick(e); // si onClick renvoie une promesse, on attend
+        await onClick(e);
       } finally {
         setLoading(false);
       }

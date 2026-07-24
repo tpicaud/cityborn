@@ -24,7 +24,6 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Détection du type de contexte
     const isHttp = context.getType() === 'http';
     const isWs = context.getType() === 'ws';
 

@@ -54,10 +54,6 @@ export function CategoryBuilder({
     );
   };
 
-  ///////////////////////////
-  // Guess object function //
-  ///////////////////////////
-
   function handleCreateGuessObject() {
     setGuessObjectDraft({
       name: '',
@@ -85,7 +81,6 @@ export function CategoryBuilder({
         return;
       }
 
-      // If id, then update, else post
       let id: string;
       if (guessObjectDraft.id) {
         const result = await patchGuessObject(
@@ -117,10 +112,6 @@ export function CategoryBuilder({
       alert("Erreur lors de l'enregistrement de l'objet");
     }
   }
-
-  ///////////////////////
-  // Category function //
-  ///////////////////////
 
   async function handleSaveCategory(publish?: boolean) {
     try {
@@ -160,10 +151,6 @@ export function CategoryBuilder({
     }
   }
 
-  /////////////////////////////////
-  // Add to category function //
-  /////////////////////////////////
-
   async function addOrUpdateGuessObjectToCategory(id: string) {
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
@@ -172,7 +159,6 @@ export function CategoryBuilder({
       if (!objectResult.ok) throw new Error(objectResult.error.message);
       const object = objectResult.data;
 
-      // Update remotely
       const updatedCategory: UpdateCategory = {
         id: category.id,
         name: category.name,
@@ -183,7 +169,6 @@ export function CategoryBuilder({
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) throw new Error(saveResult.error.message);
 
-      // Update locally
       setCategory((prev) => {
         if (!prev.guessObjects) prev.guessObjects = [];
 
@@ -193,10 +178,8 @@ export function CategoryBuilder({
         let updatedGuessObjects: typeof prev.guessObjects;
 
         if (index === -1) {
-          // ajout
           updatedGuessObjects = [...prev.guessObjects, object];
         } else {
-          // mise à jour
           updatedGuessObjects = prev.guessObjects.map((obj) =>
             obj.id === object.id ? object : obj,
           );
@@ -363,7 +346,6 @@ export function CategoryBuilder({
             </div>
 
             <div className="relative flex-1 min-h-0 rounded-xl border border-gray-300 overflow-hidden">
-              {/* Contenu scrollable */}
               <div
                 className="h-full overflow-y-auto 
                                             [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
@@ -378,7 +360,6 @@ export function CategoryBuilder({
                 </div>
               </div>
 
-              {/* Ombre dégradée fixe en bas */}
               <div
                 className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 
                                             bg-gradient-to-t from-neutral-800 to-transparent"

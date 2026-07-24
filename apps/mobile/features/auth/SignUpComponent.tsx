@@ -27,7 +27,6 @@ export const SignUpComponent = () => {
     password: '',
     confirmPassword: '',
   });
-  // validation
   const [errors, setErrors] = useState<
     Partial<Record<keyof FormValues, string>>
   >({});
@@ -135,7 +134,8 @@ export const SignUpComponent = () => {
     if (!validateForm()) return;
 
     const result = await signUp({ ...formValues });
-    if (!result.ok) return setErrorMessage(getFriendlyErrorMessage(result.error));
+    if (!result.ok)
+      return setErrorMessage(getFriendlyErrorMessage(result.error));
     setUser(result.data);
     router.push('/');
   };

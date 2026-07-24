@@ -11,9 +11,7 @@ export default function UiComponentsPage() {
         <div className="flex flex-col items-center gap-3">
           <h1 className="text-2xl p-1">Buttons</h1>
 
-          {/* Variants */}
           <div className="grid grid-rows-3 grid-cols-3 border border-gray-300">
-            {/* Header */}
             <div className="grid place-items-center p-6 border border-gray-300"></div>
             <div className="grid place-items-center p-6 border border-gray-300">
               Default
@@ -22,7 +20,6 @@ export default function UiComponentsPage() {
               Disabled
             </div>
 
-            {/* 1 row */}
             <div className="grid place-items-center p-6 border border-gray-300">
               Primary
             </div>
@@ -37,7 +34,6 @@ export default function UiComponentsPage() {
               </Button>
             </div>
 
-            {/* 2 row */}
             <div className="grid place-items-center p-6 border border-gray-300">
               Secondary
             </div>
@@ -52,7 +48,6 @@ export default function UiComponentsPage() {
               </Button>
             </div>
 
-            {/* 3 row */}
             <div className="grid place-items-center p-6 border border-gray-300">
               Accent
             </div>
@@ -68,7 +63,6 @@ export default function UiComponentsPage() {
             </div>
           </div>
 
-          {/* Sizes */}
           <div className="grid grid-rows-2 grid-cols-3 border border-gray-300">
             <div className="grid place-items-center p-6 border border-gray-300">
               Small
@@ -96,7 +90,6 @@ export default function UiComponentsPage() {
             </div>
           </div>
 
-          {/* Loading */}
           <div className="grid grid-rows-1 grid-cols-2">
             <div className="grid place-items-center p-6 border border-gray-300">
               Loading button
@@ -117,9 +110,7 @@ export default function UiComponentsPage() {
         </div>
         <div className="flex flex-col items-center gap-3">
           <h1 className="text-2xl p-1">Cards</h1>
-          {/* Variants */}
           <div className="grid grid-rows-2 grid-cols-3 border border-gray-300">
-            {/* Header */}
             <div className="grid place-items-center p-6 border border-gray-300">
               Primary
             </div>
@@ -130,7 +121,6 @@ export default function UiComponentsPage() {
               Accent
             </div>
 
-            {/* 1 row */}
             <div className="grid place-items-center p-6 border border-gray-300">
               <Card variant="primary" size="md">
                 <p>
@@ -172,7 +162,6 @@ export default function UiComponentsPage() {
             </div>
           </div>
 
-          {/* Sizes */}
           <div className="grid grid-rows-2 grid-cols-3 border border-gray-300">
             <div className="grid place-items-center p-3 border border-gray-300">
               Small
@@ -225,7 +214,6 @@ export default function UiComponentsPage() {
           </div>
         </div>
 
-        {/* Other components */}
         <h1 className="text-2xl p-1">Other components</h1>
         <WordCarousel />
       </div>

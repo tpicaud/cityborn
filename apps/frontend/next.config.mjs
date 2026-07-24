@@ -2,13 +2,17 @@
 const nextConfig = {
   reactStrictMode: false,
 
-  transpilePackages: ['@cityborn/api', '@cityborn/errors', '@cityborn/types', '@cityborn/utils'],
+  transpilePackages: [
+    '@cityborn/api',
+    '@cityborn/errors',
+    '@cityborn/types',
+    '@cityborn/utils',
+  ],
 
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // CORS config
   async headers() {
     return [
       {

@@ -105,7 +105,6 @@ export default function HomeComponent() {
                 <IconButton
                   onClick={async () => {
                     setState('profile');
-                    //setOpenProfile(true);
                   }}
                   sx={{
                     visibility: user && state === 'menu' ? 'visible' : 'hidden',

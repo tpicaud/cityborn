@@ -35,7 +35,6 @@ export function useMultiSession(
   // useEffects //
   ////////////////
 
-  // Fetch session on init
   useEffect(() => {
     const loadSession = async () => {
       const result = await fetchSession(sessionID);
@@ -43,20 +42,18 @@ export function useMultiSession(
       setSession(result.data);
     };
     loadSession();
-  }, []);
+  }, [invokeError, sessionID]);
 
-  // Manage socket disconnection
   useEffect(() => {
     if (!socket?.connected) {
       setConnected(false);
     }
   }, [socket?.connected]);
 
-  // Manage automatic reconnect
   useEffect(() => {
     const autoReconnect = async () => {
       try {
-        if (socket && socket.connected && hasDisconnected && !connected) {
+        if (socket?.connected && hasDisconnected && !connected) {
           await reconnect();
         }
       } catch (error: any) {
@@ -64,23 +61,18 @@ export function useMultiSession(
       }
     };
     autoReconnect();
-  }, [socket, hasDisconnected]);
+  }, [socket, hasDisconnected, connected, invokeError, reconnect]);
 
-  // Manage host
   useEffect(() => {
     if (session) {
       setIsHost(session?.hostID === localPlayerID);
     }
-  }, [localPlayerID, session?.hostID]);
+  }, [localPlayerID, session?.hostID, session]);
 
-  // Handle socket listener
   useEffect(() => {
     if (!socket) return;
 
-    // handle events
     const handleSessionUpdate = (session: Session) => {
-      //console.log('Session update: ', session);
-
       setSession((prevSession) => {
         const prevGuessObjects = prevSession?.currentGame?.state?.guessObjects;
         const newGuessObjects = session.currentGame?.state?.guessObjects;
@@ -100,14 +92,12 @@ export function useMultiSession(
       });
     };
 
-    // handle messages
     on('session:update', handleSessionUpdate);
     on('connection_error', (error) => {
       console.log(error);
     });
 
     return () => {
-      // Nettoyage
       off('session:update', handleSessionUpdate);
     };
   }, [socket, on, off]);
@@ -244,7 +234,7 @@ export function useMultiSession(
   };
 
   const guess = async (guess: Guess) => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Guess failed: session or game not initialized');
 
     return new Promise<void>((resolve, reject) => {
@@ -268,7 +258,7 @@ export function useMultiSession(
   };
 
   const nextRound = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error(
         'Next round game failed: session or game not initialized',
       );
@@ -292,7 +282,7 @@ export function useMultiSession(
   };
 
   const endGame = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Ending game failed: session or game not initialized');
     setSession({ ...session, status: SessionStatus.IN_LOBBY });
   };
@@ -302,7 +292,7 @@ export function useMultiSession(
   };
 
   const playAgain = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Ending game failed: session or game not initialized');
 
     if (isHost) {

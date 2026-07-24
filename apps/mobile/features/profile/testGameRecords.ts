@@ -6,7 +6,7 @@ export const gameRecordsExample: GameRecord[] = [
     mode: SessionMode.SOLO,
     createdAt: '2025-02-12T14:32:00.000Z',
     gameConfig: {
-      categories: ['animals', 'fruits'] as any, // Remplace par ton type Category réel
+      categories: ['animals', 'fruits'] as any,
       timer: 60,
       nbOfObjects: 5,
     },

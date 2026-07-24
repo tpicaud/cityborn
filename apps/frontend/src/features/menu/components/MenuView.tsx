@@ -61,7 +61,6 @@ export const MenuView = () => {
             transition={{ duration: 0.7, ease: 'easeInOut' }}
             className="absolute top-0 left-0 w-full h-full flex flex-col gap-5 items-center justify-center p-4"
           >
-            {/* Join */}
             <Card
               size="lg"
               variant="accent"
@@ -79,7 +78,6 @@ export const MenuView = () => {
               </div>
             </Card>
 
-            {/* Create */}
             <div
               className="grid grid-cols-1 gap-4 w-full place-items-center
                                         md:grid-cols-2 md:gap-6 md:w-auto"

@@ -1,6 +1,11 @@
 'use client';
 
-import { type CategoryTree, type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
+import {
+  type CategoryTree,
+  type GameConfig,
+  type Guess,
+  SessionStatus,
+} from '@cityborn/api';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
@@ -30,7 +35,6 @@ export default function MultiSessionComponent({
   // useEffects //
   ////////////////
 
-  // Auto connect to session
   useEffect(() => {
     if (
       multiSession.session &&
@@ -41,7 +45,13 @@ export default function MultiSessionComponent({
     ) {
       handleJoinSession(localPlayerID);
     }
-  }, [multiSession.session, multiSession.socket.connected]);
+  }, [
+    multiSession.session,
+    multiSession.socket.connected,
+    handleJoinSession,
+    localPlayerID,
+    multiSession.connected,
+  ]);
 
   //////////////////////////
   // Session interactions //
@@ -113,7 +123,6 @@ export default function MultiSessionComponent({
     try {
       await multiSession.endGame();
     } catch (error: any) {
-      //invokeError(error);
       console.log(error);
     }
   };
@@ -138,11 +147,9 @@ export default function MultiSessionComponent({
   // Rendering //
   ///////////////
 
-  // si pas de session, chargement
   if (!multiSession.session)
     return <LoadingComponent message="Chargement de la session" />;
 
-  // Si game, display game
   return (
     <>
       {multiSession.session.status === SessionStatus.IN_GAME &&
@@ -177,28 +184,4 @@ export default function MultiSessionComponent({
       )}
     </>
   );
-
-  // if (multiSession.session.status === SessionStatus.IN_GAME && multiSession.session.currentGame) {
-  //     return <GameComponent
-  //         localPlayerID={localPlayerID}
-  //         isHost={multiSession.isHost}
-  //         session={multiSession.session}
-  //         game={multiSession.session.currentGame}
-  //         handleGuess={handleGuess}
-  //         handleNextRound={handleNextRound}
-  //         handleEndGame={handleEndGame}
-  //         handlePlayAgain={handlePlayAgain}
-  //         handleExitGame={handleExitGame} />
-  // } else {
-  //     // display lobby
-  //     return <LobbyComponent
-  //         localPlayerID={localPlayerID}
-  //         isHost={multiSession.isHost}
-  //         session={multiSession.session}
-  //         handleUpdateHost={handleUpdateHost}
-  //         handleUpdateGameConfig={handleUpdateGameConfig}
-  //         handleKickPlayer={handleKickPlayer}
-  //         handleStartGame={handleStartGame}
-  //         handleJoinSession={handleJoinSession} />
-  // }
 }

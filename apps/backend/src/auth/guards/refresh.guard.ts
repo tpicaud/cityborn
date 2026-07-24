@@ -1,5 +1,3 @@
-// jwt-refresh.guard.ts
-
 import { ErrorCode, User } from '@cityborn/api';
 import {
   type CanActivate,

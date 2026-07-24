@@ -143,12 +143,10 @@ export const LobbyComponent = ({
                               bg-slate-100 shadow-xl rounded-2xl
                                 max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] lg:max-w-xl max-h-[80%] pointer-events-auto"
         >
-          {/* Titre du lobby */}
           <Typography variant="h5">{session.mode.toUpperCase()}</Typography>
 
           {session.mode === SessionMode.MULTI && (
             <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
-              {/* Champ pour afficher et copier l'ID du jeu */}
               <Typography variant="subtitle1">Code</Typography>
               <TextField
                 fullWidth
@@ -175,7 +173,6 @@ export const LobbyComponent = ({
           )}
 
           <div className="flex flex-row justify-start items-stretch gap-8 max-w-full">
-            {/* Liste des joueurs */}
             {session.mode !== SessionMode.SOLO && (
               <List
                 sx={{
@@ -193,12 +190,10 @@ export const LobbyComponent = ({
                 }}
               >
                 {(session.players.every((p) => 'connected' in p)
-                  ? // Tous sont des OnlinePlayer → trier + statut
-                    (session.players as OnlinePlayer[]).sort((a, b) =>
+                  ? (session.players as OnlinePlayer[]).sort((a, b) =>
                       a.connected === b.connected ? 0 : a.connected ? -1 : 1,
                     )
-                  : // Sinon, pas de tri
-                    session.players
+                  : session.players
                 ).map((player) => (
                   <ListItem key={player.username} divider>
                     <ListItemText
@@ -308,7 +303,6 @@ export const LobbyComponent = ({
             </div>
           </div>
 
-          {/* Bouton pour démarrer la partie */}
           <LoadingButton
             variant="contained"
             color="primary"
@@ -319,7 +313,6 @@ export const LobbyComponent = ({
             Démarrer la partie
           </LoadingButton>
 
-          {/* Menu */}
           <LoadingButton
             variant="contained"
             color="primary"
@@ -356,9 +349,6 @@ export const LobbyComponent = ({
           </LoadingButton>
         </DialogContent>
       </Dialog>
-      {/* {!localPlayerID && (
-                <DialogInput message='Entrez votre pseudo' handleClick={handleJoinSession} label='Votre pseudo' />
-            )} */}
     </div>
   );
 };

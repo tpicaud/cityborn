@@ -51,7 +51,6 @@ export function useMultiSession(
   const [isHost, setIsHost] = useState(false);
   const { socket, hasDisconnected, emit, on, off } = useSocket();
 
-  // Fetch session on init
   useEffect(() => {
     const load = async () => {
       const result = await fetchSession(sessionID);
@@ -61,7 +60,6 @@ export function useMultiSession(
     load();
   }, [sessionID, invokeError]);
 
-  // Manage socket disconnection
   useEffect(() => {
     if (!socket?.connected) {
       setConnected(false);
@@ -92,7 +90,6 @@ export function useMultiSession(
     }
   }, [session, localPlayerID, emit]);
 
-  // Manage automatic reconnect
   useEffect(() => {
     const autoReconnect = async () => {
       try {
@@ -106,14 +103,12 @@ export function useMultiSession(
     autoReconnect();
   }, [socket.connected, hasDisconnected, connected, invokeError, reconnect]);
 
-  // Manage host
   useEffect(() => {
     if (session) {
       setIsHost(session.hostID === localPlayerID);
     }
   }, [localPlayerID, session]);
 
-  // Handle socket listener
   useEffect(() => {
     const handleSessionUpdate = (s: Session) => {
       console.log('Session update: ', s);

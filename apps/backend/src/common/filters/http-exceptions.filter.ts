@@ -28,7 +28,6 @@ export class HTTPExceptionsFilter implements ExceptionFilter {
     message =
       (typeof res === 'string' ? res : res.message) || 'Unexpected error';
 
-    // Log unkown or internal server errors
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(`[${code}] ${exception.message}`, exception.stack);
     } else if (code === ErrorCode.UNKNOWN_ERROR) {

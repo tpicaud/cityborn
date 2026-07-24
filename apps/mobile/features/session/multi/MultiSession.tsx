@@ -24,14 +24,12 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   // useEffects //
   ////////////////
 
-  // Auto connect to session
   useEffect(() => {
     if (
       multiSession.session &&
       localPlayerID &&
       !multiSession.connected &&
-      multiSession.socket &&
-      multiSession.socket.connected &&
+      multiSession.socket?.connected &&
       !hasJoinedSession.current
     ) {
       handleJoinSession(localPlayerID);
@@ -40,6 +38,9 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     multiSession.session,
     multiSession.socket,
     multiSession.socket?.connected,
+    handleJoinSession,
+    localPlayerID,
+    multiSession.connected,
   ]);
 
   //////////////////////////
@@ -136,7 +137,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   // Rendering //
   ///////////////
 
-  // si pas de session, chargement
   if (!multiSession.session) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -155,7 +155,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     );
   }
 
-  // Si game, display game
   if (
     multiSession.session.status === SessionStatus.IN_GAME &&
     multiSession.session.currentGame

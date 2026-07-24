@@ -25,8 +25,6 @@ export interface NominatimItemResponse {
 export class NominatimService {
   private readonly NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org';
 
-  constructor() {}
-
   async searchByName(q: string): Promise<NominatimSearchResponse> {
     try {
       const params: Record<string, string> = {
@@ -53,10 +51,6 @@ export class NominatimService {
 
       const data = await response.json();
 
-      // Garde uniquement les relations
-      //const filtered_data = data.filter((r: any) => r.osm_type === 'relation');
-
-      // Group by display_name et garde celui avec le place_rank le plus haut
       const grouped: Record<string, any> = {};
       for (const item of data) {
         const key = item.display_name;
@@ -105,26 +99,26 @@ export class NominatimService {
       let id: string;
       switch (osm_type) {
         case 'node':
-          id = 'N' + osm_id;
+          id = `N${osm_id}`;
           break;
         case 'way':
-          id = 'W' + osm_id;
+          id = `W${osm_id}`;
           break;
         case 'relation':
-          id = 'R' + osm_id;
+          id = `R${osm_id}`;
           break;
         default:
-          id = 'R' + osm_id;
+          id = `R${osm_id}`;
       }
 
       const params: Record<string, string> = {
         osm_ids: id,
         format: 'json',
-        polygon_geojson: '1', // inclut la géométrie GeoJSON
-        polygon_threshold: '0.0001', // simplification de la géométrie
-        addressdetails: '1', // inclut les détails d'adresse
-        extratags: '1', // inclut les métadonnées OSM
-        namedetails: '1', // inclut les noms alternatifs
+        polygon_geojson: '1',
+        polygon_threshold: '0.0001',
+        addressdetails: '1',
+        extratags: '1',
+        namedetails: '1',
         'accept-language': 'fr',
       };
 

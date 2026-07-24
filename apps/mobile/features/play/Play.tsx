@@ -89,7 +89,6 @@ export default function Play() {
           </View>
         </View>
 
-        {/* Connection dialog */}
         <Dialog
           visible={openConnectionAlert}
           onClose={() => setOpenConnectionAlert(false)}

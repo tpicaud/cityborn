@@ -233,7 +233,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
             handleMapPress(e);
         }}
       >
-        {/* Pre-guess marker */}
         {preGuess && preGuess.distance !== -1 && (
           <Marker
             coordinate={{
@@ -244,7 +243,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           />
         )}
 
-        {/* Answer marker */}
         {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <Marker
             coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
@@ -259,7 +257,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           </Marker>
         )}
 
-        {/* Reveal: answer polygon, other players' guesses, and the line from their guess to the answer */}
         {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <>
             {localGuess &&

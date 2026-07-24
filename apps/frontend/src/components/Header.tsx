@@ -8,7 +8,6 @@ export default function Header() {
                         flex flex-row items-center justify-between
                         bg-transparent p-1 z-10"
     >
-      {/* Logo */}
       <div className="flex items-center h-full">
         <Link
           href="/"
@@ -18,7 +17,6 @@ export default function Header() {
         </Link>
       </div>
 
-      {/* Connection buttons */}
       <div className="flex flex-row items-center justify-between gap-2 md:gap-3 h-full">
         <Button variant="secondary">CONNEXION</Button>
         <Button variant="primary">INSCRIPTION</Button>

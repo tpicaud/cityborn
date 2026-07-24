@@ -17,7 +17,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
   API_KEY,
   world_location,
 }) => {
-  const defaultCenter = { lat: 48.8566, lng: 2.3522 }; // Exemple : Paris
+  const defaultCenter = { lat: 48.8566, lng: 2.3522 };
   const defaultZoom = 5;
 
   return (
@@ -28,7 +28,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
         defaultCenter={defaultCenter}
         defaultZoom={defaultZoom}
         disableDefaultUI
-        clickableIcons={false} // désactive les icônes cliquables (restaurants, etc.)
+        clickableIcons={false}
         scrollwheel={true}
       >
         <WorldLocationDisplay world_location={world_location} />
@@ -47,8 +47,8 @@ const WorldLocationDisplay: React.FC<{
     map.data.forEach((feature: any) => map.data.remove(feature));
 
     if (!world_location) {
-      map.setZoom(2); // par exemple niveau global
-      map.setCenter({ lat: 0, lng: 0 }); // centre par défaut, ici équateur / Greenwich
+      map.setZoom(2);
+      map.setCenter({ lat: 0, lng: 0 });
       return;
     }
 
@@ -63,7 +63,6 @@ const WorldLocationDisplay: React.FC<{
 
     console.log(world_location);
 
-    // Centrage sur le centroid ou sur les bounds
     const point = world_location.centroid;
     const isPoint = world_location.geometry.type === 'Point';
     if (isPoint) {
@@ -96,10 +95,9 @@ function convertToGeoJson(geometry: any) {
   if (!geometry) return null;
 
   if (geometry.type === 'Feature' || geometry.type === 'FeatureCollection') {
-    return geometry; // déjà correct
+    return geometry;
   }
 
-  // sinon c’est une geometry brute → on crée un Feature
   return {
     type: 'Feature',
     geometry,

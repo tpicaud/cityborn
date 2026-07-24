@@ -31,9 +31,7 @@ export function GuessObjectBuilder({
         if (result?.ok) {
           setGuessObjectDraft(result.data as GuessObjectDraft);
         }
-      } catch {
-        // keep current draft as-is
-      }
+      } catch {}
     };
 
     updateGuessObjectDraft();

@@ -80,7 +80,6 @@ export default function SoloSession() {
   // Rendering //
   ///////////////
 
-  // si pas de session, chargement
   if (!soloSession.session)
     return (
       <View className="flex-1 items-center justify-center">
@@ -88,7 +87,6 @@ export default function SoloSession() {
       </View>
     );
 
-  // Si game, display game
   if (soloSession.session.currentGame) {
     return (
       <Game
@@ -103,7 +101,6 @@ export default function SoloSession() {
       />
     );
   } else {
-    // display lobby
     return (
       <SoloLobby
         localPlayerID={localPlayerID}

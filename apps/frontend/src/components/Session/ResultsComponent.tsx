@@ -46,7 +46,7 @@ const ResultsComponent = ({
     if (!currentPlayerResults) return;
 
     setLocalPlayerResults(currentPlayerResults);
-  }, []);
+  }, [localPlayerID, playersResults.get]);
 
   function getGuessObjectName(id: string): string {
     const guessObject = game.state.guessObjects?.find((obj) => obj.id === id);
@@ -72,8 +72,7 @@ const ResultsComponent = ({
 
           <div className="w-full max-h-[40vh] overflow-auto flex flex-col justify-start items-center">
             {playersResults.size === 1
-              ? // Si un seul joueur, afficher une liste
-                Array.from(playersResults.entries()).map(
+              ? Array.from(playersResults.entries()).map(
                   ([player, playerResults]) => (
                     <div
                       key={player}
@@ -133,8 +132,7 @@ const ResultsComponent = ({
                     </div>
                   ),
                 )
-              : // Si plusieurs joueurs, afficher l'accordéon
-                Array.from(playersResults.entries())
+              : Array.from(playersResults.entries())
                   .sort(
                     ([, aResults], [, bResults]) =>
                       calculateTotalPoints(bResults) -

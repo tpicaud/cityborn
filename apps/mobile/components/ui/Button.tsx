@@ -37,7 +37,6 @@ export default function Button({
     }
   };
 
-  // Default button
   if (variant === 'default') {
     return (
       <Pressable onPress={handlePress} className={className}>
@@ -46,7 +45,6 @@ export default function Button({
     );
   }
 
-  // Styled button
   const variantStyles = {
     filled: 'border-2 border-transparent',
     outlined: 'border-2',
