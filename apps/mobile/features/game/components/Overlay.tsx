@@ -63,7 +63,6 @@ function GuessResult({
         </View>
       </Card>
 
-      {/* Guess Info */}
       <Card size="small" className="bg-background w-[80%]">
         <View>
           <Text className="text-xl font-bold text-center">
@@ -121,16 +120,16 @@ const Overlay = ({
   useEffect(() => {
     setTimerEnded(false);
     setHasGuessed(false);
-  }, [game.state.currentRound?.guessObjectId]);
+  }, []);
 
   useEffect(() => {
     if (timerEnded) {
       handleIsTimeUp();
     }
-  }, [timerEnded]);
+  }, [timerEnded, handleIsTimeUp]);
 
-  const currentGuessObject = game.state.guessObjects!.find(
-    (obj) => obj.id === game.state.currentRound!.guessObjectId,
+  const currentGuessObject = game.state.guessObjects?.find(
+    (obj) => obj.id === game.state.currentRound?.guessObjectId,
   )!;
 
   return (
@@ -144,9 +143,8 @@ const Overlay = ({
       }}
     >
       <View className="absolute top-5 w-full">
-        {/* Timer */}
         <View className="absolute left-0 w-40">
-          {game.state.currentRound!.status === RoundStatus.GUESSING && (
+          {game.state.currentRound?.status === RoundStatus.GUESSING && (
             <Timer
               totalTime={game.config.timer}
               endMessage="Terminé !"
@@ -155,15 +153,13 @@ const Overlay = ({
           )}
         </View>
 
-        {/* GuessObject card */}
         <View className="absolute right-0">
           <GuessObjectCard guessObject={currentGuessObject} />
         </View>
       </View>
 
-      {/* Round results */}
       <View className="absolute bottom-0 w-full z-10">
-        {game.state.currentRound!.status === RoundStatus.GUESSING && (
+        {game.state.currentRound?.status === RoundStatus.GUESSING && (
           <View className="relative w-full flex justify-center items-center bg-transparent">
             <Button
               size="large"
@@ -185,7 +181,7 @@ const Overlay = ({
           </View>
         )}
 
-        {game.state.currentRound!.status === RoundStatus.SHOWING_RESULTS && (
+        {game.state.currentRound?.status === RoundStatus.SHOWING_RESULTS && (
           <GuessResult
             currentRound={game.state.currentRound!}
             guessObject={currentGuessObject}
@@ -194,7 +190,6 @@ const Overlay = ({
         )}
       </View>
 
-      {/* Next button / counter */}
       {game.state.currentRound && (
         <View
           style={{
@@ -221,10 +216,10 @@ const Overlay = ({
             )}
             <View className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
               <Text>
-                {game.state.guessObjectsIds.findIndex(
-                  (id) => game.state.currentRound!.guessObjectId === id,
+                {game.state.guessObjectsIds.indexOf(
+                  game.state.currentRound?.guessObjectId,
                 ) + 1}
-                /{game.state.guessObjectsIds!.length}
+                /{game.state.guessObjectsIds?.length}
               </Text>
             </View>
           </View>

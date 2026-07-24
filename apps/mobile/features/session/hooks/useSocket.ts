@@ -20,7 +20,6 @@ export const useSocket = () => {
 
       socketRef.current = socket;
 
-      // Connect on mount
       if (!socket.connected) {
         socket.connect();
       }
@@ -36,9 +35,8 @@ export const useSocket = () => {
         setConnected(false);
       });
 
-      // handle errors
       socket.on('connect_error', (error: any) => {
-        setHasDisconnected(false); // Avoid automatic reconnection
+        setHasDisconnected(false);
         invokeError({
           code: error.code,
           message: error.message,
@@ -71,9 +69,8 @@ export const useSocket = () => {
       socketRef.current = null;
       console.log('Cleaning up socket');
     };
-  }, []);
+  }, [invokeError]);
 
-  // Méthodes propres pour émettre / écouter
   const emit = useCallback((event: string, ...args: any[]) => {
     const lastArg = args[args.length - 1];
     const hasCallback = typeof lastArg === 'function';

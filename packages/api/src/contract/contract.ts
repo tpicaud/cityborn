@@ -8,6 +8,7 @@ import { searchAdminContract } from './search.admin.contract';
 import { sentenceContract } from './sentence.contract';
 import { sessionContract } from './session.contract';
 import { userContract } from './user.contract';
+import { worldLocationAdminContract } from './world-location.admin.contract';
 
 const c = initContract();
 
@@ -23,6 +24,7 @@ export const contract = c.router({
       category: categoryAdminContract,
       guessObjects: guessObjectAdminContract,
       search: searchAdminContract,
+      worldLocation: worldLocationAdminContract,
     },
     { pathPrefix: '/admin' },
   ),

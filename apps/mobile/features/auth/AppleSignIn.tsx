@@ -22,15 +22,12 @@ export const SignInWithAppleButton = () => {
         ],
       });
 
-      // Validation : identityToken est requis
       if (!credential.identityToken) {
         throw ApiErrors.appleNoIdentityToken();
       }
 
-      // Extraire les détails utilisateur (seulement première connexion)
       const userDetails = extractAppleUserDetails(credential);
 
-      // Authentification via l'API
       const result = await signInWithApple({
         identity_token: credential.identityToken,
         apple_user_id: credential.user,
@@ -44,13 +41,11 @@ export const SignInWithAppleButton = () => {
     }
   };
 
-  // Fonction helper pour extraire les détails utilisateur
   function extractAppleUserDetails(
     credential: AppleAuthenticationCredential,
   ): AppleUserDetails | undefined {
     const { email, fullName } = credential;
 
-    // Retourner undefined si les infos sont incomplètes
     if (!email || !fullName?.familyName || !fullName?.givenName) {
       return undefined;
     }
@@ -62,17 +57,14 @@ export const SignInWithAppleButton = () => {
     };
   }
 
-  // Fonction helper pour la gestion d'erreur
   function handleAppleSignInError(error: any): never {
     if (error.code === 'ERR_REQUEST_CANCELED') {
-      // L'utilisateur a annulé - ne pas afficher d'erreur
       console.log('Apple sign in canceled by user');
-      throw error; // Ou return si tu veux gérer différemment
+      throw error;
     }
 
     console.error('Apple sign in error:', error);
 
-    // Si c'est déjà une ApiError, la relancer
     if (isApiError(error)) {
       throw error;
     }
@@ -80,7 +72,6 @@ export const SignInWithAppleButton = () => {
     throw ApiErrors.appleSignInFailed();
   }
 
-  // Types
   type AppleUserDetails = {
     email: string;
     family_name: string;

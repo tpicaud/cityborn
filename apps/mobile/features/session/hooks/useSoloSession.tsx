@@ -20,10 +20,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
   const [game, setGame] = useState<Game>();
-  // Source of truth for reads within this hook: kept in sync with `session`
-  // synchronously (not via a useEffect) so functions called back-to-back in
-  // the same tick (e.g. updateGameConfig then startGame) always see the
-  // latest value, regardless of React's render/effect scheduling.
   const sessionRef = useRef<Session | undefined>(undefined);
 
   const updateSession = useCallback((next: Session) => {
@@ -35,7 +31,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   // useEffects //
   ////////////////
 
-  // Create session
   useEffect(() => {
     const fetchSession = async () => {
       const result = await createSession({ mode: SessionMode.SOLO });
@@ -55,14 +50,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     }
     updateSession({ ...prevSession, currentGame: game });
   }, [game, updateSession]);
-
-  // useEffect(() => {
-  //   console.log(session);
-  // }, [session]);
-
-  // useEffect(() => {
-  //   console.log(game);
-  // }, [game]);
 
   ///////////////////////
   // Session functions //
@@ -131,7 +118,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const nextRound = () => {
     if (!game) return;
 
-    // Record result of the round
     setGame((prevGame) => {
       if (!prevGame?.state.currentRound) return prevGame;
 
@@ -139,7 +125,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
       if (!playersGuesses) return prevGame;
 
-      // Utilisation d'un Record à la place d'une Map
       const updatedResults = { ...prevGame.state.results };
 
       for (const [playerID, guess] of Object.entries(playersGuesses)) {
@@ -149,7 +134,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
           points: guess.points,
         };
 
-        // Accéder ou créer le playerResults pour chaque joueur
         if (!updatedResults[playerID]) {
           updatedResults[playerID] = { results: [] };
         }
@@ -161,12 +145,11 @@ export function useSoloSession(localPlayerID: string): IUseSession {
         ...prevGame,
         state: {
           ...prevGame.state,
-          results: updatedResults, // Retourner les résultats mis à jour
+          results: updatedResults,
         },
       };
     });
 
-    // Go to next guessObject
     const nextObjectIndex = getNextObjectId();
 
     if (nextObjectIndex) {
@@ -191,12 +174,10 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const getNextObjectId = (): string | null => {
     if (!game) return null;
 
-    // get current index
     const currentIndex = game.state.guessObjectsIds.indexOf(
       game.state.currentRound?.guessObjectId ?? '',
     );
 
-    // Vérifier que l'objet est dans la liste
     if (currentIndex === undefined) {
       throw new Error(
         "L'objet à deviner ne fais pas partie de la liste de la partie",

@@ -3,6 +3,7 @@
 import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
+  createWorldLocation,
   getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
@@ -17,9 +18,7 @@ export function GuessObjectBuilder({
   setGuessObjectDraft,
 }: {
   guessObjectDraft: GuessObjectDraft | undefined;
-  setGuessObjectDraft: Dispatch<
-    SetStateAction<GuessObjectDraft | undefined>
-  >;
+  setGuessObjectDraft: Dispatch<SetStateAction<GuessObjectDraft | undefined>>;
 }) {
   const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -32,17 +31,13 @@ export function GuessObjectBuilder({
         if (result?.ok) {
           setGuessObjectDraft(result.data as GuessObjectDraft);
         }
-      } catch {
-        // keep current draft as-is
-      }
+      } catch {}
     };
 
     updateGuessObjectDraft();
-  }, [guessObjectDraft?.id]);
+  }, [guessObjectDraft?.id, setGuessObjectDraft]);
 
-  const updateGuessObjectDraft = (
-    update: Partial<GuessObjectDraft>,
-  ) => {
+  const updateGuessObjectDraft = (update: Partial<GuessObjectDraft>) => {
     setGuessObjectDraft((prev) =>
       prev ? { ...prev, ...update } : (update as GuessObjectDraft),
     );
@@ -62,9 +57,20 @@ export function GuessObjectBuilder({
       const fullDraft = result.data;
 
       if (fullDraft) {
+        let world_location_id = fullDraft.world_location_id;
+        if (fullDraft.world_location?.source) {
+          const created = await createWorldLocation({
+            ...fullDraft.world_location,
+            source: fullDraft.world_location.source,
+          });
+          if (!created.ok) throw new Error(created.error.message);
+          world_location_id = created.data;
+        }
+
         setGuessObjectDraft({
           ...fullDraft,
           id: guessObjectDraft ? guessObjectDraft.id : fullDraft.id,
+          world_location_id,
         });
       }
     } catch (error) {
@@ -88,13 +94,18 @@ export function GuessObjectBuilder({
       );
       if (!result.ok) throw new Error(result.error.message);
       const fullCandidate = result.data;
+      if (!fullCandidate?.source) return;
 
-      if (fullCandidate) {
-        updateGuessObjectDraft({
-          world_location_id: fullCandidate.id,
-          world_location: fullCandidate,
-        });
-      }
+      const created = await createWorldLocation({
+        ...fullCandidate,
+        source: fullCandidate.source,
+      });
+      if (!created.ok) throw new Error(created.error.message);
+
+      updateGuessObjectDraft({
+        world_location_id: created.data,
+        world_location: fullCandidate,
+      });
     } catch (error) {
       alert('Erreur lors de la récupération de la localisation');
       console.error(error);
@@ -122,9 +133,7 @@ export function GuessObjectBuilder({
                 id="name"
                 name={guessObjectDraft?.name}
                 placeholder="e.g. Justin Timberlake"
-                value={
-                  guessObjectDraft ? guessObjectDraft.name : undefined
-                }
+                value={guessObjectDraft ? guessObjectDraft.name : undefined}
                 disabled={isLoadingFullObject}
                 onChange={(e) =>
                   updateGuessObjectDraft({ name: e.target.value })
@@ -199,7 +208,9 @@ export function GuessObjectBuilder({
                     id: '',
                     osm_type: 'relation',
                     name: e.target.value,
-                    type: 'point',
+                    display_name: e.target.value,
+                    centroid: [0, 0],
+                    source: { provider: '', external_id: '' },
                     geometry: {
                       type: 'Point',
                       coordinates: [],

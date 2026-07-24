@@ -1,4 +1,4 @@
-import { WorldLocation } from '@cityborn/api';
+import { CreateWorldLocation, WorldLocation } from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,23 +23,34 @@ export class WorldLocationService {
     return WorldLocationMapper.toWorldLocation(row);
   }
 
-  async create(world_location_dto: WorldLocation): Promise<WorldLocation> {
+  async findOrCreate(
+    createWorldLocation: CreateWorldLocation,
+  ): Promise<WorldLocation> {
+    const existing = await this.prisma.worldLocation.findUnique({
+      where: {
+        osm_type_external_id: {
+          osm_type: createWorldLocation.osm_type,
+          external_id: createWorldLocation.source.external_id,
+        },
+      },
+      include: { geometry: true },
+    });
+    if (existing) return WorldLocationMapper.toWorldLocation(existing);
+
     const row = await this.prisma.worldLocation.create({
       data: {
-        id: world_location_dto.id.toString(),
-        name: world_location_dto.name,
-        type: world_location_dto.type,
+        osm_type: createWorldLocation.osm_type,
+        external_id: createWorldLocation.source.external_id,
+        name: createWorldLocation.name,
         geometry: {
           create: {
-            data: world_location_dto.geometry as unknown as Prisma.InputJsonValue,
+            data: createWorldLocation.geometry as unknown as Prisma.InputJsonValue,
           },
         },
-        display_name: world_location_dto.display_name,
-        addresstype: world_location_dto.addresstype,
-        level: world_location_dto.level,
-        iso_code: world_location_dto.iso_code,
-        centroid: world_location_dto.centroid ?? [],
-        source: world_location_dto.source as unknown as Prisma.InputJsonValue,
+        display_name: createWorldLocation.display_name,
+        addresstype: createWorldLocation.addresstype,
+        centroid: createWorldLocation.centroid,
+        source: createWorldLocation.source as unknown as Prisma.InputJsonValue,
       },
       include: { geometry: true },
     });

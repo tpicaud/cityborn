@@ -17,22 +17,16 @@ export class WorldLocationMapper {
       id: prismaWorldLocation.id,
       osm_type: prismaWorldLocation.osm_type,
       name: prismaWorldLocation.name,
-      display_name: prismaWorldLocation.display_name ?? undefined,
-      type: prismaWorldLocation.type,
+      display_name: prismaWorldLocation.display_name,
       geometry: (prismaWorldLocation.geometry?.data ?? null) as unknown as {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];
       },
-      level: prismaWorldLocation.level ?? undefined,
-      iso_code: prismaWorldLocation.iso_code ?? undefined,
-      centroid:
-        (prismaWorldLocation.centroid as unknown as [number, number]) ??
-        undefined,
-      source:
-        (prismaWorldLocation.source as unknown as {
-          provider: string;
-          external_id: string;
-        }) ?? undefined,
+      centroid: prismaWorldLocation.centroid as unknown as [number, number],
+      source: prismaWorldLocation.source as unknown as {
+        provider: string;
+        external_id: string;
+      },
     };
   }
 
@@ -43,20 +37,16 @@ export class WorldLocationMapper {
       id: nominatimItem.osm_id.toString(),
       osm_type: nominatimItem.osm_type,
       name: nominatimItem.name,
-      display_name: nominatimItem.display_name ?? undefined,
+      display_name: nominatimItem.display_name,
       addresstype: nominatimItem.addresstype ?? undefined,
-      type: nominatimItem.geojson.type === 'Point' ? 'point' : 'area',
       geometry: nominatimItem.geojson as unknown as {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];
       },
-      //level: nominatimItem.level ?? undefined,
-      //iso_code: nominatimItem.iso_code ?? undefined,
-      //parent: nominatimItem.parent,
       centroid: [Number(nominatimItem.lat), Number(nominatimItem.lon)],
       source: {
         provider: 'nominatim',
-        external_id: String(nominatimItem.place_id),
+        external_id: String(nominatimItem.osm_id),
       },
     };
   }

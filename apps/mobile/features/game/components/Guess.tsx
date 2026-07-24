@@ -1,9 +1,4 @@
-import {
-  type Game,
-  GameConfig,
-  type Guess as GuessType,
-  RoundStatus,
-} from '@cityborn/api';
+import { type Game, type Guess as GuessType, RoundStatus } from '@cityborn/api';
 import type { MapProps } from '@cityborn/client';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -59,16 +54,14 @@ const Guess: React.FC<GuessProps> = ({
         setInternalRoundStatus('countdown');
         break;
     }
-  }, [game.state.currentRound?.status]);
+  }, [game.state.currentRound?.status, resetPreGuess]);
 
   return (
     <View className="flex-1">
-      {/* Maps */}
       <View className="absolute inset-0 z-0">
         <Map mapProps={mapProps} />
       </View>
 
-      {/* Round Countdown */}
       {internalRoundStatus === 'countdown' && (
         <View className="absolute inset-0 z-20">
           <RoundCountdown
@@ -77,7 +70,6 @@ const Guess: React.FC<GuessProps> = ({
         </View>
       )}
 
-      {/* Round */}
       {(internalRoundStatus === 'guessing' ||
         internalRoundStatus === 'results') &&
         !(

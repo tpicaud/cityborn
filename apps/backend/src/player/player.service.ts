@@ -55,7 +55,6 @@ export class PlayerService {
           isGuest: data.isGuest === 'true',
         };
 
-      // reset ttl
       await this.redisService.redisClient.expire(
         this.getKey(socketID),
         this.PLAYER_TTL,

@@ -6,7 +6,7 @@ import {
 } from '@cityborn/api';
 import { useError } from '@cityborn/contexts';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { fetchSession } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
@@ -31,11 +31,45 @@ export function useMultiSession(
   const [isHost, setIsHost] = useState(false);
   const { socket, hasDisconnected, emit, on, off } = useSocket();
 
+  //////////////////////////
+  // Connection functions //
+  //////////////////////////
+
+  const reconnect = useCallback(async () => {
+    if (!session || !localPlayerID)
+      throw new Error('Reconnection failed: player or session not initialized');
+
+    try {
+      console.log('Reconnecting player to session...');
+      const sessionID = session.id;
+      return new Promise<void>((resolve, reject) => {
+        const body = { sessionID, playerID: localPlayerID };
+        emit(
+          'session:reconnect',
+          body,
+          (response: { success: boolean; error?: any }) => {
+            if (response.success) {
+              setConnected(true);
+              resolve();
+            } else {
+              reject({
+                code: response.error.code,
+                message: response.error.message,
+                statusCode: response.error.statusCode,
+              });
+            }
+          },
+        );
+      });
+    } catch (error) {
+      throw new Error(`Non connecté au serveur: ${error}`);
+    }
+  }, [session, localPlayerID, emit]);
+
   /////////////////
   // useEffects //
   ////////////////
 
-  // Fetch session on init
   useEffect(() => {
     const loadSession = async () => {
       const result = await fetchSession(sessionID);
@@ -43,20 +77,18 @@ export function useMultiSession(
       setSession(result.data);
     };
     loadSession();
-  }, []);
+  }, [invokeError, sessionID]);
 
-  // Manage socket disconnection
   useEffect(() => {
     if (!socket?.connected) {
       setConnected(false);
     }
   }, [socket?.connected]);
 
-  // Manage automatic reconnect
   useEffect(() => {
     const autoReconnect = async () => {
       try {
-        if (socket && socket.connected && hasDisconnected && !connected) {
+        if (socket?.connected && hasDisconnected && !connected) {
           await reconnect();
         }
       } catch (error: any) {
@@ -64,23 +96,18 @@ export function useMultiSession(
       }
     };
     autoReconnect();
-  }, [socket, hasDisconnected]);
+  }, [socket, hasDisconnected, connected, invokeError, reconnect]);
 
-  // Manage host
   useEffect(() => {
     if (session) {
       setIsHost(session?.hostID === localPlayerID);
     }
-  }, [localPlayerID, session?.hostID]);
+  }, [localPlayerID, session?.hostID, session]);
 
-  // Handle socket listener
   useEffect(() => {
     if (!socket) return;
 
-    // handle events
     const handleSessionUpdate = (session: Session) => {
-      //console.log('Session update: ', session);
-
       setSession((prevSession) => {
         const prevGuessObjects = prevSession?.currentGame?.state?.guessObjects;
         const newGuessObjects = session.currentGame?.state?.guessObjects;
@@ -100,14 +127,12 @@ export function useMultiSession(
       });
     };
 
-    // handle messages
     on('session:update', handleSessionUpdate);
     on('connection_error', (error) => {
       console.log(error);
     });
 
     return () => {
-      // Nettoyage
       off('session:update', handleSessionUpdate);
     };
   }, [socket, on, off]);
@@ -244,7 +269,7 @@ export function useMultiSession(
   };
 
   const guess = async (guess: Guess) => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Guess failed: session or game not initialized');
 
     return new Promise<void>((resolve, reject) => {
@@ -268,7 +293,7 @@ export function useMultiSession(
   };
 
   const nextRound = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error(
         'Next round game failed: session or game not initialized',
       );
@@ -292,7 +317,7 @@ export function useMultiSession(
   };
 
   const endGame = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Ending game failed: session or game not initialized');
     setSession({ ...session, status: SessionStatus.IN_LOBBY });
   };
@@ -302,7 +327,7 @@ export function useMultiSession(
   };
 
   const playAgain = async () => {
-    if (!session || !session.currentGame)
+    if (!session?.currentGame)
       throw new Error('Ending game failed: session or game not initialized');
 
     if (isHost) {
@@ -322,41 +347,6 @@ export function useMultiSession(
           },
         );
       });
-    }
-  };
-
-  //////////////////////////
-  // Connection functions //
-  //////////////////////////
-
-  const reconnect = async () => {
-    if (!session || !localPlayerID)
-      throw new Error('Reconnection failed: player or session not initialized');
-
-    try {
-      console.log('Reconnecting player to session...');
-      const sessionID = session.id;
-      return new Promise<void>((resolve, reject) => {
-        const body = { sessionID, playerID: localPlayerID };
-        emit(
-          'session:reconnect',
-          body,
-          (response: { success: boolean; error?: any }) => {
-            if (response.success) {
-              setConnected(true);
-              resolve();
-            } else {
-              reject({
-                code: response.error.code,
-                message: response.error.message,
-                statusCode: response.error.statusCode,
-              });
-            }
-          },
-        );
-      });
-    } catch (error) {
-      throw new Error(`Non connecté au serveur: ${error}`);
     }
   };
 

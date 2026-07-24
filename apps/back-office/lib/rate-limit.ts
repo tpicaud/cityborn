@@ -1,4 +1,3 @@
-// src/lib/rate-limit.ts
 import { cookies } from 'next/headers';
 
 interface LoginAttempt {
@@ -8,8 +7,8 @@ interface LoginAttempt {
 }
 
 const MAX_ATTEMPTS = 5;
-const LOCK_DURATION = 15 * 60 * 1000; // 15 minutes
-const RESET_WINDOW = 60 * 60 * 1000; // 1 hour
+const LOCK_DURATION = 15 * 60 * 1000;
+const RESET_WINDOW = 60 * 60 * 1000;
 
 export async function checkRateLimit(): Promise<{
   isBlocked: boolean;
@@ -25,14 +24,12 @@ export async function checkRateLimit(): Promise<{
     try {
       attempts = JSON.parse(attemptsData);
     } catch {
-      // Invalid data, reset
       attempts = { count: 0, lastAttempt: 0 };
     }
   }
 
   const now = Date.now();
 
-  // Check if currently locked
   if (attempts.lockedUntil && now < attempts.lockedUntil) {
     return {
       isBlocked: true,
@@ -41,7 +38,6 @@ export async function checkRateLimit(): Promise<{
     };
   }
 
-  // Reset attempts if window has passed
   if (now - attempts.lastAttempt > RESET_WINDOW) {
     attempts = { count: 0, lastAttempt: now };
   }
@@ -70,7 +66,6 @@ export async function recordFailedAttempt(): Promise<void> {
 
   const now = Date.now();
 
-  // Reset if window has passed
   if (now - attempts.lastAttempt > RESET_WINDOW) {
     attempts = { count: 0, lastAttempt: now };
   }
@@ -78,7 +73,6 @@ export async function recordFailedAttempt(): Promise<void> {
   attempts.count += 1;
   attempts.lastAttempt = now;
 
-  // Lock if max attempts reached
   if (attempts.count >= MAX_ATTEMPTS) {
     attempts.lockedUntil = now + LOCK_DURATION;
   }
@@ -87,7 +81,7 @@ export async function recordFailedAttempt(): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60,
   });
 }
 

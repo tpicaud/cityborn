@@ -17,19 +17,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // use cookies
   app.use(cookieParser());
-
-  // use validation pipe for dto
   app.useGlobalPipes(new ValidationPipe());
-
-  // use custom exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
-
-  // use interceptors
   app.useGlobalInterceptors(new VisitorIdInterceptor());
 
-  // use redis adapter
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
@@ -43,14 +35,7 @@ async function bootstrap() {
     }),
   );
 
-  // Logger simple de toutes les requêtes
-  // app.use((req, res, next) => {
-  //   //console.log(req.headers)
-  //   //console.log(req)
-  //   console.log(`${req.method} ${req.url}`);
-  //   next();
-  // });
-
   await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
 }
+
 bootstrap();

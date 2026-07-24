@@ -30,10 +30,8 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
   ) as FullGuessObject;
 
   const getCenterOfGuessObject = (guessObject: FullGuessObject): Coord => ({
-    // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    lat: guessObject.world_location.centroid![0],
-    // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    lng: guessObject.world_location.centroid![1],
+    lat: guessObject.world_location.centroid[0],
+    lng: guessObject.world_location.centroid[1],
   });
 
   const getDistanceTo = (lat: number, lng: number): number => {
@@ -235,7 +233,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
             handleMapPress(e);
         }}
       >
-        {/* Pre-guess marker */}
         {preGuess && preGuess.distance !== -1 && (
           <Marker
             coordinate={{
@@ -246,7 +243,6 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           />
         )}
 
-        {/* Answer marker */}
         {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <Marker
             coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
@@ -261,23 +257,20 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
           </Marker>
         )}
 
-        {/* Local player guess line */}
-        {currentRound.status === RoundStatus.SHOWING_RESULTS &&
-          localGuess &&
-          localGuess.distance !== -1 &&
-          !localGuess.win && (
-            <>
-              {renderLine(
+        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
+          <>
+            {localGuess &&
+              localGuess.distance !== -1 &&
+              !localGuess.win &&
+              renderLine(
                 localGuess.coordinates,
                 getCenterOfGuessObject(guessObject),
                 true,
               )}
-              {renderOtherPlayers()}
-
-              {/* Polygons / GeoJSON */}
-              {renderPolygons()}
-            </>
-          )}
+            {renderOtherPlayers()}
+            {renderPolygons()}
+          </>
+        )}
       </MapView>
     </View>
   );

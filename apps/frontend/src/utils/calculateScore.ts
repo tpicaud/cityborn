@@ -1,8 +1,7 @@
 import type { PlayerResults } from '@cityborn/api';
 
-// Calculates points based on distance
 const calculatePoints = (distance: number) => {
-  return Math.max(0, Math.round(1000 * Math.exp(-0.001 * distance))); // Augmentation du facteur 0.0006 -> 0.001
+  return Math.max(0, Math.round(1000 * Math.exp(-0.001 * distance)));
 };
 
 const calculateTotalPoints = (results: PlayerResults) => {

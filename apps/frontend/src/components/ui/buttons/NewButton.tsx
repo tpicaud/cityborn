@@ -13,8 +13,6 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-// const className = 'text-l'
-
 function applyBreakpoint(classes: string, prefix: 'sm' | 'md' | 'lg') {
   return classes
     .split(' ')
@@ -22,13 +20,11 @@ function applyBreakpoint(classes: string, prefix: 'sm' | 'md' | 'lg') {
     .join(' ');
 }
 
-// Base styles
 const baseButtonStyle =
   'transition-transform duration-200 ease-in-out transform hover:scale-105 active:scale-95';
 const baseTextStyle =
   'font-sans font-bold text-neutral text-shadow-[0_0px_10px_rgba(0_0_0_/_0.65)]';
 
-// Variant styles
 const variantStyles: Record<string, string> = {
   primary: 'bg-gradient-primary',
   secondary: 'bg-gradient-secondary',
@@ -36,10 +32,8 @@ const variantStyles: Record<string, string> = {
   disabled: 'bg-neutral-600',
 };
 
-// Disabled style
 const disabledStyle = 'bg-neutral-700 shadow-none filter grayscale';
 
-// Size styles
 const sizeStyles: Record<string, string> = {
   sm: 'px-5 py-2 min-w-[4rem] min-h-[1rem] rounded-lg shadow-[0_0_10px_5px_rgba(0,0,0,0.15)]',
   md: 'px-9 py-2 min-w-[5rem] min-h-[2rem] rounded-xl shadow-[0_0_15px_5px_rgba(0,0,0,0.2)]',
@@ -47,7 +41,6 @@ const sizeStyles: Record<string, string> = {
 };
 const autoSizeStyle = `${sizeStyles.sm} ${applyBreakpoint(sizeStyles.md, 'md')} ${applyBreakpoint(sizeStyles.lg, 'lg')}`;
 
-// Text styles
 const textStyles: Record<string, string> = {
   sm: 'text-[11px]',
   md: 'text-sm',
@@ -65,7 +58,6 @@ export default function Button({
   onClick = async () => {},
   ...props
 }: ButtonProps) {
-  // Apply styles
   const variantClass = disabled ? disabledStyle : variantStyles[variant];
   const sizeClass = size === 'auto' ? autoSizeStyle : sizeStyles[size];
   const textClass = size === 'auto' ? autoTextStyle : textStyles[size];

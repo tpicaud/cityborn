@@ -1,5 +1,3 @@
-// src/lib/auth.ts
-
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -40,7 +38,7 @@ export async function getSession(): Promise<User | null> {
 }
 
 export async function setSession(user: User): Promise<void> {
-  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await encrypt({ ...user, expires: expires.getTime() });
 
   const cookieStore = await cookies();

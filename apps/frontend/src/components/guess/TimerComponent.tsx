@@ -33,15 +33,13 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
         setTimerEnded(true);
         clearInterval(intervalId);
       }
-    }, 10); // Met à jour toutes les 100ms
+    }, 10);
 
-    return () => clearInterval(intervalId); // Nettoyage de l'intervalle
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [setTimerEnded, totalTime]);
 
-  // Calcul de la largeur de la barre de progression en pourcentage
   const progress = (timeLeft / totalTime) * 100;
 
-  // Formate le temps restant en minutes et secondes
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);

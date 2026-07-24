@@ -1,4 +1,3 @@
-// src/hooks/use-presence.ts
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
@@ -12,7 +11,6 @@ interface ActiveUser {
   currentPage: string;
 }
 
-// Generate consistent user ID
 const getUserId = () => {
   if (typeof window === 'undefined') return '';
 
@@ -34,12 +32,11 @@ export function usePresence(currentPage = '/dashboard') {
   const lastActivityRef = useRef(0);
 
   const { data, mutate } = useSWR<{ users: ActiveUser[] }>('/api/presence', {
-    refreshInterval: 15000, // Check every 15 seconds
+    refreshInterval: 15000,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
   });
 
-  // Send heartbeat to show we're active
   const sendHeartbeat = useCallback(async () => {
     if (!userId) return;
 
@@ -55,7 +52,6 @@ export function usePresence(currentPage = '/dashboard') {
       });
 
       if (response.ok) {
-        // Only mutate if the request was successful
         mutate();
       }
     } catch (error) {
@@ -63,7 +59,6 @@ export function usePresence(currentPage = '/dashboard') {
     }
   }, [userId, currentPage, mutate]);
 
-  // Send leave signal
   const sendLeave = useCallback(async () => {
     if (!userId) return;
 
@@ -85,24 +80,19 @@ export function usePresence(currentPage = '/dashboard') {
   useEffect(() => {
     if (!userId) return;
 
-    // Send initial heartbeat immediately
     sendHeartbeat();
 
-    // Set up regular heartbeat interval - every 15 seconds
     heartbeatRef.current = setInterval(sendHeartbeat, 15000);
 
-    // Send heartbeat on visibility change
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         sendHeartbeat();
       }
     };
 
-    // Send heartbeat on activity (throttled to every 10 seconds max)
     const handleActivity = () => {
       const now = Date.now();
       if (now - lastActivityRef.current > 10000) {
-        // Throttle to 10 seconds
         lastActivityRef.current = now;
         sendHeartbeat();
       }
@@ -113,9 +103,7 @@ export function usePresence(currentPage = '/dashboard') {
     document.addEventListener('keydown', handleActivity);
     document.addEventListener('click', handleActivity);
 
-    // Send leave signal on page unload
     const handleBeforeUnload = () => {
-      // Use sendBeacon for more reliable delivery on page unload
       if (navigator.sendBeacon) {
         navigator.sendBeacon(
           '/api/presence',
@@ -141,7 +129,6 @@ export function usePresence(currentPage = '/dashboard') {
       document.removeEventListener('click', handleActivity);
       window.removeEventListener('beforeunload', handleBeforeUnload);
 
-      // Send leave signal
       sendLeave();
     };
   }, [userId, currentPage, sendHeartbeat, sendLeave]);

@@ -56,7 +56,6 @@ function GuessResult({
     currentRound.playersGuesses &&
     currentRound.status === RoundStatus.SHOWING_RESULTS && (
       <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
-        {/* Box for points */}
         <Box className="flex flex-col py-2 px-4 text-xl md:text-xl lg:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm">
           <p>
             <b>{currentRound.playersGuesses[localPlayerID].points}</b> pts
@@ -67,7 +66,7 @@ function GuessResult({
               <div className="flex flex-wrap justify-center mt-2 gap-1 text-sm w-full">
                 {Object.entries(currentRound.playersGuesses).map(
                   ([playerID, guess]) => {
-                    if (playerID === localPlayerID) return null; // skip self
+                    if (playerID === localPlayerID) return null;
 
                     return (
                       <div

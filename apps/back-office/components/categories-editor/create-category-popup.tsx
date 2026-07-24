@@ -48,7 +48,6 @@ export function CreateCategoryDialog({
             Nouvelle catégorie
           </Ariakit.DialogHeading>
 
-          {/* Le formulaire à l'intérieur du Dialog */}
           <form
             onSubmit={handleSubmit}
             className="w-full h-full flex flex-col gap-4 mt-4"

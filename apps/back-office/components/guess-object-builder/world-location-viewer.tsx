@@ -17,7 +17,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
   API_KEY,
   world_location,
 }) => {
-  const defaultCenter = { lat: 48.8566, lng: 2.3522 }; // Exemple : Paris
+  const defaultCenter = { lat: 48.8566, lng: 2.3522 };
   const defaultZoom = 5;
 
   return (
@@ -28,7 +28,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
         defaultCenter={defaultCenter}
         defaultZoom={defaultZoom}
         disableDefaultUI
-        clickableIcons={false} // désactive les icônes cliquables (restaurants, etc.)
+        clickableIcons={false}
         scrollwheel={true}
       >
         <WorldLocationDisplay world_location={world_location} />
@@ -46,13 +46,9 @@ const WorldLocationDisplay: React.FC<{
     if (!map) return;
     map.data.forEach((feature: any) => map.data.remove(feature));
 
-    if (
-      !world_location ||
-      (world_location.type === 'area' && !world_location.geometry) ||
-      (world_location.type === 'point' && !world_location.centroid)
-    ) {
-      map.setZoom(2); // par exemple niveau global
-      map.setCenter({ lat: 0, lng: 0 }); // centre par défaut, ici équateur / Greenwich
+    if (!world_location) {
+      map.setZoom(2);
+      map.setCenter({ lat: 0, lng: 0 });
       return;
     }
 
@@ -67,12 +63,12 @@ const WorldLocationDisplay: React.FC<{
 
     console.log(world_location);
 
-    // Centrage sur le centroid ou sur les bounds
     const point = world_location.centroid;
-    if (world_location.type === 'point' && world_location.centroid) {
-      map.panTo({ lat: point![0], lng: point![1] });
+    const isPoint = world_location.geometry.type === 'Point';
+    if (isPoint) {
+      map.panTo({ lat: point[0], lng: point[1] });
       map.setZoom(12);
-    } else if (world_location.type === 'area') {
+    } else {
       const bounds = new google.maps.LatLngBounds();
       const geojson = convertToGeoJson(world_location.geometry);
       const coords =
@@ -89,8 +85,8 @@ const WorldLocationDisplay: React.FC<{
 
   if (!map || !world_location) return;
 
-  const point: [number, number] | undefined = world_location.centroid;
-  return point && world_location.type !== 'point' ? (
+  const point = world_location.centroid;
+  return world_location.geometry.type !== 'Point' ? (
     <AdvancedMarker position={{ lat: point[0], lng: point[1] }} />
   ) : null;
 };
@@ -99,10 +95,9 @@ function convertToGeoJson(geometry: any) {
   if (!geometry) return null;
 
   if (geometry.type === 'Feature' || geometry.type === 'FeatureCollection') {
-    return geometry; // déjà correct
+    return geometry;
   }
 
-  // sinon c’est une geometry brute → on crée un Feature
   return {
     type: 'Feature',
     geometry,

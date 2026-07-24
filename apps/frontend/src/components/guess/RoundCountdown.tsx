@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 interface TimerComponentProps {
   onCountdownEnd: () => void;
-  initialCount?: number; // Default value 3
+  initialCount?: number;
 }
 
 const TimerComponent: React.FC<TimerComponentProps> = ({
@@ -24,7 +24,7 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
     } else {
       onCountdownEnd();
     }
-  }, [countdown]);
+  }, [countdown, onCountdownEnd]);
 
   return (
     <Backdrop

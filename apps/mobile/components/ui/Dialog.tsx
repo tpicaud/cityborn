@@ -33,10 +33,8 @@ const Dialog = ({
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 justify-center items-center">
-          {/* Backdrop */}
           <View className="absolute inset-0 bg-black opacity-30" />
 
-          {/* Modal content */}
           <TouchableWithoutFeedback>
             <View
               className={cn(

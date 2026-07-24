@@ -17,13 +17,11 @@ export default function Card({
   size = 'medium',
   className = '',
 }: CardProps) {
-  // Variant-level styles (border, background type, etc.)
   const variantStyles = {
     fill: '',
     outline: 'border-2 bg-transparent',
   };
 
-  // Color styles depending on variant
   const containerStyles = {
     primary: {
       fill: 'bg-primary-500',
@@ -35,7 +33,6 @@ export default function Card({
     },
   };
 
-  // Padding / size styles
   const sizeStyles = {
     small: 'p-2 rounded-lg',
     medium: 'p-4 rounded-xl',

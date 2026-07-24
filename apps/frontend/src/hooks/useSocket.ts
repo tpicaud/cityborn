@@ -11,7 +11,6 @@ export const useSocket = () => {
   const { invokeError } = useError();
 
   useEffect(() => {
-    // Connect on mount
     if (!socket.connected) {
       socket.connect();
     }
@@ -27,9 +26,8 @@ export const useSocket = () => {
       setConnected(false);
     });
 
-    // handle errors
     socket.on('connect_error', (error: any) => {
-      setHasDisconnected(false); // Avoid automatic reconnection
+      setHasDisconnected(false);
       invokeError({
         code: error.code,
         message: error.message,
@@ -52,33 +50,35 @@ export const useSocket = () => {
       socket.off('error');
       socket.disconnect();
     };
-  }, []);
+  }, [socket, invokeError]);
 
-  // Méthodes propres pour émettre / écouter
-  const emit = useCallback((event: string, ...args: any[]) => {
-    const lastArg = args[args.length - 1];
-    const hasCallback = typeof lastArg === 'function';
+  const emit = useCallback(
+    (event: string, ...args: any[]) => {
+      const lastArg = args[args.length - 1];
+      const hasCallback = typeof lastArg === 'function';
 
-    if (hasCallback) {
-      const callback = args.pop();
-      socket.emit(event, ...args, callback);
-    } else {
-      socket.emit(event, ...args);
-    }
-  }, []);
+      if (hasCallback) {
+        const callback = args.pop();
+        socket.emit(event, ...args, callback);
+      } else {
+        socket.emit(event, ...args);
+      }
+    },
+    [socket.emit],
+  );
 
   const on = useCallback(
     (event: string, callback: (...args: any[]) => void) => {
       socket.on(event, callback);
     },
-    [],
+    [socket.on],
   );
 
   const off = useCallback(
     (event: string, callback: (...args: any[]) => void) => {
       socket.off(event, callback);
     },
-    [],
+    [socket.off],
   );
 
   return {

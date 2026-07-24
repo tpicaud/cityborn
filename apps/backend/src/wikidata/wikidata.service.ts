@@ -21,8 +21,6 @@ export class WikidataService {
   private WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php';
   private WIKIDATA_URL = 'https://www.wikidata.org/wiki';
 
-  constructor() {}
-
   /**
    * Wikidata search by name
    */
@@ -64,9 +62,6 @@ export class WikidataService {
     }
   }
 
-  /**
-   * Wikidata search by id
-   */
   async findById(id: string): Promise<WikidataItemResponse> {
     try {
       const response = await fetch(
@@ -80,13 +75,11 @@ export class WikidataService {
       const data = await response.json();
       const entity = data.entities[id];
 
-      // Build image
       const rawImageName = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
       const imageUrl = rawImageName
         ? await this.resolveWikimediaImageUrl(rawImageName)
         : undefined;
 
-      // Build osm id
       const osm = await this.getOSMId(
         entity.claims?.P19?.[0]?.mainsnak?.datavalue?.value.id,
       );
@@ -111,7 +104,6 @@ export class WikidataService {
     }
   }
 
-  // Auxiliary
   private async getOSMId(
     place_id: string,
   ): Promise<{ world_location_id: string; osm_type: string } | undefined> {

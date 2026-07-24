@@ -15,7 +15,6 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-// ✅ On exporte pour pouvoir l'utiliser ailleurs
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({
@@ -48,7 +47,6 @@ const AuthProvider = ({
   );
 };
 
-// ✅ Hook pratique pour accéder au contexte
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -57,5 +55,4 @@ export function useAuth() {
   return context;
 }
 
-// ✅ Export du provider pour envelopper l’app
 export default AuthProvider;

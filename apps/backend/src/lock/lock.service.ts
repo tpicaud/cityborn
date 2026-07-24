@@ -1,4 +1,3 @@
-// lock.service.ts
 import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import Redlock from 'redlock';
@@ -22,9 +21,6 @@ export class LockService implements OnModuleDestroy {
     return `lock:${resource}`;
   }
 
-  /**
-   * Exécute une fonction avec un verrou Redis sur une ressource.
-   */
   async withLock<T>(
     resource: string,
     ttl: number,
@@ -41,6 +37,6 @@ export class LockService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.redlock.quit(); // Libère proprement le redlock
+    await this.redlock.quit();
   }
 }

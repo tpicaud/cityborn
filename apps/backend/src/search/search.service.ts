@@ -23,10 +23,8 @@ export class SearchService {
       external_id: source_id,
     });
     if (guessObjectInDB) {
-      // return if in db
       return guessObjectInDB;
     } else {
-      // else get from providers
       const wikidata_response = await this.wikidataService.findById(source_id);
       const guessObjectDraft =
         GuessObjectMapper.toGuessObjectDraft(wikidata_response);
@@ -36,43 +34,32 @@ export class SearchService {
           guessObjectDraft.world_location_id,
           wikidata_response.osm_type!,
         );
-        if (world_location)
-          guessObjectDraft.world_location = world_location;
+        if (world_location) guessObjectDraft.world_location = world_location;
       }
 
       return guessObjectDraft;
     }
   }
 
-  async searchGuessObjectByName(
-    query: string,
-  ): Promise<GuessObjectDraft[]> {
-    // Search in wikidata
+  async searchGuessObjectByName(query: string): Promise<GuessObjectDraft[]> {
     const wikidata_response = await this.wikidataService.searchByName(query);
     const drafts_from_wikidata =
       GuessObjectMapper.toGuessObjectsSearchResponse(wikidata_response);
 
-    // search in db
     const drafts_from_db =
       await this.guessObjectService.searchDraftByName(query);
 
-    // Remplacer les drafts Wikidata par ceux de la DB quand l’external_id correspond
     const dbByExternalId = new Map(
-      drafts_from_db.map((obj) => [
-        obj.source?.external_id,
-        obj,
-      ]),
+      drafts_from_db.map((obj) => [obj.source?.external_id, obj]),
     );
 
-    const merged_drafts = drafts_from_wikidata.map(
-      (wikiDraft) => {
-        const dbObj = dbByExternalId.get(wikiDraft.source?.external_id);
-        if (dbObj) {
-          return dbObj;
-        }
-        return wikiDraft;
-      },
-    );
+    const merged_drafts = drafts_from_wikidata.map((wikiDraft) => {
+      const dbObj = dbByExternalId.get(wikiDraft.source?.external_id);
+      if (dbObj) {
+        return dbObj;
+      }
+      return wikiDraft;
+    });
 
     return merged_drafts;
   }
@@ -81,13 +68,12 @@ export class SearchService {
     id: string,
     osm_type: string,
   ): Promise<WorldLocation> {
-    // Search in db
-    const db_world_location = await this.worldLocationService.getWithGeometry(id);
+    const db_world_location =
+      await this.worldLocationService.getWithGeometry(id);
     if (db_world_location) {
       return db_world_location;
     }
 
-    // Else, search in external provider
     const nominatim_response = await this.nominatimService.findByOsmId(
       id,
       osm_type as any,

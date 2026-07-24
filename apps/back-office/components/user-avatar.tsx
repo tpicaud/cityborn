@@ -1,4 +1,3 @@
-// src/components/user-avatar.tsx
 'use client';
 
 interface UserAvatarProps {

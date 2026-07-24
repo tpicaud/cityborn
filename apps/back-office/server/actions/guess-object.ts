@@ -1,6 +1,6 @@
 'use server';
 
-import type { CreateGuessObject } from '@cityborn/api';
+import type { CreateGuessObject, CreateWorldLocation } from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
@@ -79,4 +79,11 @@ export async function searchWorldLocationById(id: string, osm_type: string) {
   const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   return { ok: true as const, data: apiResult.data[0] };
+}
+
+export async function createWorldLocation(worldLocation: CreateWorldLocation) {
+  const result = await adminClient.worldLocation.createWorldLocation({
+    body: worldLocation,
+  });
+  return toApiResult(result);
 }

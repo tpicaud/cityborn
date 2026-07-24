@@ -8,26 +8,24 @@ export async function storeTokensInCookies(
 ) {
   const cookieStore = await cookies();
 
-  // Store access token
   cookieStore.set({
     name: 'access_token',
     value: access_token,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 6, // 4h
+    maxAge: 60 * 60 * 6,
     path: '/',
     domain: `.${process.env.DOMAIN_NAME}`,
   });
 
-  // Store refresh token
   cookieStore.set({
     name: 'refresh_token',
     value: refresh_token,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 60 * 60 * 24 * 7, // 7d
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
   });
 

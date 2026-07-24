@@ -19,7 +19,7 @@ export function extractAccessTokenFromWsClient(
 
   if (cookies) {
     const parsedCookies = cookie.parseCookie(cookies);
-    return parsedCookies['access_token'];
+    return parsedCookies.access_token;
   }
 
   if (auth) {
@@ -29,11 +29,10 @@ export function extractAccessTokenFromWsClient(
   return undefined;
 }
 
-// Configuration optimale
 const client = jwksRsa({
   jwksUri: 'https://appleid.apple.com/auth/keys',
   cache: true,
-  cacheMaxAge: 86400000, // 24h
+  cacheMaxAge: 86400000,
   rateLimit: true,
   jwksRequestsPerMinute: 10,
 });

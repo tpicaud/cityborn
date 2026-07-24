@@ -24,10 +24,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
   const [game, setGame] = useState<Game>();
-  // Source of truth for reads within this hook: kept in sync with `session`
-  // synchronously (not via a useEffect) so functions called back-to-back in
-  // the same tick (e.g. updateGameConfig then startGame) always see the
-  // latest value, regardless of React's render/effect scheduling.
   const sessionRef = useRef<Session | undefined>(undefined);
 
   const updateSession = useCallback((next: Session) => {
