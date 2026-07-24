@@ -66,7 +66,7 @@ export const GameComponent = ({
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
     game.status === GameStatus.STARTING
   )
-    return <LoadingComponent />; // Gérer le cas où currentRound est undefined
+    return <LoadingComponent />;
   if (!localPlayerID) return <p>La partie est déjà en cours</p>;
   return (
     <div>
@@ -84,10 +84,10 @@ export const GameComponent = ({
               <NextButton />
             )}
             <div className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
-              {game.state.guessObjectsIds.findIndex(
-                (id) => game.state.currentRound!.guessObjectId === id,
+              {game.state.guessObjectsIds.indexOf(
+                game.state.currentRound?.guessObjectId,
               ) + 1}
-              /{game.state.guessObjectsIds!.length}
+              /{game.state.guessObjectsIds?.length}
             </div>
           </div>
         </div>
