@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ColorValue } from 'react-native';
 
 const ICONS = {
   home_fill: {
@@ -56,7 +57,7 @@ type IconName = keyof typeof ICONS;
 type IconProps = {
   name: IconName;
   size?: number;
-  color?: string;
+  color?: ColorValue;
 };
 
 export function Icon({ name, size, color }: IconProps) {
