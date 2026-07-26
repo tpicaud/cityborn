@@ -79,6 +79,10 @@ export default {
 
     plugins: [
       'expo-router',
+      'expo-font',
+      'expo-image',
+      'expo-secure-store',
+      'expo-web-browser',
       ['./expo-plugins/withGradleProperties'],
       ['./expo-plugins/withModularHeaders'],
       ['expo-apple-authentication'],
@@ -105,8 +109,8 @@ export default {
       [
         'expo-navigation-bar',
         {
-          barStyle: 'dark',
-          visibility: 'visible',
+          style: 'dark',
+          hidden: false,
         },
       ],
       [

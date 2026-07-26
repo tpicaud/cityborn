@@ -1,6 +1,7 @@
 import { colors } from '@cityborn/design-system';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { PlatformPressable } from 'expo-router/react-navigation';
+import type { ComponentProps } from 'react';
 import { Icon } from '@/components/ui/Icon';
 
 export default function TabLayout() {
@@ -9,6 +10,13 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary[500],
+        tabBarButton: (props) => (
+          <PlatformPressable
+            {...(props as ComponentProps<typeof PlatformPressable>)}
+            pressColor="transparent"
+            pressOpacity={1}
+          />
+        ),
       }}
     >
       <Tabs.Screen
