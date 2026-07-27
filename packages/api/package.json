@@ -8,11 +8,18 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "generate:openapi": "tsx scripts/generate-openapi-file.ts"
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
-    "zod": "^3.25.76",
-    "typescript": "^6.0.3"
+    "@ts-rest/open-api": "^3.52.1",
+    "openapi3-ts": "^2.0.2",
+    "typescript": "^6.0.3",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.19.4"
   }
 }

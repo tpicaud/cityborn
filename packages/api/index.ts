@@ -1,3 +1,4 @@
+export * from './openapi/generate-openapi';
 export * from './src/api-errors';
 export * from './src/api-result';
 export * from './src/contract/contract';
