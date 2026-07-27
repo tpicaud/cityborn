@@ -1,5 +1,6 @@
 import HomeButton from '@/components/home-button';
 import LogoutButton from '@/components/logout-button';
+import SwaggerButton from '@/components/swagger-button';
 
 export default function DashboardLayout({
   children,
@@ -14,7 +15,10 @@ export default function DashboardLayout({
             <h1 className="text-2xl font-bold hidden sm:block">Admin</h1>
             <HomeButton />
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-2">
+            <SwaggerButton />
+            <LogoutButton />
+          </div>
         </div>
       </header>
 

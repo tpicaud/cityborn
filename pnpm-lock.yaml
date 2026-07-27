@@ -90,6 +90,9 @@ importers:
       react-dom:
         specifier: 19.2.5
         version: 19.2.5(react@19.2.5)
+      swagger-ui-react:
+        specifier: ^5.32.4
+        version: 5.32.11(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       swr:
         specifier: ^2.4.1
         version: 2.4.2(react@19.2.5)
@@ -112,6 +115,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/swagger-ui-react':
+        specifier: ^5.18.0
+        version: 5.18.0
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0
@@ -681,7 +687,13 @@ importers:
     dependencies:
       '@ts-rest/core':
         specifier: ^3.52.1
-        version: 3.52.1(@types/node@26.1.1)(zod@3.25.76)
+        version: 3.52.1(@types/node@26.1.2)(zod@3.25.76)
+      '@ts-rest/open-api':
+        specifier: ^3.52.1
+        version: 3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76))(zod@3.25.76)
+      openapi3-ts:
+        specifier: ^2.0.2
+        version: 2.0.2
       typescript:
         specifier: 6.0.3
         version: 6.0.3
@@ -689,9 +701,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
-      '@ts-rest/open-api':
-        specifier: ^3.52.1
-        version: 3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76))(zod@3.25.76)
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
       tsx:
         specifier: ^4.19.4
         version: 4.22.4
@@ -4500,6 +4512,9 @@ packages:
 
   '@types/node@26.1.1':
     resolution: {integrity: sha512-nxAkRSVkN1Y0JC1W8ky/fTfkGsMmcrRsbx+3XoZE+rMOX71kLYTV7fLXpqud1GpbpP5TuffXFqfX7fH2GgZREw==}
+
+  '@types/node@26.1.2':
+    resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -15288,6 +15303,11 @@ snapshots:
       '@types/node': 26.1.1
       zod: 3.25.76
 
+  '@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76)':
+    optionalDependencies:
+      '@types/node': 26.1.2
+      zod: 3.25.76
+
   '@ts-rest/nest@3.52.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76))(rxjs@7.8.2)(zod@3.25.76)':
     dependencies:
       '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -15297,10 +15317,10 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
-  '@ts-rest/open-api@3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76))(zod@3.25.76)':
+  '@ts-rest/open-api@3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.25.76)
-      '@ts-rest/core': 3.52.1(@types/node@26.1.1)(zod@3.25.76)
+      '@ts-rest/core': 3.52.1(@types/node@26.1.2)(zod@3.25.76)
       openapi3-ts: 2.0.2
       zod: 3.25.76
 
@@ -16501,7 +16521,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/compression@1.8.1':
     dependencies:
@@ -16510,7 +16530,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/cookie-parser@1.4.10(@types/express@5.0.6)':
     dependencies:
@@ -16574,7 +16594,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.2':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -16587,7 +16607,7 @@ snapshots:
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/geojson@7946.0.16': {}
 
@@ -16649,11 +16669,15 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/node@26.1.2':
+    dependencies:
+      undici-types: 8.3.0
+
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/papaparse@5.5.2':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/parse-json@4.0.2': {}
 
@@ -16701,12 +16725,12 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/slice-ansi@4.0.0': {}
 
@@ -16753,7 +16777,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.9.5
+      '@types/node': 26.1.1
 
   '@types/yargs-parser@21.0.3': {}
 

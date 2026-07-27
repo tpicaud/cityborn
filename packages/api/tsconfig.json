@@ -6,8 +6,10 @@
     "target": "ESNext",
     "noEmit": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "types": ["node"]
   },
   "include": ["./**/*"],
   "exclude": ["node_modules"]
