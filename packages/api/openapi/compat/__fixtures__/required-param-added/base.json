@@ -1,0 +1,12 @@
+{
+  "openapi": "3.0.2",
+  "info": { "title": "Fixture", "version": "base" },
+  "paths": {
+    "/widgets": {
+      "get": {
+        "parameters": [],
+        "responses": { "200": { "description": "200" } }
+      }
+    }
+  }
+}

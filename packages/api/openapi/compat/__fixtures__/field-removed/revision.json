@@ -1,0 +1,27 @@
+{
+  "openapi": "3.0.2",
+  "info": { "title": "Fixture", "version": "revision" },
+  "paths": {
+    "/widgets": {
+      "get": {
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

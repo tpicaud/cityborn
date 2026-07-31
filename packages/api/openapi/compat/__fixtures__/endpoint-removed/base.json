@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.2",
+  "info": { "title": "Fixture", "version": "base" },
+  "paths": {
+    "/widgets": {
+      "get": {
+        "parameters": [],
+        "responses": { "200": { "description": "200" } }
+      }
+    },
+    "/widgets/{id}": {
+      "delete": {
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "204": { "description": "204" } }
+      }
+    }
+  }
+}
