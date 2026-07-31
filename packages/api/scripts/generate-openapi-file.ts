@@ -7,10 +7,12 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Manifest } from '../openapi/compat/types';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '../openapi/versions');
+const manifestFile = join(outDir, 'versions-manifest.json');
 
 mkdirSync(outDir, { recursive: true });
 
@@ -65,6 +67,22 @@ if (!hasChanged) {
 const filename = `api-v${runNumber}.json`;
 writeFileSync(join(outDir, filename), JSON.stringify(document, null, 2));
 console.log(`Generated ${filename}`);
+
+function readManifest(): Manifest {
+  try {
+    return JSON.parse(readFileSync(manifestFile, 'utf-8')) as Manifest;
+  } catch {
+    return { versions: [] };
+  }
+}
+
+const manifest = readManifest();
+manifest.versions.push({
+  file: filename,
+  runNumber: Number(runNumber),
+  releasedAt: new Date().toISOString(),
+});
+writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
 
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, 'changed=true\n');
