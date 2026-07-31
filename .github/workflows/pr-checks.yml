@@ -33,6 +33,40 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+  api-compat:
+    name: API compatibility
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install oasdiff
+        run: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | version=1.26.1 sh
+
+      - name: Test compat module
+        run: pnpm --dir packages/api test
+
+      - name: Check API compatibility
+        run: pnpm check:api-compat
+
   mobile-prebuild:
     name: Mobile prebuild
     if: github.event.pull_request.draft == false

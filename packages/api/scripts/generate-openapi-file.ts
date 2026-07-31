@@ -16,16 +16,9 @@ const manifestFile = join(outDir, 'versions-manifest.json');
 
 mkdirSync(outDir, { recursive: true });
 
-const runNumber = process.argv.slice(2).filter((arg) => arg !== '--')[0];
-if (!runNumber) {
-  throw new Error(
-    'Usage: generate:openapi <run_number> (e.g. pnpm generate:openapi -- 42)',
-  );
-}
-
 const filenamePattern = /^api-v(\d+)\.json$/;
 
-function findLatestFile(): string | undefined {
+function findLatestFile(): { name: string; version: number } | undefined {
   const versionedFiles = readdirSync(outDir)
     .map((name) => ({ name, match: name.match(filenamePattern) }))
     .filter(
@@ -35,7 +28,7 @@ function findLatestFile(): string | undefined {
     .map((entry) => ({ name: entry.name, version: Number(entry.match[1]) }))
     .sort((a, b) => b.version - a.version);
 
-  return versionedFiles[0]?.name;
+  return versionedFiles[0];
 }
 
 function withNormalizedVersion(document: Record<string, unknown>) {
@@ -43,12 +36,14 @@ function withNormalizedVersion(document: Record<string, unknown>) {
   return { ...document, info: { ...info, version: 'normalized' } };
 }
 
-const document = getOpenApiDocument();
-document.info.version = `v${runNumber}`;
-
 const latestFile = findLatestFile();
+const nextVersion = (latestFile?.version ?? 0) + 1;
+
+const document = getOpenApiDocument();
+document.info.version = `v${nextVersion}`;
+
 const previousDocument = latestFile
-  ? JSON.parse(readFileSync(join(outDir, latestFile), 'utf-8'))
+  ? JSON.parse(readFileSync(join(outDir, latestFile.name), 'utf-8'))
   : undefined;
 
 const hasChanged =
@@ -64,7 +59,7 @@ if (!hasChanged) {
   process.exit(0);
 }
 
-const filename = `api-v${runNumber}.json`;
+const filename = `api-v${nextVersion}.json`;
 writeFileSync(join(outDir, filename), JSON.stringify(document, null, 2));
 console.log(`Generated ${filename}`);
 
@@ -79,11 +74,14 @@ function readManifest(): Manifest {
 const manifest = readManifest();
 manifest.versions.push({
   file: filename,
-  runNumber: Number(runNumber),
+  runNumber: nextVersion,
   releasedAt: new Date().toISOString(),
 });
 writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
 
 if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, 'changed=true\n');
+  appendFileSync(
+    process.env.GITHUB_OUTPUT,
+    `changed=true\nfilename=${filename}\n`,
+  );
 }
