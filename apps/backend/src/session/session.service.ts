@@ -1,5 +1,6 @@
 import {
   type CreateSession,
+  defaultGameConfig,
   defaultGuess,
   ErrorCode,
   FullGuessObject,
@@ -73,11 +74,7 @@ export class SessionService {
       hostID: mode === SessionMode.SOLO ? (user ? user.username : 'guest') : '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
-      gameConfig: {
-        categories: [],
-        timer: 20,
-        nbOfObjects: 6,
-      },
+      gameConfig: defaultGameConfig,
       players:
         mode === SessionMode.SOLO
           ? [

@@ -70,6 +70,12 @@ export const defaultGuess: Readonly<Guess> = {
   win: false,
 };
 
+export const defaultGameConfig: Readonly<GameConfig> = {
+  categories: [],
+  timer: 25,
+  nbOfObjects: 6,
+};
+
 export type Coord = z.infer<typeof CoordSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
