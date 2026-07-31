@@ -74,7 +74,7 @@ function readManifest(): Manifest {
 const manifest = readManifest();
 manifest.versions.push({
   file: filename,
-  runNumber: nextVersion,
+  versionNumber: nextVersion,
   releasedAt: new Date().toISOString(),
 });
 writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));

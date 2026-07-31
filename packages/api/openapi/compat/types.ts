@@ -7,15 +7,31 @@ export const CompatPolicySchema = z.object({
 
 export type CompatPolicy = z.infer<typeof CompatPolicySchema>;
 
-export interface ManifestEntry {
-  file: string;
-  runNumber: number;
-  releasedAt: string;
-}
+export const ManifestEntrySchema = z
+  .object({
+    file: z.string(),
+    versionNumber: z.number(),
+    releasedAt: z.string(),
+    deprecatedAt: z.string().optional(),
+    deprecationReason: z.string().min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (entry) =>
+      entry.deprecatedAt === undefined || entry.deprecationReason !== undefined,
+    {
+      message:
+        'deprecationReason is required when deprecatedAt is set (explain why it is safe to stop supporting this version).',
+    },
+  );
 
-export interface Manifest {
-  versions: ManifestEntry[];
-}
+export type ManifestEntry = z.infer<typeof ManifestEntrySchema>;
+
+export const ManifestSchema = z.object({
+  versions: z.array(ManifestEntrySchema),
+});
+
+export type Manifest = z.infer<typeof ManifestSchema>;
 
 export interface OasdiffChange {
   id: string;
@@ -35,4 +51,5 @@ export interface VersionCheckResult {
 export interface CompatReport {
   checked: VersionCheckResult[];
   brokenAt?: VersionCheckResult;
+  skippedDeprecated: ManifestEntry[];
 }

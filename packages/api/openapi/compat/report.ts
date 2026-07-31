@@ -7,6 +7,20 @@ function formatChange(change: VersionCheckResult['changes'][number]): string {
   return `    - [${change.id}]${location ? ` ${location}:` : ''} ${change.text}`;
 }
 
+function formatDeprecated(report: CompatReport): string[] {
+  if (report.skippedDeprecated.length === 0) return [];
+  const floorEntry = report.skippedDeprecated[0];
+  return [
+    '',
+    `Skipped ${report.skippedDeprecated.length} deprecated version(s) (not enforced, floor set at ${floorEntry.file}):`,
+    ...report.skippedDeprecated.map((entry) =>
+      entry.deprecatedAt
+        ? `  - ${entry.file}: deprecated ${entry.deprecatedAt} — ${entry.deprecationReason}`
+        : `  - ${entry.file}: deprecated (cascade, versions ≤ ${floorEntry.file} are retired)`,
+    ),
+  ];
+}
+
 export function formatHumanSummary(report: CompatReport): string {
   const lines: string[] = [];
 
@@ -17,6 +31,7 @@ export function formatHumanSummary(report: CompatReport): string {
     for (const result of report.checked) {
       lines.push(`  - ${result.entry.file}: OK`);
     }
+    lines.push(...formatDeprecated(report));
     return lines.join('\n');
   }
 
@@ -33,6 +48,7 @@ export function formatHumanSummary(report: CompatReport): string {
       lines.push(formatChange(change));
     }
   }
+  lines.push(...formatDeprecated(report));
 
   return lines.join('\n');
 }
