@@ -52,6 +52,71 @@ jobs:
       filterPaths: apps/mobile, packages
       prerelease: true
 
+  notify-discord:
+    name: Notify Discord (PR merged)
+    needs: [create-web-pre-release, create-mobile-pre-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect merged PR and notify Discord
+        uses: actions/github-script@v8
+        env:
+          DISCORD_WEBHOOK_URL_STAGING_NOTIF: ${{ secrets.DISCORD_WEBHOOK_URL_STAGING_NOTIF }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
+            const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner, repo, commit_sha: context.sha,
+            });
+            const mergedPrs = associatedPrs.filter(pr => pr.merged_at && pr.base.ref === 'main');
+
+            if (mergedPrs.length === 0) {
+              console.log('No merged PR associated with this push — direct push to main, skipping notification.');
+              return;
+            }
+
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL_STAGING_NOTIF;
+            if (!webhookUrl) {
+              console.log('DISCORD_WEBHOOK_URL_STAGING_NOTIF is not set, skipping notification.');
+              return;
+            }
+
+            const platforms = [
+              { name: 'Web', paths: ['apps/backend', 'apps/frontend', 'apps/back-office', 'packages'], releaseTag: 'web-pre-release', color: 0x5865f2 },
+              { name: 'Mobile', paths: ['apps/mobile', 'packages'], releaseTag: 'mobile-pre-release', color: 0x57f287 },
+            ];
+
+            for (const pr of mergedPrs) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner, repo, pull_number: pr.number, per_page: 100,
+              });
+              const filenames = files.map(f => f.filename);
+
+              for (const platform of platforms) {
+                const touchesPlatform = filenames.some(f => platform.paths.some(p => f.startsWith(p)));
+                if (!touchesPlatform) continue;
+
+                await fetch(webhookUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    embeds: [{
+                      title: `${pr.title} (#${pr.number})`,
+                      url: pr.html_url,
+                      description: `Ajoutée à la pre-release **${platform.name}**`,
+                      color: platform.color,
+                      fields: [{
+                        name: 'Pre-release',
+                        value: `[${platform.releaseTag}](https://github.com/${owner}/${repo}/releases/tag/${platform.releaseTag})`,
+                      }],
+                      author: { name: pr.user.login, icon_url: pr.user.avatar_url },
+                    }],
+                  }),
+                });
+              }
+            }
+
   detect-changes:
     name: Detect changes
     uses: ./.github/workflows/detect-changes.yml
