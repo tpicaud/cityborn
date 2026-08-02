@@ -61,8 +61,6 @@ const WorldLocationDisplay: React.FC<{
       fillOpacity: 0.2,
     });
 
-    console.log(world_location);
-
     const point = world_location.centroid;
     const isPoint = world_location.geometry.type === 'Point';
     if (isPoint) {

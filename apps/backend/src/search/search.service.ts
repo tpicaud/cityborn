@@ -29,9 +29,9 @@ export class SearchService {
       const guessObjectDraft =
         GuessObjectMapper.toGuessObjectDraft(wikidata_response);
 
-      if (guessObjectDraft.world_location_id) {
+      if (wikidata_response.world_location_id) {
         const world_location = await this.searchWorldLocationById(
-          guessObjectDraft.world_location_id,
+          wikidata_response.world_location_id,
           wikidata_response.osm_type!,
         );
         if (world_location) guessObjectDraft.world_location = world_location;

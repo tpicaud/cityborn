@@ -39,7 +39,7 @@ export function GuessObjectBuilder({
       try {
         const result = await getFullGuessObject(guessObjectDraft.id);
         if (result?.ok) {
-          setGuessObjectDraft(result.data as GuessObjectDraft);
+          setGuessObjectDraft(result.data);
         }
       } catch {}
     };
@@ -67,20 +67,20 @@ export function GuessObjectBuilder({
       const fullDraft = result.data;
 
       if (fullDraft) {
-        let world_location_id = fullDraft.world_location_id;
+        let world_location = fullDraft.world_location;
         if (fullDraft.world_location?.source) {
           const created = await createWorldLocation({
             ...fullDraft.world_location,
             source: fullDraft.world_location.source,
           });
           if (!created.ok) throw new Error(created.error.message);
-          world_location_id = created.data;
+          world_location = { ...fullDraft.world_location, id: created.data };
         }
 
         setGuessObjectDraft({
           ...fullDraft,
           id: guessObjectDraft ? guessObjectDraft.id : fullDraft.id,
-          world_location_id,
+          world_location,
         });
       }
     } catch (error) {
@@ -113,8 +113,7 @@ export function GuessObjectBuilder({
       if (!created.ok) throw new Error(created.error.message);
 
       updateGuessObjectDraft({
-        world_location_id: created.data,
-        world_location: fullCandidate,
+        world_location: { ...fullCandidate, id: created.data },
       });
     } catch (error) {
       alert('Erreur lors de la récupération de la localisation');
@@ -203,7 +202,7 @@ export function GuessObjectBuilder({
             <WorldLocationSearchInput
               type="text"
               id="world_location_id"
-              name={guessObjectDraft?.world_location_id}
+              name={guessObjectDraft?.world_location?.id}
               placeholder="e.g. Paris"
               value={worldLocationQuery}
               disabled={isLoadingFullObject}

@@ -74,7 +74,6 @@ export class GuessObjectMapper {
       description: response.description ?? undefined,
       short_description: response.short_description ?? undefined,
       image: response.image ?? undefined,
-      world_location_id: response.world_location_id,
     };
   }
 

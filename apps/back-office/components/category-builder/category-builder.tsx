@@ -7,6 +7,7 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
+import { getGuessObjectDraftLocationId } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/actions/category';
@@ -76,11 +77,6 @@ export function CategoryBuilder({
         return;
       }
 
-      if (!guessObjectDraft.id && !guessObjectDraft.world_location_id) {
-        alert('Localisation non valide, veuillez resélectionner');
-        return;
-      }
-
       let id: string;
       if (guessObjectDraft.id) {
         const result = await patchGuessObject(
@@ -90,6 +86,12 @@ export function CategoryBuilder({
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
       } else {
+        const locationId = getGuessObjectDraftLocationId(guessObjectDraft);
+        if (!locationId) {
+          alert('Localisation non valide, veuillez resélectionner');
+          return;
+        }
+
         const {
           id: _id,
           world_location: _world_location,
@@ -97,7 +99,7 @@ export function CategoryBuilder({
         } = guessObjectDraft;
         const result = await saveGuessObject({
           ...rest,
-          world_location_id: String(guessObjectDraft.world_location_id),
+          world_location_id: locationId,
         });
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
@@ -154,7 +156,6 @@ export function CategoryBuilder({
   async function addOrUpdateGuessObjectToCategory(id: string) {
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
-      console.log(objectResult);
       if (!objectResult) return;
       if (!objectResult.ok) throw new Error(objectResult.error.message);
       const object = objectResult.data;
@@ -165,7 +166,7 @@ export function CategoryBuilder({
         isPublished: category.isPublished,
         connectIds: [id],
       };
-      console.log(updatedCategory);
+
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) throw new Error(saveResult.error.message);
 
