@@ -1,4 +1,5 @@
 import * as Ariakit from '@ariakit/react';
+import { getGuessObjectDraftLocationId } from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -83,7 +84,7 @@ export function ImportCSVPopup({
         });
       }
     }
-    console.log(objects);
+
     return objects;
   }
 
@@ -115,12 +116,12 @@ export function ImportCSVPopup({
         if (!full_obj) throw new Error('Object not found');
         if (obj.description) full_obj.short_description = obj.description;
 
-        if (!full_obj.world_location_id)
-          throw new Error('No world location found');
+        const locationId = getGuessObjectDraftLocationId(full_obj);
+        if (!locationId) throw new Error('No world location found');
 
         const saveResult = await saveGuessObject({
           ...full_obj,
-          world_location_id: full_obj.world_location_id.toString(),
+          world_location_id: locationId,
         });
         if (!saveResult.ok) throw new Error(saveResult.error.message);
 

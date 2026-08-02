@@ -10,7 +10,7 @@ Monorepo pnpm/turbo, TypeScript partout.
 
 ## Style de code
 
-- **Typage first** : le typage est primordial. Un typage clair améliore grandement la DX. Ne jamais utiliser `any` ni affaiblir un type pour faire passer le compilateur.
+- **Typage first** : le typage est primordial. Le projet doit être type-safe. Un typage clair améliore grandement la DX. Ne jamais utiliser `any` ni affaiblir un type pour faire passer le compilateur.
 - **Aucun commentaire** : le naming doit être suffisamment clair pour s'en passer.
 - **Éviter `as`** au maximum : un cast casse l'inférence de type et masque des erreurs potentielles. Préférer un typage correct en amont (narrowing, generics, schémas zod) plutôt qu'un cast.
 - **Import type-only** obligatoire pour les imports de types (`import type { ... }`) — déjà forcé par Biome (`useImportType`), ne pas le contourner.

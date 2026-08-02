@@ -1,4 +1,4 @@
-import type { Session } from './schemas/session.schema';
+import type { Session } from '../schemas/session.schema';
 
 export function buildEndSoloGameBody(session: Session) {
   if (!session.currentGame) return null;

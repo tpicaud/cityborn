@@ -37,7 +37,6 @@ export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
   id: z.string().optional(),
-  world_location_id: z.string().optional(),
   world_location: WorldLocationSchema.optional(),
 });
 
