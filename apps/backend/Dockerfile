@@ -15,7 +15,7 @@ COPY apps/backend ./apps/backend
 COPY packages ./packages
 
 # Installer les dépendances
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Étape 2 — Builder uniquement l'app ciblée
 FROM deps AS builder
