@@ -1,2 +1,2 @@
-export * from './types/GameComponentProps';
-export * from './types/MapProps';
+export * from './src/types/GameComponentProps';
+export * from './src/types/MapProps';
