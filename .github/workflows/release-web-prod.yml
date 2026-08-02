@@ -75,6 +75,46 @@ jobs:
       prereleaseTagToDelete: web-pre-release
       prerelease: false
 
+  notify-discord:
+    name: Notify Discord (Prod release)
+    needs: [get-tag, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        uses: actions/github-script@v8
+        env:
+          DISCORD_WEBHOOK_URL_PROD_NOTIF: ${{ secrets.DISCORD_WEBHOOK_URL_PROD_NOTIF }}
+          PR_LIST: ${{ needs.create-release.outputs.prList }}
+        with:
+          script: |
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL_PROD_NOTIF;
+            if (!webhookUrl) {
+              console.log('DISCORD_WEBHOOK_URL_PROD_NOTIF is not set, skipping notification.');
+              return;
+            }
+
+            const prs = JSON.parse(process.env.PR_LIST);
+            if (prs.length === 0) {
+              console.log('No PR in this release, skipping notification.');
+              return;
+            }
+
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const releaseTag = '${{ needs.get-tag.outputs.newReleaseTag }}';
+
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                embeds: [{
+                  title: `🟦 Web — ${releaseTag} déployé en production`,
+                  url: `https://github.com/${owner}/${repo}/releases/tag/${releaseTag}`,
+                  description: prs.map(pr => `- [${pr.title}](${pr.url}) (#${pr.number})`).join('\n'),
+                  color: 0x5865f2,
+                }],
+              }),
+            });
+
   version-openapi-doc:
     name: Version OpenAPI doc
     needs:
