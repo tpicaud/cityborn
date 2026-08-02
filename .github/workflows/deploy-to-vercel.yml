@@ -79,9 +79,17 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
-          DEPLOY_URL=$(vercel deploy ${{ env.VERCEL_PROD_FLAG }} --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --yes 2>/dev/null | tail -1)
-          echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
-          echo "Deployed to: $DEPLOY_URL"
+          vercel deploy ${{ env.VERCEL_PROD_FLAG }} --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --yes >deployment-url.txt 2>error.txt
+          code=$?
+          if [ $code -eq 0 ]; then
+            DEPLOY_URL=$(cat deployment-url.txt)
+            echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
+            echo "Deployed to: $DEPLOY_URL"
+          else
+            errorMessage=$(cat error.txt)
+            echo "There was an error: $errorMessage"
+            exit $code
+          fi
 
       - name: Set custom domain alias
         run: |
