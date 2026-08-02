@@ -76,7 +76,7 @@ export function CategoryBuilder({
         return;
       }
 
-      if (!guessObjectDraft.world_location_id) {
+      if (!guessObjectDraft.id && !guessObjectDraft.world_location_id) {
         alert('Localisation non valide, veuillez resélectionner');
         return;
       }

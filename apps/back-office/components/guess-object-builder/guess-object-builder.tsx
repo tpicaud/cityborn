@@ -28,7 +28,7 @@ export function GuessObjectBuilder({
     setWorldLocationQuery(
       guessObjectDraft?.world_location
         ? (guessObjectDraft.world_location.display_name ??
-          guessObjectDraft.world_location.name)
+            guessObjectDraft.world_location.name)
         : '',
     );
   }, [guessObjectDraft?.world_location]);
