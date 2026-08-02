@@ -2,7 +2,6 @@ node_modules
 dist
 docker-data
 .turbo
-.vscode
 *.tsbuildinfo
 
 .env*
