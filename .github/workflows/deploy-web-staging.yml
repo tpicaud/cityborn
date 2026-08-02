@@ -110,13 +110,10 @@ jobs:
                   embeds: [{
                     title: `${pr.title} (#${pr.number})`,
                     url: pr.html_url,
-                    description: matchedPlatforms.map(p => `${p.emoji} **${p.name}**`).join('  '),
+                    description: matchedPlatforms
+                      .map(p => `${p.emoji} **${p.name}** — [pre-release](https://github.com/${owner}/${repo}/releases/tag/${p.releaseTag})`)
+                      .join('\n'),
                     color,
-                    fields: matchedPlatforms.map(platform => ({
-                      name: `${platform.emoji} Pre-release ${platform.name}`,
-                      value: `[${platform.releaseTag}](https://github.com/${owner}/${repo}/releases/tag/${platform.releaseTag})`,
-                      inline: true,
-                    })),
                     author: { name: pr.user.login, icon_url: pr.user.avatar_url },
                   }],
                 }),
