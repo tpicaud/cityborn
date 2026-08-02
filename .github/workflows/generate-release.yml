@@ -121,7 +121,33 @@ jobs:
               body = prs.length > 0
                 ? prs.map(pr => `- ${pr.title} (#${pr.number})`).join('\n')
                 : 'No changes.';
-              prList = prs.map(pr => ({ number: pr.number, title: pr.title, url: pr.html_url }));
+
+              for (const pr of prs) {
+                let number = pr.number;
+                let url = pr.html_url;
+                try {
+                  const result = await github.graphql(
+                    `query($owner: String!, $repo: String!, $number: Int!) {
+                      repository(owner: $owner, name: $repo) {
+                        pullRequest(number: $number) {
+                          closingIssuesReferences(first: 1) {
+                            nodes { number url }
+                          }
+                        }
+                      }
+                    }`,
+                    { owner, repo, number: pr.number },
+                  );
+                  const linkedIssue = result.repository.pullRequest.closingIssuesReferences.nodes[0];
+                  if (linkedIssue) {
+                    number = linkedIssue.number;
+                    url = linkedIssue.url;
+                  }
+                } catch (e) {
+                  console.log(`Could not fetch linked issue for PR #${pr.number}: ${e.message}`);
+                }
+                prList.push({ number, title: pr.title, url });
+              }
             } else if (filterPaths !== '') {
               // Filtered mode but no previousTag (first release of this platform)
               body = 'Initial release.';
