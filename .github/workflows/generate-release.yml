@@ -21,11 +21,17 @@ on:
         type: string
         required: false
         default: ""
+    outputs:
+      prList:
+        description: JSON array of PRs included in this release ({number, title, url})
+        value: ${{ jobs.tag-version.outputs.prList }}
 
 jobs:
   tag-version:
     name: Generate ${{ inputs.releaseTag }}
     runs-on: ubuntu-latest
+    outputs:
+      prList: ${{ steps.generate.outputs.prList }}
     steps:
       - name: Delete existing rolling tag
         if: ${{ inputs.prerelease }}
@@ -55,6 +61,7 @@ jobs:
           git push origin "${{ inputs.releaseTag }}"
 
       - name: Generate release notes
+        id: generate
         uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,6 +73,7 @@ jobs:
             const isPrerelease = ${{ inputs.prerelease }};
 
             let body;
+            let prList = [];
 
             if (filterPaths !== '' && previousTag) {
               // Filtered mode (web: exclude / mobile: include)
@@ -113,6 +121,7 @@ jobs:
               body = prs.length > 0
                 ? prs.map(pr => `- ${pr.title} (#${pr.number})`).join('\n')
                 : 'No changes.';
+              prList = prs.map(pr => ({ number: pr.number, title: pr.title, url: pr.html_url }));
             } else if (filterPaths !== '') {
               // Filtered mode but no previousTag (first release of this platform)
               body = 'Initial release.';
@@ -136,6 +145,8 @@ jobs:
                 body = 'Initial release.';
               }
             }
+
+            core.setOutput('prList', JSON.stringify(prList));
 
             console.log(`Creating release ${releaseTag} with filterPaths="${filterPaths}"`);
 
