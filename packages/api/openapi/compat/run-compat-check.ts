@@ -1,14 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { load } from 'js-yaml';
 import { assertOasdiffAvailable, diffBreaking } from './oasdiff-runner';
-import { selectVersionsToCheck } from './select-versions';
+import {
+  deprecationFloor,
+  isDeprecated,
+  selectVersionsToCheck,
+} from './select-versions';
 import type {
   CompatPolicy,
   CompatReport,
   Manifest,
   VersionCheckResult,
 } from './types';
-import { CompatPolicySchema } from './types';
+import { CompatPolicySchema, ManifestSchema } from './types';
 
 export function loadPolicy(policyFile: string): CompatPolicy {
   const raw = load(readFileSync(policyFile, 'utf-8'));
@@ -22,7 +26,14 @@ export function loadPolicy(policyFile: string): CompatPolicy {
 }
 
 export function loadManifest(manifestFile: string): Manifest {
-  return JSON.parse(readFileSync(manifestFile, 'utf-8')) as Manifest;
+  const raw = JSON.parse(readFileSync(manifestFile, 'utf-8'));
+  const result = ManifestSchema.safeParse(raw);
+  if (!result.success) {
+    throw new Error(
+      `Invalid manifest in ${manifestFile}: ${result.error.issues[0]?.path.join('.')} ${result.error.issues[0]?.message}`,
+    );
+  }
+  return result.data;
 }
 
 export interface RunCompatCheckOptions {
@@ -62,5 +73,10 @@ export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
     }
   }
 
-  return { checked, brokenAt };
+  const floor = deprecationFloor(manifest.versions);
+  const skippedDeprecated = manifest.versions
+    .filter((entry) => isDeprecated(entry, floor))
+    .sort((a, b) => b.versionNumber - a.versionNumber);
+
+  return { checked, brokenAt, skippedDeprecated };
 }

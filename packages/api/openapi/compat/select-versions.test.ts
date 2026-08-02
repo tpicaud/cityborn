@@ -5,11 +5,19 @@ import type { ManifestEntry } from './types';
 
 const NOW = new Date('2026-07-29T00:00:00.000Z');
 
-function entry(runNumber: number, daysAgo: number): ManifestEntry {
+function entry(versionNumber: number, daysAgo: number): ManifestEntry {
   const releasedAt = new Date(
     NOW.getTime() - daysAgo * 24 * 60 * 60 * 1000,
   ).toISOString();
-  return { file: `api-v${runNumber}.json`, runNumber, releasedAt };
+  return { file: `api-v${versionNumber}.json`, versionNumber, releasedAt };
+}
+
+function deprecate(e: ManifestEntry): ManifestEntry {
+  return {
+    ...e,
+    deprecatedAt: NOW.toISOString(),
+    deprecationReason: 'test',
+  };
 }
 
 test('returns only the versions within the day window when they outnumber the floor', () => {
@@ -82,4 +90,88 @@ test('never returns duplicates', () => {
   );
 
   assert.equal(result.length, 3);
+});
+
+test('excludes a deprecated version that is inside the day window', () => {
+  const versions = [entry(3, 1), deprecate(entry(2, 2))];
+  const result = selectVersionsToCheck(
+    versions,
+    { min_days_supported: 30, min_num_of_version_supported: 1 },
+    NOW,
+  );
+
+  assert.deepEqual(
+    result.map((v) => v.file),
+    ['api-v3.json'],
+  );
+});
+
+test('deprecating a version cascades to every older version, even without their own marker', () => {
+  const versions = [
+    entry(4, 60),
+    deprecate(entry(3, 60)),
+    entry(2, 60),
+    entry(1, 60),
+  ];
+  const result = selectVersionsToCheck(
+    versions,
+    { min_days_supported: 30, min_num_of_version_supported: 3 },
+    NOW,
+  );
+
+  assert.deepEqual(
+    result.map((v) => v.file),
+    ['api-v4.json'],
+  );
+});
+
+test('the count floor cannot pad past a cascaded deprecation', () => {
+  const versions = [
+    entry(5, 60),
+    entry(4, 60),
+    deprecate(entry(3, 60)),
+    entry(2, 60),
+    entry(1, 60),
+  ];
+  const result = selectVersionsToCheck(
+    versions,
+    { min_days_supported: 30, min_num_of_version_supported: 3 },
+    NOW,
+  );
+
+  assert.deepEqual(
+    result.map((v) => v.file),
+    ['api-v5.json', 'api-v4.json'],
+  );
+});
+
+test('does not break if there are several deprecated versions', () => {
+  const versions = [
+    entry(6, 1),
+    deprecate(entry(5, 5)),
+    entry(4, 10),
+    deprecate(entry(3, 45)),
+    entry(2, 50),
+  ];
+  const result = selectVersionsToCheck(
+    versions,
+    { min_days_supported: 30, min_num_of_version_supported: 3 },
+    NOW,
+  );
+
+  assert.deepEqual(
+    result.map((v) => v.file),
+    ['api-v6.json'],
+  );
+});
+
+test('returns an empty list when every version is deprecated', () => {
+  const versions = [deprecate(entry(2, 1)), deprecate(entry(1, 5))];
+  const result = selectVersionsToCheck(
+    versions,
+    { min_days_supported: 30, min_num_of_version_supported: 3 },
+    NOW,
+  );
+
+  assert.deepEqual(result, []);
 });
