@@ -87,18 +87,21 @@ export class GuessObjectService {
   }
 
   async create(createGuessObject: CreateGuessObject): Promise<GuessObjectId> {
-    const world_location = await this.worldLocationService.get(
+    const worldLocation = await this.worldLocationService.get(
       createGuessObject.world_location_id,
     );
-    if (!world_location) {
+    if (!worldLocation) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: `World location ${createGuessObject.world_location_id} not found`,
       });
     }
 
-    const existingGuessObject = await this.prisma.guessObject.findUnique({
-      where: { name: createGuessObject.name },
+    const existingGuessObject = await this.prisma.guessObject.findFirst({
+      where: {
+        name: createGuessObject.name,
+        world_location_id: createGuessObject.world_location_id,
+      },
     });
 
     if (existingGuessObject) {
@@ -112,7 +115,7 @@ export class GuessObjectService {
         description: createGuessObject.description,
         short_description: createGuessObject.short_description,
         source: createGuessObject.source,
-        world_location_id: world_location.id,
+        world_location_id: worldLocation.id,
       },
     });
 
