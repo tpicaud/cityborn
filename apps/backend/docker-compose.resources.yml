@@ -27,5 +27,32 @@ services:
     depends_on:
       - postgis
 
+  redis:
+    image: redis:8-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - pg_network
+    restart: unless-stopped
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    environment:
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
+      RI_REDIS_HOST0: redis
+      RI_REDIS_PORT0: 6379
+      RI_REDIS_ALIAS0: local
+    ports:
+      - "5540:5540"
+    networks:
+      - pg_network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
 networks:
   pg_network:
