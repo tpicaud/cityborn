@@ -4,7 +4,7 @@ FROM node:24-alpine AS deps
 WORKDIR /app
 
 # Installer pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.33.2
 
 # Copier les fichiers clés
 COPY package.json .
