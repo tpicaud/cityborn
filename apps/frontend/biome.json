@@ -3,10 +3,9 @@
   "root": false,
   "extends": "//",
   "linter": {
-    "rules": {
-      "style": {
-        "useImportType": "off"
-      }
+    "domains": {
+      "react": "recommended",
+      "next": "recommended"
     }
   }
 }
