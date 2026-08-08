@@ -33,6 +33,8 @@
   "dependencies": {
     "@cityborn/api": "workspace:*",
     "@cityborn/core": "workspace:*",
+    "@nestjs-cls/transactional": "^3.2.1",
+    "@nestjs-cls/transactional-adapter-prisma": "^1.3.5",
     "@nestjs/common": "^11.1.27",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.27",
