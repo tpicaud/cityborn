@@ -8,7 +8,7 @@ import { RedisService } from './redis.service';
     {
       provide: 'REDIS_CLIENT',
       useFactory: () => {
-        return new Redis(process.env.UPSTASH_REDIS_URL!);
+        return new Redis(process.env.REDIS_URL!);
       },
     },
     RedisService,

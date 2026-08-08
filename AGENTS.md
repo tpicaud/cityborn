@@ -24,7 +24,7 @@ Monorepo pnpm/turbo, TypeScript partout.
 - `pnpm dev:mobile` — lance mobile + backend + packages
 - `pnpm --dir apps/backend test` — tests backend (Jest)
 - `pnpm --dir packages/api test` — tests de compatibilité OpenAPI
-- `pnpm db:start` / `pnpm db:migrate` / `pnpm db:reset` — gestion de la DB locale (Docker + Prisma)
+- `pnpm db:start` / `pnpm db:migrate` / `pnpm db:reset` — gestion de la DB locale (Docker + Prisma). Lance aussi un Redis local (`localhost:6379`) et RedisInsight (`http://localhost:5540`)
 
 ## Frontières du monorepo
 
