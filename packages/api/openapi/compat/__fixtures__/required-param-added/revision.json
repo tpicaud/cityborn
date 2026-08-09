@@ -5,7 +5,12 @@
     "/widgets": {
       "get": {
         "parameters": [
-          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "responses": { "200": { "description": "200" } }
       }

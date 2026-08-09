@@ -63,7 +63,10 @@ describe('BrevoSmtpMailProvider', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     const body = JSON.parse(init?.body as string);
-    expect(body.to).toEqual([{ email: 'a@example.com' }, { email: 'b@example.com' }]);
+    expect(body.to).toEqual([
+      { email: 'a@example.com' },
+      { email: 'b@example.com' },
+    ]);
   });
 
   it('includes replyTo when provided', async () => {
@@ -103,7 +106,9 @@ describe('BrevoSmtpMailProvider', () => {
     expect(body.attachment).toHaveLength(1);
     expect(body.attachment[0].name).toBe('logo-transparent.png');
     expect(typeof body.attachment[0].content).toBe('string');
-    expect(Buffer.from(body.attachment[0].content, 'base64').length).toBeGreaterThan(0);
+    expect(
+      Buffer.from(body.attachment[0].content, 'base64').length,
+    ).toBeGreaterThan(0);
   });
 
   it('throws with the response status and body when the request fails', async () => {
