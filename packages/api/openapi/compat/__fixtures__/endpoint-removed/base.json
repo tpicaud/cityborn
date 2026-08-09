@@ -11,7 +11,12 @@
     "/widgets/{id}": {
       "delete": {
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "responses": { "204": { "description": "204" } }
       }

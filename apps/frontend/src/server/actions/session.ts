@@ -34,9 +34,7 @@ export async function createSoloGame(
   return toApiResult(result);
 }
 
-export async function endSoloGame(
-  session: Session,
-): Promise<ApiResult<void>> {
+export async function endSoloGame(session: Session): Promise<ApiResult<void>> {
   const body = buildEndSoloGameBody(session);
   if (!body) return { ok: true, data: undefined };
   const client = await getServerClient();

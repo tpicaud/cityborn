@@ -37,7 +37,8 @@ export const SignInComponent = () => {
       identifier: formValues.username,
       password: formValues.password,
     });
-    if (!result.ok) return setErrorMessage(getFriendlyErrorMessage(result.error));
+    if (!result.ok)
+      return setErrorMessage(getFriendlyErrorMessage(result.error));
     setUser(result.data);
     router.push('/');
   };

@@ -1,14 +1,8 @@
 import { initContract } from '@ts-rest/core';
 import { commonErrorResponses } from '../schemas/api-error.schema';
-import {
-  emptyResponseSchema,
-  IdParamSchema,
-} from '../schemas/common.schema';
+import { emptyResponseSchema, IdParamSchema } from '../schemas/common.schema';
 import { GameSchema, GameStateSchema } from '../schemas/game.schema';
-import {
-  CreateSessionSchema,
-  SessionSchema,
-} from '../schemas/session.schema';
+import { CreateSessionSchema, SessionSchema } from '../schemas/session.schema';
 
 const c = initContract();
 

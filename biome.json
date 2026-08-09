@@ -41,6 +41,13 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/.next/", "!**/dist/", "!**/build/", "!**/coverage/"]
+    "includes": [
+      "**",
+      "!**/.next/",
+      "!**/dist/",
+      "!**/build/",
+      "!**/coverage/",
+      "!packages/api/openapi/versions/"
+    ]
   }
 }

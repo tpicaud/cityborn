@@ -3,7 +3,10 @@ import type { SendMailOptions } from './providers/mail.provider';
 
 const logoFilename = 'logo-transparent.png';
 const logoContentId = logoFilename;
-const logoPath = resolve(__dirname, '../../../frontend/assets/logo-transparent.png');
+const logoPath = resolve(
+  __dirname,
+  '../../../frontend/assets/logo-transparent.png',
+);
 
 type EmailTemplateHeaderParams = {
   preheader: string;
