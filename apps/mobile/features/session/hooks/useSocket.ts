@@ -1,3 +1,4 @@
+import type { ApiError } from '@cityborn/api';
 import { useError } from '@cityborn/contexts';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,16 +36,12 @@ export const useSocket = () => {
         setConnected(false);
       });
 
-      socket.on('connect_error', (error: any) => {
+      socket.on('connect_error', (error: Error) => {
         setHasDisconnected(false);
-        invokeError({
-          code: error.code,
-          message: error.message,
-          statusCode: error.statusCode,
-        });
+        invokeError(error.message);
       });
 
-      socket.on('error', (error: any) => {
+      socket.on('error', (error: ApiError) => {
         invokeError({
           code: error.code,
           message: error.message,
@@ -71,7 +68,7 @@ export const useSocket = () => {
     };
   }, [invokeError]);
 
-  const emit = useCallback((event: string, ...args: any[]) => {
+  const emit = useCallback((event: string, ...args: unknown[]) => {
     const lastArg = args[args.length - 1];
     const hasCallback = typeof lastArg === 'function';
 
@@ -83,19 +80,13 @@ export const useSocket = () => {
     }
   }, []);
 
-  const on = useCallback(
-    (event: string, callback: (...args: any[]) => void) => {
-      socketRef.current?.on(event, callback);
-    },
-    [],
-  );
+  const on = useCallback(<T>(event: string, callback: (arg: T) => void) => {
+    socketRef.current?.on(event, callback);
+  }, []);
 
-  const off = useCallback(
-    (event: string, callback: (...args: any[]) => void) => {
-      socketRef.current?.off(event, callback);
-    },
-    [],
-  );
+  const off = useCallback(<T>(event: string, callback: (arg: T) => void) => {
+    socketRef.current?.off(event, callback);
+  }, []);
 
   return {
     connected,

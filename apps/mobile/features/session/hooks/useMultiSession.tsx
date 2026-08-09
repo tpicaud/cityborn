@@ -1,6 +1,8 @@
 import {
+  type ApiError,
   type GameConfig,
   type Guess,
+  isApiError,
   type Session,
   SessionStatus,
 } from '@cityborn/api';
@@ -11,6 +13,8 @@ import type { Socket } from 'socket.io-client';
 import { fetchSession } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 import { useSocket } from './useSocket';
+
+type SessionAck = { success: true } | { success: false; error: ApiError };
 
 export function useMultiSession(
   localPlayerID: string | undefined,
@@ -44,22 +48,18 @@ export function useMultiSession(
       const sessionID = session.id;
       return new Promise<void>((resolve, reject) => {
         const body = { sessionID, playerID: localPlayerID };
-        emit(
-          'session:reconnect',
-          body,
-          (response: { success: boolean; error?: any }) => {
-            if (response.success) {
-              setConnected(true);
-              resolve();
-            } else {
-              reject({
-                code: response.error.code,
-                message: response.error.message,
-                statusCode: response.error.statusCode,
-              });
-            }
-          },
-        );
+        emit('session:reconnect', body, (response: SessionAck) => {
+          if (response.success) {
+            setConnected(true);
+            resolve();
+          } else {
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
+          }
+        });
       });
     } catch (error) {
       throw new Error(`Non connecté au serveur: ${error}`);
@@ -91,8 +91,8 @@ export function useMultiSession(
         if (socket?.connected && hasDisconnected && !connected) {
           await reconnect();
         }
-      } catch (error: any) {
-        invokeError(error);
+      } catch (error) {
+        invokeError(isApiError(error) ? error : String(error));
       }
     };
     autoReconnect();
@@ -150,22 +150,18 @@ export function useMultiSession(
     const sessionID = session.id;
     return new Promise<void>((resolve, reject) => {
       const body = { sessionID, playerID };
-      emit(
-        'session:join',
-        body,
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            setConnected(true);
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:join', body, (response: SessionAck) => {
+        if (response.success) {
+          setConnected(true);
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -175,21 +171,17 @@ export function useMultiSession(
 
     return new Promise<void>((resolve, reject) => {
       const body = { newHostID };
-      emit(
-        'session:updateHost',
-        body,
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:updateHost', body, (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -200,21 +192,17 @@ export function useMultiSession(
     const gameConfig = { ...session.gameConfig, ...partialGameConfig };
     const body = { gameConfig };
     return new Promise<void>((resolve, reject) => {
-      emit(
-        'session:updateGameConfig',
-        body,
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:updateGameConfig', body, (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -224,21 +212,17 @@ export function useMultiSession(
 
     const body = { playerToKick };
     return new Promise<void>((resolve, reject) => {
-      emit(
-        'session:kickPlayer',
-        body,
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:kickPlayer', body, (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -251,20 +235,17 @@ export function useMultiSession(
       throw new Error('Starting game failed: session not initialized');
 
     return new Promise<void>((resolve, reject) => {
-      emit(
-        'session:startGame',
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:startGame', (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -274,21 +255,17 @@ export function useMultiSession(
 
     return new Promise<void>((resolve, reject) => {
       const body = { guess };
-      emit(
-        'session:guess',
-        body,
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:guess', body, (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -299,20 +276,17 @@ export function useMultiSession(
       );
 
     return new Promise<void>((resolve, reject) => {
-      emit(
-        'session:nextRound',
-        (response: { success: boolean; error?: any }) => {
-          if (response.success) {
-            resolve();
-          } else {
-            reject({
-              code: response.error.code,
-              message: response.error.message,
-              statusCode: response.error.statusCode,
-            });
-          }
-        },
-      );
+      emit('session:nextRound', (response: SessionAck) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject({
+            code: response.error.code,
+            message: response.error.message,
+            statusCode: response.error.statusCode,
+          });
+        }
+      });
     });
   };
 
@@ -332,20 +306,17 @@ export function useMultiSession(
 
     if (isHost) {
       return new Promise<void>((resolve, reject) => {
-        emit(
-          'session:playAgain',
-          (response: { success: boolean; error?: any }) => {
-            if (response.success) {
-              resolve();
-            } else {
-              reject({
-                code: response.error.code,
-                message: response.error.message,
-                statusCode: response.error.statusCode,
-              });
-            }
-          },
-        );
+        emit('session:playAgain', (response: SessionAck) => {
+          if (response.success) {
+            resolve();
+          } else {
+            reject({
+              code: response.error.code,
+              message: response.error.message,
+              statusCode: response.error.statusCode,
+            });
+          }
+        });
       });
     }
   };

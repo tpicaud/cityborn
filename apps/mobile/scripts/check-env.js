@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // Extract variables from .env.example
 const examplePath = path.resolve(process.cwd(), '.env.example');
@@ -24,7 +24,9 @@ const missing = requiredEnvVars.filter(
 
 if (missing.length > 0) {
   console.error('❌ Missing variables:');
-  missing.forEach((v) => console.error(`   - ${v}`));
+  missing.forEach((v) => {
+    console.error(`   - ${v}`);
+  });
   process.exit(1);
 }
 

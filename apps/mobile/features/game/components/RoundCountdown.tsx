@@ -24,7 +24,7 @@ const RoundCountdown: React.FC<RoundCountdownProps> = ({
     } else {
       onCountdownEnd();
     }
-  }, [countdown]);
+  }, [countdown, onCountdownEnd]);
 
   return (
     <View className="">

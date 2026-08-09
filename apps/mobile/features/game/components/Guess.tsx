@@ -1,9 +1,9 @@
 import { type Game, type Guess as GuessType, RoundStatus } from '@cityborn/api';
 import type { MapProps } from '@cityborn/client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import useGuess from '../hooks/useGuess';
-import Map from './Map';
+import GameMap from './Map';
 import Overlay from './Overlay';
 import RoundCountdown from './RoundCountdown';
 
@@ -56,17 +56,20 @@ const Guess: React.FC<GuessProps> = ({
     }
   }, [game.state.currentRound?.status, resetPreGuess]);
 
+  const handleCountdownEnd = useCallback(
+    () => setInternalRoundStatus('guessing'),
+    [],
+  );
+
   return (
     <View className="flex-1">
       <View className="absolute inset-0 z-0">
-        <Map mapProps={mapProps} />
+        <GameMap mapProps={mapProps} />
       </View>
 
       {internalRoundStatus === 'countdown' && (
         <View className="absolute inset-0 z-20">
-          <RoundCountdown
-            onCountdownEnd={() => setInternalRoundStatus('guessing')}
-          />
+          <RoundCountdown onCountdownEnd={handleCountdownEnd} />
         </View>
       )}
 

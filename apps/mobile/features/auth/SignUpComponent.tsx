@@ -32,7 +32,7 @@ export const SignUpComponent = () => {
   >({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleChange = (key: keyof FormValues, value: any) => {
+  const handleChange = (key: keyof FormValues, value: string) => {
     setFormValues({
       ...formValues,
       [key]: value,
@@ -40,7 +40,7 @@ export const SignUpComponent = () => {
     setErrors({ ...errors, [key]: null });
   };
 
-  const validateInput = (field: keyof FormValues, value: any) => {
+  const validateInput = (field: keyof FormValues, value: string) => {
     setErrors((prev) => {
       const newErrors = { ...prev };
 

@@ -1,4 +1,9 @@
-import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
+import {
+  type GameConfig,
+  type Guess,
+  isApiError,
+  SessionStatus,
+} from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LoaderIcon from '@/components/ui/LoaderIcon';
@@ -30,8 +35,8 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
         hasJoinedSession.current = true;
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
-      } catch (error: any) {
-        invokeError(error);
+      } catch (error) {
+        invokeError(isApiError(error) ? error : String(error));
       }
     },
     [multiSession, invokeError],
@@ -63,24 +68,8 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
       await multiSession.updateGameConfig(gameConfig);
-    } catch (error: any) {
-      invokeError(error);
-    }
-  };
-
-  const handleUpdateHost = async (newHostId: string) => {
-    try {
-      await multiSession.updateHost(newHostId);
-    } catch (error: any) {
-      invokeError(error);
-    }
-  };
-
-  const handleKickPlayer = async (playerId: string) => {
-    try {
-      await multiSession.kickPlayer(playerId);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
@@ -91,32 +80,32 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const handleStartGame = async () => {
     try {
       await multiSession.startGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleGuess = async (guess: Guess) => {
     try {
       multiSession.guess(guess);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleNextRound = async () => {
     try {
       multiSession.nextRound();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleEndGame = async () => {
     try {
       await multiSession.endGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
@@ -131,7 +120,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const handleExitGame = async () => {
     try {
       await multiSession.exitGame();
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
     }
   };
@@ -180,9 +169,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
         localPlayerID={localPlayerID}
         isHost={multiSession.isHost}
         session={multiSession.session}
-        handleUpdateHost={handleUpdateHost}
         handleUpdateGameConfig={handleUpdateGameConfig}
-        handleKickPlayer={handleKickPlayer}
         handleStartGame={handleStartGame}
         handleJoinSession={handleJoinSession}
       />

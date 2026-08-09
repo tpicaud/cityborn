@@ -2,6 +2,7 @@ import { ApiErrors, isApiError } from '@cityborn/api';
 import { useAuth } from '@cityborn/contexts';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { CodedError } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -36,7 +37,7 @@ export const SignInWithAppleButton = () => {
       if (!result.ok) throw result.error;
       setUser(result.data);
       router.push('/');
-    } catch (e: any) {
+    } catch (e) {
       handleAppleSignInError(e);
     }
   };
@@ -57,8 +58,8 @@ export const SignInWithAppleButton = () => {
     };
   }
 
-  function handleAppleSignInError(error: any): never {
-    if (error.code === 'ERR_REQUEST_CANCELED') {
+  function handleAppleSignInError(error: unknown): never {
+    if (error instanceof CodedError && error.code === 'ERR_REQUEST_CANCELED') {
       console.log('Apple sign in canceled by user');
       throw error;
     }

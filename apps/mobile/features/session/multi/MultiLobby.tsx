@@ -26,8 +26,6 @@ interface MultiLobbyProps {
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
-  handleUpdateHost: (newHostID: string) => Promise<void>;
-  handleKickPlayer: (playerToKick: string) => Promise<void>;
   handleJoinSession: (playerID: string) => Promise<void>;
 }
 
@@ -36,8 +34,6 @@ export function MultiLobby({
   session,
   isHost,
   handleUpdateGameConfig,
-  handleUpdateHost,
-  handleKickPlayer,
   handleStartGame,
   handleJoinSession,
 }: MultiLobbyProps) {
