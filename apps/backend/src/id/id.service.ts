@@ -5,8 +5,6 @@ import { tennis_dictionary } from './custom_dictionnaries';
 
 @Injectable()
 export class IdService {
-  constructor() {}
-
   /**
    * Generate nano ID
    */

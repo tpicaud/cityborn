@@ -36,6 +36,11 @@ interface WSResponse {
   };
 }
 
+interface AuthenticatedSocket extends Socket {
+  visitorId?: string | string[];
+  user?: User | null;
+}
+
 @WebSocketGateway({
   cors: {
     origin: process.env.CORS_ORIGIN,
@@ -58,7 +63,7 @@ export class SessionGateway
   @WebSocketServer()
   io: Server;
 
-  private toWsErrorResponse(error: unknown): WSResponse {
+  private toWSErrorResponse(error: unknown): WSResponse {
     if (error instanceof HttpException) {
       const responseBody = error.getResponse();
       const code =
@@ -87,15 +92,15 @@ export class SessionGateway
     };
   }
 
-  async handleConnection(client: Socket) {
+  async handleConnection(client: AuthenticatedSocket) {
     const visitorId = client.handshake?.query?.['x-visitor-id'];
     if (visitorId) {
-      (client as any).visitorId = visitorId;
+      client.visitorId = visitorId;
     }
 
     const token = extractAccessTokenFromWsClient(client);
     if (!token) {
-      (client as any).user = null;
+      client.user = null;
       return;
     }
 
@@ -107,7 +112,7 @@ export class SessionGateway
 
     if (payload) {
       const fullUser = await resolveFullUser(payload.id, this.userService);
-      (client as any).user = fullUser;
+      client.user = fullUser;
     }
   }
 
@@ -143,7 +148,7 @@ export class SessionGateway
       this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -168,7 +173,7 @@ export class SessionGateway
 
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -193,7 +198,7 @@ export class SessionGateway
 
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -213,7 +218,7 @@ export class SessionGateway
 
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -235,7 +240,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -253,7 +258,7 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -270,7 +275,7 @@ export class SessionGateway
 
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -306,7 +311,7 @@ export class SessionGateway
       this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
       return { success: true };
     } catch (error) {
-      return this.toWsErrorResponse(error);
+      return this.toWSErrorResponse(error);
     }
   }
 
@@ -320,16 +325,16 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       this.logger.log(`Socket ${socket.id} déconnecté`);
-    } catch (error: any) {
-      this.logger.error(error.message);
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : error);
     }
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     try {
       await this.disconnect(socket);
-    } catch (error: any) {
-      this.logger.error(error.message);
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : error);
     }
   }
 }

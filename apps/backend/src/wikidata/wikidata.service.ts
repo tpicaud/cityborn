@@ -45,8 +45,8 @@ export class WikidataService {
 
       const wikidata_response: WikidataSearchResponse = {
         results: data.search
-          .filter((item: any) => item.label && item.label.trim() !== '')
-          .map((item: any) => ({
+          .filter((item) => item.label && item.label.trim() !== '')
+          .map((item) => ({
             id: item.id,
             label: item.label,
             short_description: item.description || '',
@@ -54,10 +54,10 @@ export class WikidataService {
       };
 
       return wikidata_response;
-    } catch (error: any) {
+    } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
-        message: `Error retrieving wikidata search results: ${error.message}`,
+        message: `Error retrieving wikidata search results: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }
@@ -96,10 +96,10 @@ export class WikidataService {
       };
 
       return wikidataItem;
-    } catch (error: any) {
+    } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
-        message: `Error retrieving Wikidata entity ${id}: ${error.message}`,
+        message: `Error retrieving Wikidata entity ${id}: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }

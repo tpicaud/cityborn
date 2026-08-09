@@ -21,6 +21,19 @@ export interface NominatimItemResponse {
   };
 }
 
+interface NominatimRawItem {
+  place_id?: number | string;
+  osm_type: string;
+  osm_id?: number | string;
+  lat: string;
+  lon: string;
+  display_name: string;
+  namedetails?: Record<string, string>;
+  addresstype?: string;
+  place_rank: number;
+  geojson?: NominatimItemResponse['geojson'];
+}
+
 @Injectable()
 export class NominatimService {
   private readonly NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org';
@@ -49,9 +62,9 @@ export class NominatimService {
         throw new Error(`Nominatim search failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: NominatimRawItem[] = await response.json();
 
-      const grouped: Record<string, any> = {};
+      const grouped: Record<string, NominatimRawItem> = {};
       for (const item of data) {
         const key = item.display_name;
         if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
@@ -60,9 +73,9 @@ export class NominatimService {
       }
 
       const results: NominatimItemResponse[] = Object.values(grouped).map(
-        (item: any) => ({
+        (item) => ({
           place_id: item.place_id?.toString() ?? '',
-          osm_type: item.osm_type.toString() ?? '',
+          osm_type: item.osm_type as NominatimItemResponse['osm_type'],
           osm_id: item.osm_id?.toString() ?? '',
           lat: item.lat,
           lon: item.lon,
@@ -81,12 +94,12 @@ export class NominatimService {
       );
 
       return { results };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching Nominatim data:', error);
 
       throw new InternalServerErrorException({
         code: ErrorCode.WORLD_LOCATION_SEARCH_FAILED,
-        message: `Error retrieving nominatim search results: ${error.message}`,
+        message: `Error retrieving nominatim search results: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }

@@ -5,7 +5,9 @@ import {
   ErrorCode,
   FullGuessObject,
   type Game,
+  type GameConfig,
   GameStatus,
+  type Guess,
   type OnlinePlayer,
   type PlayerResults,
   type Round,
@@ -143,7 +145,7 @@ export class SessionService {
           });
 
         const playerExists = session.players.some(
-          (player: any) => player.username === playerID,
+          (player) => player.username === playerID,
         );
         if (playerExists)
           throw new ConflictException({
@@ -200,8 +202,8 @@ export class SessionService {
         message: `Player is not the host`,
       });
 
-    const newHost = session.players.find(
-      (player: any) => player.username === newHostID && player.connected,
+    const newHost = (session.players as OnlinePlayer[]).find(
+      (player) => player.username === newHostID && player.connected,
     );
     if (!newHost)
       throw new NotFoundException({
@@ -215,7 +217,7 @@ export class SessionService {
     return session;
   }
 
-  async updateGameConfig(socketID: string, gameConfig: any) {
+  async updateGameConfig(socketID: string, gameConfig: GameConfig) {
     const player = await this.playerService.getPlayer(socketID);
     if (!player)
       throw new NotFoundException({
@@ -225,7 +227,7 @@ export class SessionService {
 
     const { playerID, sessionID } = player;
 
-    const session: any | undefined = await this.getSession(sessionID);
+    const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
         code: ErrorCode.SESSION_NOT_FOUND,
@@ -346,7 +348,7 @@ export class SessionService {
     return game;
   }
 
-  async handleGuess(socketID: string, guess: any) {
+  async handleGuess(socketID: string, guess: Guess) {
     const player = await this.playerService.getPlayer(socketID);
     if (!player)
       throw new NotFoundException({
@@ -375,7 +377,7 @@ export class SessionService {
         const game = session.currentGame;
 
         const playerExists = session.players.some(
-          (player: any) => player.username === playerID,
+          (player) => player.username === playerID,
         );
         if (!playerExists)
           throw new NotFoundException({
@@ -383,8 +385,8 @@ export class SessionService {
             message: `Player not found in session`,
           });
 
-        const playerConnected = session.players.some(
-          (player: any) => player.username === playerID && player.connected,
+        const playerConnected = (session.players as OnlinePlayer[]).some(
+          (player) => player.username === playerID && player.connected,
         );
         if (!playerConnected)
           throw new UnauthorizedException({
@@ -404,15 +406,12 @@ export class SessionService {
         ) {
           game.state.currentRound.playersGuesses[playerID] = guess;
 
-          const connectedPlayers = session.players.filter(
-            (player: any) => player.connected,
+          const connectedPlayers = (session.players as OnlinePlayer[]).filter(
+            (player) => player.connected,
           );
-          const allConnectedPlayersGuessed = connectedPlayers.every(
-            (player: any) =>
-              Object.hasOwn(
-                game.state.currentRound?.playersGuesses!,
-                player.username,
-              ),
+          const playersGuesses = game.state.currentRound.playersGuesses;
+          const allConnectedPlayersGuessed = connectedPlayers.every((player) =>
+            Object.hasOwn(playersGuesses, player.username),
           );
           if (allConnectedPlayersGuessed) {
             for (const player of session.players) {
@@ -468,7 +467,7 @@ export class SessionService {
       (id: string) => id === game.state.currentRound?.guessObjectId,
     );
 
-    session.players.forEach((player: any) => {
+    session.players.forEach((player) => {
       const guess = game.state.currentRound?.playersGuesses?.[player.username];
       const playerResults = game.state.results[player.username];
 
@@ -540,7 +539,7 @@ export class SessionService {
         const players = session.players as OnlinePlayer[];
 
         const playerIndex = players.findIndex(
-          (player: any) => player.username === playerID,
+          (player) => player.username === playerID,
         );
         if (playerIndex === -1)
           throw new NotFoundException({
@@ -585,7 +584,7 @@ export class SessionService {
           });
 
         const playerIndex = session.players.findIndex(
-          (player: any) => player.username === playerID,
+          (player) => player.username === playerID,
         );
         if (playerIndex === -1)
           throw new NotFoundException({
@@ -597,10 +596,10 @@ export class SessionService {
 
         const isHost = playerID === session.hostID;
         if (isHost) {
-          const players = session.players;
+          const players = session.players as OnlinePlayer[];
 
           const connectedPlayers = players.filter(
-            (player: any) => player.connected && player.username !== playerID,
+            (player) => player.connected && player.username !== playerID,
           );
           if (connectedPlayers.length > 0) {
             session.hostID = connectedPlayers[0].username;
@@ -700,17 +699,8 @@ export class SessionService {
   }
 
   async generateUniqueGameID(): Promise<string> {
-    const MAX_ATTEMPTS = 3;
-
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const candidateId = this.idService.generateUniqueNamesId();
-      return candidateId.toString(); // TODO Check in supabase and redis for conflicts
-    }
-
-    throw new InternalServerErrorException({
-      code: ErrorCode.GAME_CREATION_FAILED,
-      message: 'Max id generation attempt reached',
-    });
+    const candidateId = this.idService.generateUniqueNamesId();
+    return candidateId.toString(); // TODO Check in supabase and redis for conflicts
   }
 
   private getLightSession(session: Session): Session {

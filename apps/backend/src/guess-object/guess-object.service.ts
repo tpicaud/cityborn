@@ -12,6 +12,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectMapper } from './mappers/guess-object.mapper';
@@ -60,7 +61,7 @@ export class GuessObjectService {
   async findShuffledGuessObjectsByGameConfig(
     gameConfig: GameConfig,
   ): Promise<FullGuessObject[]> {
-    const where: any = {};
+    const where: Prisma.GuessObjectWhereInput = {};
 
     if (gameConfig.categories && gameConfig.categories.length > 0) {
       const categoryIds = gameConfig.categories.map((cat) => cat.id);

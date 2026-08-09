@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 export const VisitorId = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+  (_data: unknown, ctx: ExecutionContext) => {
     const ctxType: ContextType = ctx.getType();
     let visitorId: string | null = null;
 

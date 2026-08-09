@@ -15,8 +15,8 @@ import type {
 type PrismaUserWithRelations = PrismaUser & {
   gameRecords?: PrismaGameRecord[];
 };
-export class UserMapper {
-  static toUser(prismaUser: PrismaUserWithRelations): User {
+export const UserMapper = {
+  toUser(prismaUser: PrismaUserWithRelations): User {
     return {
       id: prismaUser.id,
       type: prismaUser.type as AccountType,
@@ -39,12 +39,12 @@ export class UserMapper {
         })),
       },
     };
-  }
+  },
 
-  static toPublicUser(user: { id: string; username: string }): PublicUser {
+  toPublicUser(user: { id: string; username: string }): PublicUser {
     return {
       id: user.id,
       username: user.username,
     };
-  }
-}
+  },
+};
