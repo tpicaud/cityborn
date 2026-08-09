@@ -202,10 +202,8 @@ export function CategoryBuilder({
       const index = category.guessObjects.findIndex(
         (obj) => obj.id === guessObject.id,
       );
-      let updatedGuessObjects: GuessObject[];
-
       if (index === -1) return;
-      updatedGuessObjects = category.guessObjects.filter(
+      const updatedGuessObjects: GuessObject[] = category.guessObjects.filter(
         (obj) => obj.id !== guessObject.id,
       );
 
@@ -304,7 +302,7 @@ export function CategoryBuilder({
                 </select>
               </div>
               <div className="h-full flex flex-col w-[30%] min-w-40">
-                <label>Visibilité</label>
+                <span>Visibilité</span>
                 <p
                   className={`
                             w-fit p-2 mt-3 text-xs rounded-md border

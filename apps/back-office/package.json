@@ -12,11 +12,12 @@
     "fullcheck": "pnpm typecheck && pnpm check"
   },
   "dependencies": {
-    "@cityborn/api": "workspace:*",
     "@ariakit/react": "^0.4.26",
+    "@cityborn/api": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^9.0.0",
+    "@types/geojson": "^7946.0.16",
     "@types/google.maps": "^3.64.0",
     "@vis.gl/react-google-maps": "^1.8.3",
     "clsx": "^2.1.1",
@@ -35,9 +36,9 @@
     "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "^25.6.0",
     "@types/papaparse": "^5.5.2",
-    "@types/swagger-ui-react": "^5.18.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/swagger-ui-react": "^5.18.0",
     "dotenv-cli": "^11.0.0",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3"

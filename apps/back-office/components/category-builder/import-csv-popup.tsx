@@ -73,10 +73,10 @@ export function ImportCSVPopup({
       description?: string;
     }[]
   > {
-    const result = Papa.parse(csv, { header: true });
+    const result = Papa.parse<Record<string, string>>(csv, { header: true });
     const objects: { name: string; description: string }[] = [];
 
-    for (const row of result.data as any[]) {
+    for (const row of result.data) {
       if (row.Name?.trim()) {
         objects.push({
           name: row.Name.trim(),

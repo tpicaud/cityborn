@@ -20,16 +20,19 @@ export function GuessObjectsList({
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {guessObjects.map((obj, index) => (
+          {guessObjects.map((obj) => (
             <div
-              key={index}
-              onClick={() => handleSelectGuessObject(obj)}
+              key={obj.id}
               className={`rounded-xl border-2 p-3 bg-neutral-700 transition
-                                          hover:border-gray-100 hover:cursor-pointer
+                                          hover:border-gray-100
                                             ${selectedGuessObject?.id === obj.id ? 'border-gray-100' : 'border-transparent'}`}
             >
               <div className="flex flex-row items-center justify-between">
-                <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleSelectGuessObject(obj)}
+                  className="flex flex-col gap-1 flex-1 text-left hover:cursor-pointer"
+                >
                   <div className="flex flex-row gap-x-2 items-baseline">
                     <div className="text-base font-bold">{obj.name}</div>
                     {obj.world_location_preview.display_name && (
@@ -44,15 +47,12 @@ export function GuessObjectsList({
                   ) : (
                     <p className="text-xs italic">Aucune description</p>
                   )}
-                </div>
+                </button>
                 <Button
                   size="sm"
                   variant="destructive"
                   className="group-hover:!border-transparent group-hover:!bg-neutral-700"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveFromCategory(obj);
-                  }}
+                  onClick={() => handleRemoveFromCategory(obj)}
                 >
                   X
                 </Button>

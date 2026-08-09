@@ -3,9 +3,10 @@ import type { WorldLocation } from '@cityborn/api';
 import {
   AdvancedMarker,
   APIProvider,
-  Map,
+  Map as GoogleMap,
   useMap,
 } from '@vis.gl/react-google-maps';
+import type * as GeoJSON from 'geojson';
 import { useEffect } from 'react';
 
 interface GoogleMapsProps {
@@ -22,7 +23,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
 
   return (
     <APIProvider apiKey={API_KEY} libraries={['geometry']}>
-      <Map
+      <GoogleMap
         id="map"
         mapId="3fe9c0c47c132c089312908f"
         defaultCenter={defaultCenter}
@@ -32,7 +33,7 @@ export const WorldLocationViewer: React.FC<GoogleMapsProps> = ({
         scrollwheel={true}
       >
         <WorldLocationDisplay world_location={world_location} />
-      </Map>
+      </GoogleMap>
     </APIProvider>
   );
 };
@@ -44,7 +45,9 @@ const WorldLocationDisplay: React.FC<{
 
   useEffect(() => {
     if (!map) return;
-    map.data.forEach((feature: any) => map.data.remove(feature));
+    map.data.forEach((feature) => {
+      map.data.remove(feature);
+    });
 
     if (!world_location) {
       map.setZoom(2);
@@ -52,8 +55,11 @@ const WorldLocationDisplay: React.FC<{
       return;
     }
 
-    map.data.forEach((feature: any) => map.data.remove(feature));
-    map.data.addGeoJson(convertToGeoJson(world_location.geometry));
+    const geometry = world_location.geometry as unknown as GeoJSON.Geometry;
+    const geojson = convertToGeoJson(geometry);
+    if (!geojson) return;
+
+    map.data.addGeoJson(geojson);
     map.data.setStyle({
       fillColor: '#FF0000',
       strokeColor: '#FF0000',
@@ -68,15 +74,14 @@ const WorldLocationDisplay: React.FC<{
       map.setZoom(12);
     } else {
       const bounds = new google.maps.LatLngBounds();
-      const geojson = convertToGeoJson(world_location.geometry);
       const coords =
         geojson.type === 'FeatureCollection'
-          ? geojson.features.flatMap((f: any) => getCoordinates(f.geometry))
+          ? geojson.features.flatMap((f) => getCoordinates(f.geometry))
           : getCoordinates(geojson.geometry);
 
-      coords.forEach(([lng, lat]: [number, number]) =>
-        bounds.extend({ lat, lng }),
-      );
+      coords.forEach(([lng, lat]) => {
+        bounds.extend({ lat, lng });
+      });
       map.fitBounds(bounds);
     }
   }, [map, world_location]);
@@ -89,7 +94,14 @@ const WorldLocationDisplay: React.FC<{
   ) : null;
 };
 
-function convertToGeoJson(geometry: any) {
+function convertToGeoJson(
+  geometry:
+    | GeoJSON.Geometry
+    | GeoJSON.Feature
+    | GeoJSON.FeatureCollection
+    | null
+    | undefined,
+): GeoJSON.Feature | GeoJSON.FeatureCollection | null {
   if (!geometry) return null;
 
   if (geometry.type === 'Feature' || geometry.type === 'FeatureCollection') {
@@ -103,18 +115,18 @@ function convertToGeoJson(geometry: any) {
   };
 }
 
-function getCoordinates(geometry: any): [number, number][] {
+function getCoordinates(geometry: GeoJSON.Geometry): [number, number][] {
   switch (geometry.type) {
     case 'Point':
-      return [geometry.coordinates];
+      return [geometry.coordinates as [number, number]];
     case 'MultiPoint':
     case 'LineString':
-      return geometry.coordinates;
+      return geometry.coordinates as [number, number][];
     case 'MultiLineString':
     case 'Polygon':
-      return geometry.coordinates.flat();
+      return geometry.coordinates.flat() as [number, number][];
     case 'MultiPolygon':
-      return geometry.coordinates.flat(2);
+      return geometry.coordinates.flat(2) as [number, number][];
     default:
       return [];
   }
