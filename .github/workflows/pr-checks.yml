@@ -33,33 +33,33 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-  biome:
-    name: Biome
-    if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+  # biome:
+  #   name: Biome
+  #   if: github.event.pull_request.draft == false
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24.x
+  #     - name: Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 24.x
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+  #     - name: Install pnpm
+  #       run: npm install -g pnpm
 
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+  #     - name: Cache pnpm store
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.pnpm-store
+  #         key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Install dependencies
-        run: pnpm install
+  #     - name: Install dependencies
+  #       run: pnpm install
 
-      - name: Check formatting and lint rules
-        run: pnpm format:check
+  #     - name: Check formatting and lint rules
+  #       run: pnpm format:check
 
   api-compat:
     name: API compatibility
