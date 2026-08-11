@@ -48,8 +48,7 @@
       "!**/dist/",
       "!**/build/",
       "!**/coverage/",
-      "!packages/api/openapi/versions/",
-      "!apps/mobile/assets"
+      "!packages/api/openapi/versions"
     ]
   }
 }
