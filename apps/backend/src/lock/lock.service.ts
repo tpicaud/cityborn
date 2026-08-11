@@ -8,8 +8,8 @@ export class LockService implements OnModuleDestroy {
 
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {
     this.redlock = new Redlock([this.redisClient], {
-      retryCount: 10,
-      retryDelay: 200,
+      retryCount: 3,
+      retryDelay: 100,
     });
 
     this.redlock.on('clientError', (err) => {

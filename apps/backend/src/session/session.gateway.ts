@@ -1,7 +1,8 @@
 import { ErrorCode, GameConfig, Guess, User } from '@cityborn/api';
 import {
   BadRequestException,
-  type HttpStatus,
+  HttpException,
+  HttpStatus,
   Logger,
   UseFilters,
 } from '@nestjs/common';
@@ -56,6 +57,35 @@ export class SessionGateway
 
   @WebSocketServer()
   io: Server;
+
+  private toWsErrorResponse(error: unknown): WSResponse {
+    if (error instanceof HttpException) {
+      const responseBody = error.getResponse();
+      const code =
+        typeof responseBody === 'object' &&
+        responseBody !== null &&
+        'code' in responseBody
+          ? (responseBody.code as ErrorCode)
+          : ErrorCode.UNKNOWN_ERROR;
+
+      this.logger.error(error.message);
+      return {
+        success: false,
+        error: { code, message: error.message, statusCode: error.getStatus() },
+      };
+    }
+
+    const message = error instanceof Error ? error.message : 'Unexpected error';
+    this.logger.error(message);
+    return {
+      success: false,
+      error: {
+        code: ErrorCode.UNKNOWN_ERROR,
+        message,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      },
+    };
+  }
 
   async handleConnection(client: Socket) {
     const visitorId = client.handshake?.query?.['x-visitor-id'];
@@ -112,16 +142,8 @@ export class SessionGateway
 
       this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -145,16 +167,8 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -178,16 +192,8 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -206,16 +212,8 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -236,16 +234,8 @@ export class SessionGateway
 
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -262,16 +252,8 @@ export class SessionGateway
 
       this.io.to(session.id).emit('session:update', session);
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -287,16 +269,8 @@ export class SessionGateway
       this.io.to(session.id).emit('session:update', session);
 
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
@@ -331,16 +305,8 @@ export class SessionGateway
 
       this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
       return { success: true };
-    } catch (error: any) {
-      this.logger.error(error.message);
-      return {
-        success: false,
-        error: {
-          code: error.response.code,
-          message: error.message,
-          statusCode: error.status,
-        },
-      };
+    } catch (error) {
+      return this.toWsErrorResponse(error);
     }
   }
 
