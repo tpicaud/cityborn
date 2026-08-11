@@ -1,7 +1,6 @@
 'use client';
 
 import { Backdrop, Box, CircularProgress } from '@mui/material';
-import React from 'react';
 
 const LoadingComponent = ({ message }: { message?: string }) => {
   return (

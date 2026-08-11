@@ -40,6 +40,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
     'countdown' | 'guessing' | 'results'
   >('countdown');
 
+  const googleMapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY;
+  if (!googleMapApiKey) {
+    throw new Error('NEXT_PUBLIC_GOOGLE_MAP_API_KEY is not set');
+  }
+
   const mapProps = {
     center: DEFAULT_MAP_CENTER,
     zoom: 2,
@@ -70,10 +75,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   return (
     <div>
       <div className="fixed w-full h-full z-0">
-        <GoogleMapComponent
-          API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY!}
-          mapProps={mapProps}
-        />
+        <GoogleMapComponent API_KEY={googleMapApiKey} mapProps={mapProps} />
       </div>
 
       {internalRoundStatus === 'countdown' && (

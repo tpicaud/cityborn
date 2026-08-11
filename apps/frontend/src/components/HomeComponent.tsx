@@ -7,6 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import dynamic from 'next/dynamic';
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useError } from '@/contexts/ErrorContext';
@@ -27,9 +28,24 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
+interface GoogleIdentityServices {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id?: string;
+        callback: (response: { credential: string }) => void;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement | null,
+        options: { theme?: string; size?: string; text?: string },
+      ) => void;
+    };
+  };
+}
+
 declare global {
   interface Window {
-    google: any;
+    google?: GoogleIdentityServices;
   }
 }
 
@@ -47,7 +63,7 @@ export default function HomeComponent() {
     }
   }, [user]);
 
-  let content;
+  let content: ReactNode;
 
   switch (state) {
     case 'sign-in':
@@ -63,7 +79,11 @@ export default function HomeComponent() {
       break;
 
     case 'profile':
-      content = <ProfileComponent user={user!} />;
+      content = user ? (
+        <ProfileComponent user={user} />
+      ) : (
+        <MenuComponent setState={setState} />
+      );
       break;
 
     default:

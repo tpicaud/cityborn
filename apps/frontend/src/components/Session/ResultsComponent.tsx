@@ -102,9 +102,9 @@ const ResultsComponent = ({
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {playerResults.results.map((result, index) => (
+                            {playerResults.results.map((result) => (
                               <TableRow
-                                key={index}
+                                key={result.guessObjectId}
                                 sx={{
                                   '&:last-child td, &:last-child th': {
                                     border: 0,
@@ -177,9 +177,9 @@ const ResultsComponent = ({
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {playerResults.results.map((result, index) => (
+                              {playerResults.results.map((result) => (
                                 <TableRow
-                                  key={index}
+                                  key={result.guessObjectId}
                                   sx={{
                                     '&:last-child td, &:last-child th': {
                                       border: 0,

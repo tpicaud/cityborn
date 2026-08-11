@@ -1,3 +1,4 @@
+import { isApiError } from '@cityborn/api';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { useError } from '@/contexts/ErrorContext';
@@ -26,21 +27,15 @@ export const useSocket = () => {
       setConnected(false);
     });
 
-    socket.on('connect_error', (error: any) => {
+    socket.on('connect_error', (error: unknown) => {
       setHasDisconnected(false);
-      invokeError({
-        code: error.code,
-        message: error.message,
-        statusCode: error.statusCode,
-      });
+      invokeError(
+        isApiError(error) ? error : 'La connexion au serveur a échoué',
+      );
     });
 
-    socket.on('error', (error: any) => {
-      invokeError({
-        code: error.code,
-        message: error.message,
-        statusCode: error.statusCode,
-      });
+    socket.on('error', (error: unknown) => {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     });
 
     return () => {
@@ -53,7 +48,7 @@ export const useSocket = () => {
   }, [socket, invokeError]);
 
   const emit = useCallback(
-    (event: string, ...args: any[]) => {
+    (event: string, ...args: unknown[]) => {
       const lastArg = args[args.length - 1];
       const hasCallback = typeof lastArg === 'function';
 
@@ -68,14 +63,20 @@ export const useSocket = () => {
   );
 
   const on = useCallback(
-    (event: string, callback: (...args: any[]) => void) => {
+    <Args extends unknown[]>(
+      event: string,
+      callback: (...args: Args) => void,
+    ) => {
       socket.on(event, callback);
     },
     [socket.on],
   );
 
   const off = useCallback(
-    (event: string, callback: (...args: any[]) => void) => {
+    <Args extends unknown[]>(
+      event: string,
+      callback: (...args: Args) => void,
+    ) => {
       socket.off(event, callback);
     },
     [socket.off],
