@@ -2,42 +2,54 @@ name: Database backup
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 56-gestion-des-backup-de-la-base-de-données
-    paths:
-      - .github/workflows/database-backup.yml
+    inputs:
+      backup_kind:
+        description: Backup retention category
+        required: true
+        default: daily
+        type: choice
+        options:
+          - daily
+          - pre-migration
 
-permissions: {}
+permissions:
+  contents: read
 
 concurrency:
-  group: database-backup-dev
+  group: database-backup-production
   cancel-in-progress: false
 
 jobs:
-  test-b2-connectivity:
-    name: Test Backblaze B2 connectivity
+  backup:
+    name: Create and verify database backup
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
+    environment: database-backup-production
     steps:
-      - name: Validate configuration
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520
+        with:
+          version: 2.113.0
+
+      - name: Validate backup configuration
         env:
-          B2_UPLOAD_KEY_ID: ${{ secrets.B2_DEV_UPLOAD_KEY_ID }}
-          B2_UPLOAD_APPLICATION_KEY: ${{ secrets.B2_DEV_UPLOAD_APPLICATION_KEY }}
-          B2_VERIFY_KEY_ID: ${{ secrets.B2_DEV_VERIFY_KEY_ID }}
-          B2_VERIFY_APPLICATION_KEY: ${{ secrets.B2_DEV_VERIFY_APPLICATION_KEY }}
-          B2_BUCKET: ${{ vars.B2_DEV_BUCKET_NAME }}
-          B2_ENDPOINT: ${{ vars.B2_DEV_ENDPOINT }}
-          B2_REGION: ${{ vars.B2_DEV_REGION }}
-          B2_PREFIX: ${{ vars.B2_DEV_PREFIX }}
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+          B2_UPLOAD_KEY_ID: ${{ secrets.B2_PROD_UPLOAD_KEY_ID }}
+          B2_UPLOAD_APPLICATION_KEY: ${{ secrets.B2_PROD_UPLOAD_APPLICATION_KEY }}
+          B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
+          B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
+          B2_REGION: ${{ vars.B2_PROD_REGION }}
+          B2_PREFIX: ${{ vars.B2_PROD_PREFIX }}
         run: |
           set -euo pipefail
 
           required_names=(
+            DATABASE_URL
             B2_UPLOAD_KEY_ID
             B2_UPLOAD_APPLICATION_KEY
-            B2_VERIFY_KEY_ID
-            B2_VERIFY_APPLICATION_KEY
             B2_BUCKET
             B2_ENDPOINT
             B2_REGION
@@ -51,77 +63,262 @@ jobs:
             fi
           done
 
-          aws --version
-
-      - name: Upload connectivity file
-        id: upload
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.B2_DEV_UPLOAD_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_DEV_UPLOAD_APPLICATION_KEY }}
-          AWS_DEFAULT_REGION: ${{ vars.B2_DEV_REGION }}
-          AWS_REGION: ${{ vars.B2_DEV_REGION }}
-          B2_BUCKET: ${{ vars.B2_DEV_BUCKET_NAME }}
-          B2_ENDPOINT: ${{ vars.B2_DEV_ENDPOINT }}
-          B2_PREFIX: ${{ vars.B2_DEV_PREFIX }}
-        run: |
-          set -euo pipefail
-
-          file_path="$RUNNER_TEMP/cityborn-b2-connectivity.txt"
-          object_key="${B2_PREFIX}/connectivity/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
-
-          printf 'cityborn-b2-connectivity\nrun-id=%s\n' "$GITHUB_RUN_ID" > "$file_path"
-
-          sha256="$(sha256sum "$file_path" | cut -d ' ' -f 1)"
-
-          aws s3api put-object \
-            --bucket "$B2_BUCKET" \
-            --key "$object_key" \
-            --body "$file_path" \
-            --endpoint-url "$B2_ENDPOINT" \
-            > /dev/null
-
-          echo "object_key=$object_key" >> "$GITHUB_OUTPUT"
-          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
-
-      - name: Verify connectivity file
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.B2_DEV_VERIFY_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_DEV_VERIFY_APPLICATION_KEY }}
-          AWS_DEFAULT_REGION: ${{ vars.B2_DEV_REGION }}
-          AWS_REGION: ${{ vars.B2_DEV_REGION }}
-          B2_BUCKET: ${{ vars.B2_DEV_BUCKET_NAME }}
-          B2_ENDPOINT: ${{ vars.B2_DEV_ENDPOINT }}
-          OBJECT_KEY: ${{ steps.upload.outputs.object_key }}
-          EXPECTED_SHA256: ${{ steps.upload.outputs.sha256 }}
-        run: |
-          set -euo pipefail
-
-          downloaded_path="$RUNNER_TEMP/cityborn-b2-connectivity-downloaded.txt"
-
-          aws s3api head-object \
-            --bucket "$B2_BUCKET" \
-            --key "$OBJECT_KEY" \
-            --endpoint-url "$B2_ENDPOINT" \
-            > /dev/null
-
-          aws s3api get-object \
-            --bucket "$B2_BUCKET" \
-            --key "$OBJECT_KEY" \
-            --endpoint-url "$B2_ENDPOINT" \
-            "$downloaded_path" \
-            > /dev/null
-
-          actual_sha256="$(sha256sum "$downloaded_path" | cut -d ' ' -f 1)"
-
-          if [[ "$actual_sha256" != "$EXPECTED_SHA256" ]]; then
-            echo "::error::The downloaded file checksum does not match"
+          if [[ "$DATABASE_URL" != postgresql://* && "$DATABASE_URL" != postgres://* ]]; then
+            echo "::error::DATABASE_URL must be a PostgreSQL connection string"
             exit 1
           fi
 
+          if [[ "$B2_ENDPOINT" != https://* ]]; then
+            echo "::error::B2_ENDPOINT must use HTTPS"
+            exit 1
+          fi
+
+          if [[ ! "$B2_PREFIX" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]]; then
+            echo "::error::B2_PREFIX contains unsupported characters"
+            exit 1
+          fi
+
+          supabase --version
+          aws --version
+
+      - name: Validate verification configuration
+        env:
+          B2_VERIFY_KEY_ID: ${{ secrets.B2_PROD_VERIFY_KEY_ID }}
+          B2_VERIFY_APPLICATION_KEY: ${{ secrets.B2_PROD_VERIFY_APPLICATION_KEY }}
+        run: |
+          set -euo pipefail
+
+          required_names=(
+            B2_VERIFY_KEY_ID
+            B2_VERIFY_APPLICATION_KEY
+          )
+
+          for name in "${required_names[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::$name is not configured"
+              exit 1
+            fi
+          done
+
+      - name: Create backup archive
+        id: create
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+
+          backup_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          backup_output_dir="$RUNNER_TEMP/database-backup"
+          archive_name="cityborn-postgres-${backup_timestamp}.tar.gz"
+
+          BACKUP_OUTPUT_DIR="$backup_output_dir" \
+          BACKUP_TIMESTAMP="$backup_timestamp" \
+          ./scripts/database-backup/create.sh
+
+          archive_path="$backup_output_dir/$archive_name"
+          checksum_path="$archive_path.sha256"
+          archive_sha256="$(sha256sum "$archive_path" | cut -d ' ' -f 1)"
+          archive_size="$(stat --format '%s' "$archive_path")"
+
+          echo "backup_timestamp=$backup_timestamp" >> "$GITHUB_OUTPUT"
+          echo "backup_output_dir=$backup_output_dir" >> "$GITHUB_OUTPUT"
+          echo "archive_name=$archive_name" >> "$GITHUB_OUTPUT"
+          echo "archive_path=$archive_path" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
+          echo "archive_sha256=$archive_sha256" >> "$GITHUB_OUTPUT"
+          echo "archive_size=$archive_size" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backup
+        id: upload
+        env:
+          AWS_PAGER: ""
+          AWS_RETRY_MODE: standard
+          AWS_MAX_ATTEMPTS: 5
+          AWS_ACCESS_KEY_ID: ${{ secrets.B2_PROD_UPLOAD_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_PROD_UPLOAD_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.B2_PROD_REGION }}
+          AWS_REGION: ${{ vars.B2_PROD_REGION }}
+          B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
+          B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
+          B2_PREFIX: ${{ vars.B2_PROD_PREFIX }}
+          BACKUP_KIND: ${{ inputs.backup_kind }}
+          BACKUP_TIMESTAMP: ${{ steps.create.outputs.backup_timestamp }}
+          ARCHIVE_NAME: ${{ steps.create.outputs.archive_name }}
+          ARCHIVE_PATH: ${{ steps.create.outputs.archive_path }}
+          CHECKSUM_PATH: ${{ steps.create.outputs.checksum_path }}
+          ARCHIVE_SHA256: ${{ steps.create.outputs.archive_sha256 }}
+        run: |
+          set -euo pipefail
+
+          normalized_prefix="${B2_PREFIX%/}"
+          date_path="${BACKUP_TIMESTAMP:0:4}/${BACKUP_TIMESTAMP:4:2}/${BACKUP_TIMESTAMP:6:2}"
+          archive_object_key="${normalized_prefix}/${BACKUP_KIND}/${date_path}/${ARCHIVE_NAME}"
+          checksum_object_key="${archive_object_key}.sha256"
+          weekly_archive_object_key=""
+
+          upload_pair() {
+            local remote_archive_key="$1"
+            local remote_checksum_key="${remote_archive_key}.sha256"
+
+            aws s3api put-object \
+              --bucket "$B2_BUCKET" \
+              --key "$remote_archive_key" \
+              --body "$ARCHIVE_PATH" \
+              --server-side-encryption AES256 \
+              --content-type application/gzip \
+              --metadata "sha256=$ARCHIVE_SHA256" \
+              --endpoint-url "$B2_ENDPOINT" \
+              > /dev/null
+
+            aws s3api put-object \
+              --bucket "$B2_BUCKET" \
+              --key "$remote_checksum_key" \
+              --body "$CHECKSUM_PATH" \
+              --server-side-encryption AES256 \
+              --content-type text/plain \
+              --endpoint-url "$B2_ENDPOINT" \
+              > /dev/null
+          }
+
+          upload_pair "$archive_object_key"
+
+          if [[ "$BACKUP_KIND" == "daily" && "$(date -u +%u)" == "7" ]]; then
+            weekly_archive_object_key="${normalized_prefix}/weekly/${date_path}/${ARCHIVE_NAME}"
+            upload_pair "$weekly_archive_object_key"
+          fi
+
+          echo "archive_object_key=$archive_object_key" >> "$GITHUB_OUTPUT"
+          echo "checksum_object_key=$checksum_object_key" >> "$GITHUB_OUTPUT"
+          echo "weekly_archive_object_key=$weekly_archive_object_key" >> "$GITHUB_OUTPUT"
+
+      - name: Verify stored backup
+        env:
+          AWS_PAGER: ""
+          AWS_RETRY_MODE: standard
+          AWS_MAX_ATTEMPTS: 5
+          AWS_ACCESS_KEY_ID: ${{ secrets.B2_PROD_VERIFY_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_PROD_VERIFY_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.B2_PROD_REGION }}
+          AWS_REGION: ${{ vars.B2_PROD_REGION }}
+          B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
+          B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
+          ARCHIVE_NAME: ${{ steps.create.outputs.archive_name }}
+          EXPECTED_ARCHIVE_SIZE: ${{ steps.create.outputs.archive_size }}
+          EXPECTED_SHA256: ${{ steps.create.outputs.archive_sha256 }}
+          ARCHIVE_OBJECT_KEY: ${{ steps.upload.outputs.archive_object_key }}
+          WEEKLY_ARCHIVE_OBJECT_KEY: ${{ steps.upload.outputs.weekly_archive_object_key }}
+        run: |
+          set -euo pipefail
+
+          verify_root="$RUNNER_TEMP/database-backup-verify"
+          mkdir -m 700 "$verify_root"
+
+          verify_pair() {
+            local archive_object_key="$1"
+            local checksum_object_key="${archive_object_key}.sha256"
+            local verification_name="$2"
+            local verification_dir="$verify_root/$verification_name"
+            local downloaded_archive="$verification_dir/$ARCHIVE_NAME"
+            local downloaded_checksum="$downloaded_archive.sha256"
+            local stored_size
+            local stored_encryption
+            local stored_sha256
+            local checksum_encryption
+            local actual_sha256
+            local expected_entries
+            local actual_entries
+
+            mkdir -m 700 "$verification_dir"
+
+            read -r stored_size stored_encryption stored_sha256 < <(
+              aws s3api head-object \
+                --bucket "$B2_BUCKET" \
+                --key "$archive_object_key" \
+                --endpoint-url "$B2_ENDPOINT" \
+                --query '[ContentLength,ServerSideEncryption,Metadata.sha256]' \
+                --output text
+            )
+
+            if [[ "$stored_size" != "$EXPECTED_ARCHIVE_SIZE" ]]; then
+              echo "::error::$verification_name archive size does not match"
+              exit 1
+            fi
+
+            if [[ "$stored_encryption" != "AES256" ]]; then
+              echo "::error::$verification_name archive encryption is not AES256"
+              exit 1
+            fi
+
+            if [[ "$stored_sha256" != "$EXPECTED_SHA256" ]]; then
+              echo "::error::$verification_name archive metadata checksum does not match"
+              exit 1
+            fi
+
+            checksum_encryption="$(
+              aws s3api head-object \
+                --bucket "$B2_BUCKET" \
+                --key "$checksum_object_key" \
+                --endpoint-url "$B2_ENDPOINT" \
+                --query 'ServerSideEncryption' \
+                --output text
+            )"
+
+            if [[ "$checksum_encryption" != "AES256" ]]; then
+              echo "::error::$verification_name checksum encryption is not AES256"
+              exit 1
+            fi
+
+            aws s3api get-object \
+              --bucket "$B2_BUCKET" \
+              --key "$archive_object_key" \
+              --endpoint-url "$B2_ENDPOINT" \
+              "$downloaded_archive" \
+              > /dev/null
+
+            aws s3api get-object \
+              --bucket "$B2_BUCKET" \
+              --key "$checksum_object_key" \
+              --endpoint-url "$B2_ENDPOINT" \
+              "$downloaded_checksum" \
+              > /dev/null
+
+            chmod 600 "$downloaded_archive" "$downloaded_checksum"
+
+            actual_sha256="$(sha256sum "$downloaded_archive" | cut -d ' ' -f 1)"
+            if [[ "$actual_sha256" != "$EXPECTED_SHA256" ]]; then
+              echo "::error::$verification_name downloaded archive checksum does not match"
+              exit 1
+            fi
+
+            (
+              cd "$verification_dir"
+              sha256sum --check "$ARCHIVE_NAME.sha256"
+            )
+
+            expected_entries="$(printf '%s\n' data.sql roles.sql schema.sql)"
+            actual_entries="$(tar -tzf "$downloaded_archive" | sort)"
+            if [[ "$actual_entries" != "$expected_entries" ]]; then
+              echo "::error::$verification_name downloaded archive contains unexpected files"
+              exit 1
+            fi
+          }
+
+          verify_pair "$ARCHIVE_OBJECT_KEY" primary
+
+          if [[ -n "$WEEKLY_ARCHIVE_OBJECT_KEY" ]]; then
+            verify_pair "$WEEKLY_ARCHIVE_OBJECT_KEY" weekly
+          fi
+
           {
-            echo "### Backblaze B2 connectivity"
+            echo "### PostgreSQL backup"
             echo
             echo "- Status: successful"
-            echo "- Object: \`$OBJECT_KEY\`"
-            echo "- SHA-256: verified"
+            echo "- Category: \`${{ inputs.backup_kind }}\`"
+            echo "- Object: \`$ARCHIVE_OBJECT_KEY\`"
+            echo "- Size: $EXPECTED_ARCHIVE_SIZE bytes"
+            echo "- SHA-256: verified after download"
+            echo "- Encryption: AES256"
+            if [[ -n "$WEEKLY_ARCHIVE_OBJECT_KEY" ]]; then
+              echo "- Weekly copy: \`$WEEKLY_ARCHIVE_OBJECT_KEY\`"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
