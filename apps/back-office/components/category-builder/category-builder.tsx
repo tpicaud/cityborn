@@ -7,7 +7,6 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
-import { getGuessObjectDraftLocationId } from '@cityborn/api';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/actions/category';
@@ -77,26 +76,27 @@ export function CategoryBuilder({
         return;
       }
 
+      const locationId = guessObjectDraft.world_location?.id;
+      if (!locationId) {
+        alert('Localisation non valide, veuillez resélectionner');
+        return;
+      }
+
+      const {
+        id: _id,
+        world_location: _world_location,
+        ...rest
+      } = guessObjectDraft;
+
       let id: string;
       if (guessObjectDraft.id) {
-        const result = await patchGuessObject(
-          guessObjectDraft.id,
-          guessObjectDraft,
-        );
+        const result = await patchGuessObject(guessObjectDraft.id, {
+          ...rest,
+          world_location_id: locationId,
+        });
         if (!result.ok) throw new Error(result.error.message);
         id = result.data;
       } else {
-        const locationId = getGuessObjectDraftLocationId(guessObjectDraft);
-        if (!locationId) {
-          alert('Localisation non valide, veuillez resélectionner');
-          return;
-        }
-
-        const {
-          id: _id,
-          world_location: _world_location,
-          ...rest
-        } = guessObjectDraft;
         const result = await saveGuessObject({
           ...rest,
           world_location_id: locationId,
