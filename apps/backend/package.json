@@ -49,8 +49,6 @@
     "@upstash/redis": "^1.38.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.3.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
     "compression": "^1.8.1",
     "cookie": "^2.0.0",
     "cookie-parser": "^1.4.7",
