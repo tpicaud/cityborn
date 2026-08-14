@@ -29,10 +29,10 @@ export class SearchService {
       const guessObjectDraft =
         GuessObjectMapper.toGuessObjectDraft(wikidata_response);
 
-      if (wikidata_response.world_location_id) {
+      if (wikidata_response.world_location_id && wikidata_response.osm_type) {
         const world_location = await this.searchWorldLocationById(
           wikidata_response.world_location_id,
-          wikidata_response.osm_type!,
+          wikidata_response.osm_type,
         );
         if (world_location) guessObjectDraft.world_location = world_location;
       }
@@ -76,7 +76,7 @@ export class SearchService {
 
     const nominatim_response = await this.nominatimService.findByOsmId(
       id,
-      osm_type as any,
+      osm_type as 'node' | 'way' | 'relation',
     );
 
     if (!nominatim_response) {

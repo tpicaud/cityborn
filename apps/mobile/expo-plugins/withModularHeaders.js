@@ -1,6 +1,6 @@
 const { withDangerousMod } = require('@expo/config-plugins');
-const { readFileSync, writeFileSync } = require('fs');
-const { join } = require('path');
+const { readFileSync, writeFileSync } = require('node:fs');
+const { join } = require('node:path');
 
 module.exports = function withModularHeaders(config) {
   return withDangerousMod(config, [

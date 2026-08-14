@@ -7,5 +7,12 @@
       "react": "recommended",
       "reactNative": "recommended"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["assets/**"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false }
+    }
+  ]
 }

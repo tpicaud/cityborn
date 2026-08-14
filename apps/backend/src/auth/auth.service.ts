@@ -231,7 +231,8 @@ export class AuthService {
   ): Promise<AuthResponse> {
     const { identity_token, apple_user_id, details } = dto;
 
-    if (!(await verifyAppleIdToken(identity_token, process.env.APP_ID!))) {
+    const appId = process.env.APP_ID;
+    if (!appId || !(await verifyAppleIdToken(identity_token, appId))) {
       throw new UnauthorizedException({
         code: ErrorCode.BAD_REQUEST,
         message: 'Bad request',

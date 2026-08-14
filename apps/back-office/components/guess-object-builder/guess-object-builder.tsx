@@ -13,6 +13,8 @@ import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';
 import { WorldLocationViewer } from './world-location-viewer';
 
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+
 export function GuessObjectBuilder({
   guessObjectDraft,
   setGuessObjectDraft,
@@ -224,7 +226,7 @@ export function GuessObjectBuilder({
             <div className="inset-0 z-0 h-full w-full">
               <WorldLocationViewer
                 world_location={guessObjectDraft?.world_location}
-                API_KEY={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+                API_KEY={GOOGLE_MAPS_API_KEY}
               />
             </div>
           </div>

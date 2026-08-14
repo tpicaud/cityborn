@@ -1,4 +1,4 @@
-import type { GameConfig, Guess } from '@cityborn/api';
+import { type GameConfig, type Guess, isApiError } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/contexts';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
@@ -19,8 +19,8 @@ export default function SoloSession() {
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
       soloSession.updateGameConfig(gameConfig);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
@@ -31,32 +31,32 @@ export default function SoloSession() {
   const handleStartGame = async () => {
     try {
       await soloSession.startGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleGuess = async (guess: Guess) => {
     try {
       soloSession.guess(guess);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleNextRound = async () => {
     try {
       soloSession.nextRound();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
   const handleEndGame = async () => {
     try {
       await soloSession.endGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : String(error));
     }
   };
 
@@ -71,7 +71,7 @@ export default function SoloSession() {
   const handleExitGame = async () => {
     try {
       await soloSession.exitGame();
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
     }
   };
@@ -103,7 +103,6 @@ export default function SoloSession() {
   } else {
     return (
       <SoloLobby
-        localPlayerID={localPlayerID}
         isHost={soloSession.isHost}
         session={soloSession.session}
         handleUpdateGameConfig={handleUpdateGameConfig}

@@ -113,13 +113,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {game.mode.toUpperCase()} •{' '}
-                          {calculateTotalPoints(
-                            game.results[
-                              game.players.find(
-                                (p) => p.username === user.username,
-                              )?.username!
-                            ],
-                          )}
+                          {calculateTotalPoints(game.results[user.username])}
                         </Typography>
                       </div>
                     </AccordionSummary>

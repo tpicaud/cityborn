@@ -9,7 +9,8 @@ import type { MapProps } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import { calculatePoints } from '@cityborn/utils';
 import * as turf from '@turf/turf';
-import React, { useEffect, useRef } from 'react';
+import type * as GeoJSON from 'geojson';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Appearance, Image, View } from 'react-native';
 import MapView, {
   type LatLng,
@@ -19,20 +20,26 @@ import MapView, {
   PROVIDER_GOOGLE,
 } from 'react-native-maps';
 
-export default function Map({ mapProps }: { mapProps: MapProps }) {
+export default function GameMap({ mapProps }: { mapProps: MapProps }) {
   const { center, zoom, preGuess, game, localPlayerID, handlePreGuess } =
     mapProps;
 
   const mapRef = useRef<MapView>(null);
-  const currentRound: Round = game.state.currentRound!;
+  if (!game.state.currentRound) {
+    throw new Error('GameMap rendered without an active round');
+  }
+  const currentRound: Round = game.state.currentRound;
   const guessObject = (game.state.guessObjects ?? []).find(
     (obj: FullGuessObject) => obj.id === currentRound.guessObjectId,
   ) as FullGuessObject;
 
-  const getCenterOfGuessObject = (guessObject: FullGuessObject): Coord => ({
-    lat: guessObject.world_location.centroid[0],
-    lng: guessObject.world_location.centroid[1],
-  });
+  const getCenterOfGuessObject = useCallback(
+    (guessObject: FullGuessObject): Coord => ({
+      lat: guessObject.world_location.centroid[0],
+      lng: guessObject.world_location.centroid[1],
+    }),
+    [],
+  );
 
   const getDistanceTo = (lat: number, lng: number): number => {
     if (isGeoJSON(guessObject) && hasWin({ lat, lng }, guessObject)) return 0;
@@ -66,16 +73,19 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
   };
 
   const isGeoJSON = (guessObject: FullGuessObject) => {
-    const type = guessObject.world_location?.geometry?.type;
+    const type = guessObject.world_location.geometry.type;
     return type === 'Polygon' || type === 'MultiPolygon';
   };
 
   const hasWin = (point: Coord, guessObject: FullGuessObject) => {
     try {
-      const geoJson = guessObject.world_location?.geometry!;
+      const geoJson = guessObject.world_location.geometry;
       if (geoJson.type === 'Point') return false;
       const turfPoint = turf.point([point.lng, point.lat]);
-      return turf.booleanPointInPolygon(turfPoint, geoJson as any);
+      return turf.booleanPointInPolygon(
+        turfPoint,
+        geoJson as unknown as GeoJSON.Polygon | GeoJSON.MultiPolygon,
+      );
     } catch {
       return false;
     }
@@ -84,7 +94,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
   const renderPolygons = () => {
     if (!isGeoJSON(guessObject)) return null;
 
-    const geometry = guessObject.world_location?.geometry!;
+    const geometry = guessObject.world_location.geometry;
     if (geometry.type === 'Polygon') {
       const polygonCoords = (geometry.coordinates[0] as number[][]).map(
         ([lng, lat]) => ({ latitude: lat, longitude: lng }),
@@ -99,10 +109,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         />
       );
     } else if (geometry.type === 'MultiPolygon') {
-      return geometry.coordinates.map((polygon: any, idx: number) => (
+      return (geometry.coordinates as number[][][][]).map((polygon) => (
         <Polygon
-          key={idx}
-          coordinates={polygon[0].map(([lng, lat]: [number, number]) => ({
+          key={JSON.stringify(polygon[0][0])}
+          coordinates={polygon[0].map(([lng, lat]) => ({
             latitude: lat,
             longitude: lng,
           }))}
@@ -134,15 +144,15 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   const renderOtherPlayers = () => {
     const guesses = currentRound.playersGuesses
-      ? Object.entries(currentRound.playersGuesses)
-          .filter(([playerID]) => playerID !== localPlayerID)
-          .map(([, guess]) => guess)
+      ? Object.entries(currentRound.playersGuesses).filter(
+          ([playerID]) => playerID !== localPlayerID,
+        )
       : [];
 
-    return guesses.map((guess, index) => {
+    return guesses.map(([playerID, guess]) => {
       if (guess.distance === -1) return null;
       return (
-        <React.Fragment key={index}>
+        <React.Fragment key={playerID}>
           <Marker
             coordinate={{
               latitude: guess.coordinates.lat,
@@ -169,7 +179,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
 
   const localGuess = currentRound.playersGuesses?.[localPlayerID];
 
-  const focusMap = () => {
+  const focusMap = useCallback(() => {
     if (!mapRef.current) return;
 
     const answer = getCenterOfGuessObject(guessObject);
@@ -197,7 +207,7 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
       },
       100,
     );
-  };
+  }, [guessObject, localGuess, getCenterOfGuessObject]);
 
   useEffect(() => {
     if (currentRound.status === RoundStatus.SHOWING_RESULTS) focusMap();
@@ -220,10 +230,10 @@ export default function Map({ mapProps }: { mapProps: MapProps }) {
         onPanDrag={() => {}}
         initialCamera={{
           center: {
-            latitude: 15,
-            longitude: 0,
+            latitude: center.lat,
+            longitude: center.lng,
           },
-          zoom: 0,
+          zoom,
           pitch: 0,
           heading: 0,
         }}

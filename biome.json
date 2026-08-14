@@ -41,13 +41,14 @@
     }
   },
   "files": {
+    "maxSize": 1500000,
     "includes": [
       "**",
       "!**/.next/",
       "!**/dist/",
       "!**/build/",
       "!**/coverage/",
-      "!packages/api/openapi/versions/"
+      "!packages/api/openapi/versions"
     ]
   }
 }

@@ -1,6 +1,11 @@
 'use client';
 
-import type { CategoryTree, GameConfig, Guess } from '@cityborn/api';
+import {
+  type CategoryTree,
+  type GameConfig,
+  type Guess,
+  isApiError,
+} from '@cityborn/api';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
@@ -27,8 +32,8 @@ export default function SoloSessionComponent({
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
       soloSession.updateGameConfig(gameConfig);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
@@ -39,32 +44,32 @@ export default function SoloSessionComponent({
   const handleStartGame = async () => {
     try {
       await soloSession.startGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleGuess = async (guess: Guess) => {
     try {
       soloSession.guess(guess);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleNextRound = async () => {
     try {
       soloSession.nextRound();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleEndGame = async () => {
     try {
       await soloSession.endGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
@@ -72,15 +77,15 @@ export default function SoloSessionComponent({
     try {
       await soloSession.playAgain();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   const handleExitGame = async () => {
     try {
       await soloSession.exitGame();
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
+      console.error(error);
     }
   };
 

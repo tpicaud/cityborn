@@ -8,17 +8,9 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 const Results = ({
   game,
   localPlayerID,
-  isHost,
-  handleEndGame,
-  handlePlayAgain,
-  handleExitGame,
 }: {
   game: Game;
   localPlayerID: string;
-  isHost: boolean;
-  handleEndGame: () => Promise<void>;
-  handlePlayAgain: () => Promise<void>;
-  handleExitGame: () => Promise<void>;
 }) => {
   const playersResults = new Map<string, PlayerResults>(getGameResult(game));
   const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
@@ -92,9 +84,9 @@ const Results = ({
               <Text className="flex-1 text-right font-semibold">Points</Text>
             </View>
 
-            {localPlayerResults.results.map((res, index) => (
+            {localPlayerResults.results.map((res) => (
               <View
-                key={index}
+                key={res.guessObjectId}
                 className="flex-row border-b border-gray-300 py-2 w-full"
               >
                 <Text className="flex-1 text-left text-sm">

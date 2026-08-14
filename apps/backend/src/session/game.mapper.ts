@@ -7,8 +7,8 @@ import {
 } from '@cityborn/api';
 import type { GameRecord as PrismaGameRecord } from '@prisma/client';
 import { z } from 'zod';
-export class GameMapper {
-  static toGameRecord(gameRecords: PrismaGameRecord[]): GameRecord[] {
+export const GameMapper = {
+  toGameRecord(gameRecords: PrismaGameRecord[]): GameRecord[] {
     return gameRecords.map((record) => ({
       id: record.id,
       mode: record.mode as SessionMode,
@@ -18,5 +18,5 @@ export class GameMapper {
       results: record.results as unknown as Record<string, PlayerResults>,
       createdAt: record.createdAt.toISOString().split('T')[0],
     }));
-  }
-}
+  },
+};

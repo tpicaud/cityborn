@@ -2,7 +2,12 @@ import { createApiClient } from '@cityborn/api';
 
 const adminToken = process.env.ADMIN_DASHBOARD_TOKEN ?? '';
 
-const client = createApiClient(process.env.BACKEND_URL!, {
+const backendUrl = process.env.BACKEND_URL;
+if (!backendUrl) {
+  throw new Error('BACKEND_URL is not set');
+}
+
+const client = createApiClient(backendUrl, {
   getAccessToken: async () => adminToken,
   getRefreshToken: async () => null,
   setTokens: async () => {},

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/buttons/NewButton';
 
@@ -13,7 +14,13 @@ export default function Header() {
           href="/"
           className="h-full transition-transform duration-200 ease-in-out transform hover:scale-105 active:scale-95"
         >
-          <img src={'./logo.svg'} alt="Logo" className="h-full w-auto" />
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            width={131}
+            height={133}
+            className="h-full w-auto"
+          />
         </Link>
       </div>
 

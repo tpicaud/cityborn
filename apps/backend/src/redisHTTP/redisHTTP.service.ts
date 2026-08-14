@@ -4,7 +4,6 @@ import { Redis } from '@upstash/redis';
 @Injectable()
 export class RedisHTTPService {
   private readonly redisHTTPClient: Redis;
-  private readonly redisClient: Redis;
 
   constructor() {
     this.redisHTTPClient = new Redis({
@@ -13,11 +12,11 @@ export class RedisHTTPService {
     });
   }
 
-  async getHTTP<T = any>(key: string): Promise<T | null> {
+  async getHTTP<T = unknown>(key: string): Promise<T | null> {
     return await this.redisHTTPClient.get<T>(key);
   }
 
-  async setHTTP<T = any>(
+  async setHTTP<T = unknown>(
     key: string,
     value: T,
     ttlSeconds?: number,

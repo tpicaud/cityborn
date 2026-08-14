@@ -66,6 +66,7 @@ export function WorldLocationSearchInput({
         name={name ?? id}
         placeholder={placeholder}
         value={value ?? ''}
+        disabled={disabled}
         autoComplete="off"
         onChange={onChange}
         className={className}

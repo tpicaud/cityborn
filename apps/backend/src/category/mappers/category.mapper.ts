@@ -11,8 +11,8 @@ type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: (PrismaGuessObject & { world_location: WorldLocation })[];
 };
 
-export class CategoryMapper {
-  static toCategory(prismaCategory: PrismaCategoryWithRelations): Category {
+export const CategoryMapper = {
+  toCategory(prismaCategory: PrismaCategoryWithRelations): Category {
     return {
       id: prismaCategory.id,
       name: prismaCategory.name,
@@ -20,17 +20,15 @@ export class CategoryMapper {
       description: prismaCategory.description ?? undefined,
       parentId: prismaCategory.parentId ?? undefined,
     };
-  }
+  },
 
-  static toCategories(prismaCategories: PrismaCategory[]): Category[] {
+  toCategories(prismaCategories: PrismaCategory[]): Category[] {
     return prismaCategories.map((category) =>
       CategoryMapper.toCategory(category),
     );
-  }
+  },
 
-  static toFullCategory(
-    prismaCategory: PrismaCategoryWithRelations,
-  ): FullCategory {
+  toFullCategory(prismaCategory: PrismaCategoryWithRelations): FullCategory {
     return {
       id: prismaCategory.id,
       name: prismaCategory.name,
@@ -42,17 +40,17 @@ export class CategoryMapper {
           GuessObjectMapper.toGuessObject(guessObject),
         ) ?? [],
     };
-  }
+  },
 
-  static toFullCategories(
+  toFullCategories(
     prismaCategories: PrismaCategoryWithRelations[],
   ): FullCategory[] {
     return prismaCategories.map((category) =>
       CategoryMapper.toFullCategory(category),
     );
-  }
+  },
 
-  static toCategoryTree(node: PrismaCategoryNode): CategoryTree {
+  toCategoryTree(node: PrismaCategoryNode): CategoryTree {
     return {
       id: node.id,
       name: node.name,
@@ -61,9 +59,9 @@ export class CategoryMapper {
       parentId: node.parentId ?? undefined,
       children: node.children.map((c) => CategoryMapper.toCategoryTree(c)),
     };
-  }
+  },
 
-  static toCategoryTrees(roots: PrismaCategoryNode[]): CategoryTree[] {
+  toCategoryTrees(roots: PrismaCategoryNode[]): CategoryTree[] {
     return roots.map((r) => CategoryMapper.toCategoryTree(r));
-  }
-}
+  },
+};

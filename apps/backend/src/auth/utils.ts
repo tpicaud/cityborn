@@ -1,6 +1,6 @@
 import * as cookie from 'cookie';
 import type { Request } from 'express';
-import type { JwtHeader, SigningKeyCallback } from 'jsonwebtoken';
+import type { JwtHeader, JwtPayload, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
@@ -55,7 +55,7 @@ function getKey(header: JwtHeader, callback: SigningKeyCallback): void {
 export async function verifyAppleIdToken(
   idToken: string,
   audience: string,
-): Promise<any> {
+): Promise<JwtPayload | string | undefined> {
   return new Promise((resolve, reject) => {
     jwt.verify(
       idToken,

@@ -9,8 +9,8 @@ export type PrismaWorldLocationWithGeometry = PrismaWorldLocation & {
   geometry: PrismaWorldLocationGeometry | null;
 };
 
-export class WorldLocationMapper {
-  static toWorldLocation(
+export const WorldLocationMapper = {
+  toWorldLocation(
     prismaWorldLocation: PrismaWorldLocationWithGeometry,
   ): WorldLocation {
     return {
@@ -28,9 +28,9 @@ export class WorldLocationMapper {
         external_id: string;
       },
     };
-  }
+  },
 
-  static toWorldLocationFromNominatimItem(
+  toWorldLocationFromNominatimItem(
     nominatimItem: NominatimItemResponse,
   ): WorldLocation {
     return {
@@ -49,5 +49,5 @@ export class WorldLocationMapper {
         external_id: String(nominatimItem.osm_id),
       },
     };
-  }
-}
+  },
+};

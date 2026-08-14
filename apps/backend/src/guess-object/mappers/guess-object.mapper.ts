@@ -20,10 +20,8 @@ export type PrismaGuessObjectWithFullLocation = PrismaGuessObject & {
   };
 };
 
-export class GuessObjectMapper {
-  static toGuessObject(
-    prismaGuessObject: PrismaGuessObjectWithLocation,
-  ): GuessObject {
+export const GuessObjectMapper = {
+  toGuessObject(prismaGuessObject: PrismaGuessObjectWithLocation): GuessObject {
     return {
       id: prismaGuessObject.id,
       name: prismaGuessObject.name,
@@ -42,9 +40,9 @@ export class GuessObjectMapper {
           prismaGuessObject.world_location.display_name ?? undefined,
       },
     };
-  }
+  },
 
-  static toFullGuessObject(
+  toFullGuessObject(
     prismaGuessObject: PrismaGuessObjectWithFullLocation,
   ): FullGuessObject {
     return {
@@ -62,9 +60,9 @@ export class GuessObjectMapper {
         prismaGuessObject.world_location,
       ),
     };
-  }
+  },
 
-  static toGuessObjectDraft(response: WikidataItemResponse): GuessObjectDraft {
+  toGuessObjectDraft(response: WikidataItemResponse): GuessObjectDraft {
     return {
       source: {
         provider: 'wikidata',
@@ -75,9 +73,9 @@ export class GuessObjectMapper {
       short_description: response.short_description ?? undefined,
       image: response.image ?? undefined,
     };
-  }
+  },
 
-  static toGuessObjectDraftFromPrisma(
+  toGuessObjectDraftFromPrisma(
     prismaGuessObject: PrismaGuessObject,
   ): GuessObjectDraft {
     return {
@@ -91,13 +89,13 @@ export class GuessObjectMapper {
       short_description: prismaGuessObject.short_description ?? undefined,
       image: prismaGuessObject.image ?? undefined,
     };
-  }
+  },
 
-  static toGuessObjectsSearchResponse(
+  toGuessObjectsSearchResponse(
     response: WikidataSearchResponse,
   ): GuessObjectDraft[] {
     return response.results.map((item) =>
       GuessObjectMapper.toGuessObjectDraft(item),
     );
-  }
-}
+  },
+};

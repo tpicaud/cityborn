@@ -8,7 +8,11 @@ import { RedisService } from './redis.service';
     {
       provide: 'REDIS_CLIENT',
       useFactory: () => {
-        return new Redis(process.env.REDIS_URL!);
+        const url = process.env.REDIS_URL;
+        if (!url) {
+          throw new Error('REDIS_URL is not set');
+        }
+        return new Redis(url);
       },
     },
     RedisService,

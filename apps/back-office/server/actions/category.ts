@@ -27,10 +27,12 @@ export async function saveCategory(
   return toApiResult(result);
 }
 
-export async function deleteCategory(id: string): Promise<ApiResult<{}>> {
+export async function deleteCategory(id: string): Promise<ApiResult<void>> {
   const result = await adminClient.category.deleteCategory({
     params: { id },
     body: {},
   });
-  return toApiResult(result);
+  const r = toApiResult(result);
+  if (!r.ok) return r;
+  return { ok: true, data: undefined };
 }

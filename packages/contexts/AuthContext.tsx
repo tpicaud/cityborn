@@ -35,7 +35,7 @@ export const AuthProvider = ({
     } catch {
       setUser(null);
     }
-  }, []);
+  }, [getCurrentUser]);
 
   return (
     <AuthContext.Provider value={{ user, setUser, refreshUser }}>

@@ -24,22 +24,21 @@ export default function Profile() {
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] =
     useState<boolean>(false);
 
-  const fetchGameRecords = async () => {
+  const fetchGameRecords = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const result = await getGameRecords();
     setLoading(false);
     if (!result.ok) return invokeError(result.error);
     setGamesRecords(result.data);
-  };
+  }, [user, invokeError]);
 
   useFocusEffect(
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     useCallback(() => {
       if (user) {
         fetchGameRecords();
       }
-    }, [user]),
+    }, [user, fetchGameRecords]),
   );
 
   const handleDeleteAccount = async () => {

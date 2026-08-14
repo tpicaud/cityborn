@@ -13,7 +13,6 @@ import {
 } from '@/lib/api/category';
 
 interface SoloLobbyProps {
-  localPlayerID: string | undefined;
   session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
@@ -21,7 +20,6 @@ interface SoloLobbyProps {
 }
 
 export function SoloLobby({
-  localPlayerID,
   session,
   isHost,
   handleUpdateGameConfig,

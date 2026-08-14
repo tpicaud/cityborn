@@ -31,10 +31,10 @@ export class PlayerService {
         this.getKey(socketID),
         this.PLAYER_TTL,
       );
-    } catch (error: any) {
+    } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_SET_FAILED,
-        message: `Error saving player: ${error.message}`,
+        message: `Error saving player: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }
@@ -61,10 +61,10 @@ export class PlayerService {
       );
 
       return result;
-    } catch (error: any) {
+    } catch (error) {
       throw new InternalServerErrorException({
         code: ErrorCode.REDIS_GET_FAILED,
-        message: `Error getting player: ${error.message}`,
+        message: `Error getting player: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   }

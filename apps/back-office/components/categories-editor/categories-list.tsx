@@ -13,10 +13,11 @@ export function CategoriesList({
                         sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
     >
       {categories.map((category) => (
-        <div
+        <button
           key={category.id}
+          type="button"
           onClick={() => onCategorySelect(category)}
-          className={`w-full h-full
+          className={`w-full h-full text-left
                                 flex flex-row justify-between p-3 bg-neutral-700
                                 rounded-xl border border-solid
                                 ${category.isPublished ? 'border-green-600' : 'border-orange-500'}
@@ -42,7 +43,7 @@ export function CategoriesList({
               )}
             </div>
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );

@@ -9,13 +9,9 @@ import { extractTokenFromHTTPHeader } from '../utils';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor() {}
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    let token: string | undefined;
-
     const request = context.switchToHttp().getRequest();
-    token = extractTokenFromHTTPHeader(request);
+    const token = extractTokenFromHTTPHeader(request);
     if (!token)
       throw new UnauthorizedException({
         code: ErrorCode.USER_TOKEN_MISSING,

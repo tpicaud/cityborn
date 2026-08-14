@@ -4,6 +4,7 @@ import {
   type CategoryTree,
   type GameConfig,
   type Guess,
+  isApiError,
   SessionStatus,
 } from '@cityborn/api';
 import { useParams } from 'next/navigation';
@@ -37,8 +38,8 @@ export default function MultiSessionComponent({
         hasJoinedSession.current = true;
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
-      } catch (error: any) {
-        invokeError(error);
+      } catch (error) {
+        invokeError(isApiError(error) ? error : 'Une erreur est survenue');
       }
     },
     [multiSession.join, invokeError],
@@ -73,24 +74,24 @@ export default function MultiSessionComponent({
   const handleUpdateHost = async (newHostID: string) => {
     try {
       await multiSession.updateHost(newHostID);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
       await multiSession.updateGameConfig(gameConfig);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleKickPlayer = async (playerToKick: string) => {
     try {
       await multiSession.kickPlayer(playerToKick);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
@@ -101,48 +102,48 @@ export default function MultiSessionComponent({
   const handleStartGame = async () => {
     try {
       await multiSession.startGame();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleGuess = async (guess: Guess) => {
     try {
       await multiSession.guess(guess);
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleNextRound = async () => {
     try {
       await multiSession.nextRound();
-    } catch (error: any) {
-      invokeError(error);
+    } catch (error) {
+      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
     }
   };
 
   const handleEndGame = async () => {
     try {
       await multiSession.endGame();
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handlePlayAgain = async () => {
     try {
       await multiSession.playAgain();
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleExitGame = async () => {
     try {
       await multiSession.exitGame();
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
+      console.error(error);
     }
   };
 

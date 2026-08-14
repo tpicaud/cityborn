@@ -128,9 +128,13 @@ const Overlay = ({
     }
   }, [timerEnded, handleIsTimeUp]);
 
+  if (!game.state.currentRound) {
+    throw new Error('Overlay rendered without an active round');
+  }
+  const currentRound: Round = game.state.currentRound;
   const currentGuessObject = game.state.guessObjects?.find(
-    (obj) => obj.id === game.state.currentRound?.guessObjectId,
-  )!;
+    (obj) => obj.id === currentRound.guessObjectId,
+  ) as FullGuessObject;
 
   return (
     <View
@@ -144,7 +148,7 @@ const Overlay = ({
     >
       <View className="absolute top-5 w-full">
         <View className="absolute left-0 w-40">
-          {game.state.currentRound?.status === RoundStatus.GUESSING && (
+          {currentRound.status === RoundStatus.GUESSING && (
             <Timer
               totalTime={game.config.timer}
               endMessage="Terminé !"
@@ -159,72 +163,69 @@ const Overlay = ({
       </View>
 
       <View className="absolute bottom-0 w-full z-10">
-        {game.state.currentRound?.status === RoundStatus.GUESSING && (
+        {currentRound.status === RoundStatus.GUESSING && (
           <View className="relative w-full flex justify-center items-center bg-transparent">
             <Button
               size="large"
               label={
                 hasGuessed
-                  ? `${Object.keys(game.state.currentRound?.playersGuesses!).length}/${Object.keys(game.state.results).length}...`
+                  ? `${Object.keys(currentRound.playersGuesses ?? {}).length}/${Object.keys(game.state.results).length}...`
                   : 'GUESS'
               }
               disabled={
                 !preGuess ||
-                game.state.currentRound?.playersGuesses?.[localPlayerID] !==
-                  undefined
+                currentRound.playersGuesses?.[localPlayerID] !== undefined
               }
               onPress={async () => {
-                await handleGuess(preGuess!);
+                if (!preGuess) return;
+                await handleGuess(preGuess);
                 setHasGuessed(true);
               }}
             />
           </View>
         )}
 
-        {game.state.currentRound?.status === RoundStatus.SHOWING_RESULTS && (
+        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <GuessResult
-            currentRound={game.state.currentRound!}
+            currentRound={currentRound}
             guessObject={currentGuessObject}
             localPlayerID={localPlayerID}
           />
         )}
       </View>
 
-      {game.state.currentRound && (
+      <View
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: '55%',
+          transform: [{ translateY: -50 }],
+          zIndex: 50,
+          backgroundColor: 'transparent',
+        }}
+      >
         <View
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '55%',
-            transform: [{ translateY: -50 }],
-            zIndex: 50,
-            backgroundColor: 'transparent',
-          }}
+          className="flex flex-col gap-2 bg-transparent"
+          pointerEvents="auto"
         >
-          <View
-            className="flex flex-col gap-2 bg-transparent"
-            pointerEvents="auto"
-          >
-            {game.state.currentRound.status === RoundStatus.SHOWING_RESULTS && (
-              <Button
-                size="small"
-                label="->"
-                className="w-auto text-center"
-                disabled={!isHost}
-                onPress={async () => await handleNextRound()}
-              />
-            )}
-            <View className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
-              <Text>
-                {game.state.guessObjectsIds.indexOf(
-                  game.state.currentRound?.guessObjectId,
-                ) + 1}
-                /{game.state.guessObjectsIds?.length}
-              </Text>
-            </View>
+          {currentRound.status === RoundStatus.SHOWING_RESULTS && (
+            <Button
+              size="small"
+              label="->"
+              className="w-auto text-center"
+              disabled={!isHost}
+              onPress={async () => await handleNextRound()}
+            />
+          )}
+          <View className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
+            <Text>
+              {game.state.guessObjectsIds.indexOf(currentRound.guessObjectId) +
+                1}
+              /{game.state.guessObjectsIds?.length}
+            </Text>
           </View>
         </View>
-      )}
+      </View>
     </View>
   );
 };

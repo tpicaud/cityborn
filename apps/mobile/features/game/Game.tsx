@@ -20,7 +20,7 @@ export const Game = ({
   handleGuess,
   handleNextRound,
   handleEndGame,
-  handlePlayAgain,
+  handlePlayAgain: _handlePlayAgain,
   handleExitGame,
 }: {
   localPlayerID: string | undefined;
@@ -87,14 +87,7 @@ export const Game = ({
             className="absolute h-[80%] w-[90%] p-8"
           >
             <View className="flex-1 w-full">
-              <Results
-                game={game}
-                localPlayerID={localPlayerID}
-                isHost={isHost}
-                handleEndGame={handleEndGame}
-                handlePlayAgain={handlePlayAgain}
-                handleExitGame={handleExitGame}
-              />
+              <Results game={game} localPlayerID={localPlayerID} />
             </View>
             <View className="flex gap-4 items-center justify-center">
               <Button
