@@ -33,6 +33,7 @@ import {
   logApiError,
 } from '../common/filters/all-exceptions.filter';
 import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
+import type { SessionSocket } from '../common/types/session-socket';
 import { CurrentUser } from '../user/user.decorator';
 import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
@@ -40,11 +41,6 @@ import { SessionService } from './session.service';
 interface WSResponse {
   success: boolean;
   error?: ApiError;
-}
-
-interface AuthenticatedSocket extends Socket {
-  visitorId?: string | string[];
-  user?: User | null;
 }
 
 @WebSocketGateway({
@@ -70,15 +66,15 @@ export class SessionGateway
   @WebSocketServer()
   io: Server;
 
-  async handleConnection(client: AuthenticatedSocket) {
+  async handleConnection(client: SessionSocket) {
     const visitorId = client.handshake?.query?.['x-visitor-id'];
     if (visitorId) {
-      client.visitorId = visitorId;
+      client.data.visitorId = visitorId;
     }
 
     const token = extractAccessTokenFromWsClient(client);
     if (!token) {
-      client.user = null;
+      client.data.user = null;
       return;
     }
 
@@ -91,11 +87,11 @@ export class SessionGateway
     if (!payload) return;
 
     try {
-      client.user = await resolveFullUser(payload.id, this.userService);
+      client.data.user = await resolveFullUser(payload.id, this.userService);
     } catch (error) {
       const apiError = exceptionToApiError(error);
       logApiError(this.logger, 'WS Connection Error', apiError, error);
-      client.user = undefined;
+      client.data.user = undefined;
     }
   }
 

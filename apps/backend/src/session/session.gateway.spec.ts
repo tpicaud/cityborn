@@ -4,6 +4,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
+import type { SessionSocket } from '../common/types/session-socket';
 import type { UserService } from '../user/user.service';
 import { SessionGateway } from './session.gateway';
 import type { SessionService } from './session.service';
@@ -86,24 +87,30 @@ describe('SessionGateway', () => {
       jest.mocked(resolveFullUser).mockRejectedValue(new Error('DB down'));
 
       const gateway = buildGateway({});
-      const client = { handshake: { query: {} } } as unknown as Socket;
+      const client = {
+        handshake: { query: {} },
+        data: {},
+      } as unknown as SessionSocket;
 
       await expect(gateway.handleConnection(client)).resolves.not.toThrow();
-      expect((client as { user?: unknown }).user).toBeUndefined();
+      expect(client.data.user).toBeUndefined();
     });
 
-    it('sets client.user when resolveFullUser succeeds', async () => {
+    it('sets client.data.user when resolveFullUser succeeds', async () => {
       const user = { id: 'user-1' };
       jest.mocked(extractAccessTokenFromWsClient).mockReturnValue('a-token');
       jest.mocked(validateAccessToken).mockResolvedValue({ id: 'user-1' });
       jest.mocked(resolveFullUser).mockResolvedValue(user);
 
       const gateway = buildGateway({});
-      const client = { handshake: { query: {} } } as unknown as Socket;
+      const client = {
+        handshake: { query: {} },
+        data: {},
+      } as unknown as SessionSocket;
 
       await gateway.handleConnection(client);
 
-      expect((client as { user?: unknown }).user).toBe(user);
+      expect(client.data.user).toBe(user);
     });
   });
 });
