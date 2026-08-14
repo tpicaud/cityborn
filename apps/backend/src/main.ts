@@ -1,10 +1,10 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { RequestValidationErrorFilter } from './common/filters/request-validation-error.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 import { RedisIoAdapter } from './redis/redis.adapter';
 
@@ -18,8 +18,14 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  // Nest traite les filtres globaux dans l'ordre inverse de leur
+  // enregistrement (le dernier gagne en cas de match) : le catch-all
+  // doit donc être enregistré avant le filtre spécifique pour que
+  // RequestValidationErrorFilter l'emporte sur RequestValidationError.
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new RequestValidationErrorFilter(),
+  );
   app.useGlobalInterceptors(new VisitorIdInterceptor());
 
   const redisIoAdapter = new RedisIoAdapter(app);
