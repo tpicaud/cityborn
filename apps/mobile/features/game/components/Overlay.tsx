@@ -5,7 +5,7 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -116,14 +116,17 @@ const Overlay = ({
   const [timerEnded, setTimerEnded] = useState(false);
   const [hasGuessed, setHasGuessed] = useState(false);
   const insets = useSafeAreaInsets();
+  const timeUpHandledRef = useRef(false);
 
   useEffect(() => {
     setTimerEnded(false);
     setHasGuessed(false);
+    timeUpHandledRef.current = false;
   }, []);
 
   useEffect(() => {
-    if (timerEnded) {
+    if (timerEnded && !timeUpHandledRef.current) {
+      timeUpHandledRef.current = true;
       handleIsTimeUp();
     }
   }, [timerEnded, handleIsTimeUp]);
