@@ -1,0 +1,202 @@
+name: Database backup
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_kind:
+        description: Backup retention category
+        required: true
+        default: daily
+        type: choice
+        options:
+          - daily
+          - pre-migration
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup-production
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Create and verify database backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: database-backup-production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520
+        with:
+          version: 2.113.0
+
+      - name: Validate backup configuration
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+          B2_UPLOAD_KEY_ID: ${{ secrets.B2_PROD_UPLOAD_KEY_ID }}
+          B2_UPLOAD_APPLICATION_KEY: ${{ secrets.B2_PROD_UPLOAD_APPLICATION_KEY }}
+          B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
+          B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
+          B2_REGION: ${{ vars.B2_PROD_REGION }}
+          B2_PREFIX: ${{ vars.B2_PROD_PREFIX }}
+        run: |
+          set -euo pipefail
+
+          required_names=(
+            DATABASE_URL
+            B2_UPLOAD_KEY_ID
+            B2_UPLOAD_APPLICATION_KEY
+            B2_BUCKET
+            B2_ENDPOINT
+            B2_REGION
+            B2_PREFIX
+          )
+
+          for name in "${required_names[@]}"; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::$name is not configured"
+              exit 1
+            fi
+          done
+
+          supabase --version
+          aws --version
+
+      - name: Create backup archive
+        id: create
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+
+          backup_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          backup_output_dir="$RUNNER_TEMP/database-backup"
+          archive_name="cityborn-postgres-${backup_timestamp}.tar.gz"
+
+          BACKUP_OUTPUT_DIR="$backup_output_dir" \
+          BACKUP_TIMESTAMP="$backup_timestamp" \
+          ./scripts/database-backup/create.sh
+
+          archive_path="$backup_output_dir/$archive_name"
+          checksum_path="$archive_path.sha256"
+          archive_sha256="$(sha256sum "$archive_path" | cut -d ' ' -f 1)"
+          archive_size="$(stat --format '%s' "$archive_path")"
+
+          echo "backup_timestamp=$backup_timestamp" >> "$GITHUB_OUTPUT"
+          echo "backup_output_dir=$backup_output_dir" >> "$GITHUB_OUTPUT"
+          echo "archive_name=$archive_name" >> "$GITHUB_OUTPUT"
+          echo "archive_path=$archive_path" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
+          echo "archive_sha256=$archive_sha256" >> "$GITHUB_OUTPUT"
+          echo "archive_size=$archive_size" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backup
+        env:
+          AWS_PAGER: ""
+          AWS_RETRY_MODE: standard
+          AWS_MAX_ATTEMPTS: 5
+          AWS_ACCESS_KEY_ID: ${{ secrets.B2_PROD_UPLOAD_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_PROD_UPLOAD_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.B2_PROD_REGION }}
+          AWS_REGION: ${{ vars.B2_PROD_REGION }}
+          B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
+          B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
+          B2_PREFIX: ${{ vars.B2_PROD_PREFIX }}
+          BACKUP_KIND: ${{ inputs.backup_kind }}
+          BACKUP_TIMESTAMP: ${{ steps.create.outputs.backup_timestamp }}
+          ARCHIVE_NAME: ${{ steps.create.outputs.archive_name }}
+          ARCHIVE_PATH: ${{ steps.create.outputs.archive_path }}
+          CHECKSUM_PATH: ${{ steps.create.outputs.checksum_path }}
+          ARCHIVE_SHA256: ${{ steps.create.outputs.archive_sha256 }}
+          ARCHIVE_SIZE: ${{ steps.create.outputs.archive_size }}
+        run: |
+          set -euo pipefail
+
+          normalized_prefix="${B2_PREFIX%/}"
+          date_path="${BACKUP_TIMESTAMP:0:4}/${BACKUP_TIMESTAMP:4:2}/${BACKUP_TIMESTAMP:6:2}"
+          archive_object_key="${normalized_prefix}/${BACKUP_KIND}/${date_path}/${ARCHIVE_NAME}"
+          weekly_archive_object_key=""
+          archive_md5="$(md5sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)"
+          checksum_md5="$(md5sum "$CHECKSUM_PATH" | cut -d ' ' -f 1)"
+
+          upload_pair() {
+            local remote_archive_key="$1"
+            local remote_checksum_key="${remote_archive_key}.sha256"
+            local stored_archive_etag
+            local stored_archive_encryption
+            local stored_checksum_etag
+            local stored_checksum_encryption
+
+            read -r stored_archive_etag stored_archive_encryption < <(
+              aws s3api put-object \
+                --bucket "$B2_BUCKET" \
+                --key "$remote_archive_key" \
+                --body "$ARCHIVE_PATH" \
+                --server-side-encryption AES256 \
+                --content-type application/gzip \
+                --metadata "sha256=$ARCHIVE_SHA256" \
+                --endpoint-url "$B2_ENDPOINT" \
+                --query '[ETag,ServerSideEncryption]' \
+                --output text
+            )
+
+            stored_archive_etag="${stored_archive_etag//\"/}"
+            if [[ "$stored_archive_etag" != "$archive_md5" ]]; then
+              echo "::error::Archive ETag does not match for $remote_archive_key"
+              exit 1
+            fi
+
+            if [[ "$stored_archive_encryption" != "AES256" ]]; then
+              echo "::error::Archive encryption is not AES256 for $remote_archive_key"
+              exit 1
+            fi
+
+            read -r stored_checksum_etag stored_checksum_encryption < <(
+              aws s3api put-object \
+                --bucket "$B2_BUCKET" \
+                --key "$remote_checksum_key" \
+                --body "$CHECKSUM_PATH" \
+                --server-side-encryption AES256 \
+                --content-type text/plain \
+                --endpoint-url "$B2_ENDPOINT" \
+                --query '[ETag,ServerSideEncryption]' \
+                --output text
+            )
+
+            stored_checksum_etag="${stored_checksum_etag//\"/}"
+            if [[ "$stored_checksum_etag" != "$checksum_md5" ]]; then
+              echo "::error::Checksum ETag does not match for $remote_checksum_key"
+              exit 1
+            fi
+
+            if [[ "$stored_checksum_encryption" != "AES256" ]]; then
+              echo "::error::Checksum encryption is not AES256 for $remote_checksum_key"
+              exit 1
+            fi
+          }
+
+          upload_pair "$archive_object_key"
+
+          if [[ "$BACKUP_KIND" == "daily" && "$(date -u +%u)" == "7" ]]; then
+            weekly_archive_object_key="${normalized_prefix}/weekly/${date_path}/${ARCHIVE_NAME}"
+            upload_pair "$weekly_archive_object_key"
+          fi
+
+          {
+            echo "### PostgreSQL backup"
+            echo
+            echo "- Status: successful"
+            echo "- Category: \`${{ inputs.backup_kind }}\`"
+            echo "- Object: \`$archive_object_key\`"
+            echo "- Size: $ARCHIVE_SIZE bytes"
+            echo "- Upload integrity: ETag verified"
+            echo "- SHA-256: stored with backup"
+            echo "- Encryption: AES256"
+            if [[ -n "$weekly_archive_object_key" ]]; then
+              echo "- Weekly copy: \`$weekly_archive_object_key\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
