@@ -87,7 +87,7 @@ export function MultiLobby({
 
   return (
     <View className="flex-1 justify-center items-center">
-      <View className="flex-1 flex items-center justify-center gap-10 w-70">
+      <View className="flex-1 flex items-center justify-center gap-10 w-[88%] max-w-96">
         <Text className="text-2xl  font-bold">MULTI</Text>
 
         <View className="flex flex-col gap-1 justify-center items-center">
@@ -111,7 +111,7 @@ export function MultiLobby({
         <View className="flex flex-col gap-2 w-full">
           <Text className="text-xl">Joueurs</Text>
           <View className=" w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
-          <ScrollView className="max-h-30">
+          <ScrollView className="max-h-40">
             <View className="flex-row flex-wrap justify-between gap-2 w-full">
               {(session.players.every((p) => 'connected' in p)
                 ? (session.players as OnlinePlayer[]).sort((a, b) =>
@@ -154,7 +154,7 @@ export function MultiLobby({
           {currentCategoryNodes.length === 0 ? (
             <Text>Aucun pack disponible</Text>
           ) : (
-            <ScrollView className="max-h-60">
+            <ScrollView className="max-h-80">
               <View className="flex flex-col gap-2 w-full">
                 {currentCategoryNodes.map((node) => (
                   <View
@@ -190,13 +190,6 @@ export function MultiLobby({
             </ScrollView>
           )}
         </View>
-
-        <Button
-          size="large"
-          label="JOUER"
-          disabled={!isHost}
-          onPress={handleStartGame}
-        />
       </View>
       <Dialog visible={!localPlayerID} className="h-auto">
         <View className="flex items-center justify-center">
