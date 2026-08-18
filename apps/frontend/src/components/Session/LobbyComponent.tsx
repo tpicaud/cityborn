@@ -139,9 +139,11 @@ export const LobbyComponent = ({
                             bg-transparent h-full w-full pointer-events-none"
       >
         <Box
-          className="flex flex-col items-center gap-2 p-6
-                              bg-slate-100 shadow-xl rounded-2xl
-                                max-w-[90%] min-w-80 sm:w-[60%] md:w-[50%] lg:max-w-xl max-h-[80%] pointer-events-auto"
+          className={
+            session.mode === SessionMode.SOLO
+              ? 'flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[95%] min-w-80 sm:w-[70%] md:w-[55%] lg:max-w-xl max-h-[92%] overflow-y-auto pointer-events-auto'
+              : 'flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[95%] min-w-80 sm:w-[85%] md:w-[75%] lg:max-w-3xl max-h-[92%] overflow-y-auto pointer-events-auto'
+          }
         >
           <Typography variant="h5">{session.mode.toUpperCase()}</Typography>
 
@@ -172,11 +174,11 @@ export const LobbyComponent = ({
             </div>
           )}
 
-          <div className="flex flex-row justify-start items-stretch gap-8 max-w-full">
+          <div className="flex flex-col sm:flex-row justify-start items-stretch gap-4 sm:gap-8 max-w-full w-full">
             {session.mode !== SessionMode.SOLO && (
               <List
                 sx={{
-                  flex: '1 1 50%',
+                  flex: { xs: '1 1 auto', sm: '1 1 50%' },
                   p: 0,
                   '& .MuiListItem-root': {
                     py: 0.5,
@@ -222,7 +224,13 @@ export const LobbyComponent = ({
               </List>
             )}
 
-            <div className="w-[300px] max-w-full shrink-0 flex flex-col gap-3">
+            <div
+              className={
+                session.mode === SessionMode.SOLO
+                  ? 'w-full max-w-full sm:max-w-xl mx-auto flex flex-col gap-3'
+                  : 'w-full sm:w-[300px] md:w-[400px] max-w-full sm:shrink-0 flex flex-col gap-3'
+              }
+            >
               <div className="flex items-center gap-1">
                 {selectedPath.length > 0 && (
                   <IconButton
@@ -243,7 +251,7 @@ export const LobbyComponent = ({
                   border: '1px solid',
                   borderColor: 'divider',
                   borderRadius: 1,
-                  maxHeight: 220,
+                  maxHeight: { xs: 400, md: 520 },
                   overflowY: 'auto',
                 }}
               >
@@ -302,16 +310,6 @@ export const LobbyComponent = ({
               </Box>
             </div>
           </div>
-
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            fullWidth
-            disabled={session.hostID !== localPlayerID}
-            onClick={handleStartGame}
-          >
-            Démarrer la partie
-          </LoadingButton>
 
           <LoadingButton
             variant="contained"

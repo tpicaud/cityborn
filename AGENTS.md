@@ -31,9 +31,14 @@ Monorepo pnpm/turbo, TypeScript partout.
 - Ne pas dupliquer dans une app un type/schéma qui existe déjà dans `@cityborn/api` (types transitant par l'API) ou `@cityborn/client` (types partagés front/mobile ne transitant pas par l'API) — les réutiliser.
 - `packages/api` est la source de vérité des contrats. Toute évolution d'un contrat existant doit rester rétrocompatible (vérifié par `check:api-compat` en CI avec oasdiff) — un breaking change nécessite un bump de version d'API, pas une modification silencieuse.
 
+## Quand demander avant d'agir
+- Ajout d'une dépendance npm nouvelle → demander avant
+- Modification cassante du contrat openapi de `packages /api`
+
 ## Garde-fous
 
 - Ne jamais modifier une migration Prisma déjà appliquée/mergée : toujours créer une nouvelle migration (`pnpm db:migrate`).
 - Ne pas contourner Biome ou le typecheck pour faire passer un build (pas de `// biome-ignore` ou `@ts-ignore` de confort).
 - Ne pas toucher aux `overrides` de `pnpm-workspace.yaml` sans comprendre pourquoi elles ont été ajoutées (la plupart corrigent des CVE).
 - Ne fais jamais de commit, laisse le developpeur gérer ça
+- Ne lance jamais le front ni le mobile pour faire des tests d'interface, demande un test manuel par le développeur

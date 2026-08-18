@@ -67,7 +67,7 @@ export function SoloLobby({
 
   return (
     <View className="flex-1 justify-center items-center">
-      <View className="flex-1 flex items-center justify-center gap-10 w-70">
+      <View className="flex-1 flex items-center justify-center gap-10 w-[88%] max-w-96">
         <Text className="text-2xl  font-bold">SOLO</Text>
 
         <View className="flex flex-col gap-2 w-full">
@@ -90,7 +90,7 @@ export function SoloLobby({
             </Text>
           </View>
           <View className="w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
-          <ScrollView className="max-h-60">
+          <ScrollView className="max-h-96">
             <View className="flex flex-col gap-2 w-full">
               {currentCategoryNodes.map((node) => (
                 <View
@@ -125,13 +125,6 @@ export function SoloLobby({
             </View>
           </ScrollView>
         </View>
-
-        <Button
-          size="large"
-          label="JOUER"
-          disabled={!isHost}
-          onPress={handleStartGame}
-        />
       </View>
     </View>
   );
