@@ -8,6 +8,7 @@ import {
 import {
   BadRequestException,
   Logger,
+  NotFoundException,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
@@ -34,6 +35,7 @@ import {
 } from '../common/filters/all-exceptions.filter';
 import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
 import type { SessionSocket } from '../common/types/session-socket';
+import { PlayerService } from '../player/player.service';
 import { CurrentUser } from '../user/user.decorator';
 import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
@@ -61,10 +63,24 @@ export class SessionGateway
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly playerService: PlayerService,
   ) {}
 
   @WebSocketServer()
   io: Server;
+
+  private async resolvePlayer(
+    socketID: string,
+  ): Promise<{ playerID: string; sessionID: string; isGuest: boolean }> {
+    const player = await this.playerService.getPlayer(socketID);
+    if (!player)
+      throw new NotFoundException({
+        code: ErrorCode.PLAYER_NOT_FOUND,
+        message: 'No player associated with this socket',
+      });
+
+    return player;
+  }
 
   async handleConnection(client: SessionSocket) {
     const visitorId = client.handshake?.query?.['x-visitor-id'];
@@ -113,12 +129,8 @@ export class SessionGateway
       });
     }
 
-    const session = await this.sessionService.join(
-      socket.id,
-      sessionID,
-      playerID,
-      user,
-    );
+    const session = await this.sessionService.join(sessionID, playerID, user);
+    await this.playerService.save(socket.id, playerID, sessionID, !user);
 
     await socket.join(session.id);
     this.io.to(session.id).emit('session:update', session);
@@ -139,7 +151,12 @@ export class SessionGateway
       });
     }
 
-    const session = await this.sessionService.updateHost(socket.id, newHostID);
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
+    const session = await this.sessionService.updateHost(
+      playerID,
+      sessionID,
+      newHostID,
+    );
     this.io.to(session.id).emit('session:update', session);
 
     return { success: true };
@@ -157,8 +174,10 @@ export class SessionGateway
       });
     }
 
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
     const session = await this.sessionService.updateGameConfig(
-      socket.id,
+      playerID,
+      sessionID,
       gameConfig,
     );
     this.io.to(session.id).emit('session:update', session);
@@ -175,7 +194,12 @@ export class SessionGateway
     @ConnectedSocket() socket: Socket,
     @VisitorId() visitorId?: string,
   ): Promise<WSResponse> {
-    const session = await this.sessionService.startGame(socket.id, visitorId);
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
+    const session = await this.sessionService.startGame(
+      playerID,
+      sessionID,
+      visitorId,
+    );
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -194,7 +218,12 @@ export class SessionGateway
       });
     }
 
-    const session = await this.sessionService.handleGuess(socket.id, guess);
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
+    const session = await this.sessionService.handleGuess(
+      playerID,
+      sessionID,
+      guess,
+    );
 
     this.io.to(session.id).emit('session:update', session);
     return { success: true };
@@ -205,8 +234,10 @@ export class SessionGateway
     @ConnectedSocket() socket: Socket,
     @VisitorId() visitorId?: string,
   ): Promise<WSResponse> {
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
     const session = await this.sessionService.handleNextRound(
-      socket.id,
+      playerID,
+      sessionID,
       visitorId,
     );
 
@@ -219,8 +250,12 @@ export class SessionGateway
     @ConnectedSocket() socket: Socket,
     @VisitorId() visitorId?: string,
   ): Promise<WSResponse> {
-    // Start new one
-    const session = await this.sessionService.startGame(socket.id, visitorId);
+    const { playerID, sessionID } = await this.resolvePlayer(socket.id);
+    const session = await this.sessionService.startGame(
+      playerID,
+      sessionID,
+      visitorId,
+    );
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -246,11 +281,11 @@ export class SessionGateway
     }
 
     const session = await this.sessionService.reconnectPlayer(
-      socket.id,
       sessionID,
       playerID,
       user,
     );
+    await this.playerService.save(socket.id, playerID, sessionID, !user);
 
     await socket.join(sessionID);
     this.io.to(sessionID).emit('session:update', session);
@@ -261,8 +296,14 @@ export class SessionGateway
 
   private async disconnect(socket: Socket): Promise<void> {
     try {
-      const session = await this.sessionService.disconnectPlayer(socket.id);
-      if (!session) return;
+      const player = await this.playerService.getPlayer(socket.id);
+      if (!player) return;
+
+      const session = await this.sessionService.disconnectPlayer(
+        player.playerID,
+        player.sessionID,
+      );
+      await this.playerService.deletePlayer(socket.id);
 
       await socket.leave(session.id);
       this.io.to(session.id).emit('session:update', session);
