@@ -33,7 +33,6 @@ import { createEvent } from '../event/event.types';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
-import { PlayerService } from '../player/player.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 
@@ -47,7 +46,6 @@ export class SessionService {
   constructor(
     private readonly redisService: RedisService,
     private readonly lockService: LockService,
-    private readonly playerService: PlayerService,
     private readonly idService: IdService,
     private readonly guessObjectService: GuessObjectService,
     private readonly prisma: PrismaService,
@@ -121,12 +119,7 @@ export class SessionService {
     return session;
   }
 
-  async join(
-    socketID: string,
-    sessionID: string,
-    playerID: string,
-    user?: User,
-  ) {
+  async join(sessionID: string, playerID: string, user?: User) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -154,7 +147,6 @@ export class SessionService {
           });
 
         const isGuest = !user;
-        await this.playerService.save(socketID, playerID, sessionID, isGuest);
 
         const newPlayer: OnlinePlayer = {
           username: playerID,
@@ -173,16 +165,7 @@ export class SessionService {
     );
   }
 
-  async updateHost(socketID: string, newHostID: string) {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player)
-      throw new NotFoundException({
-        code: ErrorCode.PLAYER_NOT_FOUND,
-        message: `No player associated with this socket`,
-      });
-
-    const { playerID, sessionID } = player;
-
+  async updateHost(playerID: string, sessionID: string, newHostID: string) {
     const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -217,16 +200,11 @@ export class SessionService {
     return session;
   }
 
-  async updateGameConfig(socketID: string, gameConfig: GameConfig) {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player)
-      throw new NotFoundException({
-        code: ErrorCode.PLAYER_NOT_FOUND,
-        message: `No player associated with this socket`,
-      });
-
-    const { playerID, sessionID } = player;
-
+  async updateGameConfig(
+    playerID: string,
+    sessionID: string,
+    gameConfig: GameConfig,
+  ) {
     const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -252,16 +230,7 @@ export class SessionService {
     return session;
   }
 
-  async startGame(socketID: string, visitorId?: string) {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player)
-      throw new NotFoundException({
-        code: ErrorCode.PLAYER_NOT_FOUND,
-        message: `No player associated with this socket`,
-      });
-
-    const { playerID, sessionID } = player;
-
+  async startGame(playerID: string, sessionID: string, visitorId?: string) {
     const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -348,16 +317,7 @@ export class SessionService {
     return game;
   }
 
-  async handleGuess(socketID: string, guess: Guess) {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player)
-      throw new NotFoundException({
-        code: ErrorCode.PLAYER_NOT_FOUND,
-        message: `No player associated with this socket`,
-      });
-
-    const { playerID, sessionID } = player;
-
+  async handleGuess(playerID: string, sessionID: string, guess: Guess) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -432,16 +392,11 @@ export class SessionService {
     );
   }
 
-  async handleNextRound(socketID: string, visitorId?: string) {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player)
-      throw new NotFoundException({
-        code: ErrorCode.PLAYER_NOT_FOUND,
-        message: `No player associated with this socket`,
-      });
-
-    const { playerID, sessionID } = player;
-
+  async handleNextRound(
+    playerID: string,
+    sessionID: string,
+    visitorId?: string,
+  ) {
     const session = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -519,12 +474,7 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer(
-    socketID: string,
-    sessionID: string,
-    playerID: string,
-    user?: User,
-  ) {
+  async reconnectPlayer(sessionID: string, playerID: string, user?: User) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -554,8 +504,6 @@ export class SessionService {
             message: 'Invalid or missing user token',
           });
 
-        await this.playerService.save(socketID, playerID, sessionID, !user);
-
         players[playerIndex].connected = true;
 
         if (session.hostID === '') session.hostID = playerID;
@@ -566,12 +514,10 @@ export class SessionService {
     );
   }
 
-  async disconnectPlayer(socketID: string): Promise<Session | undefined> {
-    const player = await this.playerService.getPlayer(socketID);
-    if (!player) return;
-
-    const { playerID, sessionID } = player;
-
+  async disconnectPlayer(
+    playerID: string,
+    sessionID: string,
+  ): Promise<Session> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -608,7 +554,6 @@ export class SessionService {
           }
         }
 
-        await this.playerService.deletePlayer(socketID);
         await this.saveSession(session);
 
         return session;
