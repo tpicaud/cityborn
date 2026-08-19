@@ -8,9 +8,13 @@ Monorepo pnpm/turbo, TypeScript partout.
 - `packages/api` — contrats ts-rest + schémas zod, source de vérité des types partagés
 - `packages/client`, `packages/contexts`, `packages/design-system`, `packages/types`, `packages/utils`
 
+## Ligne directrice du projet
+
+- Les bonnes pratiques de code/architectures sont primordiale. Ne pas hésiter à proposer des refactos si l'architecture actuellement implémenté n'est pas recommandée
+- **Typage first** : le typage est primordial. Le projet doit être type-safe. Un typage clair améliore grandement la DX. Ne jamais utiliser `any` ni affaiblir un type pour faire passer le compilateur.
+
 ## Style de code
 
-- **Typage first** : le typage est primordial. Le projet doit être type-safe. Un typage clair améliore grandement la DX. Ne jamais utiliser `any` ni affaiblir un type pour faire passer le compilateur.
 - **Aucun commentaire** : N'ajoute JAMAIS de commentaire dans le code, le naming doit être suffisamment clair pour s'en passer.
 - **Éviter `as`** au maximum : un cast casse l'inférence de type et masque des erreurs potentielles. Préférer un typage correct en amont (narrowing, generics, schémas zod) plutôt qu'un cast.
 - **Import type-only** obligatoire pour les imports de types (`import type { ... }`) — déjà forcé par Biome (`useImportType`), ne pas le contourner.
@@ -34,6 +38,7 @@ Monorepo pnpm/turbo, TypeScript partout.
 ## Quand demander avant d'agir
 - Ajout d'une dépendance npm nouvelle → demander avant
 - Modification cassante du contrat openapi de `packages /api`
+- Avant le début d'implémentation de chaque grande étape d'un plan
 
 ## Garde-fous
 
