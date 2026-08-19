@@ -71,6 +71,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async expire(key: string, ttlSeconds: number): Promise<void> {
+    try {
+      await this.redisClient.expire(key, ttlSeconds);
+    } catch (error) {
+      throw new InternalServerErrorException({
+        code: ErrorCode.REDIS_EXPIRE_FAILED,
+        message: `Error setting expiry for resource ${key}: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+  }
+
   async del(key: string): Promise<number> {
     try {
       return this.redisClient.del(key);

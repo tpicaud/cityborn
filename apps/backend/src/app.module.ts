@@ -4,12 +4,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
+import { ConnectionRegistryModule } from './connection-registry/connection-registry.module';
 import { EventModule } from './event/event.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
 import { IdModule } from './id/id.module';
 import { LockModule } from './lock/lock.module';
 import { NominatimModule } from './nominatim/nominatim.module';
-import { PlayerModule } from './player/player.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { SearchModule } from './search/search.module';
@@ -32,7 +32,7 @@ import { WorldLocationModule } from './world-location/world-location.module';
     IdModule,
     RedisModule,
     LockModule,
-    PlayerModule,
+    ConnectionRegistryModule,
     AuthModule,
     PrismaModule,
     UserModule,

@@ -5,7 +5,7 @@ import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { SessionSocket } from '../common/types/session-socket';
-import type { PlayerService } from '../player/player.service';
+import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import type { UserService } from '../user/user.service';
 import { SessionGateway } from './session.gateway';
 import type { SessionService } from './session.service';
@@ -28,12 +28,16 @@ const { validateAccessToken, resolveFullUser } = jest.requireMock(
 describe('SessionGateway', () => {
   const socket = { id: 'socket-1' } as unknown as Socket;
 
-  const resolvedPlayer = { playerID: 'p1', sessionID: 's1', isGuest: false };
+  const resolvedConnection = {
+    playerID: 'p1',
+    sessionID: 's1',
+    isGuest: false,
+  };
 
   const buildGateway = (
     sessionService: Partial<SessionService>,
-    playerService: Partial<PlayerService> = {
-      getPlayer: jest.fn().mockResolvedValue(resolvedPlayer),
+    connectionRegistryService: Partial<ConnectionRegistryService> = {
+      getConnection: jest.fn().mockResolvedValue(resolvedConnection),
     },
   ) => {
     const gateway = new SessionGateway(
@@ -41,7 +45,7 @@ describe('SessionGateway', () => {
       { get: jest.fn() } as unknown as ConfigService,
       {} as unknown as JwtService,
       {} as unknown as UserService,
-      playerService as unknown as PlayerService,
+      connectionRegistryService as unknown as ConnectionRegistryService,
     );
     gateway.io = { to: () => ({ emit: jest.fn() }) } as unknown as Server;
     return gateway;
@@ -74,17 +78,17 @@ describe('SessionGateway', () => {
       );
     });
 
-    it('throws PLAYER_NOT_FOUND when the socket has no registered player', async () => {
+    it('throws CONNECTION_NOT_FOUND when the socket has no registered connection', async () => {
       const sessionService = { handleGuess: jest.fn() };
       const gateway = buildGateway(sessionService, {
-        getPlayer: jest.fn().mockResolvedValue(null),
+        getConnection: jest.fn().mockResolvedValue(null),
       });
 
       await expect(
         gateway.handleGuess(socket, defaultGuess),
       ).rejects.toMatchObject({
         response: expect.objectContaining({
-          code: ErrorCode.PLAYER_NOT_FOUND,
+          code: ErrorCode.CONNECTION_NOT_FOUND,
         }),
       });
       expect(sessionService.handleGuess).not.toHaveBeenCalled();

@@ -37,9 +37,6 @@ function main() {
   if (jsonOutputFile) {
     writeFileSync(jsonOutputFile, toJsonReport(report));
     console.log(`\nJSON report written to ${jsonOutputFile}`);
-  } else {
-    console.log('\n--- JSON ---');
-    console.log(toJsonReport(report));
   }
 
   process.exit(report.brokenAt ? 1 : 0);

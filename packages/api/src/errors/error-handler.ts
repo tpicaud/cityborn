@@ -28,6 +28,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 
   // Player
   [ErrorCode.PLAYER_NOT_FOUND]: "Le joueur n'existe pas.",
+  [ErrorCode.CONNECTION_NOT_FOUND]: 'Aucune connexion trouvée pour ce socket.',
 
   // Session
   [ErrorCode.SESSION_NOT_FOUND]: "La session n'existe pas.",
@@ -73,6 +74,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.REDIS_GET_FAILED]: 'Erreur interne. Veuillez réessayer.',
   [ErrorCode.REDIS_SET_FAILED]: 'Erreur interne. Veuillez réessayer.',
   [ErrorCode.REDIS_DELETE_FAILED]: 'Erreur interne. Veuillez réessayer.',
+  [ErrorCode.REDIS_EXPIRE_FAILED]: 'Erreur interne. Veuillez réessayer.',
 
   // Email
   [ErrorCode.EMAIL_SEND_FAILED]:
