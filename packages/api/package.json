@@ -11,6 +11,7 @@
     "check": "biome check .",
     "generate:openapi": "tsx scripts/generate-openapi-file.ts",
     "check:compat": "tsx scripts/check-api-compat.ts",
+    "check:deprecations": "tsx scripts/check-deprecations.ts",
     "test": "tsx --test openapi/compat/**/*.test.ts"
   },
   "dependencies": {

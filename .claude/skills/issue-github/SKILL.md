@@ -19,6 +19,6 @@ description: Rédige des tickets GitHub Issues et le publier sur le Project City
 - Ne pas fermer/modifier/créer des tickets existants sans confirmation
 
 ## Ce qu'il ne faut pas oublier
-- Ajouter l'issue sur le project Cityborn avec le Type "DEV"
+- Ajouter l'issue sur le project Cityborn avec le Type "DEV" et Status "A faire dans l'itération"
 
 **Toujours faire relire une issue avant sa publication sur github**
