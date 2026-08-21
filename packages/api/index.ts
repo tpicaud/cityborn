@@ -1,6 +1,7 @@
 export * from './openapi/generate-openapi';
 export * from './src/api-errors';
 export * from './src/api-result';
+export * from './src/api-version';
 export * from './src/contract/contract';
 export * from './src/create-api-client';
 export * from './src/errors/error-codes';

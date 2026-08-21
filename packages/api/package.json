@@ -12,7 +12,7 @@
     "generate:openapi": "tsx scripts/generate-openapi-file.ts",
     "check:compat": "tsx scripts/check-api-compat.ts",
     "check:deprecations": "tsx scripts/check-deprecations.ts",
-    "test": "tsx --test openapi/compat/**/*.test.ts"
+    "test": "tsx --test openapi/compat/**/*.test.ts src/**/*.test.ts"
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
