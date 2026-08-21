@@ -8,6 +8,21 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 
+export function beginGame(game: Game): Game {
+  return {
+    ...game,
+    status: GameStatus.IN_GAME,
+    state: {
+      ...game.state,
+      currentRound: {
+        status: RoundStatus.GUESSING,
+        guessObjectId: game.state.guessObjectsIds[0],
+        playersGuesses: {},
+      },
+    },
+  };
+}
+
 export function applyGuess(
   game: Game,
   playerID: string,

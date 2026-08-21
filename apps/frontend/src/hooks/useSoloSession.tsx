@@ -1,14 +1,12 @@
 import {
   type Game,
   type GameConfig,
-  GameStatus,
   type Guess,
-  RoundStatus,
   type Session,
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
-import { applyGuess, resolveNextRound } from '@cityborn/core';
+import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
@@ -68,20 +66,8 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!current) return;
     const result = await createSoloGame(current);
     if (!result.ok) return invokeError(result.error);
-    const game: Game = result.data;
     updateSession({ ...current, status: SessionStatus.IN_GAME });
-    setGame({
-      ...game,
-      status: GameStatus.IN_GAME,
-      state: {
-        ...game.state,
-        currentRound: {
-          status: RoundStatus.GUESSING,
-          guessObjectId: game.state.guessObjectsIds[0],
-          playersGuesses: {},
-        },
-      },
-    });
+    setGame(beginGame(result.data));
   };
 
   const guess = (g: Guess) => {

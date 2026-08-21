@@ -4,6 +4,7 @@ import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { GameService } from '../game/game.service';
 import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
 
@@ -20,7 +21,10 @@ const optionalAuthSessionRoutes = c.router({
 });
 @Controller()
 export class SessionController {
-  constructor(private readonly sessionService: SessionService) {}
+  constructor(
+    private readonly sessionService: SessionService,
+    private readonly gameService: GameService,
+  ) {}
 
   @TsRestHandler(publicSessionRoutes)
   async handler() {
@@ -52,10 +56,10 @@ export class SessionController {
       },
       createGame: async ({ body }) => ({
         status: 200 as const,
-        body: await this.sessionService.createGame(body, visitorId),
+        body: await this.gameService.createGame(body, visitorId),
       }),
       endSoloGame: async ({ body }) => {
-        await this.sessionService.endSoloGame(body, visitorId);
+        await this.gameService.endSoloGame(body, visitorId);
         return { status: 200 as const, body: {} };
       },
     });

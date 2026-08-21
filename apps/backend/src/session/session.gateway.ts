@@ -210,6 +210,42 @@ export class SessionGateway
     return { success: true };
   }
 
+  @SubscribeMessage('session:kickPlayer')
+  async kickPlayer(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody('playerToKick') playerToKick: string,
+  ): Promise<WSResponse> {
+    if (!playerToKick) {
+      throw new BadRequestException({
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'playerToKick required.',
+      });
+    }
+
+    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const session = await this.sessionService.kickPlayer(
+      playerID,
+      sessionID,
+      playerToKick,
+    );
+
+    const socketsInRoom = await this.io.in(sessionID).fetchSockets();
+    for (const remoteSocket of socketsInRoom) {
+      const connection = await this.connectionRegistryService.getConnection(
+        remoteSocket.id,
+      );
+      if (connection?.playerID === playerToKick) {
+        remoteSocket.emit('session:kicked');
+        remoteSocket.leave(sessionID);
+        await this.connectionRegistryService.unregister(remoteSocket.id);
+      }
+    }
+
+    this.io.to(session.id).emit('session:update', session);
+
+    return { success: true };
+  }
+
   ////////////////////////
   // Current game event //
   ////////////////////////
