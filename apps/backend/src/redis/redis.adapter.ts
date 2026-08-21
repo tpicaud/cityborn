@@ -1,3 +1,4 @@
+import type { INestApplicationContext } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
@@ -5,11 +6,15 @@ import { createClient } from 'redis';
 import type { Server, ServerOptions } from 'socket.io';
 
 export class RedisIoAdapter extends IoAdapter {
-  private readonly logger = new Logger(RedisIoAdapter.name);
+  private constructor(
+    app: INestApplicationContext,
+    private readonly adapterConstructor: ReturnType<typeof createAdapter>,
+  ) {
+    super(app);
+  }
 
-  private adapterConstructor: ReturnType<typeof createAdapter>;
-
-  async connectToRedis(): Promise<void> {
+  static async create(app: INestApplicationContext): Promise<RedisIoAdapter> {
+    const logger = new Logger(RedisIoAdapter.name);
     const pubClient = createClient({ url: process.env.REDIS_URL });
     const subClient = pubClient.duplicate();
 
@@ -17,13 +22,13 @@ export class RedisIoAdapter extends IoAdapter {
     await subClient.connect();
 
     pubClient.on('error', (err) => {
-      this.logger.error('Redis Pub Error:', err);
+      logger.error('Redis Pub Error:', err);
     });
     subClient.on('error', (err) => {
-      this.logger.error('Redis Sub Error:', err);
+      logger.error('Redis Sub Error:', err);
     });
 
-    this.adapterConstructor = createAdapter(pubClient, subClient);
+    return new RedisIoAdapter(app, createAdapter(pubClient, subClient));
   }
 
   createIOServer(port: number, options?: ServerOptions): Server {
