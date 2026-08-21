@@ -7,6 +7,7 @@ import {
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
+import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -108,23 +109,13 @@ export function useMultiSession(
     if (!socket) return;
 
     const handleSessionUpdate = (session: Session) => {
-      setSession((prevSession) => {
-        const prevGuessObjects = prevSession?.currentGame?.state?.guessObjects;
-        const newGuessObjects = session.currentGame?.state?.guessObjects;
-
-        return {
-          ...session,
-          currentGame: session.currentGame
-            ? {
-                ...session.currentGame,
-                state: {
-                  ...session.currentGame.state,
-                  guessObjects: newGuessObjects ?? prevGuessObjects,
-                },
-              }
-            : undefined,
-        };
-      });
+      setSession((prevSession) => ({
+        ...session,
+        currentGame: reconcileGuessObjects(
+          prevSession?.currentGame,
+          session.currentGame,
+        ),
+      }));
     };
 
     on('session:update', handleSessionUpdate);

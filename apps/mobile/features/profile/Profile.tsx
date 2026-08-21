@@ -1,10 +1,6 @@
 import type { GameRecord } from '@cityborn/api';
-import {
-  calculateTotalPoints,
-  isoToLocalDate,
-  useAuth,
-  useError,
-} from '@cityborn/client';
+import { isoToLocalDate, useAuth, useError } from '@cityborn/client';
+import { calculateTotalPoints } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router/react-navigation';

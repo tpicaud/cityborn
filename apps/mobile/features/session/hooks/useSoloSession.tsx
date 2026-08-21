@@ -3,13 +3,13 @@ import {
   type GameConfig,
   GameStatus,
   type Guess,
-  type Result,
   RoundStatus,
   type Session,
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
+import { applyGuess, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createSession, createSoloGame, endSoloGame } from '@/lib/api/session';
@@ -99,104 +99,16 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     setGame((prevGame) => {
       if (!prevGame?.state.currentRound || !localPlayerID) return prevGame;
 
-      return {
-        ...prevGame,
-        state: {
-          ...prevGame.state,
-          currentRound: {
-            ...prevGame.state.currentRound,
-            status: RoundStatus.SHOWING_RESULTS,
-            playersGuesses: {
-              [localPlayerID]: guess,
-            },
-          },
-        },
-      };
+      return applyGuess(prevGame, localPlayerID, guess, [localPlayerID]);
     });
   };
 
   const nextRound = () => {
     if (!game) return;
 
-    setGame((prevGame) => {
-      if (!prevGame?.state.currentRound) return prevGame;
-
-      const { guessObjectId, playersGuesses } = prevGame.state.currentRound;
-
-      if (!playersGuesses) return prevGame;
-
-      const updatedResults = { ...prevGame.state.results };
-
-      for (const [playerID, guess] of Object.entries(playersGuesses)) {
-        const newResult: Result = {
-          guessObjectId,
-          distance: guess.distance,
-          points: guess.points,
-        };
-
-        if (!updatedResults[playerID]) {
-          updatedResults[playerID] = { results: [] };
-        }
-
-        updatedResults[playerID].results.push(newResult);
-      }
-
-      return {
-        ...prevGame,
-        state: {
-          ...prevGame.state,
-          results: updatedResults,
-        },
-      };
-    });
-
-    const nextObjectIndex = getNextObjectId();
-
-    if (nextObjectIndex) {
-      setGame((prevGame) => {
-        if (!prevGame) return prevGame;
-
-        return {
-          ...prevGame,
-          state: {
-            ...prevGame.state,
-            currentRound: {
-              status: RoundStatus.GUESSING,
-              guessObjectId: nextObjectIndex,
-              playersGuesses: {},
-            },
-          },
-        };
-      });
-    }
-  };
-
-  const getNextObjectId = (): string | null => {
-    if (!game) return null;
-
-    const currentIndex = game.state.guessObjectsIds.indexOf(
-      game.state.currentRound?.guessObjectId ?? '',
+    setGame((prevGame) =>
+      prevGame ? resolveNextRound(prevGame).game : prevGame,
     );
-
-    if (currentIndex === undefined) {
-      throw new Error(
-        "L'objet à deviner ne fais pas partie de la liste de la partie",
-      );
-    }
-
-    if (currentIndex + 1 < game.state.guessObjectsIds.length) {
-      return game.state.guessObjectsIds[currentIndex + 1];
-    } else {
-      setGame((prevGame) => {
-        if (!prevGame) return prevGame;
-
-        return {
-          ...prevGame,
-          status: GameStatus.IN_RESULTS,
-        };
-      });
-      return null;
-    }
   };
 
   const endGame = async () => {

@@ -1,4 +1,5 @@
 import type { GameRecord, User } from '@cityborn/api';
+import { calculateTotalPoints } from '@cityborn/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -14,7 +15,6 @@ import {
 import { useEffect, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
 import { getGameRecords } from '@/server/actions/user';
-import { calculateTotalPoints } from '@/utils/calculateScore';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { invokeError } = useError();

@@ -3,12 +3,12 @@ import {
   type GameConfig,
   GameStatus,
   type Guess,
-  type Result,
   RoundStatus,
   type Session,
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
+import { applyGuess, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
@@ -87,73 +87,13 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const guess = (g: Guess) => {
     setGame((prev) => {
       if (!prev?.state.currentRound || !localPlayerID) return prev;
-      return {
-        ...prev,
-        state: {
-          ...prev.state,
-          currentRound: {
-            ...prev.state.currentRound,
-            status: RoundStatus.SHOWING_RESULTS,
-            playersGuesses: { [localPlayerID]: g },
-          },
-        },
-      };
+      return applyGuess(prev, localPlayerID, g, [localPlayerID]);
     });
-  };
-
-  const getNextObjectId = (): string | null => {
-    if (!game) return null;
-    const currentIndex = game.state.guessObjectsIds.indexOf(
-      game.state.currentRound?.guessObjectId ?? '',
-    );
-    if (currentIndex + 1 < game.state.guessObjectsIds.length) {
-      return game.state.guessObjectsIds[currentIndex + 1];
-    }
-    setGame((prev) =>
-      prev ? { ...prev, status: GameStatus.IN_RESULTS } : prev,
-    );
-    return null;
   };
 
   const nextRound = () => {
     if (!game) return;
-
-    setGame((prev) => {
-      if (!prev?.state.currentRound) return prev;
-      const { guessObjectId, playersGuesses } = prev.state.currentRound;
-      if (!playersGuesses) return prev;
-
-      const updatedResults = { ...prev.state.results };
-      for (const [playerID, g] of Object.entries(playersGuesses)) {
-        const newResult: Result = {
-          guessObjectId,
-          distance: g.distance,
-          points: g.points,
-        };
-        if (!updatedResults[playerID])
-          updatedResults[playerID] = { results: [] };
-        updatedResults[playerID].results.push(newResult);
-      }
-      return { ...prev, state: { ...prev.state, results: updatedResults } };
-    });
-
-    const nextId = getNextObjectId();
-    if (nextId) {
-      setGame((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          state: {
-            ...prev.state,
-            currentRound: {
-              status: RoundStatus.GUESSING,
-              guessObjectId: nextId,
-              playersGuesses: {},
-            },
-          },
-        };
-      });
-    }
+    setGame((prev) => (prev ? resolveNextRound(prev).game : prev));
   };
 
   const endGame = async () => {
