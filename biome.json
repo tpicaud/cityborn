@@ -48,7 +48,8 @@
       "!**/dist/",
       "!**/build/",
       "!**/coverage/",
-      "!packages/api/openapi/versions"
+      "!packages/api/openapi/versions",
+      "!!**/node_modules"
     ]
   }
 }
