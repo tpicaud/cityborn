@@ -1,4 +1,4 @@
-import { CITYBORN_CONTACT_EMAIL } from '@cityborn/utils';
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 
 export default function TermsAndPolicies() {
   return (

@@ -12,7 +12,13 @@
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "uuid": "^14.0.0"
+  },
+  "peerDependencies": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "@types/react": "~19.2.14"
   },
   "license": "ISC"
 }

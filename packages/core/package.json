@@ -1,5 +1,5 @@
 {
-  "name": "@cityborn/utils",
+  "name": "@cityborn/core",
   "version": "1.0.0",
   "main": "index.ts",
   "types": "index.ts",
@@ -10,10 +10,8 @@
     "format": "biome check --write .",
     "check": "biome check ."
   },
-  "packageManager": "pnpm@10.33.2",
   "dependencies": {
-    "@cityborn/api": "workspace:*",
-    "typescript": "^6.0.3",
-    "uuid": "^14.0.0"
-  }
+    "typescript": "^6.0.3"
+  },
+  "license": "ISC"
 }

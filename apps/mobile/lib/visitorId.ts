@@ -1,4 +1,4 @@
-import { generateVisitorId } from '@cityborn/utils';
+import { generateVisitorId } from '@cityborn/client';
 import { asyncStorage } from './asyncStorage';
 
 export async function getOrCreateVisitorId(): Promise<string> {

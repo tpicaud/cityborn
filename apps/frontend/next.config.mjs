@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
 
-  transpilePackages: ['@cityborn/api', '@cityborn/errors', '@cityborn/utils'],
+  transpilePackages: ['@cityborn/api', '@cityborn/core', '@cityborn/client'],
 
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

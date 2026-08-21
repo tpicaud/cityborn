@@ -1,5 +1,5 @@
 import { ApiErrors } from '@cityborn/api';
-import { useAuth } from '@cityborn/contexts';
+import { useAuth } from '@cityborn/client';
 import {
   GoogleSignin,
   isSuccessResponse,

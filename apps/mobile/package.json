@@ -23,9 +23,8 @@
   "dependencies": {
     "@cityborn/api": "workspace:*",
     "@cityborn/client": "workspace:*",
-    "@cityborn/contexts": "workspace:*",
+    "@cityborn/core": "workspace:*",
     "@cityborn/design-system": "workspace:*",
-    "@cityborn/utils": "workspace:*",
     "@expo/config-plugins": "^57.0.6",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "^2.2.0",

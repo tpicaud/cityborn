@@ -1,5 +1,5 @@
 import { type GameConfig, type Guess, isApiError } from '@cityborn/api';
-import { useAuth, useError } from '@cityborn/contexts';
+import { useAuth, useError } from '@cityborn/client';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { Game } from '../../game/Game';

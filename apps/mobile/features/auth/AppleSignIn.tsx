@@ -1,5 +1,5 @@
 import { ApiErrors, isApiError } from '@cityborn/api';
-import { useAuth } from '@cityborn/contexts';
+import { useAuth } from '@cityborn/client';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';

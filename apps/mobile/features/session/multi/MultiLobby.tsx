@@ -4,7 +4,7 @@ import type {
   OnlinePlayer,
   Session,
 } from '@cityborn/api';
-import { useError } from '@cityborn/contexts';
+import { useError } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';

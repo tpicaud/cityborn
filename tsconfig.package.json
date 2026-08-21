@@ -1,13 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ESNext",
     "noEmit": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["./**/*"],
-  "exclude": ["node_modules"]
+    "skipLibCheck": true,
+    "strict": true
+  }
 }

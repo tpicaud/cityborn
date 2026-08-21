@@ -6,7 +6,7 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { useError } from '@cityborn/contexts';
+import { useError } from '@cityborn/client';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
