@@ -5,10 +5,10 @@ export function resolveClientIpFromHeaders(
   fallbackAddress: string,
 ): string {
   const forwardedFor = headers['x-forwarded-for'];
-  const firstForwarded = Array.isArray(forwardedFor)
-    ? forwardedFor[0]
-    : forwardedFor?.split(',')[0];
-  const ip = firstForwarded?.trim();
+  const rawValue = Array.isArray(forwardedFor)
+    ? forwardedFor.join(',')
+    : forwardedFor;
+  const trustedHop = rawValue?.split(',').at(-1)?.trim();
 
-  return ip && ip.length > 0 ? ip : fallbackAddress;
+  return trustedHop && trustedHop.length > 0 ? trustedHop : fallbackAddress;
 }
