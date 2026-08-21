@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
+    "@cityborn/core": "workspace:*",
     "typescript": "^6.0.3",
     "uuid": "^14.0.0"
   },

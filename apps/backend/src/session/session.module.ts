@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConnectionRegistryModule } from '../connection-registry/connection-registry.module';
 import { EventModule } from '../event/event.module';
+import { GameService } from '../game/game.service';
 import { GuessObjectModule } from '../guess-object/guess-object.module';
 import { IdModule } from '../id/id.module';
 import { LockModule } from '../lock/lock.module';
@@ -23,7 +24,7 @@ import { SessionService } from './session.service';
     RateLimitModule,
   ],
   controllers: [SessionController],
-  providers: [SessionService, SessionGateway],
+  providers: [SessionService, GameService, SessionGateway],
   exports: [SessionService],
 })
 export class SessionModule {}

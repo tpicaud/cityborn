@@ -6,7 +6,12 @@ import {
   GameStatus,
   RoundStatus,
 } from '@cityborn/api';
-import { aggregateGameResults, applyGuess, resolveNextRound } from './round';
+import {
+  aggregateGameResults,
+  applyGuess,
+  beginGame,
+  resolveNextRound,
+} from './round';
 
 function baseGame(overrides: Partial<Game['state']> = {}): Game {
   return {
@@ -32,6 +37,19 @@ const guess = {
   points: 900,
   win: false,
 };
+
+test('beginGame switches the game to IN_GAME and opens the first round', () => {
+  const game = baseGame({ currentRound: undefined });
+
+  const result = beginGame(game);
+
+  assert.equal(result.status, GameStatus.IN_GAME);
+  assert.deepEqual(result.state.currentRound, {
+    status: RoundStatus.GUESSING,
+    guessObjectId: 'obj-1',
+    playersGuesses: {},
+  });
+});
 
 test('applyGuess records the guess without marking the round done when other connected players still owe a guess', () => {
   const game = baseGame();

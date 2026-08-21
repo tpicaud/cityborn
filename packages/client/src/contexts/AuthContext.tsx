@@ -1,3 +1,5 @@
+'use client';
+
 import type { User } from '@cityborn/api';
 import {
   createContext,

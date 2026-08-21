@@ -1,9 +1,10 @@
-import { contract, ErrorCode, User } from '@cityborn/api';
+import { contract, ErrorCode, type Session, User } from '@cityborn/api';
 import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { GameService } from '../game/game.service';
 import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
 
@@ -16,11 +17,15 @@ const publicSessionRoutes = c.router({
 const optionalAuthSessionRoutes = c.router({
   createSession: contract.session.createSession,
   createGame: contract.session.createGame,
+  finalizeGame: contract.session.finalizeGame,
   endSoloGame: contract.session.endSoloGame,
 });
 @Controller()
 export class SessionController {
-  constructor(private readonly sessionService: SessionService) {}
+  constructor(
+    private readonly sessionService: SessionService,
+    private readonly gameService: GameService,
+  ) {}
 
   @TsRestHandler(publicSessionRoutes)
   async handler() {
@@ -50,14 +55,36 @@ export class SessionController {
           body: await this.sessionService.create(body, user, visitorId),
         };
       },
-      createGame: async ({ body }) => ({
+      createGame: async ({ body: session }) => ({
         status: 200 as const,
-        body: await this.sessionService.createGame(body, visitorId),
+        body: await this.gameService.createGame({
+          gameConfig: session.gameConfig,
+          players: session.players,
+          mode: session.mode,
+          visitorId,
+        }),
       }),
-      endSoloGame: async ({ body }) => {
-        await this.sessionService.endSoloGame(body, visitorId);
+      finalizeGame: async ({ body: session }) => {
+        await this.finalizeGame(session, visitorId);
+        return { status: 200 as const, body: {} };
+      },
+      // @deprecated kept for older mobile builds still calling this route; use finalizeGame.
+      endSoloGame: async ({ body: session }) => {
+        await this.finalizeGame(session, visitorId);
         return { status: 200 as const, body: {} };
       },
     });
+  }
+
+  private async finalizeGame(
+    session: Session & { currentGame: NonNullable<Session['currentGame']> },
+    visitorId?: string,
+  ): Promise<void> {
+    await this.gameService.endGame(
+      session.currentGame,
+      session.players,
+      session.mode,
+      visitorId,
+    );
   }
 }

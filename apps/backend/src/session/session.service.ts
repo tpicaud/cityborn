@@ -2,38 +2,27 @@ import {
   type CreateSession,
   defaultGameConfig,
   ErrorCode,
-  FullGuessObject,
-  type Game,
   type GameConfig,
-  GameStatus,
   type Guess,
   type OnlinePlayer,
-  type PlayerResults,
-  type Round,
-  RoundStatus,
   type Session,
   SessionMode,
   SessionStatus,
   type User,
 } from '@cityborn/api';
-import { applyGuess, resolveNextRound } from '@cityborn/core';
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
-import { GuessObjectService } from '../guess-object/guess-object.service';
+import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
@@ -41,14 +30,12 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 30 * 60;
   private readonly LOCK_TTL = 2000;
-  private readonly logger = new Logger(SessionService.name);
 
   constructor(
     private readonly redisService: RedisService,
     private readonly lockService: LockService,
     private readonly idService: IdService,
-    private readonly guessObjectService: GuessObjectService,
-    private readonly prisma: PrismaService,
+    private readonly gameService: GameService,
     private readonly eventService: EventService,
   ) {}
 
@@ -87,10 +74,8 @@ export class SessionService {
           : [],
     };
 
-    this.logger.log('saving solo session');
     if (mode === SessionMode.MULTI) await this.saveSession(newSession);
 
-    this.logger.log('saving solo session');
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -173,10 +158,10 @@ export class SessionService {
         message: `Session not found`,
       });
 
-    if (session.status === 'IN_GAME')
-      throw new BadRequestException({
+    if (session.currentGame)
+      throw new ForbiddenException({
         code: ErrorCode.SESSION_ALREADY_IN_GAME,
-        message: `Session is already in game`,
+        message: `Session already in game`,
       });
 
     if (session.hostID !== playerID)
@@ -250,18 +235,15 @@ export class SessionService {
         message: `Player is not the host`,
       });
 
-    const game = await this.createGame(session, visitorId);
-
-    const firstRound: Round = {
-      status: RoundStatus.GUESSING,
-      guessObjectId: game.state.guessObjectsIds[0],
-      playersGuesses: {},
-    };
-    game.status = GameStatus.IN_GAME;
-    game.state.currentRound = firstRound;
+    const game = await this.gameService.createGame({
+      gameConfig: session.gameConfig,
+      players: session.players,
+      mode: session.mode,
+      visitorId,
+    });
 
     session.status = SessionStatus.IN_GAME;
-    session.currentGame = game;
+    session.currentGame = this.gameService.beginGame(game);
 
     await this.saveSession(this.getLightSession(session));
     return session;
@@ -270,52 +252,6 @@ export class SessionService {
   /////////////////////////
   // Current game method //
   /////////////////////////
-
-  async createGame(session: Session, visitorId?: string): Promise<Game> {
-    const guessObjects: FullGuessObject[] =
-      await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
-        session.gameConfig,
-      );
-    const guessObjectIds = guessObjects.map((obj) => obj.id);
-
-    const game: Game = {
-      id: await this.generateUniqueGameID(),
-      config: session.gameConfig,
-      status: GameStatus.STARTING,
-      state: {
-        guessObjectsIds: guessObjectIds,
-        results: session.players.reduce(
-          (acc, player) => {
-            acc[player.username] = { results: [] };
-            return acc;
-          },
-          {} as Record<string, PlayerResults>,
-        ),
-        guessObjects: guessObjects,
-      },
-    };
-
-    if (visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'game_started',
-          visitorId,
-          properties: {
-            mode: session.mode,
-            categories: session.gameConfig.categories,
-            numberOfPlayers:
-              session.mode === SessionMode.SOLO
-                ? session.players.length
-                : (session.players as OnlinePlayer[]).filter(
-                    (player) => player.connected,
-                  ).length,
-          },
-        }),
-      );
-    }
-
-    return game;
-  }
 
   async handleGuess(playerID: string, sessionID: string, guess: Guess) {
     return await this.lockService.withLock(
@@ -364,7 +300,7 @@ export class SessionService {
           .filter((player) => player.connected)
           .map((player) => player.username);
 
-        const updatedGame = applyGuess(
+        const updatedGame = this.gameService.applyGuess(
           game,
           playerID,
           guess,
@@ -384,51 +320,58 @@ export class SessionService {
     sessionID: string,
     visitorId?: string,
   ) {
-    const session = await this.getSession(sessionID);
-    if (!session)
-      throw new NotFoundException({
-        code: ErrorCode.SESSION_NOT_FOUND,
-        message: `Session not found`,
-      });
+    return await this.lockService.withLock(
+      this.getKey(sessionID),
+      this.LOCK_TTL,
+      async () => {
+        const session = await this.getSession(sessionID);
+        if (!session)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_NOT_FOUND,
+            message: `Session not found`,
+          });
 
-    if (!session.currentGame)
-      throw new NotFoundException({
-        code: ErrorCode.SESSION_NO_CURRENT_GAME,
-        message: `No current game in this session`,
-      });
-    const game = session.currentGame;
+        if (!session.currentGame)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_NO_CURRENT_GAME,
+            message: `No current game in this session`,
+          });
+        const game = session.currentGame;
 
-    if (session.hostID !== playerID) {
-      throw new UnauthorizedException({
-        code: ErrorCode.SESSION_FORBIDDEN_HOST,
-        message: `Player is not the host`,
-      });
-    }
+        if (session.hostID !== playerID) {
+          throw new UnauthorizedException({
+            code: ErrorCode.SESSION_FORBIDDEN_HOST,
+            message: `Player is not the host`,
+          });
+        }
 
-    const { game: updatedGame, isGameOver } = resolveNextRound(game);
+        const { game: updatedGame, isGameOver } =
+          this.gameService.resolveNextRound(game);
 
-    if (isGameOver) {
-      await this.endGame(session, updatedGame, visitorId);
+        if (isGameOver) {
+          await this.gameService.endGame(
+            updatedGame,
+            session.players,
+            session.mode,
+            visitorId,
+          );
 
-      const lobbySession: Session = {
-        ...session,
-        status: SessionStatus.IN_LOBBY,
-        currentGame: undefined,
-      };
-      await this.saveSession(lobbySession);
+          const lobbySession: Session = {
+            ...session,
+            status: SessionStatus.IN_LOBBY,
+            currentGame: undefined,
+          };
+          await this.saveSession(lobbySession);
 
-      session.currentGame = updatedGame;
-    } else {
-      session.currentGame = updatedGame;
-      await this.saveSession(session);
-    }
+          session.currentGame = updatedGame;
+        } else {
+          session.currentGame = updatedGame;
+          await this.saveSession(session);
+        }
 
-    return session;
-  }
-
-  async endSoloGame(sessionDto: Session, visitorId?: string) {
-    if (!sessionDto.currentGame) return;
-    await this.endGame(sessionDto, sessionDto.currentGame, visitorId);
+        return session;
+      },
+    );
   }
 
   ///////////////////////
@@ -501,19 +444,55 @@ export class SessionService {
 
         (session.players[playerIndex] as OnlinePlayer).connected = false;
 
-        const isHost = playerID === session.hostID;
-        if (isHost) {
-          const players = session.players as OnlinePlayer[];
+        this.reassignHostAfterRemoval(session, playerID);
 
-          const connectedPlayers = players.filter(
-            (player) => player.connected && player.username !== playerID,
-          );
-          if (connectedPlayers.length > 0) {
-            session.hostID = connectedPlayers[0].username;
-          } else {
-            session.hostID = '';
-          }
-        }
+        await this.saveSession(session);
+
+        return session;
+      },
+    );
+  }
+
+  async kickPlayer(
+    playerID: string,
+    sessionID: string,
+    playerToKick: string,
+  ): Promise<Session> {
+    return await this.lockService.withLock(
+      this.getKey(sessionID),
+      this.LOCK_TTL,
+      async () => {
+        const session: Session | null = await this.getSession(sessionID);
+        if (!session)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_NOT_FOUND,
+            message: `Session not found`,
+          });
+
+        if (session.hostID !== playerID)
+          throw new ForbiddenException({
+            code: ErrorCode.SESSION_FORBIDDEN_HOST,
+            message: `Player is not the host`,
+          });
+
+        if (session.currentGame)
+          throw new ForbiddenException({
+            code: ErrorCode.SESSION_ALREADY_IN_GAME,
+            message: `Session already in game`,
+          });
+
+        const playerIndex = session.players.findIndex(
+          (player) => player.username === playerToKick,
+        );
+        if (playerIndex === -1)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+            message: `Player not found in session`,
+          });
+
+        session.players.splice(playerIndex, 1);
+
+        this.reassignHostAfterRemoval(session, playerToKick);
 
         await this.saveSession(session);
 
@@ -541,53 +520,17 @@ export class SessionService {
   // Private function //
   //////////////////////
 
-  private async endGame(
+  private reassignHostAfterRemoval(
     session: Session,
-    game: Game,
-    visitorId?: string,
-  ): Promise<void> {
-    try {
-      const game_record = await this.prisma.gameRecord.create({
-        data: {
-          mode: session.mode,
-          gameConfig: session.gameConfig as unknown as Prisma.InputJsonValue,
-          players: session.players as unknown as Prisma.InputJsonValue,
-          guessObjectsIds: game.state.guessObjectsIds,
-          results: game.state.results as unknown as Prisma.InputJsonValue,
-          users: {
-            connect: session.players
-              .filter((player) => !player.isGuest)
-              .map((player) => ({ id: player.id })),
-          },
-        },
-      });
+    removedPlayerID: string,
+  ): void {
+    if (session.hostID !== removedPlayerID) return;
 
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'game_finished',
-            visitorId,
-            properties: {
-              gameId: game_record.id.toString(),
-              mode: session.mode,
-              numberOfPlayers: game.state.results
-                ? Object.keys(game.state.results).length
-                : 0,
-              average_score: game.state.results
-                ? Object.values(game.state.results)
-                    .flatMap((res) => res.results)
-                    .reduce((sum, r) => sum + r.points, 0) /
-                  Object.values(game.state.results).flatMap(
-                    (res) => res.results,
-                  ).length
-                : 0,
-            },
-          }),
-        );
-      }
-    } catch (error) {
-      this.logger.error(`Error storing game in db: ${error}`);
-    }
+    const connectedPlayers = (session.players as OnlinePlayer[]).filter(
+      (player) => player.connected && player.username !== removedPlayerID,
+    );
+    session.hostID =
+      connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
   }
 
   private async generateUniqueSessionID(): Promise<string> {
@@ -604,28 +547,12 @@ export class SessionService {
     });
   }
 
-  async generateUniqueGameID(): Promise<string> {
-    const candidateId = this.idService.generateUniqueNamesId();
-    return candidateId.toString(); // TODO Check in supabase and redis for conflicts
-  }
-
   private getLightSession(session: Session): Session {
-    let lightSession = session;
+    if (!session.currentGame) return session;
 
-    if (session.currentGame) {
-      const { guessObjects, ...restState } = session.currentGame.state;
-
-      lightSession = {
-        ...session,
-        currentGame: {
-          ...session.currentGame,
-          state: {
-            ...restState,
-          },
-        },
-      };
-    }
-
-    return lightSession;
+    return {
+      ...session,
+      currentGame: this.gameService.toLightGame(session.currentGame),
+    };
   }
 }

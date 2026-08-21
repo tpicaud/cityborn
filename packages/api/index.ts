@@ -5,7 +5,6 @@ export * from './src/contract/contract';
 export * from './src/create-api-client';
 export * from './src/errors/error-codes';
 export * from './src/errors/error-handler';
-export * from './src/helpers/session.helpers';
 export * from './src/schemas/api-error.schema';
 export * from './src/schemas/category.schema';
 export * from './src/schemas/common.schema';

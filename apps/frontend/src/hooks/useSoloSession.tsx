@@ -1,21 +1,19 @@
 import {
   type Game,
   type GameConfig,
-  GameStatus,
   type Guess,
-  RoundStatus,
   type Session,
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
-import { applyGuess, resolveNextRound } from '@cityborn/core';
+import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useError } from '@/contexts/ErrorContext';
 import {
   createSession,
   createSoloGame,
-  endSoloGame,
+  finalizeGame,
 } from '@/server/actions/session';
 import type { IUseSession } from './IUseSession';
 
@@ -68,20 +66,8 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     if (!current) return;
     const result = await createSoloGame(current);
     if (!result.ok) return invokeError(result.error);
-    const game: Game = result.data;
     updateSession({ ...current, status: SessionStatus.IN_GAME });
-    setGame({
-      ...game,
-      status: GameStatus.IN_GAME,
-      state: {
-        ...game.state,
-        currentRound: {
-          status: RoundStatus.GUESSING,
-          guessObjectId: game.state.guessObjectsIds[0],
-          playersGuesses: {},
-        },
-      },
-    });
+    setGame(beginGame(result.data));
   };
 
   const guess = (g: Guess) => {
@@ -93,28 +79,30 @@ export function useSoloSession(localPlayerID: string): IUseSession {
 
   const nextRound = () => {
     if (!game) return;
-    setGame((prev) => (prev ? resolveNextRound(prev).game : prev));
+    const { game: updatedGame, isGameOver } = resolveNextRound(game);
+    setGame(updatedGame);
+
+    const current = sessionRef.current;
+    if (isGameOver && current) {
+      finalizeGame({ ...current, currentGame: updatedGame }).then((result) => {
+        if (!result.ok) invokeError(result.error);
+      });
+    }
   };
 
-  const endGame = async () => {
+  const endGame = () => {
     const current = sessionRef.current;
     if (!current?.currentGame) return;
-    const result = await endSoloGame(current);
-    if (!result.ok) invokeError(result.error);
     updateSession({ ...current, currentGame: undefined });
   };
 
   const playAgain = async () => {
     if (!sessionRef.current?.currentGame) return;
-    const result = await endSoloGame(sessionRef.current);
-    if (!result.ok) invokeError(result.error);
     await startGame();
   };
 
   const exitGame = async () => {
     if (!sessionRef.current?.currentGame) return;
-    const result = await endSoloGame(sessionRef.current);
-    if (!result.ok) invokeError(result.error);
     router.push('/');
   };
 

@@ -1,11 +1,11 @@
 import {
   type ApiResult,
-  buildEndSoloGameBody,
   type CreateSession,
   type Game,
   type Session,
   toApiResult,
 } from '@cityborn/api';
+import { buildFinalizeGameBody } from '@cityborn/client';
 import { client } from './client';
 
 export async function createSession(
@@ -27,10 +27,10 @@ export async function createSoloGame(
   return toApiResult(result);
 }
 
-export async function endSoloGame(session: Session): Promise<ApiResult<void>> {
-  const body = buildEndSoloGameBody(session);
+export async function finalizeGame(session: Session): Promise<ApiResult<void>> {
+  const body = buildFinalizeGameBody(session);
   if (!body) return { ok: true, data: undefined };
-  const result = await client.session.endSoloGame({ body });
+  const result = await client.session.finalizeGame({ body });
   const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   return { ok: true, data: undefined };
