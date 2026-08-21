@@ -5,7 +5,7 @@
   "linter": {
     "enabled": true,
     "domains": {
-      "project": "recommended",
+      "project": "none",
       "test": "recommended",
       "turborepo": "recommended"
     },

@@ -53,6 +53,9 @@ export enum ErrorCode {
   CATEGORY_NOT_FOUND = 'CATEGORY_NOT_FOUND',
   CATEGORY_HAS_CHILDREN = 'CATEGORY_HAS_CHILDREN',
 
+  // Rate limiting
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+
   ///////////////
   // Technical //
   ///////////////

@@ -1,11 +1,12 @@
 import { defaultGuess, ErrorCode } from '@cityborn/api';
-import { NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { SessionSocket } from '../common/types/session-socket';
 import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
+import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
 import { SessionGateway } from './session.gateway';
 import type { SessionService } from './session.service';
@@ -39,6 +40,10 @@ describe('SessionGateway', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(resolvedConnection),
     },
+    rateLimitService: Partial<RateLimitService> = {
+      consumeWsConnection: jest.fn().mockResolvedValue(undefined),
+      consumeWsMessage: jest.fn().mockResolvedValue(undefined),
+    },
   ) => {
     const gateway = new SessionGateway(
       sessionService as unknown as SessionService,
@@ -46,6 +51,7 @@ describe('SessionGateway', () => {
       {} as unknown as JwtService,
       {} as unknown as UserService,
       connectionRegistryService as unknown as ConnectionRegistryService,
+      rateLimitService as unknown as RateLimitService,
     );
     gateway.io = { to: () => ({ emit: jest.fn() }) } as unknown as Server;
     return gateway;
@@ -107,9 +113,6 @@ describe('SessionGateway', () => {
   });
 
   describe('handleConnection', () => {
-    // Ce hook échappe au pipeline Nest (pas de filtre/interceptor
-    // possible) : il doit gérer ses erreurs lui-même. On vérifie ici la
-    // dégradation en invité choisie plutôt qu'une déconnexion brutale.
     it('degrades to a guest connection when resolveFullUser fails, instead of throwing', async () => {
       jest.mocked(extractAccessTokenFromWsClient).mockReturnValue('a-token');
       jest.mocked(validateAccessToken).mockResolvedValue({ id: 'user-1' });
@@ -117,7 +120,7 @@ describe('SessionGateway', () => {
 
       const gateway = buildGateway({});
       const client = {
-        handshake: { query: {} },
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
         data: {},
       } as unknown as SessionSocket;
 
@@ -133,13 +136,45 @@ describe('SessionGateway', () => {
 
       const gateway = buildGateway({});
       const client = {
-        handshake: { query: {} },
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
         data: {},
       } as unknown as SessionSocket;
 
       await gateway.handleConnection(client);
 
       expect(client.data.user).toBe(user);
+    });
+
+    it('catches the WS connection rate limit rejection, emits a formatted error, and disconnects the client instead of crashing the process', async () => {
+      const rateLimitExceeded = new HttpException(
+        { code: ErrorCode.RATE_LIMIT_EXCEEDED, message: 'Too many requests' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+      const gateway = buildGateway(
+        {},
+        { getConnection: jest.fn().mockResolvedValue(resolvedConnection) },
+        {
+          consumeWsConnection: jest.fn().mockRejectedValue(rateLimitExceeded),
+          consumeWsMessage: jest.fn().mockResolvedValue(undefined),
+        },
+      );
+      const client = {
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
+        data: {},
+        emit: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as SessionSocket;
+
+      await expect(gateway.handleConnection(client)).resolves.toBeUndefined();
+
+      expect(client.emit).toHaveBeenCalledWith(
+        'error',
+        expect.objectContaining({
+          code: ErrorCode.RATE_LIMIT_EXCEEDED,
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        }),
+      );
+      expect(client.disconnect).toHaveBeenCalledWith(true);
     });
   });
 });

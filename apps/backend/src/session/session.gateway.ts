@@ -39,6 +39,8 @@ import {
   type ConnectionInfo,
   ConnectionRegistryService,
 } from '../connection-registry/connection-registry.service';
+import { RateLimitService } from '../rate-limit/rate-limit.service';
+import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { CurrentUser } from '../user/user.decorator';
 import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
@@ -67,6 +69,7 @@ export class SessionGateway
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly connectionRegistryService: ConnectionRegistryService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   @WebSocketServer()
@@ -85,6 +88,21 @@ export class SessionGateway
   }
 
   async handleConnection(client: SessionSocket) {
+    try {
+      await this.rateLimitService.consumeWsConnection(
+        resolveClientIpFromHeaders(
+          client.handshake.headers,
+          client.handshake.address,
+        ),
+      );
+    } catch (error) {
+      const apiError = exceptionToApiError(error);
+      logApiError(this.logger, 'WS Connection Error', apiError, error);
+      client.emit('error', apiError);
+      client.disconnect(true);
+      return;
+    }
+
     const visitorId = client.handshake?.query?.['x-visitor-id'];
     if (visitorId) {
       client.data.visitorId = visitorId;
