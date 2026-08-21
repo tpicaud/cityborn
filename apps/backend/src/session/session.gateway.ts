@@ -88,12 +88,20 @@ export class SessionGateway
   }
 
   async handleConnection(client: SessionSocket) {
-    await this.rateLimitService.consumeWsConnection(
-      resolveClientIpFromHeaders(
-        client.handshake.headers,
-        client.handshake.address,
-      ),
-    );
+    try {
+      await this.rateLimitService.consumeWsConnection(
+        resolveClientIpFromHeaders(
+          client.handshake.headers,
+          client.handshake.address,
+        ),
+      );
+    } catch (error) {
+      const apiError = exceptionToApiError(error);
+      logApiError(this.logger, 'WS Connection Error', apiError, error);
+      client.emit('error', apiError);
+      client.disconnect(true);
+      return;
+    }
 
     const visitorId = client.handshake?.query?.['x-visitor-id'];
     if (visitorId) {

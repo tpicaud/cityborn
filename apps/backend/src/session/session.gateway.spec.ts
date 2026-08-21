@@ -1,5 +1,5 @@
 import { defaultGuess, ErrorCode } from '@cityborn/api';
-import { NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
@@ -143,6 +143,38 @@ describe('SessionGateway', () => {
       await gateway.handleConnection(client);
 
       expect(client.data.user).toBe(user);
+    });
+
+    it('catches the WS connection rate limit rejection, emits a formatted error, and disconnects the client instead of crashing the process', async () => {
+      const rateLimitExceeded = new HttpException(
+        { code: ErrorCode.RATE_LIMIT_EXCEEDED, message: 'Too many requests' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+      const gateway = buildGateway(
+        {},
+        { getConnection: jest.fn().mockResolvedValue(resolvedConnection) },
+        {
+          consumeWsConnection: jest.fn().mockRejectedValue(rateLimitExceeded),
+          consumeWsMessage: jest.fn().mockResolvedValue(undefined),
+        },
+      );
+      const client = {
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
+        data: {},
+        emit: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as SessionSocket;
+
+      await expect(gateway.handleConnection(client)).resolves.toBeUndefined();
+
+      expect(client.emit).toHaveBeenCalledWith(
+        'error',
+        expect.objectContaining({
+          code: ErrorCode.RATE_LIMIT_EXCEEDED,
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        }),
+      );
+      expect(client.disconnect).toHaveBeenCalledWith(true);
     });
   });
 });
