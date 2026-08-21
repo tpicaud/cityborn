@@ -6,6 +6,12 @@ import { CreateSessionSchema, SessionSchema } from '../schemas/session.schema';
 
 const c = initContract();
 
+const finalizeGameBodySchema = SessionSchema.extend({
+  currentGame: GameSchema.extend({
+    state: GameStateSchema.omit({ guessObjects: true }),
+  }),
+});
+
 export const sessionContract = c.router(
   {
     createSession: {
@@ -26,14 +32,22 @@ export const sessionContract = c.router(
       body: SessionSchema,
       responses: { 200: GameSchema, ...commonErrorResponses },
     },
+    finalizeGame: {
+      method: 'POST',
+      path: '/finalize-game',
+      body: finalizeGameBodySchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
+    /**
+     * @deprecated Use `finalizeGame` instead. Kept so mobile builds
+     * published before this rename keep working — safe to remove once
+     * their adoption of a newer build is high enough.
+     * @deprecatedSince 2026-08-21
+     */
     endSoloGame: {
       method: 'POST',
       path: '/end-solo-game',
-      body: SessionSchema.extend({
-        currentGame: GameSchema.extend({
-          state: GameStateSchema.omit({ guessObjects: true }),
-        }),
-      }),
+      body: finalizeGameBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },

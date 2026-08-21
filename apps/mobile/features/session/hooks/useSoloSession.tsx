@@ -10,7 +10,7 @@ import { useError } from '@cityborn/client';
 import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createSession, createSoloGame, endSoloGame } from '@/lib/api/session';
+import { createSession, createSoloGame, finalizeGame } from '@/lib/api/session';
 import type { IUseSession } from './IUseSession';
 
 export function useSoloSession(localPlayerID: string): IUseSession {
@@ -92,30 +92,30 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   const nextRound = () => {
     if (!game) return;
 
-    setGame((prevGame) =>
-      prevGame ? resolveNextRound(prevGame).game : prevGame,
-    );
+    const { game: updatedGame, isGameOver } = resolveNextRound(game);
+    setGame(updatedGame);
+
+    const current = sessionRef.current;
+    if (isGameOver && current) {
+      finalizeGame({ ...current, currentGame: updatedGame }).then((result) => {
+        if (!result.ok) invokeError(result.error);
+      });
+    }
   };
 
-  const endGame = async () => {
+  const endGame = () => {
     const current = sessionRef.current;
     if (!current?.currentGame) return;
-    const result = await endSoloGame(current);
-    if (!result.ok) invokeError(result.error);
     updateSession({ ...current, currentGame: undefined });
   };
 
   const playAgain = async () => {
     if (!sessionRef.current?.currentGame) return;
-    const result = await endSoloGame(sessionRef.current);
-    if (!result.ok) invokeError(result.error);
     await startGame();
   };
 
   const exitGame = async () => {
     if (!sessionRef.current?.currentGame) return;
-    const result = await endSoloGame(sessionRef.current);
-    if (!result.ok) invokeError(result.error);
     router.replace('/');
   };
 

@@ -1,4 +1,4 @@
-import { contract, ErrorCode, User } from '@cityborn/api';
+import { contract, ErrorCode, type Session, User } from '@cityborn/api';
 import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
@@ -17,6 +17,7 @@ const publicSessionRoutes = c.router({
 const optionalAuthSessionRoutes = c.router({
   createSession: contract.session.createSession,
   createGame: contract.session.createGame,
+  finalizeGame: contract.session.finalizeGame,
   endSoloGame: contract.session.endSoloGame,
 });
 @Controller()
@@ -63,15 +64,27 @@ export class SessionController {
           visitorId,
         }),
       }),
+      finalizeGame: async ({ body: session }) => {
+        await this.finalizeGame(session, visitorId);
+        return { status: 200 as const, body: {} };
+      },
+      // @deprecated kept for older mobile builds still calling this route; use finalizeGame.
       endSoloGame: async ({ body: session }) => {
-        await this.gameService.endGame(
-          session.currentGame,
-          session.players,
-          session.mode,
-          visitorId,
-        );
+        await this.finalizeGame(session, visitorId);
         return { status: 200 as const, body: {} };
       },
     });
+  }
+
+  private async finalizeGame(
+    session: Session & { currentGame: NonNullable<Session['currentGame']> },
+    visitorId?: string,
+  ): Promise<void> {
+    await this.gameService.endGame(
+      session.currentGame,
+      session.players,
+      session.mode,
+      visitorId,
+    );
   }
 }

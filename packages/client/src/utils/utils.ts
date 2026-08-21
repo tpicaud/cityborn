@@ -1,5 +1,13 @@
-import type { Game, PlayerResults } from '@cityborn/api';
+import type { Game, PlayerResults, Session } from '@cityborn/api';
+import { toLightGame } from '@cityborn/core';
 import { v4 as uuidv4 } from 'uuid';
+
+export function buildFinalizeGameBody(
+  session: Session,
+): (Session & { currentGame: NonNullable<Session['currentGame']> }) | null {
+  if (!session.currentGame) return null;
+  return { ...session, currentGame: toLightGame(session.currentGame) };
+}
 
 export function getGameResult(game: Game): Map<string, PlayerResults> {
   const resultsMap = new Map<string, PlayerResults>();
