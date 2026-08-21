@@ -73,7 +73,7 @@ export class SessionGateway
   ) {}
 
   @WebSocketServer()
-  io: Server;
+  io!: Server;
 
   private async resolveConnection(socketID: string): Promise<ConnectionInfo> {
     const connection =

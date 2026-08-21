@@ -1,5 +1,5 @@
 import type { CategoryTree, GameConfig, Session } from '@cityborn/api';
-import { useError } from '@cityborn/contexts';
+import { useError } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';

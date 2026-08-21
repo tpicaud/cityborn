@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
-    "@cityborn/utils": "workspace:*",
+    "@cityborn/core": "workspace:*",
     "@nestjs/common": "^11.1.27",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.27",

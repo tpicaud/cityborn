@@ -9,7 +9,7 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
-import { useError } from '@cityborn/contexts';
+import { useError } from '@cityborn/client';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createSession, createSoloGame, endSoloGame } from '@/lib/api/session';

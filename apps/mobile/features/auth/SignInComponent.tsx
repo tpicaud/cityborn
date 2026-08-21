@@ -1,5 +1,5 @@
 import { getFriendlyErrorMessage } from '@cityborn/api';
-import { useAuth } from '@cityborn/contexts';
+import { useAuth } from '@cityborn/client';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform } from 'react-native';

@@ -1,5 +1,5 @@
 import type { ApiError } from '@cityborn/api';
-import { useError } from '@cityborn/contexts';
+import { useError } from '@cityborn/client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';

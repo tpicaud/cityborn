@@ -6,7 +6,7 @@ Monorepo pnpm/turbo, TypeScript partout.
 - `apps/frontend`, `apps/back-office` — Next.js
 - `apps/mobile` — Expo / React Native
 - `packages/api` — contrats ts-rest + schémas zod, source de vérité des types partagés
-- `packages/client`, `packages/contexts`, `packages/design-system`, `packages/types`, `packages/utils`
+- `packages/client`, `packages/core`, `packages/design-system`
 
 ## Ligne directrice du projet
 

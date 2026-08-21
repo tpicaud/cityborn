@@ -3,7 +3,7 @@ import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
 import type { User } from '@cityborn/api';
-import { AuthProvider, ErrorProvider } from '@cityborn/contexts';
+import { AuthProvider, ErrorProvider } from '@cityborn/client';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';

@@ -28,8 +28,7 @@ async function bootstrap() {
   );
   app.useGlobalInterceptors(new VisitorIdInterceptor());
 
-  const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis();
+  const redisIoAdapter = await RedisIoAdapter.create(app);
   app.useWebSocketAdapter(redisIoAdapter);
 
   app.use(bodyParser.json({ limit: '10mb' }));
