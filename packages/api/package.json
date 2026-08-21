@@ -17,13 +17,11 @@
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
-    "js-yaml": "^5.2.2",
     "openapi3-ts": "^2.0.2",
     "typescript": "^6.0.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.1.2",
     "tsx": "^4.19.4"
   }

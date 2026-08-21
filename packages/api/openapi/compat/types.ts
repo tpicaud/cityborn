@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+// To retire a version early (before it ages out of this policy), add
+// deprecatedAt + deprecationReason to its entry in versions-manifest.json.
+// This also retires every OLDER version automatically (deprecating vN raises
+// the minimum supported version to vN+1) — mark the highest version you want
+// to retire.
 export const CompatPolicySchema = z.object({
   min_days_supported: z.number(),
   min_num_of_version_supported: z.number(),

@@ -13,7 +13,7 @@ function main() {
   const manifest = loadManifest(
     join(apiRoot, 'openapi/versions/versions-manifest.json'),
   );
-  const policy = loadPolicy(join(apiRoot, 'openapi/compat-policy.yaml'));
+  const policy = loadPolicy(join(apiRoot, 'openapi/compat-policy.json'));
   const items = findDeprecatedItems(join(apiRoot, 'src'));
 
   if (items.length === 0) {

@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { load } from 'js-yaml';
 import { assertOasdiffAvailable, diffBreaking } from './oasdiff-runner';
 import {
   deprecationFloor,
@@ -15,7 +14,7 @@ import type {
 import { CompatPolicySchema, ManifestSchema } from './types';
 
 export function loadPolicy(policyFile: string): CompatPolicy {
-  const raw = load(readFileSync(policyFile, 'utf-8'));
+  const raw = JSON.parse(readFileSync(policyFile, 'utf-8'));
   const result = CompatPolicySchema.safeParse(raw);
   if (!result.success) {
     throw new Error(
