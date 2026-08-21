@@ -1,6 +1,6 @@
 ---
 name: issue-github
-description: Rédige des tickets GitHub Issues selon nos conventions internes. À utiliser dès qu'on me demande de créer, rédiger ou reformuler un ticket/issue GitHub.
+description: Rédige des tickets GitHub Issues et le publier sur le Project Cityborn selon nos conventions internes. À utiliser dès qu'on me demande de créer, rédiger ou reformuler un ticket/issue GitHub.
 ---
 
 # Règles de rédaction de tickets GitHub
@@ -17,5 +17,8 @@ description: Rédige des tickets GitHub Issues selon nos conventions internes. �
 ## Ce qu'il ne faut PAS faire
 - Ne pas assigner de personne sauf si demandé
 - Ne pas fermer/modifier/créer des tickets existants sans confirmation
+
+## Ce qu'il ne faut pas oublier
+- Ajouter l'issue sur le project Cityborn avec le Type "DEV"
 
 **Toujours faire relire une issue avant sa publication sur github**

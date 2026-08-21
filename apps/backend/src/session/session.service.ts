@@ -1,7 +1,6 @@
 import {
   type CreateSession,
   defaultGameConfig,
-  defaultGuess,
   ErrorCode,
   FullGuessObject,
   type Game,
@@ -17,6 +16,7 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
+import { applyGuess, resolveNextRound } from '@cityborn/core';
 import {
   BadRequestException,
   ConflictException,
@@ -360,31 +360,18 @@ export class SessionService {
             message: `No active round on current game`,
           });
 
-        if (
-          game.state.currentRound.playersGuesses &&
-          !game.state.currentRound.playersGuesses[playerID]
-        ) {
-          game.state.currentRound.playersGuesses[playerID] = guess;
+        const connectedPlayerUsernames = (session.players as OnlinePlayer[])
+          .filter((player) => player.connected)
+          .map((player) => player.username);
 
-          const connectedPlayers = (session.players as OnlinePlayer[]).filter(
-            (player) => player.connected,
-          );
-          const playersGuesses = game.state.currentRound.playersGuesses;
-          const allConnectedPlayersGuessed = connectedPlayers.every((player) =>
-            Object.hasOwn(playersGuesses, player.username),
-          );
-          if (allConnectedPlayersGuessed) {
-            for (const player of session.players) {
-              if (!game.state.currentRound.playersGuesses[player.username]) {
-                game.state.currentRound.playersGuesses[player.username] =
-                  defaultGuess;
-              }
-            }
-
-            game.state.currentRound.status = RoundStatus.SHOWING_RESULTS;
-          }
-
-          session.currentGame = game;
+        const updatedGame = applyGuess(
+          game,
+          playerID,
+          guess,
+          connectedPlayerUsernames,
+        );
+        if (updatedGame !== game) {
+          session.currentGame = updatedGame;
           await this.saveSession(session);
         }
         return session;
@@ -418,29 +405,10 @@ export class SessionService {
       });
     }
 
-    const currentIndex = game.state.guessObjectsIds.findIndex(
-      (id: string) => id === game.state.currentRound?.guessObjectId,
-    );
+    const { game: updatedGame, isGameOver } = resolveNextRound(game);
 
-    session.players.forEach((player) => {
-      const guess = game.state.currentRound?.playersGuesses?.[player.username];
-      const playerResults = game.state.results[player.username];
-
-      const newResult = {
-        guessObjectId: game.state.currentRound?.guessObjectId ?? '',
-        distance: guess ? guess.distance : -1,
-        points: guess ? guess.points : 0,
-      };
-
-      if (playerResults?.results) {
-        playerResults.results.push(newResult);
-      } else {
-        game.state.results[player.username] = { results: [newResult] };
-      }
-    });
-
-    if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
-      await this.endGame(session, game, visitorId);
+    if (isGameOver) {
+      await this.endGame(session, updatedGame, visitorId);
 
       const lobbySession: Session = {
         ...session,
@@ -449,16 +417,9 @@ export class SessionService {
       };
       await this.saveSession(lobbySession);
 
-      game.status = GameStatus.IN_RESULTS;
-      session.currentGame = game;
+      session.currentGame = updatedGame;
     } else {
-      game.state.currentRound = {
-        status: RoundStatus.GUESSING,
-        guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
-        playersGuesses: {},
-      };
-
-      session.currentGame = game;
+      session.currentGame = updatedGame;
       await this.saveSession(session);
     }
 

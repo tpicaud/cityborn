@@ -9,6 +9,7 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 import type { MapProps } from '@cityborn/client';
+import { calculatePoints } from '@cityborn/core';
 import * as turf from '@turf/turf';
 import {
   AdvancedMarker,
@@ -21,7 +22,6 @@ import {
 import type { MultiPolygon, Polygon } from 'geojson';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
-import { calculatePoints } from '@/utils/calculateScore';
 
 type GoogleMapProps = {
   API_KEY: string;

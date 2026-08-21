@@ -1,6 +1,7 @@
 'use client';
 
 import { type Game, type PlayerResults, SessionMode } from '@cityborn/api';
+import { calculateTotalPoints } from '@cityborn/core';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,
@@ -16,7 +17,6 @@ import {
   TableRow,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { calculateTotalPoints } from '@/utils/calculateScore';
 import { getGameResult } from '@/utils/getGameResult';
 import LoadingComponent from '../others/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';

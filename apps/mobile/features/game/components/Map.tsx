@@ -5,7 +5,8 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
-import { calculatePoints, type MapProps } from '@cityborn/client';
+import type { MapProps } from '@cityborn/client';
+import { calculatePoints } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import * as turf from '@turf/turf';
 import type * as GeoJSON from 'geojson';

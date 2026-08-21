@@ -8,10 +8,16 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@cityborn/api": "workspace:*",
     "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.19.4"
   },
   "license": "ISC"
 }
