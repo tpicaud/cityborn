@@ -10,14 +10,11 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
-import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -33,7 +30,6 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 30 * 60;
   private readonly LOCK_TTL = 2000;
-  private readonly logger = new Logger(SessionService.name);
 
   constructor(
     private readonly redisService: RedisService,
@@ -78,10 +74,8 @@ export class SessionService {
           : [],
     };
 
-    this.logger.log('saving solo session');
     if (mode === SessionMode.MULTI) await this.saveSession(newSession);
 
-    this.logger.log('saving solo session');
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -164,10 +158,10 @@ export class SessionService {
         message: `Session not found`,
       });
 
-    if (session.status === 'IN_GAME')
-      throw new BadRequestException({
+    if (session.currentGame)
+      throw new ForbiddenException({
         code: ErrorCode.SESSION_ALREADY_IN_GAME,
-        message: `Session is already in game`,
+        message: `Session already in game`,
       });
 
     if (session.hostID !== playerID)
@@ -241,10 +235,15 @@ export class SessionService {
         message: `Player is not the host`,
       });
 
-    const game = await this.gameService.createGame(session, visitorId);
+    const game = await this.gameService.createGame({
+      gameConfig: session.gameConfig,
+      players: session.players,
+      mode: session.mode,
+      visitorId,
+    });
 
     session.status = SessionStatus.IN_GAME;
-    session.currentGame = beginGame(game);
+    session.currentGame = this.gameService.beginGame(game);
 
     await this.saveSession(this.getLightSession(session));
     return session;
@@ -301,7 +300,7 @@ export class SessionService {
           .filter((player) => player.connected)
           .map((player) => player.username);
 
-        const updatedGame = applyGuess(
+        const updatedGame = this.gameService.applyGuess(
           game,
           playerID,
           guess,
@@ -321,46 +320,58 @@ export class SessionService {
     sessionID: string,
     visitorId?: string,
   ) {
-    const session = await this.getSession(sessionID);
-    if (!session)
-      throw new NotFoundException({
-        code: ErrorCode.SESSION_NOT_FOUND,
-        message: `Session not found`,
-      });
+    return await this.lockService.withLock(
+      this.getKey(sessionID),
+      this.LOCK_TTL,
+      async () => {
+        const session = await this.getSession(sessionID);
+        if (!session)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_NOT_FOUND,
+            message: `Session not found`,
+          });
 
-    if (!session.currentGame)
-      throw new NotFoundException({
-        code: ErrorCode.SESSION_NO_CURRENT_GAME,
-        message: `No current game in this session`,
-      });
-    const game = session.currentGame;
+        if (!session.currentGame)
+          throw new NotFoundException({
+            code: ErrorCode.SESSION_NO_CURRENT_GAME,
+            message: `No current game in this session`,
+          });
+        const game = session.currentGame;
 
-    if (session.hostID !== playerID) {
-      throw new UnauthorizedException({
-        code: ErrorCode.SESSION_FORBIDDEN_HOST,
-        message: `Player is not the host`,
-      });
-    }
+        if (session.hostID !== playerID) {
+          throw new UnauthorizedException({
+            code: ErrorCode.SESSION_FORBIDDEN_HOST,
+            message: `Player is not the host`,
+          });
+        }
 
-    const { game: updatedGame, isGameOver } = resolveNextRound(game);
+        const { game: updatedGame, isGameOver } =
+          this.gameService.resolveNextRound(game);
 
-    if (isGameOver) {
-      await this.gameService.endGame(session, updatedGame, visitorId);
+        if (isGameOver) {
+          await this.gameService.endGame(
+            updatedGame,
+            session.players,
+            session.mode,
+            visitorId,
+          );
 
-      const lobbySession: Session = {
-        ...session,
-        status: SessionStatus.IN_LOBBY,
-        currentGame: undefined,
-      };
-      await this.saveSession(lobbySession);
+          const lobbySession: Session = {
+            ...session,
+            status: SessionStatus.IN_LOBBY,
+            currentGame: undefined,
+          };
+          await this.saveSession(lobbySession);
 
-      session.currentGame = updatedGame;
-    } else {
-      session.currentGame = updatedGame;
-      await this.saveSession(session);
-    }
+          session.currentGame = updatedGame;
+        } else {
+          session.currentGame = updatedGame;
+          await this.saveSession(session);
+        }
 
-    return session;
+        return session;
+      },
+    );
   }
 
   ///////////////////////
@@ -537,22 +548,11 @@ export class SessionService {
   }
 
   private getLightSession(session: Session): Session {
-    let lightSession = session;
+    if (!session.currentGame) return session;
 
-    if (session.currentGame) {
-      const { guessObjects, ...restState } = session.currentGame.state;
-
-      lightSession = {
-        ...session,
-        currentGame: {
-          ...session.currentGame,
-          state: {
-            ...restState,
-          },
-        },
-      };
-    }
-
-    return lightSession;
+    return {
+      ...session,
+      currentGame: this.gameService.toLightGame(session.currentGame),
+    };
   }
 }

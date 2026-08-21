@@ -54,12 +54,22 @@ export class SessionController {
           body: await this.sessionService.create(body, user, visitorId),
         };
       },
-      createGame: async ({ body }) => ({
+      createGame: async ({ body: session }) => ({
         status: 200 as const,
-        body: await this.gameService.createGame(body, visitorId),
+        body: await this.gameService.createGame({
+          gameConfig: session.gameConfig,
+          players: session.players,
+          mode: session.mode,
+          visitorId,
+        }),
       }),
-      endSoloGame: async ({ body }) => {
-        await this.gameService.endSoloGame(body, visitorId);
+      endSoloGame: async ({ body: session }) => {
+        await this.gameService.endGame(
+          session.currentGame,
+          session.players,
+          session.mode,
+          visitorId,
+        );
         return { status: 200 as const, body: {} };
       },
     });

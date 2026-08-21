@@ -5,6 +5,7 @@ import {
   calculatePoints,
   calculateTotalPoints,
   reconcileGuessObjects,
+  toLightGame,
 } from './utils';
 
 test('calculatePoints returns 1000 for a perfect guess', () => {
@@ -67,4 +68,21 @@ test('reconcileGuessObjects returns undefined when there is no incoming game', (
   const result = reconcileGuessObjects(local, undefined);
 
   assert.equal(result, undefined);
+});
+
+test('toLightGame strips guessObjects from the game state', () => {
+  const game = gameWith({ guessObjects });
+
+  const result = toLightGame(game);
+
+  assert.equal(result.state.guessObjects, undefined);
+  assert.deepEqual(result.state.guessObjectsIds, game.state.guessObjectsIds);
+});
+
+test('toLightGame is a no-op when the game already has no guessObjects', () => {
+  const game = gameWith({});
+
+  const result = toLightGame(game);
+
+  assert.equal(result.state.guessObjects, undefined);
 });

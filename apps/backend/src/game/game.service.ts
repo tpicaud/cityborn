@@ -1,11 +1,19 @@
 import {
   type Game,
+  type GameConfig,
   GameStatus,
+  type Guess,
   type OnlinePlayer,
+  type Player,
   type PlayerResults,
-  type Session,
   SessionMode,
 } from '@cityborn/api';
+import {
+  applyGuess,
+  beginGame,
+  resolveNextRound,
+  toLightGame,
+} from '@cityborn/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { EventService } from '../event/event.service';
@@ -13,6 +21,13 @@ import { createEvent } from '../event/event.types';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
 import { PrismaService } from '../prisma/prisma.service';
+
+export type CreateGameParams = {
+  gameConfig: GameConfig;
+  players: Player[];
+  mode: SessionMode;
+  visitorId?: string;
+};
 
 @Injectable()
 export class GameService {
@@ -25,20 +40,25 @@ export class GameService {
     private readonly idService: IdService,
   ) {}
 
-  async createGame(session: Session, visitorId?: string): Promise<Game> {
+  async createGame({
+    gameConfig,
+    players,
+    mode,
+    visitorId,
+  }: CreateGameParams): Promise<Game> {
     const guessObjects =
       await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
-        session.gameConfig,
+        gameConfig,
       );
     const guessObjectIds = guessObjects.map((obj) => obj.id);
 
     const game: Game = {
       id: await this.generateUniqueGameID(),
-      config: session.gameConfig,
+      config: gameConfig,
       status: GameStatus.STARTING,
       state: {
         guessObjectsIds: guessObjectIds,
-        results: session.players.reduce(
+        results: players.reduce(
           (acc, player) => {
             acc[player.username] = { results: [] };
             return acc;
@@ -55,12 +75,12 @@ export class GameService {
           name: 'game_started',
           visitorId,
           properties: {
-            mode: session.mode,
-            categories: session.gameConfig.categories,
+            mode,
+            categories: gameConfig.categories,
             numberOfPlayers:
-              session.mode === SessionMode.SOLO
-                ? session.players.length
-                : (session.players as OnlinePlayer[]).filter(
+              mode === SessionMode.SOLO
+                ? players.length
+                : (players as OnlinePlayer[]).filter(
                     (player) => player.connected,
                   ).length,
           },
@@ -72,20 +92,21 @@ export class GameService {
   }
 
   async endGame(
-    session: Session,
     game: Game,
+    players: Player[],
+    mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
     try {
       const game_record = await this.prisma.gameRecord.create({
         data: {
-          mode: session.mode,
-          gameConfig: session.gameConfig as unknown as Prisma.InputJsonValue,
-          players: session.players as unknown as Prisma.InputJsonValue,
+          mode,
+          gameConfig: game.config as unknown as Prisma.InputJsonValue,
+          players: players as unknown as Prisma.InputJsonValue,
           guessObjectsIds: game.state.guessObjectsIds,
           results: game.state.results as unknown as Prisma.InputJsonValue,
           users: {
-            connect: session.players
+            connect: players
               .filter((player) => !player.isGuest)
               .map((player) => ({ id: player.id })),
           },
@@ -99,7 +120,7 @@ export class GameService {
             visitorId,
             properties: {
               gameId: game_record.id.toString(),
-              mode: session.mode,
+              mode,
               numberOfPlayers: game.state.results
                 ? Object.keys(game.state.results).length
                 : 0,
@@ -120,9 +141,25 @@ export class GameService {
     }
   }
 
-  async endSoloGame(sessionDto: Session, visitorId?: string) {
-    if (!sessionDto.currentGame) return;
-    await this.endGame(sessionDto, sessionDto.currentGame, visitorId);
+  beginGame(game: Game): Game {
+    return beginGame(game);
+  }
+
+  applyGuess(
+    game: Game,
+    playerID: string,
+    guess: Guess,
+    connectedPlayerUsernames: string[],
+  ): Game {
+    return applyGuess(game, playerID, guess, connectedPlayerUsernames);
+  }
+
+  resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {
+    return resolveNextRound(game);
+  }
+
+  toLightGame(game: Game): Game {
+    return toLightGame(game);
   }
 
   private async generateUniqueGameID(): Promise<string> {

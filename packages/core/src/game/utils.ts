@@ -23,3 +23,9 @@ export function reconcileGuessObjects(
     },
   };
 }
+
+export function toLightGame(game: Game): Game {
+  const { guessObjects, ...restState } = game.state;
+
+  return { ...game, state: restState };
+}
