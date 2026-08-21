@@ -70,6 +70,10 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.CATEGORY_HAS_CHILDREN]:
     'Cette catégorie contient des sous-catégories et ne peut pas être supprimée.',
 
+  // Rate limiting
+  [ErrorCode.RATE_LIMIT_EXCEEDED]:
+    'Trop de requêtes. Veuillez patienter avant de réessayer.',
+
   // Redis
   [ErrorCode.REDIS_GET_FAILED]: 'Erreur interne. Veuillez réessayer.',
   [ErrorCode.REDIS_SET_FAILED]: 'Erreur interne. Veuillez réessayer.',

@@ -6,6 +6,7 @@ import type { Server, Socket } from 'socket.io';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { SessionSocket } from '../common/types/session-socket';
 import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
+import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
 import { SessionGateway } from './session.gateway';
 import type { SessionService } from './session.service';
@@ -39,6 +40,10 @@ describe('SessionGateway', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(resolvedConnection),
     },
+    rateLimitService: Partial<RateLimitService> = {
+      consumeWsConnection: jest.fn().mockResolvedValue(undefined),
+      consumeWsMessage: jest.fn().mockResolvedValue(undefined),
+    },
   ) => {
     const gateway = new SessionGateway(
       sessionService as unknown as SessionService,
@@ -46,6 +51,7 @@ describe('SessionGateway', () => {
       {} as unknown as JwtService,
       {} as unknown as UserService,
       connectionRegistryService as unknown as ConnectionRegistryService,
+      rateLimitService as unknown as RateLimitService,
     );
     gateway.io = { to: () => ({ emit: jest.fn() }) } as unknown as Server;
     return gateway;
@@ -107,9 +113,6 @@ describe('SessionGateway', () => {
   });
 
   describe('handleConnection', () => {
-    // Ce hook échappe au pipeline Nest (pas de filtre/interceptor
-    // possible) : il doit gérer ses erreurs lui-même. On vérifie ici la
-    // dégradation en invité choisie plutôt qu'une déconnexion brutale.
     it('degrades to a guest connection when resolveFullUser fails, instead of throwing', async () => {
       jest.mocked(extractAccessTokenFromWsClient).mockReturnValue('a-token');
       jest.mocked(validateAccessToken).mockResolvedValue({ id: 'user-1' });
@@ -117,7 +120,7 @@ describe('SessionGateway', () => {
 
       const gateway = buildGateway({});
       const client = {
-        handshake: { query: {} },
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
         data: {},
       } as unknown as SessionSocket;
 
@@ -133,7 +136,7 @@ describe('SessionGateway', () => {
 
       const gateway = buildGateway({});
       const client = {
-        handshake: { query: {} },
+        handshake: { query: {}, headers: {}, address: '127.0.0.1' },
         data: {},
       } as unknown as SessionSocket;
 

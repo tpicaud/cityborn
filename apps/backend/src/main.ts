@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -9,7 +10,9 @@ import { VisitorIdInterceptor } from './common/interceptors/visitor-id.intercept
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.set('trust proxy', 1);
 
   const cors = process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'];
   app.enableCors({
@@ -18,10 +21,7 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
-  // Nest traite les filtres globaux dans l'ordre inverse de leur
-  // enregistrement (le dernier gagne en cas de match) : le catch-all
-  // doit donc être enregistré avant le filtre spécifique pour que
-  // RequestValidationErrorFilter l'emporte sur RequestValidationError.
+
   app.useGlobalFilters(
     new AllExceptionsFilter(),
     new RequestValidationErrorFilter(),

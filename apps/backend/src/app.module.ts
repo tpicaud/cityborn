@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -11,6 +12,8 @@ import { IdModule } from './id/id.module';
 import { LockModule } from './lock/lock.module';
 import { NominatimModule } from './nominatim/nominatim.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RateLimitGuard } from './rate-limit/rate-limit.guard';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { RedisModule } from './redis/redis.module';
 import { SearchModule } from './search/search.module';
 import { SentenceModule } from './sentence/sentence.module';
@@ -42,8 +45,9 @@ import { WorldLocationModule } from './world-location/world-location.module';
     WorldLocationModule,
     CategoryModule,
     SearchModule,
+    RateLimitModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: RateLimitGuard }],
 })
 export class AppModule {}
