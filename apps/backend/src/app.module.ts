@@ -8,6 +8,7 @@ import { CategoryModule } from './category/category.module';
 import { ConnectionRegistryModule } from './connection-registry/connection-registry.module';
 import { EventModule } from './event/event.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
+import { HealthModule } from './health/health.module';
 import { IdModule } from './id/id.module';
 import { LockModule } from './lock/lock.module';
 import { NominatimModule } from './nominatim/nominatim.module';
@@ -32,6 +33,7 @@ import { WorldLocationModule } from './world-location/world-location.module';
     SessionModule,
     SentenceModule,
     GuessObjectModule,
+    HealthModule,
     IdModule,
     RedisModule,
     LockModule,

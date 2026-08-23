@@ -13,21 +13,24 @@ import {
   useMinSupportedApiVersion,
 } from '@cityborn/client';
 import * as NavigationBar from 'expo-navigation-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import BackendUnreachableDialog from '@/components/ui/BackendUnreachableDialog';
 import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
 import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { getCurrentUser } from '@/lib/api/auth';
+import { checkHealth } from '@/lib/api/health';
 
 const currentApiVersion = getCurrentApiVersion();
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBackendUnreachable, setIsBackendUnreachable] = useState(false);
   const minSupportedApiVersion = useMinSupportedApiVersion();
   const isForceUpdateRequired =
     minSupportedApiVersion !== null &&
@@ -38,6 +41,24 @@ export default function RootLayout() {
       NavigationBar.setStyle('light');
     }
   }, []);
+
+  const runHealthCheck = useCallback(async () => {
+    try {
+      const result = await checkHealth();
+      if (result.ok) {
+        setIsBackendUnreachable(false);
+      } else {
+        console.error('Healthcheck failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Healthcheck unreachable:', error);
+      setIsBackendUnreachable(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    runHealthCheck();
+  }, [runHealthCheck]);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,6 +79,10 @@ export default function RootLayout() {
   return (
     <>
       <ForceUpdateDialog visible={isForceUpdateRequired} />
+      <BackendUnreachableDialog
+        visible={isBackendUnreachable}
+        onRetry={runHealthCheck}
+      />
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <LoaderIcon />
