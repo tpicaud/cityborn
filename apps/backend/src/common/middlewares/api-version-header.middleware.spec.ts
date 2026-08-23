@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 jest.mock('@cityborn/api', () => ({
+  API_MIN_SUPPORTED_VERSION_HEADER_NAME: 'X-Api-Min-Supported-Version',
   getApiVersionInfo: jest.fn().mockReturnValue({ minSupportedVersion: 4 }),
 }));
 

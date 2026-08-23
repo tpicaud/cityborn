@@ -5,7 +5,12 @@ import type {
   Manifest,
   ManifestEntry,
 } from '../openapi/compat/types';
-import { getApiVersionInfo, getCurrentApiVersion } from './api-version';
+import {
+  API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+  getApiVersionInfo,
+  getCurrentApiVersion,
+  isApiVersionOutdated,
+} from './api-version';
 
 const NOW = new Date('2026-07-29T00:00:00.000Z');
 
@@ -73,5 +78,26 @@ describe('getApiVersionInfo', () => {
       withDefaultNow.minSupportedVersion,
       withExplicitNow.minSupportedVersion,
     );
+  });
+});
+
+test('API_MIN_SUPPORTED_VERSION_HEADER_NAME matches the header set by the backend middleware', () => {
+  assert.equal(
+    API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+    'X-Api-Min-Supported-Version',
+  );
+});
+
+describe('isApiVersionOutdated', () => {
+  test('returns true when the current version is below the minimum supported one', () => {
+    assert.equal(isApiVersionOutdated(1, 2), true);
+  });
+
+  test('returns false when the current version equals the minimum supported one', () => {
+    assert.equal(isApiVersionOutdated(2, 2), false);
+  });
+
+  test('returns false when the current version is above the minimum supported one', () => {
+    assert.equal(isApiVersionOutdated(3, 2), false);
   });
 });

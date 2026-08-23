@@ -8,14 +8,26 @@ import {
 import compatPolicyJson from '../openapi/compat-policy.json';
 import manifestJson from '../openapi/versions/versions-manifest.json';
 
+export const API_MIN_SUPPORTED_VERSION_HEADER_NAME =
+  'X-Api-Min-Supported-Version';
+
 export interface ApiVersionInfo {
   minSupportedVersion: number;
+}
+
+export function isApiVersionOutdated(
+  currentVersion: number,
+  minSupportedVersion: number,
+): boolean {
+  return currentVersion < minSupportedVersion;
 }
 
 const defaultManifest = ManifestSchema.parse(manifestJson);
 const defaultCompatPolicy = CompatPolicySchema.parse(compatPolicyJson);
 
-export function getCurrentApiVersion(manifest: Manifest = defaultManifest): number {
+export function getCurrentApiVersion(
+  manifest: Manifest = defaultManifest,
+): number {
   return Math.max(...manifest.versions.map((entry) => entry.versionNumber));
 }
 

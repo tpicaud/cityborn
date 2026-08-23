@@ -1,4 +1,7 @@
-import { getApiVersionInfo } from '@cityborn/api';
+import {
+  API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+  getApiVersionInfo,
+} from '@cityborn/api';
 import type { NextFunction, Request, Response } from 'express';
 
 let cachedMinSupportedVersion: number | undefined;
@@ -13,7 +16,7 @@ export function apiVersionHeaderMiddleware(
   }
 
   res.setHeader(
-    'X-Api-Min-Supported-Version',
+    API_MIN_SUPPORTED_VERSION_HEADER_NAME,
     String(cachedMinSupportedVersion),
   );
   next();
