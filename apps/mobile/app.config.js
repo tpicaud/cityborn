@@ -64,7 +64,7 @@ export default {
         projectId: '2e929dee-4003-47f1-8aac-8d2b06f5dc6f',
       },
       storeUrls: {
-        ios: 'https://apps.apple.com/app/id0000000000',
+        ios: 'https://apps.apple.com/app/id6745219519',
         android:
           'https://play.google.com/store/apps/details?id=com.app.cityborn',
       },
