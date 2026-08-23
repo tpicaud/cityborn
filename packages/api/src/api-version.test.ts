@@ -1,44 +1,77 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { selectVersionsToCheck } from '../openapi/compat/select-versions';
-import type { CompatPolicy, Manifest } from '../openapi/compat/types';
-import { getApiVersionInfo } from './api-version';
+import { describe, test } from 'node:test';
+import type {
+  CompatPolicy,
+  Manifest,
+  ManifestEntry,
+} from '../openapi/compat/types';
+import { getApiVersionInfo, getCurrentApiVersion } from './api-version';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const openapiDir = join(__dirname, '../openapi');
+const NOW = new Date('2026-07-29T00:00:00.000Z');
 
-test('returns the lowest version number still selected by selectVersionsToCheck on the real manifest/policy', () => {
-  const manifest = JSON.parse(
-    readFileSync(join(openapiDir, 'versions/versions-manifest.json'), 'utf-8'),
-  ) as Manifest;
-  const policy = JSON.parse(
-    readFileSync(join(openapiDir, 'compat-policy.json'), 'utf-8'),
-  ) as CompatPolicy;
+function entry(versionNumber: number, daysAgo: number): ManifestEntry {
+  const releasedAt = new Date(
+    NOW.getTime() - daysAgo * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  return { file: `api-v${versionNumber}.json`, versionNumber, releasedAt };
+}
 
-  const now = new Date();
-  const info = getApiVersionInfo(now);
+function manifest(versions: ManifestEntry[]): Manifest {
+  return { versions };
+}
 
-  const expectedVersions = selectVersionsToCheck(
-    manifest.versions,
-    policy,
-    now,
-  );
-  const expectedMinSupportedVersion = Math.min(
-    ...expectedVersions.map((v) => v.versionNumber),
-  );
+const POLICY: CompatPolicy = {
+  min_days_supported: 30,
+  min_num_of_version_supported: 2,
+};
 
-  assert.equal(info.minSupportedVersion, expectedMinSupportedVersion);
+describe('getCurrentApiVersion', () => {
+  test('getCurrentApiVersion returns the highest version number regardless of manifest order', () => {
+    const fixture = manifest([entry(2, 10), entry(5, 1), entry(3, 5)]);
+
+    assert.equal(getCurrentApiVersion(fixture), 5);
+  });
+
+  test('getCurrentApiVersion returns the single version number when there is only one', () => {
+    const fixture = manifest([entry(1, 1)]);
+
+    assert.equal(getCurrentApiVersion(fixture), 1);
+  });
 });
 
-test('defaults now to the current date when not provided', () => {
-  const withExplicitNow = getApiVersionInfo(new Date());
-  const withDefaultNow = getApiVersionInfo();
+describe('getApiVersionInfo', () => {
+  test('getApiVersionInfo returns the lowest version number still selected by the compat policy', () => {
+    const fixture = manifest([
+      entry(5, 1),
+      entry(4, 5),
+      entry(3, 10),
+      entry(2, 60),
+    ]);
 
-  assert.equal(
-    withDefaultNow.minSupportedVersion,
-    withExplicitNow.minSupportedVersion,
-  );
+    const info = getApiVersionInfo(NOW, fixture, POLICY);
+
+    assert.equal(info.minSupportedVersion, 3);
+  });
+
+  test('getApiVersionInfo throws when every version has aged out of the compat policy', () => {
+    const fixture = manifest([entry(2, 90), entry(1, 120)]);
+    const strictPolicy: CompatPolicy = {
+      min_days_supported: 30,
+      min_num_of_version_supported: 0,
+    };
+
+    assert.throws(() => getApiVersionInfo(NOW, fixture, strictPolicy));
+  });
+
+  test('getApiVersionInfo defaults now to the current date when not provided', () => {
+    const fixture = manifest([entry(1, 1)]);
+
+    const withExplicitNow = getApiVersionInfo(new Date(), fixture, POLICY);
+    const withDefaultNow = getApiVersionInfo(undefined, fixture, POLICY);
+
+    assert.equal(
+      withDefaultNow.minSupportedVersion,
+      withExplicitNow.minSupportedVersion,
+    );
+  });
 });

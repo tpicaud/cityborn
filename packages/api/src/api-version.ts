@@ -1,5 +1,10 @@
 import { selectVersionsToCheck } from '../openapi/compat/select-versions';
-import { CompatPolicySchema, ManifestSchema } from '../openapi/compat/types';
+import {
+  type CompatPolicy,
+  CompatPolicySchema,
+  type Manifest,
+  ManifestSchema,
+} from '../openapi/compat/types';
 import compatPolicyJson from '../openapi/compat-policy.json';
 import manifestJson from '../openapi/versions/versions-manifest.json';
 
@@ -7,10 +12,18 @@ export interface ApiVersionInfo {
   minSupportedVersion: number;
 }
 
-export function getApiVersionInfo(now: Date = new Date()): ApiVersionInfo {
-  const policy = CompatPolicySchema.parse(compatPolicyJson);
-  const manifest = ManifestSchema.parse(manifestJson);
+const defaultManifest = ManifestSchema.parse(manifestJson);
+const defaultCompatPolicy = CompatPolicySchema.parse(compatPolicyJson);
 
+export function getCurrentApiVersion(manifest: Manifest = defaultManifest): number {
+  return Math.max(...manifest.versions.map((entry) => entry.versionNumber));
+}
+
+export function getApiVersionInfo(
+  now: Date = new Date(),
+  manifest: Manifest = defaultManifest,
+  policy: CompatPolicy = defaultCompatPolicy,
+): ApiVersionInfo {
   const supportedVersions = selectVersionsToCheck(
     manifest.versions,
     policy,
