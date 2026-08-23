@@ -12,18 +12,16 @@
     "generate:openapi": "tsx scripts/generate-openapi-file.ts",
     "check:compat": "tsx scripts/check-api-compat.ts",
     "check:deprecations": "tsx scripts/check-deprecations.ts",
-    "test": "tsx --test openapi/compat/**/*.test.ts"
+    "test": "tsx --test openapi/compat/**/*.test.ts src/**/*.test.ts"
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
-    "js-yaml": "^5.2.2",
     "openapi3-ts": "^2.0.2",
     "typescript": "^6.0.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.1.2",
     "tsx": "^4.19.4"
   }

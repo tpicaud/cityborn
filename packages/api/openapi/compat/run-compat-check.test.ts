@@ -16,11 +16,8 @@ function oasdiffAvailable(): boolean {
 }
 
 function writePolicyFile(dir: string, policy: CompatPolicy): string {
-  const file = join(dir, 'policy.yaml');
-  writeFileSync(
-    file,
-    `min_days_supported: ${policy.min_days_supported}\nmin_num_of_version_supported: ${policy.min_num_of_version_supported}\n`,
-  );
+  const file = join(dir, 'policy.json');
+  writeFileSync(file, JSON.stringify(policy));
   return file;
 }
 
@@ -215,18 +212,21 @@ describe('runCompatCheck', {
 describe('loadPolicy', () => {
   test('throws when a required field is missing', () => {
     const dir = mkdtempSync(join(tmpdir(), 'run-compat-check-policy-'));
-    const file = join(dir, 'policy.yaml');
-    writeFileSync(file, 'min_days_supported: 30\n');
+    const file = join(dir, 'policy.json');
+    writeFileSync(file, JSON.stringify({ min_days_supported: 30 }));
 
     assert.throws(() => loadPolicy(file));
   });
 
   test('throws when a field has the wrong type', () => {
     const dir = mkdtempSync(join(tmpdir(), 'run-compat-check-policy-'));
-    const file = join(dir, 'policy.yaml');
+    const file = join(dir, 'policy.json');
     writeFileSync(
       file,
-      'min_days_supported: "thirty"\nmin_num_of_version_supported: 3\n',
+      JSON.stringify({
+        min_days_supported: 'thirty',
+        min_num_of_version_supported: 3,
+      }),
     );
 
     assert.throws(() => loadPolicy(file));

@@ -5,15 +5,25 @@ import type { ApiError } from './schemas/api-error.schema';
 import { AuthResponseSchema } from './schemas/user.schema';
 import type { TokenStorage } from './types/token-storage';
 
+export interface AuthFetchOptions {
+  onResponseHeaders?: (headers: Headers) => void;
+}
+
 export class AuthFetch {
   private isRefreshing = false;
   private refreshQueue: ((token: string | null) => void)[] = [];
   private readonly baseURL: string;
   private readonly tokenStorage: TokenStorage;
+  private readonly onResponseHeaders?: (headers: Headers) => void;
 
-  constructor(baseURL: string, tokenStorage: TokenStorage) {
+  constructor(
+    baseURL: string,
+    tokenStorage: TokenStorage,
+    options: AuthFetchOptions = {},
+  ) {
     this.baseURL = baseURL.replace(/\/+$/, '');
     this.tokenStorage = tokenStorage;
+    this.onResponseHeaders = options.onResponseHeaders;
   }
 
   buildApiFunction() {
@@ -53,6 +63,10 @@ export class AuthFetch {
       body: args.body,
       credentials: 'include',
     });
+
+    if (this.onResponseHeaders) {
+      this.onResponseHeaders(response.headers);
+    }
 
     const body = await this.parseBody(response);
     return { status: response.status, body, headers: response.headers };
@@ -104,6 +118,10 @@ export class AuthFetch {
         Authorization: `Bearer ${refreshToken}`,
       },
     });
+
+    if (this.onResponseHeaders) {
+      this.onResponseHeaders(response.headers);
+    }
 
     if (!response.ok) {
       const error: ApiError = await response.json();

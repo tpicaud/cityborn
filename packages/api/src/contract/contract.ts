@@ -4,6 +4,7 @@ import { categoryAdminContract } from './category.admin.contract';
 import { categoryContract } from './category.contract';
 import { guessObjectAdminContract } from './guess-object.admin.contract';
 import { guessObjectContract } from './guess-object.contract';
+import { healthContract } from './health.contract';
 import { searchAdminContract } from './search.admin.contract';
 import { sentenceContract } from './sentence.contract';
 import { sessionContract } from './session.contract';
@@ -14,6 +15,7 @@ const c = initContract();
 
 export const contract = c.router({
   auth: authContract,
+  health: healthContract,
   user: userContract,
   session: sessionContract,
   category: categoryContract,

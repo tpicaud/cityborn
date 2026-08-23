@@ -26,7 +26,7 @@ function main() {
   const currentSpecFile = writeCurrentSpecToTempFile();
 
   const report = runCompatCheck({
-    policyFile: join(openapiDir, 'compat-policy.yaml'),
+    policyFile: join(openapiDir, 'compat-policy.json'),
     manifestFile: join(openapiDir, 'versions/versions-manifest.json'),
     versionsDir: join(openapiDir, 'versions'),
     currentSpecFile,

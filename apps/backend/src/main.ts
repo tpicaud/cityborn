@@ -7,10 +7,13 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { RequestValidationErrorFilter } from './common/filters/request-validation-error.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
+import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-header.middleware';
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.use(apiVersionHeaderMiddleware);
 
   app.set('trust proxy', 1);
 
