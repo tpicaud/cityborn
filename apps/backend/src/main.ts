@@ -5,6 +5,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { RequestValidationErrorFilter } from './common/filters/request-validation-error.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-header.middleware';
@@ -27,6 +28,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(
     new AllExceptionsFilter(),
+    new PrismaExceptionFilter(),
     new RequestValidationErrorFilter(),
   );
   app.useGlobalInterceptors(new VisitorIdInterceptor());
