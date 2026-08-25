@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import Script from 'next/script';
-import AuthProvider from '@/contexts/AuthContext';
-import ErrorProvider from '@/contexts/ErrorContext';
 import { getCurrentUser, hasToken } from '@/server/queries/auth';
+import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
   title: 'CityBorn',
@@ -45,11 +43,7 @@ export default async function RootLayout({
       </head>
       <body className="h-full antialiased font-sans">
         <main className="min-h-screen h-full">
-          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-            <AuthProvider initialValue={user}>
-              <ErrorProvider>{children}</ErrorProvider>
-            </AuthProvider>
-          </AppRouterCacheProvider>
+          <AppProviders user={user}>{children}</AppProviders>
         </main>
       </body>
     </html>

@@ -6,11 +6,11 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { useError } from '@/contexts/ErrorContext';
 import { fetchSession } from '@/server/actions/session';
 import type { IUseSession } from './IUseSession';
 import { useSocket } from './useSocket';

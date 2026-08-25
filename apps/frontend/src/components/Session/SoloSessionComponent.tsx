@@ -6,11 +6,11 @@ import {
   type Guess,
   isApiError,
 } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import { useAuth } from '@/contexts/AuthContext';
-import { useError } from '@/contexts/ErrorContext';
 import { useSoloSession } from '@/hooks/useSoloSession';
 
 export default function SoloSessionComponent({

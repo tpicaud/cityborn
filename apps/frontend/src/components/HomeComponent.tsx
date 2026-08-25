@@ -1,6 +1,7 @@
 'use client';
 
 import { isApiError } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
@@ -10,7 +11,6 @@ import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useError } from '@/contexts/ErrorContext';
 import { signOut } from '@/server/actions/auth';
 import { SignInComponent } from './auth/SignInComponent';
 import { SignUpComponent } from './auth/SignUpComponent';

@@ -6,10 +6,10 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useError } from '@/contexts/ErrorContext';
 import {
   createSession,
   createSoloGame,
