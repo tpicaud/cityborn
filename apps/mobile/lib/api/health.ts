@@ -1,7 +1,7 @@
-import { toApiResult } from '@cityborn/api';
+import { toAppResult } from '@cityborn/client';
 import { client } from './client';
 
 export async function checkHealth() {
   const result = await client.health.check();
-  return toApiResult(result);
+  return toAppResult(result);
 }

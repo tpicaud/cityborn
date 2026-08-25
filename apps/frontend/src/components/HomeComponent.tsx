@@ -1,7 +1,6 @@
 'use client';
 
-import { isApiError } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { resolveCaughtError, useError } from '@cityborn/client';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
@@ -141,7 +140,7 @@ export default function HomeComponent() {
                       setState('menu');
                     } catch (error: unknown) {
                       invokeError(
-                        isApiError(error) ? error : 'Une erreur est survenue',
+                        resolveCaughtError(error, 'Une erreur est survenue'),
                       );
                     }
                   }}

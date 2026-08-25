@@ -16,3 +16,11 @@ export function toApiResult<T extends { status: number; body: unknown }>(
     data: result.body as Extract<T, { status: HttpSuccessStatus }>['body'],
   };
 }
+
+export function throwOnError<T extends { status: number; body: unknown }>(
+  result: T,
+): asserts result is Extract<T, { status: HttpSuccessStatus }> {
+  if (result.status < 200 || result.status >= 300) {
+    throw parseApiError(result.status, result.body);
+  }
+}

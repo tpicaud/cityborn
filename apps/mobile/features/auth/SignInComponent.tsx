@@ -1,8 +1,4 @@
-import {
-  getFriendlyErrorMessage,
-  type SignIn,
-  SignInSchema,
-} from '@cityborn/api';
+import { type SignIn, SignInSchema } from '@cityborn/api';
 import { useAuth } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -54,7 +50,7 @@ export const SignInComponent = () => {
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      setErrorMessage(getFriendlyErrorMessage(result.error));
+      setErrorMessage(result.error.message);
       return;
     }
 

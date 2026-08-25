@@ -1,9 +1,4 @@
-import {
-  type ApiError,
-  ApiErrors,
-  AuthResponseSchema,
-  ErrorCode,
-} from '@cityborn/api';
+import { type ApiError, AuthResponseSchema, ErrorCode } from '@cityborn/api';
 import type { ApiFetcherArgs } from '@ts-rest/core';
 import type { TokenStorage } from '../types/token-storage';
 
@@ -81,7 +76,11 @@ export class AuthFetch {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
-            reject(ApiErrors.refreshFailed());
+            reject({
+              code: ErrorCode.USER_REFRESH_FAILED,
+              message: 'Refresh failed',
+              statusCode: 401,
+            } satisfies ApiError);
             return;
           }
           try {
@@ -110,7 +109,11 @@ export class AuthFetch {
   private async refreshToken(): Promise<string> {
     const refreshToken = await this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
-      throw ApiErrors.noRefreshToken();
+      throw {
+        code: ErrorCode.USER_REFRESH_FAILED,
+        message: 'No refresh token available',
+        statusCode: 401,
+      } satisfies ApiError;
     }
 
     const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {

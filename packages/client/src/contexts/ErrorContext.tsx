@@ -1,16 +1,12 @@
 'use client';
 
-import {
-  type ApiError,
-  getFriendlyErrorMessage,
-  isApiError,
-} from '@cityborn/api';
 import { createContext, type ReactNode, useContext, useState } from 'react';
+import type { AppError } from '../errors/app-error';
 
 type ui_type = 'dialog';
 
 type ErrorContextType = {
-  invokeError: (error: ApiError | string) => void;
+  invokeError: (error: AppError | string) => void;
 };
 
 const ErrorContext = createContext<ErrorContextType>({
@@ -35,14 +31,10 @@ export const ErrorProvider = ({
   const [openDialog, setOpenDialog] = useState(false);
 
   const invokeError = (
-    error: ApiError | string,
+    error: AppError | string,
     ui_type: ui_type = 'dialog',
   ) => {
-    if (isApiError(error)) {
-      setErrorMessage(getFriendlyErrorMessage(error));
-    } else {
-      setErrorMessage(error);
-    }
+    setErrorMessage(typeof error === 'string' ? error : error.message);
 
     console.error(error);
     if (ui_type === 'dialog') {

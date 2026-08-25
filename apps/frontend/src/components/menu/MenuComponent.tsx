@@ -3,8 +3,8 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { isApiError, type Session, SessionMode } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { type Session, SessionMode } from '@cityborn/api';
+import { resolveCaughtError, useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -98,7 +98,7 @@ export default function MenuComponent({
       await resendVerificationEmail();
       setVerificationEmailSent(true);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 

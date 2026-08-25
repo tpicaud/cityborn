@@ -1,5 +1,5 @@
 import type { ApiError } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { toAppError, useError } from '@cityborn/client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -39,11 +39,7 @@ export const useSocket = () => {
       });
 
       socket.on('error', (error: ApiError) => {
-        invokeError({
-          code: error.code,
-          message: error.message,
-          statusCode: error.statusCode,
-        });
+        invokeError(toAppError(error));
       });
     });
 

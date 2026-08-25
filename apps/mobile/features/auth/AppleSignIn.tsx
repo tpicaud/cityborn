@@ -1,5 +1,4 @@
-import { ApiErrors, isApiError } from '@cityborn/api';
-import { useAuth } from '@cityborn/client';
+import { AppErrors, isAppError, useAuth } from '@cityborn/client';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
@@ -24,7 +23,7 @@ export const SignInWithAppleButton = () => {
       });
 
       if (!credential.identityToken) {
-        throw ApiErrors.appleNoIdentityToken();
+        throw AppErrors.appleNoIdentityToken();
       }
 
       const userDetails = extractAppleUserDetails(credential);
@@ -65,11 +64,11 @@ export const SignInWithAppleButton = () => {
 
     console.error('Apple sign in error:', error);
 
-    if (isApiError(error)) {
+    if (isAppError(error)) {
       throw error;
     }
 
-    throw ApiErrors.appleSignInFailed();
+    throw AppErrors.appleSignInFailed();
   }
 
   type AppleUserDetails = {

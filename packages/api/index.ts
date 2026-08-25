@@ -1,8 +1,7 @@
 import './src/errors/zod-error-map';
 
 export * from './openapi/generate-openapi';
-export * from './src/api-errors';
-export * from './src/api-result';
+export * from './src/api-response';
 export * from './src/api-version';
 export * from './src/contract/contract';
 export * from './src/errors/error-codes';
@@ -19,3 +18,4 @@ export * from './src/schemas/session.schema';
 export * from './src/schemas/user.schema';
 export * from './src/schemas/world-location.schema';
 export * from './src/types/http';
+export * from './src/types/nominal';

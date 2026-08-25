@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import { getFriendlyErrorMessage, isApiError } from '@cityborn/api';
+import { isAppError } from '@cityborn/client';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -17,7 +17,7 @@ interface Objects {
 }
 
 function resolveImportErrorMessage(error: unknown): string {
-  if (isApiError(error)) return getFriendlyErrorMessage(error);
+  if (isAppError(error)) return error.message;
   if (error instanceof Error) return error.message;
   return 'Erreur inconnue';
 }

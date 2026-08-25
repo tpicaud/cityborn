@@ -4,10 +4,9 @@ import {
   type CategoryTree,
   type GameConfig,
   type Guess,
-  isApiError,
   SessionStatus,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { resolveCaughtError, useError } from '@cityborn/client';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
@@ -39,7 +38,7 @@ export default function MultiSessionComponent({
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
       } catch (error) {
-        invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+        invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
       }
     },
     [multiSession.join, invokeError],
@@ -75,7 +74,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.updateHost(newHostID);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 
@@ -83,7 +82,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 
@@ -91,7 +90,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.kickPlayer(playerToKick);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 
@@ -103,7 +102,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.startGame();
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 
@@ -111,7 +110,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.guess(guess);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 
@@ -119,7 +118,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.nextRound();
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     }
   };
 

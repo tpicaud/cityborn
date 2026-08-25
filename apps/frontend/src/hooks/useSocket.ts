@@ -1,5 +1,4 @@
-import { isApiError } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { resolveCaughtError, useError } from '@cityborn/client';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { getSocket } from '@/lib/socket';
@@ -28,12 +27,12 @@ export const useSocket = () => {
     socket.on('connect_error', (error: unknown) => {
       setHasDisconnected(false);
       invokeError(
-        isApiError(error) ? error : 'La connexion au serveur a échoué',
+        resolveCaughtError(error, 'La connexion au serveur a échoué'),
       );
     });
 
     socket.on('error', (error: unknown) => {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
     });
 
     return () => {

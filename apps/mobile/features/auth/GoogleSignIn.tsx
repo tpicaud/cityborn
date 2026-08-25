@@ -1,5 +1,4 @@
-import { ApiErrors } from '@cityborn/api';
-import { useAuth } from '@cityborn/client';
+import { AppErrors, useAuth } from '@cityborn/client';
 import {
   GoogleSignin,
   isSuccessResponse,
@@ -37,7 +36,7 @@ export const SignInWithGoogleButton = () => {
       }
     } catch (error) {
       console.error(error);
-      throw ApiErrors.googleSignInFailed();
+      throw AppErrors.googleSignInFailed();
     }
   };
 

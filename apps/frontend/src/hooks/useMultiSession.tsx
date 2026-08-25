@@ -2,11 +2,10 @@ import {
   type ApiError,
   type GameConfig,
   type Guess,
-  isApiError,
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { resolveCaughtError, useError } from '@cityborn/client';
 import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -96,7 +95,7 @@ export function useMultiSession(
           await reconnect();
         }
       } catch (error: unknown) {
-        invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+        invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
       }
     };
     autoReconnect();
