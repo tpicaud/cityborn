@@ -1,6 +1,7 @@
 'use client';
 
 import type { Category, CreateCategory } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
@@ -16,6 +17,7 @@ export function CategoriesEditor({
   initialCategories: Category[];
 }) {
   const router = useRouter();
+  const { invokeError } = useError();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -36,17 +38,23 @@ export function CategoriesEditor({
     startTransition(() => router.refresh());
   }
 
-  async function handleCreateCategory(newCategory: CreateCategory) {
+  async function handleCreateCategory(
+    newCategory: CreateCategory,
+  ): Promise<boolean> {
     try {
       setIsLoading(true);
       const result = await createCategory(newCategory);
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) {
+        invokeError(result.error);
+        return false;
+      }
       const category = result.data;
       categories.push(category);
       await onCategorySelect(category);
+      return true;
     } catch (error) {
-      alert('Erreur lors de la création de la catégorie');
-      console.log(error);
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      return false;
     } finally {
       setIsLoading(false);
     }

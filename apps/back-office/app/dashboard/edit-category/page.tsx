@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { CategoryBuilder } from '@/components/category-builder/category-builder';
 import { getCategories, getFullCategory } from '@/server/queries/category';
 
@@ -11,5 +12,8 @@ export default async function EditCategory({
     getFullCategory(id),
     getCategories(),
   ]);
+
+  if (!category) notFound();
+
   return <CategoryBuilder fetchedCategory={category} categories={categories} />;
 }

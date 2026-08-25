@@ -3,7 +3,7 @@ import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
 import {
-  getCurrentApiVersion,
+  getApiVersionInfo,
   isApiVersionOutdated,
   type User,
 } from '@cityborn/api';
@@ -25,7 +25,7 @@ import { View } from '@/components/ui/native/NativeComponents';
 import { getCurrentUser } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
 
-const currentApiVersion = getCurrentApiVersion();
+const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,7 +34,10 @@ export default function RootLayout() {
   const minSupportedApiVersion = useMinSupportedApiVersion();
   const isForceUpdateRequired =
     minSupportedApiVersion !== null &&
-    isApiVersionOutdated(currentApiVersion, minSupportedApiVersion);
+    isApiVersionOutdated(
+      localApiVersionInfo.currentVersion,
+      minSupportedApiVersion,
+    );
 
   useEffect(() => {
     if (Platform.OS === 'android') {
