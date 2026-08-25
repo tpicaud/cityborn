@@ -18,5 +18,7 @@ export const commonErrorResponses = {
   401: ApiErrorSchema,
   403: ApiErrorSchema,
   404: ApiErrorSchema,
+  409: ApiErrorSchema,
+  429: ApiErrorSchema,
   500: ApiErrorSchema,
 } as const;
