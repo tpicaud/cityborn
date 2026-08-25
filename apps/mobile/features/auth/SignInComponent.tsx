@@ -1,7 +1,13 @@
-import { getFriendlyErrorMessage } from '@cityborn/api';
+import {
+  getFriendlyErrorMessage,
+  type SignIn,
+  SignInSchema,
+} from '@cityborn/api';
 import { useAuth } from '@cityborn/client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
@@ -11,37 +17,55 @@ import { signIn } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-interface FormValues {
-  username: string;
-  password: string;
+const SIGN_IN_FORM_FIELDS = [
+  'identifier',
+  'password',
+] as const satisfies readonly (keyof SignIn)[];
+
+function isSignInFormField(
+  path: string,
+): path is (typeof SIGN_IN_FORM_FIELDS)[number] {
+  return (SIGN_IN_FORM_FIELDS as readonly string[]).includes(path);
 }
 
 export const SignInComponent = () => {
   const router = useRouter();
   const { setUser } = useAuth();
-  const [formValues, setFormValues] = useState<FormValues>({
-    username: '',
-    password: '',
-  });
-  const isFormValid =
-    formValues.username.trim() !== '' && formValues.password.trim() !== '';
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignIn>({
+    resolver: zodResolver(SignInSchema),
+    defaultValues: { identifier: '', password: '' },
+  });
 
-  const handleChange = (key: string, value: string) => {
-    setFormValues({ ...formValues, [key]: value });
-  };
-
-  const handleSubmit = async () => {
+  const onSubmit = handleSubmit(async (values) => {
     setErrorMessage(null);
-    const result = await signIn({
-      identifier: formValues.username,
-      password: formValues.password,
-    });
-    if (!result.ok)
-      return setErrorMessage(getFriendlyErrorMessage(result.error));
-    setUser(result.data);
-    router.push('/');
-  };
+    const result = await signIn(values);
+
+    if (result.ok) {
+      setUser(result.data);
+      router.push('/');
+      return;
+    }
+
+    const fieldErrors = result.error.fieldErrors;
+    if (!fieldErrors || fieldErrors.length === 0) {
+      setErrorMessage(getFriendlyErrorMessage(result.error));
+      return;
+    }
+
+    for (const fieldError of fieldErrors) {
+      if (isSignInFormField(fieldError.path)) {
+        setError(fieldError.path, { message: fieldError.message });
+        continue;
+      }
+      setErrorMessage(fieldError.message);
+    }
+  });
 
   return (
     <KeyboardAwareScrollView
@@ -57,22 +81,50 @@ export const SignInComponent = () => {
 
         <View className="flex-col items-center justify-center w-auto gap-0">
           <View className="flex-col items-center justify-center gap-6">
-            <TextInput
-              placeholder="Username"
-              value={formValues.username}
-              onChangeText={(text) => handleChange('username', text)}
-              autoCapitalize="none"
-              error={!!errorMessage}
-            />
+            <View className="w-full relative">
+              <Controller
+                control={control}
+                name="identifier"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Username"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    error={!!errors.identifier}
+                  />
+                )}
+              />
+              {errors.identifier && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.identifier.message}
+                </Text>
+              )}
+            </View>
 
-            <TextInput
-              placeholder="Password"
-              value={formValues.password}
-              onChangeText={(text) => handleChange('password', text)}
-              autoCapitalize="none"
-              secureTextEntry
-              error={!!errorMessage}
-            />
+            <View className="w-full relative">
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    secureTextEntry
+                    error={!!errors.password}
+                  />
+                )}
+              />
+              {errors.password && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.password.message}
+                </Text>
+              )}
+            </View>
 
             <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
               {errorMessage}
@@ -82,9 +134,9 @@ export const SignInComponent = () => {
             variant="filled"
             color="primary"
             size="large"
-            disabled={!isFormValid}
+            disabled={isSubmitting}
             label="SE CONNECTER"
-            onPress={handleSubmit}
+            onPress={onSubmit}
           />
           <Button
             variant="default"

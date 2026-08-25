@@ -1,7 +1,11 @@
 'use client';
 
-import type { Category, CreateCategory } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import {
+  type ApiResult,
+  type Category,
+  type CreateCategory,
+  ErrorCode,
+} from '@cityborn/api';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
@@ -17,7 +21,6 @@ export function CategoriesEditor({
   initialCategories: Category[];
 }) {
   const router = useRouter();
-  const { invokeError } = useError();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -40,21 +43,24 @@ export function CategoriesEditor({
 
   async function handleCreateCategory(
     newCategory: CreateCategory,
-  ): Promise<boolean> {
+  ): Promise<ApiResult<Category>> {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const result = await createCategory(newCategory);
-      if (!result.ok) {
-        invokeError(result.error);
-        return false;
+      if (result.ok) {
+        categories.push(result.data);
+        await onCategorySelect(result.data);
       }
-      const category = result.data;
-      categories.push(category);
-      await onCategorySelect(category);
-      return true;
+      return result;
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
-      return false;
+      return {
+        ok: false,
+        error: {
+          code: ErrorCode.UNKNOWN_ERROR,
+          statusCode: 500,
+          message: error instanceof Error ? error.message : 'Erreur inattendue',
+        },
+      };
     } finally {
       setIsLoading(false);
     }
