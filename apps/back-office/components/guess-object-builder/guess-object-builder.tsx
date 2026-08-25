@@ -7,7 +7,7 @@ import {
   getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
-} from '@/server/actions/guess-object';
+} from '@/server/use-server/guess-object';
 import GuessObjectCard from './guess-object-card';
 import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';

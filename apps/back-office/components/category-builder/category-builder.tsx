@@ -10,12 +10,12 @@ import type {
 import { useError } from '@cityborn/client';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { deleteCategory, saveCategory } from '@/server/actions/category';
+import { deleteCategory, saveCategory } from '@/server/use-server/category';
 import {
   getGuessObject,
   patchGuessObject,
   saveGuessObject,
-} from '@/server/actions/guess-object';
+} from '@/server/use-server/guess-object';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';

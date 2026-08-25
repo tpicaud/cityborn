@@ -6,7 +6,7 @@ import {
   saveGuessObject,
   searchGuessObjectByExternalId,
   searchGuessObjectByName,
-} from '@/server/actions/guess-object';
+} from '@/server/use-server/guess-object';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 

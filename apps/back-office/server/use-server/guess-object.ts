@@ -41,14 +41,6 @@ export async function patchGuessObject(
   return toApiResult(result);
 }
 
-export async function deleteGuessObject(id: string) {
-  const result = await adminClient.guessObjects.deleteGuessObject({
-    params: { id },
-    body: {},
-  });
-  return toApiResult(result);
-}
-
 export async function searchGuessObjectByName(query: string) {
   const result = await adminClient.search.searchGuessObject({
     query: { q: query },
