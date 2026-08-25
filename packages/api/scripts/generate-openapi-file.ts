@@ -1,13 +1,12 @@
 import {
   appendFileSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Manifest } from '../openapi/compat/types';
+import type { Manifest, ManifestEntry } from '../openapi/compat/types';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -16,19 +15,15 @@ const manifestFile = join(outDir, 'versions-manifest.json');
 
 mkdirSync(outDir, { recursive: true });
 
-const filenamePattern = /^api-v(\d+)\.json$/;
+const modeArg = process.argv.find((arg) => arg.startsWith('--mode='));
+const mode = modeArg?.slice('--mode='.length);
 
-function findLatestFile(): { name: string; version: number } | undefined {
-  const versionedFiles = readdirSync(outDir)
-    .map((name) => ({ name, match: name.match(filenamePattern) }))
-    .filter(
-      (entry): entry is { name: string; match: RegExpMatchArray } =>
-        entry.match !== null,
-    )
-    .map((entry) => ({ name: entry.name, version: Number(entry.match[1]) }))
-    .sort((a, b) => b.version - a.version);
-
-  return versionedFiles[0];
+if (mode !== 'draft' && mode !== 'release') {
+  throw new Error(
+    'Usage: generate-openapi-file.ts --mode=draft|release\n' +
+      '  draft   upserts the pending draft version on every push to main (staging)\n' +
+      '  release finalizes the pending draft version into a permanent version (prod)',
+  );
 }
 
 function withNormalizedVersion(document: Record<string, unknown>) {
@@ -36,32 +31,16 @@ function withNormalizedVersion(document: Record<string, unknown>) {
   return { ...document, info: { ...info, version: 'normalized' } };
 }
 
-const latestFile = findLatestFile();
-const nextVersion = (latestFile?.version ?? 0) + 1;
-
-const document = getOpenApiDocument();
-document.info.version = `v${nextVersion}`;
-
-const previousDocument = latestFile
-  ? JSON.parse(readFileSync(join(outDir, latestFile.name), 'utf-8'))
-  : undefined;
-
-const hasChanged =
-  !previousDocument ||
-  JSON.stringify(withNormalizedVersion(previousDocument)) !==
-    JSON.stringify(withNormalizedVersion(document));
-
-if (!hasChanged) {
-  console.log('No API changes detected, skipping.');
-  if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, 'changed=false\n');
-  }
-  process.exit(0);
+function hasDocumentChanged(
+  previousDocument: Record<string, unknown> | undefined,
+  nextDocument: Record<string, unknown>,
+): boolean {
+  return (
+    !previousDocument ||
+    JSON.stringify(withNormalizedVersion(previousDocument)) !==
+      JSON.stringify(withNormalizedVersion(nextDocument))
+  );
 }
-
-const filename = `api-v${nextVersion}.json`;
-writeFileSync(join(outDir, filename), JSON.stringify(document, null, 2));
-console.log(`Generated ${filename}`);
 
 function readManifest(): Manifest {
   try {
@@ -71,17 +50,106 @@ function readManifest(): Manifest {
   }
 }
 
-const manifest = readManifest();
-manifest.versions.push({
-  file: filename,
-  versionNumber: nextVersion,
-  releasedAt: new Date().toISOString(),
-});
-writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+function readVersionDocument(filename: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(join(outDir, filename), 'utf-8'));
+}
 
-if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(
-    process.env.GITHUB_OUTPUT,
-    `changed=true\nfilename=${filename}\n`,
-  );
+function writeVersionDocument(filename: string, document: unknown) {
+  writeFileSync(join(outDir, filename), JSON.stringify(document, null, 2));
+}
+
+function writeManifest(manifest: Manifest) {
+  writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+}
+
+function findLatestEntry(manifest: Manifest): ManifestEntry | undefined {
+  return [...manifest.versions].sort(
+    (a, b) => b.versionNumber - a.versionNumber,
+  )[0];
+}
+
+function writeOutputs(changed: boolean, filename?: string) {
+  if (!process.env.GITHUB_OUTPUT) return;
+  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+  if (filename) {
+    appendFileSync(process.env.GITHUB_OUTPUT, `filename=${filename}\n`);
+  }
+}
+
+function skip(): never {
+  console.log('No API changes detected, skipping.');
+  writeOutputs(false);
+  process.exit(0);
+}
+
+function insertNewVersion(
+  manifest: Manifest,
+  document: Record<string, unknown>,
+  versionNumber: number,
+  draft: boolean,
+): string {
+  const filename = `api-v${versionNumber}.json`;
+  writeVersionDocument(filename, document);
+  manifest.versions.push({
+    file: filename,
+    versionNumber,
+    releasedAt: new Date().toISOString(),
+    ...(draft ? { draft: true } : {}),
+  });
+  writeManifest(manifest);
+  return filename;
+}
+
+const manifest = readManifest();
+const latestEntry = findLatestEntry(manifest);
+const isDraftAtTop = latestEntry?.draft === true;
+
+const document = getOpenApiDocument();
+const targetVersion =
+  isDraftAtTop && latestEntry
+    ? latestEntry.versionNumber
+    : (latestEntry?.versionNumber ?? 0) + 1;
+document.info.version = `v${targetVersion}`;
+
+if (mode === 'draft') {
+  if (isDraftAtTop && latestEntry) {
+    const previousDocument = readVersionDocument(latestEntry.file);
+    if (!hasDocumentChanged(previousDocument, document)) skip();
+
+    writeVersionDocument(latestEntry.file, document);
+    latestEntry.releasedAt = new Date().toISOString();
+    writeManifest(manifest);
+    console.log(`Updated draft ${latestEntry.file}`);
+    writeOutputs(true, latestEntry.file);
+  } else {
+    const previousDocument = latestEntry
+      ? readVersionDocument(latestEntry.file)
+      : undefined;
+    if (!hasDocumentChanged(previousDocument, document)) skip();
+
+    const filename = insertNewVersion(manifest, document, targetVersion, true);
+    console.log(`Created draft ${filename}`);
+    writeOutputs(true, filename);
+  }
+} else {
+  if (isDraftAtTop && latestEntry) {
+    const previousDocument = readVersionDocument(latestEntry.file);
+    if (hasDocumentChanged(previousDocument, document)) {
+      writeVersionDocument(latestEntry.file, document);
+    }
+    latestEntry.releasedAt = new Date().toISOString();
+    latestEntry.draft = undefined;
+    writeManifest(manifest);
+    console.log(`Released ${latestEntry.file}`);
+    writeOutputs(true, latestEntry.file);
+  } else {
+    const previousDocument = latestEntry
+      ? readVersionDocument(latestEntry.file)
+      : undefined;
+    if (!hasDocumentChanged(previousDocument, document)) skip();
+
+    const filename = insertNewVersion(manifest, document, targetVersion, false);
+    console.log(`Created ${filename}`);
+    writeOutputs(true, filename);
+  }
 }

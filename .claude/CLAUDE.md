@@ -18,6 +18,7 @@ Monorepo pnpm/turbo, TypeScript partout.
 - **Éviter `as`** au maximum : un cast casse l'inférence de type et masque des erreurs potentielles. Préférer un typage correct en amont (narrowing, generics, schémas zod) plutôt qu'un cast.
 - **Import type-only** obligatoire pour les imports de types (`import type { ... }`) — déjà forcé par Biome (`useImportType`), ne pas le contourner.
 - **Aucun commentaire** : N'ajoute JAMAIS de commentaire dans le code, le naming doit être suffisamment clair pour s'en passer.
+- **Pas de bloc else** : préfère des early return au lieux d'un bloc else. Possible de faire un ternaire si c'est vraiement nécessaire
 - **Sois précis dans le naming** le nom d'une variable/constante doit refléter précisément ce qu'elle est.
 ```typescript
 const service = new RateLimitService(redisService); // ❌​ à éviter, "service" trop générique

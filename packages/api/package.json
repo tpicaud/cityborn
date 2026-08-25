@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check .",
-    "generate:openapi": "tsx scripts/generate-openapi-file.ts",
+    "generate:openapi:draft": "tsx scripts/generate-openapi-file.ts --mode=draft",
+    "generate:openapi:release": "tsx scripts/generate-openapi-file.ts --mode=release",
     "check:compat": "tsx scripts/check-api-compat.ts",
     "check:deprecations": "tsx scripts/check-deprecations.ts",
     "test": "tsx --test openapi/compat/**/*.test.ts src/**/*.test.ts"
