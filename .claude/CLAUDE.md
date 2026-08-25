@@ -40,10 +40,12 @@ const rateLimitService = new RateLimitService(redisService) // ​✅​ naming 
 
 - Ne pas dupliquer dans une app un type/schéma qui existe déjà dans `@cityborn/api` (types transitant par l'API) ou `@cityborn/client` (types partagés front/mobile ne transitant pas par l'API) — les réutiliser.
 - `packages/api` est la source de vérité des contrats. Toute évolution d'un contrat existant doit rester rétrocompatible (vérifié par `check:api-compat` en CI avec oasdiff) — un breaking change nécessite un bump de version d'API, pas une modification silencieuse.
+- Exception : `packages/api/openapi/compat/err-ignore.txt` permet de faire passer un breaking change précis détecté par oasdiff (une ligne `<METHOD> <path> <texte exact du changement>`). Validation manuelle explicite obligatoire 
 
 ## Quand demander avant d'agir
 - Ajout d'une dépendance npm nouvelle → demander avant
 - Modification cassante du contrat openapi de `packages /api`
+- Ajout d'une entrée dans `packages/api/openapi/compat/err-ignore.txt` (bypass explicite de `check:api-compat`)
 - Avant le début d'implémentation de chaque grande étape d'un plan
 
 ## Garde-fous
