@@ -1,5 +1,5 @@
 import { SessionMode } from '@cityborn/api';
-import { useAuth, useError } from '@cityborn/client';
+import { toAppError, useAuth, useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -52,7 +52,7 @@ export default function Play() {
       setOpenConnectionAlert(true);
     } else {
       const result = await createSession({ mode: SessionMode.MULTI });
-      if (!result.ok) return invokeError(result.error);
+      if (!result.ok) return invokeError(toAppError(result.error));
       router.navigate(`/session/multi/${result.data.id}`);
     }
   };
@@ -66,7 +66,7 @@ export default function Play() {
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
+      invokeError(toAppError(result.error));
       return;
     }
 

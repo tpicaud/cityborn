@@ -7,7 +7,7 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { toAppError, useError } from '@cityborn/client';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/use-server/category';
@@ -97,7 +97,7 @@ export function CategoryBuilder({
           world_location_id: locationId,
         });
         if (!result.ok) {
-          invokeError(result.error);
+          invokeError(toAppError(result.error));
           return;
         }
         id = result.data;
@@ -107,7 +107,7 @@ export function CategoryBuilder({
           world_location_id: locationId,
         });
         if (!result.ok) {
-          invokeError(result.error);
+          invokeError(toAppError(result.error));
           return;
         }
         id = result.data;
@@ -137,7 +137,7 @@ export function CategoryBuilder({
       };
       const result = await saveCategory(category.id, updatedCategory);
       if (!result.ok) {
-        invokeError(result.error);
+        invokeError(toAppError(result.error));
       }
     } catch (error) {
       invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
@@ -156,7 +156,7 @@ export function CategoryBuilder({
       setIsSaveLoading(true);
       const result = await deleteCategory(category.id);
       if (!result.ok) {
-        invokeError(result.error);
+        invokeError(toAppError(result.error));
         return;
       }
       router.push('/dashboard');
@@ -172,7 +172,7 @@ export function CategoryBuilder({
       const objectResult = await getGuessObject(id, ['world_location_preview']);
       if (!objectResult) return;
       if (!objectResult.ok) {
-        invokeError(objectResult.error);
+        invokeError(toAppError(objectResult.error));
         return;
       }
       const object = objectResult.data;
@@ -186,7 +186,7 @@ export function CategoryBuilder({
 
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) {
-        invokeError(saveResult.error);
+        invokeError(toAppError(saveResult.error));
         return;
       }
 
@@ -235,7 +235,7 @@ export function CategoryBuilder({
       setCategory({ ...category, guessObjects: updatedGuessObjects });
       const removeResult = await saveCategory(category.id, updated_category);
       if (!removeResult.ok) {
-        invokeError(removeResult.error);
+        invokeError(toAppError(removeResult.error));
         return;
       }
       setGuessObjectDraft(undefined);

@@ -1,4 +1,8 @@
-import { type ApiError, getFriendlyErrorMessage, isApiError } from '@cityborn/api';
+import {
+  type ApiError,
+  getFriendlyErrorMessage,
+  isApiError,
+} from '@cityborn/api';
 import { type AppError, AppErrorCode } from './app-error';
 
 const APP_ERROR_MESSAGES: Record<AppErrorCode, string> = {

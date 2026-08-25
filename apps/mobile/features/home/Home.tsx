@@ -1,4 +1,4 @@
-import { useAuth, useError } from '@cityborn/client';
+import { toAppError, useAuth, useError } from '@cityborn/client';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AppState, Image, Pressable } from 'react-native';
@@ -27,7 +27,7 @@ export default function Home() {
     setIsSendingVerificationEmail(true);
     const result = await resendVerificationEmail();
     setIsSendingVerificationEmail(false);
-    if (!result.ok) return invokeError(result.error);
+    if (!result.ok) return invokeError(toAppError(result.error));
     setVerificationEmailSent(true);
   };
 

@@ -1,4 +1,5 @@
-import { AppErrors, isAppError, useAuth } from '@cityborn/client';
+import { isApiError } from '@cityborn/api';
+import { AppErrors, isAppError, toAppError, useAuth } from '@cityborn/client';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
@@ -66,6 +67,10 @@ export const SignInWithAppleButton = () => {
 
     if (isAppError(error)) {
       throw error;
+    }
+
+    if (isApiError(error)) {
+      throw toAppError(error);
     }
 
     throw AppErrors.appleSignInFailed();

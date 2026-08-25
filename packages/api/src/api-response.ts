@@ -9,7 +9,10 @@ export function toApiResult<T extends { status: number; body: unknown }>(
   result: T,
 ): ApiResult<Extract<T, { status: HttpSuccessStatus }>['body']> {
   if (result.status < 200 || result.status >= 300) {
-    return { ok: false, error: parseApiError(result.status, result.body) };
+    return {
+      ok: false,
+      error: parseApiError(result.status, result.body) satisfies ApiError,
+    };
   }
   return {
     ok: true,

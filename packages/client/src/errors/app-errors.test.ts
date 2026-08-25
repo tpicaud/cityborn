@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { type ApiError, ErrorCode } from '@cityborn/api';
-import { resolveCaughtError, toAppError } from './app-errors';
 import { isAppError } from './app-error';
+import { resolveCaughtError, toAppError } from './app-errors';
 
 const apiError: ApiError = {
   code: ErrorCode.USER_INVALID_CREDENTIALS,

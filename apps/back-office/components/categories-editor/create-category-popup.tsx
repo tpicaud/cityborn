@@ -1,10 +1,11 @@
 import * as Ariakit from '@ariakit/react';
 import {
+  type ApiResult,
   type Category,
   type CreateCategory,
   CreateCategorySchema,
 } from '@cityborn/api';
-import { type AppResult, useError } from '@cityborn/client';
+import { toAppError, useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -28,7 +29,7 @@ export function CreateCategoryDialog({
 }: {
   handleCreateCategory: (
     createCategory: CreateCategory,
-  ) => Promise<AppResult<Category>>;
+  ) => Promise<ApiResult<Category>>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const { invokeError } = useError();
@@ -53,7 +54,7 @@ export function CreateCategoryDialog({
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
+      invokeError(toAppError(result.error));
       return;
     }
 

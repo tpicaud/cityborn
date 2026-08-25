@@ -1,12 +1,11 @@
-import type { Category, FullCategory } from '@cityborn/api';
-import { throwOnAppError } from '@cityborn/client';
+import { type Category, type FullCategory, throwOnError } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
 export async function getCategories(): Promise<Category[]> {
   const result = await adminClient.category.getAllCategories({
     query: { include: 'guessObjects' },
   });
-  throwOnAppError(result);
+  throwOnError(result);
   return result.body;
 }
 
@@ -17,6 +16,6 @@ export async function getFullCategory(
     params: { id },
   });
   if (result.status === 404) return null;
-  throwOnAppError(result);
+  throwOnError(result);
   return result.body;
 }

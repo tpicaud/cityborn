@@ -1,15 +1,19 @@
-import type { Category, CategoryTree } from '@cityborn/api';
-import { type AppResult, toAppResult } from '@cityborn/client';
+import {
+  type ApiResult,
+  type Category,
+  type CategoryTree,
+  toApiResult,
+} from '@cityborn/api';
 import { client } from './client';
 
-export async function fetchCategories(): Promise<AppResult<Category[]>> {
+export async function fetchCategories(): Promise<ApiResult<Category[]>> {
   const result = await client.category.getCategories({ query: {} });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
-export async function fetchCategoryTrees(): Promise<AppResult<CategoryTree[]>> {
+export async function fetchCategoryTrees(): Promise<ApiResult<CategoryTree[]>> {
   const result = await client.category.getCategoryTrees({});
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
 export function flattenCategoryTree(nodes: CategoryTree[]): Category[] {

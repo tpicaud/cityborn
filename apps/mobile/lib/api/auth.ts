@@ -1,11 +1,12 @@
-import type {
-  CreateUser,
-  SignIn,
-  SignInWithApple,
-  SignInWithGoogle,
-  User,
+import {
+  type ApiResult,
+  type CreateUser,
+  type SignIn,
+  type SignInWithApple,
+  type SignInWithGoogle,
+  toApiResult,
+  type User,
 } from '@cityborn/api';
-import { type AppResult, toAppResult } from '@cityborn/client';
 import { client, tokenStorage } from './client';
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -16,9 +17,9 @@ export async function getCurrentUser(): Promise<User | null> {
   return result.status === 200 ? result.body : null;
 }
 
-export async function signIn(data: SignIn): Promise<AppResult<User>> {
+export async function signIn(data: SignIn): Promise<ApiResult<User>> {
   const result = await client.auth.signIn({ body: data });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   await tokenStorage.setTokens(
     apiResult.data.access_token,
@@ -27,9 +28,9 @@ export async function signIn(data: SignIn): Promise<AppResult<User>> {
   return { ok: true, data: apiResult.data.user };
 }
 
-export async function signUp(data: CreateUser): Promise<AppResult<User>> {
+export async function signUp(data: CreateUser): Promise<ApiResult<User>> {
   const result = await client.auth.signUp({ body: data });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   await tokenStorage.setTokens(
     apiResult.data.access_token,
@@ -44,9 +45,9 @@ export async function signOut(): Promise<void> {
 
 export async function signInWithGoogle(
   data: SignInWithGoogle,
-): Promise<AppResult<User>> {
+): Promise<ApiResult<User>> {
   const result = await client.auth.signInWithGoogle({ body: data });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   await tokenStorage.setTokens(
     apiResult.data.access_token,
@@ -57,9 +58,9 @@ export async function signInWithGoogle(
 
 export async function signInWithApple(
   data: SignInWithApple,
-): Promise<AppResult<User>> {
+): Promise<ApiResult<User>> {
   const result = await client.auth.signInWithApple({ body: data });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   await tokenStorage.setTokens(
     apiResult.data.access_token,
@@ -68,16 +69,16 @@ export async function signInWithApple(
   return { ok: true, data: apiResult.data.user };
 }
 
-export async function deleteUser(): Promise<AppResult<void>> {
+export async function deleteUser(): Promise<ApiResult<void>> {
   const result = await client.auth.deleteUser({ body: {} });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   return { ok: true, data: undefined };
 }
 
-export async function resendVerificationEmail(): Promise<AppResult<void>> {
+export async function resendVerificationEmail(): Promise<ApiResult<void>> {
   const result = await client.auth.resendVerificationEmail({ body: {} });
-  const apiResult = toAppResult(result);
+  const apiResult = toApiResult(result);
   if (!apiResult.ok) return apiResult;
   return { ok: true, data: undefined };
 }

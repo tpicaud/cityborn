@@ -1,5 +1,7 @@
 'use client';
 
+import { isApiError } from '@cityborn/api';
+import { toAppError } from '@cityborn/client';
 import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
@@ -16,12 +18,16 @@ export default function ErrorPage({
     console.error(error);
   }, [error]);
 
+  const message = isApiError(error)
+    ? toAppError(error).message
+    : error.message || "Quelque chose s'est mal passé.";
+
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center gap-4 text-center">
       <CircleAlert strokeWidth={2.75} size={40} className="text-red-700" />
       <div>
         <p className="font-bold text-lg">Une erreur est survenue</p>
-        <p>{error.message || "Quelque chose s'est mal passé."}</p>
+        <p>{message}</p>
       </div>
       <div className="flex gap-2">
         <Button variant="outline" onClick={() => reset()}>

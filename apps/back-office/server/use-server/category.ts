@@ -1,33 +1,38 @@
 'use server';
 
-import type { Category, CreateCategory, UpdateCategory } from '@cityborn/api';
-import { type AppResult, toAppResult } from '@cityborn/client';
+import type {
+  ApiResult,
+  Category,
+  CreateCategory,
+  UpdateCategory,
+} from '@cityborn/api';
+import { toApiResult } from '@cityborn/api';
 import { adminClient } from '@/lib/adminApiClient';
 
 export async function createCategory(
   data: CreateCategory,
-): Promise<AppResult<Category>> {
+): Promise<ApiResult<Category>> {
   const result = await adminClient.category.createCategory({ body: data });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
 export async function saveCategory(
   id: string,
   updatedCategory: UpdateCategory,
-): Promise<AppResult<Category>> {
+): Promise<ApiResult<Category>> {
   const result = await adminClient.category.updateCategory({
     params: { id },
     body: updatedCategory,
   });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
-export async function deleteCategory(id: string): Promise<AppResult<void>> {
+export async function deleteCategory(id: string): Promise<ApiResult<void>> {
   const result = await adminClient.category.deleteCategory({
     params: { id },
     body: {},
   });
-  const r = toAppResult(result);
+  const r = toApiResult(result);
   if (!r.ok) return r;
   return { ok: true, data: undefined };
 }

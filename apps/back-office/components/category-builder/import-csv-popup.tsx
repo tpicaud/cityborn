@@ -1,5 +1,6 @@
 import * as Ariakit from '@ariakit/react';
-import { isAppError } from '@cityborn/client';
+import { isApiError } from '@cityborn/api';
+import { toAppError } from '@cityborn/client';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -17,7 +18,7 @@ interface Objects {
 }
 
 function resolveImportErrorMessage(error: unknown): string {
-  if (isAppError(error)) return error.message;
+  if (isApiError(error)) return toAppError(error).message;
   if (error instanceof Error) return error.message;
   return 'Erreur inconnue';
 }

@@ -5,7 +5,7 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { resolveCaughtError, useError } from '@cityborn/client';
+import { resolveCaughtError, toAppError, useError } from '@cityborn/client';
 import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -53,7 +53,7 @@ export function useMultiSession(
   useEffect(() => {
     const load = async () => {
       const result = await fetchSession(sessionID);
-      if (!result.ok) return invokeError(result.error);
+      if (!result.ok) return invokeError(toAppError(result.error));
       setSession(result.data);
     };
     load();

@@ -1,43 +1,45 @@
 'use server';
 
-import type { CreateSession, Game, Session } from '@cityborn/api';
 import {
-  type AppResult,
-  buildFinalizeGameBody,
-  toAppResult,
-} from '@cityborn/client';
+  type ApiResult,
+  type CreateSession,
+  type Game,
+  type Session,
+  toApiResult,
+} from '@cityborn/api';
+import { buildFinalizeGameBody } from '@cityborn/client';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function createSession(
   data: CreateSession,
-): Promise<AppResult<Session>> {
+): Promise<ApiResult<Session>> {
   const client = await getServerClient();
   const result = await client.session.createSession({ body: data });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
 export async function fetchSession(
   sessionId: string,
-): Promise<AppResult<Session>> {
+): Promise<ApiResult<Session>> {
   const client = await getServerClient();
   const result = await client.session.getSession({ params: { id: sessionId } });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
 export async function createSoloGame(
   session: Session,
-): Promise<AppResult<Game>> {
+): Promise<ApiResult<Game>> {
   const client = await getServerClient();
   const result = await client.session.createGame({ body: session });
-  return toAppResult(result);
+  return toApiResult(result);
 }
 
-export async function finalizeGame(session: Session): Promise<AppResult<void>> {
+export async function finalizeGame(session: Session): Promise<ApiResult<void>> {
   const body = buildFinalizeGameBody(session);
   if (!body) return { ok: true, data: undefined };
   const client = await getServerClient();
   const result = await client.session.finalizeGame({ body });
-  const r = toAppResult(result);
+  const r = toApiResult(result);
   if (!r.ok) return r;
   return { ok: true, data: undefined };
 }

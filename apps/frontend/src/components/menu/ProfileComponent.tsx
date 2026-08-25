@@ -1,5 +1,5 @@
 import type { GameRecord, User } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { toAppError, useError } from '@cityborn/client';
 import { calculateTotalPoints } from '@cityborn/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
@@ -25,7 +25,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
     const load = async () => {
       try {
         const result = await getGameRecords();
-        if (!result.ok) return invokeError(result.error);
+        if (!result.ok) return invokeError(toAppError(result.error));
         const gameRecords: GameRecord[] = result.data;
         setGames(gameRecords);
       } finally {

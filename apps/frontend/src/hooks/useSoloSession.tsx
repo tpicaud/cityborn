@@ -6,7 +6,7 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { toAppError, useError } from '@cityborn/client';
 import { applyGuess, beginGame, resolveNextRound } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,7 +32,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
   useEffect(() => {
     const init = async () => {
       const result = await createSession({ mode: SessionMode.SOLO });
-      if (!result.ok) return invokeError(result.error);
+      if (!result.ok) return invokeError(toAppError(result.error));
       const session: Session = result.data;
       session.hostID = localPlayerID;
       updateSession(session);
@@ -61,7 +61,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     const current = sessionRef.current;
     if (!current) return;
     const result = await createSoloGame(current);
-    if (!result.ok) return invokeError(result.error);
+    if (!result.ok) return invokeError(toAppError(result.error));
     updateSession({ ...current, status: SessionStatus.IN_GAME });
     setGame(beginGame(result.data));
   };
@@ -81,7 +81,7 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     const current = sessionRef.current;
     if (isGameOver && current) {
       finalizeGame({ ...current, currentGame: updatedGame }).then((result) => {
-        if (!result.ok) invokeError(result.error);
+        if (!result.ok) invokeError(toAppError(result.error));
       });
     }
   };
