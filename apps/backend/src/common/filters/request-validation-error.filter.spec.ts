@@ -50,5 +50,8 @@ describe('RequestValidationErrorFilter registration order', () => {
       statusCode: 400,
     });
     expect(response.body.message).toContain('foo');
+    expect(response.body.fieldErrors).toEqual([
+      { path: 'foo', message: expect.any(String) },
+    ]);
   });
 });

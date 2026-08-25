@@ -43,7 +43,4 @@ allowed-tools: Bash(git *), Bash(gh *)
 
 ### Points d'attention
 - ...
-
-### Complexité estimée
-...
 ```

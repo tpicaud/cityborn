@@ -5,6 +5,9 @@ export const ApiErrorSchema = z.object({
   code: z.nativeEnum(ErrorCode),
   statusCode: z.number().int(),
   message: z.string(),
+  fieldErrors: z
+    .array(z.object({ path: z.string(), message: z.string() }))
+    .optional(),
 });
 
 export type ApiError = z.infer<typeof ApiErrorSchema>;
