@@ -1,5 +1,4 @@
-import { ErrorCode } from './errors/error-codes';
-import { type ApiError, ApiErrorSchema } from './schemas/api-error.schema';
+import { type ApiError, parseApiError } from './schemas/api-error.schema';
 import type { HttpSuccessStatus } from './types/http';
 
 export type ApiResult<T> =
@@ -10,17 +9,7 @@ export function toApiResult<T extends { status: number; body: unknown }>(
   result: T,
 ): ApiResult<Extract<T, { status: HttpSuccessStatus }>['body']> {
   if (result.status < 200 || result.status >= 300) {
-    const parsed = ApiErrorSchema.safeParse(result.body);
-    return {
-      ok: false,
-      error: parsed.success
-        ? parsed.data
-        : {
-            code: ErrorCode.UNKNOWN_ERROR,
-            message: 'Unexpected error',
-            statusCode: result.status,
-          },
-    };
+    return { ok: false, error: parseApiError(result.status, result.body) };
   }
   return {
     ok: true,
