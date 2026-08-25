@@ -40,6 +40,7 @@ export interface RunCompatCheckOptions {
   manifestFile: string;
   versionsDir: string;
   currentSpecFile: string;
+  errIgnoreFile?: string;
   now?: Date;
 }
 
@@ -62,6 +63,7 @@ export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
     const { breaking, changes } = diffBreaking(
       versionFile,
       options.currentSpecFile,
+      options.errIgnoreFile,
     );
     const result: VersionCheckResult = { entry, breaking, changes };
     checked.push(result);

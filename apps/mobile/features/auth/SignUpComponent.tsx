@@ -1,9 +1,16 @@
-import { getFriendlyErrorMessage } from '@cityborn/api';
+import {
+  type CreateUser,
+  CreateUserSchema,
+  getFriendlyErrorMessage,
+} from '@cityborn/api';
 import { useAuth } from '@cityborn/client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { z } from 'zod';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
@@ -11,134 +18,77 @@ import { signUp } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-interface FormValues {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
+const SignUpFormSchema = CreateUserSchema.extend({
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+});
+
+type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
+
+const SIGN_UP_FORM_FIELDS = [
+  'username',
+  'email',
+  'password',
+  'confirmPassword',
+] as const satisfies readonly (keyof SignUpFormValues)[];
+
+function isSignUpFormField(
+  path: string,
+): path is (typeof SIGN_UP_FORM_FIELDS)[number] {
+  return (SIGN_UP_FORM_FIELDS as readonly string[]).includes(path);
 }
 
 export const SignUpComponent = () => {
   const router = useRouter();
   const { setUser } = useAuth();
-  const [formValues, setFormValues] = useState<FormValues>({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormValues, string>>
-  >({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(SignUpFormSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-  const handleChange = (key: keyof FormValues, value: string) => {
-    setFormValues({
-      ...formValues,
-      [key]: value,
-    });
-    setErrors({ ...errors, [key]: null });
-  };
-
-  const validateInput = (field: keyof FormValues, value: string) => {
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-
-      switch (field) {
-        case 'username':
-          if (!String(value).trim()) {
-            newErrors.username = "Nom d'utilisateur obligatoire";
-          } else {
-            delete newErrors.username;
-          }
-          break;
-
-        case 'email':
-          if (!String(value).trim()) {
-            newErrors.email = 'Email obligatoire';
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            newErrors.email = 'Email invalide';
-          } else {
-            delete newErrors.email;
-          }
-          break;
-
-        case 'password': {
-          const password = value;
-          if (!password?.trim()) {
-            newErrors.password = 'Mot de passe obligatoire';
-          } else if (password.length < 6) {
-            newErrors.password = 'Minimum 6 caractères requis';
-          } else if (!/[A-Z]/.test(password) || !/\d/.test(password)) {
-            newErrors.password =
-              'Doit contenir au moins une majuscule et un chiffre';
-          } else {
-            delete newErrors.password;
-          }
-
-          if (
-            formValues.confirmPassword &&
-            formValues.confirmPassword !== password
-          ) {
-            newErrors.confirmPassword =
-              'Les mots de passe ne correspondent pas';
-          } else {
-            delete newErrors.confirmPassword;
-          }
-
-          break;
-        }
-
-        case 'confirmPassword': {
-          const confirm = value;
-          if (!confirm?.trim()) {
-            newErrors.confirmPassword = 'Confirmation obligatoire';
-          } else if (confirm !== formValues.password) {
-            newErrors.confirmPassword =
-              'Les mots de passe ne correspondent pas';
-          } else {
-            delete newErrors.confirmPassword;
-          }
-          break;
-        }
-      }
-
-      return newErrors;
-    });
-  };
-
-  const validateForm = (): boolean => {
-    validateInput('username', formValues.username);
-    validateInput('email', formValues.email);
-    validateInput('password', formValues.password);
-    validateInput('confirmPassword', formValues.confirmPassword);
-
-    const noErrors = Object.keys(errors).length === 0;
-    if (!noErrors) setErrorMessage('Le formulaire est invalide.');
-    return noErrors;
-  };
-
-  const handleSubmit = async () => {
+  const onSubmit = handleSubmit(async (values) => {
     setErrorMessage(null);
 
-    if (
-      !formValues.username ||
-      !formValues.email ||
-      !formValues.password ||
-      !formValues.confirmPassword
-    ) {
-      validateForm();
+    const createUser: CreateUser = {
+      username: values.username,
+      email: values.email,
+      password: values.password,
+    };
+    const result = await signUp(createUser);
+
+    if (result.ok) {
+      setUser(result.data);
+      router.push('/');
       return;
     }
 
-    if (!validateForm()) return;
+    const fieldErrors = result.error.fieldErrors;
+    if (!fieldErrors || fieldErrors.length === 0) {
+      setErrorMessage(getFriendlyErrorMessage(result.error));
+      return;
+    }
 
-    const result = await signUp({ ...formValues });
-    if (!result.ok)
-      return setErrorMessage(getFriendlyErrorMessage(result.error));
-    setUser(result.data);
-    router.push('/');
-  };
+    for (const fieldError of fieldErrors) {
+      if (isSignUpFormField(fieldError.path)) {
+        setError(fieldError.path, { message: fieldError.message });
+        continue;
+      }
+      setErrorMessage(fieldError.message);
+    }
+  });
 
   return (
     <KeyboardAwareScrollView
@@ -155,70 +105,91 @@ export const SignUpComponent = () => {
         <View className="flex-col items-center justify-center gap-0 w-70">
           <View className="flex-col items-center justify-center gap-6">
             <View className="w-full relative">
-              <TextInput
-                placeholder="Nom d'utilisateur"
-                value={formValues.username}
-                onChangeText={(text) => handleChange('username', text)}
-                onBlur={() => validateInput('username', formValues.username)}
-                autoCapitalize="none"
-                error={!!errors.username}
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Nom d'utilisateur"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    error={!!errors.username}
+                  />
+                )}
               />
-
               {errors.username && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.username}
+                  {errors.username.message}
                 </Text>
               )}
             </View>
 
             <View className="w-full relative">
-              <TextInput
-                placeholder="Email"
-                value={formValues.email}
-                onChangeText={(text) => handleChange('email', text)}
-                onBlur={() => validateInput('email', formValues.email)}
-                autoCapitalize="none"
-                error={!!errors.email}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Email"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    error={!!errors.email}
+                  />
+                )}
               />
               {errors.email && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.email}
+                  {errors.email.message}
                 </Text>
               )}
             </View>
 
             <View className="w-full relative">
-              <TextInput
-                placeholder="Mot de passe"
-                value={formValues.password}
-                onChangeText={(text) => handleChange('password', text)}
-                onBlur={() => validateInput('password', formValues.password)}
-                autoCapitalize="none"
-                secureTextEntry
-                error={!!errors.password}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Mot de passe"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    secureTextEntry
+                    error={!!errors.password}
+                  />
+                )}
               />
               {errors.password && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.password}
+                  {errors.password.message}
                 </Text>
               )}
             </View>
 
             <View className="w-full relative">
-              <TextInput
-                placeholder="Confirmez le mot de passe"
-                value={formValues.confirmPassword}
-                onChangeText={(text) => handleChange('confirmPassword', text)}
-                onBlur={() =>
-                  validateInput('confirmPassword', formValues.confirmPassword)
-                }
-                autoCapitalize="none"
-                secureTextEntry
-                error={!!errors.confirmPassword}
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Confirmez le mot de passe"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    secureTextEntry
+                    error={!!errors.confirmPassword}
+                  />
+                )}
               />
               {errors.confirmPassword && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.confirmPassword}
+                  {errors.confirmPassword.message}
                 </Text>
               )}
             </View>
@@ -231,8 +202,9 @@ export const SignUpComponent = () => {
             variant="filled"
             color="primary"
             size="large"
+            disabled={isSubmitting}
             label="S'INSCRIRE"
-            onPress={handleSubmit}
+            onPress={onSubmit}
           />
         </View>
         <View className="flex flex-row items-center gap-2 w-full">

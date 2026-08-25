@@ -15,6 +15,13 @@ function formatZodError(error: ZodError): string {
     .join(', ');
 }
 
+function toFieldErrors(error: ZodError): ApiError['fieldErrors'] {
+  return error.issues.map((issue) => ({
+    path: issue.path.join('.'),
+    message: issue.message,
+  }));
+}
+
 @Catch(RequestValidationError)
 export class RequestValidationErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger(RequestValidationErrorFilter.name);
@@ -30,6 +37,7 @@ export class RequestValidationErrorFilter implements ExceptionFilter {
       statusCode: exception.getStatus(),
       code: ErrorCode.BAD_REQUEST,
       message: zodError ? formatZodError(zodError) : 'Invalid request',
+      fieldErrors: zodError ? toFieldErrors(zodError) : undefined,
     };
 
     logApiError(this.logger, 'HTTP Error', payload, exception);

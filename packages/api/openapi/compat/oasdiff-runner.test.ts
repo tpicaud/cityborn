@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -40,4 +42,22 @@ describe('diffBreaking on fixtures', {
       }
     });
   }
+
+  test('errIgnoreFile suppresses a pinned breaking change', () => {
+    const base = join(fixturesDir, 'required-param-added', 'base.json');
+    const revision = join(fixturesDir, 'required-param-added', 'revision.json');
+
+    const dir = mkdtempSync(join(tmpdir(), 'oasdiff-err-ignore-'));
+    const errIgnoreFile = join(dir, 'err-ignore.txt');
+    writeFileSync(
+      errIgnoreFile,
+      'GET /widgets added the new required `query` request parameter `token`\n',
+    );
+
+    const ignored = diffBreaking(base, revision, errIgnoreFile);
+    assert.equal(ignored.breaking, false);
+
+    const notIgnored = diffBreaking(base, revision);
+    assert.equal(notIgnored.breaking, true);
+  });
 });

@@ -19,6 +19,7 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@hookform/resolvers": "^5.9.1",
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
     "@mui/material-nextjs": "^9.0.0",
@@ -44,13 +45,15 @@
     "postcss": "^8.5.10",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-hook-form": "^7.86.0",
     "react-leaflet": "^5.0.0",
     "sharp": "^0.35.1",
     "socket.io-client": "^4.8.3",
     "swagger-ui-react": "^5.32.4",
     "tailwindcss": "^4.2.4",
     "unique-names-generator": "^4.7.1",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

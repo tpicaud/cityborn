@@ -1,29 +1,71 @@
 import * as Ariakit from '@ariakit/react';
-import type { CreateCategory } from '@cityborn/api';
+import {
+  type ApiResult,
+  type Category,
+  type CreateCategory,
+  CreateCategorySchema,
+} from '@cityborn/api';
+import { useError } from '@cityborn/client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from '../ui/Button';
+
+const CREATE_CATEGORY_FORM_FIELDS = [
+  'name',
+  'description',
+  'isPublished',
+  'parentId',
+] as const satisfies readonly (keyof CreateCategory)[];
+
+function isCreateCategoryFormField(
+  path: string,
+): path is (typeof CREATE_CATEGORY_FORM_FIELDS)[number] {
+  return (CREATE_CATEGORY_FORM_FIELDS as readonly string[]).includes(path);
+}
 
 export function CreateCategoryDialog({
   handleCreateCategory,
 }: {
-  handleCreateCategory: (createCategory: CreateCategory) => Promise<boolean>;
+  handleCreateCategory: (
+    createCategory: CreateCategory,
+  ) => Promise<ApiResult<Category>>;
 }) {
   const dialog = Ariakit.useDialogStore();
-  const [createCategory, setCreateCategory] = useState<CreateCategory>({
-    name: '',
-    description: '',
-    isPublished: false,
+  const { invokeError } = useError();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateCategory>({
+    resolver: zodResolver(CreateCategorySchema),
+    defaultValues: { name: '', description: '', isPublished: false },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = await handleCreateCategory(createCategory);
-    if (success) {
+  const onSubmit = handleSubmit(async (values) => {
+    const result = await handleCreateCategory(values);
+    if (result.ok) {
       dialog.hide();
-      setCreateCategory({ name: '', description: '', isPublished: false });
+      reset();
+      return;
     }
-  };
+
+    const fieldErrors = result.error.fieldErrors;
+    if (!fieldErrors || fieldErrors.length === 0) {
+      invokeError(result.error);
+      return;
+    }
+
+    for (const fieldError of fieldErrors) {
+      if (isCreateCategoryFormField(fieldError.path)) {
+        setError(fieldError.path, { message: fieldError.message });
+        continue;
+      }
+      invokeError(fieldError.message);
+    }
+  });
 
   return (
     <div className="w-full">
@@ -46,46 +88,45 @@ export function CreateCategoryDialog({
           </Ariakit.DialogHeading>
 
           <form
-            onSubmit={handleSubmit}
+            onSubmit={onSubmit}
             className="w-full h-full flex flex-col gap-4 mt-4"
           >
             <label htmlFor="name">Nom</label>
             <input
               type="text"
               id="name"
-              value={createCategory.name}
-              onChange={(e) =>
-                setCreateCategory({ ...createCategory, name: e.target.value })
-              }
+              {...register('name')}
               placeholder="e.g. Sport"
               className="bg-white text-gray-800 rounded-md p-2 w-full"
               required
             />
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name.message}</p>
+            )}
 
             <label htmlFor="description">Description</label>
             <input
               type="text"
               id="description"
-              value={createCategory.description}
-              onChange={(e) =>
-                setCreateCategory({
-                  ...createCategory,
-                  description: e.target.value,
-                })
-              }
+              {...register('description')}
               placeholder="e.g. Tous les meilleurs sportifs du monde"
               className="bg-white text-gray-800 rounded-md p-2 w-full"
             />
+            {errors.description && (
+              <p className="text-red-500 text-sm">
+                {errors.description.message}
+              </p>
+            )}
 
             <div className="flex justify-end gap-2 mt-4">
-              <Button onClick={dialog.hide} variant="outline">
+              <Button onClick={() => dialog.hide()} variant="outline">
                 Annuler
               </Button>
               <Button
                 type="submit"
                 variant="primary"
                 size="default"
-                onClick={handleSubmit}
+                disabled={isSubmitting}
               >
                 Créer
               </Button>

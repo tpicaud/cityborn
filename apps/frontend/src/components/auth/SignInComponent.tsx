@@ -1,17 +1,38 @@
 'use client';
 
+import { type SignIn, SignInSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
-import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { signIn, signInWithGoogle } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
+const SIGN_IN_FORM_FIELDS = [
+  'identifier',
+  'password',
+] as const satisfies readonly (keyof SignIn)[];
+
+function isSignInFormField(
+  path: string,
+): path is (typeof SIGN_IN_FORM_FIELDS)[number] {
+  return (SIGN_IN_FORM_FIELDS as readonly string[]).includes(path);
+}
+
 export const SignInComponent = () => {
   const { invokeError } = useError();
-  const [isSignInFormSubmitting, setIsSignInFormSubmitting] = useState(false);
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
     useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignIn>({
+    resolver: zodResolver(SignInSchema),
+    defaultValues: { identifier: '', password: '' },
+  });
 
   useEffect(() => {
     const handleCredentialResponse = async (response: {
@@ -39,34 +60,33 @@ export const SignInComponent = () => {
     }
   }, [invokeError]);
 
-  const [formValues, setFormValues] = React.useState({
-    username: '',
-    password: '',
-  });
+  const onSubmit = handleSubmit(async (values) => {
+    const result = await signIn(values);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({ ...formValues, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    try {
-      setIsSignInFormSubmitting(true);
-      e.preventDefault();
-      const result = await signIn({
-        identifier: formValues.username,
-        password: formValues.password,
-      });
-      if (!result.ok) return invokeError(result.error);
+    if (result.ok) {
       window.location.reload();
-    } finally {
-      setIsSignInFormSubmitting(false);
+      return;
     }
-  };
+
+    const fieldErrors = result.error.fieldErrors;
+    if (!fieldErrors || fieldErrors.length === 0) {
+      invokeError(result.error);
+      return;
+    }
+
+    for (const fieldError of fieldErrors) {
+      if (isSignInFormField(fieldError.path)) {
+        setError(fieldError.path, { message: fieldError.message });
+        continue;
+      }
+      invokeError(fieldError.message);
+    }
+  });
 
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
     >
       <Typography variant="h5" align="center">
@@ -76,10 +96,9 @@ export const SignInComponent = () => {
       <FormControl>
         <TextField
           label="Username"
-          name="username"
-          value={formValues.username}
-          onChange={handleChange}
-          required
+          {...register('identifier')}
+          error={!!errors.identifier}
+          helperText={errors.identifier?.message}
         />
       </FormControl>
 
@@ -87,18 +106,13 @@ export const SignInComponent = () => {
         <TextField
           type="password"
           label="Password"
-          name="password"
-          value={formValues.password}
-          onChange={handleChange}
-          required
+          {...register('password')}
+          error={!!errors.password}
+          helperText={errors.password?.message}
         />
       </FormControl>
 
-      <Button
-        variant="contained"
-        type="submit"
-        loading={isSignInFormSubmitting}
-      >
+      <Button variant="contained" type="submit" loading={isSubmitting}>
         Se connecter
       </Button>
 

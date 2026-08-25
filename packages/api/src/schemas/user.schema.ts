@@ -24,7 +24,14 @@ export const UserSchema = PublicUserSchema.extend({
 export const CreateUserSchema = z.object({
   username: z.string().min(3).max(20),
   email: z.string().email(),
-  password: z.string().min(6).max(32),
+  password: z
+    .string()
+    .min(6)
+    .max(32)
+    .regex(
+      /^(?=.*[A-Z])(?=.*\d).+$/,
+      'Le mot de passe doit contenir au moins une majuscule et un chiffre',
+    ),
 });
 
 export const SignInSchema = z.object({
