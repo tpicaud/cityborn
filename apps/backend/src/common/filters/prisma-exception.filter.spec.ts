@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import { AllExceptionsFilter } from './all-exceptions.filter';
+import { DefaultExceptionFilter } from './default-exception.filter';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
 
 @Controller()
@@ -45,7 +45,7 @@ describe('PrismaExceptionFilter registration order', () => {
     app = moduleRef.createNestApplication();
 
     app.useGlobalFilters(
-      new AllExceptionsFilter(),
+      new DefaultExceptionFilter(),
       new PrismaExceptionFilter(),
     );
     await app.init();

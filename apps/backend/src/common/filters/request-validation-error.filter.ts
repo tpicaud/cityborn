@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { RequestValidationError } from '@ts-rest/nest';
 import type { ZodError } from 'zod';
+import { logApiError, sendApiError } from './utils';
 
 function formatZodError(error: ZodError): string {
   return error.issues
@@ -31,7 +32,7 @@ export class RequestValidationErrorFilter implements ExceptionFilter {
       message: zodError ? formatZodError(zodError) : 'Invalid request',
     };
 
-    this.logger.warn(`HTTP Error: ${payload.code} - ${payload.message}`);
-    host.switchToHttp().getResponse().status(payload.statusCode).json(payload);
+    logApiError(this.logger, 'HTTP Error', payload, exception);
+    sendApiError(host, payload);
   }
 }

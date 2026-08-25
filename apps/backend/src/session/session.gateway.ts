@@ -29,10 +29,10 @@ import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import {
-  AllExceptionsFilter,
+  DefaultExceptionFilter,
   exceptionToApiError,
-  logApiError,
-} from '../common/filters/all-exceptions.filter';
+} from '../common/filters/default-exception.filter';
+import { logApiError } from '../common/filters/utils';
 import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
 import type { SessionSocket } from '../common/types/session-socket';
 import {
@@ -56,7 +56,7 @@ interface WSResponse {
     credentials: true,
   },
 })
-@UseFilters(AllExceptionsFilter)
+@UseFilters(DefaultExceptionFilter)
 @UseInterceptors(WsErrorInterceptor)
 export class SessionGateway
   implements OnGatewayConnection, OnGatewayDisconnect

@@ -8,6 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
+import { logApiError, sendApiError } from './utils';
 
 function toPartialApiError(value: unknown): Partial<ApiError> | null {
   return value && typeof value === 'object'
@@ -37,25 +38,9 @@ export function exceptionToApiError(exception: unknown): ApiError {
   };
 }
 
-export function logApiError(
-  logger: Logger,
-  prefix: string,
-  payload: ApiError,
-  exception: unknown,
-) {
-  if (payload.code === ErrorCode.UNKNOWN_ERROR) {
-    logger.error(
-      `${prefix}: ${payload.code} - ${payload.message}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
-  } else {
-    logger.warn(`${prefix}: ${payload.code} - ${payload.message}`);
-  }
-}
-
 @Catch()
-export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
+export class DefaultExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(DefaultExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctxType = host.getType<'http' | 'ws'>();
@@ -73,7 +58,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const payload = exceptionToApiError(exception);
     logApiError(this.logger, 'HTTP Error', payload, exception);
 
-    host.switchToHttp().getResponse().status(payload.statusCode).json(payload);
+    sendApiError(host, payload);
   }
 
   private handleWsContextError(exception: unknown, host: ArgumentsHost) {

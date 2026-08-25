@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { DefaultExceptionFilter } from './common/filters/default-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { RequestValidationErrorFilter } from './common/filters/request-validation-error.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
@@ -27,7 +27,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.useGlobalFilters(
-    new AllExceptionsFilter(),
+    new DefaultExceptionFilter(),
     new PrismaExceptionFilter(),
     new RequestValidationErrorFilter(),
   );

@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { logApiError } from './all-exceptions.filter';
+import { logApiError, sendApiError } from './utils';
 
 function toApiError(exception: Prisma.PrismaClientKnownRequestError): ApiError {
   switch (exception.code) {
@@ -39,6 +39,6 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const payload = toApiError(exception);
     logApiError(this.logger, 'HTTP Error', payload, exception);
 
-    host.switchToHttp().getResponse().status(payload.statusCode).json(payload);
+    sendApiError(host, payload);
   }
 }
