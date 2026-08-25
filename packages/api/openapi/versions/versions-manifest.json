@@ -9,6 +9,12 @@
       "file": "api-v2.json",
       "versionNumber": 2,
       "releasedAt": "2026-08-14T10:05:21.535Z"
+    },
+    {
+      "file": "api-v3.json",
+      "versionNumber": 3,
+      "releasedAt": "2026-08-25T09:09:56.608Z",
+      "draft": true
     }
   ]
 }
