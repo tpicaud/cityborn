@@ -39,6 +39,8 @@ jobs:
       VERCEL_PROJECT_ID: ${{ inputs.project_id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup node
         uses: actions/setup-node@v4

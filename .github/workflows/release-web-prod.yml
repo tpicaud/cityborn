@@ -49,10 +49,61 @@ jobs:
     with:
       base: ${{ needs.get-tag.outputs.lastProdTag }}
 
+  version-openapi-release:
+    name: Version OpenAPI release
+    needs:
+      - detect-changes
+    if: needs.detect-changes.outputs.backendHasChanged == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: version-api-on-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Release OpenAPI version
+        id: generate
+        run: pnpm --dir packages/api generate:openapi:release
+
+      - name: Commit versioned release
+        if: steps.generate.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add packages/api/openapi/
+          git commit -m "chore(api): version openapi release ${{ steps.generate.outputs.filename }} [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
   build-and-deploy-web-prod:
     name: Build + Deploy - Web - Prod
     needs:
       - detect-changes
+      - version-openapi-release
+    if: ${{ !failure() && !cancelled() }}
     secrets: inherit
     uses: ./.github/workflows/_build-deploy-web-prod.yml
     with:
@@ -114,53 +165,3 @@ jobs:
                 }],
               }),
             });
-
-  version-openapi-doc:
-    name: Version OpenAPI doc
-    needs:
-      - detect-changes
-      - build-and-deploy-web-prod
-    if: needs.detect-changes.outputs.backendHasChanged == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    concurrency:
-      group: version-api-on-deploy
-      cancel-in-progress: false
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24.x
-
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Generate OpenAPI doc
-        id: generate
-        run: pnpm --dir packages/api generate:openapi
-
-      - name: Commit versioned doc
-        if: steps.generate.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add packages/api/openapi/
-          git commit -m "chore(api): version openapi doc ${{ steps.generate.outputs.filename }} [skip ci]"
-          git pull --rebase origin main
-          git push origin HEAD:main
