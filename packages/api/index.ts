@@ -1,3 +1,5 @@
+import './src/errors/zod-error-map';
+
 export * from './openapi/generate-openapi';
 export * from './src/api-errors';
 export * from './src/api-result';
