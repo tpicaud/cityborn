@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,12 +24,14 @@ function writeCurrentSpecToTempFile(): string {
 
 function main() {
   const currentSpecFile = writeCurrentSpecToTempFile();
+  const errIgnoreFile = join(openapiDir, 'compat/err-ignore.txt');
 
   const report = runCompatCheck({
     policyFile: join(openapiDir, 'compat-policy.json'),
     manifestFile: join(openapiDir, 'versions/versions-manifest.json'),
     versionsDir: join(openapiDir, 'versions'),
     currentSpecFile,
+    errIgnoreFile: existsSync(errIgnoreFile) ? errIgnoreFile : undefined,
   });
 
   console.log(formatHumanSummary(report));

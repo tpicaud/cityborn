@@ -28,6 +28,7 @@ export interface DiffResult {
 export function diffBreaking(
   baseFile: string,
   revisionFile: string,
+  errIgnoreFile?: string,
 ): DiffResult {
   const result = spawnSync(
     'oasdiff',
@@ -37,6 +38,7 @@ export function diffBreaking(
       'json',
       '--fail-on',
       'ERR',
+      ...(errIgnoreFile ? ['--err-ignore', errIgnoreFile] : []),
       baseFile,
       revisionFile,
     ],

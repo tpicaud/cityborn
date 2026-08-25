@@ -1,0 +1,9 @@
+# Breaking changes explicitly reviewed and accepted by the team.
+# Format: <METHOD> <path> <exact change text reported by oasdiff>
+# See https://oasdiff.com/docs for --err-ignore file format details.
+
+# 2026-08-25 — POST /auth/sign-up password pattern tightened (issue #179).
+# The frontend has enforced this exact pattern (>=1 uppercase, >=1 digit) client-side
+# since before this change; no existing client can have signed up with a password that
+# violates it, so this is not breaking in practice.
+POST /auth/sign-up added the pattern `^(?=.*[A-Z])(?=.*\d).+$` to the request property `password`

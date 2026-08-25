@@ -10,10 +10,6 @@ import { z } from 'zod';
 import { signInWithGoogle, signUp } from '@/server/use-server/auth';
 
 const SignUpFormSchema = CreateUserSchema.extend({
-  password: CreateUserSchema.shape.password.regex(
-    /^(?=.*[A-Z])(?=.*\d).+$/,
-    'Le mot de passe doit contenir au moins une majuscule et un chiffre',
-  ),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
