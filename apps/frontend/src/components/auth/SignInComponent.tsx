@@ -4,7 +4,7 @@ import { useError } from '@cityborn/client';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { signIn, signInWithGoogle } from '@/server/actions/auth';
+import { signIn, signInWithGoogle } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
 export const SignInComponent = () => {
