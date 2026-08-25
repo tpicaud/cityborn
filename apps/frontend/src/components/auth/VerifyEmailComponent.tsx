@@ -6,7 +6,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { verifyEmail } from '@/server/actions/auth';
+import { verifyEmail } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
 type VerifyEmailComponentProps = {

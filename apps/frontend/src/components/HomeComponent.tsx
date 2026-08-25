@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { signOut } from '@/server/actions/auth';
+import { signOut } from '@/server/use-server/auth';
 import { SignInComponent } from './auth/SignInComponent';
 import { SignUpComponent } from './auth/SignUpComponent';
 import MenuComponent from './menu/MenuComponent';

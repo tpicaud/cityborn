@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { CategoryBuilder } from '@/components/category-builder/category-builder';
-import { getCategories, getFullCategory } from '@/server/queries/category';
+import { getCategories, getFullCategory } from '@/server/server-only/category';
 
 export default async function EditCategory({
   searchParams,

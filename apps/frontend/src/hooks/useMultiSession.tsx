@@ -11,7 +11,7 @@ import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { fetchSession } from '@/server/actions/session';
+import { fetchSession } from '@/server/use-server/session';
 import type { IUseSession } from './IUseSession';
 import { useSocket } from './useSocket';
 

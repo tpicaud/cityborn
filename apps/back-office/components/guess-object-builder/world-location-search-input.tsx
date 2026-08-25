@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { searchWorldLocationByName } from '@/server/actions/guess-object';
+import { searchWorldLocationByName } from '@/server/use-server/guess-object';
 
 export function WorldLocationSearchInput({
   type = 'text',

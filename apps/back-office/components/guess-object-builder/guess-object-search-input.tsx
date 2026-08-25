@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { searchGuessObjectByName } from '@/server/actions/guess-object';
+import { searchGuessObjectByName } from '@/server/use-server/guess-object';
 
 export function GuessObjectSearchInput({
   type = 'text',

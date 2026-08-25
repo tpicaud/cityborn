@@ -14,7 +14,7 @@ import {
   createSession,
   createSoloGame,
   finalizeGame,
-} from '@/server/actions/session';
+} from '@/server/use-server/session';
 import type { IUseSession } from './IUseSession';
 
 export function useSoloSession(localPlayerID: string): IUseSession {

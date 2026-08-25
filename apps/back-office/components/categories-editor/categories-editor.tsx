@@ -5,7 +5,7 @@ import { useError } from '@cityborn/client';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
-import { createCategory } from '@/server/actions/category';
+import { createCategory } from '@/server/use-server/category';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 import { CategoriesList } from './categories-list';

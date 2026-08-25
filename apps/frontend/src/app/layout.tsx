@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Script from 'next/script';
-import { getCurrentUser, hasToken } from '@/server/queries/auth';
+import { getCurrentUser, hasToken } from '@/server/server-only/auth';
 import { AppProviders } from './providers';
 
 export const metadata: Metadata = {

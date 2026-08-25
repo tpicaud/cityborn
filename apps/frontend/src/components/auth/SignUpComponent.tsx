@@ -4,7 +4,7 @@ import { useError } from '@cityborn/client';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { signInWithGoogle, signUp } from '@/server/actions/auth';
+import { signInWithGoogle, signUp } from '@/server/use-server/auth';
 
 interface FormValues {
   username: string;

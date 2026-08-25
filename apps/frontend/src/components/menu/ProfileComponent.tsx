@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { getGameRecords } from '@/server/actions/user';
+import { getGameRecords } from '@/server/use-server/user';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { invokeError } = useError();
