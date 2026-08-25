@@ -22,11 +22,10 @@ allowed-tools: Bash(git *), Bash(gh *)
 3. **Explorer le code existant** pertinent (fichiers, modules, tests) en lien avec la demande de l'issue, pour ancrer le plan dans la réalité du repo plutôt que dans des suppositions.
 
 4. **Proposer un plan d'implémentation** structuré, sans encore écrire de code :
-   - Vérifie que tu es en mode pla. Si ce n'est pas le cas demande à l'utilisateur de passer en mode plan
+   - Vérifie que tu es en mode plan. Si ce n'est pas le cas demande à l'utilisateur de passer en mode plan
    - Résumé en une phrase de ce que l'issue demande.
    - Liste des étapes concrètes, dans l'ordre, avec pour chacune les fichiers probablement concernés.
    - Points d'attention / risques / questions ouvertes (edge cases, impacts sur d'autres modules, migrations, tests à ajouter).
-   - Estimation grossière de la complexité (petite / moyenne / grande).
 
 5. **Ne pas commencer l'implémentation.** Présente le plan et attends ma validation ou mes ajustements avant de coder.
 
