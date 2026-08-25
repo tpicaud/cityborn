@@ -8,7 +8,6 @@ import type {
 import {
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
   getApiVersionInfo,
-  getCurrentApiVersion,
   isApiVersionOutdated,
 } from './api-version';
 
@@ -30,20 +29,6 @@ const POLICY: CompatPolicy = {
   min_num_of_version_supported: 2,
 };
 
-describe('getCurrentApiVersion', () => {
-  test('getCurrentApiVersion returns the highest version number regardless of manifest order', () => {
-    const fixture = manifest([entry(2, 10), entry(5, 1), entry(3, 5)]);
-
-    assert.equal(getCurrentApiVersion(fixture), 5);
-  });
-
-  test('getCurrentApiVersion returns the single version number when there is only one', () => {
-    const fixture = manifest([entry(1, 1)]);
-
-    assert.equal(getCurrentApiVersion(fixture), 1);
-  });
-});
-
 describe('getApiVersionInfo', () => {
   test('getApiVersionInfo returns the lowest version number still selected by the compat policy', () => {
     const fixture = manifest([
@@ -56,6 +41,22 @@ describe('getApiVersionInfo', () => {
     const info = getApiVersionInfo(NOW, fixture, POLICY);
 
     assert.equal(info.minSupportedVersion, 3);
+  });
+
+  test('getApiVersionInfo returns the highest version number regardless of manifest order', () => {
+    const fixture = manifest([entry(2, 10), entry(5, 1), entry(3, 5)]);
+
+    const info = getApiVersionInfo(NOW, fixture, POLICY);
+
+    assert.equal(info.currentVersion, 5);
+  });
+
+  test('getApiVersionInfo returns the single version number as current when there is only one', () => {
+    const fixture = manifest([entry(1, 1)]);
+
+    const info = getApiVersionInfo(NOW, fixture, POLICY);
+
+    assert.equal(info.currentVersion, 1);
   });
 
   test('getApiVersionInfo throws when every version has aged out of the compat policy', () => {

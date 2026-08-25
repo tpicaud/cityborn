@@ -2,7 +2,10 @@ import type { NextFunction, Request, Response } from 'express';
 
 jest.mock('@cityborn/api', () => ({
   API_MIN_SUPPORTED_VERSION_HEADER_NAME: 'X-Api-Min-Supported-Version',
-  getApiVersionInfo: jest.fn().mockReturnValue({ minSupportedVersion: 4 }),
+  API_CURRENT_VERSION_HEADER_NAME: 'X-Api-Current-Version',
+  getApiVersionInfo: jest
+    .fn()
+    .mockReturnValue({ minSupportedVersion: 4, currentVersion: 7 }),
 }));
 
 function createResponse(): Response {
@@ -28,6 +31,19 @@ describe('apiVersionHeaderMiddleware', () => {
       'X-Api-Min-Supported-Version',
       '4',
     );
+  });
+
+  it('sets the X-Api-Current-Version header from getApiVersionInfo', () => {
+    const {
+      apiVersionHeaderMiddleware,
+    } = require('./api-version-header.middleware');
+    const req = {} as Request;
+    const res = createResponse();
+    const next = jest.fn() as NextFunction;
+
+    apiVersionHeaderMiddleware(req, res, next);
+
+    expect(res.setHeader).toHaveBeenCalledWith('X-Api-Current-Version', '7');
   });
 
   it('calls next() so the request continues', () => {

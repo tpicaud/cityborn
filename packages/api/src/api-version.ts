@@ -10,9 +10,11 @@ import manifestJson from '../openapi/versions/versions-manifest.json';
 
 export const API_MIN_SUPPORTED_VERSION_HEADER_NAME =
   'X-Api-Min-Supported-Version';
+export const API_CURRENT_VERSION_HEADER_NAME = 'X-Api-Current-Version';
 
 export interface ApiVersionInfo {
   minSupportedVersion: number;
+  currentVersion: number;
 }
 
 export function isApiVersionOutdated(
@@ -24,12 +26,6 @@ export function isApiVersionOutdated(
 
 const defaultManifest = ManifestSchema.parse(manifestJson);
 const defaultCompatPolicy = CompatPolicySchema.parse(compatPolicyJson);
-
-export function getCurrentApiVersion(
-  manifest: Manifest = defaultManifest,
-): number {
-  return Math.max(...manifest.versions.map((entry) => entry.versionNumber));
-}
 
 export function getApiVersionInfo(
   now: Date = new Date(),
@@ -49,6 +45,9 @@ export function getApiVersionInfo(
   return {
     minSupportedVersion: Math.min(
       ...supportedVersions.map((entry) => entry.versionNumber),
+    ),
+    currentVersion: Math.max(
+      ...manifest.versions.map((entry) => entry.versionNumber),
     ),
   };
 }
