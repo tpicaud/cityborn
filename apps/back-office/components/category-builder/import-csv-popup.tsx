@@ -1,4 +1,5 @@
 import * as Ariakit from '@ariakit/react';
+import { getFriendlyErrorMessage, isApiError } from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -12,6 +13,13 @@ import Loader from '../ui/Loader';
 interface Objects {
   name: string;
   description?: string;
+  errorMessage?: string;
+}
+
+function resolveImportErrorMessage(error: unknown): string {
+  if (isApiError(error)) return getFriendlyErrorMessage(error);
+  if (error instanceof Error) return error.message;
+  return 'Erreur inconnue';
 }
 
 interface ImportRecap {
@@ -103,26 +111,26 @@ export function ImportCSVPopup({
 
       try {
         const searchResult = await searchGuessObjectByName(obj.name);
-        if (!searchResult.ok) throw new Error(searchResult.error.message);
+        if (!searchResult.ok) throw searchResult.error;
         const candidate_obj = searchResult.data[0];
 
         const external_id = candidate_obj.source?.external_id;
-        if (!external_id) throw new Error('No external_id found');
+        if (!external_id) throw new Error('Identifiant externe introuvable');
         const candidateResult =
           await searchGuessObjectByExternalId(external_id);
-        if (!candidateResult.ok) throw new Error(candidateResult.error.message);
+        if (!candidateResult.ok) throw candidateResult.error;
         const full_obj = candidateResult.data;
-        if (!full_obj) throw new Error('Object not found');
+        if (!full_obj) throw new Error('Objet introuvable');
         if (obj.description) full_obj.short_description = obj.description;
 
         const locationId = full_obj.world_location?.id;
-        if (!locationId) throw new Error('No world location found');
+        if (!locationId) throw new Error('Localisation introuvable');
 
         const saveResult = await saveGuessObject({
           ...full_obj,
           world_location_id: locationId,
         });
-        if (!saveResult.ok) throw new Error(saveResult.error.message);
+        if (!saveResult.ok) throw saveResult.error;
 
         await addOrUpdateGuessObjectToCategory(saveResult.data);
 
@@ -139,13 +147,14 @@ export function ImportCSVPopup({
           return newRecap;
         });
       } catch (error) {
-        console.error(`Error importing ${obj.name}: ${error}`);
+        const errorMessage = resolveImportErrorMessage(error);
+        console.error(`Error importing ${obj.name}: ${errorMessage}`);
 
         setImportRecap((prev) => {
           const newRecap = {
             ...prev,
             failed: prev.failed + 1,
-            failed_objects: [...prev.failed_objects, obj],
+            failed_objects: [...prev.failed_objects, { ...obj, errorMessage }],
           };
           setProgress(
             Math.round(
@@ -251,7 +260,9 @@ export function ImportCSVPopup({
                   <div className="h-max-24 overflow-y-auto">
                     <ul className="list-disc pl-5">
                       {importRecap.failed_objects.map((obj) => (
-                        <li key={obj.name}>{obj.name}</li>
+                        <li key={obj.name}>
+                          {obj.name} — {obj.errorMessage}
+                        </li>
                       ))}
                     </ul>
                   </div>

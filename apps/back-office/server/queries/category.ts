@@ -9,10 +9,13 @@ export async function getCategories(): Promise<Category[]> {
   return result.body;
 }
 
-export async function getFullCategory(id: string): Promise<FullCategory> {
+export async function getFullCategory(
+  id: string,
+): Promise<FullCategory | null> {
   const result = await adminClient.category.getFullCategory({
     params: { id },
   });
+  if (result.status === 404) return null;
   throwOnError(result);
   return result.body;
 }

@@ -7,6 +7,7 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/actions/category';
@@ -33,6 +34,7 @@ export function CategoryBuilder({
   categories,
 }: CategoryBuilderProps) {
   const router = useRouter();
+  const { invokeError } = useError();
   const [category, setCategory] = useState<FullCategory>(fetchedCategory);
   const [guessObjectDraft, setGuessObjectDraft] = useState<GuessObjectDraft>();
   const [isSaveLoading, setIsSaveLoading] = useState(false);
@@ -72,13 +74,13 @@ export function CategoryBuilder({
   async function handleSaveGuessObjectDraft(): Promise<void> {
     try {
       if (!guessObjectDraft) {
-        alert('Objet non valide');
+        invokeError('Objet non valide');
         return;
       }
 
       const locationId = guessObjectDraft.world_location?.id;
       if (!locationId) {
-        alert('Localisation non valide, veuillez resélectionner');
+        invokeError('Localisation non valide, veuillez resélectionner');
         return;
       }
 
@@ -94,24 +96,32 @@ export function CategoryBuilder({
           ...rest,
           world_location_id: locationId,
         });
-        if (!result.ok) throw new Error(result.error.message);
+        if (!result.ok) {
+          invokeError(result.error);
+          return;
+        }
         id = result.data;
       } else {
         const result = await saveGuessObject({
           ...rest,
           world_location_id: locationId,
         });
-        if (!result.ok) throw new Error(result.error.message);
+        if (!result.ok) {
+          invokeError(result.error);
+          return;
+        }
         id = result.data;
       }
 
-      if (!id) throw new Error('Error saving or updating object');
+      if (!id) {
+        invokeError("Erreur lors de l'enregistrement de l'objet");
+        return;
+      }
 
       await addOrUpdateGuessObjectToCategory(id);
       handleCreateGuessObject();
     } catch (error) {
-      console.log(error);
-      alert("Erreur lors de l'enregistrement de l'objet");
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
     }
   }
 
@@ -126,10 +136,11 @@ export function CategoryBuilder({
         parentId: category.parentId,
       };
       const result = await saveCategory(category.id, updatedCategory);
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) {
+        invokeError(result.error);
+      }
     } catch (error) {
-      alert("Erreur lors de l'enregistrement de la catégorie");
-      console.error(error);
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
     } finally {
       setIsSaveLoading(false);
     }
@@ -144,11 +155,14 @@ export function CategoryBuilder({
     try {
       setIsSaveLoading(true);
       const result = await deleteCategory(category.id);
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) {
+        invokeError(result.error);
+        return;
+      }
       router.push('/dashboard');
     } catch (error) {
-      alert('Erreur lors de la suppression de la catégorie');
-      console.error(error);
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+    } finally {
       setIsSaveLoading(false);
     }
   }
@@ -157,7 +171,10 @@ export function CategoryBuilder({
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
       if (!objectResult) return;
-      if (!objectResult.ok) throw new Error(objectResult.error.message);
+      if (!objectResult.ok) {
+        invokeError(objectResult.error);
+        return;
+      }
       const object = objectResult.data;
 
       const updatedCategory: UpdateCategory = {
@@ -168,7 +185,10 @@ export function CategoryBuilder({
       };
 
       const saveResult = await saveCategory(category.id, updatedCategory);
-      if (!saveResult.ok) throw new Error(saveResult.error.message);
+      if (!saveResult.ok) {
+        invokeError(saveResult.error);
+        return;
+      }
 
       setCategory((prev) => {
         if (!prev.guessObjects) prev.guessObjects = [];
@@ -191,8 +211,7 @@ export function CategoryBuilder({
 
       setGuessObjectDraft(object);
     } catch (error) {
-      alert("Erreur lors de l'ajout de l'objet");
-      console.error(error);
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
     }
   }
 
@@ -215,11 +234,13 @@ export function CategoryBuilder({
       };
       setCategory({ ...category, guessObjects: updatedGuessObjects });
       const removeResult = await saveCategory(category.id, updated_category);
-      if (!removeResult.ok) throw new Error(removeResult.error.message);
+      if (!removeResult.ok) {
+        invokeError(removeResult.error);
+        return;
+      }
       setGuessObjectDraft(undefined);
     } catch (error) {
-      alert("Erreur lors de la suppression de l'objet");
-      console.error(error);
+      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
     }
   }
 

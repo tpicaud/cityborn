@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 export function CreateCategoryDialog({
   handleCreateCategory,
 }: {
-  handleCreateCategory: (createCategory: CreateCategory) => Promise<void>;
+  handleCreateCategory: (createCategory: CreateCategory) => Promise<boolean>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const [createCategory, setCreateCategory] = useState<CreateCategory>({
@@ -17,14 +17,11 @@ export function CreateCategoryDialog({
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    try {
-      e.preventDefault();
-      await handleCreateCategory(createCategory);
+    e.preventDefault();
+    const success = await handleCreateCategory(createCategory);
+    if (success) {
       dialog.hide();
       setCreateCategory({ name: '', description: '', isPublished: false });
-    } catch (error) {
-      alert('Erreur lors de la création de la catégorie');
-      console.error(error);
     }
   };
 
