@@ -100,7 +100,6 @@ export default function UiComponentsPage() {
                 size="lg"
                 onClick={async () => {
                   await new Promise((res) => setTimeout(res, 2000));
-                  console.log('loader finished');
                 }}
               >
                 LABEL

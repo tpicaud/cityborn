@@ -17,12 +17,10 @@ export const useSocket = () => {
     }
 
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
       setConnected(true);
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
       setHasDisconnected(true);
       setConnected(false);
     });

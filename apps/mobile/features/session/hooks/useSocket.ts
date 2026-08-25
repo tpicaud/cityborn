@@ -16,7 +16,6 @@ export const useSocket = () => {
     let mounted = true;
 
     initSocket().then((socket: Socket) => {
-      console.log('initialized');
       if (!mounted) return;
 
       socketRef.current = socket;
@@ -26,12 +25,10 @@ export const useSocket = () => {
       }
 
       socket.on('connect', () => {
-        console.log('Socket connected:', socket.id);
         setConnected(true);
       });
 
       socket.on('disconnect', () => {
-        console.log('Socket disconnected');
         setHasDisconnected(true);
         setConnected(false);
       });
@@ -64,7 +61,6 @@ export const useSocket = () => {
       socket.disconnect();
 
       socketRef.current = null;
-      console.log('Cleaning up socket');
     };
   }, [invokeError]);
 

@@ -67,7 +67,6 @@ export async function verifyAppleIdToken(
       },
       (err, decoded) => {
         if (err) return reject(err);
-        console.log(decoded);
         resolve(decoded);
       },
     );

@@ -47,10 +47,6 @@ export function useSoloSession(localPlayerID: string): IUseSession {
     updateSession({ ...prev, currentGame: game });
   }, [game, updateSession]);
 
-  useEffect(() => {
-    console.log(session);
-  }, [session]);
-
   const updateGameConfig = (newConfig: Partial<GameConfig>) => {
     const prev = sessionRef.current;
     if (!prev)

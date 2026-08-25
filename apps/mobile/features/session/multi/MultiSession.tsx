@@ -112,17 +112,13 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const handlePlayAgain = async () => {
     try {
       await multiSession.playAgain();
-    } catch (error) {
-      console.log(error);
-    }
+    } catch {}
   };
 
   const handleExitGame = async () => {
     try {
       await multiSession.exitGame();
-    } catch (error) {
-      console.log(error);
-    }
+    } catch {}
   };
 
   ///////////////
