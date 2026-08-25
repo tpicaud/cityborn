@@ -34,8 +34,6 @@ export const SignInWithGoogleButton = () => {
         if (!result.ok) throw result.error;
         setUser(result.data);
         router.push('/');
-      } else {
-        console.log('Google sign in modal closed by user');
       }
     } catch (error) {
       console.error(error);

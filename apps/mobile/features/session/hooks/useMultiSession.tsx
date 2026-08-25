@@ -45,7 +45,6 @@ export function useMultiSession(
       throw new Error('Reconnection failed: player or session not initialized');
 
     try {
-      console.log('Reconnecting player to session...');
       const sessionID = session.id;
       return new Promise<void>((resolve, reject) => {
         const body = { sessionID, playerID: localPlayerID };
@@ -119,9 +118,7 @@ export function useMultiSession(
     };
 
     on('session:update', handleSessionUpdate);
-    on('connection_error', (error) => {
-      console.log(error);
-    });
+    on('connection_error', () => {});
 
     return () => {
       off('session:update', handleSessionUpdate);

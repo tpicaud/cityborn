@@ -63,17 +63,13 @@ export default function SoloSession() {
   const handlePlayAgain = async () => {
     try {
       await soloSession.playAgain();
-    } catch (error) {
-      console.log(error);
-    }
+    } catch {}
   };
 
   const handleExitGame = async () => {
     try {
       await soloSession.exitGame();
-    } catch (error) {
-      console.log(error);
-    }
+    } catch {}
   };
 
   ///////////////

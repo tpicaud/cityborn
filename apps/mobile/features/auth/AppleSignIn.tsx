@@ -60,7 +60,6 @@ export const SignInWithAppleButton = () => {
 
   function handleAppleSignInError(error: unknown): never {
     if (error instanceof CodedError && error.code === 'ERR_REQUEST_CANCELED') {
-      console.log('Apple sign in canceled by user');
       throw error;
     }
 

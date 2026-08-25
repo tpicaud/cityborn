@@ -14,11 +14,30 @@
       "correctness": {
         "noUnusedImports": "error"
       },
+
       "style": {
         "useImportType": "error"
+      },
+      "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "options": { "allow": ["warn", "error"] }
+        }
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/api/scripts/**", "apps/mobile/scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

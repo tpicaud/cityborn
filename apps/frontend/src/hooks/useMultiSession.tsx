@@ -70,7 +70,6 @@ export function useMultiSession(
     if (!session || !localPlayerID)
       throw new Error('Reconnection failed: player or session not initialized');
     try {
-      console.log('Reconnecting player to session...');
       return new Promise<void>((resolve, reject) => {
         emit(
           'session:reconnect',
@@ -111,7 +110,6 @@ export function useMultiSession(
 
   useEffect(() => {
     const handleSessionUpdate = (s: Session) => {
-      console.log('Session update: ', s);
       setSession((prev) => ({
         ...s,
         currentGame: reconcileGuessObjects(prev?.currentGame, s.currentGame),
@@ -119,9 +117,7 @@ export function useMultiSession(
     };
 
     on('session:update', handleSessionUpdate);
-    on('connection_error', (error: unknown) => {
-      console.log(error);
-    });
+    on('connection_error', () => {});
     return () => {
       off('session:update', handleSessionUpdate);
     };
