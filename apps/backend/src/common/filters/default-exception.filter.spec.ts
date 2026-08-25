@@ -8,9 +8,9 @@ import {
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import {
-  AllExceptionsFilter,
+  DefaultExceptionFilter,
   exceptionToApiError,
-} from './all-exceptions.filter';
+} from './default-exception.filter';
 
 function createHttpHost() {
   const json = jest.fn();
@@ -159,7 +159,7 @@ describe('exceptionToApiError', () => {
   });
 });
 
-describe('AllExceptionsFilter', () => {
+describe('DefaultExceptionFilter', () => {
   let warnSpy: jest.SpyInstance;
   let errorSpy: jest.SpyInstance;
 
@@ -174,7 +174,7 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('writes the ApiError payload to the HTTP response with the right status', () => {
-    const filter = new AllExceptionsFilter();
+    const filter = new DefaultExceptionFilter();
     const { host, status, json } = createHttpHost();
     const exception = new NotFoundException({
       code: ErrorCode.SESSION_NOT_FOUND,
@@ -192,7 +192,7 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('emits an "error" event with the ApiError payload in WS context', () => {
-    const filter = new AllExceptionsFilter();
+    const filter = new DefaultExceptionFilter();
     const { host, emit } = createWsHost();
     const exception = new WsException({
       code: ErrorCode.SESSION_FORBIDDEN_HOST,
@@ -209,7 +209,7 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('logs a warning (not an error) for a known, non-UNKNOWN_ERROR code', () => {
-    const filter = new AllExceptionsFilter();
+    const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new NotFoundException({
       code: ErrorCode.SESSION_NOT_FOUND,
@@ -223,7 +223,7 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('logs an error (not a warning) for an UNKNOWN_ERROR code', () => {
-    const filter = new AllExceptionsFilter();
+    const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new Error('database down');
 
@@ -234,7 +234,7 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('neither writes a response nor emits, and logs, for an unrecognized execution context', () => {
-    const filter = new AllExceptionsFilter();
+    const filter = new DefaultExceptionFilter();
     const { host } = createUnknownHost('rpc');
 
     expect(() => filter.catch(new Error('n/a'), host)).not.toThrow();

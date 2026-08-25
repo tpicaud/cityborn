@@ -1,7 +1,7 @@
 import { isApiError } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { useCallback, useEffect, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { useError } from '@/contexts/ErrorContext';
 import { getSocket } from '@/lib/socket';
 
 export const useSocket = () => {

@@ -7,10 +7,8 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { catchError, type Observable, of } from 'rxjs';
-import {
-  exceptionToApiError,
-  logApiError,
-} from '../filters/all-exceptions.filter';
+import { exceptionToApiError } from '../filters/default-exception.filter';
+import { logApiError } from '../filters/utils';
 
 @Injectable()
 export class WsErrorInterceptor implements NestInterceptor {

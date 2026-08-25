@@ -1,9 +1,9 @@
 'use client';
 
+import { useError } from '@cityborn/client';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useError } from '@/contexts/ErrorContext';
 import { signInWithGoogle, signUp } from '@/server/actions/auth';
 
 interface FormValues {

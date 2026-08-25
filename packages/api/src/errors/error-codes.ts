@@ -69,6 +69,10 @@ export enum ErrorCode {
   // Email
   EMAIL_SEND_FAILED = 'EMAIL_SEND_FAILED',
 
+  // Prisma
+  RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS',
+  RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+
   // Classic error codes
   BAD_REQUEST = 'BAD_REQUEST',
 

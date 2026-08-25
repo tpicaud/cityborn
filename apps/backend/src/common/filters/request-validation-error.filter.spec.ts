@@ -5,7 +5,7 @@ import { RequestValidationError } from '@ts-rest/nest';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { z } from 'zod';
-import { AllExceptionsFilter } from './all-exceptions.filter';
+import { DefaultExceptionFilter } from './default-exception.filter';
 import { RequestValidationErrorFilter } from './request-validation-error.filter';
 
 @Controller()
@@ -33,7 +33,7 @@ describe('RequestValidationErrorFilter registration order', () => {
     app = moduleRef.createNestApplication();
 
     app.useGlobalFilters(
-      new AllExceptionsFilter(),
+      new DefaultExceptionFilter(),
       new RequestValidationErrorFilter(),
     );
     await app.init();

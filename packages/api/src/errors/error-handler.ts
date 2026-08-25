@@ -84,6 +84,11 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.EMAIL_SEND_FAILED]:
     "Erreur lors de l'envoi de l'email. Veuillez réessayer.",
 
+  // Prisma
+  [ErrorCode.RESOURCE_ALREADY_EXISTS]: 'Cette ressource existe déjà.',
+  [ErrorCode.RESOURCE_NOT_FOUND]:
+    "Cette ressource n'existe pas ou a déjà été supprimée.",
+
   // Classic
   [ErrorCode.BAD_REQUEST]: 'Requête invalide.',
   [ErrorCode.TOKEN_EXPIRED]: 'Session expirée. Veuillez vous reconnecter.',

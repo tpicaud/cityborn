@@ -1,13 +1,12 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DialogContent, DialogTitle } from '@mui/material';
-import type { Dispatch, SetStateAction } from 'react';
 import { Dialog } from './Dialog';
 
 interface ErrorDialogProps {
   errorMessage: string;
   open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  onExited: () => void;
+  setOpen: (open: boolean) => void;
+  onExited?: () => void;
 }
 
 export function ErrorDialog({
