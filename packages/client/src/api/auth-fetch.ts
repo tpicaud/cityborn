@@ -1,9 +1,11 @@
+import {
+  type ApiError,
+  ApiErrors,
+  AuthResponseSchema,
+  ErrorCode,
+} from '@cityborn/api';
 import type { ApiFetcherArgs } from '@ts-rest/core';
-import { ApiErrors } from './api-errors';
-import { ErrorCode } from './errors/error-codes';
-import type { ApiError } from './schemas/api-error.schema';
-import { AuthResponseSchema } from './schemas/user.schema';
-import type { TokenStorage } from './types/token-storage';
+import type { TokenStorage } from '../types/token-storage';
 
 export interface AuthFetchOptions {
   onResponseHeaders?: (headers: Headers) => void;

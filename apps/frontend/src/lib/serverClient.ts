@@ -1,4 +1,4 @@
-import { createApiClient } from '@cityborn/api';
+import { createApiClient } from '@cityborn/client';
 import { cookies } from 'next/headers';
 import { WebTokenStorage } from './tokenStorage';
 

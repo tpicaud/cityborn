@@ -1,4 +1,4 @@
-import { createApiClient } from '@cityborn/api';
+import { createApiClient } from '@cityborn/client';
 
 const adminToken = process.env.ADMIN_DASHBOARD_TOKEN ?? '';
 
