@@ -15,7 +15,8 @@
     "@cityborn/api": "workspace:*",
     "@cityborn/core": "workspace:*",
     "typescript": "^6.0.3",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "zod": "^3.25.76"
   },
   "peerDependencies": {
     "react": "19.2.3",

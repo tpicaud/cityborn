@@ -1,31 +1,21 @@
+import { type CreateUser, resolveErrorMessage } from '@cityborn/api';
 import {
-  type CreateUser,
-  CreateUserSchema,
-  resolveErrorMessage,
-} from '@cityborn/api';
-import { useAuth } from '@cityborn/client';
+  SignUpFormSchema,
+  type SignUpFormValues,
+  useAuth,
+} from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { z } from 'zod';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { signUp } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
-
-const SignUpFormSchema = CreateUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
-
-type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
 
 export const SignUpComponent = () => {
   const router = useRouter();

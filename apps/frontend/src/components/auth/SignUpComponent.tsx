@@ -1,22 +1,15 @@
 'use client';
 
-import { CreateUserSchema } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import {
+  SignUpFormSchema,
+  type SignUpFormValues,
+  useError,
+} from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { signInWithGoogle, signUp } from '@/server/use-server/auth';
-
-const SignUpFormSchema = CreateUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
-
-type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
 
 export const SignUpComponent = () => {
   const { invokeError } = useError();
