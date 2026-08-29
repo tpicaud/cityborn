@@ -9,17 +9,6 @@ import { useForm } from 'react-hook-form';
 import { signIn, signInWithGoogle } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
-const SIGN_IN_FORM_FIELDS = [
-  'identifier',
-  'password',
-] as const satisfies readonly (keyof SignIn)[];
-
-function isSignInFormField(
-  path: string,
-): path is (typeof SIGN_IN_FORM_FIELDS)[number] {
-  return (SIGN_IN_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export const SignInComponent = () => {
   const { invokeError } = useError();
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
@@ -27,7 +16,6 @@ export const SignInComponent = () => {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
@@ -68,19 +56,7 @@ export const SignInComponent = () => {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isSignInFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   return (

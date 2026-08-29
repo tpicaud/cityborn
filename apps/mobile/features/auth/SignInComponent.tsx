@@ -1,8 +1,4 @@
-import {
-  getFriendlyErrorMessage,
-  type SignIn,
-  SignInSchema,
-} from '@cityborn/api';
+import { resolveErrorMessage, type SignIn, SignInSchema } from '@cityborn/api';
 import { useAuth } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -17,17 +13,6 @@ import { signIn } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-const SIGN_IN_FORM_FIELDS = [
-  'identifier',
-  'password',
-] as const satisfies readonly (keyof SignIn)[];
-
-function isSignInFormField(
-  path: string,
-): path is (typeof SIGN_IN_FORM_FIELDS)[number] {
-  return (SIGN_IN_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export const SignInComponent = () => {
   const router = useRouter();
   const { setUser } = useAuth();
@@ -35,7 +20,6 @@ export const SignInComponent = () => {
   const {
     control,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
@@ -52,19 +36,7 @@ export const SignInComponent = () => {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      setErrorMessage(getFriendlyErrorMessage(result.error));
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isSignInFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      setErrorMessage(fieldError.message);
-    }
+    setErrorMessage(resolveErrorMessage(result.error));
   });
 
   return (

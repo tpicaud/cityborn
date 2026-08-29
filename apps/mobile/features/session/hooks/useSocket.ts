@@ -35,15 +35,11 @@ export const useSocket = () => {
 
       socket.on('connect_error', (error: Error) => {
         setHasDisconnected(false);
-        invokeError(error.message);
+        invokeError(error, 'La connexion au serveur a échoué.');
       });
 
       socket.on('error', (error: ApiError) => {
-        invokeError({
-          code: error.code,
-          message: error.message,
-          statusCode: error.statusCode,
-        });
+        invokeError(error);
       });
     });
 

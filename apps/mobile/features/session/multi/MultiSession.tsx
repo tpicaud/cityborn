@@ -1,9 +1,4 @@
-import {
-  type GameConfig,
-  type Guess,
-  isApiError,
-  SessionStatus,
-} from '@cityborn/api';
+import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
 import { useAuth, useError } from '@cityborn/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LoaderIcon from '@/components/ui/LoaderIcon';
@@ -36,7 +31,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
       } catch (error) {
-        invokeError(isApiError(error) ? error : String(error));
+        invokeError(error);
       }
     },
     [multiSession, invokeError],
@@ -69,7 +64,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     try {
       await multiSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(isApiError(error) ? error : String(error));
+      invokeError(error);
     }
   };
 
@@ -81,7 +76,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     try {
       await multiSession.startGame();
     } catch (error) {
-      invokeError(isApiError(error) ? error : String(error));
+      invokeError(error);
     }
   };
 
@@ -89,7 +84,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     try {
       multiSession.guess(guess);
     } catch (error) {
-      invokeError(isApiError(error) ? error : String(error));
+      invokeError(error);
     }
   };
 
@@ -97,7 +92,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     try {
       multiSession.nextRound();
     } catch (error) {
-      invokeError(isApiError(error) ? error : String(error));
+      invokeError(error);
     }
   };
 
@@ -105,7 +100,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     try {
       await multiSession.endGame();
     } catch (error) {
-      invokeError(isApiError(error) ? error : String(error));
+      invokeError(error);
     }
   };
 

@@ -18,16 +18,6 @@ const JoinSessionSchema = z.object({
 
 type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
 
-const JOIN_SESSION_FORM_FIELDS = [
-  'code',
-] as const satisfies readonly (keyof JoinSessionFormValues)[];
-
-function isJoinSessionFormField(
-  path: string,
-): path is (typeof JOIN_SESSION_FORM_FIELDS)[number] {
-  return (JOIN_SESSION_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export default function Play() {
   const { user } = useAuth();
   const { invokeError } = useError();
@@ -36,7 +26,6 @@ export default function Play() {
   const {
     control,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
@@ -64,19 +53,7 @@ export default function Play() {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isJoinSessionFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   return (

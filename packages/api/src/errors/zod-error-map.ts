@@ -66,4 +66,6 @@ export const frenchZodErrorMap: z.ZodErrorMap = (issue, ctx) => {
   }
 };
 
-z.setErrorMap(frenchZodErrorMap);
+export function installFrenchZodErrorMap(): void {
+  z.setErrorMap(frenchZodErrorMap);
+}

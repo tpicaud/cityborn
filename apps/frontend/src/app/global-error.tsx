@@ -1,5 +1,6 @@
 'use client';
 
+import { resolveErrorMessage } from '@cityborn/api';
 import { useEffect } from 'react';
 
 export default function GlobalError({
@@ -12,6 +13,8 @@ export default function GlobalError({
   useEffect(() => {
     console.error(error);
   }, [error]);
+
+  const message = resolveErrorMessage(error);
 
   return (
     <html lang="fr">
@@ -30,7 +33,7 @@ export default function GlobalError({
         <p style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>
           Une erreur critique est survenue
         </p>
-        <p>{error.message || "Quelque chose s'est mal passé."}</p>
+        <p>{message}</p>
         <button
           type="button"
           onClick={() => reset()}

@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import { getFriendlyErrorMessage, isApiError } from '@cityborn/api';
+import { resolveErrorMessage } from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -14,12 +14,6 @@ interface Objects {
   name: string;
   description?: string;
   errorMessage?: string;
-}
-
-function resolveImportErrorMessage(error: unknown): string {
-  if (isApiError(error)) return getFriendlyErrorMessage(error);
-  if (error instanceof Error) return error.message;
-  return 'Erreur inconnue';
 }
 
 interface ImportRecap {
@@ -147,7 +141,7 @@ export function ImportCSVPopup({
           return newRecap;
         });
       } catch (error) {
-        const errorMessage = resolveImportErrorMessage(error);
+        const errorMessage = resolveErrorMessage(error);
         console.error(`Error importing ${obj.name}: ${errorMessage}`);
 
         setImportRecap((prev) => {

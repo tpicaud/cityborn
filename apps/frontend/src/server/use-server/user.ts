@@ -1,7 +1,6 @@
 'use server';
 
-import type { GameRecord } from '@cityborn/api';
-import { type ApiResult, toApiResult } from '@cityborn/api';
+import { type ApiResult, type GameRecord, toApiResult } from '@cityborn/api';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function getGameRecords(): Promise<ApiResult<GameRecord[]>> {

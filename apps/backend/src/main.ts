@@ -1,3 +1,4 @@
+import { installFrenchZodErrorMap } from '@cityborn/api';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
@@ -12,6 +13,8 @@ import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-hea
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 async function bootstrap() {
+  installFrenchZodErrorMap();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(apiVersionHeaderMiddleware);

@@ -2,7 +2,6 @@ import {
   type ApiError,
   type GameConfig,
   type Guess,
-  isApiError,
   type Session,
   SessionStatus,
 } from '@cityborn/api';
@@ -92,7 +91,7 @@ export function useMultiSession(
           await reconnect();
         }
       } catch (error) {
-        invokeError(isApiError(error) ? error : String(error));
+        invokeError(error, 'La reconnexion à la session a échoué.');
       }
     };
     autoReconnect();

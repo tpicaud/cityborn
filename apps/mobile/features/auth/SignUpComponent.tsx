@@ -1,44 +1,21 @@
+import { type CreateUser, resolveErrorMessage } from '@cityborn/api';
 import {
-  type CreateUser,
-  CreateUserSchema,
-  getFriendlyErrorMessage,
-} from '@cityborn/api';
-import { useAuth } from '@cityborn/client';
+  SignUpFormSchema,
+  type SignUpFormValues,
+  useAuth,
+} from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { z } from 'zod';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { signUp } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
-
-const SignUpFormSchema = CreateUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
-
-type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
-
-const SIGN_UP_FORM_FIELDS = [
-  'username',
-  'email',
-  'password',
-  'confirmPassword',
-] as const satisfies readonly (keyof SignUpFormValues)[];
-
-function isSignUpFormField(
-  path: string,
-): path is (typeof SIGN_UP_FORM_FIELDS)[number] {
-  return (SIGN_UP_FORM_FIELDS as readonly string[]).includes(path);
-}
 
 export const SignUpComponent = () => {
   const router = useRouter();
@@ -47,7 +24,6 @@ export const SignUpComponent = () => {
   const {
     control,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema),
@@ -75,19 +51,7 @@ export const SignUpComponent = () => {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      setErrorMessage(getFriendlyErrorMessage(result.error));
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isSignUpFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      setErrorMessage(fieldError.message);
-    }
+    setErrorMessage(resolveErrorMessage(result.error));
   });
 
   return (

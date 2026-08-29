@@ -1,42 +1,21 @@
 'use client';
 
-import { CreateUserSchema } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import {
+  SignUpFormSchema,
+  type SignUpFormValues,
+  useError,
+} from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { signInWithGoogle, signUp } from '@/server/use-server/auth';
-
-const SignUpFormSchema = CreateUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
-
-type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
-
-const SIGN_UP_FORM_FIELDS = [
-  'username',
-  'email',
-  'password',
-  'confirmPassword',
-] as const satisfies readonly (keyof SignUpFormValues)[];
-
-function isSignUpFormField(
-  path: string,
-): path is (typeof SIGN_UP_FORM_FIELDS)[number] {
-  return (SIGN_UP_FORM_FIELDS as readonly string[]).includes(path);
-}
 
 export const SignUpComponent = () => {
   const { invokeError } = useError();
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema),
@@ -81,19 +60,7 @@ export const SignUpComponent = () => {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isSignUpFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   return (

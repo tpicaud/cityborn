@@ -121,7 +121,7 @@ export function CategoryBuilder({
       await addOrUpdateGuessObjectToCategory(id);
       handleCreateGuessObject();
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 
@@ -140,7 +140,7 @@ export function CategoryBuilder({
         invokeError(result.error);
       }
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     } finally {
       setIsSaveLoading(false);
     }
@@ -161,7 +161,7 @@ export function CategoryBuilder({
       }
       router.push('/dashboard');
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     } finally {
       setIsSaveLoading(false);
     }
@@ -211,7 +211,7 @@ export function CategoryBuilder({
 
       setGuessObjectDraft(object);
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 
@@ -240,7 +240,7 @@ export function CategoryBuilder({
       }
       setGuessObjectDraft(undefined);
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 

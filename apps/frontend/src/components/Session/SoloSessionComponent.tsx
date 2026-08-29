@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  type CategoryTree,
-  type GameConfig,
-  type Guess,
-  isApiError,
-} from '@cityborn/api';
+import type { CategoryTree, GameConfig, Guess } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
@@ -33,7 +28,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -45,7 +40,7 @@ export default function SoloSessionComponent({
     try {
       await soloSession.startGame();
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -53,7 +48,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.guess(guess);
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -61,7 +56,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.nextRound();
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -69,7 +64,7 @@ export default function SoloSessionComponent({
     try {
       await soloSession.endGame();
     } catch (error) {
-      invokeError(isApiError(error) ? error : 'Une erreur est survenue');
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
