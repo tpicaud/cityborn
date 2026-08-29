@@ -4,6 +4,7 @@ import '../global.css';
 import 'react-native-get-random-values';
 import {
   getApiVersionInfo,
+  installFrenchZodErrorMap,
   isApiVersionOutdated,
   type User,
 } from '@cityborn/api';
@@ -24,6 +25,8 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { getCurrentUser } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
+
+installFrenchZodErrorMap();
 
 const localApiVersionInfo = getApiVersionInfo();
 

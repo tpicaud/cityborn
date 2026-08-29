@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { z } from 'zod';
-import './zod-error-map';
+import { installFrenchZodErrorMap } from './zod-error-map';
+
+installFrenchZodErrorMap();
 
 function issueMessage(schema: z.ZodTypeAny, value: unknown): string {
   const result = schema.safeParse(value);
@@ -10,7 +12,7 @@ function issueMessage(schema: z.ZodTypeAny, value: unknown): string {
   return result.error.issues[0].message;
 }
 
-describe('frenchZodErrorMap (installed globally on import)', () => {
+describe('frenchZodErrorMap (via installFrenchZodErrorMap)', () => {
   test('required field', () => {
     assert.equal(
       issueMessage(z.object({ name: z.string() }), {}),

@@ -1,11 +1,13 @@
 'use client';
 
-import type { User } from '@cityborn/api';
+import { installFrenchZodErrorMap, type User } from '@cityborn/api';
 import { ErrorProvider } from '@cityborn/client';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { ReactNode } from 'react';
 import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
 import AuthProvider from '@/contexts/AuthContext';
+
+installFrenchZodErrorMap();
 
 export function AppProviders({
   user,
