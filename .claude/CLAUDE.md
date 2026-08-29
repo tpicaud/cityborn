@@ -13,6 +13,10 @@ Monorepo pnpm/turbo, TypeScript partout.
 - Les bonnes pratiques de code/architectures sont primordiale. Ne pas hésiter à proposer des refactos si l'architecture actuellement implémenté n'est pas recommandée
 - **Typage first** : le typage est primordial. Le projet doit être type-safe. Un typage clair améliore grandement la DX. Ne jamais utiliser `any` ni affaiblir un type pour faire passer le compilateur.
 
+## Maintenir ce guide à jour
+
+Dès qu'un changement modifie une convention ou une décision d'architecture décrite ici (gestion des erreurs, frontières des packages, structure d'un dossier, flux de données, garde-fous…), mettre à jour la section concernée de ce fichier dans le même lot de modifications. Le guide doit toujours refléter l'état réel du code.
+
 ## Style de code
 
 - **Éviter `as`** au maximum : un cast casse l'inférence de type et masque des erreurs potentielles. Préférer un typage correct en amont (narrowing, generics, schémas zod) plutôt qu'un cast.
@@ -25,6 +29,15 @@ Monorepo pnpm/turbo, TypeScript partout.
 const service = new RateLimitService(redisService); // ❌​ à éviter, "service" trop générique
 const rateLimitService = new RateLimitService(redisService) // ​✅​ naming précis
 ```
+
+## Gestion des erreurs
+
+- **Wrappers d'API** (server actions `use-server/`, `apps/mobile/lib/api/`) → `toApiResult(result)` → `ApiResult<T>` (`{ ok: true, data } | { ok: false, error: ApiError }`) ; le consommateur branche sur `result.ok`.
+- **Loaders de Server Component** (`server-only/`) → `unwrapApiResponse(result)` : renvoie le body typé, ou `throw` un `ApiResponseError` capté par `error.tsx`.
+- **Ne jamais `throw` un objet nu** : `throw new ApiResponseError(apiError)` (vraie `Error`, stack, `instanceof`).
+- **Afficher une erreur** : `useError()` → `invokeError(error)` (dialog). `invokeError` accepte `unknown` et normalise via `resolveErrorMessage` — ne pas pré-convertir chez l'appelant. Repli contextuel : `invokeError(error, 'message par défaut')`.
+- **Messages FR** : indexés sur `ErrorCode` dans `@cityborn/api` (`resolveErrorMessage` / `getFriendlyErrorMessage`), seule source. Map zod FR : appeler `installFrenchZodErrorMap()` au bootstrap de chaque app (pas d'effet de bord à l'import).
+- **Validation de formulaire** : `zodResolver` + schéma partagé (`@cityborn/api` ou `@cityborn/client`) côté client. On ne route pas les `fieldErrors` d'un 400 serveur vers les champs (le client valide déjà avec le même schéma) — `!result.ok` → `invokeError(result.error)`.
 
 ## Commandes utiles
 
