@@ -18,25 +18,11 @@ const SignUpFormSchema = CreateUserSchema.extend({
 
 type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
 
-const SIGN_UP_FORM_FIELDS = [
-  'username',
-  'email',
-  'password',
-  'confirmPassword',
-] as const satisfies readonly (keyof SignUpFormValues)[];
-
-function isSignUpFormField(
-  path: string,
-): path is (typeof SIGN_UP_FORM_FIELDS)[number] {
-  return (SIGN_UP_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export const SignUpComponent = () => {
   const { invokeError } = useError();
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema),
@@ -81,19 +67,7 @@ export const SignUpComponent = () => {
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isSignUpFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   return (

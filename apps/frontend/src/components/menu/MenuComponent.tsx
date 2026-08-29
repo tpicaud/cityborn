@@ -24,16 +24,6 @@ const JoinSessionSchema = z.object({
 
 type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
 
-const JOIN_SESSION_FORM_FIELDS = [
-  'code',
-] as const satisfies readonly (keyof JoinSessionFormValues)[];
-
-function isJoinSessionFormField(
-  path: string,
-): path is (typeof JOIN_SESSION_FORM_FIELDS)[number] {
-  return (JOIN_SESSION_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export default function MenuComponent({
   setState,
 }: {
@@ -49,7 +39,6 @@ export default function MenuComponent({
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
@@ -78,19 +67,7 @@ export default function MenuComponent({
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isJoinSessionFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   const handleResendVerificationEmail = async () => {

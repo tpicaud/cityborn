@@ -11,19 +11,6 @@ import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../ui/Button';
 
-const CREATE_CATEGORY_FORM_FIELDS = [
-  'name',
-  'description',
-  'isPublished',
-  'parentId',
-] as const satisfies readonly (keyof CreateCategory)[];
-
-function isCreateCategoryFormField(
-  path: string,
-): path is (typeof CREATE_CATEGORY_FORM_FIELDS)[number] {
-  return (CREATE_CATEGORY_FORM_FIELDS as readonly string[]).includes(path);
-}
-
 export function CreateCategoryDialog({
   handleCreateCategory,
 }: {
@@ -37,7 +24,6 @@ export function CreateCategoryDialog({
     register,
     handleSubmit,
     reset,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateCategory>({
     resolver: zodResolver(CreateCategorySchema),
@@ -52,19 +38,7 @@ export function CreateCategoryDialog({
       return;
     }
 
-    const fieldErrors = result.error.fieldErrors;
-    if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(result.error);
-      return;
-    }
-
-    for (const fieldError of fieldErrors) {
-      if (isCreateCategoryFormField(fieldError.path)) {
-        setError(fieldError.path, { message: fieldError.message });
-        continue;
-      }
-      invokeError(fieldError.message);
-    }
+    invokeError(result.error);
   });
 
   return (

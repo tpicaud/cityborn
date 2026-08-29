@@ -101,6 +101,13 @@ export const getFriendlyErrorMessage = (error: ApiError): string => {
   return ERROR_MESSAGES[error.code];
 };
 
+function resolveApiErrorMessage(error: ApiError): string {
+  if (error.code === ErrorCode.BAD_REQUEST && error.message) {
+    return error.message;
+  }
+  return getFriendlyErrorMessage(error);
+}
+
 export function resolveErrorMessage(
   error: unknown,
   fallbackMessage?: string,
@@ -109,10 +116,10 @@ export function resolveErrorMessage(
     return error;
   }
   if (error instanceof ApiResponseError) {
-    return getFriendlyErrorMessage(error.apiError);
+    return resolveApiErrorMessage(error.apiError);
   }
   if (isApiError(error)) {
-    return getFriendlyErrorMessage(error);
+    return resolveApiErrorMessage(error);
   }
   if (fallbackMessage) {
     return fallbackMessage;
