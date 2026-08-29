@@ -1,4 +1,9 @@
-import { type ApiError, AuthResponseSchema, ErrorCode } from '@cityborn/api';
+import {
+  ApiResponseError,
+  AuthResponseSchema,
+  ErrorCode,
+  parseApiError,
+} from '@cityborn/api';
 import type { ApiFetcherArgs } from '@ts-rest/core';
 import type { TokenStorage } from '../types/token-storage';
 
@@ -76,11 +81,13 @@ export class AuthFetch {
       return new Promise((resolve, reject) => {
         this.refreshQueue.push(async (newToken) => {
           if (!newToken) {
-            reject({
-              code: ErrorCode.USER_REFRESH_FAILED,
-              message: 'Refresh failed',
-              statusCode: 401,
-            } satisfies ApiError);
+            reject(
+              new ApiResponseError({
+                code: ErrorCode.USER_REFRESH_FAILED,
+                message: 'Refresh failed',
+                statusCode: 401,
+              }),
+            );
             return;
           }
           try {
@@ -109,11 +116,11 @@ export class AuthFetch {
   private async refreshToken(): Promise<string> {
     const refreshToken = await this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
-      throw {
+      throw new ApiResponseError({
         code: ErrorCode.USER_REFRESH_FAILED,
         message: 'No refresh token available',
         statusCode: 401,
-      } satisfies ApiError;
+      });
     }
 
     const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
@@ -129,22 +136,19 @@ export class AuthFetch {
     }
 
     if (!response.ok) {
-      const error: ApiError = await response.json();
-      throw {
-        code: error.code,
-        message: error.message,
-        statusCode: error.statusCode,
-      };
+      throw new ApiResponseError(
+        parseApiError(response.status, await response.json()),
+      );
     }
 
     const raw = await response.json();
     const parsed = AuthResponseSchema.safeParse(raw);
     if (!parsed.success) {
-      throw {
+      throw new ApiResponseError({
         code: ErrorCode.UNKNOWN_ERROR,
         message: 'Unexpected error',
         statusCode: response.status,
-      } satisfies ApiError;
+      });
     }
     const { access_token, refresh_token } = parsed.data;
     await this.tokenStorage.setTokens(access_token, refresh_token);

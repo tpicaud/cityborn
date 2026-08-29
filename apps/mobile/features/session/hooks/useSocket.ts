@@ -1,5 +1,5 @@
 import type { ApiError } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -35,11 +35,11 @@ export const useSocket = () => {
 
       socket.on('connect_error', (error: Error) => {
         setHasDisconnected(false);
-        invokeError(error.message);
+        invokeError(error, 'La connexion au serveur a échoué.');
       });
 
       socket.on('error', (error: ApiError) => {
-        invokeError(toAppError(error));
+        invokeError(error);
       });
     });
 

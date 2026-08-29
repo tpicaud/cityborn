@@ -1,5 +1,9 @@
-import { type CreateUser, CreateUserSchema } from '@cityborn/api';
-import { toAppError, useAuth } from '@cityborn/client';
+import {
+  type CreateUser,
+  CreateUserSchema,
+  resolveErrorMessage,
+} from '@cityborn/api';
+import { useAuth } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -73,7 +77,7 @@ export const SignUpComponent = () => {
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      setErrorMessage(toAppError(result.error).message);
+      setErrorMessage(resolveErrorMessage(result.error));
       return;
     }
 

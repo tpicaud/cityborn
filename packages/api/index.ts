@@ -18,4 +18,3 @@ export * from './src/schemas/session.schema';
 export * from './src/schemas/user.schema';
 export * from './src/schemas/world-location.schema';
 export * from './src/types/http';
-export * from './src/types/nominal';

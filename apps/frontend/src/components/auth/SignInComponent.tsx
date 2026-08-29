@@ -1,7 +1,7 @@
 'use client';
 
 import { type SignIn, SignInSchema } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -41,7 +41,7 @@ export const SignInComponent = () => {
       try {
         setIsGoogleSignInFormSubmitting(true);
         const result = await signInWithGoogle({ idToken: response.credential });
-        if (!result.ok) return invokeError(toAppError(result.error));
+        if (!result.ok) return invokeError(result.error);
         window.location.reload();
       } finally {
         setIsGoogleSignInFormSubmitting(false);
@@ -70,7 +70,7 @@ export const SignInComponent = () => {
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(toAppError(result.error));
+      invokeError(result.error);
       return;
     }
 

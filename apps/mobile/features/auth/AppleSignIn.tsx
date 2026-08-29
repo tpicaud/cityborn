@@ -1,5 +1,4 @@
-import { isApiError } from '@cityborn/api';
-import { AppErrors, isAppError, toAppError, useAuth } from '@cityborn/client';
+import { useAuth, useError } from '@cityborn/client';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
   const { setUser } = useAuth();
+  const { invokeError } = useError();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +24,8 @@ export const SignInWithAppleButton = () => {
       });
 
       if (!credential.identityToken) {
-        throw AppErrors.appleNoIdentityToken();
+        invokeError("Apple n'a pas fourni de jeton d'identité.");
+        return;
       }
 
       const userDetails = extractAppleUserDetails(credential);
@@ -34,7 +35,10 @@ export const SignInWithAppleButton = () => {
         apple_user_id: credential.user,
         details: userDetails,
       });
-      if (!result.ok) throw result.error;
+      if (!result.ok) {
+        invokeError(result.error);
+        return;
+      }
       setUser(result.data);
       router.push('/');
     } catch (e) {
@@ -58,22 +62,13 @@ export const SignInWithAppleButton = () => {
     };
   }
 
-  function handleAppleSignInError(error: unknown): never {
+  function handleAppleSignInError(error: unknown): void {
     if (error instanceof CodedError && error.code === 'ERR_REQUEST_CANCELED') {
       throw error;
     }
 
     console.error('Apple sign in error:', error);
-
-    if (isAppError(error)) {
-      throw error;
-    }
-
-    if (isApiError(error)) {
-      throw toAppError(error);
-    }
-
-    throw AppErrors.appleSignInFailed();
+    invokeError(error, 'La connexion avec Apple a échoué.');
   }
 
   type AppleUserDetails = {

@@ -1,5 +1,5 @@
 import type { CategoryTree, GameConfig, Session } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
@@ -32,7 +32,7 @@ export function SoloLobby({
   useEffect(() => {
     const loadCategoryTrees = async () => {
       const result = await fetchCategoryTrees();
-      if (!result.ok) return invokeError(toAppError(result.error));
+      if (!result.ok) return invokeError(result.error);
       setCategoryTrees(result.data);
     };
     loadCategoryTrees();

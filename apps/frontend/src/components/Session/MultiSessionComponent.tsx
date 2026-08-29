@@ -6,7 +6,7 @@ import {
   type Guess,
   SessionStatus,
 } from '@cityborn/api';
-import { resolveCaughtError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
@@ -38,7 +38,7 @@ export default function MultiSessionComponent({
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
       } catch (error) {
-        invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+        invokeError(error, 'Une erreur est survenue');
       }
     },
     [multiSession.join, invokeError],
@@ -74,7 +74,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.updateHost(newHostID);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -82,7 +82,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -90,7 +90,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.kickPlayer(playerToKick);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -102,7 +102,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.startGame();
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -110,7 +110,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.guess(guess);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -118,7 +118,7 @@ export default function MultiSessionComponent({
     try {
       await multiSession.nextRound();
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 

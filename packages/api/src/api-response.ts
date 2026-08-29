@@ -60,12 +60,3 @@ export function unwrapApiResponse<T extends { status: number; body: unknown }>(
   assertSuccess(result);
   return result.body;
 }
-
-/** @deprecated Utiliser `unwrapApiResponse` (retourne le body) ou `toApiResult`. */
-export function throwOnError<T extends { status: number; body: unknown }>(
-  result: T,
-): asserts result is Extract<T, { status: HttpSuccessStatus }> {
-  if (result.status < 200 || result.status >= 300) {
-    throw parseApiError(result.status, result.body);
-  }
-}

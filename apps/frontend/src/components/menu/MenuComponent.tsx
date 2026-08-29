@@ -4,7 +4,7 @@ import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
 import { type Session, SessionMode } from '@cityborn/api';
-import { resolveCaughtError, toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -65,7 +65,7 @@ export default function MenuComponent({
       setOpenConnectionAlert(true);
     } else {
       const result = await createSession({ mode: SessionMode.MULTI });
-      if (!result.ok) return invokeError(toAppError(result.error));
+      if (!result.ok) return invokeError(result.error);
       const session: Session = result.data;
       router.push(`/session/multi/${session.id}`);
     }
@@ -80,7 +80,7 @@ export default function MenuComponent({
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(toAppError(result.error));
+      invokeError(result.error);
       return;
     }
 
@@ -98,7 +98,7 @@ export default function MenuComponent({
       await resendVerificationEmail();
       setVerificationEmailSent(true);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 

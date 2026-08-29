@@ -5,7 +5,7 @@ import {
   type CreateCategory,
   CreateCategorySchema,
 } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -54,7 +54,7 @@ export function CreateCategoryDialog({
 
     const fieldErrors = result.error.fieldErrors;
     if (!fieldErrors || fieldErrors.length === 0) {
-      invokeError(toAppError(result.error));
+      invokeError(result.error);
       return;
     }
 

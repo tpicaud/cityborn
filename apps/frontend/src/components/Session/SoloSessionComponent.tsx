@@ -1,7 +1,7 @@
 'use client';
 
 import type { CategoryTree, GameConfig, Guess } from '@cityborn/api';
-import { resolveCaughtError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
@@ -28,7 +28,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -40,7 +40,7 @@ export default function SoloSessionComponent({
     try {
       await soloSession.startGame();
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -48,7 +48,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.guess(guess);
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -56,7 +56,7 @@ export default function SoloSessionComponent({
     try {
       soloSession.nextRound();
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 
@@ -64,7 +64,7 @@ export default function SoloSessionComponent({
     try {
       await soloSession.endGame();
     } catch (error) {
-      invokeError(resolveCaughtError(error, 'Une erreur est survenue'));
+      invokeError(error, 'Une erreur est survenue');
     }
   };
 

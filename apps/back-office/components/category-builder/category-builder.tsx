@@ -7,7 +7,7 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/use-server/category';
@@ -97,7 +97,7 @@ export function CategoryBuilder({
           world_location_id: locationId,
         });
         if (!result.ok) {
-          invokeError(toAppError(result.error));
+          invokeError(result.error);
           return;
         }
         id = result.data;
@@ -107,7 +107,7 @@ export function CategoryBuilder({
           world_location_id: locationId,
         });
         if (!result.ok) {
-          invokeError(toAppError(result.error));
+          invokeError(result.error);
           return;
         }
         id = result.data;
@@ -121,7 +121,7 @@ export function CategoryBuilder({
       await addOrUpdateGuessObjectToCategory(id);
       handleCreateGuessObject();
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 
@@ -137,10 +137,10 @@ export function CategoryBuilder({
       };
       const result = await saveCategory(category.id, updatedCategory);
       if (!result.ok) {
-        invokeError(toAppError(result.error));
+        invokeError(result.error);
       }
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     } finally {
       setIsSaveLoading(false);
     }
@@ -156,12 +156,12 @@ export function CategoryBuilder({
       setIsSaveLoading(true);
       const result = await deleteCategory(category.id);
       if (!result.ok) {
-        invokeError(toAppError(result.error));
+        invokeError(result.error);
         return;
       }
       router.push('/dashboard');
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     } finally {
       setIsSaveLoading(false);
     }
@@ -172,7 +172,7 @@ export function CategoryBuilder({
       const objectResult = await getGuessObject(id, ['world_location_preview']);
       if (!objectResult) return;
       if (!objectResult.ok) {
-        invokeError(toAppError(objectResult.error));
+        invokeError(objectResult.error);
         return;
       }
       const object = objectResult.data;
@@ -186,7 +186,7 @@ export function CategoryBuilder({
 
       const saveResult = await saveCategory(category.id, updatedCategory);
       if (!saveResult.ok) {
-        invokeError(toAppError(saveResult.error));
+        invokeError(saveResult.error);
         return;
       }
 
@@ -211,7 +211,7 @@ export function CategoryBuilder({
 
       setGuessObjectDraft(object);
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 
@@ -235,12 +235,12 @@ export function CategoryBuilder({
       setCategory({ ...category, guessObjects: updatedGuessObjects });
       const removeResult = await saveCategory(category.id, updated_category);
       if (!removeResult.ok) {
-        invokeError(toAppError(removeResult.error));
+        invokeError(removeResult.error);
         return;
       }
       setGuessObjectDraft(undefined);
     } catch (error) {
-      invokeError(error instanceof Error ? error.message : 'Erreur inattendue');
+      invokeError(error, 'Erreur inattendue');
     }
   }
 

@@ -4,7 +4,7 @@ import type {
   OnlinePlayer,
   Session,
 } from '@cityborn/api';
-import { toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
@@ -46,7 +46,7 @@ export function MultiLobby({
   useEffect(() => {
     const loadCategoryTrees = async () => {
       const result = await fetchCategoryTrees();
-      if (!result.ok) return invokeError(toAppError(result.error));
+      if (!result.ok) return invokeError(result.error);
       setCategoryTrees(result.data);
     };
     loadCategoryTrees();

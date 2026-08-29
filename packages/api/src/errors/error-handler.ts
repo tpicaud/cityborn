@@ -101,12 +101,21 @@ export const getFriendlyErrorMessage = (error: ApiError): string => {
   return ERROR_MESSAGES[error.code];
 };
 
-export function resolveErrorMessage(error: unknown): string {
+export function resolveErrorMessage(
+  error: unknown,
+  fallbackMessage?: string,
+): string {
+  if (typeof error === 'string') {
+    return error;
+  }
   if (error instanceof ApiResponseError) {
     return getFriendlyErrorMessage(error.apiError);
   }
   if (isApiError(error)) {
     return getFriendlyErrorMessage(error);
+  }
+  if (fallbackMessage) {
+    return fallbackMessage;
   }
   if (error instanceof Error && error.message) {
     return error.message;

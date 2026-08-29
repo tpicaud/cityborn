@@ -5,7 +5,7 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
-import { resolveCaughtError, toAppError, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
 import { reconcileGuessObjects } from '@cityborn/core';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -72,7 +72,7 @@ export function useMultiSession(
   useEffect(() => {
     const loadSession = async () => {
       const result = await fetchSession(sessionID);
-      if (!result.ok) return invokeError(toAppError(result.error));
+      if (!result.ok) return invokeError(result.error);
       setSession(result.data);
     };
     loadSession();
@@ -91,7 +91,7 @@ export function useMultiSession(
           await reconnect();
         }
       } catch (error) {
-        invokeError(resolveCaughtError(error, String(error)));
+        invokeError(error, 'La reconnexion à la session a échoué.');
       }
     };
     autoReconnect();

@@ -1,5 +1,5 @@
 import type { GameConfig, Guess } from '@cityborn/api';
-import { resolveCaughtError, useAuth, useError } from '@cityborn/client';
+import { useAuth, useError } from '@cityborn/client';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { Game } from '../../game/Game';
@@ -20,7 +20,7 @@ export default function SoloSession() {
     try {
       soloSession.updateGameConfig(gameConfig);
     } catch (error) {
-      invokeError(resolveCaughtError(error, String(error)));
+      invokeError(error);
     }
   };
 
@@ -32,7 +32,7 @@ export default function SoloSession() {
     try {
       await soloSession.startGame();
     } catch (error) {
-      invokeError(resolveCaughtError(error, String(error)));
+      invokeError(error);
     }
   };
 
@@ -40,7 +40,7 @@ export default function SoloSession() {
     try {
       soloSession.guess(guess);
     } catch (error) {
-      invokeError(resolveCaughtError(error, String(error)));
+      invokeError(error);
     }
   };
 
@@ -48,7 +48,7 @@ export default function SoloSession() {
     try {
       soloSession.nextRound();
     } catch (error) {
-      invokeError(resolveCaughtError(error, String(error)));
+      invokeError(error);
     }
   };
 
@@ -56,7 +56,7 @@ export default function SoloSession() {
     try {
       await soloSession.endGame();
     } catch (error) {
-      invokeError(resolveCaughtError(error, String(error)));
+      invokeError(error);
     }
   };
 

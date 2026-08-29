@@ -1,10 +1,5 @@
 import type { GameRecord } from '@cityborn/api';
-import {
-  isoToLocalDate,
-  toAppError,
-  useAuth,
-  useError,
-} from '@cityborn/client';
+import { isoToLocalDate, useAuth, useError } from '@cityborn/client';
 import { calculateTotalPoints } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
@@ -34,7 +29,7 @@ export default function Profile() {
     setLoading(true);
     const result = await getGameRecords();
     setLoading(false);
-    if (!result.ok) return invokeError(toAppError(result.error));
+    if (!result.ok) return invokeError(result.error);
     setGamesRecords(result.data);
   }, [user, invokeError]);
 
@@ -49,7 +44,7 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     if (!user) return;
     const result = await deleteUser();
-    if (!result.ok) return invokeError(toAppError(result.error));
+    if (!result.ok) return invokeError(result.error);
     await signOut();
     setUser(null);
     setDeleteAccountModalOpen(false);
