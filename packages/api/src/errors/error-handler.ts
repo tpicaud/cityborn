@@ -1,4 +1,5 @@
-import type { ApiError } from '../schemas/api-error.schema';
+import { ApiResponseError } from '../api-response';
+import { type ApiError, isApiError } from '../schemas/api-error.schema';
 import { ErrorCode } from './error-codes';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
@@ -99,3 +100,16 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 export const getFriendlyErrorMessage = (error: ApiError): string => {
   return ERROR_MESSAGES[error.code];
 };
+
+export function resolveErrorMessage(error: unknown): string {
+  if (error instanceof ApiResponseError) {
+    return getFriendlyErrorMessage(error.apiError);
+  }
+  if (isApiError(error)) {
+    return getFriendlyErrorMessage(error);
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return "Quelque chose s'est mal passé.";
+}

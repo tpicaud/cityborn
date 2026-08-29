@@ -1,7 +1,6 @@
 'use client';
 
-import { isApiError } from '@cityborn/api';
-import { toAppError } from '@cityborn/client';
+import { resolveErrorMessage } from '@cityborn/api';
 import { useEffect } from 'react';
 
 export default function GlobalError({
@@ -15,9 +14,7 @@ export default function GlobalError({
     console.error(error);
   }, [error]);
 
-  const message = isApiError(error)
-    ? toAppError(error).message
-    : error.message || "Quelque chose s'est mal passé.";
+  const message = resolveErrorMessage(error);
 
   return (
     <html lang="fr">
