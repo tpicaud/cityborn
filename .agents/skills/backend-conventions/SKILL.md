@@ -20,4 +20,4 @@ description: Conventions backend NestJS Cityborn (apps/backend) — structure d'
 
 ## Garde-fou DB
 
-Ne jamais modifier une migration Prisma déjà appliquée/mergée : toujours en créer une nouvelle (`pnpm db:migrate`).
+Migrations Prisma : voir *Garde-fous* dans `AGENTS.md`.
