@@ -53,7 +53,7 @@ export type OldShape = { ... };
 
 ## Étapes
 
-1. Identifier précisément l'élément à déprécier et son remplaçant. Si le remplaçant n'existe pas, le créer d'abord (ou demander à l'utilisateur avant toute modification cassante du contrat — garde-fou CLAUDE.md).
+1. Identifier précisément l'élément à déprécier et son remplaçant. Si le remplaçant n'existe pas, le créer d'abord (ou demander à l'utilisateur avant toute modification cassante du contrat — garde-fou AGENTS.md).
 2. Ajouter le bloc JSDoc directement au-dessus de la déclaration, avec la date du jour.
 3. Vérifier que le marqueur est bien capté : `pnpm --dir packages/api check:deprecations` doit lister le symbole avec le bon nom et la bonne raison (statut ❓ attendu juste après l'ajout, tant que ce n'est pas encore déployé).
 4. Lancer `pnpm typecheck` et `pnpm check:api-compat` — l'ajout d'un JSDoc seul ne doit jamais les casser. Si ça casse, un autre changement s'est glissé en même temps : le séparer.
