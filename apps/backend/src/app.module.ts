@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
 import { loggerModuleParams } from './common/logger/logger.params';
+import { WideEventModule } from './common/wide-event/wide-event.module';
 import { ConnectionRegistryModule } from './connection-registry/connection-registry.module';
 import { EventModule } from './event/event.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
@@ -32,6 +33,7 @@ import { WorldLocationModule } from './world-location/world-location.module';
       envFilePath: '.env',
     }),
     LoggerModule.forRoot(loggerModuleParams),
+    WideEventModule,
     SentenceModule,
     SessionModule,
     GuessObjectModule,

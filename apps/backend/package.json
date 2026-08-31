@@ -58,6 +58,7 @@
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
     "nanoid": "^5.1.16",
+    "nestjs-cls": "^6.2.2",
     "nestjs-pino": "^4.6.1",
     "p-limit": "^7.3.0",
     "pino": "^10.3.1",

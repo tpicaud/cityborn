@@ -1,0 +1,56 @@
+import type { ClsService } from 'nestjs-cls';
+import type { WideEventInit } from './wide-event';
+import { type WideEventClsStore, WideEventService } from './wide-event.service';
+
+const baseInit: WideEventInit = {
+  requestId: 'r1',
+  method: 'GET',
+  route: '/x',
+  ip: undefined,
+  userAgent: undefined,
+  visitorId: undefined,
+  apiVersion: 7,
+};
+
+const buildService = () => {
+  const store = new Map<string, unknown>();
+  const cls = {
+    get: (key: string) => store.get(key),
+    set: (key: string, value: unknown) => store.set(key, value),
+  } as unknown as ClsService<WideEventClsStore>;
+  return new WideEventService(cls);
+};
+
+describe('WideEventService', () => {
+  it('stores the initial wide event', () => {
+    const service = buildService();
+
+    service.set(baseInit);
+
+    expect(service.get()).toMatchObject({ requestId: 'r1', method: 'GET' });
+  });
+
+  it('merges enrichment fields without dropping existing ones', () => {
+    const service = buildService();
+    service.set(baseInit);
+
+    service.enrich({ userId: 'u1', isAuthenticated: true });
+    service.enrich({ statusCode: 200, durationMs: 12 });
+
+    expect(service.get()).toMatchObject({
+      requestId: 'r1',
+      userId: 'u1',
+      isAuthenticated: true,
+      statusCode: 200,
+      durationMs: 12,
+    });
+  });
+
+  it('is a no-op when enrich runs before any wide event is set', () => {
+    const service = buildService();
+
+    service.enrich({ statusCode: 200 });
+
+    expect(service.get()).toBeUndefined();
+  });
+});
