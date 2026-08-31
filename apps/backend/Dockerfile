@@ -28,6 +28,8 @@ RUN pnpm turbo run build --filter=cityborn-backend
 # Étape 3 — Image finale pour l'app (runtime only)
 FROM node:24-alpine AS runner
 
+ENV NODE_ENV=production
+
 WORKDIR /app
 
 # Copier les fichiers nécessaires au runtime
