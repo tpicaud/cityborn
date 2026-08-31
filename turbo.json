@@ -22,6 +22,7 @@
   },
   "globalEnv": [
     "NODE_ENV",
+    "LOG_LEVEL",
     "PORT",
     "AUTH_SECRET",
     "ADMIN_PASSWORD",

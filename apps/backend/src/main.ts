@@ -4,6 +4,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { DefaultExceptionFilter } from './common/filters/default-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
@@ -15,7 +16,12 @@ import { RedisIoAdapter } from './redis/redis.adapter';
 async function bootstrap() {
   installFrenchZodErrorMap();
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+
+  app.useLogger(app.get(Logger));
+  app.flushLogs();
 
   app.use(apiVersionHeaderMiddleware);
 
