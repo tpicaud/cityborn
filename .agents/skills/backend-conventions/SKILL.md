@@ -1,6 +1,6 @@
 ---
 name: backend-conventions
-description: Conventions backend NestJS Cityborn (apps/backend) — structure d'un module (controllers/ fins + services/ + mappers/, split *.public.* / *.admin.*, handlers ts-rest) et gestion des erreurs (exceptions Nest typées avec ErrorCode de @cityborn/api, filtres globaux qui sérialisent en ApiError, erreurs Prisma déjà mappées). À utiliser dès qu'on crée ou modifie un module, controller, service ou mapper dans apps/backend, ou qu'on lève une exception.
+description: Conventions backend NestJS Cityborn (apps/backend) — structure d'un module (controllers/ fins + services/ + mappers/, split *.public.* / *.admin.*, handlers ts-rest), gestion des erreurs (exceptions Nest typées avec ErrorCode de @cityborn/api, filtres globaux qui sérialisent en ApiError, erreurs Prisma déjà mappées) et observabilité (un wide event par requête HTTP via WideEventService). À utiliser dès qu'on crée ou modifie un module, controller, service ou mapper dans apps/backend, ou qu'on lève une exception.
 ---
 
 # Conventions backend (NestJS)
@@ -17,6 +17,14 @@ description: Conventions backend NestJS Cityborn (apps/backend) — structure d'
 - **Ne jamais construire la réponse HTTP soi-même** : les filtres globaux de `main.ts` sérialisent tout au format `ApiError` `{ statusCode, code, message }` — `DefaultExceptionFilter`, `PrismaExceptionFilter`, `RequestValidationErrorFilter`.
 - Erreurs Prisma (`P2002`, `P2025`, …) déjà mappées par `PrismaExceptionFilter` — ne pas les `catch` pour les relancer.
 - `installFrenchZodErrorMap()` est déjà appelé au bootstrap (`apps/backend/src/main.ts`).
+
+## Observabilité — wide event par requête
+
+- **Une seule ligne de log par requête HTTP** (`msg: 'request'`, `event: 'http_request'`), émise par `WideEventInterceptor` (global), succès comme erreur. Niveau dérivé du `statusCode` : `info` (< 400), `warn` (4xx), `error` (5xx).
+- Le contexte vit dans un `AsyncLocalStorage` (`nestjs-cls`) : `WideEventModule` crée le `WideEvent` par requête (`createWideEvent`, dans `src/common/wide-event/`), les guards l'enrichissent (`AuthGuard`/`OptionalAuthGuard` → `userId` / `isAuthenticated` ; `RateLimitGuard` → `rateLimitBucket` / `rateLimitRemaining`).
+- Pour ajouter un champ au wide event depuis un guard/interceptor : injecter `WideEventService` et appeler `enrich({ … })`. **Ne pas** ajouter de `logger.log(...)` ad hoc pour tracer une requête — enrichir le wide event.
+- `pino-http` `autoLogging` est à `false` (`common/logger/logger.params.ts`) : aucune ligne automatique par requête.
+- Hors périmètre actuel (sous-issues dédiées) : la ligne des `ExceptionFilter` n'est pas encore fusionnée dans le wide event ; les messages WebSocket non plus.
 
 ## Garde-fou DB
 
