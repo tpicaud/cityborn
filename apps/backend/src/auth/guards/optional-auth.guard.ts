@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { UserService } from '../../user/user.service';
 import { getJwtConstants } from '../constants';
 import { extractTokenFromHTTPHeader } from '../utils';
@@ -17,6 +18,7 @@ export class OptionalAuthGuard implements CanActivate {
     private jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,6 +26,7 @@ export class OptionalAuthGuard implements CanActivate {
     const token = extractTokenFromHTTPHeader(request);
 
     if (!token) {
+      this.wideEventService.enrich({ isAuthenticated: false });
       return true;
     }
 
@@ -33,8 +36,13 @@ export class OptionalAuthGuard implements CanActivate {
       getJwtConstants(this.configService).jwt_access_secret,
     );
 
-    request.user =
+    const fullUser =
       (await resolveFullUser(user.id, this.userService)) ?? undefined;
+    request.user = fullUser;
+    this.wideEventService.enrich({
+      isAuthenticated: fullUser !== undefined,
+      userId: fullUser?.id,
+    });
 
     return true;
   }
