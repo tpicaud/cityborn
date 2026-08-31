@@ -1,5 +1,9 @@
 import { ErrorCode } from '@cityborn/api';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { USER_AGENT } from '../common/constants';
 
 export interface NominatimSearchResponse {
@@ -36,6 +40,7 @@ interface NominatimRawItem {
 
 @Injectable()
 export class NominatimService {
+  private readonly logger = new Logger(NominatimService.name);
   private readonly NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org';
 
   async searchByName(q: string): Promise<NominatimSearchResponse> {
@@ -95,7 +100,7 @@ export class NominatimService {
 
       return { results };
     } catch (error) {
-      console.error('Error fetching Nominatim data:', error);
+      this.logger.error('Error fetching Nominatim data:', error);
 
       throw new InternalServerErrorException({
         code: ErrorCode.WORLD_LOCATION_SEARCH_FAILED,
@@ -158,7 +163,7 @@ export class NominatimService {
 
       return data[0];
     } catch (error) {
-      console.error('Error fetching Nominatim data:', error);
+      this.logger.error('Error fetching Nominatim data:', error);
       return null;
     }
   }

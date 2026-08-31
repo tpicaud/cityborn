@@ -1,9 +1,15 @@
-import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+} from '@nestjs/common';
 import { Redis } from 'ioredis';
 import Redlock from 'redlock';
 
 @Injectable()
 export class LockService implements OnModuleDestroy {
+  private readonly logger = new Logger(LockService.name);
   private redlock: Redlock;
 
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {
@@ -13,7 +19,7 @@ export class LockService implements OnModuleDestroy {
     });
 
     this.redlock.on('clientError', (err) => {
-      console.error('A Redis client error occurred:', err);
+      this.logger.error('A Redis client error occurred:', err);
     });
   }
 
