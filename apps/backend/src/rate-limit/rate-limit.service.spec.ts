@@ -43,12 +43,13 @@ describe('RateLimitService', () => {
   });
 
   describe('Right paths', () => {
-    it('resolves when consumption succeeds', async () => {
-      httpLimiter.consume.mockResolvedValue(new RateLimiterRes());
+    it('returns the rate limiter result when consumption succeeds', async () => {
+      const rateLimiterRes = new RateLimiterRes();
+      httpLimiter.consume.mockResolvedValue(rateLimiterRes);
 
-      await expect(
-        rateLimiteService.consumeHttp('key'),
-      ).resolves.toBeUndefined();
+      await expect(rateLimiteService.consumeHttp('key')).resolves.toBe(
+        rateLimiterRes,
+      );
     });
   });
 

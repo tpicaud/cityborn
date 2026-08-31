@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { SessionSocket } from '../common/types/session-socket';
+import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import { RateLimitGuard } from './rate-limit.guard';
 import type { RateLimitService } from './rate-limit.service';
@@ -14,12 +15,19 @@ describe('RateLimitGuard', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(null),
     },
+    wideEventService: Partial<WideEventService> = { enrich: jest.fn() },
   ) => {
     const rateLimitGuard = new RateLimitGuard(
       rateLimitService as unknown as RateLimitService,
       connectionRegistryService as unknown as ConnectionRegistryService,
+      wideEventService as unknown as WideEventService,
     );
-    return { rateLimitGuard, rateLimitService, connectionRegistryService };
+    return {
+      rateLimitGuard,
+      rateLimitService,
+      connectionRegistryService,
+      wideEventService,
+    };
   };
 
   const buildHttpContext = (request: Partial<Request>): ExecutionContext =>
@@ -52,6 +60,25 @@ describe('RateLimitGuard', () => {
       expect(rateLimitService.consumeHttp).toHaveBeenCalledWith(
         '1.2.3.4:POST:/auth/sign-in',
       );
+    });
+
+    it('enriches the wide event with the http rate limit bucket and remaining points', async () => {
+      const { rateLimitGuard: guard, wideEventService } = buildGuard({
+        consumeHttp: jest.fn().mockResolvedValue({ remainingPoints: 42 }),
+      });
+      const context = buildHttpContext({
+        ip: '1.2.3.4',
+        method: 'GET',
+        route: { path: '/health' } as Request['route'],
+        url: '/health',
+      });
+
+      await guard.canActivate(context);
+
+      expect(wideEventService.enrich).toHaveBeenCalledWith({
+        rateLimitBucket: 'rl:http',
+        rateLimitRemaining: 42,
+      });
     });
 
     it('consumes the playerID as key when the WS connection is registered', async () => {

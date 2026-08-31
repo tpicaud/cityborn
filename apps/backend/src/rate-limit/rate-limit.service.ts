@@ -32,21 +32,24 @@ export class RateLimitService {
     });
   }
 
-  async consumeHttp(key: string): Promise<void> {
-    await this.consume(this.httpLimiter, key);
+  async consumeHttp(key: string): Promise<RateLimiterRes | undefined> {
+    return this.consume(this.httpLimiter, key);
   }
 
-  async consumeWsConnection(key: string): Promise<void> {
-    await this.consume(this.wsConnectionLimiter, key);
+  async consumeWsConnection(key: string): Promise<RateLimiterRes | undefined> {
+    return this.consume(this.wsConnectionLimiter, key);
   }
 
-  async consumeWsMessage(key: string): Promise<void> {
-    await this.consume(this.wsMessageLimiter, key);
+  async consumeWsMessage(key: string): Promise<RateLimiterRes | undefined> {
+    return this.consume(this.wsMessageLimiter, key);
   }
 
-  private async consume(limiter: RateLimiterRedis, key: string): Promise<void> {
+  private async consume(
+    limiter: RateLimiterRedis,
+    key: string,
+  ): Promise<RateLimiterRes | undefined> {
     try {
-      await limiter.consume(key);
+      return await limiter.consume(key);
     } catch (rejectedOrError) {
       if (rejectedOrError instanceof RateLimiterRes) {
         throw new HttpException(
