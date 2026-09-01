@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { catchError, type Observable, of } from 'rxjs';
 import { exceptionToApiError } from '../errors/exception-to-api-error';
-import { logApiError } from '../filters/utils';
+import { logWsApiError } from '../filters/utils';
 
 @Injectable()
 export class WsErrorInterceptor implements NestInterceptor {
@@ -21,7 +21,7 @@ export class WsErrorInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((exception: unknown) => {
         const payload: ApiError = exceptionToApiError(exception);
-        logApiError(this.logger, 'WS Error', payload, exception);
+        logWsApiError(this.logger, 'WS Error', payload, exception);
 
         return of({ success: false, error: payload } satisfies {
           success: false;

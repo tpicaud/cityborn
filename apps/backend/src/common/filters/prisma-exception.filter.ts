@@ -3,10 +3,11 @@ import {
   type ArgumentsHost,
   Catch,
   type ExceptionFilter,
-  Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { logApiError, sendApiError } from './utils';
+import { toWideEventErrorFields } from '../errors/exception-to-api-error';
+import { enrichWideEventFromCls } from '../wide-event/wide-event.service';
+import { sendApiError } from './utils';
 
 function toApiError(exception: Prisma.PrismaClientKnownRequestError): ApiError {
   switch (exception.code) {
@@ -33,11 +34,9 @@ function toApiError(exception: Prisma.PrismaClientKnownRequestError): ApiError {
 
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(PrismaExceptionFilter.name);
-
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
     const payload = toApiError(exception);
-    logApiError(this.logger, 'HTTP Error', payload, exception);
+    enrichWideEventFromCls(toWideEventErrorFields(payload, exception));
 
     sendApiError(host, payload);
   }

@@ -4,8 +4,12 @@ import {
   type ExceptionFilter,
   Logger,
 } from '@nestjs/common';
-import { exceptionToApiError } from '../errors/exception-to-api-error';
-import { logApiError, sendApiError } from './utils';
+import {
+  exceptionToApiError,
+  toWideEventErrorFields,
+} from '../errors/exception-to-api-error';
+import { enrichWideEventFromCls } from '../wide-event/wide-event.service';
+import { logWsApiError, sendApiError } from './utils';
 
 @Catch()
 export class DefaultExceptionFilter implements ExceptionFilter {
@@ -25,14 +29,14 @@ export class DefaultExceptionFilter implements ExceptionFilter {
 
   private handleHttpContextError(exception: unknown, host: ArgumentsHost) {
     const payload = exceptionToApiError(exception);
-    logApiError(this.logger, 'HTTP Error', payload, exception);
+    enrichWideEventFromCls(toWideEventErrorFields(payload, exception));
 
     sendApiError(host, payload);
   }
 
   private handleWsContextError(exception: unknown, host: ArgumentsHost) {
     const payload = exceptionToApiError(exception);
-    logApiError(this.logger, 'WS Error', payload, exception);
+    logWsApiError(this.logger, 'WS Error', payload, exception);
 
     host.switchToWs().getClient().emit('error', payload);
   }

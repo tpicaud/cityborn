@@ -1,7 +1,33 @@
 import { ErrorCode } from '@cityborn/api';
 import { type ArgumentsHost, Logger, NotFoundException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
+import { ClsServiceManager } from 'nestjs-cls';
+import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
+
+const baseWideEvent: WideEventInit = {
+  requestId: 'rid',
+  method: 'GET',
+  route: '/x',
+  ip: undefined,
+  userAgent: undefined,
+  visitorId: undefined,
+  apiVersion: 7,
+};
+
+function catchInCls(
+  filter: DefaultExceptionFilter,
+  exception: unknown,
+  host: ArgumentsHost,
+): WideEvent | undefined {
+  const cls = ClsServiceManager.getClsService<WideEventClsStore>();
+  return cls.run(() => {
+    cls.set('wideEvent', { ...baseWideEvent });
+    filter.catch(exception, host);
+    return cls.get('wideEvent');
+  });
+}
 
 function createHttpHost() {
   const json = jest.fn();
@@ -92,7 +118,7 @@ describe('DefaultExceptionFilter', () => {
     });
   });
 
-  it('logs a warning (not an error) for a known, non-UNKNOWN_ERROR code', () => {
+  it('enriches the wide event with errorCode/errorMessage for a known 4xx code, without a stack', () => {
     const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new NotFoundException({
@@ -100,21 +126,45 @@ describe('DefaultExceptionFilter', () => {
       message: 'Session not found',
     });
 
-    filter.catch(exception, host);
+    const wideEvent = catchInCls(filter, exception, host);
 
-    expect(warnSpy).toHaveBeenCalled();
-    expect(errorSpy).not.toHaveBeenCalled();
+    expect(wideEvent).toMatchObject({
+      errorCode: ErrorCode.SESSION_NOT_FOUND,
+      errorMessage: 'Session not found',
+    });
+    expect(wideEvent?.errorStack).toBeUndefined();
   });
 
-  it('logs an error (not a warning) for an UNKNOWN_ERROR code', () => {
+  it('enriches the wide event with a stack for an UNKNOWN_ERROR (5xx)', () => {
     const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new Error('database down');
 
-    filter.catch(exception, host);
+    const wideEvent = catchInCls(filter, exception, host);
 
-    expect(errorSpy).toHaveBeenCalled();
+    expect(wideEvent).toMatchObject({
+      errorCode: ErrorCode.UNKNOWN_ERROR,
+      errorMessage: 'database down',
+    });
+    expect(typeof wideEvent?.errorStack).toBe('string');
+  });
+
+  it('does not log a line on the HTTP path (the wide event carries the error)', () => {
+    const filter = new DefaultExceptionFilter();
+    const { host } = createHttpHost();
+
+    catchInCls(
+      filter,
+      new NotFoundException({
+        code: ErrorCode.SESSION_NOT_FOUND,
+        message: 'Session not found',
+      }),
+      host,
+    );
+    catchInCls(filter, new Error('database down'), host);
+
     expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it('neither writes a response nor emits, and logs, for an unrecognized execution context', () => {
