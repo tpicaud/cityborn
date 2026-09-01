@@ -21,7 +21,7 @@ export interface WideEventEnrichment {
   durationMs: number;
   errorCode: ErrorCode;
   errorMessage: string;
-  stack: string;
+  errorStack: string;
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;

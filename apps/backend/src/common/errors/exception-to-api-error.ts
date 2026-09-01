@@ -44,7 +44,7 @@ type WideEventErrorFields = Pick<
   WideEventEnrichment,
   'errorCode' | 'errorMessage'
 > &
-  Partial<Pick<WideEventEnrichment, 'stack'>>;
+  Partial<Pick<WideEventEnrichment, 'errorStack'>>;
 
 export function toWideEventErrorFields(
   apiError: ApiError,
@@ -60,7 +60,7 @@ export function toWideEventErrorFields(
     exception instanceof Error &&
     exception.stack
   ) {
-    fields.stack = exception.stack;
+    fields.errorStack = exception.stack;
   }
 
   return fields;

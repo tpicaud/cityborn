@@ -172,7 +172,7 @@ describe('toWideEventErrorFields', () => {
     );
 
     expect(fields.errorCode).toBe(ErrorCode.UNKNOWN_ERROR);
-    expect(fields.stack).toBe(exception.stack);
+    expect(fields.errorStack).toBe(exception.stack);
   });
 
   it('omits the stack when the exception is not an Error', () => {
@@ -181,6 +181,6 @@ describe('toWideEventErrorFields', () => {
       'not-an-error',
     );
 
-    expect(fields.stack).toBeUndefined();
+    expect(fields.errorStack).toBeUndefined();
   });
 });

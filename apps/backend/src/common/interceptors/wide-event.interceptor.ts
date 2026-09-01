@@ -1,3 +1,4 @@
+import { AsyncResource } from 'node:async_hooks';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -6,8 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { PinoLogger } from 'nestjs-pino';
-import { catchError, type Observable, tap, throwError } from 'rxjs';
-import { exceptionToApiError } from '../errors/exception-to-api-error';
+import type { Observable } from 'rxjs';
 import { deriveWideEventLevel } from '../wide-event/wide-event';
 import { WideEventService } from '../wide-event/wide-event.service';
 
@@ -30,27 +30,31 @@ export class WideEventInterceptor implements NestInterceptor {
     const response = http.getResponse<Response>();
     const start = process.hrtime.bigint();
 
-    const emit = (statusCode: number): void => {
+    let emitted = false;
+    const emit = (): void => {
+      if (emitted) {
+        return;
+      }
+      emitted = true;
+
       const durationMs = Number(process.hrtime.bigint() - start) / 1e6;
       const route = request.route?.path;
       this.wideEventService.enrich({
-        statusCode,
+        statusCode: response.statusCode,
         durationMs,
         ...(route ? { route } : {}),
       });
-      const level = deriveWideEventLevel(statusCode);
+      const level = deriveWideEventLevel(response.statusCode);
       this.logger[level](
         { ...this.wideEventService.get(), event: 'http_request' },
         'request',
       );
     };
 
-    return next.handle().pipe(
-      tap(() => emit(response.statusCode)),
-      catchError((error: unknown) => {
-        emit(exceptionToApiError(error).statusCode);
-        return throwError(() => error);
-      }),
-    );
+    const boundEmit = AsyncResource.bind(emit);
+    response.on('finish', boundEmit);
+    response.on('close', boundEmit);
+
+    return next.handle();
   }
 }
