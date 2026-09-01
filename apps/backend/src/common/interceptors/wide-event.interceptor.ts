@@ -7,7 +7,7 @@ import {
 import type { Request, Response } from 'express';
 import { PinoLogger } from 'nestjs-pino';
 import { catchError, type Observable, tap, throwError } from 'rxjs';
-import { exceptionToApiError } from '../filters/default-exception.filter';
+import { exceptionToApiError } from '../errors/exception-to-api-error';
 import { deriveWideEventLevel } from '../wide-event/wide-event';
 import { WideEventService } from '../wide-event/wide-event.service';
 
