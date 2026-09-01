@@ -12,7 +12,7 @@ export function enrichWideEventFromCls(fields: Partial<WideEvent>): void {
   if (!current) {
     return;
   }
-  cls.set('wideEvent', { ...current, ...fields });
+  cls.set('wideEvent', Object.assign({}, current, fields));
 }
 
 @Injectable()
@@ -28,7 +28,7 @@ export class WideEventService {
     if (!current) {
       return;
     }
-    this.cls.set('wideEvent', { ...current, ...fields });
+    this.cls.set('wideEvent', Object.assign({}, current, fields));
   }
 
   get(): WideEvent | undefined {

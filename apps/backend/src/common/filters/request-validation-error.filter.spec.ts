@@ -11,7 +11,7 @@ import { ClsServiceManager } from 'nestjs-cls';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { z } from 'zod';
-import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { HttpWideEventInit, WideEvent } from '../wide-event/wide-event';
 import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
 import { RequestValidationErrorFilter } from './request-validation-error.filter';
@@ -65,7 +65,8 @@ describe('RequestValidationErrorFilter registration order', () => {
 });
 
 describe('RequestValidationErrorFilter wide event enrichment', () => {
-  const baseWideEvent: WideEventInit = {
+  const baseWideEvent: HttpWideEventInit = {
+    transport: 'http',
     requestId: 'rid',
     method: 'GET',
     route: '/x',

@@ -2,11 +2,12 @@ import { ErrorCode } from '@cityborn/api';
 import { type ArgumentsHost, Logger, NotFoundException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { ClsServiceManager } from 'nestjs-cls';
-import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { HttpWideEventInit, WideEvent } from '../wide-event/wide-event';
 import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
 
-const baseWideEvent: WideEventInit = {
+const baseWideEvent: HttpWideEventInit = {
+  transport: 'http',
   requestId: 'rid',
   method: 'GET',
   route: '/x',

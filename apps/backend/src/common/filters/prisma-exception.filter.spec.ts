@@ -10,7 +10,7 @@ import { Prisma } from '@prisma/client';
 import { ClsServiceManager } from 'nestjs-cls';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { HttpWideEventInit, WideEvent } from '../wide-event/wide-event';
 import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
@@ -93,7 +93,8 @@ describe('PrismaExceptionFilter registration order', () => {
 });
 
 describe('PrismaExceptionFilter wide event enrichment', () => {
-  const baseWideEvent: WideEventInit = {
+  const baseWideEvent: HttpWideEventInit = {
+    transport: 'http',
     requestId: 'rid',
     method: 'GET',
     route: '/x',

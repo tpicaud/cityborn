@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule } from 'nestjs-cls';
 import { WideEventInterceptor } from '../interceptors/wide-event.interceptor';
-import { createWideEvent } from './wide-event';
+import { createHttpWideEvent } from './wide-event';
 import { WideEventService } from './wide-event.service';
 
 @Global()
@@ -13,7 +13,7 @@ import { WideEventService } from './wide-event.service';
       middleware: {
         mount: true,
         setup: (cls, req) => {
-          cls.set('wideEvent', createWideEvent(req));
+          cls.set('wideEvent', createHttpWideEvent(req));
         },
       },
     }),
