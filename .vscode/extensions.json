@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "firsttris.vscode-jest-runner",
+    "Prisma.prisma",
+    "bradlc.vscode-tailwindcss",
+    "Vercel.turbo-vsc",
+    "github.vscode-github-actions",
+    "expo.vscode-expo-tools"
+  ]
+}
