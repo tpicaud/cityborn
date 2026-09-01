@@ -1,11 +1,15 @@
-import { ErrorCode } from '@cityborn/api';
+import { type ApiError, ErrorCode } from '@cityborn/api';
 import {
   BadRequestException,
   HttpException,
   NotFoundException,
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { exceptionToApiError } from './exception-to-api-error';
+import {
+  exceptionToApiError,
+  shouldRetainStack,
+  toWideEventErrorFields,
+} from './exception-to-api-error';
 
 describe('exceptionToApiError', () => {
   it('passes through code/message/statusCode from a well-formed HttpException', () => {
@@ -111,5 +115,72 @@ describe('exceptionToApiError', () => {
       code: ErrorCode.UNKNOWN_ERROR,
       message: 'Unexpected error',
     });
+  });
+});
+
+describe('shouldRetainStack', () => {
+  it('is true for a 5xx status', () => {
+    expect(
+      shouldRetainStack({
+        statusCode: 503,
+        code: ErrorCode.SESSION_NOT_FOUND,
+        message: 'x',
+      }),
+    ).toBe(true);
+  });
+
+  it('is true for an UNKNOWN_ERROR code even on a 4xx status', () => {
+    expect(
+      shouldRetainStack({
+        statusCode: 400,
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'x',
+      }),
+    ).toBe(true);
+  });
+
+  it('is false for a 4xx status with a known code', () => {
+    expect(
+      shouldRetainStack({
+        statusCode: 404,
+        code: ErrorCode.SESSION_NOT_FOUND,
+        message: 'x',
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('toWideEventErrorFields', () => {
+  const notFound: ApiError = {
+    statusCode: 404,
+    code: ErrorCode.SESSION_NOT_FOUND,
+    message: 'Session not found',
+  };
+
+  it('always carries errorCode and errorMessage', () => {
+    expect(toWideEventErrorFields(notFound, new Error('boom'))).toEqual({
+      errorCode: ErrorCode.SESSION_NOT_FOUND,
+      errorMessage: 'Session not found',
+    });
+  });
+
+  it('adds the stack for a 5xx Error exception', () => {
+    const exception = new Error('db down');
+    const fields = toWideEventErrorFields(
+      { statusCode: 500, code: ErrorCode.UNKNOWN_ERROR, message: 'db down' },
+      exception,
+    );
+
+    expect(fields.errorCode).toBe(ErrorCode.UNKNOWN_ERROR);
+    expect(fields.stack).toBe(exception.stack);
+  });
+
+  it('omits the stack when the exception is not an Error', () => {
+    const fields = toWideEventErrorFields(
+      { statusCode: 500, code: ErrorCode.UNKNOWN_ERROR, message: 'weird' },
+      'not-an-error',
+    );
+
+    expect(fields.stack).toBeUndefined();
   });
 });

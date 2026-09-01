@@ -1,9 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ClsService, type ClsStore } from 'nestjs-cls';
+import { ClsService, ClsServiceManager, type ClsStore } from 'nestjs-cls';
 import type { WideEvent, WideEventInit } from './wide-event';
 
 export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
+}
+
+export function enrichWideEventFromCls(fields: Partial<WideEvent>): void {
+  const cls = ClsServiceManager.getClsService<WideEventClsStore>();
+  const current = cls.get('wideEvent');
+  if (!current) {
+    return;
+  }
+  cls.set('wideEvent', { ...current, ...fields });
 }
 
 @Injectable()

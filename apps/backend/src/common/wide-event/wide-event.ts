@@ -1,4 +1,4 @@
-import { getApiVersionInfo } from '@cityborn/api';
+import { type ErrorCode, getApiVersionInfo } from '@cityborn/api';
 import type { Request } from 'express';
 import { nanoid } from 'nanoid';
 
@@ -19,6 +19,9 @@ export interface WideEventEnrichment {
   rateLimitRemaining: number;
   statusCode: number;
   durationMs: number;
+  errorCode: ErrorCode;
+  errorMessage: string;
+  stack: string;
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
