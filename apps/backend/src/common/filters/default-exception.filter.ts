@@ -1,42 +1,15 @@
-import { type ApiError, ErrorCode } from '@cityborn/api';
 import {
   type ArgumentsHost,
   Catch,
   type ExceptionFilter,
-  HttpException,
-  HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
-import { logApiError, sendApiError } from './utils';
-
-function toPartialApiError(value: unknown): Partial<ApiError> | null {
-  return value && typeof value === 'object'
-    ? (value as Partial<ApiError>)
-    : null;
-}
-
-export function exceptionToApiError(exception: unknown): ApiError {
-  const statusCode =
-    exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
-
-  const errorObj =
-    exception instanceof HttpException
-      ? toPartialApiError(exception.getResponse())
-      : exception instanceof WsException
-        ? toPartialApiError(exception.getError())
-        : null;
-
-  return {
-    statusCode,
-    code: errorObj?.code ?? ErrorCode.UNKNOWN_ERROR,
-    message:
-      errorObj?.message ??
-      (exception instanceof Error ? exception.message : 'Unexpected error'),
-  };
-}
+import {
+  exceptionToApiError,
+  toWideEventErrorFields,
+} from '../errors/exception-to-api-error';
+import { enrichWideEventFromCls } from '../wide-event/wide-event.service';
+import { logWsApiError, sendApiError } from './utils';
 
 @Catch()
 export class DefaultExceptionFilter implements ExceptionFilter {
@@ -56,14 +29,14 @@ export class DefaultExceptionFilter implements ExceptionFilter {
 
   private handleHttpContextError(exception: unknown, host: ArgumentsHost) {
     const payload = exceptionToApiError(exception);
-    logApiError(this.logger, 'HTTP Error', payload, exception);
+    enrichWideEventFromCls(toWideEventErrorFields(payload, exception));
 
     sendApiError(host, payload);
   }
 
   private handleWsContextError(exception: unknown, host: ArgumentsHost) {
     const payload = exceptionToApiError(exception);
-    logApiError(this.logger, 'WS Error', payload, exception);
+    logWsApiError(this.logger, 'WS Error', payload, exception);
 
     host.switchToWs().getClient().emit('error', payload);
   }

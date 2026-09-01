@@ -1,7 +1,7 @@
 import { type ApiError, ErrorCode } from '@cityborn/api';
 import type { ArgumentsHost, Logger } from '@nestjs/common';
 
-export function logApiError(
+export function logWsApiError(
   logger: Logger,
   prefix: string,
   payload: ApiError,

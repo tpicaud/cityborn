@@ -3,11 +3,12 @@ import {
   type ArgumentsHost,
   Catch,
   type ExceptionFilter,
-  Logger,
 } from '@nestjs/common';
 import { RequestValidationError } from '@ts-rest/nest';
 import type { ZodError } from 'zod';
-import { logApiError, sendApiError } from './utils';
+import { toWideEventErrorFields } from '../errors/exception-to-api-error';
+import { enrichWideEventFromCls } from '../wide-event/wide-event.service';
+import { sendApiError } from './utils';
 
 function formatZodError(error: ZodError): string {
   return error.issues
@@ -24,8 +25,6 @@ function toFieldErrors(error: ZodError): ApiError['fieldErrors'] {
 
 @Catch(RequestValidationError)
 export class RequestValidationErrorFilter implements ExceptionFilter {
-  private readonly logger = new Logger(RequestValidationErrorFilter.name);
-
   catch(exception: RequestValidationError, host: ArgumentsHost) {
     const zodError =
       exception.pathParams ??
@@ -40,7 +39,7 @@ export class RequestValidationErrorFilter implements ExceptionFilter {
       fieldErrors: zodError ? toFieldErrors(zodError) : undefined,
     };
 
-    logApiError(this.logger, 'HTTP Error', payload, exception);
+    enrichWideEventFromCls(toWideEventErrorFields(payload, exception));
     sendApiError(host, payload);
   }
 }

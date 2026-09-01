@@ -1,16 +1,33 @@
 import { ErrorCode } from '@cityborn/api';
-import {
-  type ArgumentsHost,
-  BadRequestException,
-  HttpException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { type ArgumentsHost, Logger, NotFoundException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import {
-  DefaultExceptionFilter,
-  exceptionToApiError,
-} from './default-exception.filter';
+import { ClsServiceManager } from 'nestjs-cls';
+import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { WideEventClsStore } from '../wide-event/wide-event.service';
+import { DefaultExceptionFilter } from './default-exception.filter';
+
+const baseWideEvent: WideEventInit = {
+  requestId: 'rid',
+  method: 'GET',
+  route: '/x',
+  ip: undefined,
+  userAgent: undefined,
+  visitorId: undefined,
+  apiVersion: 7,
+};
+
+function catchInCls(
+  filter: DefaultExceptionFilter,
+  exception: unknown,
+  host: ArgumentsHost,
+): WideEvent | undefined {
+  const cls = ClsServiceManager.getClsService<WideEventClsStore>();
+  return cls.run(() => {
+    cls.set('wideEvent', { ...baseWideEvent });
+    filter.catch(exception, host);
+    return cls.get('wideEvent');
+  });
+}
 
 function createHttpHost() {
   const json = jest.fn();
@@ -51,113 +68,6 @@ function createUnknownHost(type: string) {
   } as unknown as ArgumentsHost;
   return { host };
 }
-
-describe('exceptionToApiError', () => {
-  it('passes through code/message/statusCode from a well-formed HttpException', () => {
-    const exception = new NotFoundException({
-      code: ErrorCode.SESSION_NOT_FOUND,
-      message: 'Session not found',
-    });
-
-    expect(exceptionToApiError(exception)).toEqual({
-      statusCode: 404,
-      code: ErrorCode.SESSION_NOT_FOUND,
-      message: 'Session not found',
-    });
-  });
-
-  it('falls back to UNKNOWN_ERROR but keeps the response message when the body has no code', () => {
-    const exception = new BadRequestException('Payload malformed');
-
-    const result = exceptionToApiError(exception);
-
-    expect(result.statusCode).toBe(400);
-    expect(result.code).toBe(ErrorCode.UNKNOWN_ERROR);
-    expect(result.message).toBe('Payload malformed');
-  });
-
-  it('falls back to UNKNOWN_ERROR and exception.message for a default (no-args) HttpException subclass', () => {
-    const exception = new BadRequestException();
-
-    const result = exceptionToApiError(exception);
-
-    expect(result.statusCode).toBe(400);
-    expect(result.code).toBe(ErrorCode.UNKNOWN_ERROR);
-    expect(result.message).toBe(exception.message);
-  });
-
-  it('falls back to UNKNOWN_ERROR and exception.message for a raw HttpException with a string body', () => {
-    const exception = new HttpException('Teapot', 418);
-
-    const result = exceptionToApiError(exception);
-
-    expect(result.statusCode).toBe(418);
-    expect(result.code).toBe(ErrorCode.UNKNOWN_ERROR);
-    expect(result.message).toBe('Teapot');
-  });
-
-  it('passes through code/message from a well-formed WsException', () => {
-    const exception = new WsException({
-      code: ErrorCode.SESSION_FORBIDDEN_HOST,
-      message: 'Not the host',
-    });
-
-    const result = exceptionToApiError(exception);
-
-    expect(result.statusCode).toBe(500);
-    expect(result.code).toBe(ErrorCode.SESSION_FORBIDDEN_HOST);
-    expect(result.message).toBe('Not the host');
-  });
-
-  it('falls back to UNKNOWN_ERROR for a WsException built from a plain string', () => {
-    const exception = new WsException('nope');
-
-    const result = exceptionToApiError(exception);
-
-    expect(result.statusCode).toBe(500);
-    expect(result.code).toBe(ErrorCode.UNKNOWN_ERROR);
-    expect(result.message).toBe('nope');
-  });
-
-  it('falls back to UNKNOWN_ERROR and the raw message for a plain Error', () => {
-    const exception = new Error('database down');
-
-    expect(exceptionToApiError(exception)).toEqual({
-      statusCode: 500,
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'database down',
-    });
-  });
-
-  it('falls back to UNKNOWN_ERROR and a generic message for a thrown non-Error string', () => {
-    expect(exceptionToApiError('boom')).toEqual({
-      statusCode: 500,
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-    });
-  });
-
-  it('falls back to UNKNOWN_ERROR and a generic message for a thrown plain object', () => {
-    expect(exceptionToApiError({ foo: 'bar' })).toEqual({
-      statusCode: 500,
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-    });
-  });
-
-  it('falls back to UNKNOWN_ERROR and a generic message for undefined/null', () => {
-    expect(exceptionToApiError(undefined)).toEqual({
-      statusCode: 500,
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-    });
-    expect(exceptionToApiError(null)).toEqual({
-      statusCode: 500,
-      code: ErrorCode.UNKNOWN_ERROR,
-      message: 'Unexpected error',
-    });
-  });
-});
 
 describe('DefaultExceptionFilter', () => {
   let warnSpy: jest.SpyInstance;
@@ -208,7 +118,7 @@ describe('DefaultExceptionFilter', () => {
     });
   });
 
-  it('logs a warning (not an error) for a known, non-UNKNOWN_ERROR code', () => {
+  it('enriches the wide event with errorCode/errorMessage for a known 4xx code, without a stack', () => {
     const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new NotFoundException({
@@ -216,21 +126,45 @@ describe('DefaultExceptionFilter', () => {
       message: 'Session not found',
     });
 
-    filter.catch(exception, host);
+    const wideEvent = catchInCls(filter, exception, host);
 
-    expect(warnSpy).toHaveBeenCalled();
-    expect(errorSpy).not.toHaveBeenCalled();
+    expect(wideEvent).toMatchObject({
+      errorCode: ErrorCode.SESSION_NOT_FOUND,
+      errorMessage: 'Session not found',
+    });
+    expect(wideEvent?.errorStack).toBeUndefined();
   });
 
-  it('logs an error (not a warning) for an UNKNOWN_ERROR code', () => {
+  it('enriches the wide event with a stack for an UNKNOWN_ERROR (5xx)', () => {
     const filter = new DefaultExceptionFilter();
     const { host } = createHttpHost();
     const exception = new Error('database down');
 
-    filter.catch(exception, host);
+    const wideEvent = catchInCls(filter, exception, host);
 
-    expect(errorSpy).toHaveBeenCalled();
+    expect(wideEvent).toMatchObject({
+      errorCode: ErrorCode.UNKNOWN_ERROR,
+      errorMessage: 'database down',
+    });
+    expect(typeof wideEvent?.errorStack).toBe('string');
+  });
+
+  it('does not log a line on the HTTP path (the wide event carries the error)', () => {
+    const filter = new DefaultExceptionFilter();
+    const { host } = createHttpHost();
+
+    catchInCls(
+      filter,
+      new NotFoundException({
+        code: ErrorCode.SESSION_NOT_FOUND,
+        message: 'Session not found',
+      }),
+      host,
+    );
+    catchInCls(filter, new Error('database down'), host);
+
     expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it('neither writes a response nor emits, and logs, for an unrecognized execution context', () => {

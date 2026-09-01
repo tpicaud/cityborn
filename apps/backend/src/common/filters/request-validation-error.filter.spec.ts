@@ -1,10 +1,18 @@
 import { ErrorCode } from '@cityborn/api';
-import { Controller, Get, type INestApplication } from '@nestjs/common';
+import {
+  type ArgumentsHost,
+  Controller,
+  Get,
+  type INestApplication,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { RequestValidationError } from '@ts-rest/nest';
+import { ClsServiceManager } from 'nestjs-cls';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { z } from 'zod';
+import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
 import { RequestValidationErrorFilter } from './request-validation-error.filter';
 
@@ -53,5 +61,45 @@ describe('RequestValidationErrorFilter registration order', () => {
     expect(response.body.fieldErrors).toEqual([
       { path: 'foo', message: expect.any(String) },
     ]);
+  });
+});
+
+describe('RequestValidationErrorFilter wide event enrichment', () => {
+  const baseWideEvent: WideEventInit = {
+    requestId: 'rid',
+    method: 'GET',
+    route: '/x',
+    ip: undefined,
+    userAgent: undefined,
+    visitorId: undefined,
+    apiVersion: 7,
+  };
+
+  const httpHost = {
+    getType: () => 'http',
+    switchToHttp: () => ({
+      getResponse: () => ({ status: () => ({ json: () => undefined }) }),
+    }),
+  } as unknown as ArgumentsHost;
+
+  it('carries BAD_REQUEST and the formatted message, never a stack', () => {
+    const bodyResult = z.object({ foo: z.string() }).safeParse({});
+    const exception = new RequestValidationError(
+      null,
+      null,
+      null,
+      bodyResult.success ? null : bodyResult.error,
+    );
+
+    const cls = ClsServiceManager.getClsService<WideEventClsStore>();
+    const wideEvent = cls.run<WideEvent | undefined>(() => {
+      cls.set('wideEvent', { ...baseWideEvent });
+      new RequestValidationErrorFilter().catch(exception, httpHost);
+      return cls.get('wideEvent');
+    });
+
+    expect(wideEvent?.errorCode).toBe(ErrorCode.BAD_REQUEST);
+    expect(wideEvent?.errorMessage).toContain('foo');
+    expect(wideEvent?.errorStack).toBeUndefined();
   });
 });

@@ -28,11 +28,9 @@ import { getJwtConstants } from '../auth/constants';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
-import {
-  DefaultExceptionFilter,
-  exceptionToApiError,
-} from '../common/filters/default-exception.filter';
-import { logApiError } from '../common/filters/utils';
+import { exceptionToApiError } from '../common/errors/exception-to-api-error';
+import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
+import { logWsApiError } from '../common/filters/utils';
 import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
 import type { SessionSocket } from '../common/types/session-socket';
 import {
@@ -96,8 +94,8 @@ export class SessionGateway
         ),
       );
     } catch (error) {
-      const apiError = exceptionToApiError(error);
-      logApiError(this.logger, 'WS Connection Error', apiError, error);
+      const apiError: ApiError = exceptionToApiError(error);
+      logWsApiError(this.logger, 'WS Connection Error', apiError, error);
       client.emit('error', apiError);
       client.disconnect(true);
       return;
@@ -125,8 +123,8 @@ export class SessionGateway
     try {
       client.data.user = await resolveFullUser(payload.id, this.userService);
     } catch (error) {
-      const apiError = exceptionToApiError(error);
-      logApiError(this.logger, 'WS Connection Error', apiError, error);
+      const apiError: ApiError = exceptionToApiError(error);
+      logWsApiError(this.logger, 'WS Connection Error', apiError, error);
       client.data.user = undefined;
     }
   }

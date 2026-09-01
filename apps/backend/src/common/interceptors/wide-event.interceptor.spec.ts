@@ -1,5 +1,6 @@
 jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
 
+import { EventEmitter } from 'node:events';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { PinoLogger } from 'nestjs-pino';
 import { firstValueFrom, of, throwError } from 'rxjs';
@@ -23,15 +24,19 @@ const buildWideEventService = () => {
   };
 };
 
+class FakeResponse extends EventEmitter {
+  statusCode = 200;
+}
+
 const buildHttpContext = (
-  statusCode: number,
+  response: FakeResponse,
   route?: string,
 ): ExecutionContext =>
   ({
     getType: () => 'http',
     switchToHttp: () => ({
       getRequest: () => ({ route: route ? { path: route } : undefined }),
-      getResponse: () => ({ statusCode }),
+      getResponse: () => response,
     }),
   }) as unknown as ExecutionContext;
 
@@ -48,12 +53,14 @@ describe('WideEventInterceptor', () => {
     return { interceptor, logger, wideEventService };
   };
 
-  it('emits a single info line for a 2xx response', async () => {
+  it('emits a single info line once the response finishes (2xx)', async () => {
     const { interceptor, logger, wideEventService } = buildInterceptor();
+    const response = new FakeResponse();
 
     await firstValueFrom(
-      interceptor.intercept(buildHttpContext(200), successHandler),
+      interceptor.intercept(buildHttpContext(response), successHandler),
     );
+    response.emit('finish');
 
     expect(wideEventService.enrich).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -77,13 +84,15 @@ describe('WideEventInterceptor', () => {
 
   it('enriches the templated route resolved after routing', async () => {
     const { interceptor, wideEventService } = buildInterceptor();
+    const response = new FakeResponse();
 
     await firstValueFrom(
       interceptor.intercept(
-        buildHttpContext(200, '/users/:id'),
+        buildHttpContext(response, '/users/:id'),
         successHandler,
       ),
     );
+    response.emit('finish');
 
     expect(wideEventService.enrich).toHaveBeenCalledWith(
       expect.objectContaining({ route: '/users/:id' }),
@@ -92,10 +101,13 @@ describe('WideEventInterceptor', () => {
 
   it('emits a warn line for a 4xx response', async () => {
     const { interceptor, logger } = buildInterceptor();
+    const response = new FakeResponse();
+    response.statusCode = 404;
 
     await firstValueFrom(
-      interceptor.intercept(buildHttpContext(404), successHandler),
+      interceptor.intercept(buildHttpContext(response), successHandler),
     );
+    response.emit('finish');
 
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.info).not.toHaveBeenCalled();
@@ -103,16 +115,33 @@ describe('WideEventInterceptor', () => {
 
   it('emits an error line for a 5xx response', async () => {
     const { interceptor, logger } = buildInterceptor();
+    const response = new FakeResponse();
+    response.statusCode = 503;
 
     await firstValueFrom(
-      interceptor.intercept(buildHttpContext(503), successHandler),
+      interceptor.intercept(buildHttpContext(response), successHandler),
     );
+    response.emit('finish');
 
     expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
-  it('emits a single error line and rethrows when the handler throws', async () => {
+  it('emits only once when finish and close both fire', async () => {
+    const { interceptor, logger } = buildInterceptor();
+    const response = new FakeResponse();
+
+    await firstValueFrom(
+      interceptor.intercept(buildHttpContext(response), successHandler),
+    );
+    response.emit('finish');
+    response.emit('close');
+
+    expect(logger.info).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits the error line after the exception filter set the status, when the handler throws', async () => {
     const { interceptor, logger, wideEventService } = buildInterceptor();
+    const response = new FakeResponse();
     const failure = new Error('boom');
     const errorHandler: CallHandler = {
       handle: () => throwError(() => failure),
@@ -120,9 +149,12 @@ describe('WideEventInterceptor', () => {
 
     await expect(
       firstValueFrom(
-        interceptor.intercept(buildHttpContext(200), errorHandler),
+        interceptor.intercept(buildHttpContext(response), errorHandler),
       ),
     ).rejects.toBe(failure);
+
+    response.statusCode = 500;
+    response.emit('finish');
 
     expect(wideEventService.enrich).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 500 }),

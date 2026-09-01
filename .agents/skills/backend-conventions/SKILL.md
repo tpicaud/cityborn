@@ -20,11 +20,12 @@ description: Conventions backend NestJS Cityborn (apps/backend) — structure d'
 
 ## Observabilité — wide event par requête
 
-- **Une seule ligne de log par requête HTTP** (`msg: 'request'`, `event: 'http_request'`), émise par `WideEventInterceptor` (global), succès comme erreur. Niveau dérivé du `statusCode` : `info` (< 400), `warn` (4xx), `error` (5xx).
+- **Une seule ligne de log par requête HTTP** (`msg: 'request'`, `event: 'http_request'`), émise par `WideEventInterceptor` (global) sur `response` `finish`/`close` — donc **après** les `ExceptionFilter`. Succès comme erreur. Niveau dérivé du `statusCode` : `info` (< 400), `warn` (4xx), `error` (5xx).
 - Le contexte vit dans un `AsyncLocalStorage` (`nestjs-cls`) : `WideEventModule` crée le `WideEvent` par requête (`createWideEvent`, dans `src/common/wide-event/`), les guards l'enrichissent (`AuthGuard`/`OptionalAuthGuard` → `userId` / `isAuthenticated` ; `RateLimitGuard` → `rateLimitBucket` / `rateLimitRemaining`).
-- Pour ajouter un champ au wide event depuis un guard/interceptor : injecter `WideEventService` et appeler `enrich({ … })`. **Ne pas** ajouter de `logger.log(...)` ad hoc pour tracer une requête — enrichir le wide event.
+- **Les `ExceptionFilter` n'écrivent pas de ligne** : sur le chemin HTTP ils enrichissent le wide event via `enrichWideEventFromCls(toWideEventErrorFields(payload, exception))` → `errorCode` / `errorMessage`, plus `errorStack` uniquement pour les 5xx et `UNKNOWN_ERROR`. `logWsApiError` (`common/filters/utils.ts`) ne sert plus qu'au contexte WebSocket.
+- Pour ajouter un champ au wide event : depuis un guard/interceptor injecter `WideEventService` et appeler `enrich({ … })` ; depuis un filtre global (non injectable, `new` dans `main.ts`) utiliser `enrichWideEventFromCls({ … })`. **Ne pas** ajouter de `logger.log(...)` ad hoc pour tracer une requête — enrichir le wide event.
 - `pino-http` `autoLogging` est à `false` (`common/logger/logger.params.ts`) : aucune ligne automatique par requête.
-- Hors périmètre actuel (sous-issues dédiées) : la ligne des `ExceptionFilter` n'est pas encore fusionnée dans le wide event ; les messages WebSocket non plus.
+- Hors périmètre actuel (sous-issue dédiée) : les messages WebSocket ne sont pas fusionnés dans le wide event.
 
 ## Garde-fou DB
 
