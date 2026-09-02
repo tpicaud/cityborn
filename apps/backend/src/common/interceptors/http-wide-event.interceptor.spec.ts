@@ -5,7 +5,7 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { PinoLogger } from 'nestjs-pino';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import type { WideEventService } from '../wide-event/wide-event.service';
-import { WideEventInterceptor } from './wide-event.interceptor';
+import { HttpWideEventInterceptor } from './http-wide-event.interceptor';
 
 const buildLogger = () => ({
   setContext: jest.fn(),
@@ -15,7 +15,11 @@ const buildLogger = () => ({
 });
 
 const buildWideEventService = () => {
-  let event: Record<string, unknown> = { requestId: 'rid', method: 'GET' };
+  let event: Record<string, unknown> = {
+    transport: 'http',
+    requestId: 'rid',
+    method: 'GET',
+  };
   return {
     enrich: jest.fn((fields: Record<string, unknown>) => {
       event = { ...event, ...fields };
@@ -42,11 +46,11 @@ const buildHttpContext = (
 
 const successHandler: CallHandler = { handle: () => of({ ok: true }) };
 
-describe('WideEventInterceptor', () => {
+describe('HttpWideEventInterceptor', () => {
   const buildInterceptor = () => {
     const logger = buildLogger();
     const wideEventService = buildWideEventService();
-    const interceptor = new WideEventInterceptor(
+    const interceptor = new HttpWideEventInterceptor(
       wideEventService as unknown as WideEventService,
       logger as unknown as PinoLogger,
     );

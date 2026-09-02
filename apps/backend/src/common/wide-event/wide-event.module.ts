@@ -1,7 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule } from 'nestjs-cls';
-import { WideEventInterceptor } from '../interceptors/wide-event.interceptor';
+import { HttpWideEventInterceptor } from '../interceptors/http-wide-event.interceptor';
+import { WsWideEventInterceptor } from '../interceptors/ws-wide-event.interceptor';
 import { createHttpWideEvent } from './wide-event';
 import { WideEventService } from './wide-event.service';
 
@@ -20,7 +21,8 @@ import { WideEventService } from './wide-event.service';
   ],
   providers: [
     WideEventService,
-    { provide: APP_INTERCEPTOR, useClass: WideEventInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: HttpWideEventInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: WsWideEventInterceptor },
   ],
   exports: [WideEventService],
 })

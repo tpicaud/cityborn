@@ -8,11 +8,11 @@ import {
 import type { Request, Response } from 'express';
 import { PinoLogger } from 'nestjs-pino';
 import type { Observable } from 'rxjs';
-import { deriveWideEventLevel } from '../wide-event/wide-event';
+import { emitWideEventLine } from '../wide-event/wide-event';
 import { WideEventService } from '../wide-event/wide-event.service';
 
 @Injectable()
-export class WideEventInterceptor implements NestInterceptor {
+export class HttpWideEventInterceptor implements NestInterceptor {
   constructor(
     private readonly wideEventService: WideEventService,
     private readonly logger: PinoLogger,
@@ -44,11 +44,10 @@ export class WideEventInterceptor implements NestInterceptor {
         durationMs,
         ...(route ? { route } : {}),
       });
-      const level = deriveWideEventLevel(response.statusCode);
-      this.logger[level](
-        { ...this.wideEventService.get(), event: 'http_request' },
-        'request',
-      );
+      const wideEvent = this.wideEventService.get();
+      if (wideEvent) {
+        emitWideEventLine(this.logger, wideEvent);
+      }
     };
 
     const boundEmit = AsyncResource.bind(emit);
