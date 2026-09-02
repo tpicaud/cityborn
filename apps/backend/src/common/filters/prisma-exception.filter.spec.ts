@@ -101,6 +101,8 @@ describe('PrismaExceptionFilter wide event enrichment', () => {
     ip: undefined,
     userAgent: undefined,
     visitorId: undefined,
+    client: undefined,
+    clientVersion: undefined,
     apiVersion: 7,
   };
 

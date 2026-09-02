@@ -33,6 +33,8 @@ describe('createHttpWideEvent', () => {
         headers: {
           'user-agent': 'jest',
           'x-visitor-id': 'visitor-1',
+          'x-client-name': 'web',
+          'x-client-version': '1.2.3',
         },
       }),
     );
@@ -45,7 +47,16 @@ describe('createHttpWideEvent', () => {
       ip: '1.2.3.4',
       userAgent: 'jest',
       visitorId: 'visitor-1',
+      client: 'web',
+      clientVersion: '1.2.3',
     });
+  });
+
+  it('leaves the client fields undefined when the headers are absent', () => {
+    const wideEvent = createHttpWideEvent(buildRequest());
+
+    expect(wideEvent.client).toBeUndefined();
+    expect(wideEvent.clientVersion).toBeUndefined();
   });
 
   it('falls back to the original url when the route is not resolved', () => {
@@ -74,6 +85,8 @@ describe('createWsWideEvent', () => {
         ip: '1.2.3.4',
         userAgent: 'jest',
         visitorId: 'visitor-1',
+        client: 'mobile',
+        clientVersion: '0.1.4',
       }),
     ).toEqual({
       transport: 'ws',
@@ -83,6 +96,8 @@ describe('createWsWideEvent', () => {
       ip: '1.2.3.4',
       userAgent: 'jest',
       visitorId: 'visitor-1',
+      client: 'mobile',
+      clientVersion: '0.1.4',
     });
   });
 });
@@ -118,6 +133,8 @@ describe('emitWideEventLine', () => {
       ip: undefined,
       userAgent: undefined,
       visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
       apiVersion: 7,
       statusCode: 404,
     };
@@ -141,6 +158,8 @@ describe('emitWideEventLine', () => {
       ip: undefined,
       userAgent: undefined,
       visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
     };
 
     emitWideEventLine(logger, wideEvent);
@@ -161,6 +180,8 @@ describe('emitWideEventLine', () => {
       ip: undefined,
       userAgent: undefined,
       visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
       statusCode: 500,
     };
 

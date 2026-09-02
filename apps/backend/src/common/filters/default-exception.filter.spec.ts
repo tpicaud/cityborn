@@ -14,6 +14,8 @@ const baseWideEvent: HttpWideEventInit = {
   ip: undefined,
   userAgent: undefined,
   visitorId: undefined,
+  client: undefined,
+  clientVersion: undefined,
   apiVersion: 7,
 };
 

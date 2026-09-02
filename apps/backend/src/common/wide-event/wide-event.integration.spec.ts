@@ -78,6 +78,19 @@ describe('wide event integration — one line per request, error folded in', () 
     expect(httpRequestLines(errorSpy)).toHaveLength(0);
   });
 
+  it('folds the calling client identity from the request headers', async () => {
+    await request(app.getHttpServer())
+      .get('/ok')
+      .set('X-Client-Name', 'web')
+      .set('X-Client-Version', '1.2.3')
+      .expect(200);
+
+    expect(httpRequestLines(infoSpy)[0]).toMatchObject({
+      client: 'web',
+      clientVersion: '1.2.3',
+    });
+  });
+
   it('emits exactly one error line for a thrown 500, carrying the error folded in', async () => {
     await request(app.getHttpServer()).get('/boom').expect(500);
 

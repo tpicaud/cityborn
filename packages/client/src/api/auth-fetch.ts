@@ -17,6 +17,7 @@ export interface ClientInfo {
 export interface AuthFetchOptions {
   onResponseHeaders?: (headers: Headers) => void;
   client?: ClientInfo;
+  getVisitorId?: () => string | null | Promise<string | null>;
 }
 
 function buildClientHeaders(
@@ -39,6 +40,7 @@ export class AuthFetch {
   private readonly tokenStorage: TokenStorage;
   private readonly onResponseHeaders?: (headers: Headers) => void;
   private readonly baseHeaders: Record<string, string>;
+  private readonly getVisitorId?: () => string | null | Promise<string | null>;
 
   constructor(
     baseURL: string,
@@ -49,6 +51,7 @@ export class AuthFetch {
     this.tokenStorage = tokenStorage;
     this.onResponseHeaders = options.onResponseHeaders;
     this.baseHeaders = buildClientHeaders(options.client);
+    this.getVisitorId = options.getVisitorId;
   }
 
   private async buildHeaders(
@@ -59,6 +62,11 @@ export class AuthFetch {
       ...this.baseHeaders,
       ...extra,
     };
+
+    const visitorId = await this.getVisitorId?.();
+    if (visitorId) {
+      headers['x-visitor-id'] = visitorId;
+    }
 
     const token =
       auth.kind === 'bearer'

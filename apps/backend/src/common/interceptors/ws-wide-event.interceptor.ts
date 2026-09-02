@@ -10,7 +10,11 @@ import { PinoLogger } from 'nestjs-pino';
 import { finalize, Observable } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
 import type { SessionSocket } from '../types/session-socket';
-import { createWsWideEvent, emitWideEventLine } from '../wide-event/wide-event';
+import {
+  createWsWideEvent,
+  emitWideEventLine,
+  firstHeaderValue,
+} from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -65,17 +69,17 @@ export class WsWideEventInterceptor implements NestInterceptor {
   private initWideEvent(ws: WsArgumentsHost): void {
     const client = ws.getClient<SessionSocket>();
     const rawVisitorId = client.data.visitorId;
+    const headers = client.handshake.headers;
 
     this.wideEventService.set(
       createWsWideEvent({
         eventName: ws.getPattern(),
         socketId: client.id,
-        ip: resolveClientIpFromHeaders(
-          client.handshake.headers,
-          client.handshake.address,
-        ),
-        userAgent: client.handshake.headers['user-agent'],
+        ip: resolveClientIpFromHeaders(headers, client.handshake.address),
+        userAgent: headers['user-agent'],
         visitorId: Array.isArray(rawVisitorId) ? rawVisitorId[0] : rawVisitorId,
+        client: firstHeaderValue(headers['x-client-name']),
+        clientVersion: firstHeaderValue(headers['x-client-version']),
       }),
     );
 

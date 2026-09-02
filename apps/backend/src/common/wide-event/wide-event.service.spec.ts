@@ -10,6 +10,8 @@ const baseInit: WideEventInit = {
   ip: undefined,
   userAgent: undefined,
   visitorId: undefined,
+  client: undefined,
+  clientVersion: undefined,
   apiVersion: 7,
 };
 
