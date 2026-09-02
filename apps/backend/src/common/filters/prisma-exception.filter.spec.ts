@@ -104,6 +104,7 @@ describe('PrismaExceptionFilter wide event enrichment', () => {
     client: undefined,
     clientVersion: undefined,
     apiVersion: 7,
+    isAuthenticated: false,
   };
 
   const httpHost = {

@@ -1,12 +1,12 @@
 import {
   type CallHandler,
   type ExecutionContext,
+  Inject,
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
 import type { WsArgumentsHost } from '@nestjs/common/interfaces';
 import { ClsService } from 'nestjs-cls';
-import { PinoLogger } from 'nestjs-pino';
 import { finalize, Observable } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
 import type { SessionSocket } from '../types/session-socket';
@@ -14,6 +14,8 @@ import {
   createWsWideEvent,
   emitWideEventLine,
   firstHeaderValue,
+  WIDE_EVENT_LOGGER,
+  type WideEventLogger,
 } from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
@@ -25,10 +27,8 @@ export class WsWideEventInterceptor implements NestInterceptor {
   constructor(
     private readonly wideEventService: WideEventService,
     private readonly cls: ClsService<WideEventClsStore>,
-    private readonly logger: PinoLogger,
-  ) {
-    this.logger.setContext('WideEvent');
-  }
+    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     if (context.getType() !== 'ws') {

@@ -16,6 +16,7 @@ export interface HttpWideEventInit extends WideEventInitBase {
   method: string;
   route: string;
   apiVersion: number | undefined;
+  isAuthenticated: boolean;
 }
 
 export interface WsWideEventInit extends WideEventInitBase {
@@ -44,10 +45,12 @@ export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
 
-type WideEventLogger = Record<
+export type WideEventLogger = Record<
   WideEventLevel,
   (payload: object, message: string) => void
 >;
+
+export const WIDE_EVENT_LOGGER = Symbol('WIDE_EVENT_LOGGER');
 
 const wideEventLogShape = {
   http: { event: 'http_request', message: 'request' },
@@ -89,6 +92,7 @@ export function createHttpWideEvent(req: Request): HttpWideEventInit {
     client: firstHeaderValue(req.headers['x-client-name']),
     clientVersion: firstHeaderValue(req.headers['x-client-version']),
     apiVersion: resolveApiVersion(req),
+    isAuthenticated: false,
   };
 }
 

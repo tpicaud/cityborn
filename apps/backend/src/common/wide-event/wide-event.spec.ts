@@ -49,6 +49,7 @@ describe('createHttpWideEvent', () => {
       visitorId: 'visitor-1',
       client: 'web',
       clientVersion: '1.2.3',
+      isAuthenticated: false,
     });
   });
 
@@ -136,6 +137,7 @@ describe('emitWideEventLine', () => {
       client: undefined,
       clientVersion: undefined,
       apiVersion: 7,
+      isAuthenticated: false,
       statusCode: 404,
     };
 

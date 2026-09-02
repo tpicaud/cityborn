@@ -17,6 +17,7 @@ const baseWideEvent: HttpWideEventInit = {
   client: undefined,
   clientVersion: undefined,
   apiVersion: 7,
+  isAuthenticated: false,
 };
 
 function catchInCls(
