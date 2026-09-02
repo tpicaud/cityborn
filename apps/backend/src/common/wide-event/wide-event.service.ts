@@ -6,13 +6,14 @@ export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
 }
 
-export function enrichWideEventFromCls(fields: Partial<WideEvent>): void {
+export function enrichWideEventFromCls(fields: Partial<WideEvent>): boolean {
   const cls = ClsServiceManager.getClsService<WideEventClsStore>();
   const current = cls.get('wideEvent');
   if (!current) {
-    return;
+    return false;
   }
-  cls.set('wideEvent', { ...current, ...fields });
+  cls.set('wideEvent', Object.assign({}, current, fields));
+  return true;
 }
 
 @Injectable()
@@ -28,7 +29,7 @@ export class WideEventService {
     if (!current) {
       return;
     }
-    this.cls.set('wideEvent', { ...current, ...fields });
+    this.cls.set('wideEvent', Object.assign({}, current, fields));
   }
 
   get(): WideEvent | undefined {

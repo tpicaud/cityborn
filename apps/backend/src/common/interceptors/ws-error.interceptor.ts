@@ -3,16 +3,18 @@ import {
   type CallHandler,
   type ExecutionContext,
   Injectable,
-  Logger,
   type NestInterceptor,
 } from '@nestjs/common';
 import { catchError, type Observable, of } from 'rxjs';
-import { exceptionToApiError } from '../errors/exception-to-api-error';
-import { logWsApiError } from '../filters/utils';
+import {
+  exceptionToApiError,
+  toWideEventErrorFields,
+} from '../errors/exception-to-api-error';
+import { WideEventService } from '../wide-event/wide-event.service';
 
 @Injectable()
 export class WsErrorInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(WsErrorInterceptor.name);
+  constructor(private readonly wideEventService: WideEventService) {}
 
   intercept(
     _context: ExecutionContext,
@@ -21,7 +23,10 @@ export class WsErrorInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((exception: unknown) => {
         const payload: ApiError = exceptionToApiError(exception);
-        logWsApiError(this.logger, 'WS Error', payload, exception);
+        this.wideEventService.enrich({
+          statusCode: payload.statusCode,
+          ...toWideEventErrorFields(payload, exception),
+        });
 
         return of({ success: false, error: payload } satisfies {
           success: false;

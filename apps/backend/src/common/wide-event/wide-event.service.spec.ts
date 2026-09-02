@@ -3,6 +3,7 @@ import type { WideEventInit } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
 const baseInit: WideEventInit = {
+  transport: 'http',
   requestId: 'r1',
   method: 'GET',
   route: '/x',

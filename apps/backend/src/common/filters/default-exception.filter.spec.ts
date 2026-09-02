@@ -2,11 +2,12 @@ import { ErrorCode } from '@cityborn/api';
 import { type ArgumentsHost, Logger, NotFoundException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { ClsServiceManager } from 'nestjs-cls';
-import type { WideEvent, WideEventInit } from '../wide-event/wide-event';
+import type { HttpWideEventInit, WideEvent } from '../wide-event/wide-event';
 import type { WideEventClsStore } from '../wide-event/wide-event.service';
 import { DefaultExceptionFilter } from './default-exception.filter';
 
-const baseWideEvent: WideEventInit = {
+const baseWideEvent: HttpWideEventInit = {
+  transport: 'http',
   requestId: 'rid',
   method: 'GET',
   route: '/x',
@@ -101,7 +102,7 @@ describe('DefaultExceptionFilter', () => {
     });
   });
 
-  it('emits an "error" event with the ApiError payload in WS context', () => {
+  it('emits an "error" event with the ApiError payload in WS context, and logs as a fallback when there is no wide event context', () => {
     const filter = new DefaultExceptionFilter();
     const { host, emit } = createWsHost();
     const exception = new WsException({
@@ -116,6 +117,30 @@ describe('DefaultExceptionFilter', () => {
       code: ErrorCode.SESSION_FORBIDDEN_HOST,
       message: 'Not the host',
     });
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('folds the error into the wide event and skips the log on the WS path when a context exists', () => {
+    const filter = new DefaultExceptionFilter();
+    const { host, emit } = createWsHost();
+    const exception = new WsException({
+      code: ErrorCode.SESSION_FORBIDDEN_HOST,
+      message: 'Not the host',
+    });
+
+    const wideEvent = catchInCls(filter, exception, host);
+
+    expect(wideEvent).toMatchObject({
+      statusCode: 500,
+      errorCode: ErrorCode.SESSION_FORBIDDEN_HOST,
+      errorMessage: 'Not the host',
+    });
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(emit).toHaveBeenCalledWith(
+      'error',
+      expect.objectContaining({ code: ErrorCode.SESSION_FORBIDDEN_HOST }),
+    );
   });
 
   it('enriches the wide event with errorCode/errorMessage for a known 4xx code, without a stack', () => {

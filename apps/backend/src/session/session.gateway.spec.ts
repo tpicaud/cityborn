@@ -5,6 +5,7 @@ import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { SessionSocket } from '../common/types/session-socket';
+import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
@@ -35,6 +36,12 @@ describe('SessionGateway', () => {
     isGuest: false,
   };
 
+  const wideEventService = { enrich: jest.fn() };
+
+  beforeEach(() => {
+    wideEventService.enrich.mockClear();
+  });
+
   const buildGateway = (
     sessionService: Partial<SessionService>,
     connectionRegistryService: Partial<ConnectionRegistryService> = {
@@ -52,6 +59,7 @@ describe('SessionGateway', () => {
       {} as unknown as UserService,
       connectionRegistryService as unknown as ConnectionRegistryService,
       rateLimitService as unknown as RateLimitService,
+      wideEventService as unknown as WideEventService,
     );
     gateway.io = { to: () => ({ emit: jest.fn() }) } as unknown as Server;
     return gateway;
@@ -109,6 +117,59 @@ describe('SessionGateway', () => {
       const gateway = buildGateway(sessionService);
 
       await expect(gateway.startGame(socket)).rejects.toThrow('ECONNREFUSED');
+    });
+  });
+
+  describe('wide event enrichment', () => {
+    it('enriches sessionId and playerId from the resolved connection', async () => {
+      const sessionService = {
+        handleGuess: jest.fn().mockResolvedValue({ id: 's1' }),
+      };
+      const gateway = buildGateway(sessionService);
+
+      await gateway.handleGuess(socket, defaultGuess);
+
+      expect(wideEventService.enrich).toHaveBeenCalledWith({
+        sessionId: 's1',
+        playerId: 'p1',
+      });
+    });
+
+    it('enriches sessionId and playerId from the message body on session:join', async () => {
+      const sessionService = {
+        join: jest.fn().mockResolvedValue({ id: 's9' }),
+      };
+      const gateway = buildGateway(sessionService, {
+        getConnection: jest.fn().mockResolvedValue(resolvedConnection),
+        register: jest.fn().mockResolvedValue(undefined),
+      });
+      const joinSocket = {
+        id: 'socket-1',
+        join: jest.fn(),
+      } as unknown as Socket;
+
+      await gateway.handleJoin(joinSocket, undefined, 's9', 'p9');
+
+      expect(wideEventService.enrich).toHaveBeenCalledWith({
+        sessionId: 's9',
+        playerId: 'p9',
+      });
+    });
+
+    it('does not enrich when the socket has no registered connection', async () => {
+      const sessionService = { handleGuess: jest.fn() };
+      const gateway = buildGateway(sessionService, {
+        getConnection: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        gateway.handleGuess(socket, defaultGuess),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: ErrorCode.CONNECTION_NOT_FOUND,
+        }),
+      });
+      expect(wideEventService.enrich).not.toHaveBeenCalled();
     });
   });
 
