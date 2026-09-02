@@ -36,7 +36,13 @@ export class DefaultExceptionFilter implements ExceptionFilter {
 
   private handleWsContextError(exception: unknown, host: ArgumentsHost) {
     const payload = exceptionToApiError(exception);
-    logWsApiError(this.logger, 'WS Error', payload, exception);
+    const enriched = enrichWideEventFromCls({
+      statusCode: payload.statusCode,
+      ...toWideEventErrorFields(payload, exception),
+    });
+    if (!enriched) {
+      logWsApiError(this.logger, 'WS Error', payload, exception);
+    }
 
     host.switchToWs().getClient().emit('error', payload);
   }
