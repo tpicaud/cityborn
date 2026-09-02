@@ -33,6 +33,7 @@ import { DefaultExceptionFilter } from '../common/filters/default-exception.filt
 import { logWsApiError } from '../common/filters/utils';
 import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
 import type { SessionSocket } from '../common/types/session-socket';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   type ConnectionInfo,
   ConnectionRegistryService,
@@ -68,6 +69,7 @@ export class SessionGateway
     private readonly userService: UserService,
     private readonly connectionRegistryService: ConnectionRegistryService,
     private readonly rateLimitService: RateLimitService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   @WebSocketServer()
@@ -81,6 +83,11 @@ export class SessionGateway
         code: ErrorCode.CONNECTION_NOT_FOUND,
         message: 'No connection associated with this socket',
       });
+
+    this.wideEventService.enrich({
+      sessionId: connection.sessionID,
+      playerId: connection.playerID,
+    });
 
     return connection;
   }
@@ -147,6 +154,8 @@ export class SessionGateway
       });
     }
 
+    this.wideEventService.enrich({ sessionId: sessionID, playerId: playerID });
+
     const session = await this.sessionService.join(sessionID, playerID, user);
     await this.connectionRegistryService.register(
       socket.id,
@@ -158,7 +167,6 @@ export class SessionGateway
     await socket.join(session.id);
     this.io.to(session.id).emit('session:update', session);
 
-    this.logger.log(`${playerID} a rejoint la session ${sessionID}`);
     return { success: true };
   }
 
@@ -339,6 +347,8 @@ export class SessionGateway
       });
     }
 
+    this.wideEventService.enrich({ sessionId: sessionID, playerId: playerID });
+
     const session = await this.sessionService.reconnectPlayer(
       sessionID,
       playerID,
@@ -354,7 +364,6 @@ export class SessionGateway
     await socket.join(sessionID);
     this.io.to(sessionID).emit('session:update', session);
 
-    this.logger.log(`${playerID} s'est reconnecté à la session ${sessionID}`);
     return { success: true };
   }
 
