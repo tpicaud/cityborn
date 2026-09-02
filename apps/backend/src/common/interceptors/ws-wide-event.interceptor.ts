@@ -1,16 +1,22 @@
 import {
   type CallHandler,
   type ExecutionContext,
+  Inject,
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
 import type { WsArgumentsHost } from '@nestjs/common/interfaces';
 import { ClsService } from 'nestjs-cls';
-import { PinoLogger } from 'nestjs-pino';
 import { finalize, Observable } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
 import type { SessionSocket } from '../types/session-socket';
-import { createWsWideEvent, emitWideEventLine } from '../wide-event/wide-event';
+import {
+  createWsWideEvent,
+  emitWideEventLine,
+  firstHeaderValue,
+  WIDE_EVENT_LOGGER,
+  type WideEventLogger,
+} from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -21,10 +27,8 @@ export class WsWideEventInterceptor implements NestInterceptor {
   constructor(
     private readonly wideEventService: WideEventService,
     private readonly cls: ClsService<WideEventClsStore>,
-    private readonly logger: PinoLogger,
-  ) {
-    this.logger.setContext('WideEvent');
-  }
+    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     if (context.getType() !== 'ws') {
@@ -65,17 +69,17 @@ export class WsWideEventInterceptor implements NestInterceptor {
   private initWideEvent(ws: WsArgumentsHost): void {
     const client = ws.getClient<SessionSocket>();
     const rawVisitorId = client.data.visitorId;
+    const headers = client.handshake.headers;
 
     this.wideEventService.set(
       createWsWideEvent({
         eventName: ws.getPattern(),
         socketId: client.id,
-        ip: resolveClientIpFromHeaders(
-          client.handshake.headers,
-          client.handshake.address,
-        ),
-        userAgent: client.handshake.headers['user-agent'],
+        ip: resolveClientIpFromHeaders(headers, client.handshake.address),
+        userAgent: headers['user-agent'],
         visitorId: Array.isArray(rawVisitorId) ? rawVisitorId[0] : rawVisitorId,
+        client: firstHeaderValue(headers['x-client-name']),
+        clientVersion: firstHeaderValue(headers['x-client-version']),
       }),
     );
 

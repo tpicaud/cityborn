@@ -3,10 +3,11 @@ jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'test-request-id') }));
 import { ErrorCode } from '@cityborn/api';
 import { Controller, Get, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { LoggerModule, PinoLogger } from 'nestjs-pino';
+import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { DefaultExceptionFilter } from '../filters/default-exception.filter';
+import { WIDE_EVENT_LOGGER } from './wide-event';
 import { WideEventModule } from './wide-event.module';
 
 @Controller()
@@ -26,9 +27,11 @@ type WideEventLine = Record<string, unknown> & { event?: unknown };
 
 describe('wide event integration — one line per request, error folded in', () => {
   let app: INestApplication<App>;
-  let infoSpy: jest.SpyInstance;
-  let warnSpy: jest.SpyInstance;
-  let errorSpy: jest.SpyInstance;
+  const wideEventLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -39,7 +42,10 @@ describe('wide event integration — one line per request, error folded in', () 
         WideEventModule,
       ],
       controllers: [ProbeController],
-    }).compile();
+    })
+      .overrideProvider(WIDE_EVENT_LOGGER)
+      .useValue(wideEventLogger)
+      .compile();
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new DefaultExceptionFilter());
@@ -47,20 +53,14 @@ describe('wide event integration — one line per request, error folded in', () 
   });
 
   beforeEach(() => {
-    infoSpy = jest.spyOn(PinoLogger.prototype, 'info').mockImplementation();
-    warnSpy = jest.spyOn(PinoLogger.prototype, 'warn').mockImplementation();
-    errorSpy = jest.spyOn(PinoLogger.prototype, 'error').mockImplementation();
-  });
-
-  afterEach(() => {
-    infoSpy.mockRestore();
-    warnSpy.mockRestore();
-    errorSpy.mockRestore();
+    wideEventLogger.info.mockClear();
+    wideEventLogger.warn.mockClear();
+    wideEventLogger.error.mockClear();
   });
 
   afterAll(() => app.close());
 
-  const httpRequestLines = (spy: jest.SpyInstance): WideEventLine[] =>
+  const httpRequestLines = (spy: jest.Mock): WideEventLine[] =>
     spy.mock.calls
       .map((call) => call[0] as unknown)
       .filter(
@@ -73,17 +73,30 @@ describe('wide event integration — one line per request, error folded in', () 
   it('emits exactly one info line for a 2xx response', async () => {
     await request(app.getHttpServer()).get('/ok').expect(200);
 
-    expect(httpRequestLines(infoSpy)).toHaveLength(1);
-    expect(httpRequestLines(warnSpy)).toHaveLength(0);
-    expect(httpRequestLines(errorSpy)).toHaveLength(0);
+    expect(httpRequestLines(wideEventLogger.info)).toHaveLength(1);
+    expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(0);
+    expect(httpRequestLines(wideEventLogger.error)).toHaveLength(0);
+  });
+
+  it('folds the calling client identity from the request headers', async () => {
+    await request(app.getHttpServer())
+      .get('/ok')
+      .set('X-Client-Name', 'web')
+      .set('X-Client-Version', '1.2.3')
+      .expect(200);
+
+    expect(httpRequestLines(wideEventLogger.info)[0]).toMatchObject({
+      client: 'web',
+      clientVersion: '1.2.3',
+    });
   });
 
   it('emits exactly one error line for a thrown 500, carrying the error folded in', async () => {
     await request(app.getHttpServer()).get('/boom').expect(500);
 
-    const errorLines = httpRequestLines(errorSpy);
+    const errorLines = httpRequestLines(wideEventLogger.error);
 
-    expect(httpRequestLines(infoSpy)).toHaveLength(0);
+    expect(httpRequestLines(wideEventLogger.info)).toHaveLength(0);
     expect(errorLines).toHaveLength(1);
     expect(errorLines[0]).toMatchObject({
       event: 'http_request',

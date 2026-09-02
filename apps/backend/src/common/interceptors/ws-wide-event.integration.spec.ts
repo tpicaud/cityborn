@@ -4,8 +4,8 @@ import { ErrorCode } from '@cityborn/api';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common';
 import { ClsServiceManager } from 'nestjs-cls';
-import type { PinoLogger } from 'nestjs-pino';
 import { lastValueFrom, of, throwError } from 'rxjs';
+import type { WideEventLogger } from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -14,7 +14,6 @@ import { WsErrorInterceptor } from './ws-error.interceptor';
 import { WsWideEventInterceptor } from './ws-wide-event.interceptor';
 
 const buildLogger = () => ({
-  setContext: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
@@ -42,7 +41,7 @@ describe('ws wide event integration — one line per message, error folded in', 
     const wsWideEvent = new WsWideEventInterceptor(
       wideEventService,
       cls,
-      logger as unknown as PinoLogger,
+      logger as unknown as WideEventLogger,
     );
     const wsError = new WsErrorInterceptor(wideEventService);
     const ctx = wsContext();

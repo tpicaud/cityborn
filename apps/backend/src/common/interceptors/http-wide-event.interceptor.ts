@@ -2,23 +2,25 @@ import { AsyncResource } from 'node:async_hooks';
 import {
   type CallHandler,
   type ExecutionContext,
+  Inject,
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { PinoLogger } from 'nestjs-pino';
 import type { Observable } from 'rxjs';
-import { emitWideEventLine } from '../wide-event/wide-event';
+import {
+  emitWideEventLine,
+  WIDE_EVENT_LOGGER,
+  type WideEventLogger,
+} from '../wide-event/wide-event';
 import { WideEventService } from '../wide-event/wide-event.service';
 
 @Injectable()
 export class HttpWideEventInterceptor implements NestInterceptor {
   constructor(
     private readonly wideEventService: WideEventService,
-    private readonly logger: PinoLogger,
-  ) {
-    this.logger.setContext('WideEvent');
-  }
+    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     if (context.getType() !== 'http') {

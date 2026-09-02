@@ -7,8 +7,30 @@ import {
 import type { ApiFetcherArgs } from '@ts-rest/core';
 import type { TokenStorage } from '../types/token-storage';
 
+export type ClientName = 'web' | 'mobile' | 'back-office';
+
+export interface ClientInfo {
+  name: ClientName;
+  version?: string;
+}
+
 export interface AuthFetchOptions {
   onResponseHeaders?: (headers: Headers) => void;
+  client?: ClientInfo;
+  getVisitorId?: () => string | null | Promise<string | null>;
+}
+
+function buildClientHeaders(
+  client: ClientInfo | undefined,
+): Record<string, string> {
+  if (!client) {
+    return {};
+  }
+  const headers: Record<string, string> = { 'X-Client-Name': client.name };
+  if (client.version) {
+    headers['X-Client-Version'] = client.version;
+  }
+  return headers;
 }
 
 export class AuthFetch {
@@ -17,6 +39,8 @@ export class AuthFetch {
   private readonly baseURL: string;
   private readonly tokenStorage: TokenStorage;
   private readonly onResponseHeaders?: (headers: Headers) => void;
+  private readonly baseHeaders: Record<string, string>;
+  private readonly getVisitorId?: () => string | null | Promise<string | null>;
 
   constructor(
     baseURL: string,
@@ -26,6 +50,33 @@ export class AuthFetch {
     this.baseURL = baseURL.replace(/\/+$/, '');
     this.tokenStorage = tokenStorage;
     this.onResponseHeaders = options.onResponseHeaders;
+    this.baseHeaders = buildClientHeaders(options.client);
+    this.getVisitorId = options.getVisitorId;
+  }
+
+  private async buildHeaders(
+    extra: Record<string, string>,
+    auth: { kind: 'access' } | { kind: 'bearer'; token: string },
+  ): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      ...this.baseHeaders,
+      ...extra,
+    };
+
+    const visitorId = await this.getVisitorId?.();
+    if (visitorId) {
+      headers['x-visitor-id'] = visitorId;
+    }
+
+    const token =
+      auth.kind === 'bearer'
+        ? auth.token
+        : await this.tokenStorage.getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   buildApiFunction() {
@@ -52,12 +103,9 @@ export class AuthFetch {
   private async fetchOnce(
     args: ApiFetcherArgs,
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
-    const token = await this.tokenStorage.getAccessToken();
-
-    const headers: Record<string, string> = { ...args.headers };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    const headers = await this.buildHeaders(args.headers ?? {}, {
+      kind: 'access',
+    });
 
     const response = await this.timeoutFetch(args.path, {
       method: args.method,
@@ -125,10 +173,10 @@ export class AuthFetch {
 
     const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`,
-      },
+      headers: await this.buildHeaders(
+        { 'Content-Type': 'application/json' },
+        { kind: 'bearer', token: refreshToken },
+      ),
     });
 
     if (this.onResponseHeaders) {

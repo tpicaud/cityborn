@@ -9,5 +9,7 @@ export async function getServerClient() {
   }
 
   const tokenStorage = new WebTokenStorage(await cookies());
-  return createApiClient(restBackendUrl, tokenStorage);
+  return createApiClient(restBackendUrl, tokenStorage, {
+    client: { name: 'web' },
+  });
 }

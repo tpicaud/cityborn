@@ -7,6 +7,8 @@ interface WideEventInitBase {
   ip: string | undefined;
   userAgent: string | undefined;
   visitorId: string | undefined;
+  client: string | undefined;
+  clientVersion: string | undefined;
 }
 
 export interface HttpWideEventInit extends WideEventInitBase {
@@ -14,6 +16,7 @@ export interface HttpWideEventInit extends WideEventInitBase {
   method: string;
   route: string;
   apiVersion: number | undefined;
+  isAuthenticated: boolean;
 }
 
 export interface WsWideEventInit extends WideEventInitBase {
@@ -42,10 +45,12 @@ export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
 
-type WideEventLogger = Record<
+export type WideEventLogger = Record<
   WideEventLevel,
   (payload: object, message: string) => void
 >;
+
+export const WIDE_EVENT_LOGGER = Symbol('WIDE_EVENT_LOGGER');
 
 const wideEventLogShape = {
   http: { event: 'http_request', message: 'request' },
@@ -69,9 +74,10 @@ function resolveApiVersion(req: Request): number | undefined {
   return cachedCurrentApiVersion;
 }
 
-function resolveVisitorId(req: Request): string | undefined {
-  const rawVisitorId = req.headers['x-visitor-id'];
-  return Array.isArray(rawVisitorId) ? rawVisitorId[0] : rawVisitorId;
+export function firstHeaderValue(
+  value: string | string[] | undefined,
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 export function createHttpWideEvent(req: Request): HttpWideEventInit {
@@ -82,8 +88,11 @@ export function createHttpWideEvent(req: Request): HttpWideEventInit {
     route: req.route?.path ?? req.originalUrl,
     ip: req.ip,
     userAgent: req.headers['user-agent'],
-    visitorId: resolveVisitorId(req),
+    visitorId: firstHeaderValue(req.headers['x-visitor-id']),
+    client: firstHeaderValue(req.headers['x-client-name']),
+    clientVersion: firstHeaderValue(req.headers['x-client-version']),
     apiVersion: resolveApiVersion(req),
+    isAuthenticated: false,
   };
 }
 
@@ -93,6 +102,8 @@ export function createWsWideEvent(params: {
   ip: string | undefined;
   userAgent: string | undefined;
   visitorId: string | undefined;
+  client: string | undefined;
+  clientVersion: string | undefined;
 }): WsWideEventInit {
   return {
     transport: 'ws',
@@ -102,6 +113,8 @@ export function createWsWideEvent(params: {
     ip: params.ip,
     userAgent: params.userAgent,
     visitorId: params.visitorId,
+    client: params.client,
+    clientVersion: params.clientVersion,
   };
 }
 

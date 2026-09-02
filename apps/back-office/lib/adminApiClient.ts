@@ -7,11 +7,15 @@ if (!backendUrl) {
   throw new Error('BACKEND_URL is not set');
 }
 
-const client = createApiClient(backendUrl, {
-  getAccessToken: async () => adminToken,
-  getRefreshToken: async () => null,
-  setTokens: async () => {},
-  clearTokens: async () => {},
-});
+const client = createApiClient(
+  backendUrl,
+  {
+    getAccessToken: async () => adminToken,
+    getRefreshToken: async () => null,
+    setTokens: async () => {},
+    clearTokens: async () => {},
+  },
+  { client: { name: 'back-office' } },
+);
 
 export const adminClient = client.admin;
