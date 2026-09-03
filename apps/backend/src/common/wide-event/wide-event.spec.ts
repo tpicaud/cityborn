@@ -11,6 +11,7 @@ import {
   createHttpWideEvent,
   createWsWideEvent,
   deriveWideEventLevel,
+  deriveWideEventOutcome,
   emitWideEventLine,
   type WideEvent,
 } from './wide-event';
@@ -60,8 +61,8 @@ describe('createHttpWideEvent', () => {
     expect(wideEvent.clientVersion).toBeUndefined();
   });
 
-  it('falls back to the original url when the route is not resolved', () => {
-    expect(createHttpWideEvent(buildRequest()).route).toBe('/fallback');
+  it('does not capture an unresolved URL', () => {
+    expect(createHttpWideEvent(buildRequest()).route).toBe('<unresolved>');
   });
 
   it('uses the X-Api-Version header when it is an integer', () => {
@@ -105,15 +106,25 @@ describe('createWsWideEvent', () => {
 
 describe('deriveWideEventLevel', () => {
   it.each([
-    [undefined, 'info'],
-    [200, 'info'],
-    [302, 'info'],
-    [400, 'warn'],
-    [404, 'warn'],
-    [500, 'error'],
-    [503, 'error'],
-  ])('maps status %s to %s', (statusCode, level) => {
-    expect(deriveWideEventLevel(statusCode)).toBe(level);
+    ['success', 'info'],
+    ['client_error', 'warn'],
+    ['server_error', 'error'],
+    ['aborted', 'warn'],
+  ] as const)('maps outcome %s to %s', (outcome, level) => {
+    expect(deriveWideEventLevel(outcome)).toBe(level);
+  });
+});
+
+describe('deriveWideEventOutcome', () => {
+  it.each([
+    [200, 'success'],
+    [302, 'success'],
+    [400, 'client_error'],
+    [404, 'client_error'],
+    [500, 'server_error'],
+    [503, 'server_error'],
+  ] as const)('maps status %s to %s', (statusCode, outcome) => {
+    expect(deriveWideEventOutcome(statusCode)).toBe(outcome);
   });
 });
 
@@ -139,6 +150,7 @@ describe('emitWideEventLine', () => {
       apiVersion: 7,
       isAuthenticated: false,
       statusCode: 404,
+      outcome: 'client_error',
     };
 
     emitWideEventLine(logger, wideEvent);
@@ -150,7 +162,7 @@ describe('emitWideEventLine', () => {
     expect(logger.info).not.toHaveBeenCalled();
   });
 
-  it('logs a ws_message line at info when no status code is set', () => {
+  it('logs a successful ws_message line at info', () => {
     const logger = buildLogger();
     const wideEvent: WideEvent = {
       transport: 'ws',
@@ -162,6 +174,7 @@ describe('emitWideEventLine', () => {
       visitorId: undefined,
       client: undefined,
       clientVersion: undefined,
+      outcome: 'success',
     };
 
     emitWideEventLine(logger, wideEvent);
@@ -185,6 +198,7 @@ describe('emitWideEventLine', () => {
       client: undefined,
       clientVersion: undefined,
       statusCode: 500,
+      outcome: 'server_error',
     };
 
     emitWideEventLine(logger, wideEvent);

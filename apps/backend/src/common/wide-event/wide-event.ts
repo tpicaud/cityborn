@@ -28,6 +28,7 @@ export interface WsWideEventInit extends WideEventInitBase {
 export type WideEventInit = HttpWideEventInit | WsWideEventInit;
 
 export interface WideEventEnrichment {
+  route: string;
   userId: string;
   isAuthenticated: boolean;
   rateLimitBucket: string;
@@ -39,11 +40,18 @@ export interface WideEventEnrichment {
   errorStack: string;
   sessionId: string;
   playerId: string;
+  outcome: WideEventOutcome;
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
+
+export type WideEventOutcome =
+  | 'success'
+  | 'client_error'
+  | 'server_error'
+  | 'aborted';
 
 export type WideEventLogger = Record<
   WideEventLevel,
@@ -81,11 +89,13 @@ export function firstHeaderValue(
 }
 
 export function createHttpWideEvent(req: Request): HttpWideEventInit {
+  const route = req.route?.path;
+
   return {
     transport: 'http',
     requestId: nanoid(),
     method: req.method,
-    route: req.route?.path ?? req.originalUrl,
+    route: typeof route === 'string' ? route : '<unresolved>',
     ip: req.ip,
     userAgent: req.headers['user-agent'],
     visitorId: firstHeaderValue(req.headers['x-visitor-id']),
@@ -119,25 +129,33 @@ export function createWsWideEvent(params: {
 }
 
 export function deriveWideEventLevel(
-  statusCode: number | undefined,
+  outcome: WideEventOutcome,
 ): WideEventLevel {
-  if (statusCode === undefined) {
-    return 'info';
-  }
-  if (statusCode >= 500) {
+  if (outcome === 'server_error') {
     return 'error';
   }
-  if (statusCode >= 400) {
+  if (outcome === 'client_error' || outcome === 'aborted') {
     return 'warn';
   }
   return 'info';
+}
+
+export function deriveWideEventOutcome(statusCode: number): WideEventOutcome {
+  if (statusCode >= 500) {
+    return 'server_error';
+  }
+  if (statusCode >= 400) {
+    return 'client_error';
+  }
+  return 'success';
 }
 
 export function emitWideEventLine(
   logger: WideEventLogger,
   wideEvent: WideEvent,
 ): void {
-  const level = deriveWideEventLevel(wideEvent.statusCode);
+  const outcome = wideEvent.outcome ?? 'success';
+  const level = deriveWideEventLevel(outcome);
   const { event, message } = wideEventLogShape[wideEvent.transport];
   logger[level]({ ...wideEvent, event }, message);
 }

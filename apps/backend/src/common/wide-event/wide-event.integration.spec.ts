@@ -1,7 +1,15 @@
 jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'test-request-id') }));
 
 import { ErrorCode } from '@cityborn/api';
-import { Controller, Get, type INestApplication } from '@nestjs/common';
+import {
+  type CanActivate,
+  Controller,
+  Get,
+  type INestApplication,
+  Injectable,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
@@ -9,6 +17,13 @@ import type { App } from 'supertest/types';
 import { DefaultExceptionFilter } from '../filters/default-exception.filter';
 import { WIDE_EVENT_LOGGER } from './wide-event';
 import { WideEventModule } from './wide-event.module';
+
+@Injectable()
+class RejectGuard implements CanActivate {
+  canActivate(): never {
+    throw new UnauthorizedException();
+  }
+}
 
 @Controller()
 class ProbeController {
@@ -20,6 +35,12 @@ class ProbeController {
   @Get('boom')
   boom(): never {
     throw new Error('kaboom');
+  }
+
+  @Get('protected')
+  @UseGuards(RejectGuard)
+  protected() {
+    return { hidden: true };
   }
 }
 
@@ -42,6 +63,7 @@ describe('wide event integration — one line per request, error folded in', () 
         WideEventModule,
       ],
       controllers: [ProbeController],
+      providers: [RejectGuard],
     })
       .overrideProvider(WIDE_EVENT_LOGGER)
       .useValue(wideEventLogger)
@@ -76,6 +98,11 @@ describe('wide event integration — one line per request, error folded in', () 
     expect(httpRequestLines(wideEventLogger.info)).toHaveLength(1);
     expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(0);
     expect(httpRequestLines(wideEventLogger.error)).toHaveLength(0);
+    expect(httpRequestLines(wideEventLogger.info)[0]).toMatchObject({
+      route: '/ok',
+      outcome: 'success',
+      statusCode: 200,
+    });
   });
 
   it('folds the calling client identity from the request headers', async () => {
@@ -106,5 +133,36 @@ describe('wide event integration — one line per request, error folded in', () 
       requestId: expect.any(String),
     });
     expect(typeof errorLines[0].errorStack).toBe('string');
+    expect(errorLines[0].outcome).toBe('server_error');
+  });
+
+  it('emits exactly one line when a guard rejects before interceptors', async () => {
+    await request(app.getHttpServer()).get('/protected').expect(401);
+
+    expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(1);
+    expect(httpRequestLines(wideEventLogger.warn)[0]).toMatchObject({
+      route: '/protected',
+      outcome: 'client_error',
+      statusCode: 401,
+    });
+  });
+
+  it('emits exactly one bounded line for an unknown route', async () => {
+    await request(app.getHttpServer())
+      .get('/missing/private-value?token=secret')
+      .expect(404);
+
+    expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(1);
+    expect(httpRequestLines(wideEventLogger.warn)[0]).toMatchObject({
+      route: '<unmatched>',
+      outcome: 'client_error',
+      statusCode: 404,
+    });
+    expect(
+      JSON.stringify(httpRequestLines(wideEventLogger.warn)[0]),
+    ).not.toContain('private-value');
+    expect(
+      JSON.stringify(httpRequestLines(wideEventLogger.warn)[0]),
+    ).not.toContain('secret');
   });
 });

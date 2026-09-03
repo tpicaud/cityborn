@@ -57,4 +57,26 @@ describe('WideEventService', () => {
 
     expect(service.get()).toBeUndefined();
   });
+
+  it('completes an event exactly once', () => {
+    const service = buildService();
+    service.set(baseInit);
+
+    const completed = service.complete({ outcome: 'success', statusCode: 200 });
+    const duplicate = service.complete({
+      outcome: 'server_error',
+      statusCode: 500,
+    });
+
+    expect(completed).toMatchObject({
+      outcome: 'success',
+      statusCode: 200,
+      durationMs: expect.any(Number),
+    });
+    expect(duplicate).toBeUndefined();
+    expect(service.get()).toMatchObject({
+      outcome: 'success',
+      statusCode: 200,
+    });
+  });
 });
