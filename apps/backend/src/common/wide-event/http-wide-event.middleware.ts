@@ -2,7 +2,11 @@ import { AsyncResource } from 'node:async_hooks';
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { ClsService } from 'nestjs-cls';
-import { createHttpWideEvent, deriveWideEventOutcome } from './wide-event';
+import {
+  createHttpWideEvent,
+  deriveWideEventOutcome,
+  resolveHttpWideEventContext,
+} from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
 @Injectable()
@@ -33,6 +37,9 @@ export class HttpWideEventMiddleware implements NestMiddleware {
           errorStack: undefined,
         });
       }
+      this.wideEventService.enrich(
+        resolveHttpWideEventContext(request.method, route),
+      );
       this.wideEventService.complete({
         route,
         outcome: aborted

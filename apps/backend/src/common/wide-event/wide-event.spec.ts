@@ -13,6 +13,8 @@ import {
   deriveWideEventLevel,
   deriveWideEventOutcome,
   emitWideEventLine,
+  resolveHttpWideEventContext,
+  resolveWsWideEventContext,
   type WideEvent,
 } from './wide-event';
 
@@ -61,6 +63,12 @@ describe('createHttpWideEvent', () => {
     expect(wideEvent.clientVersion).toBeUndefined();
   });
 
+  it('reuses the pino request id', () => {
+    expect(
+      createHttpWideEvent(buildRequest({ id: 'pino-request-id' })).requestId,
+    ).toBe('pino-request-id');
+  });
+
   it('does not capture an unresolved URL', () => {
     expect(createHttpWideEvent(buildRequest()).route).toBe('<unresolved>');
   });
@@ -100,6 +108,8 @@ describe('createWsWideEvent', () => {
       visitorId: 'visitor-1',
       client: 'mobile',
       clientVersion: '0.1.4',
+      domain: 'session',
+      operation: 'join',
     });
   });
 });
@@ -128,6 +138,35 @@ describe('deriveWideEventOutcome', () => {
   });
 });
 
+describe('wide event context', () => {
+  it.each([
+    ['POST', '/auth/sign-in', { domain: 'auth', operation: 'sign_in' }],
+    ['GET', '/session/:id', { domain: 'session', operation: 'get' }],
+    ['POST', '/session/create-game', { domain: 'game', operation: 'create' }],
+    [
+      'PATCH',
+      '/admin/guess-object/:id',
+      { domain: 'guess_object', operation: 'admin_update' },
+    ],
+  ] as const)('maps %s %s to a bounded context', (method, route, expected) => {
+    expect(resolveHttpWideEventContext(method, route)).toEqual(expected);
+  });
+
+  it('maps an unknown route without retaining its value', () => {
+    expect(resolveHttpWideEventContext('GET', '<unmatched>')).toEqual({
+      domain: 'system',
+      operation: 'route_not_found',
+    });
+  });
+
+  it('maps a websocket event to a bounded context', () => {
+    expect(resolveWsWideEventContext('session:nextRound')).toEqual({
+      domain: 'game',
+      operation: 'next_round',
+    });
+  });
+});
+
 describe('emitWideEventLine', () => {
   const buildLogger = () => ({
     info: jest.fn(),
@@ -142,6 +181,8 @@ describe('emitWideEventLine', () => {
       requestId: 'r1',
       method: 'GET',
       route: '/x',
+      domain: 'system',
+      operation: 'unmapped_request',
       ip: undefined,
       userAgent: undefined,
       visitorId: undefined,
@@ -168,6 +209,8 @@ describe('emitWideEventLine', () => {
       transport: 'ws',
       requestId: 'r1',
       eventName: 'session:join',
+      domain: 'session',
+      operation: 'join',
       socketId: 'socket-1',
       ip: undefined,
       userAgent: undefined,
@@ -191,6 +234,8 @@ describe('emitWideEventLine', () => {
       transport: 'ws',
       requestId: 'r1',
       eventName: 'session:guess',
+      domain: 'game',
+      operation: 'guess',
       socketId: 'socket-1',
       ip: undefined,
       userAgent: undefined,

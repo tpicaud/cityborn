@@ -1,3 +1,5 @@
+jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
+
 import {
   ErrorCode,
   type Game,
@@ -8,6 +10,7 @@ import {
   SessionStatus,
 } from '@cityborn/api';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
@@ -35,6 +38,7 @@ function buildSessionService(session: Session | null) {
     {} as unknown as IdService,
     {} as unknown as GameService,
     {} as unknown as EventService,
+    { enrich: jest.fn() } as unknown as WideEventService,
   );
 
   return { sessionService, redisService };

@@ -155,6 +155,8 @@ describe('wide event integration — one line per request, error folded in', () 
     expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(1);
     expect(httpRequestLines(wideEventLogger.warn)[0]).toMatchObject({
       route: '<unmatched>',
+      domain: 'system',
+      operation: 'route_not_found',
       outcome: 'client_error',
       statusCode: 404,
     });

@@ -18,6 +18,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
@@ -37,6 +38,7 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   private getKey(id: string): string {
@@ -55,6 +57,7 @@ export class SessionService {
     const { mode } = dto;
 
     const sessionID: string = await this.generateUniqueSessionID();
+    this.wideEventService.enrich({ sessionId: sessionID });
 
     const newSession: Session = {
       id: sessionID,
@@ -240,6 +243,7 @@ export class SessionService {
       players: session.players,
       mode: session.mode,
       visitorId,
+      sessionId: sessionID,
     });
 
     session.status = SessionStatus.IN_GAME;
@@ -354,6 +358,7 @@ export class SessionService {
             session.players,
             session.mode,
             visitorId,
+            sessionID,
           );
 
           const lobbySession: Session = {
@@ -506,7 +511,14 @@ export class SessionService {
   ///////////
 
   private async getSession(sessionID: string): Promise<Session | null> {
-    return await this.redisService.getJSON<Session>(this.getKey(sessionID));
+    this.wideEventService.enrich({ sessionId: sessionID });
+    const session = await this.redisService.getJSON<Session>(
+      this.getKey(sessionID),
+    );
+    if (session?.currentGame) {
+      this.wideEventService.enrich({ gameId: session.currentGame.id });
+    }
+    return session;
   }
 
   private async saveSession(

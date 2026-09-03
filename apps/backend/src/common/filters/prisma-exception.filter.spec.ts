@@ -98,6 +98,8 @@ describe('PrismaExceptionFilter wide event enrichment', () => {
     requestId: 'rid',
     method: 'GET',
     route: '/x',
+    domain: 'system',
+    operation: 'unmapped_request',
     ip: undefined,
     userAgent: undefined,
     visitorId: undefined,

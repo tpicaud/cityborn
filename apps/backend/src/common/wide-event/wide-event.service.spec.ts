@@ -1,3 +1,5 @@
+jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
+
 import type { ClsService } from 'nestjs-cls';
 import type { WideEventInit } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
@@ -7,6 +9,8 @@ const baseInit: WideEventInit = {
   requestId: 'r1',
   method: 'GET',
   route: '/x',
+  domain: 'system',
+  operation: 'unmapped_request',
   ip: undefined,
   userAgent: undefined,
   visitorId: undefined,

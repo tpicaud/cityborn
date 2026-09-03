@@ -58,6 +58,10 @@ describe('ws wide event integration — one line per message, error folded in', 
       expect.objectContaining({
         event: 'ws_message',
         eventName: 'session:guess',
+        domain: 'game',
+        operation: 'guess',
+        outcome: 'success',
+        statusCode: 200,
       }),
       'message',
     );
@@ -87,6 +91,7 @@ describe('ws wide event integration — one line per message, error folded in', 
         statusCode: 404,
         errorCode: ErrorCode.SESSION_NOT_FOUND,
         errorMessage: 'Session not found',
+        outcome: 'client_error',
       }),
       'message',
     );

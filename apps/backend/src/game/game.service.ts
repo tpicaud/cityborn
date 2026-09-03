@@ -16,6 +16,7 @@ import {
 } from '@cityborn/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GuessObjectService } from '../guess-object/guess-object.service';
@@ -27,6 +28,7 @@ export type CreateGameParams = {
   players: Player[];
   mode: SessionMode;
   visitorId?: string;
+  sessionId?: string;
 };
 
 @Injectable()
@@ -38,6 +40,7 @@ export class GameService {
     private readonly prisma: PrismaService,
     private readonly eventService: EventService,
     private readonly idService: IdService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   async createGame({
@@ -45,7 +48,11 @@ export class GameService {
     players,
     mode,
     visitorId,
+    sessionId,
   }: CreateGameParams): Promise<Game> {
+    if (sessionId) {
+      this.wideEventService.enrich({ sessionId });
+    }
     const guessObjects =
       await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
         gameConfig,
@@ -68,6 +75,7 @@ export class GameService {
         guessObjects: guessObjects,
       },
     };
+    this.wideEventService.enrich({ gameId: game.id });
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -96,7 +104,12 @@ export class GameService {
     players: Player[],
     mode: SessionMode,
     visitorId?: string,
+    sessionId?: string,
   ): Promise<void> {
+    this.wideEventService.enrich({
+      gameId: game.id,
+      ...(sessionId ? { sessionId } : {}),
+    });
     try {
       const game_record = await this.prisma.gameRecord.create({
         data: {

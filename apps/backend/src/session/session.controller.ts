@@ -62,6 +62,7 @@ export class SessionController {
           players: session.players,
           mode: session.mode,
           visitorId,
+          sessionId: session.id,
         }),
       }),
       finalizeGame: async ({ body: session }) => {
@@ -85,6 +86,7 @@ export class SessionController {
       session.players,
       session.mode,
       visitorId,
+      session.id,
     );
   }
 }
