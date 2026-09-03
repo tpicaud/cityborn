@@ -1,14 +1,8 @@
 import { AsyncResource } from 'node:async_hooks';
-import { Inject, Injectable, type NestMiddleware } from '@nestjs/common';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { ClsService } from 'nestjs-cls';
-import {
-  createHttpWideEvent,
-  deriveWideEventOutcome,
-  emitWideEventLine,
-  WIDE_EVENT_LOGGER,
-  type WideEventLogger,
-} from './wide-event';
+import { createHttpWideEvent, deriveWideEventOutcome } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
 @Injectable()
@@ -16,7 +10,6 @@ export class HttpWideEventMiddleware implements NestMiddleware {
   constructor(
     private readonly wideEventService: WideEventService,
     private readonly cls: ClsService<WideEventClsStore>,
-    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
   ) {}
 
   use(request: Request, response: Response, next: NextFunction): void {
@@ -40,16 +33,13 @@ export class HttpWideEventMiddleware implements NestMiddleware {
           errorStack: undefined,
         });
       }
-      const wideEvent = this.wideEventService.complete({
+      this.wideEventService.complete({
         route,
         outcome: aborted
           ? 'aborted'
           : deriveWideEventOutcome(response.statusCode),
         ...(aborted ? {} : { statusCode: response.statusCode }),
       });
-      if (wideEvent) {
-        emitWideEventLine(this.logger, wideEvent);
-      }
     };
 
     const completeResponse = AsyncResource.bind(() => complete(false));

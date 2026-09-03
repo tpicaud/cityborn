@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClsService, ClsServiceManager, type ClsStore } from 'nestjs-cls';
 import type {
   WideEvent,
   WideEventEnrichment,
   WideEventInit,
+  WideEventLogger,
   WideEventOutcome,
 } from './wide-event';
+import { emitWideEventLine, WIDE_EVENT_LOGGER } from './wide-event';
 
 export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
@@ -27,7 +29,10 @@ export function enrichWideEventFromCls(
 
 @Injectable()
 export class WideEventService {
-  constructor(private readonly cls: ClsService<WideEventClsStore>) {}
+  constructor(
+    private readonly cls: ClsService<WideEventClsStore>,
+    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
+  ) {}
 
   set(init: WideEventInit): void {
     this.cls.set('wideEvent', init);
@@ -67,6 +72,10 @@ export class WideEventService {
       ...fields,
       durationMs: Number(process.hrtime.bigint() - startedAt) / 1e6,
     });
-    return this.get();
+    const completed = this.get();
+    if (completed) {
+      emitWideEventLine(this.logger, completed);
+    }
+    return completed;
   }
 }

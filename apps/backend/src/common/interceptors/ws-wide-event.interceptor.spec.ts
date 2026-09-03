@@ -3,7 +3,6 @@ jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { ClsServiceManager } from 'nestjs-cls';
 import { lastValueFrom, of, throwError } from 'rxjs';
-import type { WideEventLogger } from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -40,12 +39,8 @@ describe('WsWideEventInterceptor', () => {
   const build = () => {
     const logger = buildLogger();
     const cls = ClsServiceManager.getClsService<WideEventClsStore>();
-    const wideEventService = new WideEventService(cls);
-    const interceptor = new WsWideEventInterceptor(
-      wideEventService,
-      cls,
-      logger as unknown as WideEventLogger,
-    );
+    const wideEventService = new WideEventService(cls, logger);
+    const interceptor = new WsWideEventInterceptor(wideEventService, cls);
     return { interceptor, logger, wideEventService };
   };
 

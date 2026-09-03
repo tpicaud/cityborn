@@ -5,7 +5,6 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common';
 import { ClsServiceManager } from 'nestjs-cls';
 import { lastValueFrom, of, throwError } from 'rxjs';
-import type { WideEventLogger } from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -37,12 +36,8 @@ describe('ws wide event integration — one line per message, error folded in', 
   const run = (handler: CallHandler) => {
     const logger = buildLogger();
     const cls = ClsServiceManager.getClsService<WideEventClsStore>();
-    const wideEventService = new WideEventService(cls);
-    const wsWideEvent = new WsWideEventInterceptor(
-      wideEventService,
-      cls,
-      logger as unknown as WideEventLogger,
-    );
+    const wideEventService = new WideEventService(cls, logger);
+    const wsWideEvent = new WsWideEventInterceptor(wideEventService, cls);
     const wsError = new WsErrorInterceptor(wideEventService);
     const ctx = wsContext();
 

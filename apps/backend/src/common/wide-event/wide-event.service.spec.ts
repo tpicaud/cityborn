@@ -22,7 +22,11 @@ const buildService = () => {
     get: (key: string) => store.get(key),
     set: (key: string, value: unknown) => store.set(key, value),
   } as unknown as ClsService<WideEventClsStore>;
-  return new WideEventService(cls);
+  return new WideEventService(cls, {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  });
 };
 
 describe('WideEventService', () => {

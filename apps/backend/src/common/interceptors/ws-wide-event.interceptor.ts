@@ -1,7 +1,6 @@
 import {
   type CallHandler,
   type ExecutionContext,
-  Inject,
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
@@ -12,10 +11,8 @@ import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
 import type { SessionSocket } from '../types/session-socket';
 import {
   createWsWideEvent,
-  emitWideEventLine,
+  deriveWideEventOutcome,
   firstHeaderValue,
-  WIDE_EVENT_LOGGER,
-  type WideEventLogger,
 } from '../wide-event/wide-event';
 import {
   type WideEventClsStore,
@@ -27,7 +24,6 @@ export class WsWideEventInterceptor implements NestInterceptor {
   constructor(
     private readonly wideEventService: WideEventService,
     private readonly cls: ClsService<WideEventClsStore>,
-    @Inject(WIDE_EVENT_LOGGER) private readonly logger: WideEventLogger,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -36,33 +32,27 @@ export class WsWideEventInterceptor implements NestInterceptor {
     }
 
     const ws = context.switchToWs();
+    if (this.wideEventService.get()?.transport === 'ws') {
+      return next.handle().pipe(finalize(() => this.completeWideEvent()));
+    }
 
     return new Observable((subscriber) => {
       this.cls.run(() => {
         this.initWideEvent(ws);
-        const start = process.hrtime.bigint();
-
-        let emitted = false;
-        const emit = (): void => {
-          if (emitted) {
-            return;
-          }
-          emitted = true;
-
-          const durationMs = Number(process.hrtime.bigint() - start) / 1e6;
-          this.wideEventService.enrich({ durationMs });
-          const wideEvent = this.wideEventService.get();
-          if (wideEvent) {
-            emitWideEventLine(this.logger, wideEvent);
-          }
-        };
-
         const subscription = next
           .handle()
-          .pipe(finalize(emit))
+          .pipe(finalize(() => this.completeWideEvent()))
           .subscribe(subscriber);
         subscriber.add(subscription);
       });
+    });
+  }
+
+  private completeWideEvent(): void {
+    const statusCode = this.wideEventService.get()?.statusCode ?? 200;
+    this.wideEventService.complete({
+      statusCode,
+      outcome: deriveWideEventOutcome(statusCode),
     });
   }
 
