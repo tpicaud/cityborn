@@ -89,6 +89,7 @@ Conventions chargées automatiquement quand le contexte le demande (`.agents/ski
 | `deprecate` | on déprécie une route / type / champ / valeur d'enum du contrat API |
 | `check-and-remove-deprecated` | ménage périodique des dépréciations d'API |
 | `issue-github` | on rédige / reformule un ticket GitHub |
+| `develop-issue` | on lance ou développe une issue existante dans une tâche et un worktree dédiés |
 
 ## Maintenir ce guide
 
