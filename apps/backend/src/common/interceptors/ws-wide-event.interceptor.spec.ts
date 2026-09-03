@@ -1,8 +1,6 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
-
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { ClsServiceManager } from 'nestjs-cls';
-import { lastValueFrom, of, throwError } from 'rxjs';
+import { delay, lastValueFrom, NEVER, of, tap, throwError } from 'rxjs';
 import {
   type WideEventClsStore,
   WideEventService,
@@ -60,7 +58,7 @@ describe('WsWideEventInterceptor', () => {
         event: 'ws_message',
         eventName: 'session:join',
         socketId: 'socket-1',
-        requestId: 'rid',
+        requestId: expect.any(String),
         ip: '1.2.3.4',
         userAgent: 'jest',
         isAuthenticated: false,
@@ -129,7 +127,66 @@ describe('WsWideEventInterceptor', () => {
       ),
     ).rejects.toBe(failure);
 
-    expect(logger.info).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits one aborted line when message processing is cancelled', () => {
+    const { interceptor, logger } = build();
+    const subscription = interceptor
+      .intercept(buildWsContext(buildClient()), { handle: () => NEVER })
+      .subscribe();
+
+    subscription.unsubscribe();
+
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'ws_message',
+        outcome: 'aborted',
+      }),
+      'message',
+    );
+  });
+
+  it('isolates concurrent message enrichments', async () => {
+    const { interceptor, logger, wideEventService } = build();
+    const first = lastValueFrom(
+      interceptor.intercept(buildWsContext(buildClient(), 'session:join'), {
+        handle: () =>
+          of(null).pipe(
+            delay(20),
+            tap(() => wideEventService.enrich({ sessionId: 'first' })),
+          ),
+      }),
+    );
+    const second = lastValueFrom(
+      interceptor.intercept(
+        buildWsContext(buildClient(), 'session:reconnect'),
+        {
+          handle: () =>
+            of(null).pipe(
+              delay(5),
+              tap(() => wideEventService.enrich({ sessionId: 'second' })),
+            ),
+        },
+      ),
+    );
+
+    await Promise.all([first, second]);
+
+    expect(logger.info).toHaveBeenCalledTimes(2);
+    expect(logger.info.mock.calls.map(([line]) => line)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventName: 'session:join',
+          sessionId: 'first',
+        }),
+        expect.objectContaining({
+          eventName: 'session:reconnect',
+          sessionId: 'second',
+        }),
+      ]),
+    );
   });
 
   it('passes through a non-ws context untouched', async () => {

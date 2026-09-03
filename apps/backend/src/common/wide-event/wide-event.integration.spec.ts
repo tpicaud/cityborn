@@ -1,12 +1,12 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'test-request-id') }));
-
 import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   Controller,
   Get,
+  HttpException,
   type INestApplication,
   Injectable,
+  Param,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +17,7 @@ import type { App } from 'supertest/types';
 import { DefaultExceptionFilter } from '../filters/default-exception.filter';
 import { WIDE_EVENT_LOGGER } from './wide-event';
 import { WideEventModule } from './wide-event.module';
+import { WideEventService } from './wide-event.service';
 
 @Injectable()
 class RejectGuard implements CanActivate {
@@ -25,8 +26,26 @@ class RejectGuard implements CanActivate {
   }
 }
 
+@Injectable()
+class RateLimitRejectGuard implements CanActivate {
+  constructor(private readonly wideEventService: WideEventService) {}
+
+  canActivate(): never {
+    this.wideEventService.enrich({ rateLimitBucket: 'rl:http' });
+    throw new HttpException(
+      {
+        code: ErrorCode.RATE_LIMIT_EXCEEDED,
+        message: 'Too many requests',
+      },
+      429,
+    );
+  }
+}
+
 @Controller()
 class ProbeController {
+  constructor(private readonly wideEventService: WideEventService) {}
+
   @Get('ok')
   ok() {
     return { hello: 'world' };
@@ -41,6 +60,21 @@ class ProbeController {
   @UseGuards(RejectGuard)
   protected() {
     return { hidden: true };
+  }
+
+  @Get('limited')
+  @UseGuards(RateLimitRejectGuard)
+  limited() {
+    return { hidden: true };
+  }
+
+  @Get('isolation/:id')
+  async isolation(@Param('id') id: string) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, id === 'first' ? 20 : 5),
+    );
+    this.wideEventService.enrich({ sessionId: id });
+    return { id };
   }
 }
 
@@ -63,7 +97,7 @@ describe('wide event integration — one line per request, error folded in', () 
         WideEventModule,
       ],
       controllers: [ProbeController],
-      providers: [RejectGuard],
+      providers: [RejectGuard, RateLimitRejectGuard],
     })
       .overrideProvider(WIDE_EVENT_LOGGER)
       .useValue(wideEventLogger)
@@ -147,6 +181,35 @@ describe('wide event integration — one line per request, error folded in', () 
     });
   });
 
+  it('emits exactly one rate limit line when a guard rejects with 429', async () => {
+    await request(app.getHttpServer()).get('/limited').expect(429);
+
+    expect(httpRequestLines(wideEventLogger.warn)).toHaveLength(1);
+    expect(httpRequestLines(wideEventLogger.warn)[0]).toMatchObject({
+      route: '/limited',
+      outcome: 'client_error',
+      statusCode: 429,
+      rateLimitBucket: 'rl:http',
+      errorCode: ErrorCode.RATE_LIMIT_EXCEEDED,
+    });
+  });
+
+  it('isolates concurrent request enrichments', async () => {
+    await Promise.all([
+      request(app.getHttpServer()).get('/isolation/first').expect(200),
+      request(app.getHttpServer()).get('/isolation/second').expect(200),
+    ]);
+
+    const lines = httpRequestLines(wideEventLogger.info);
+    expect(lines).toHaveLength(2);
+    expect(lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sessionId: 'first' }),
+        expect.objectContaining({ sessionId: 'second' }),
+      ]),
+    );
+  });
+
   it('emits exactly one bounded line for an unknown route', async () => {
     await request(app.getHttpServer())
       .get('/missing/private-value?token=secret')
@@ -156,7 +219,6 @@ describe('wide event integration — one line per request, error folded in', () 
     expect(httpRequestLines(wideEventLogger.warn)[0]).toMatchObject({
       route: '<unmatched>',
       domain: 'system',
-      operation: 'route_not_found',
       outcome: 'client_error',
       statusCode: 404,
     });

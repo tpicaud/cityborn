@@ -1,5 +1,3 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
-
 import {
   ErrorCode,
   type Game,

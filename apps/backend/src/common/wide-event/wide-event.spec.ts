@@ -1,4 +1,3 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'generated-request-id') }));
 jest.mock('@cityborn/api', () => ({
   getApiVersionInfo: jest.fn(() => ({
     minSupportedVersion: 4,
@@ -13,8 +12,8 @@ import {
   deriveWideEventLevel,
   deriveWideEventOutcome,
   emitWideEventLine,
-  resolveHttpWideEventContext,
-  resolveWsWideEventContext,
+  resolveHttpWideEventDomain,
+  resolveWsWideEventDomain,
   type WideEvent,
 } from './wide-event';
 
@@ -44,7 +43,7 @@ describe('createHttpWideEvent', () => {
 
     expect(wideEvent).toMatchObject({
       transport: 'http',
-      requestId: 'generated-request-id',
+      requestId: expect.any(String),
       method: 'POST',
       route: '/auth/sign-in',
       ip: '1.2.3.4',
@@ -100,7 +99,7 @@ describe('createWsWideEvent', () => {
       }),
     ).toEqual({
       transport: 'ws',
-      requestId: 'generated-request-id',
+      requestId: expect.any(String),
       eventName: 'session:join',
       socketId: 'socket-1',
       ip: '1.2.3.4',
@@ -109,7 +108,6 @@ describe('createWsWideEvent', () => {
       client: 'mobile',
       clientVersion: '0.1.4',
       domain: 'session',
-      operation: 'join',
     });
   });
 });
@@ -138,32 +136,24 @@ describe('deriveWideEventOutcome', () => {
   });
 });
 
-describe('wide event context', () => {
+describe('wide event domain', () => {
   it.each([
-    ['POST', '/auth/sign-in', { domain: 'auth', operation: 'sign_in' }],
-    ['GET', '/session/:id', { domain: 'session', operation: 'get' }],
-    ['POST', '/session/create-game', { domain: 'game', operation: 'create' }],
-    [
-      'PATCH',
-      '/admin/guess-object/:id',
-      { domain: 'guess_object', operation: 'admin_update' },
-    ],
-  ] as const)('maps %s %s to a bounded context', (method, route, expected) => {
-    expect(resolveHttpWideEventContext(method, route)).toEqual(expected);
+    ['/auth/sign-in', 'auth'],
+    ['/auth/future-action', 'auth'],
+    ['/session/create-game', 'session'],
+    ['/admin/guess-object/:id', 'guess_object'],
+    ['/admin/world-location', 'world_location'],
+  ] as const)('derives %s as the %s domain', (route, expected) => {
+    expect(resolveHttpWideEventDomain(route)).toBe(expected);
   });
 
-  it('maps an unknown route without retaining its value', () => {
-    expect(resolveHttpWideEventContext('GET', '<unmatched>')).toEqual({
-      domain: 'system',
-      operation: 'route_not_found',
-    });
+  it('falls back to system for an unknown route', () => {
+    expect(resolveHttpWideEventDomain('<unmatched>')).toBe('system');
   });
 
-  it('maps a websocket event to a bounded context', () => {
-    expect(resolveWsWideEventContext('session:nextRound')).toEqual({
-      domain: 'game',
-      operation: 'next_round',
-    });
+  it('derives a websocket domain from the event prefix', () => {
+    expect(resolveWsWideEventDomain('session:newMessage')).toBe('session');
+    expect(resolveWsWideEventDomain('untrusted:value')).toBe('system');
   });
 });
 
@@ -182,7 +172,6 @@ describe('emitWideEventLine', () => {
       method: 'GET',
       route: '/x',
       domain: 'system',
-      operation: 'unmapped_request',
       ip: undefined,
       userAgent: undefined,
       visitorId: undefined,
@@ -210,7 +199,6 @@ describe('emitWideEventLine', () => {
       requestId: 'r1',
       eventName: 'session:join',
       domain: 'session',
-      operation: 'join',
       socketId: 'socket-1',
       ip: undefined,
       userAgent: undefined,
@@ -234,8 +222,7 @@ describe('emitWideEventLine', () => {
       transport: 'ws',
       requestId: 'r1',
       eventName: 'session:guess',
-      domain: 'game',
-      operation: 'guess',
+      domain: 'session',
       socketId: 'socket-1',
       ip: undefined,
       userAgent: undefined,

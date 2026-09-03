@@ -1,3 +1,4 @@
+import { AsyncResource } from 'node:async_hooks';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -6,8 +7,12 @@ import {
 } from '@nestjs/common';
 import type { WsArgumentsHost } from '@nestjs/common/interfaces';
 import { ClsService } from 'nestjs-cls';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, tap } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
+import {
+  exceptionToApiError,
+  toWideEventErrorFields,
+} from '../errors/exception-to-api-error';
 import type { SessionSocket } from '../types/session-socket';
 import {
   createWsWideEvent,
@@ -33,22 +38,60 @@ export class WsWideEventInterceptor implements NestInterceptor {
 
     const ws = context.switchToWs();
     if (this.wideEventService.get()?.transport === 'ws') {
-      return next.handle().pipe(finalize(() => this.completeWideEvent()));
+      return this.completeOnFinalize(next.handle());
     }
 
     return new Observable((subscriber) => {
       this.cls.run(() => {
         this.initWideEvent(ws);
-        const subscription = next
-          .handle()
-          .pipe(finalize(() => this.completeWideEvent()))
-          .subscribe(subscriber);
-        subscriber.add(subscription);
+        const subscription = next.handle();
+        const observedSubscription =
+          this.completeOnFinalize(subscription).subscribe(subscriber);
+        subscriber.add(observedSubscription);
       });
     });
   }
 
-  private completeWideEvent(): void {
+  private completeOnFinalize(source: Observable<unknown>): Observable<unknown> {
+    let settled = false;
+    let failed = false;
+    let failure: unknown;
+    const complete = AsyncResource.bind(() =>
+      this.completeWideEvent(!settled, failed, failure),
+    );
+    return source.pipe(
+      tap({
+        complete: () => {
+          settled = true;
+        },
+        error: (exception: unknown) => {
+          settled = true;
+          failed = true;
+          failure = exception;
+        },
+      }),
+      finalize(complete),
+    );
+  }
+
+  private completeWideEvent(
+    aborted: boolean,
+    failed = false,
+    failure?: unknown,
+  ): void {
+    if (aborted) {
+      this.wideEventService.complete({ outcome: 'aborted' });
+      return;
+    }
+
+    if (failed && this.wideEventService.get()?.statusCode === undefined) {
+      const payload = exceptionToApiError(failure);
+      this.wideEventService.enrich({
+        statusCode: payload.statusCode,
+        ...toWideEventErrorFields(payload, failure),
+      });
+    }
+
     const statusCode = this.wideEventService.get()?.statusCode ?? 200;
     this.wideEventService.complete({
       statusCode,

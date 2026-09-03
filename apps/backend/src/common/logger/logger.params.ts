@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+import { randomUUID } from 'node:crypto';
 import { ClsServiceManager } from 'nestjs-cls';
 import type { Params } from 'nestjs-pino';
 import type { LoggerOptions } from 'pino';
@@ -29,6 +29,6 @@ export const loggerModuleParams: Params = {
   pinoHttp: {
     ...loggerBaseOptions,
     autoLogging: false,
-    genReqId: () => nanoid(),
+    genReqId: () => randomUUID(),
   },
 };

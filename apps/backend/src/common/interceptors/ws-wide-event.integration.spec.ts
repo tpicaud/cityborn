@@ -1,5 +1,3 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
-
 import { ErrorCode } from '@cityborn/api';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common';
@@ -58,8 +56,7 @@ describe('ws wide event integration — one line per message, error folded in', 
       expect.objectContaining({
         event: 'ws_message',
         eventName: 'session:guess',
-        domain: 'game',
-        operation: 'guess',
+        domain: 'session',
         outcome: 'success',
         statusCode: 200,
       }),

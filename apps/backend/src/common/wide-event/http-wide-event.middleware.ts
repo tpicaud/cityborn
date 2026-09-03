@@ -5,7 +5,7 @@ import { ClsService } from 'nestjs-cls';
 import {
   createHttpWideEvent,
   deriveWideEventOutcome,
-  resolveHttpWideEventContext,
+  resolveHttpWideEventDomain,
 } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
@@ -37,9 +37,9 @@ export class HttpWideEventMiddleware implements NestMiddleware {
           errorStack: undefined,
         });
       }
-      this.wideEventService.enrich(
-        resolveHttpWideEventContext(request.method, route),
-      );
+      this.wideEventService.enrich({
+        domain: resolveHttpWideEventDomain(route),
+      });
       this.wideEventService.complete({
         route,
         outcome: aborted

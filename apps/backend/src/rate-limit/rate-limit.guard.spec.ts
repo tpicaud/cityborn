@@ -1,11 +1,10 @@
-jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'rid') }));
-
+import { ErrorCode } from '@cityborn/api';
 import { type ExecutionContext, HttpException } from '@nestjs/common';
 import type { Request } from 'express';
-import type { ClsService } from 'nestjs-cls';
+import { type ClsService, ClsServiceManager } from 'nestjs-cls';
 import type { SessionSocket } from '../common/types/session-socket';
-import type {
-  WideEventClsStore,
+import {
+  type WideEventClsStore,
   WideEventService,
 } from '../common/wide-event/wide-event.service';
 import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
@@ -154,6 +153,54 @@ describe('RateLimitGuard', () => {
         statusCode: 429,
         outcome: 'client_error',
       });
+    });
+
+    it('emits exactly one WS rate limit line', async () => {
+      const rejection = new HttpException(
+        {
+          code: ErrorCode.RATE_LIMIT_EXCEEDED,
+          message: 'Too many requests',
+        },
+        429,
+      );
+      const rateLimitService = {
+        consumeWsMessage: jest.fn().mockRejectedValue(rejection),
+      };
+      const connectionRegistryService = {
+        getConnection: jest.fn().mockResolvedValue(null),
+      };
+      const logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const cls = ClsServiceManager.getClsService<WideEventClsStore>();
+      const wideEventService = new WideEventService(cls, logger);
+      const guard = new RateLimitGuard(
+        rateLimitService as unknown as RateLimitService,
+        connectionRegistryService as unknown as ConnectionRegistryService,
+        wideEventService,
+        cls,
+      );
+      const context = buildWsContext({
+        id: 'socket-1',
+        handshake: { headers: {}, address: '5.6.7.8' },
+        data: {},
+      } as unknown as SessionSocket);
+
+      await expect(guard.canActivate(context)).rejects.toBe(rejection);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'ws_message',
+          statusCode: 429,
+          outcome: 'client_error',
+          rateLimitBucket: 'rl:ws:msg',
+          errorCode: ErrorCode.RATE_LIMIT_EXCEEDED,
+        }),
+        'message',
+      );
     });
   });
 });
