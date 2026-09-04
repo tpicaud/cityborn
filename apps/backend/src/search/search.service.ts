@@ -68,8 +68,7 @@ export class SearchService {
     id: string,
     osm_type: string,
   ): Promise<WorldLocation> {
-    const db_world_location =
-      await this.worldLocationService.getWithGeometry(id);
+    const db_world_location = await this.worldLocationService.getById(id);
     if (db_world_location) {
       return db_world_location;
     }
