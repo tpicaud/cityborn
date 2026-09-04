@@ -8,7 +8,6 @@ import {
 } from '@cityborn/api';
 import {
   BadRequestException,
-  Logger,
   NotFoundException,
   UseFilters,
 } from '@nestjs/common';
@@ -30,6 +29,10 @@ import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
 import type { SessionSocket } from '../common/types/session-socket';
+import {
+  createWsWideEvent,
+  firstHeaderValue,
+} from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   type ConnectionInfo,
@@ -56,8 +59,6 @@ interface WSResponse {
 export class SessionGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  private readonly logger = new Logger(SessionGateway.name);
-
   constructor(
     private readonly sessionService: SessionService,
     private readonly configService: ConfigService,
@@ -96,7 +97,16 @@ export class SessionGateway
     }
   }
 
-  async handleConnection(client: SessionSocket) {
+  async handleConnection(client: SessionSocket): Promise<void> {
+    await this.runConnectionWideEvent(
+      client,
+      'connection',
+      'session:connect',
+      () => this.connect(client),
+    );
+  }
+
+  private async connect(client: SessionSocket): Promise<void> {
     try {
       await this.rateLimitService.consumeWsConnection(
         resolveClientIpFromHeaders(
@@ -386,12 +396,17 @@ export class SessionGateway
     return { success: true };
   }
 
-  private async disconnect(socket: Socket): Promise<void> {
+  private async disconnect(socket: SessionSocket): Promise<void> {
     try {
       const connection = await this.connectionRegistryService.getConnection(
         socket.id,
       );
       if (!connection) return;
+
+      this.wideEventService.enrichBusinessContext({
+        sessionId: connection.sessionID,
+        playerId: connection.playerID,
+      });
 
       const session = await this.sessionService.disconnectPlayer(
         connection.playerID,
@@ -401,14 +416,54 @@ export class SessionGateway
 
       await socket.leave(session.id);
       this.io.to(session.id).emit('session:update', session);
-
-      this.logger.log(`Socket ${socket.id} déconnecté`);
+      this.enrichGame(session);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.disconnect');
     }
   }
 
-  async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    await this.disconnect(socket);
+  async handleDisconnect(
+    @ConnectedSocket() socket: SessionSocket,
+  ): Promise<void> {
+    await this.runConnectionWideEvent(
+      socket,
+      'disconnection',
+      'session:disconnect',
+      () => this.disconnect(socket),
+    );
+  }
+
+  private async runConnectionWideEvent(
+    socket: SessionSocket,
+    kind: 'connection' | 'disconnection',
+    eventName: string,
+    handler: () => Promise<void>,
+  ): Promise<void> {
+    const headers = socket.handshake.headers;
+    return this.wideEventService.run(
+      createWsWideEvent({
+        kind,
+        eventName,
+        socketId: socket.id,
+        ip: resolveClientIpFromHeaders(headers, socket.handshake.address),
+        userAgent: headers['user-agent'],
+        visitorId: firstHeaderValue(socket.handshake.query['x-visitor-id']),
+        client: firstHeaderValue(headers['x-client-name']),
+        clientVersion: firstHeaderValue(headers['x-client-version']),
+      }),
+      async () => {
+        try {
+          await handler();
+        } finally {
+          const user = socket.data.user;
+          this.wideEventService.enrichAuth(
+            user
+              ? { isAuthenticated: true, userId: user.id }
+              : { isAuthenticated: false },
+          );
+          this.wideEventService.finish();
+        }
+      },
+    );
   }
 }

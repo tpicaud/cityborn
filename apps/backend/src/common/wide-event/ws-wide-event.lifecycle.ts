@@ -18,6 +18,7 @@ export class WsWideEventLifecycle {
     return new Observable((subscriber) => {
       const headers = client.handshake.headers;
       const init = createWsWideEvent({
+        kind: 'message',
         eventName,
         socketId: client.id,
         ip: resolveClientIpFromHeaders(headers, client.handshake.address),

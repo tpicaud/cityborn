@@ -24,9 +24,12 @@ export interface HttpWideEventInit extends WideEventInitBase {
 
 export interface WsWideEventInit extends WideEventInitBase {
   transport: 'ws';
+  kind: WsWideEventKind;
   eventName: string;
   socketId: string;
 }
+
+export type WsWideEventKind = 'message' | 'connection' | 'disconnection';
 
 export type WideEventInit = HttpWideEventInit | WsWideEventInit;
 
@@ -128,10 +131,21 @@ export type WideEventLogger = Record<
   (payload: object, message: string) => void
 >;
 
-const wideEventLogShape = {
+const wideEventLogShapes = {
   http: { event: 'http_request', message: 'request' },
-  ws: { event: 'ws_message', message: 'message' },
+  ws: {
+    message: { event: 'ws_message', message: 'message' },
+    connection: { event: 'ws_connection', message: 'connection' },
+    disconnection: { event: 'ws_disconnection', message: 'disconnection' },
+  },
 } as const;
+
+function resolveLogShape(wideEvent: WideEventFinalized) {
+  if (wideEvent.transport === 'http') {
+    return wideEventLogShapes.http;
+  }
+  return wideEventLogShapes.ws[wideEvent.kind];
+}
 
 let cachedCurrentApiVersion: number | undefined;
 
@@ -225,6 +239,7 @@ export function createHttpWideEvent(req: Request): HttpWideEventInit {
 }
 
 export function createWsWideEvent(params: {
+  kind: WsWideEventKind;
   eventName: string;
   socketId: string;
   ip: string | undefined;
@@ -235,6 +250,7 @@ export function createWsWideEvent(params: {
 }): WsWideEventInit {
   return {
     transport: 'ws',
+    kind: params.kind,
     requestId: nanoid(),
     domain: deriveWsDomain(params.eventName),
     operation: params.eventName,
@@ -272,6 +288,6 @@ export function emitWideEventLine(
   wideEvent: WideEventFinalized,
 ): void {
   const level = deriveWideEventLevel(wideEvent.statusCode, wideEvent.outcome);
-  const { event, message } = wideEventLogShape[wideEvent.transport];
+  const { event, message } = resolveLogShape(wideEvent);
   logger[level]({ ...wideEvent, event }, message);
 }
