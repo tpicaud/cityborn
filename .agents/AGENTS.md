@@ -29,10 +29,12 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 - Le typage prime : un typage clair est une part majeure de la DX. Corriger en amont (narrowing, generics, zod) plutôt qu'un cast.
 - Si l'architecture touchée par une tâche est mauvaise : le **signaler en fin de réponse** avec une piste, sans implémenter le refacto ni dévier de la tâche demandée.
+- Les instructions explicites de l'utilisateur priment sur les préférences de workflow de ce guide et des skills, sans lever les garde-fous de sécurité ni élargir le périmètre demandé.
+- Avancer de façon autonome pour les actions réversibles et dans le périmètre demandé. Poser une question uniquement si une information manquante change matériellement le résultat ou si une autorisation listée ci-dessous est nécessaire.
 
 ## Style de code
 
-- **Aucun commentaire** pour décrire ce que fait le code — le naming et les types suffisent. Seule exception, en dernier recours : une ligne expliquant un *pourquoi* contre-intuitif (workaround, contrainte externe).
+- **Pas de commentaire descriptif** quand le naming et les types peuvent rendre le code explicite. Conserver les JSDoc publiques, les marqueurs de dépréciation et, en dernier recours, une ligne expliquant un *pourquoi* contre-intuitif (workaround, contrainte externe).
 - **Naming précis** : le nom reflète exactement la chose.
   ```typescript
   const service = new RateLimitService(redisService);          // ❌ trop générique
@@ -41,7 +43,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - **Éviter `as`** : un cast casse l'inférence et masque des erreurs.
 - **Éviter `else`** : early return ; ternaire seulement si vraiment nécessaire.
 - **`import type { … }`** obligatoire pour les types (forcé par Biome `useImportType`).
-- **Nouveaux fichiers** : préférer étendre un fichier existant (quitte à le renommer). Créer un fichier seulement si c'est évident vu la structure du dossier ; sinon demander où placer le code.
+- **Nouveaux fichiers** : inspecter les fichiers voisins et suivre le précédent dominant. Préférer étendre un fichier existant quand sa responsabilité reste cohérente. Demander uniquement si plusieurs emplacements correspondent à des responsabilités différentes et que le choix affecte l'architecture publique.
 
 ## Frontières du monorepo
 
@@ -61,6 +63,13 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 | `pnpm --dir packages/api test` | tests de compatibilité OpenAPI |
 | `pnpm db:start` / `db:migrate` / `db:reset` | DB locale (Docker + Prisma) ; lance aussi Redis (`localhost:6379`) + RedisInsight (`localhost:5540`) |
 
+### Stratégie de vérification
+
+- Pendant l'implémentation, lancer d'abord les tests et vérifications ciblés sur les packages modifiés.
+- Exécuter les contrôles transverses explicitement requis par un skill une seule fois avant le compte rendu final.
+- Ne pas répéter un contrôle déjà réussi sans nouveau changement pertinent ou échec qui le justifie.
+- Pour une modification réversible et de faible impact, ne pas ajouter un test qui ne ferait que reproduire l'implémentation. Tester les comportements et invariants significatifs.
+
 ## Commits & PR
 
 - **Commit** : message court, une seule ligne (pas de corps) ; format Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, …) ; pas de signature.
@@ -71,7 +80,6 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - Ajout d'une dépendance npm.
 - Breaking change sur un contrat OpenAPI de `packages/api`.
 - Ajout d'une ligne dans `packages/api/openapi/compat/err-ignore.txt` (bypass de `check:api-compat`).
-- Avant de démarrer chaque grande étape d'un plan.
 
 ## Garde-fous
 
@@ -93,7 +101,8 @@ Conventions chargées automatiquement quand le contexte le demande (`.agents/ski
 | `deprecate` | on déprécie une route / type / champ / valeur d'enum du contrat API |
 | `check-and-remove-deprecated` | ménage périodique des dépréciations d'API |
 | `issue-github` | on rédige / reformule un ticket GitHub |
-| `develop-issue` | on lance ou développe une issue existante dans une tâche et un worktree dédiés |
+| `start-issue-task` | on demande explicitement de lancer une nouvelle tâche ou un worktree dédié pour une issue existante |
+| `develop-issue` | on développe une issue existante dans l'environnement courant |
 
 ## Maintenir ce guide
 

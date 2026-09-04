@@ -19,7 +19,7 @@ Déprécier = ajouter un marqueur, **rien d'autre**. L'élément reste pleinemen
 /**
  * @deprecated Utiliser `finalizeGame` à la place. Conservé pour les
  * builds mobile publiées avant ce renommage.
- * @deprecatedSince 2026-08-21
+ * @deprecatedSince <YYYY-MM-DD-du-jour>
  */
 ```
 
@@ -31,23 +31,23 @@ Exemples de placement selon le type d'élément :
 
 ```ts
 // Route ts-rest (propriété d'objet)
-/** @deprecated ... @deprecatedSince 2026-08-25 */
+/** @deprecated ... @deprecatedSince <YYYY-MM-DD-du-jour> */
 endSoloGame: { method: 'POST', ... },
 
 // Champ de schéma zod (propriété d'objet)
 export const gameSchema = z.object({
-  /** @deprecated ... @deprecatedSince 2026-08-25 */
+  /** @deprecated ... @deprecatedSince <YYYY-MM-DD-du-jour> */
   oldField: z.string(),
 });
 
 // Valeur d'enum (membre)
 enum ErrorCode {
-  /** @deprecated ... @deprecatedSince 2026-08-25 */
+  /** @deprecated ... @deprecatedSince <YYYY-MM-DD-du-jour> */
   OLD_CODE = 'OLD_CODE',
 }
 
 // Type exporté (déclaration)
-/** @deprecated ... @deprecatedSince 2026-08-25 */
+/** @deprecated ... @deprecatedSince <YYYY-MM-DD-du-jour> */
 export type OldShape = { ... };
 ```
 

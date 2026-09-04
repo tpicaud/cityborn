@@ -34,12 +34,12 @@ Lancer `pnpm --dir packages/api check:deprecations`. Ce script (`packages/api/sc
 
 Toujours présenter la sortie du script à l'utilisateur avant toute action (reformater en tableau si utile : élément | date de dépréciation | version d'origine | statut).
 
-## Phase 3 — Suppression (uniquement sur confirmation explicite)
+## Phase 3 — Suppression autorisée
 
-**Ne jamais supprimer sans confirmation explicite de l'utilisateur, même pour un élément ✅ éligible** — l'éligibilité garantit seulement que `check:api-compat` ne râlera pas, ce n'est pas une preuve qu'aucun client réel n'appelle encore l'ancien élément (cf. garde-fou du projet sur les modifications cassantes de contrat OpenAPI).
+Une demande explicite de nettoyer ou supprimer les éléments éligibles autorise cette phase après présentation du rapport dans la même tâche. Si l'utilisateur demande seulement de vérifier, auditer ou produire un rapport, attendre sa confirmation avant toute suppression. L'éligibilité garantit seulement que `check:api-compat` ne râlera pas : rechercher les clients réels avant de modifier le contrat.
 
 Pour chaque élément confirmé :
 - Chercher toutes les références au symbole dans **tout le monorepo**, pas seulement `packages/api` — un champ déprécié peut avoir du code de fallback ailleurs (ex. `data.newField ?? data.oldField`), une route dépréciée peut avoir un handler dédié dans un controller backend, un type déprécié peut être importé par des apps.
 - Supprimer la déclaration dans `packages/api` et nettoyer tout le code qui la consommait spécifiquement (handler dédié, branche de fallback, etc.) — ne pas supprimer à l'aveugle, comprendre chaque usage trouvé avant de le toucher.
-- Lancer `pnpm typecheck`, `pnpm --dir apps/backend test`, `pnpm --dir packages/api test`, `pnpm format`, `pnpm check:api-compat` pour valider qu'il ne reste rien de cassé.
+- Lancer d'abord les tests ciblés pendant l'implémentation, puis une seule fois avant le compte rendu final : `pnpm typecheck`, `pnpm --dir apps/backend test`, `pnpm --dir packages/api test`, `pnpm format` et `pnpm check:api-compat`.
 - Présenter le diff complet pour relecture. Ne jamais commit (cf. garde-fou du projet — c'est au développeur de committer).

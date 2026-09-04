@@ -16,9 +16,11 @@ description: Modifier la surface publique de @cityborn/api (route ts-rest, sché
 
 ## Vérifier
 
-1. `pnpm typecheck`
-2. `pnpm check:api-compat` — doit passer. S'il signale un breaking change non voulu, revoir l'approche (additif).
-3. `pnpm --dir packages/api test` — tests de compatibilité OpenAPI.
+Pendant l'implémentation, lancer les tests ciblés du contrat modifié. Avant le compte rendu final, exécuter une seule fois :
+
+1. `pnpm --dir packages/api test` — tests de compatibilité OpenAPI ;
+2. `pnpm check:api-compat` — doit passer. S'il signale un breaking change non voulu, revoir l'approche additive ;
+3. `pnpm typecheck`.
 
 ## Breaking change assumé
 

@@ -16,7 +16,7 @@ Front (`apps/frontend`, `apps/back-office`) et mobile (`apps/mobile`) suivent la
 | `lib/` | Intégrations transverses bas niveau : socket, storage du token, visitorId, client API. |
 | `contexts/`, `hooks/` | React transverse à plusieurs domaines. |
 
-Avant de créer un fichier : préférer étendre un fichier existant du bon dossier. Créer seulement si c'est évident vu la structure ; sinon demander où placer le code.
+Avant de créer un fichier, inspecter les fichiers voisins et suivre le précédent dominant. Préférer étendre un fichier existant si sa responsabilité reste cohérente. Demander seulement si plusieurs emplacements impliquent des responsabilités architecturales différentes.
 
 ## Accès à l'API
 
