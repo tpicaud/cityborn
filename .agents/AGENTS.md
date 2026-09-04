@@ -78,7 +78,6 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - Ne jamais modifier une migration Prisma déjà appliquée/mergée : toujours en créer une nouvelle (`pnpm db:migrate`).
 - Ne pas contourner Biome ni le typecheck (`// biome-ignore`, `@ts-ignore` de confort interdits).
 - Ne pas toucher aux `overrides` de `pnpm-workspace.yaml` (la plupart corrigent des CVE).
-- Ne jamais commit — laisser le développeur.
 - Ne jamais lancer le front ni le mobile pour tester l'UI — demander un test manuel.
 
 ## Skills
