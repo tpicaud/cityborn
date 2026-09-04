@@ -2,4 +2,83 @@ version = 1
 name = "Cityborn"
 
 [setup]
-script = "pnpm install --frozen-lockfile"
+script = '''
+set -eu
+
+expected_node_major="24"
+actual_node_major="$(node --print "process.versions.node.split('.')[0]")"
+
+if [ "$actual_node_major" != "$expected_node_major" ]; then
+  echo "Cityborn requires Node.js 24.x, found $(node --version)." >&2
+  exit 1
+fi
+
+expected_pnpm_version="10.33.2"
+actual_pnpm_version="$(pnpm --version)"
+
+if [ "$actual_pnpm_version" != "$expected_pnpm_version" ]; then
+  echo "Cityborn requires pnpm $expected_pnpm_version, found $actual_pnpm_version." >&2
+  exit 1
+fi
+
+primary_checkout="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+current_checkout="$(pwd)"
+
+for env_path in \
+  apps/backend/.env \
+  apps/frontend/.env \
+  apps/back-office/.env \
+  apps/mobile/.env \
+  infra/.env
+do
+  if [ -e "$env_path" ]; then
+    continue
+  fi
+
+  source_env_path="$primary_checkout/$env_path"
+  example_env_path="${env_path}.example"
+
+  if [ "$primary_checkout" != "$current_checkout" ] && [ -f "$source_env_path" ]; then
+    cp "$source_env_path" "$env_path"
+    echo "Copied $env_path from the primary checkout."
+    continue
+  fi
+
+  if [ -f "$example_env_path" ]; then
+    cp "$example_env_path" "$env_path"
+    echo "Created $env_path from its example; complete missing development values if needed." >&2
+  fi
+done
+
+pnpm install --frozen-lockfile
+'''
+
+[[actions]]
+name = "Dev web"
+icon = "run"
+command = "pnpm dev:web"
+
+[[actions]]
+name = "Dev mobile"
+icon = "run"
+command = "pnpm dev:mobile"
+
+[[actions]]
+name = "Start local resources"
+icon = "run"
+command = "pnpm db:start"
+
+[[actions]]
+name = "Stop local resources"
+icon = "run"
+command = "pnpm db:stop"
+
+[[actions]]
+name = "Typecheck"
+icon = "run"
+command = "pnpm typecheck"
+
+[[actions]]
+name = "Check formatting"
+icon = "run"
+command = "pnpm format:check"
