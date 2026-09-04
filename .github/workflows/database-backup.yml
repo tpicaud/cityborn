@@ -11,6 +11,11 @@ on:
         options:
           - daily
           - pre-migration
+  schedule:
+    - cron: "53 3 * * *"
+      timezone: Europe/Paris
+    - cron: "53 15 * * *"
+      timezone: Europe/Paris
 
 permissions:
   contents: read
@@ -106,7 +111,9 @@ jobs:
           B2_BUCKET: ${{ vars.B2_PROD_BUCKET_NAME }}
           B2_ENDPOINT: ${{ vars.B2_PROD_ENDPOINT }}
           B2_PREFIX: ${{ vars.B2_PROD_PREFIX }}
-          BACKUP_KIND: ${{ inputs.backup_kind }}
+          BACKUP_KIND: ${{ github.event_name == 'schedule' && 'daily' || inputs.backup_kind }}
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule || '' }}
           BACKUP_TIMESTAMP: ${{ steps.create.outputs.backup_timestamp }}
           ARCHIVE_NAME: ${{ steps.create.outputs.archive_name }}
           ARCHIVE_PATH: ${{ steps.create.outputs.archive_path }}
@@ -181,7 +188,10 @@ jobs:
 
           upload_pair "$archive_object_key"
 
-          if [[ "$BACKUP_KIND" == "daily" && "$(date -u +%u)" == "7" ]]; then
+          if [[ "$BACKUP_KIND" == "daily" ]] && \
+            [[ "$TRIGGER_EVENT" == "schedule" ]] && \
+            [[ "$TRIGGER_SCHEDULE" == "53 15 * * *" ]] && \
+            [[ "$(TZ=Europe/Paris date +%u)" == "7" ]]; then
             weekly_archive_object_key="${normalized_prefix}/weekly/${date_path}/${ARCHIVE_NAME}"
             upload_pair "$weekly_archive_object_key"
           fi
@@ -190,7 +200,7 @@ jobs:
             echo "### PostgreSQL backup"
             echo
             echo "- Status: successful"
-            echo "- Category: \`${{ inputs.backup_kind }}\`"
+            echo "- Category: \`$BACKUP_KIND\`"
             echo "- Object: \`$archive_object_key\`"
             echo "- Size: $ARCHIVE_SIZE bytes"
             echo "- Upload integrity: ETag verified"

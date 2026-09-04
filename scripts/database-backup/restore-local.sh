@@ -65,10 +65,61 @@ fi
 tar -xzf "$archive_path" -C "$restore_directory"
 chmod 600 "$restore_directory/roles.sql" "$restore_directory/schema.sql" "$restore_directory/data.sql"
 
+if ! awk '
+  /^COPY "(auth|storage)"\./ {
+    platform_copy = 1
+    next
+  }
+  platform_copy && /^\\\.$/ {
+    platform_copy = 0
+    next
+  }
+  platform_copy {
+    platform_row_found = 1
+  }
+  END {
+    exit platform_row_found ? 1 : 0
+  }
+' "$restore_directory/data.sql"; then
+  echo "Local restore cannot skip non-empty Supabase Auth or Storage data" >&2
+  exit 1
+fi
+
+awk '
+  /^COPY "(auth|storage)"\./ {
+    platform_copy = 1
+    next
+  }
+  platform_copy && /^\\\.$/ {
+    platform_copy = 0
+    next
+  }
+  platform_copy {
+    next
+  }
+  /^SELECT pg_catalog\.setval/ && /"(auth|storage)"\./ {
+    next
+  }
+  {
+    print
+  }
+' "$restore_directory/data.sql" \
+  > "$restore_directory/data.application.sql"
+
 sed 's/^SET transaction_timeout/-- &/' \
-  "$restore_directory/data.sql" \
+  "$restore_directory/data.application.sql" \
   > "$restore_directory/data.restore.sql"
-chmod 600 "$restore_directory/data.restore.sql"
+
+sed \
+  -e 's/^CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";/-- &/' \
+  -e 's/^ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";/-- &/' \
+  "$restore_directory/schema.sql" \
+  > "$restore_directory/schema.restore.sql"
+
+chmod 600 \
+  "$restore_directory/schema.restore.sql" \
+  "$restore_directory/data.application.sql" \
+  "$restore_directory/data.restore.sql"
 
 if docker compose -f "$compose_file" exec -T postgis \
   psql -X -U postgres -d postgres -Atqc \
@@ -79,6 +130,32 @@ if docker compose -f "$compose_file" exec -T postgis \
 fi
 
 docker compose -f "$compose_file" exec -T postgis \
+  psql \
+    -X \
+    --set ON_ERROR_STOP=1 \
+    -U postgres \
+    -d postgres \
+    --command 'DO $do$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''anon'\'') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''authenticated'\'') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''authenticator'\'') THEN
+    CREATE ROLE authenticator NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''service_role'\'') THEN
+    CREATE ROLE service_role NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''supabase_admin'\'') THEN
+    CREATE ROLE supabase_admin NOLOGIN;
+  END IF;
+END
+$do$;'
+
+docker compose -f "$compose_file" exec -T postgis \
   createdb -U postgres "$target_database"
 
 docker compose -f "$compose_file" exec -T postgis \
@@ -87,12 +164,13 @@ docker compose -f "$compose_file" exec -T postgis \
     --set ON_ERROR_STOP=1 \
     -U postgres \
     -d "$target_database" \
+    --command 'CREATE SCHEMA IF NOT EXISTS extensions AUTHORIZATION postgres;' \
     --command 'CREATE SCHEMA IF NOT EXISTS tiger AUTHORIZATION postgres;' \
     --command 'CREATE SCHEMA IF NOT EXISTS topology AUTHORIZATION postgres;'
 
 {
   cat "$restore_directory/roles.sql"
-  cat "$restore_directory/schema.sql"
+  cat "$restore_directory/schema.restore.sql"
   echo 'SET session_replication_role = replica;'
   cat "$restore_directory/data.restore.sql"
 } | docker compose -f "$compose_file" exec -T postgis \
