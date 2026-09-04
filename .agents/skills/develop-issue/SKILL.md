@@ -7,11 +7,16 @@ description: "Implémenter et vérifier une issue GitHub Cityborn dans l'environ
 
 ## Préparer la branche liée à l'issue
 
-À faire **avant tout développement** si l'environnement courant est un worktree dédié à l'issue. Dans un checkout que l'utilisateur a explicitement demandé d'utiliser directement, ne pas changer de branche ni créer de branche distante sans sa demande.
+À faire **avant toute inspection destinée à modifier le code ou tout développement**.
 
-1. Lister les branches que GitHub associe à l'issue : `gh issue develop <numéro> --list`. Ne pas se fier au nom de la branche du worktree courant : une branche créée localement (ou par le worktree coordinateur) avec un nom proche n'est **pas** une branche liée par GitHub et ne compte pas.
-2. Si aucune branche liée n'existe, en créer une depuis GitHub sur la branche par défaut : `gh issue develop <numéro> --base <branche par défaut>`. Cela crée la branche côté remote et l'associe à l'issue, pour que la PR créée plus tard soit automatiquement rattachée à l'issue.
-3. Récupérer la branche liée et s'y placer dans le worktree : `git fetch origin` puis `git checkout <branche liée>`. Ne démarrer le développement qu'une fois sur cette branche.
+1. Vérifier `git status --short`. Si le worktree contient des changements, ne pas lancer de rebase et demander à l'utilisateur comment les préserver.
+2. Exécuter `git fetch --all --prune` et vérifier que `origin/main` existe.
+3. Lister les branches que GitHub associe à l'issue : `gh issue develop <numéro> --list`. Ne pas se fier au nom de la branche du worktree courant : une branche créée localement avec un nom proche n'est **pas** une branche liée par GitHub et ne compte pas.
+4. Si aucune branche liée n'existe, en créer une depuis GitHub avec `gh issue develop <numéro> --base main`. Cela crée la branche distante depuis le `main` actuel de GitHub et l'associe à l'issue. Exécuter ensuite de nouveau `git fetch --all --prune` pour récupérer cette branche.
+5. Checkout la branche liée dans le worktree, puis exécuter `git rebase origin/main`. Ne démarrer le développement qu'après la réussite du rebase.
+6. En cas de conflit, résoudre les conflits autonomement seulement si la résolution découle clairement de l'issue et du code actuel. Sinon, laisser le rebase en cours, présenter les fichiers en conflit et demander une décision.
+
+Dans un checkout que l'utilisateur a explicitement demandé d'utiliser directement, ne pas changer de branche. Appliquer tout de même les étapes de propreté, fetch et rebase si la branche courante est la branche liée à l'issue. Sinon, signaler que l'environnement courant n'est pas sur la branche liée avant de modifier le code.
 
 ## Développer l'issue
 
