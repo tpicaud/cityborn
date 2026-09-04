@@ -95,7 +95,9 @@ export class SessionGateway
 
   private enrichGame(session: Session): void {
     if (session.currentGame) {
-      this.wideEventService.enrichBusinessContext({ gameId: session.currentGame.id });
+      this.wideEventService.enrichBusinessContext({
+        gameId: session.currentGame.id,
+      });
     }
   }
 
@@ -161,7 +163,10 @@ export class SessionGateway
       });
     }
 
-    this.wideEventService.enrichBusinessContext({ sessionId: sessionID, playerId: playerID });
+    this.wideEventService.enrichBusinessContext({
+      sessionId: sessionID,
+      playerId: playerID,
+    });
 
     const session = await this.sessionService.join(sessionID, playerID, user);
     await this.connectionRegistryService.register(
@@ -358,7 +363,10 @@ export class SessionGateway
       });
     }
 
-    this.wideEventService.enrichBusinessContext({ sessionId: sessionID, playerId: playerID });
+    this.wideEventService.enrichBusinessContext({
+      sessionId: sessionID,
+      playerId: playerID,
+    });
 
     const session = await this.sessionService.reconnectPlayer(
       sessionID,

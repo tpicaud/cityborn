@@ -1,8 +1,8 @@
 jest.mock('nanoid', () => ({ nanoid: jest.fn(() => 'request-id') }));
 
-import { contract } from '@cityborn/api';
 import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { contract } from '@cityborn/api';
 import { deriveHttpDomain, deriveWsDomain } from './wide-event';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -29,7 +29,10 @@ function collectWsEventNames(): string[] {
       .flatMap((decoratorSuffix) => {
         const trimmedSuffix = decoratorSuffix.trimStart();
         const quote = trimmedSuffix[0];
-        if (quote !== String.fromCharCode(39) && quote !== String.fromCharCode(34)) {
+        if (
+          quote !== String.fromCharCode(39) &&
+          quote !== String.fromCharCode(34)
+        ) {
           return [];
         }
         const eventName = trimmedSuffix.slice(1).split(quote, 1)[0];

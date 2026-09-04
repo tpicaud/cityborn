@@ -15,9 +15,7 @@ export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
 }
 
-export function enrichWideEventFromCls(
-  fields: WideEventErrorContext,
-): boolean {
+export function enrichWideEventFromCls(fields: WideEventErrorContext): boolean {
   const cls = ClsServiceManager.getClsService<WideEventClsStore>();
   const current = cls.get('wideEvent');
   if (!current) {

@@ -49,9 +49,7 @@ export interface WideEventEnrichment {
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
 
 export type WideEventFinalized = WideEvent &
-  Required<
-    Pick<WideEventEnrichment, 'statusCode' | 'outcome' | 'durationMs'>
-  >;
+  Required<Pick<WideEventEnrichment, 'statusCode' | 'outcome' | 'durationMs'>>;
 
 export type WideEventFinalization = Pick<
   WideEventEnrichment,

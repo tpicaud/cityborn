@@ -20,7 +20,9 @@ describe('RateLimitGuard', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(null),
     },
-    wideEventService: Partial<WideEventService> = { enrichRateLimit: jest.fn() },
+    wideEventService: Partial<WideEventService> = {
+      enrichRateLimit: jest.fn(),
+    },
   ) => {
     const rateLimitGuard = new RateLimitGuard(
       rateLimitService as unknown as RateLimitService,
