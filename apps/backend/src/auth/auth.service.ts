@@ -13,7 +13,6 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -34,8 +33,6 @@ const verificationEmailCooldown = 3 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -64,14 +61,7 @@ export class AuthService {
         message: `Error creating user in database`,
       });
 
-    try {
-      await this.sendVerificationEmail(user);
-    } catch (error) {
-      this.logger.error(
-        'Failed to send verification email during sign-up',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
+    await this.sendVerificationEmail(user);
 
     const access_token = await this.generateToken(
       'access',

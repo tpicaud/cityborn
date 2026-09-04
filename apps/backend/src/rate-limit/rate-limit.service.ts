@@ -1,12 +1,9 @@
-import { ErrorCode } from '@cityborn/api';
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
+import { Injectable } from '@nestjs/common';
+import { RateLimiterRedis, type RateLimiterRes } from 'rate-limiter-flexible';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class RateLimitService {
-  private readonly logger = new Logger(RateLimitService.name);
-
   private readonly httpLimiter: RateLimiterRedis;
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
@@ -32,38 +29,15 @@ export class RateLimitService {
     });
   }
 
-  async consumeHttp(key: string): Promise<RateLimiterRes | undefined> {
-    return this.consume(this.httpLimiter, key);
+  async consumeHttp(key: string): Promise<RateLimiterRes> {
+    return this.httpLimiter.consume(key);
   }
 
-  async consumeWsConnection(key: string): Promise<RateLimiterRes | undefined> {
-    return this.consume(this.wsConnectionLimiter, key);
+  async consumeWsConnection(key: string): Promise<RateLimiterRes> {
+    return this.wsConnectionLimiter.consume(key);
   }
 
-  async consumeWsMessage(key: string): Promise<RateLimiterRes | undefined> {
-    return this.consume(this.wsMessageLimiter, key);
-  }
-
-  private async consume(
-    limiter: RateLimiterRedis,
-    key: string,
-  ): Promise<RateLimiterRes | undefined> {
-    try {
-      return await limiter.consume(key);
-    } catch (rejectedOrError) {
-      if (rejectedOrError instanceof RateLimiterRes) {
-        throw new HttpException(
-          {
-            code: ErrorCode.RATE_LIMIT_EXCEEDED,
-            message: 'Too many requests',
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-
-      this.logger.warn(
-        `Rate limiter backend error, failing open: ${rejectedOrError instanceof Error ? rejectedOrError.message : String(rejectedOrError)}`,
-      );
-    }
+  async consumeWsMessage(key: string): Promise<RateLimiterRes> {
+    return this.wsMessageLimiter.consume(key);
   }
 }

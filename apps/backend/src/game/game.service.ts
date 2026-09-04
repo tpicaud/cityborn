@@ -14,7 +14,7 @@ import {
   resolveNextRound,
   toLightGame,
 } from '@cityborn/core';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
@@ -31,8 +31,6 @@ export type CreateGameParams = {
 
 @Injectable()
 export class GameService {
-  private readonly logger = new Logger(GameService.name);
-
   constructor(
     private readonly guessObjectService: GuessObjectService,
     private readonly prisma: PrismaService,
@@ -97,47 +95,42 @@ export class GameService {
     mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
-    try {
-      const game_record = await this.prisma.gameRecord.create({
-        data: {
-          mode,
-          gameConfig: game.config as unknown as Prisma.InputJsonValue,
-          players: players as unknown as Prisma.InputJsonValue,
-          guessObjectsIds: game.state.guessObjectsIds,
-          results: game.state.results as unknown as Prisma.InputJsonValue,
-          users: {
-            connect: players
-              .filter((player) => !player.isGuest)
-              .map((player) => ({ id: player.id })),
-          },
+    const game_record = await this.prisma.gameRecord.create({
+      data: {
+        mode,
+        gameConfig: game.config as unknown as Prisma.InputJsonValue,
+        players: players as unknown as Prisma.InputJsonValue,
+        guessObjectsIds: game.state.guessObjectsIds,
+        results: game.state.results as unknown as Prisma.InputJsonValue,
+        users: {
+          connect: players
+            .filter((player) => !player.isGuest)
+            .map((player) => ({ id: player.id })),
         },
-      });
+      },
+    });
 
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'game_finished',
-            visitorId,
-            properties: {
-              gameId: game_record.id.toString(),
-              mode,
-              numberOfPlayers: game.state.results
-                ? Object.keys(game.state.results).length
-                : 0,
-              average_score: game.state.results
-                ? Object.values(game.state.results)
-                    .flatMap((res) => res.results)
-                    .reduce((sum, r) => sum + r.points, 0) /
-                  Object.values(game.state.results).flatMap(
-                    (res) => res.results,
-                  ).length
-                : 0,
-            },
-          }),
-        );
-      }
-    } catch (error) {
-      this.logger.error(`Error storing game in db: ${error}`);
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'game_finished',
+          visitorId,
+          properties: {
+            gameId: game_record.id.toString(),
+            mode,
+            numberOfPlayers: game.state.results
+              ? Object.keys(game.state.results).length
+              : 0,
+            average_score: game.state.results
+              ? Object.values(game.state.results)
+                  .flatMap((res) => res.results)
+                  .reduce((sum, r) => sum + r.points, 0) /
+                Object.values(game.state.results).flatMap((res) => res.results)
+                  .length
+              : 0,
+          },
+        }),
+      );
     }
   }
 

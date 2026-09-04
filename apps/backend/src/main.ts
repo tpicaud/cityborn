@@ -6,11 +6,9 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
-import { DefaultExceptionFilter } from './common/filters/default-exception.filter';
-import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
-import { RequestValidationErrorFilter } from './common/filters/request-validation-error.filter';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-header.middleware';
+import { HttpWideEventMiddleware } from './common/middlewares/http-wide-event.middleware';
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 async function bootstrap() {
@@ -23,6 +21,8 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.flushLogs();
 
+  const httpWideEventMiddleware = app.get(HttpWideEventMiddleware);
+  app.use(httpWideEventMiddleware.use.bind(httpWideEventMiddleware));
   app.use(apiVersionHeaderMiddleware);
 
   app.set('trust proxy', 1);
@@ -35,11 +35,6 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.useGlobalFilters(
-    new DefaultExceptionFilter(),
-    new PrismaExceptionFilter(),
-    new RequestValidationErrorFilter(),
-  );
   app.useGlobalInterceptors(new VisitorIdInterceptor());
 
   const redisIoAdapter = await RedisIoAdapter.create(app);

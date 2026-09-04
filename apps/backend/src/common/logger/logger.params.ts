@@ -33,7 +33,7 @@ export const loggerModuleParams: Params = {
   pinoHttp: {
     ...loggerBaseOptions,
     autoLogging: false,
-    genReqId: () => nanoid(),
+    genReqId: () => currentRequestId() ?? nanoid(),
     customProps: (request) => ({ requestId: request.id }),
   },
 };

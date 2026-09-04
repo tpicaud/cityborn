@@ -34,28 +34,16 @@ export class RateLimitGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const key = `${request.ip}:${request.method}:${request.route?.path ?? request.url}`;
 
-    try {
-      const result = await this.rateLimitService.consumeHttp(key);
-      if (!result) {
-        this.wideEventService.enrichRateLimit({
-          rateLimitBucket: 'rl:http',
-          rateLimitStatus: 'bypassed',
-        });
-        return;
-      }
-      this.wideEventService.enrichRateLimit({
-        rateLimitBucket: 'rl:http',
-        rateLimitStatus: 'allowed',
-        rateLimitRemaining: result.remainingPoints,
-      });
-    } catch (exception) {
-      this.wideEventService.enrichRateLimit({
-        rateLimitBucket: 'rl:http',
-        rateLimitRemaining: 0,
-        rateLimitStatus: 'rejected',
-      });
-      throw exception;
-    }
+    this.wideEventService.enrichRateLimit({
+      rateLimitBucket: 'rl:http',
+      rateLimitStatus: 'pending',
+    });
+    const result = await this.rateLimitService.consumeHttp(key);
+    this.wideEventService.enrichRateLimit({
+      rateLimitBucket: 'rl:http',
+      rateLimitStatus: 'allowed',
+      rateLimitRemaining: result.remainingPoints,
+    });
   }
 
   private async consumeWsMessage(context: ExecutionContext): Promise<void> {
@@ -70,27 +58,15 @@ export class RateLimitGuard implements CanActivate {
         client.handshake.address,
       );
 
-    try {
-      const result = await this.rateLimitService.consumeWsMessage(key);
-      if (!result) {
-        this.wideEventService.enrichRateLimit({
-          rateLimitBucket: 'rl:ws:msg',
-          rateLimitStatus: 'bypassed',
-        });
-        return;
-      }
-      this.wideEventService.enrichRateLimit({
-        rateLimitBucket: 'rl:ws:msg',
-        rateLimitStatus: 'allowed',
-        rateLimitRemaining: result.remainingPoints,
-      });
-    } catch (exception) {
-      this.wideEventService.enrichRateLimit({
-        rateLimitBucket: 'rl:ws:msg',
-        rateLimitRemaining: 0,
-        rateLimitStatus: 'rejected',
-      });
-      throw exception;
-    }
+    this.wideEventService.enrichRateLimit({
+      rateLimitBucket: 'rl:ws:msg',
+      rateLimitStatus: 'pending',
+    });
+    const result = await this.rateLimitService.consumeWsMessage(key);
+    this.wideEventService.enrichRateLimit({
+      rateLimitBucket: 'rl:ws:msg',
+      rateLimitStatus: 'allowed',
+      rateLimitRemaining: result.remainingPoints,
+    });
   }
 }
