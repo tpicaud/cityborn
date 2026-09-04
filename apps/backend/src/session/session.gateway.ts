@@ -3,6 +3,7 @@ import {
   ErrorCode,
   GameConfig,
   Guess,
+  type Session,
   User,
 } from '@cityborn/api';
 import {
@@ -84,12 +85,20 @@ export class SessionGateway
         message: 'No connection associated with this socket',
       });
 
-    this.wideEventService.enrich({
+    this.wideEventService.enrichBusinessContext({
       sessionId: connection.sessionID,
       playerId: connection.playerID,
     });
 
     return connection;
+  }
+
+  private enrichGame(session: Session): void {
+    if (session.currentGame) {
+      this.wideEventService.enrichBusinessContext({
+        gameId: session.currentGame.id,
+      });
+    }
   }
 
   async handleConnection(client: SessionSocket) {
@@ -154,7 +163,10 @@ export class SessionGateway
       });
     }
 
-    this.wideEventService.enrich({ sessionId: sessionID, playerId: playerID });
+    this.wideEventService.enrichBusinessContext({
+      sessionId: sessionID,
+      playerId: playerID,
+    });
 
     const session = await this.sessionService.join(sessionID, playerID, user);
     await this.connectionRegistryService.register(
@@ -267,6 +279,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -291,6 +304,7 @@ export class SessionGateway
       sessionID,
       guess,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
     return { success: true };
@@ -307,6 +321,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
     return { success: true };
@@ -323,6 +338,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -347,13 +363,17 @@ export class SessionGateway
       });
     }
 
-    this.wideEventService.enrich({ sessionId: sessionID, playerId: playerID });
+    this.wideEventService.enrichBusinessContext({
+      sessionId: sessionID,
+      playerId: playerID,
+    });
 
     const session = await this.sessionService.reconnectPlayer(
       sessionID,
       playerID,
       user,
     );
+    this.enrichGame(session);
     await this.connectionRegistryService.register(
       socket.id,
       playerID,

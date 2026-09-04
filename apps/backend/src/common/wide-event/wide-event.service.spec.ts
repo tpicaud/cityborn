@@ -5,6 +5,8 @@ import { type WideEventClsStore, WideEventService } from './wide-event.service';
 const baseInit: WideEventInit = {
   transport: 'http',
   requestId: 'r1',
+  domain: 'other',
+  operation: 'GET /test',
   method: 'GET',
   route: '/x',
   ip: undefined,
@@ -38,23 +40,40 @@ describe('WideEventService', () => {
     const service = buildService();
     service.set(baseInit);
 
-    service.enrich({ userId: 'u1', isAuthenticated: true });
-    service.enrich({ statusCode: 200, durationMs: 12 });
+    service.enrichAuth({ userId: 'u1', isAuthenticated: true });
+    service.enrichBusinessContext({ sessionId: 's1' });
 
     expect(service.get()).toMatchObject({
       requestId: 'r1',
       userId: 'u1',
       isAuthenticated: true,
-      statusCode: 200,
-      durationMs: 12,
+      sessionId: 's1',
     });
   });
 
-  it('is a no-op when enrich runs before any wide event is set', () => {
+  it('is a no-op when enrichment runs before any wide event is set', () => {
     const service = buildService();
 
-    service.enrich({ statusCode: 200 });
+    service.enrichBusinessContext({ sessionId: 's1' });
 
     expect(service.get()).toBeUndefined();
+  });
+
+  it('returns a finalized event only after outcome fields are supplied', () => {
+    const service = buildService();
+    service.set(baseInit);
+
+    const finalized = service.finalize({
+      statusCode: 200,
+      outcome: 'success',
+      durationMs: 12,
+    });
+
+    expect(finalized).toMatchObject({
+      requestId: 'r1',
+      statusCode: 200,
+      outcome: 'success',
+      durationMs: 12,
+    });
   });
 });

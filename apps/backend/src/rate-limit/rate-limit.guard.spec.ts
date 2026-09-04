@@ -1,4 +1,9 @@
-import type { ExecutionContext } from '@nestjs/common';
+import { ErrorCode } from '@cityborn/api';
+import {
+  type ExecutionContext,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import type { SessionSocket } from '../common/types/session-socket';
 import type { WideEventService } from '../common/wide-event/wide-event.service';
@@ -15,7 +20,9 @@ describe('RateLimitGuard', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(null),
     },
-    wideEventService: Partial<WideEventService> = { enrich: jest.fn() },
+    wideEventService: Partial<WideEventService> = {
+      enrichRateLimit: jest.fn(),
+    },
   ) => {
     const rateLimitGuard = new RateLimitGuard(
       rateLimitService as unknown as RateLimitService,
@@ -75,9 +82,10 @@ describe('RateLimitGuard', () => {
 
       await guard.canActivate(context);
 
-      expect(wideEventService.enrich).toHaveBeenCalledWith({
+      expect(wideEventService.enrichRateLimit).toHaveBeenCalledWith({
         rateLimitBucket: 'rl:http',
         rateLimitRemaining: 42,
+        rateLimitStatus: 'allowed',
       });
     });
 
@@ -116,6 +124,69 @@ describe('RateLimitGuard', () => {
 
       await expect(guard.canActivate(context)).resolves.toBe(true);
       expect(rateLimitService.consumeWsMessage).toHaveBeenCalledWith('5.6.7.8');
+    });
+    it('enriches rejected HTTP rate limits before rethrowing the 429', async () => {
+      const failure = new HttpException(
+        {
+          code: ErrorCode.RATE_LIMIT_EXCEEDED,
+          message: 'Too many requests',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+      const { rateLimitGuard: guard, wideEventService } = buildGuard({
+        consumeHttp: jest.fn().mockRejectedValue(failure),
+      });
+      const context = buildHttpContext({
+        ip: '1.2.3.4',
+        method: 'GET',
+        route: { path: '/health' } as Request['route'],
+        url: '/health',
+      });
+
+      await expect(guard.canActivate(context)).rejects.toBe(failure);
+      expect(wideEventService.enrichRateLimit).toHaveBeenCalledWith({
+        rateLimitBucket: 'rl:http',
+        rateLimitRemaining: 0,
+        rateLimitStatus: 'rejected',
+      });
+    });
+
+    it('enriches allowed and rejected WS message rate limits', async () => {
+      const allowed = buildGuard({
+        consumeWsMessage: jest.fn().mockResolvedValue({ remainingPoints: 12 }),
+      });
+      const client = {
+        id: 'socket-1',
+        handshake: { headers: {}, address: '5.6.7.8' },
+      } as unknown as SessionSocket;
+      const context = buildWsContext(client);
+
+      await allowed.rateLimitGuard.canActivate(context);
+      expect(allowed.wideEventService.enrichRateLimit).toHaveBeenCalledWith({
+        rateLimitBucket: 'rl:ws:msg',
+        rateLimitRemaining: 12,
+        rateLimitStatus: 'allowed',
+      });
+
+      const failure = new HttpException(
+        {
+          code: ErrorCode.RATE_LIMIT_EXCEEDED,
+          message: 'Too many requests',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+      const rejected = buildGuard({
+        consumeWsMessage: jest.fn().mockRejectedValue(failure),
+      });
+
+      await expect(rejected.rateLimitGuard.canActivate(context)).rejects.toBe(
+        failure,
+      );
+      expect(rejected.wideEventService.enrichRateLimit).toHaveBeenCalledWith({
+        rateLimitBucket: 'rl:ws:msg',
+        rateLimitRemaining: 0,
+        rateLimitStatus: 'rejected',
+      });
     });
   });
 });

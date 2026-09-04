@@ -4,6 +4,7 @@ import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import { GameService } from '../game/game.service';
 import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
@@ -25,15 +26,19 @@ export class SessionController {
   constructor(
     private readonly sessionService: SessionService,
     private readonly gameService: GameService,
+    private readonly wideEventService: WideEventService,
   ) {}
 
   @TsRestHandler(publicSessionRoutes)
   async handler() {
     return tsRestHandler(publicSessionRoutes, {
-      getSession: async ({ params }) => ({
-        status: 200 as const,
-        body: await this.sessionService.getById(params.id),
-      }),
+      getSession: async ({ params }) => {
+        this.wideEventService.enrichBusinessContext({ sessionId: params.id });
+        return {
+          status: 200 as const,
+          body: await this.sessionService.getById(params.id),
+        };
+      },
     });
   }
 
@@ -50,20 +55,24 @@ export class SessionController {
             code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED,
             message: 'User does not have an account or is not verified',
           });
+        const session = await this.sessionService.create(body, user, visitorId);
+        this.wideEventService.enrichBusinessContext({ sessionId: session.id });
         return {
           status: 201 as const,
-          body: await this.sessionService.create(body, user, visitorId),
+          body: session,
         };
       },
-      createGame: async ({ body: session }) => ({
-        status: 200 as const,
-        body: await this.gameService.createGame({
+      createGame: async ({ body: session }) => {
+        this.wideEventService.enrichBusinessContext({ sessionId: session.id });
+        const game = await this.gameService.createGame({
           gameConfig: session.gameConfig,
           players: session.players,
           mode: session.mode,
           visitorId,
-        }),
-      }),
+        });
+        this.wideEventService.enrichBusinessContext({ gameId: game.id });
+        return { status: 200 as const, body: game };
+      },
       finalizeGame: async ({ body: session }) => {
         await this.finalizeGame(session, visitorId);
         return { status: 200 as const, body: {} };
@@ -80,6 +89,10 @@ export class SessionController {
     session: Session & { currentGame: NonNullable<Session['currentGame']> },
     visitorId?: string,
   ): Promise<void> {
+    this.wideEventService.enrichBusinessContext({
+      sessionId: session.id,
+      gameId: session.currentGame.id,
+    });
     await this.gameService.endGame(
       session.currentGame,
       session.players,

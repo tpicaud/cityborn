@@ -45,7 +45,7 @@ export class AuthGuard implements CanActivate {
       });
     }
     request.user = fullUser satisfies User;
-    this.wideEventService.enrich({
+    this.wideEventService.enrichAuth({
       userId: fullUser.id,
       isAuthenticated: true,
     });

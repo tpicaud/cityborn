@@ -96,6 +96,8 @@ describe('PrismaExceptionFilter wide event enrichment', () => {
   const baseWideEvent: HttpWideEventInit = {
     transport: 'http',
     requestId: 'rid',
+    domain: 'other',
+    operation: 'GET /test',
     method: 'GET',
     route: '/x',
     ip: undefined,

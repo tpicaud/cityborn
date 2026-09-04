@@ -23,7 +23,7 @@ export class WsErrorInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((exception: unknown) => {
         const payload: ApiError = exceptionToApiError(exception);
-        this.wideEventService.enrich({
+        this.wideEventService.enrichError({
           statusCode: payload.statusCode,
           ...toWideEventErrorFields(payload, exception),
         });
