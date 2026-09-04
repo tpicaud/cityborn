@@ -1,10 +1,6 @@
 import { ErrorCode, type User } from '@cityborn/api';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import {
-  JsonWebTokenError,
-  type JwtService,
-  TokenExpiredError,
-} from '@nestjs/jwt';
+import { type JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { UserMapper } from '../../user/user.mapper';
 import type { UserService } from '../../user/user.service';
 
@@ -25,13 +21,12 @@ export async function validateAccessToken(
         code: ErrorCode.TOKEN_EXPIRED,
         message: 'Token expired',
       });
-    } else {
-      logger.error(err);
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_TOKEN,
-        message: 'Invalid token',
-      });
     }
+    logger.error(err);
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_INVALID_TOKEN,
+      message: 'Invalid token',
+    });
   }
 }
 
@@ -58,16 +53,10 @@ export async function validateRefreshToken(
         code: ErrorCode.TOKEN_EXPIRED,
         message: 'Token expired',
       });
-    } else if (err instanceof JsonWebTokenError) {
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_TOKEN,
-        message: 'Invalid token',
-      });
-    } else {
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_TOKEN,
-        message: 'Invalid token',
-      });
     }
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_INVALID_TOKEN,
+      message: 'Invalid token',
+    });
   }
 }
