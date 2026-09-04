@@ -49,12 +49,11 @@ export class WsWideEventLifecycle {
         client.off('disconnect', markAborted);
 
         const statusCode = this.wideEventService.get()?.statusCode ?? 200;
-        this.wideEventService.enrich({
+        const wideEvent = this.wideEventService.finalize({
           statusCode,
           outcome: deriveWideEventOutcome(statusCode, aborted),
           durationMs: Number(process.hrtime.bigint() - start) / 1e6,
         });
-        const wideEvent = this.wideEventService.get();
         if (wideEvent) {
           emitWideEventLine(this.logger, wideEvent);
         }
@@ -70,7 +69,7 @@ export class WsWideEventLifecycle {
         return result;
       } catch (exception) {
         const payload = exceptionToApiError(exception);
-        this.wideEventService.enrich({
+        this.wideEventService.enrichError({
           statusCode: payload.statusCode,
           ...toWideEventErrorFields(payload, exception),
         });
@@ -96,9 +95,13 @@ export class WsWideEventLifecycle {
     );
 
     const user = client.data.user;
-    this.wideEventService.enrich({
-      isAuthenticated: Boolean(user),
-      ...(user ? { userId: user.id } : {}),
+    if (!user) {
+      this.wideEventService.enrichAuth({ isAuthenticated: false });
+      return;
+    }
+    this.wideEventService.enrichAuth({
+      isAuthenticated: true,
+      userId: user.id,
     });
   }
 }

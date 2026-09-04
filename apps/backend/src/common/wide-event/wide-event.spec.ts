@@ -15,7 +15,7 @@ import {
   deriveWideEventOutcome,
   deriveWsDomain,
   emitWideEventLine,
-  type WideEvent,
+  type WideEventFinalized,
 } from './wide-event';
 
 const buildRequest = (overrides: Partial<Request> = {}): Request =>
@@ -118,8 +118,8 @@ describe('createWsWideEvent', () => {
 describe('wide event dimensions', () => {
   it.each([
     ['/auth/sign-in', 'auth'],
-    ['/admin/world-location', 'world_location'],
-    ['/game-records', 'game'],
+    ['/admin/world-location', 'world-location'],
+    ['/game/records', 'game'],
     ['/new-route', 'other'],
   ])('derives the HTTP domain for %s', (route, domain) => {
     expect(deriveHttpDomain(route)).toBe(domain);
@@ -169,7 +169,7 @@ describe('emitWideEventLine', () => {
 
   it('logs an http_request line at the level derived from the status code', () => {
     const logger = buildLogger();
-    const wideEvent: WideEvent = {
+    const wideEvent: WideEventFinalized = {
       transport: 'http',
       requestId: 'r1',
       domain: 'auth',
@@ -184,6 +184,8 @@ describe('emitWideEventLine', () => {
       apiVersion: 7,
       isAuthenticated: false,
       statusCode: 404,
+      outcome: 'client_error',
+      durationMs: 12,
     };
 
     emitWideEventLine(logger, wideEvent);
@@ -195,9 +197,9 @@ describe('emitWideEventLine', () => {
     expect(logger.info).not.toHaveBeenCalled();
   });
 
-  it('logs a ws_message line at info when no status code is set', () => {
+  it('logs a successful ws_message line at info', () => {
     const logger = buildLogger();
-    const wideEvent: WideEvent = {
+    const wideEvent: WideEventFinalized = {
       transport: 'ws',
       requestId: 'r1',
       domain: 'session',
@@ -209,6 +211,9 @@ describe('emitWideEventLine', () => {
       visitorId: undefined,
       client: undefined,
       clientVersion: undefined,
+      statusCode: 200,
+      outcome: 'success',
+      durationMs: 12,
     };
 
     emitWideEventLine(logger, wideEvent);
@@ -221,7 +226,7 @@ describe('emitWideEventLine', () => {
 
   it('logs a ws_message line at error for a 5xx status code', () => {
     const logger = buildLogger();
-    const wideEvent: WideEvent = {
+    const wideEvent: WideEventFinalized = {
       transport: 'ws',
       requestId: 'r1',
       domain: 'session',
@@ -234,6 +239,8 @@ describe('emitWideEventLine', () => {
       client: undefined,
       clientVersion: undefined,
       statusCode: 500,
+      outcome: 'server_error',
+      durationMs: 12,
     };
 
     emitWideEventLine(logger, wideEvent);

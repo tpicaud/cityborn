@@ -47,26 +47,75 @@ export interface WideEventEnrichment {
 }
 
 export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
-export type WideEventUpdate = Partial<WideEventEnrichment> & {
-  domain?: WideEventDomain;
-  operation?: string;
-  route?: string;
-};
+
+export type WideEventFinalized = WideEvent &
+  Required<
+    Pick<WideEventEnrichment, 'statusCode' | 'outcome' | 'durationMs'>
+  >;
+
+export type WideEventFinalization = Pick<
+  WideEventEnrichment,
+  'statusCode' | 'outcome' | 'durationMs'
+> &
+  Partial<Pick<WideEventInitBase, 'domain' | 'operation'>> & {
+    route?: string;
+  };
+
+export type WideEventAuthContext =
+  | { isAuthenticated: false; userId?: never }
+  | { isAuthenticated: true; userId: string };
+
+export type WideEventRateLimitContext =
+  | {
+      rateLimitBucket: WideEventRateLimitBucket;
+      rateLimitStatus: 'allowed';
+      rateLimitRemaining: number;
+    }
+  | {
+      rateLimitBucket: WideEventRateLimitBucket;
+      rateLimitStatus: 'rejected';
+      rateLimitRemaining: 0;
+    }
+  | {
+      rateLimitBucket: WideEventRateLimitBucket;
+      rateLimitStatus: 'bypassed';
+      rateLimitRemaining?: never;
+    };
+
+interface WideEventBusinessFields {
+  sessionId: string;
+  playerId: string;
+  gameId: string;
+}
+
+type AtLeastOne<T> = {
+  [Key in keyof T]-?: Required<Pick<T, Key>> & Partial<Omit<T, Key>>;
+}[keyof T];
+
+export type WideEventBusinessContext = AtLeastOne<WideEventBusinessFields>;
+
+export type WideEventErrorContext = Pick<
+  WideEventEnrichment,
+  'errorCode' | 'errorMessage'
+> &
+  Partial<Pick<WideEventEnrichment, 'errorStack' | 'statusCode'>>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
 
-export type WideEventDomain =
-  | 'auth'
-  | 'category'
-  | 'game'
-  | 'guess_object'
-  | 'health'
-  | 'search'
-  | 'sentence'
-  | 'session'
-  | 'user'
-  | 'world_location'
-  | 'other';
+export const WIDE_EVENT_DOMAINS = [
+  'auth',
+  'category',
+  'game',
+  'guess-object',
+  'health',
+  'search',
+  'sentence',
+  'session',
+  'user',
+  'world-location',
+] as const;
+
+export type WideEventDomain = (typeof WIDE_EVENT_DOMAINS)[number] | 'other';
 
 export type WideEventOutcome =
   | 'success'
@@ -117,31 +166,7 @@ function resolveRequestId(req: Request): string {
 }
 
 function domainFromSegment(segment: string | undefined): WideEventDomain {
-  switch (segment) {
-    case 'auth':
-      return 'auth';
-    case 'category':
-      return 'category';
-    case 'game':
-    case 'game-records':
-      return 'game';
-    case 'guess-object':
-      return 'guess_object';
-    case 'health':
-      return 'health';
-    case 'search':
-      return 'search';
-    case 'sentence':
-      return 'sentence';
-    case 'session':
-      return 'session';
-    case 'user':
-      return 'user';
-    case 'world-location':
-      return 'world_location';
-    default:
-      return 'other';
-  }
+  return WIDE_EVENT_DOMAINS.find((domain) => domain === segment) ?? 'other';
 }
 
 export function deriveHttpDomain(route: string): WideEventDomain {
@@ -253,7 +278,7 @@ export function deriveWideEventLevel(
 
 export function emitWideEventLine(
   logger: WideEventLogger,
-  wideEvent: WideEvent,
+  wideEvent: WideEventFinalized,
 ): void {
   const level = deriveWideEventLevel(wideEvent.statusCode, wideEvent.outcome);
   const { event, message } = wideEventLogShape[wideEvent.transport];

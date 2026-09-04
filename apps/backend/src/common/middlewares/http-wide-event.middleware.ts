@@ -38,7 +38,7 @@ export class HttpWideEventMiddleware implements NestMiddleware {
 
         const statusCode = response.statusCode;
         const route = resolveHttpRoute(request, statusCode);
-        this.wideEventService.enrich({
+        const wideEvent = this.wideEventService.finalize({
           domain: deriveHttpDomain(route),
           operation: `${request.method} ${route}`,
           route,
@@ -46,8 +46,6 @@ export class HttpWideEventMiddleware implements NestMiddleware {
           outcome: deriveWideEventOutcome(statusCode, aborted),
           durationMs: Number(process.hrtime.bigint() - start) / 1e6,
         });
-
-        const wideEvent = this.wideEventService.get();
         if (wideEvent) {
           emitWideEventLine(this.logger, wideEvent);
         }

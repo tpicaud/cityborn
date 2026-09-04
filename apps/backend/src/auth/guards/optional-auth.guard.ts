@@ -26,7 +26,7 @@ export class OptionalAuthGuard implements CanActivate {
     const token = extractTokenFromHTTPHeader(request);
 
     if (!token) {
-      this.wideEventService.enrich({ isAuthenticated: false });
+      this.wideEventService.enrichAuth({ isAuthenticated: false });
       return true;
     }
 
@@ -39,9 +39,13 @@ export class OptionalAuthGuard implements CanActivate {
     const fullUser =
       (await resolveFullUser(user.id, this.userService)) ?? undefined;
     request.user = fullUser;
-    this.wideEventService.enrich({
-      isAuthenticated: fullUser !== undefined,
-      userId: fullUser?.id,
+    if (!fullUser) {
+      this.wideEventService.enrichAuth({ isAuthenticated: false });
+      return true;
+    }
+    this.wideEventService.enrichAuth({
+      isAuthenticated: true,
+      userId: fullUser.id,
     });
 
     return true;

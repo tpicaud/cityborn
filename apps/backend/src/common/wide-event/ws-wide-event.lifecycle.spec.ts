@@ -79,7 +79,7 @@ describe('WsWideEventLifecycle', () => {
 
     await expect(
       lifecycle.run(buildClient('socket-1'), 'session:guess', async () => {
-        wideEventService.enrich({
+        wideEventService.enrichRateLimit({
           rateLimitBucket: 'rl:ws:msg',
           rateLimitRemaining: 0,
           rateLimitStatus: 'rejected',
@@ -148,11 +148,11 @@ describe('WsWideEventLifecycle', () => {
 
     await Promise.all([
       lifecycle.run(buildClient('socket-slow'), 'session:guess', async () => {
-        wideEventService.enrich({ sessionId: 'slow' });
+        wideEventService.enrichBusinessContext({ sessionId: 'slow' });
         await setTimeout(20);
       }),
       lifecycle.run(buildClient('socket-fast'), 'session:guess', async () => {
-        wideEventService.enrich({ sessionId: 'fast' });
+        wideEventService.enrichBusinessContext({ sessionId: 'fast' });
         await setTimeout(1);
       }),
     ]);

@@ -20,7 +20,7 @@ describe('RateLimitGuard', () => {
     connectionRegistryService: Partial<ConnectionRegistryService> = {
       getConnection: jest.fn().mockResolvedValue(null),
     },
-    wideEventService: Partial<WideEventService> = { enrich: jest.fn() },
+    wideEventService: Partial<WideEventService> = { enrichRateLimit: jest.fn() },
   ) => {
     const rateLimitGuard = new RateLimitGuard(
       rateLimitService as unknown as RateLimitService,
@@ -80,7 +80,7 @@ describe('RateLimitGuard', () => {
 
       await guard.canActivate(context);
 
-      expect(wideEventService.enrich).toHaveBeenCalledWith({
+      expect(wideEventService.enrichRateLimit).toHaveBeenCalledWith({
         rateLimitBucket: 'rl:http',
         rateLimitRemaining: 42,
         rateLimitStatus: 'allowed',
@@ -142,7 +142,7 @@ describe('RateLimitGuard', () => {
       });
 
       await expect(guard.canActivate(context)).rejects.toBe(failure);
-      expect(wideEventService.enrich).toHaveBeenCalledWith({
+      expect(wideEventService.enrichRateLimit).toHaveBeenCalledWith({
         rateLimitBucket: 'rl:http',
         rateLimitRemaining: 0,
         rateLimitStatus: 'rejected',
@@ -160,7 +160,7 @@ describe('RateLimitGuard', () => {
       const context = buildWsContext(client);
 
       await allowed.rateLimitGuard.canActivate(context);
-      expect(allowed.wideEventService.enrich).toHaveBeenCalledWith({
+      expect(allowed.wideEventService.enrichRateLimit).toHaveBeenCalledWith({
         rateLimitBucket: 'rl:ws:msg',
         rateLimitRemaining: 12,
         rateLimitStatus: 'allowed',
@@ -180,7 +180,7 @@ describe('RateLimitGuard', () => {
       await expect(rejected.rateLimitGuard.canActivate(context)).rejects.toBe(
         failure,
       );
-      expect(rejected.wideEventService.enrich).toHaveBeenCalledWith({
+      expect(rejected.wideEventService.enrichRateLimit).toHaveBeenCalledWith({
         rateLimitBucket: 'rl:ws:msg',
         rateLimitRemaining: 0,
         rateLimitStatus: 'rejected',

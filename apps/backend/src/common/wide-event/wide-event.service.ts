@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ClsService, ClsServiceManager, type ClsStore } from 'nestjs-cls';
-import type { WideEvent, WideEventInit, WideEventUpdate } from './wide-event';
+import type {
+  WideEvent,
+  WideEventAuthContext,
+  WideEventBusinessContext,
+  WideEventErrorContext,
+  WideEventFinalization,
+  WideEventFinalized,
+  WideEventInit,
+  WideEventRateLimitContext,
+} from './wide-event';
 
 export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
 }
 
-export function enrichWideEventFromCls(fields: WideEventUpdate): boolean {
+export function enrichWideEventFromCls(
+  fields: WideEventErrorContext,
+): boolean {
   const cls = ClsServiceManager.getClsService<WideEventClsStore>();
   const current = cls.get('wideEvent');
   if (!current) {
@@ -24,15 +35,47 @@ export class WideEventService {
     this.cls.set('wideEvent', init);
   }
 
-  enrich(fields: WideEventUpdate): void {
+  enrichAuth(fields: WideEventAuthContext): void {
+    this.merge(fields);
+  }
+
+  enrichBusinessContext(fields: WideEventBusinessContext): void {
+    this.merge(fields);
+  }
+
+  enrichError(fields: WideEventErrorContext): void {
+    this.merge(fields);
+  }
+
+  enrichRateLimit(fields: WideEventRateLimitContext): void {
+    this.merge(fields);
+  }
+
+  finalize(fields: WideEventFinalization): WideEventFinalized | undefined {
+    const current = this.cls.get('wideEvent');
+    if (!current) {
+      return undefined;
+    }
+    const finalized = Object.assign({}, current, fields);
+    this.cls.set('wideEvent', finalized);
+    return finalized;
+  }
+
+  get(): WideEvent | undefined {
+    return this.cls.get('wideEvent');
+  }
+
+  private merge(
+    fields:
+      | WideEventAuthContext
+      | WideEventBusinessContext
+      | WideEventErrorContext
+      | WideEventRateLimitContext,
+  ): void {
     const current = this.cls.get('wideEvent');
     if (!current) {
       return;
     }
     this.cls.set('wideEvent', Object.assign({}, current, fields));
-  }
-
-  get(): WideEvent | undefined {
-    return this.cls.get('wideEvent');
   }
 }

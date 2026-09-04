@@ -41,7 +41,7 @@ class LimitedGuard implements CanActivate {
   constructor(private readonly wideEventService: WideEventService) {}
 
   canActivate(_context: ExecutionContext): never {
-    this.wideEventService.enrich({
+    this.wideEventService.enrichRateLimit({
       rateLimitBucket: 'rl:http',
       rateLimitRemaining: 0,
       rateLimitStatus: 'rejected',
@@ -80,7 +80,7 @@ class ProbeController {
 
   @Get('session/context/:sessionId')
   async context(@Param('sessionId') sessionId: string): Promise<void> {
-    this.wideEventService.enrich({ sessionId });
+    this.wideEventService.enrichBusinessContext({ sessionId });
     await setTimeout(sessionId === 'slow' ? 25 : 1);
   }
 

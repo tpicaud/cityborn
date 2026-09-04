@@ -36,13 +36,20 @@ export class RateLimitGuard implements CanActivate {
 
     try {
       const result = await this.rateLimitService.consumeHttp(key);
-      this.wideEventService.enrich({
+      if (!result) {
+        this.wideEventService.enrichRateLimit({
+          rateLimitBucket: 'rl:http',
+          rateLimitStatus: 'bypassed',
+        });
+        return;
+      }
+      this.wideEventService.enrichRateLimit({
         rateLimitBucket: 'rl:http',
-        rateLimitStatus: result ? 'allowed' : 'bypassed',
-        ...(result ? { rateLimitRemaining: result.remainingPoints } : {}),
+        rateLimitStatus: 'allowed',
+        rateLimitRemaining: result.remainingPoints,
       });
     } catch (exception) {
-      this.wideEventService.enrich({
+      this.wideEventService.enrichRateLimit({
         rateLimitBucket: 'rl:http',
         rateLimitRemaining: 0,
         rateLimitStatus: 'rejected',
@@ -65,13 +72,20 @@ export class RateLimitGuard implements CanActivate {
 
     try {
       const result = await this.rateLimitService.consumeWsMessage(key);
-      this.wideEventService.enrich({
+      if (!result) {
+        this.wideEventService.enrichRateLimit({
+          rateLimitBucket: 'rl:ws:msg',
+          rateLimitStatus: 'bypassed',
+        });
+        return;
+      }
+      this.wideEventService.enrichRateLimit({
         rateLimitBucket: 'rl:ws:msg',
-        rateLimitStatus: result ? 'allowed' : 'bypassed',
-        ...(result ? { rateLimitRemaining: result.remainingPoints } : {}),
+        rateLimitStatus: 'allowed',
+        rateLimitRemaining: result.remainingPoints,
       });
     } catch (exception) {
-      this.wideEventService.enrich({
+      this.wideEventService.enrichRateLimit({
         rateLimitBucket: 'rl:ws:msg',
         rateLimitRemaining: 0,
         rateLimitStatus: 'rejected',

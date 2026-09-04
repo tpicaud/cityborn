@@ -33,7 +33,7 @@ export class SessionController {
   async handler() {
     return tsRestHandler(publicSessionRoutes, {
       getSession: async ({ params }) => {
-        this.wideEventService.enrich({ sessionId: params.id });
+        this.wideEventService.enrichBusinessContext({ sessionId: params.id });
         return {
           status: 200 as const,
           body: await this.sessionService.getById(params.id),
@@ -56,21 +56,21 @@ export class SessionController {
             message: 'User does not have an account or is not verified',
           });
         const session = await this.sessionService.create(body, user, visitorId);
-        this.wideEventService.enrich({ sessionId: session.id });
+        this.wideEventService.enrichBusinessContext({ sessionId: session.id });
         return {
           status: 201 as const,
           body: session,
         };
       },
       createGame: async ({ body: session }) => {
-        this.wideEventService.enrich({ sessionId: session.id });
+        this.wideEventService.enrichBusinessContext({ sessionId: session.id });
         const game = await this.gameService.createGame({
           gameConfig: session.gameConfig,
           players: session.players,
           mode: session.mode,
           visitorId,
         });
-        this.wideEventService.enrich({ gameId: game.id });
+        this.wideEventService.enrichBusinessContext({ gameId: game.id });
         return { status: 200 as const, body: game };
       },
       finalizeGame: async ({ body: session }) => {
@@ -89,7 +89,7 @@ export class SessionController {
     session: Session & { currentGame: NonNullable<Session['currentGame']> },
     visitorId?: string,
   ): Promise<void> {
-    this.wideEventService.enrich({
+    this.wideEventService.enrichBusinessContext({
       sessionId: session.id,
       gameId: session.currentGame.id,
     });
