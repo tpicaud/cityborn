@@ -3,6 +3,7 @@ import {
   ErrorCode,
   GameConfig,
   Guess,
+  type Session,
   User,
 } from '@cityborn/api';
 import {
@@ -90,6 +91,12 @@ export class SessionGateway
     });
 
     return connection;
+  }
+
+  private enrichGame(session: Session): void {
+    if (session.currentGame) {
+      this.wideEventService.enrich({ gameId: session.currentGame.id });
+    }
   }
 
   async handleConnection(client: SessionSocket) {
@@ -267,6 +274,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -291,6 +299,7 @@ export class SessionGateway
       sessionID,
       guess,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
     return { success: true };
@@ -307,6 +316,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
     return { success: true };
@@ -323,6 +333,7 @@ export class SessionGateway
       sessionID,
       visitorId,
     );
+    this.enrichGame(session);
 
     this.io.to(session.id).emit('session:update', session);
 
@@ -354,6 +365,7 @@ export class SessionGateway
       playerID,
       user,
     );
+    this.enrichGame(session);
     await this.connectionRegistryService.register(
       socket.id,
       playerID,

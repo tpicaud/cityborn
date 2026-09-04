@@ -10,7 +10,10 @@ import type { Request } from 'express';
 import {
   createHttpWideEvent,
   createWsWideEvent,
+  deriveHttpDomain,
   deriveWideEventLevel,
+  deriveWideEventOutcome,
+  deriveWsDomain,
   emitWideEventLine,
   type WideEvent,
 } from './wide-event';
@@ -42,6 +45,8 @@ describe('createHttpWideEvent', () => {
     expect(wideEvent).toMatchObject({
       transport: 'http',
       requestId: 'generated-request-id',
+      domain: 'auth',
+      operation: 'POST /auth/sign-in',
       method: 'POST',
       route: '/auth/sign-in',
       ip: '1.2.3.4',
@@ -62,6 +67,11 @@ describe('createHttpWideEvent', () => {
 
   it('falls back to the original url when the route is not resolved', () => {
     expect(createHttpWideEvent(buildRequest()).route).toBe('/fallback');
+  });
+  it('reuses the Pino request id for correlation', () => {
+    const request = Object.assign(buildRequest(), { id: 'pino-request-id' });
+
+    expect(createHttpWideEvent(request).requestId).toBe('pino-request-id');
   });
 
   it('uses the X-Api-Version header when it is an integer', () => {
@@ -92,6 +102,8 @@ describe('createWsWideEvent', () => {
     ).toEqual({
       transport: 'ws',
       requestId: 'generated-request-id',
+      domain: 'session',
+      operation: 'session:join',
       eventName: 'session:join',
       socketId: 'socket-1',
       ip: '1.2.3.4',
@@ -101,6 +113,37 @@ describe('createWsWideEvent', () => {
       clientVersion: '0.1.4',
     });
   });
+});
+
+describe('wide event dimensions', () => {
+  it.each([
+    ['/auth/sign-in', 'auth'],
+    ['/admin/world-location', 'world_location'],
+    ['/game-records', 'game'],
+    ['/new-route', 'other'],
+  ])('derives the HTTP domain for %s', (route, domain) => {
+    expect(deriveHttpDomain(route)).toBe(domain);
+  });
+
+  it.each([
+    ['session:guess', 'session'],
+    ['game:finish', 'game'],
+    ['new-domain:event', 'other'],
+  ])('derives the WS domain for %s', (eventName, domain) => {
+    expect(deriveWsDomain(eventName)).toBe(domain);
+  });
+
+  it.each([
+    [200, false, 'success'],
+    [401, false, 'client_error'],
+    [500, false, 'server_error'],
+    [200, true, 'aborted'],
+  ])(
+    'derives outcome %s from status %s and aborted %s',
+    (statusCode, aborted, outcome) => {
+      expect(deriveWideEventOutcome(statusCode, aborted)).toBe(outcome);
+    },
+  );
 });
 
 describe('deriveWideEventLevel', () => {
@@ -129,6 +172,8 @@ describe('emitWideEventLine', () => {
     const wideEvent: WideEvent = {
       transport: 'http',
       requestId: 'r1',
+      domain: 'auth',
+      operation: 'GET /auth',
       method: 'GET',
       route: '/x',
       ip: undefined,
@@ -155,6 +200,8 @@ describe('emitWideEventLine', () => {
     const wideEvent: WideEvent = {
       transport: 'ws',
       requestId: 'r1',
+      domain: 'session',
+      operation: 'session:join',
       eventName: 'session:join',
       socketId: 'socket-1',
       ip: undefined,
@@ -177,6 +224,8 @@ describe('emitWideEventLine', () => {
     const wideEvent: WideEvent = {
       transport: 'ws',
       requestId: 'r1',
+      domain: 'session',
+      operation: 'session:join',
       eventName: 'session:guess',
       socketId: 'socket-1',
       ip: undefined,

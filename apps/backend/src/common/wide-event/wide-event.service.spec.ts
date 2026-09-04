@@ -5,6 +5,8 @@ import { type WideEventClsStore, WideEventService } from './wide-event.service';
 const baseInit: WideEventInit = {
   transport: 'http',
   requestId: 'r1',
+  domain: 'other',
+  operation: 'GET /test',
   method: 'GET',
   route: '/x',
   ip: undefined,

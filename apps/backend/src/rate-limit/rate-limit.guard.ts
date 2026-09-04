@@ -34,11 +34,21 @@ export class RateLimitGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const key = `${request.ip}:${request.method}:${request.route?.path ?? request.url}`;
 
-    const result = await this.rateLimitService.consumeHttp(key);
-    this.wideEventService.enrich({
-      rateLimitBucket: 'rl:http',
-      rateLimitRemaining: result?.remainingPoints,
-    });
+    try {
+      const result = await this.rateLimitService.consumeHttp(key);
+      this.wideEventService.enrich({
+        rateLimitBucket: 'rl:http',
+        rateLimitStatus: result ? 'allowed' : 'bypassed',
+        ...(result ? { rateLimitRemaining: result.remainingPoints } : {}),
+      });
+    } catch (exception) {
+      this.wideEventService.enrich({
+        rateLimitBucket: 'rl:http',
+        rateLimitRemaining: 0,
+        rateLimitStatus: 'rejected',
+      });
+      throw exception;
+    }
   }
 
   private async consumeWsMessage(context: ExecutionContext): Promise<void> {
@@ -53,6 +63,20 @@ export class RateLimitGuard implements CanActivate {
         client.handshake.address,
       );
 
-    await this.rateLimitService.consumeWsMessage(key);
+    try {
+      const result = await this.rateLimitService.consumeWsMessage(key);
+      this.wideEventService.enrich({
+        rateLimitBucket: 'rl:ws:msg',
+        rateLimitStatus: result ? 'allowed' : 'bypassed',
+        ...(result ? { rateLimitRemaining: result.remainingPoints } : {}),
+      });
+    } catch (exception) {
+      this.wideEventService.enrich({
+        rateLimitBucket: 'rl:ws:msg',
+        rateLimitRemaining: 0,
+        rateLimitStatus: 'rejected',
+      });
+      throw exception;
+    }
   }
 }

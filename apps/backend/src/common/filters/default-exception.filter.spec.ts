@@ -9,6 +9,8 @@ import { DefaultExceptionFilter } from './default-exception.filter';
 const baseWideEvent: HttpWideEventInit = {
   transport: 'http',
   requestId: 'rid',
+  domain: 'other',
+  operation: 'GET /test',
   method: 'GET',
   route: '/x',
   ip: undefined,
