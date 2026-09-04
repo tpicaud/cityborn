@@ -61,6 +61,11 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 | `pnpm --dir packages/api test` | tests de compatibilité OpenAPI |
 | `pnpm db:start` / `db:migrate` / `db:reset` | DB locale (Docker + Prisma) ; lance aussi Redis (`localhost:6379`) + RedisInsight (`localhost:5540`) |
 
+## Commits & PR
+
+- **Commit** : message court, une seule ligne (pas de corps) ; format Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, …) ; pas de signature.
+- **PR** : publiée en draft ; titre au format `#<num_issue> - <titre_issue>`.
+
 ## Demander avant d'agir
 
 - Ajout d'une dépendance npm.
