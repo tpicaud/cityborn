@@ -1,79 +1,123 @@
-import { Injectable } from '@nestjs/common';
-import { ClsService, ClsServiceManager, type ClsStore } from 'nestjs-cls';
-import type {
-  WideEvent,
-  WideEventAuthContext,
-  WideEventBusinessContext,
-  WideEventErrorContext,
-  WideEventFinalization,
-  WideEventFinalized,
-  WideEventInit,
-  WideEventRateLimitContext,
+import { type ApiError, ErrorCode } from '@cityborn/api';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClsService, type ClsStore } from 'nestjs-cls';
+import { PinoLogger } from 'nestjs-pino';
+import { normalizeException } from '../errors/exception-to-api-error';
+import {
+  deriveHttpDomain,
+  deriveWideEventLevel,
+  deriveWideEventOutcome,
+  emitWideEventLine,
+  type WideEvent,
+  type WideEventAuthContext,
+  type WideEventBusinessContext,
+  type WideEventEnrichment,
+  type WideEventFinalization,
+  type WideEventInit,
+  type WideEventLogger,
+  type WideEventRateLimitContext,
 } from './wide-event';
 
 export interface WideEventClsStore extends ClsStore {
   wideEvent: WideEvent;
-}
-
-export function enrichWideEventFromCls(fields: WideEventErrorContext): boolean {
-  const cls = ClsServiceManager.getClsService<WideEventClsStore>();
-  const current = cls.get('wideEvent');
-  if (!current) {
-    return false;
-  }
-  cls.set('wideEvent', Object.assign({}, current, fields));
-  return true;
+  startedAt: bigint;
+  finalized: boolean;
 }
 
 @Injectable()
 export class WideEventService {
-  constructor(private readonly cls: ClsService<WideEventClsStore>) {}
+  constructor(
+    private readonly cls: ClsService<WideEventClsStore>,
+    @Inject(PinoLogger) private readonly logger: WideEventLogger,
+  ) {}
 
-  set(init: WideEventInit): void {
-    this.cls.set('wideEvent', init);
+  run<T>(init: WideEventInit, callback: () => T): T {
+    return this.cls.runWith(
+      { wideEvent: init, startedAt: process.hrtime.bigint(), finalized: false },
+      callback,
+    );
   }
 
   enrichAuth(fields: WideEventAuthContext): void {
-    this.merge(fields);
+    this.merge({ userId: undefined, ...fields });
   }
 
   enrichBusinessContext(fields: WideEventBusinessContext): void {
     this.merge(fields);
   }
 
-  enrichError(fields: WideEventErrorContext): void {
-    this.merge(fields);
-  }
-
   enrichRateLimit(fields: WideEventRateLimitContext): void {
-    this.merge(fields);
+    this.merge({ rateLimitRemaining: undefined, ...fields });
   }
 
-  finalize(fields: WideEventFinalization): WideEventFinalized | undefined {
-    const current = this.cls.get('wideEvent');
-    if (!current) {
-      return undefined;
+  recordError(exception: unknown, source = 'operation'): ApiError {
+    const { apiError, diagnostic } = normalizeException(exception);
+    if (this.get()?.rateLimitStatus === 'pending') {
+      this.merge(
+        apiError.code === ErrorCode.RATE_LIMIT_EXCEEDED
+          ? { rateLimitStatus: 'rejected', rateLimitRemaining: 0 }
+          : { rateLimitStatus: 'failed' },
+      );
     }
-    const finalized = Object.assign({}, current, fields);
-    this.cls.set('wideEvent', finalized);
-    return finalized;
+    if (
+      !this.merge({
+        statusCode: apiError.statusCode,
+        errorCode: diagnostic.code,
+        errorMessage: diagnostic.message,
+        errorStack: diagnostic.stack,
+        errorCauses: diagnostic.causes,
+      })
+    ) {
+      const level = deriveWideEventLevel(apiError.statusCode);
+      this.logger[level](
+        {
+          event: 'operation_error',
+          source,
+          statusCode: apiError.statusCode,
+          ...diagnostic,
+        },
+        'operation error',
+      );
+    }
+    return apiError;
   }
 
-  get(): WideEvent | undefined {
+  finish(fields: WideEventFinalization = {}): void {
+    const current = this.get();
+    if (!current || this.cls.get('finalized')) {
+      return;
+    }
+    this.cls.set('finalized', true);
+    const statusCode = fields.statusCode ?? current.statusCode ?? 200;
+    const route = fields.route;
+    const finalized = {
+      ...current,
+      ...(current.transport === 'http' && route !== undefined
+        ? {
+            route,
+            domain: deriveHttpDomain(route),
+            operation: `${current.method} ${route}`,
+          }
+        : {}),
+      statusCode,
+      outcome: deriveWideEventOutcome(statusCode, fields.aborted),
+      durationMs:
+        Number(process.hrtime.bigint() - this.cls.get('startedAt')) / 1e6,
+    };
+    this.cls.set('wideEvent', finalized);
+    emitWideEventLine(this.logger, finalized);
+  }
+
+  private get(): WideEvent | undefined {
     return this.cls.get('wideEvent');
   }
 
-  private merge(
-    fields:
-      | WideEventAuthContext
-      | WideEventBusinessContext
-      | WideEventErrorContext
-      | WideEventRateLimitContext,
-  ): void {
-    const current = this.cls.get('wideEvent');
-    if (!current) {
-      return;
+  private merge(fields: Partial<WideEventEnrichment>): boolean {
+    const current = this.get();
+    if (!current || this.cls.get('finalized')) {
+      return false;
     }
-    this.cls.set('wideEvent', Object.assign({}, current, fields));
+    this.cls.set('wideEvent', { ...current, ...fields });
+    return true;
   }
 }

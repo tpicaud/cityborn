@@ -1,9 +1,4 @@
-import { ErrorCode } from '@cityborn/api';
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { USER_AGENT } from '../common/constants';
 
 export interface NominatimSearchResponse {
@@ -40,131 +35,116 @@ interface NominatimRawItem {
 
 @Injectable()
 export class NominatimService {
-  private readonly logger = new Logger(NominatimService.name);
   private readonly NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org';
 
   async searchByName(q: string): Promise<NominatimSearchResponse> {
-    try {
-      const params: Record<string, string> = {
-        q,
-        format: 'json',
-        addressdetails: '1',
-        extratags: '1',
-        'accept-language': 'fr',
-        limit: '20',
-      };
+    const params: Record<string, string> = {
+      q,
+      format: 'json',
+      addressdetails: '1',
+      extratags: '1',
+      'accept-language': 'fr',
+      limit: '20',
+    };
 
-      const queryString = new URLSearchParams(params).toString();
-      const url = `${this.NOMINATIM_API_URL}/search?${queryString}`;
+    const queryString = new URLSearchParams(params).toString();
+    const url = `${this.NOMINATIM_API_URL}/search?${queryString}`;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      });
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': USER_AGENT,
+      },
+    });
 
-      if (!response.ok) {
-        throw new Error(`Nominatim search failed: ${response.statusText}`);
-      }
-
-      const data: NominatimRawItem[] = await response.json();
-
-      const grouped: Record<string, NominatimRawItem> = {};
-      for (const item of data) {
-        const key = item.display_name;
-        if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
-          grouped[key] = item;
-        }
-      }
-
-      const results: NominatimItemResponse[] = Object.values(grouped).map(
-        (item) => ({
-          place_id: item.place_id?.toString() ?? '',
-          osm_type: item.osm_type as NominatimItemResponse['osm_type'],
-          osm_id: item.osm_id?.toString() ?? '',
-          lat: item.lat,
-          lon: item.lon,
-          name:
-            item.namedetails?.['name:fr'] ||
-            item.display_name?.split(',')[0] ||
-            'Inconnu',
-          display_name: item.display_name,
-          addresstype: item.addresstype,
-          place_rank: item.place_rank,
-          geojson: item.geojson ?? {
-            type: 'Point',
-            coordinates: [Number(item.lat), Number(item.lon)],
-          },
-        }),
-      );
-
-      return { results };
-    } catch (error) {
-      this.logger.error('Error fetching Nominatim data:', error);
-
-      throw new InternalServerErrorException({
-        code: ErrorCode.WORLD_LOCATION_SEARCH_FAILED,
-        message: `Error retrieving nominatim search results: ${error instanceof Error ? error.message : String(error)}`,
-      });
+    if (!response.ok) {
+      throw new Error(`Nominatim search failed: ${response.statusText}`);
     }
+
+    const data: NominatimRawItem[] = await response.json();
+
+    const grouped: Record<string, NominatimRawItem> = {};
+    for (const item of data) {
+      const key = item.display_name;
+      if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
+        grouped[key] = item;
+      }
+    }
+
+    const results: NominatimItemResponse[] = Object.values(grouped).map(
+      (item) => ({
+        place_id: item.place_id?.toString() ?? '',
+        osm_type: item.osm_type as NominatimItemResponse['osm_type'],
+        osm_id: item.osm_id?.toString() ?? '',
+        lat: item.lat,
+        lon: item.lon,
+        name:
+          item.namedetails?.['name:fr'] ||
+          item.display_name?.split(',')[0] ||
+          'Inconnu',
+        display_name: item.display_name,
+        addresstype: item.addresstype,
+        place_rank: item.place_rank,
+        geojson: item.geojson ?? {
+          type: 'Point',
+          coordinates: [Number(item.lat), Number(item.lon)],
+        },
+      }),
+    );
+
+    return { results };
   }
 
   async findByOsmId(
     osm_id: string,
     osm_type: 'node' | 'way' | 'relation' = 'relation',
   ): Promise<NominatimItemResponse | null> {
-    try {
-      let id: string;
-      switch (osm_type) {
-        case 'node':
-          id = `N${osm_id}`;
-          break;
-        case 'way':
-          id = `W${osm_id}`;
-          break;
-        case 'relation':
-          id = `R${osm_id}`;
-          break;
-        default:
-          id = `R${osm_id}`;
-      }
+    let id: string;
+    switch (osm_type) {
+      case 'node':
+        id = `N${osm_id}`;
+        break;
+      case 'way':
+        id = `W${osm_id}`;
+        break;
+      case 'relation':
+        id = `R${osm_id}`;
+        break;
+      default:
+        id = `R${osm_id}`;
+    }
 
-      const params: Record<string, string> = {
-        osm_ids: id,
-        format: 'json',
-        polygon_geojson: '1',
-        polygon_threshold: '0.0001',
-        addressdetails: '1',
-        extratags: '1',
-        namedetails: '1',
-        'accept-language': 'fr',
-      };
+    const params: Record<string, string> = {
+      osm_ids: id,
+      format: 'json',
+      polygon_geojson: '1',
+      polygon_threshold: '0.0001',
+      addressdetails: '1',
+      extratags: '1',
+      namedetails: '1',
+      'accept-language': 'fr',
+    };
 
-      const queryString = new URLSearchParams(params).toString();
+    const queryString = new URLSearchParams(params).toString();
 
-      const response = await fetch(
-        `${this.NOMINATIM_API_URL}/lookup?${queryString}`,
-        {
-          headers: {
-            'User-Agent': USER_AGENT,
-          },
+    const response = await fetch(
+      `${this.NOMINATIM_API_URL}/lookup?${queryString}`,
+      {
+        headers: {
+          'User-Agent': USER_AGENT,
         },
-      );
+      },
+    );
 
-      if (!response.ok) {
-        throw new Error(`Nominatim request failed: ${response.statusText}`);
-      }
+    if (!response.ok) {
+      throw new Error(`Nominatim request failed: ${response.statusText}`);
+    }
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!data.length) {
-        throw new Error(`No results found for OSM id ${osm_id}`);
-      }
-
-      return data[0];
-    } catch (error) {
-      this.logger.error('Error fetching Nominatim data:', error);
+    if (!data.length) {
       return null;
     }
+
+    return data[0];
   }
 }

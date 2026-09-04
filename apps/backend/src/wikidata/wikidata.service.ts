@@ -1,5 +1,4 @@
-import { ErrorCode } from '@cityborn/api';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { USER_AGENT } from '../common/constants';
 
 export interface WikidataSearchResponse {
@@ -33,75 +32,61 @@ export class WikidataService {
       search: q,
     });
 
-    try {
-      const response = await fetch(`${this.WIKIDATA_API_URL}?${params}`, {
-        headers: { 'User-Agent': USER_AGENT },
-      });
-      if (!response.ok) {
-        throw new Error(`Erreur Wikidata: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      const wikidata_response: WikidataSearchResponse = {
-        results: data.search
-          .filter((item) => item.label && item.label.trim() !== '')
-          .map((item) => ({
-            id: item.id,
-            label: item.label,
-            short_description: item.description || '',
-          })),
-      };
-
-      return wikidata_response;
-    } catch (error) {
-      throw new InternalServerErrorException({
-        code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
-        message: `Error retrieving wikidata search results: ${error instanceof Error ? error.message : String(error)}`,
-      });
+    const response = await fetch(`${this.WIKIDATA_API_URL}?${params}`, {
+      headers: { 'User-Agent': USER_AGENT },
+    });
+    if (!response.ok) {
+      throw new Error(`Erreur Wikidata: ${response.statusText}`);
     }
+
+    const data = await response.json();
+
+    const wikidata_response: WikidataSearchResponse = {
+      results: data.search
+        .filter((item) => item.label && item.label.trim() !== '')
+        .map((item) => ({
+          id: item.id,
+          label: item.label,
+          short_description: item.description || '',
+        })),
+    };
+
+    return wikidata_response;
   }
 
   async findById(id: string): Promise<WikidataItemResponse> {
-    try {
-      const response = await fetch(
-        `${this.WIKIDATA_URL}/Special:EntityData/${id}.json`,
-        { headers: { 'User-Agent': USER_AGENT } },
-      );
-      if (!response.ok) {
-        throw new Error(`Erreur Wikidata: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const entity = data.entities[id];
-
-      const rawImageName = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
-      const imageUrl = rawImageName
-        ? await this.resolveWikimediaImageUrl(rawImageName)
-        : undefined;
-
-      const osm = await this.getOSMId(
-        entity.claims?.P19?.[0]?.mainsnak?.datavalue?.value.id,
-      );
-
-      const wikidataItem: WikidataItemResponse = {
-        id: entity.id.toString(),
-        label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
-        short_description:
-          (entity.descriptions.fr?.value || entity.descriptions.en?.value) ??
-          undefined,
-        image: imageUrl,
-        world_location_id: osm ? osm.world_location_id : undefined,
-        osm_type: osm ? osm.osm_type : undefined,
-      };
-
-      return wikidataItem;
-    } catch (error) {
-      throw new InternalServerErrorException({
-        code: ErrorCode.GUESS_OBJECTS_SEARCH_FAILED,
-        message: `Error retrieving Wikidata entity ${id}: ${error instanceof Error ? error.message : String(error)}`,
-      });
+    const response = await fetch(
+      `${this.WIKIDATA_URL}/Special:EntityData/${id}.json`,
+      { headers: { 'User-Agent': USER_AGENT } },
+    );
+    if (!response.ok) {
+      throw new Error(`Erreur Wikidata: ${response.statusText}`);
     }
+
+    const data = await response.json();
+    const entity = data.entities[id];
+
+    const rawImageName = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    const imageUrl = rawImageName
+      ? await this.resolveWikimediaImageUrl(rawImageName)
+      : undefined;
+
+    const osm = await this.getOSMId(
+      entity.claims?.P19?.[0]?.mainsnak?.datavalue?.value.id,
+    );
+
+    const wikidataItem: WikidataItemResponse = {
+      id: entity.id.toString(),
+      label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
+      short_description:
+        (entity.descriptions.fr?.value || entity.descriptions.en?.value) ??
+        undefined,
+      image: imageUrl,
+      world_location_id: osm ? osm.world_location_id : undefined,
+      osm_type: osm ? osm.osm_type : undefined,
+    };
+
+    return wikidataItem;
   }
 
   private async getOSMId(

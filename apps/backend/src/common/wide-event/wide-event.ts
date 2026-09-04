@@ -1,6 +1,7 @@
 import { type ErrorCode, getApiVersionInfo } from '@cityborn/api';
 import type { Request } from 'express';
 import { nanoid } from 'nanoid';
+import type { ErrorDiagnostic } from '../errors/exception-to-api-error';
 
 interface WideEventInitBase {
   requestId: string;
@@ -41,6 +42,7 @@ export interface WideEventEnrichment {
   errorCode: ErrorCode;
   errorMessage: string;
   errorStack: string;
+  errorCauses: ErrorDiagnostic['causes'];
   sessionId: string;
   playerId: string;
   gameId: string;
@@ -51,13 +53,11 @@ export type WideEvent = WideEventInit & Partial<WideEventEnrichment>;
 export type WideEventFinalized = WideEvent &
   Required<Pick<WideEventEnrichment, 'statusCode' | 'outcome' | 'durationMs'>>;
 
-export type WideEventFinalization = Pick<
-  WideEventEnrichment,
-  'statusCode' | 'outcome' | 'durationMs'
-> &
-  Partial<Pick<WideEventInitBase, 'domain' | 'operation'>> & {
-    route?: string;
-  };
+export interface WideEventFinalization {
+  statusCode?: number;
+  aborted?: boolean;
+  route?: string;
+}
 
 export type WideEventAuthContext =
   | { isAuthenticated: false; userId?: never }
@@ -76,7 +76,7 @@ export type WideEventRateLimitContext =
     }
   | {
       rateLimitBucket: WideEventRateLimitBucket;
-      rateLimitStatus: 'bypassed';
+      rateLimitStatus: 'pending' | 'failed';
       rateLimitRemaining?: never;
     };
 
@@ -91,12 +91,6 @@ type AtLeastOne<T> = {
 }[keyof T];
 
 export type WideEventBusinessContext = AtLeastOne<WideEventBusinessFields>;
-
-export type WideEventErrorContext = Pick<
-  WideEventEnrichment,
-  'errorCode' | 'errorMessage'
-> &
-  Partial<Pick<WideEventEnrichment, 'errorStack' | 'statusCode'>>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
 
@@ -123,14 +117,16 @@ export type WideEventOutcome =
 
 export type WideEventRateLimitBucket = 'rl:http' | 'rl:ws:msg';
 
-export type WideEventRateLimitStatus = 'allowed' | 'rejected' | 'bypassed';
+export type WideEventRateLimitStatus =
+  | 'pending'
+  | 'allowed'
+  | 'rejected'
+  | 'failed';
 
 export type WideEventLogger = Record<
   WideEventLevel,
   (payload: object, message: string) => void
 >;
-
-export const WIDE_EVENT_LOGGER = Symbol('WIDE_EVENT_LOGGER');
 
 const wideEventLogShape = {
   http: { event: 'http_request', message: 'request' },
@@ -195,15 +191,12 @@ export function deriveWideEventOutcome(
   return 'success';
 }
 
-export function resolveHttpRoute(req: Request, statusCode?: number): string {
+export function resolveHttpRoute(req: Request): string {
   const route = req.route?.path;
-  if (typeof route === 'string' && !route.includes('*splat')) {
+  if (typeof route === 'string' && !route.includes('*')) {
     return route;
   }
-  if (statusCode === 404) {
-    return '<unmatched>';
-  }
-  return req.path ?? req.originalUrl.split('?', 1)[0];
+  return '<unmatched>';
 }
 
 export function firstHeaderValue(
@@ -259,14 +252,14 @@ export function deriveWideEventLevel(
   statusCode: number | undefined,
   outcome?: WideEventOutcome,
 ): WideEventLevel {
+  if (statusCode !== undefined && statusCode >= 500) {
+    return 'error';
+  }
   if (outcome === 'aborted') {
     return 'warn';
   }
   if (statusCode === undefined) {
     return 'info';
-  }
-  if (statusCode >= 500) {
-    return 'error';
   }
   if (statusCode >= 400) {
     return 'warn';

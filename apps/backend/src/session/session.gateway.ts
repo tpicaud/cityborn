@@ -11,7 +11,6 @@ import {
   Logger,
   NotFoundException,
   UseFilters,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -29,10 +28,7 @@ import { getJwtConstants } from '../auth/constants';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
-import { exceptionToApiError } from '../common/errors/exception-to-api-error';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
-import { logWsApiError } from '../common/filters/utils';
-import { WsErrorInterceptor } from '../common/interceptors/ws-error.interceptor';
 import type { SessionSocket } from '../common/types/session-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
@@ -57,7 +53,6 @@ interface WSResponse {
   },
 })
 @UseFilters(DefaultExceptionFilter)
-@UseInterceptors(WsErrorInterceptor)
 export class SessionGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -110,8 +105,10 @@ export class SessionGateway
         ),
       );
     } catch (error) {
-      const apiError: ApiError = exceptionToApiError(error);
-      logWsApiError(this.logger, 'WS Connection Error', apiError, error);
+      const apiError = this.wideEventService.recordError(
+        error,
+        'ws.connection',
+      );
       client.emit('error', apiError);
       client.disconnect(true);
       return;
@@ -132,15 +129,17 @@ export class SessionGateway
       token,
       this.jwtService,
       getJwtConstants(this.configService).jwt_access_secret,
-    ).catch(() => null);
+    ).catch((error: unknown) => {
+      this.wideEventService.recordError(error, 'ws.connection_token');
+      return null;
+    });
 
     if (!payload) return;
 
     try {
       client.data.user = await resolveFullUser(payload.id, this.userService);
     } catch (error) {
-      const apiError: ApiError = exceptionToApiError(error);
-      logWsApiError(this.logger, 'WS Connection Error', apiError, error);
+      this.wideEventService.recordError(error, 'ws.connection_auth');
       client.data.user = undefined;
     }
   }
@@ -158,7 +157,7 @@ export class SessionGateway
   ): Promise<WSResponse> {
     if (!sessionID || !playerID) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'sessionID et playerID required.',
       });
     }
@@ -189,7 +188,7 @@ export class SessionGateway
   ): Promise<WSResponse> {
     if (!newHostID) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'newHostID required.',
       });
     }
@@ -212,7 +211,7 @@ export class SessionGateway
   ): Promise<WSResponse> {
     if (!gameConfig) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'gameConfig required.',
       });
     }
@@ -235,7 +234,7 @@ export class SessionGateway
   ): Promise<WSResponse> {
     if (!playerToKick) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'playerToKick required.',
       });
     }
@@ -293,7 +292,7 @@ export class SessionGateway
   ): Promise<WSResponse> {
     if (!guess) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'guess required.',
       });
     }
@@ -358,7 +357,7 @@ export class SessionGateway
   ): Promise<WSResponse & { isInGame?: boolean }> {
     if (!sessionID || !playerID) {
       throw new BadRequestException({
-        code: ErrorCode.UNKNOWN_ERROR,
+        code: ErrorCode.BAD_REQUEST,
         message: 'sessionID and playerID required.',
       });
     }
@@ -405,7 +404,7 @@ export class SessionGateway
 
       this.logger.log(`Socket ${socket.id} déconnecté`);
     } catch (error) {
-      this.logger.error(error instanceof Error ? error.message : error);
+      this.wideEventService.recordError(error, 'ws.disconnect');
     }
   }
 

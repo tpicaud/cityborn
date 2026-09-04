@@ -1,15 +1,8 @@
-import {
-  Global,
-  type MiddlewareConsumer,
-  Module,
-  type NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ClsModule } from 'nestjs-cls';
-import pino from 'pino';
-import { loggerBaseOptions } from '../logger/logger.params';
+import { DefaultExceptionFilter } from '../filters/default-exception.filter';
 import { HttpWideEventMiddleware } from '../middlewares/http-wide-event.middleware';
-import { WIDE_EVENT_LOGGER } from './wide-event';
 import { WideEventService } from './wide-event.service';
 import { WsWideEventLifecycle } from './ws-wide-event.lifecycle';
 
@@ -20,17 +13,14 @@ import { WsWideEventLifecycle } from './ws-wide-event.lifecycle';
     WideEventService,
     WsWideEventLifecycle,
     HttpWideEventMiddleware,
-    {
-      provide: WIDE_EVENT_LOGGER,
-      useFactory: () => pino(loggerBaseOptions).child({ context: 'WideEvent' }),
-    },
+    DefaultExceptionFilter,
+    { provide: APP_FILTER, useExisting: DefaultExceptionFilter },
   ],
-  exports: [WideEventService, WsWideEventLifecycle],
+  exports: [
+    WideEventService,
+    WsWideEventLifecycle,
+    HttpWideEventMiddleware,
+    DefaultExceptionFilter,
+  ],
 })
-export class WideEventModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply(HttpWideEventMiddleware)
-      .forRoutes({ path: '{*splat}', method: RequestMethod.ALL });
-  }
-}
+export class WideEventModule {}

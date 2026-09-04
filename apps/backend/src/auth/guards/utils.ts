@@ -1,33 +1,16 @@
-import { ErrorCode, type User } from '@cityborn/api';
-import { Logger, UnauthorizedException } from '@nestjs/common';
-import { type JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { type User } from '@cityborn/api';
+import { type JwtService } from '@nestjs/jwt';
 import { UserMapper } from '../../user/user.mapper';
 import type { UserService } from '../../user/user.service';
-
-const logger = new Logger('validateAccessToken');
 
 export async function validateAccessToken(
   token: string,
   jwtService: JwtService,
   jwt_access_secret: string | undefined,
 ) {
-  try {
-    return await jwtService.verifyAsync(token, {
-      secret: jwt_access_secret,
-    });
-  } catch (err) {
-    if (err instanceof TokenExpiredError) {
-      throw new UnauthorizedException({
-        code: ErrorCode.TOKEN_EXPIRED,
-        message: 'Token expired',
-      });
-    }
-    logger.error(err);
-    throw new UnauthorizedException({
-      code: ErrorCode.USER_INVALID_TOKEN,
-      message: 'Invalid token',
-    });
-  }
+  return await jwtService.verifyAsync(token, {
+    secret: jwt_access_secret,
+  });
 }
 
 export async function resolveFullUser(
@@ -43,20 +26,7 @@ export async function validateRefreshToken(
   jwtService: JwtService,
   jwt_refresh_secret: string | undefined,
 ) {
-  try {
-    return await jwtService.verifyAsync(token, {
-      secret: jwt_refresh_secret,
-    });
-  } catch (err) {
-    if (err instanceof TokenExpiredError) {
-      throw new UnauthorizedException({
-        code: ErrorCode.TOKEN_EXPIRED,
-        message: 'Token expired',
-      });
-    }
-    throw new UnauthorizedException({
-      code: ErrorCode.USER_INVALID_TOKEN,
-      message: 'Invalid token',
-    });
-  }
+  return await jwtService.verifyAsync(token, {
+    secret: jwt_refresh_secret,
+  });
 }

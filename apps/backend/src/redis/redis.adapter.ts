@@ -4,7 +4,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import type { MessageMappingProperties } from '@nestjs/websockets';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
-import type { Observable } from 'rxjs';
+import { isObservable, type Observable } from 'rxjs';
 import type { Server, ServerOptions } from 'socket.io';
 import type { SessionSocket } from '../common/types/session-socket';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
@@ -48,13 +48,13 @@ export class RedisIoAdapter extends IoAdapter {
     const wrappedHandlers = handlers.map((handler) => ({
       ...handler,
       callback: (...args: unknown[]) =>
-        this.wsWideEventLifecycle.run(
-          client,
-          handler.message,
-          async () => await handler.callback(...args),
+        this.wsWideEventLifecycle.run(client, handler.message, () =>
+          transform(handler.callback(...args)),
         ),
     }));
-    super.bindMessageHandlers(client, wrappedHandlers, transform);
+    super.bindMessageHandlers(client, wrappedHandlers, (result: unknown) =>
+      isObservable(result) ? result : transform(result),
+    );
   }
 
   createIOServer(port: number, options?: ServerOptions): Server {
