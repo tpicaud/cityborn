@@ -54,5 +54,39 @@ services:
       - redis
     restart: unless-stopped
 
+  postgis-test:
+    image: postgis/postgis:16-3.4
+    profiles: [test]
+    environment:
+      POSTGRES_USER: cityborn_test
+      POSTGRES_PASSWORD: cityborn_test
+      POSTGRES_DB: cityborn_test
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U cityborn_test -d cityborn_test"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+  redis-test:
+    image: redis:8-alpine
+    profiles: [test]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-test-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres-test-data:
+  redis-test-data:
+
 networks:
   pg_network:
