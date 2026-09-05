@@ -65,7 +65,10 @@ const config: Config = {
     {
       ...baseProject,
       displayName: 'unit',
-      testMatch: ['<rootDir>/src/**/*.unit.spec.ts'],
+      testMatch: [
+        '<rootDir>/src/**/*.unit.spec.ts',
+        '<rootDir>/test/support/**/*.unit.spec.ts',
+      ],
     },
     {
       ...infrastructureProject,

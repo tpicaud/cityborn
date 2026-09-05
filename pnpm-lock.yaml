@@ -278,6 +278,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.8.0(jiti@2.7.0))
+      '@golevelup/ts-jest':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@nestjs/cli':
         specifier: ^11.0.23
         version: 11.0.24(@swc/cli@0.8.1(@swc/core@1.15.46)(chokidar@4.0.3))(@swc/core@1.15.46)(@types/node@26.1.1)
@@ -1917,6 +1920,9 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@golevelup/ts-jest@3.0.0':
+    resolution: {integrity: sha512-ei0cvUKrVv8cJBW6df54yeod8PyzR2LTYG6wJ1xm+213p7HnThw5ShQcRH0/hhhnXnJCLrpmJM7e6fkRjHUF1g==}
 
   '@googlemaps/js-api-loader@2.1.1':
     resolution: {integrity: sha512-yUpAwksbHrlZIWD49JmveNSfBG4oAK0AwMknfSaPMnP5N7UT8oFRVCqwjGb1XQovi//7KLbPQKZpbofiLGzpDw==}
@@ -12361,6 +12367,8 @@ snapshots:
       '@floating-ui/utils': 0.2.12
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@golevelup/ts-jest@3.0.0': {}
 
   '@googlemaps/js-api-loader@2.1.1':
     dependencies:
