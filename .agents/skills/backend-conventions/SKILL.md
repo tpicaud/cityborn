@@ -1,6 +1,6 @@
 ---
 name: backend-conventions
-description: Conventions backend NestJS Cityborn (apps/backend) — structure d'un module (controllers/ fins + services/ + mappers/, split *.public.* / *.admin.*, handlers ts-rest), gestion des erreurs (exceptions Nest typées avec ErrorCode de @cityborn/api, filtres globaux qui sérialisent en ApiError, erreurs Prisma déjà mappées) et observabilité (un wide event par requête HTTP et par message WebSocket via WideEventService). À utiliser dès qu'on crée ou modifie un module, controller, service ou mapper dans apps/backend, ou qu'on lève une exception.
+description: Conventions d'architecture backend NestJS Cityborn (apps/backend) — structure des modules, gestion des erreurs et observabilité. À utiliser dès qu'on crée ou modifie du code NestJS dans apps/backend, notamment un module, controller, service, mapper, guard ou gateway.
 ---
 
 # Conventions backend (NestJS)
@@ -33,10 +33,3 @@ description: Conventions backend NestJS Cityborn (apps/backend) — structure d'
 ## Garde-fou DB
 
 Migrations Prisma : voir *Garde-fous* dans `AGENTS.md`.
-
-## Support de test backend
-
-- `main.ts` et `test/support/createTestApp.ts` appellent `configureApp()` : garder la configuration HTTP/WS dans cette fonction partagée. Les filtres globaux et handlers ts-rest restent enregistrés par les modules de production ; ne pas créer de pipeline propre aux tests.
-- Tous les e2e utilisent `createTestApp()` puis `await app.close()` dans `afterAll`. Le callback optionnel permet les overrides Nest des services externes. Prisma et l’adaptateur Redis WebSocket ferment leurs connexions au teardown Nest.
-- Importer `createMock<T>()` depuis `test/support/createMock` (réexport de `@golevelup/ts-jest`) pour les doubles typés, sans `as unknown as`. Configurer explicitement les retours utilisés par le scénario.
-- Les fixtures d’entité sont définies uniquement dans `test/support/fixtures/`, exportées par son barrel (`buildSession`, `buildGame`, `buildGameConfig`, `buildUser`, `player`). Les builders utilisent les types de `@cityborn/api`, acceptent des overrides et produisent des données indépendantes à chaque appel.

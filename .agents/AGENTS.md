@@ -68,9 +68,6 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 ### Stratégie de vérification
 
-- Les projets Jest `integration` et `e2e` partagent `test/support/` : `globalSetup.ts` déploie les migrations une seule fois par lancement ; `setupEnvironment.ts` impose `DATABASE_URL` et `DIRECT_URL` sur `localhost:5433/cityborn_test`, et `REDIS_URL` sur `localhost:6380/0`, même si l'environnement parent pointe vers la dev. Aucun fichier `.env.test` à créer.
-- Avant chaque test d'intégration/e2e, `resetDb(prisma)` vide les tables applicatives via `TRUNCATE … RESTART IDENTITY CASCADE` et Redis est vidé. Les migrations et les tables d'extension PostGIS sont conservées. `globalTeardown.ts` nettoie les données restantes et ferme ses connexions ; les conteneurs restent disponibles jusqu'à `pnpm db:test:stop`.
-- Jest utilise un seul worker pour cette base partagée : ne pas lancer plusieurs commandes d'intégration/e2e simultanément ni utiliser `test.concurrent`. Les tests ferment leurs propres clients/applications dans leurs hooks de fin. La stack de test utilise le projet Compose `cityborn_tests`, des ports et des volumes nommés distincts de la dev.
 - Pendant l'implémentation, lancer d'abord les tests et vérifications ciblés sur les packages modifiés.
 - Exécuter les contrôles transverses explicitement requis par un skill une seule fois avant le compte rendu final.
 - Ne pas répéter un contrôle déjà réussi sans nouveau changement pertinent ou échec qui le justifie.
@@ -102,7 +99,8 @@ Conventions chargées automatiquement quand le contexte le demande (`.agents/ski
 |---|---|
 | `client-app-architecture` | on crée/modifie un composant, hook, feature ou accès API dans `apps/frontend`, `apps/back-office`, `apps/mobile` |
 | `client-error-handling` | on affiche/propage une erreur, on écrit un wrapper d'API / loader de Server Component, on branche un formulaire (front & mobile) |
-| `backend-conventions` | on crée/modifie un module, controller, service ou mapper dans `apps/backend`, ou on lève une exception Nest |
+| `backend-conventions` | on crée/modifie du code NestJS dans `apps/backend`, ou on lève une exception Nest |
+| `backend-testing` | on crée, modifie, relit ou vérifie un test dans `apps/backend`, ou on choisit son tier |
 | `api-contract-change` | on ajoute/modifie un élément de la surface publique de `packages/api` |
 | `deprecate` | on déprécie une route / type / champ / valeur d'enum du contrat API |
 | `check-and-remove-deprecated` | ménage périodique des dépréciations d'API |
