@@ -1,6 +1,13 @@
 import type { Config } from 'jest';
 
-const esmOnlyDependencies = ['nanoid', 'p-limit', 'uuid', 'yocto-queue'];
+const esmOnlyDependencies = [
+  'cookie',
+  'jose',
+  'nanoid',
+  'p-limit',
+  'uuid',
+  'yocto-queue',
+];
 
 const swcOptions = {
   module: { type: 'commonjs' },

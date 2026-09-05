@@ -5,6 +5,10 @@ on:
     types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
+  detect-changes:
+    name: Detect changes
+    uses: ./.github/workflows/detect-changes.yml
+
   typecheck:
     name: Typecheck
     if: github.event.pull_request.draft == false
@@ -127,3 +131,150 @@ jobs:
       - name: Prebuild mobile app
         working-directory: apps/mobile
         run: pnpm prebuild
+
+  backend-unit:
+    name: Backend unit tests
+    needs: detect-changes
+    if: github.event.pull_request.draft == false && needs.detect-changes.outputs.backendHasChanged == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run backend unit tests
+        run: pnpm --dir apps/backend test
+
+  backend-integration:
+    name: Backend integration tests
+    needs: detect-changes
+    if: github.event.pull_request.draft == false && needs.detect-changes.outputs.backendHasChanged == 'true'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
+      DIRECT_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
+      REDIS_URL: redis://localhost:6380/0
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: cityborn_test
+          POSTGRES_PASSWORD: cityborn_test
+          POSTGRES_DB: cityborn_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U cityborn_test -d cityborn_test"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 30
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Deploy database migrations
+        run: pnpm --dir apps/backend migrate
+
+      - name: Run backend integration tests
+        run: pnpm --dir apps/backend test:int
+
+  backend-e2e:
+    name: Backend e2e tests
+    needs: detect-changes
+    if: github.event.pull_request.draft == false && needs.detect-changes.outputs.backendHasChanged == 'true'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
+      DIRECT_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
+      REDIS_URL: redis://localhost:6380/0
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: cityborn_test
+          POSTGRES_PASSWORD: cityborn_test
+          POSTGRES_DB: cityborn_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U cityborn_test -d cityborn_test"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 30
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Deploy database migrations
+        run: pnpm --dir apps/backend migrate
+
+      - name: Run backend e2e tests
+        run: pnpm --dir apps/backend test:e2e
