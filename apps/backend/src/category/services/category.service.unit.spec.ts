@@ -1,4 +1,8 @@
-import { ErrorCode } from '@cityborn/api';
+import {
+  buildCreateCategory,
+  buildUpdateCategory,
+  ErrorCode,
+} from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
@@ -170,11 +174,11 @@ describe('CategoryService.create', () => {
     const { categoryService, prismaService } = buildCategoryService();
     prismaService.category.create.mockResolvedValue(buildPrismaCategory());
 
-    await categoryService.create({
-      name: 'Monuments',
-      isPublished: true,
-      guessObjectsIds: ['guess-1', 'guess-2'],
-    });
+    await categoryService.create(
+      buildCreateCategory({
+        guessObjectsIds: ['guess-1', 'guess-2'],
+      }),
+    );
 
     expect(prismaService.category.create).toHaveBeenCalledWith({
       data: {
@@ -191,7 +195,7 @@ describe('CategoryService.create', () => {
     const { categoryService, prismaService } = buildCategoryService();
     prismaService.category.create.mockResolvedValue(buildPrismaCategory());
 
-    await categoryService.create({ name: 'Monuments', isPublished: false });
+    await categoryService.create(buildCreateCategory({ isPublished: false }));
 
     expect(prismaService.category.create).toHaveBeenCalledWith({
       data: {
@@ -213,13 +217,14 @@ describe('CategoryService.update', () => {
       .mockResolvedValueOnce(1);
     guessObjectService.delete.mockResolvedValue(undefined);
 
-    await categoryService.update('category-1', {
-      id: 'category-1',
-      name: 'Monuments',
-      isPublished: true,
-      connectIds: ['guess-connected'],
-      disconnectIds: ['guess-orphan', 'guess-shared'],
-    });
+    await categoryService.update(
+      'category-1',
+      buildUpdateCategory({
+        id: 'category-1',
+        connectIds: ['guess-connected'],
+        disconnectIds: ['guess-orphan', 'guess-shared'],
+      }),
+    );
 
     expect(prismaService.category.update).toHaveBeenCalledWith({
       where: { id: 'category-1' },
@@ -242,11 +247,10 @@ describe('CategoryService.update', () => {
       buildCategoryService();
     prismaService.category.update.mockResolvedValue(buildPrismaCategory());
 
-    await categoryService.update('category-1', {
-      id: 'category-1',
-      name: 'Landmarks',
-      isPublished: true,
-    });
+    await categoryService.update(
+      'category-1',
+      buildUpdateCategory({ id: 'category-1', name: 'Landmarks' }),
+    );
 
     expect(prismaService.category.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -261,12 +265,10 @@ describe('CategoryService.update', () => {
     const { categoryService, prismaService } = buildCategoryService();
     prismaService.category.update.mockResolvedValue(buildPrismaCategory());
 
-    await categoryService.update('category-1', {
-      id: 'category-1',
-      name: 'Monuments',
-      isPublished: true,
-      disconnectIds: [],
-    });
+    await categoryService.update(
+      'category-1',
+      buildUpdateCategory({ id: 'category-1', disconnectIds: [] }),
+    );
 
     expect(prismaService.category.count).not.toHaveBeenCalled();
   });
