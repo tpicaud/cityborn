@@ -51,7 +51,11 @@
     "check:api-compat": "pnpm --dir packages/api check:compat",
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "format:fix": "biome check --write ."
+    "format:fix": "biome check --write .",
+    "db:test:start": "pnpm backend db:test:start",
+    "db:test:stop": "pnpm backend db:test:stop",
+    "test:int": "pnpm backend test:int",
+    "test:e2e": "pnpm backend test:e2e"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",

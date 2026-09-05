@@ -59,12 +59,18 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 | `pnpm format` / `pnpm format:check` | Biome (lint + format) |
 | `pnpm check:api-compat` | rétrocompat des contrats API (CI) |
 | `pnpm dev:web` / `pnpm dev:mobile` | stack web / mobile + backend + packages |
-| `pnpm --dir apps/backend test` | tests backend (Jest) |
+| `pnpm --dir apps/backend test` | tests backend unitaires (Jest) |
+| `pnpm db:test:start` / `pnpm db:test:stop` | démarrer (et attendre les healthchecks) / arrêter uniquement Postgres + Redis du profil `test` |
+| `pnpm test:int` / `pnpm test:e2e` | tests backend d'intégration / e2e sur la stack dédiée ; après `pnpm install` puis `pnpm db:test:start` |
+| `pnpm --dir apps/backend test:all` / `pnpm --dir apps/backend test:cov` | tous les projets Jest / avec couverture |
 | `pnpm --dir packages/api test` | tests de compatibilité OpenAPI |
 | `pnpm db:start` / `db:migrate` / `db:reset` | DB locale (Docker + Prisma) ; lance aussi Redis (`localhost:6379`) + RedisInsight (`localhost:5540`) |
 
 ### Stratégie de vérification
 
+- Les projets Jest `integration` et `e2e` partagent `test/support/` : `globalSetup.ts` déploie les migrations une seule fois par lancement ; `setupEnvironment.ts` impose `DATABASE_URL` et `DIRECT_URL` sur `localhost:5433/cityborn_test`, et `REDIS_URL` sur `localhost:6380/0`, même si l'environnement parent pointe vers la dev. Aucun fichier `.env.test` à créer.
+- Avant chaque test d'intégration/e2e, `resetDb(prisma)` vide les tables applicatives via `TRUNCATE … RESTART IDENTITY CASCADE` et Redis est vidé. Les migrations et les tables d'extension PostGIS sont conservées. `globalTeardown.ts` nettoie les données restantes et ferme ses connexions ; les conteneurs restent disponibles jusqu'à `pnpm db:test:stop`.
+- Jest utilise un seul worker pour cette base partagée : ne pas lancer plusieurs commandes d'intégration/e2e simultanément ni utiliser `test.concurrent`. Les tests ferment leurs propres clients/applications dans leurs hooks de fin. La stack de test utilise le projet Compose `cityborn_tests`, des ports et des volumes nommés distincts de la dev.
 - Pendant l'implémentation, lancer d'abord les tests et vérifications ciblés sur les packages modifiés.
 - Exécuter les contrôles transverses explicitement requis par un skill une seule fois avant le compte rendu final.
 - Ne pas répéter un contrôle déjà réussi sans nouveau changement pertinent ou échec qui le justifie.

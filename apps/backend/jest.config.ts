@@ -36,8 +36,17 @@ const baseProject = {
   ],
 } satisfies Config;
 
+const infrastructureProject = {
+  ...baseProject,
+  globalSetup: '<rootDir>/test/support/globalSetup.ts',
+  globalTeardown: '<rootDir>/test/support/globalTeardown.ts',
+  setupFiles: ['<rootDir>/test/support/setupEnvironment.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/support/setupAfterEnv.ts'],
+} satisfies Config;
+
 const config: Config = {
   passWithNoTests: true,
+  maxWorkers: 1,
   clearMocks: true,
   restoreMocks: true,
   collectCoverageFrom: [
@@ -59,12 +68,12 @@ const config: Config = {
       testMatch: ['<rootDir>/src/**/*.unit.spec.ts'],
     },
     {
-      ...baseProject,
+      ...infrastructureProject,
       displayName: 'integration',
       testMatch: ['<rootDir>/test/integration/**/*.integration.spec.ts'],
     },
     {
-      ...baseProject,
+      ...infrastructureProject,
       displayName: 'e2e',
       testMatch: ['<rootDir>/test/e2e/**/*.e2e.spec.ts'],
     },

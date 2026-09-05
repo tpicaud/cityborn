@@ -29,7 +29,9 @@
     "postinstall": "prisma generate",
     "format": "biome check --write .",
     "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check"
+    "fullcheck": "pnpm typecheck && pnpm check",
+    "db:test:start": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test up -d --wait postgis-test redis-test",
+    "db:test:stop": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test stop postgis-test redis-test"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
