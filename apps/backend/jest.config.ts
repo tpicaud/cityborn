@@ -2,6 +2,7 @@ import type { Config } from 'jest';
 
 const esmOnlyDependencies = [
   'cookie',
+  'jose',
   'nanoid',
   'p-limit',
   'uuid',
