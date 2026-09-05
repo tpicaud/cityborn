@@ -72,7 +72,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 ## Commits & PR
 
-- **Commit** : message court, une seule ligne (pas de corps) ; format Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, …) ; pas de signature.
+- **Commit** : message court, en anglais, une seule ligne (pas de corps) ; format Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, …) ; pas de signature.
 - **PR** : publiée en draft ; titre au format `#<num_issue> - <titre_issue>`.
 
 ## Demander avant d'agir
