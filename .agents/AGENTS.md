@@ -99,7 +99,8 @@ Conventions chargées automatiquement quand le contexte le demande (`.agents/ski
 |---|---|
 | `client-app-architecture` | on crée/modifie un composant, hook, feature ou accès API dans `apps/frontend`, `apps/back-office`, `apps/mobile` |
 | `client-error-handling` | on affiche/propage une erreur, on écrit un wrapper d'API / loader de Server Component, on branche un formulaire (front & mobile) |
-| `backend-conventions` | on crée/modifie du code ou un test dans `apps/backend`, ou on lève une exception Nest |
+| `backend-conventions` | on crée/modifie du code NestJS dans `apps/backend`, ou on lève une exception Nest |
+| `backend-testing` | on crée, modifie, relit ou vérifie un test dans `apps/backend`, ou on choisit son tier |
 | `api-contract-change` | on ajoute/modifie un élément de la surface publique de `packages/api` |
 | `deprecate` | on déprécie une route / type / champ / valeur d'enum du contrat API |
 | `check-and-remove-deprecated` | ménage périodique des dépréciations d'API |
