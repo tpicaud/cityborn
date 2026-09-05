@@ -1,3 +1,4 @@
+import { buildUser } from '../support/fixtures';
 import { createTestInfrastructure } from '../support/infrastructure';
 import { resetDb } from '../support/resetDb';
 
@@ -16,10 +17,14 @@ describe('Test infrastructure', () => {
     const spatialReferencesBefore = await prisma.$queryRaw`
       SELECT count(*) FROM spatial_ref_sys
     `;
+    const { id, email, username, type, isVerified } = buildUser();
     const user = await prisma.user.create({
       data: {
-        email: 'infrastructure@cityborn.test',
-        username: 'infrastructure',
+        id,
+        email,
+        username,
+        type,
+        isVerified,
         tokens: {
           create: {
             token: 'infrastructure-token',

@@ -14,6 +14,7 @@ export class RedisIoAdapter extends IoAdapter {
     app: INestApplicationContext,
     private readonly adapterConstructor: ReturnType<typeof createAdapter>,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
+    private readonly closeRedisConnections: () => Promise<void>,
   ) {
     super(app);
   }
@@ -23,9 +24,6 @@ export class RedisIoAdapter extends IoAdapter {
     const pubClient = createClient({ url: process.env.REDIS_URL });
     const subClient = pubClient.duplicate();
 
-    await pubClient.connect();
-    await subClient.connect();
-
     pubClient.on('error', (err) => {
       logger.error('Redis Pub Error:', err);
     });
@@ -33,11 +31,33 @@ export class RedisIoAdapter extends IoAdapter {
       logger.error('Redis Sub Error:', err);
     });
 
+    let connected = false;
+    try {
+      await pubClient.connect();
+      await subClient.connect();
+      connected = true;
+    } finally {
+      if (!connected) {
+        if (pubClient.isOpen) pubClient.destroy();
+        if (subClient.isOpen) subClient.destroy();
+      }
+    }
+
     return new RedisIoAdapter(
       app,
       createAdapter(pubClient, subClient),
       app.get(WsWideEventLifecycle),
+      async () => {
+        await Promise.all([
+          pubClient.isOpen ? pubClient.close() : undefined,
+          subClient.isOpen ? subClient.close() : undefined,
+        ]);
+      },
     );
+  }
+
+  async dispose(): Promise<void> {
+    await this.closeRedisConnections();
   }
 
   bindMessageHandlers(

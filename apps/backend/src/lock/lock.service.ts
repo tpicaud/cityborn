@@ -1,14 +1,9 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import Redlock from 'redlock';
 
 @Injectable()
-export class LockService implements OnModuleDestroy {
+export class LockService {
   private readonly logger = new Logger(LockService.name);
   private redlock: Redlock;
 
@@ -40,9 +35,5 @@ export class LockService implements OnModuleDestroy {
     } finally {
       await lock.release();
     }
-  }
-
-  async onModuleDestroy() {
-    await this.redlock.quit();
   }
 }
