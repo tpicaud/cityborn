@@ -1,7 +1,15 @@
+import type { Category as PrismaCategory } from '@prisma/client';
 import { createMock } from '../../../test/support/createMock';
-import { buildPrismaCategory } from '../../../test/support/fixtures';
 import { PublicCategoryService } from './category.public.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
+
+const prismaCategory = {
+  id: '00000000-0000-4000-8000-000000000010',
+  name: 'Monuments',
+  isPublished: true,
+  description: null,
+  parentId: null,
+} satisfies PrismaCategory;
 
 function buildPublicCategoryService() {
   const categoryService = createMock<CategoryService>();
@@ -14,7 +22,7 @@ describe('PublicCategoryService.findAll', () => {
   it('loads only published categories', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
-    categoryService.findBy.mockResolvedValue([buildPrismaCategory()]);
+    categoryService.findBy.mockResolvedValue([prismaCategory]);
 
     const categories = await publicCategoryService.findAll();
 
@@ -27,7 +35,7 @@ describe('PublicCategoryService.findBy', () => {
   it('enforces the published filter', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
-    categoryService.findBy.mockResolvedValue([buildPrismaCategory()]);
+    categoryService.findBy.mockResolvedValue([prismaCategory]);
 
     const categories = await publicCategoryService.findBy({
       ids: ['category-1'],
@@ -46,7 +54,7 @@ describe('PublicCategoryService.getTrees', () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
     const root: PrismaCategoryNode = {
-      ...buildPrismaCategory(),
+      ...prismaCategory,
       children: [],
     };
     categoryService.findTree.mockResolvedValue([root]);

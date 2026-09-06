@@ -1,18 +1,25 @@
 import { ErrorCode, ScoreType } from '@cityborn/api';
+import type { EndGameSentence as PrismaEndGameSentence } from '@prisma/client';
 import { createMock } from '../../test/support/createMock';
-import { buildPrismaEndGameSentence } from '../../test/support/fixtures';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SentenceService } from './sentence.service';
+
+const prismaEndGameSentence = {
+  id: '00000000-0000-4000-8000-000000000030',
+  message: 'Excellent score!',
+  score_type: ScoreType.GOOD,
+} satisfies PrismaEndGameSentence;
 
 describe('SentenceService.findRandomOne', () => {
   it('returns the randomly selected mapped sentence', async () => {
     const prismaService = createMock<PrismaService>();
     const sentenceService = new SentenceService(prismaService);
-    const firstSentence = buildPrismaEndGameSentence();
-    const secondSentence = buildPrismaEndGameSentence({
+    const firstSentence = prismaEndGameSentence;
+    const secondSentence = {
+      ...prismaEndGameSentence,
       id: 'sentence-2',
       message: 'Perfect!',
-    });
+    };
     prismaService.endGameSentence.findMany.mockResolvedValue([
       firstSentence,
       secondSentence,

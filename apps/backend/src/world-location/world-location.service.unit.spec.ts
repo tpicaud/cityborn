@@ -1,11 +1,36 @@
 import { buildWorldLocation } from '@cityborn/api';
+import type {
+  WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
+} from '@prisma/client';
 import { createMock } from '../../test/support/createMock';
-import {
-  buildPrismaWorldLocation,
-  buildPrismaWorldLocationWithGeometry,
-} from '../../test/support/fixtures';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { PrismaWorldLocationWithGeometry } from './mapper/world-location.mapper';
 import { WorldLocationService } from './world-location.service';
+
+const prismaWorldLocation = {
+  id: 'location-1',
+  osm_type: 'relation',
+  external_id: '7444',
+  name: 'Paris',
+  display_name: 'Paris, France',
+  addresstype: 'city',
+  centroid: [48.8566, 2.3522],
+  source: { provider: 'nominatim', external_id: '7444' },
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+} satisfies PrismaWorldLocation;
+
+const prismaWorldLocationGeometry = {
+  id: 'geometry-1',
+  data: { type: 'Point', coordinates: [2.3522, 48.8566] },
+  world_location_id: 'location-1',
+} satisfies PrismaWorldLocationGeometry;
+
+const prismaWorldLocationWithGeometry = {
+  ...prismaWorldLocation,
+  geometry: prismaWorldLocationGeometry,
+} satisfies PrismaWorldLocationWithGeometry;
 
 function buildWorldLocationService() {
   const prismaService = createMock<PrismaService>();
@@ -27,7 +52,7 @@ describe('WorldLocationService.get', () => {
   it('returns only the identifier', async () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.findUnique.mockResolvedValue(
-      buildPrismaWorldLocation(),
+      prismaWorldLocation,
     );
 
     const location = await worldLocationService.get('location-1');
@@ -49,7 +74,7 @@ describe('WorldLocationService.getWithGeometry', () => {
   it('returns the mapped location with geometry', async () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.findUnique.mockResolvedValue(
-      buildPrismaWorldLocationWithGeometry(),
+      prismaWorldLocationWithGeometry,
     );
 
     const location = await worldLocationService.getWithGeometry('location-1');
@@ -65,7 +90,7 @@ describe('WorldLocationService.findOrCreate', () => {
   it('returns an existing location without creating a duplicate', async () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.findUnique.mockResolvedValue(
-      buildPrismaWorldLocationWithGeometry(),
+      prismaWorldLocationWithGeometry,
     );
 
     const location = await worldLocationService.findOrCreate(
@@ -81,7 +106,7 @@ describe('WorldLocationService.findOrCreate', () => {
     const payload = buildWorldLocation();
     prismaService.worldLocation.findUnique.mockResolvedValue(null);
     prismaService.worldLocation.create.mockResolvedValue(
-      buildPrismaWorldLocationWithGeometry(),
+      prismaWorldLocationWithGeometry,
     );
 
     const location = await worldLocationService.findOrCreate(payload);
@@ -106,9 +131,7 @@ describe('WorldLocationService.findOrCreate', () => {
 describe('WorldLocationService.delete', () => {
   it('deletes the location', async () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
-    prismaService.worldLocation.delete.mockResolvedValue(
-      buildPrismaWorldLocation(),
-    );
+    prismaService.worldLocation.delete.mockResolvedValue(prismaWorldLocation);
 
     await worldLocationService.delete('location-1');
 

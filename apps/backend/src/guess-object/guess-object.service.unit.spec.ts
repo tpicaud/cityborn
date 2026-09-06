@@ -1,16 +1,82 @@
 import { buildCategory, buildGameConfig, ErrorCode } from '@cityborn/api';
+import type {
+  Category as PrismaCategory,
+  GuessObject as PrismaGuessObject,
+  WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
+} from '@prisma/client';
 import { createMock } from '../../test/support/createMock';
-import {
-  buildPrismaCategory,
-  buildPrismaGuessObject,
-  buildPrismaGuessObjectWithCategories,
-  buildPrismaGuessObjectWithLocation,
-  buildPrismaWorldLocation,
-  buildPrismaWorldLocationGeometry,
-} from '../../test/support/fixtures';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectService } from './guess-object.service';
+
+const prismaCategory = {
+  id: '00000000-0000-4000-8000-000000000010',
+  name: 'Monuments',
+  isPublished: true,
+  description: null,
+  parentId: null,
+} satisfies PrismaCategory;
+
+const prismaWorldLocation = {
+  id: 'location-1',
+  osm_type: 'relation',
+  external_id: '7444',
+  name: 'Paris',
+  display_name: 'Paris, France',
+  addresstype: 'city',
+  centroid: [48.8566, 2.3522],
+  source: { provider: 'nominatim', external_id: '7444' },
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+} satisfies PrismaWorldLocation;
+
+const prismaWorldLocationGeometry = {
+  id: 'geometry-1',
+  data: { type: 'Point', coordinates: [2.3522, 48.8566] },
+  world_location_id: 'location-1',
+} satisfies PrismaWorldLocationGeometry;
+
+const prismaGuessObject = {
+  id: '00000000-0000-4000-8000-000000000020',
+  name: 'Eiffel Tower',
+  image: 'https://example.com/eiffel.jpg',
+  description: 'A wrought-iron tower',
+  short_description: 'Paris landmark',
+  source: { provider: 'wikidata', external_id: 'Q243' },
+  world_location_id: 'location-1',
+} satisfies PrismaGuessObject;
+
+type PrismaGuessObjectWithLocation = PrismaGuessObject & {
+  world_location: PrismaWorldLocation;
+};
+
+type PrismaGuessObjectWithCategories = PrismaGuessObject & {
+  categories: PrismaCategory[];
+};
+
+const prismaGuessObjectWithLocation = {
+  ...prismaGuessObject,
+  world_location: prismaWorldLocation,
+} satisfies PrismaGuessObjectWithLocation;
+
+const prismaGuessObjectWithCategories = {
+  ...prismaGuessObject,
+  categories: [],
+} satisfies PrismaGuessObjectWithCategories;
+
+const prismaGuessObjectWithCategory = {
+  ...prismaGuessObject,
+  categories: [prismaCategory],
+} satisfies PrismaGuessObjectWithCategories;
+
+const prismaFullGuessObject = {
+  ...prismaGuessObject,
+  world_location: {
+    ...prismaWorldLocation,
+    geometry: prismaWorldLocationGeometry,
+  },
+};
 
 function buildGuessObjectService() {
   const prismaService = createMock<PrismaService>();
@@ -23,21 +89,11 @@ function buildGuessObjectService() {
   return { guessObjectService, prismaService, worldLocationService };
 }
 
-function buildFullPrismaGuessObject() {
-  return {
-    ...buildPrismaGuessObject(),
-    world_location: {
-      ...buildPrismaWorldLocation(),
-      geometry: buildPrismaWorldLocationGeometry(),
-    },
-  };
-}
-
 describe('GuessObjectService.findBy', () => {
   it('applies filters and maps results', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.findMany.mockResolvedValue([
-      buildPrismaGuessObjectWithLocation(),
+      prismaGuessObjectWithLocation,
     ]);
 
     const objects = await guessObjectService.findBy({
@@ -71,7 +127,7 @@ describe('GuessObjectService.findFullBy', () => {
   it('loads geometry and maps results', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.findMany.mockResolvedValue([
-      buildFullPrismaGuessObject(),
+      prismaFullGuessObject,
     ]);
 
     const objects = await guessObjectService.findFullBy({
@@ -86,8 +142,8 @@ describe('GuessObjectService.findShuffledGuessObjectsByGameConfig', () => {
   it('filters configured categories and limits the result', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.findMany.mockResolvedValue([
-      buildFullPrismaGuessObject(),
-      { ...buildFullPrismaGuessObject(), id: 'guess-2' },
+      prismaFullGuessObject,
+      { ...prismaFullGuessObject, id: 'guess-2' },
     ]);
     jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
@@ -148,9 +204,7 @@ describe('GuessObjectService.create', () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
     worldLocationService.get.mockResolvedValue({ id: 'location-1' });
-    prismaService.guessObject.findFirst.mockResolvedValue(
-      buildPrismaGuessObject(),
-    );
+    prismaService.guessObject.findFirst.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.create({
       name: 'Eiffel Tower',
@@ -166,9 +220,7 @@ describe('GuessObjectService.create', () => {
       buildGuessObjectService();
     worldLocationService.get.mockResolvedValue({ id: 'location-1' });
     prismaService.guessObject.findFirst.mockResolvedValue(null);
-    prismaService.guessObject.create.mockResolvedValue(
-      buildPrismaGuessObject(),
-    );
+    prismaService.guessObject.create.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.create({
       name: 'Eiffel Tower',
@@ -192,9 +244,7 @@ describe('GuessObjectService.create', () => {
 describe('GuessObjectService.update', () => {
   it('updates fields and an explicit location', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
-    prismaService.guessObject.update.mockResolvedValue(
-      buildPrismaGuessObject(),
-    );
+    prismaService.guessObject.update.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.update('guess-1', {
       name: 'Tower',
@@ -228,9 +278,7 @@ describe('GuessObjectService.delete', () => {
   it('rejects an object assigned to a category', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.findUnique.mockResolvedValue(
-      buildPrismaGuessObjectWithCategories({
-        categories: [buildPrismaCategory()],
-      }),
+      prismaGuessObjectWithCategory,
     );
 
     await expect(guessObjectService.delete('guess-1')).rejects.toMatchObject({
@@ -242,11 +290,9 @@ describe('GuessObjectService.delete', () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
     prismaService.guessObject.findUnique.mockResolvedValue(
-      buildPrismaGuessObjectWithCategories(),
+      prismaGuessObjectWithCategories,
     );
-    prismaService.guessObject.delete.mockResolvedValue(
-      buildPrismaGuessObject(),
-    );
+    prismaService.guessObject.delete.mockResolvedValue(prismaGuessObject);
     prismaService.guessObject.count.mockResolvedValue(0);
     worldLocationService.delete.mockResolvedValue(undefined);
 
@@ -259,11 +305,9 @@ describe('GuessObjectService.delete', () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
     prismaService.guessObject.findUnique.mockResolvedValue(
-      buildPrismaGuessObjectWithCategories(),
+      prismaGuessObjectWithCategories,
     );
-    prismaService.guessObject.delete.mockResolvedValue(
-      buildPrismaGuessObject(),
-    );
+    prismaService.guessObject.delete.mockResolvedValue(prismaGuessObject);
     prismaService.guessObject.count.mockResolvedValue(1);
 
     await guessObjectService.delete('guess-1');
@@ -275,9 +319,7 @@ describe('GuessObjectService.delete', () => {
 describe('GuessObjectService.searchDraftByName', () => {
   it('performs a case-insensitive search and maps drafts', async () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
-    prismaService.guessObject.findMany.mockResolvedValue([
-      buildPrismaGuessObject(),
-    ]);
+    prismaService.guessObject.findMany.mockResolvedValue([prismaGuessObject]);
 
     const drafts = await guessObjectService.searchDraftByName('tower');
 

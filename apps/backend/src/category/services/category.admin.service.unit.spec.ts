@@ -3,13 +3,18 @@ import {
   buildUpdateCategory,
   ErrorCode,
 } from '@cityborn/api';
+import type { Category as PrismaCategory } from '@prisma/client';
 import { createMock } from '../../../test/support/createMock';
-import {
-  buildPrismaCategory,
-  buildPrismaCategoryWithGuessObjects,
-} from '../../../test/support/fixtures';
 import { AdminCategoryService } from './category.admin.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
+
+const prismaCategory = {
+  id: '00000000-0000-4000-8000-000000000010',
+  name: 'Monuments',
+  isPublished: true,
+  description: null,
+  parentId: null,
+} satisfies PrismaCategory;
 
 function buildAdminCategoryService() {
   const categoryService = createMock<CategoryService>();
@@ -23,8 +28,8 @@ describe('AdminCategoryService.findAll', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     categoryService.findAll.mockResolvedValue([
-      buildPrismaCategory(),
-      buildPrismaCategory({ id: 'category-2' }),
+      prismaCategory,
+      { ...prismaCategory, id: 'category-2' },
     ]);
 
     const categories = await adminCategoryService.findAll();
@@ -40,7 +45,7 @@ describe('AdminCategoryService.findBy', () => {
   it('forwards the filter and returns mapped categories', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    categoryService.findBy.mockResolvedValue([buildPrismaCategory()]);
+    categoryService.findBy.mockResolvedValue([prismaCategory]);
 
     const categories = await adminCategoryService.findBy({
       ids: ['category-1'],
@@ -58,7 +63,7 @@ describe('AdminCategoryService.findFullBy', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     categoryService.findFullBy.mockResolvedValue([
-      buildPrismaCategoryWithGuessObjects(),
+      { ...prismaCategory, guessObjects: [] },
     ]);
 
     const category = await adminCategoryService.findFullBy('category-1');
@@ -83,7 +88,7 @@ describe('AdminCategoryService.create', () => {
   it('creates and maps a category', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    categoryService.create.mockResolvedValue(buildPrismaCategory());
+    categoryService.create.mockResolvedValue(prismaCategory);
     const payload = buildCreateCategory();
 
     const category = await adminCategoryService.create(payload);
@@ -97,9 +102,11 @@ describe('AdminCategoryService.update', () => {
   it('updates and maps a category', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    categoryService.update.mockResolvedValue(
-      buildPrismaCategoryWithGuessObjects({ name: 'Landmarks' }),
-    );
+    categoryService.update.mockResolvedValue({
+      ...prismaCategory,
+      name: 'Landmarks',
+      guessObjects: [],
+    });
     const payload = buildUpdateCategory({ name: 'Landmarks' });
 
     const category = await adminCategoryService.update('category-1', payload);
@@ -126,7 +133,7 @@ describe('AdminCategoryService.getTrees', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     const root: PrismaCategoryNode = {
-      ...buildPrismaCategory(),
+      ...prismaCategory,
       children: [],
     };
     categoryService.findTree.mockResolvedValue([root]);
