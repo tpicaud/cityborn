@@ -19,7 +19,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { OAuth2Client } from 'google-auth-library';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
@@ -30,6 +29,22 @@ import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
+interface GoogleIdentityPayload {
+  email_verified?: boolean;
+  email?: string;
+  name?: string;
+}
+
+interface GoogleIdentityTicket {
+  getPayload(): GoogleIdentityPayload | undefined;
+}
+
+export interface GoogleIdentityClient {
+  verifyIdToken(options: {
+    idToken: string;
+    audience?: string;
+  }): Promise<GoogleIdentityTicket>;
+}
 
 @Injectable()
 export class AuthService {
@@ -39,7 +54,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly eventService: EventService,
     private readonly mailService: MailService,
-    @Inject('GOOGLE_CLIENT') private readonly googleClient: OAuth2Client,
+    @Inject('GOOGLE_CLIENT')
+    private readonly googleClient: GoogleIdentityClient,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
