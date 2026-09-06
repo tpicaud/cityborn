@@ -5,26 +5,21 @@ import { createMock } from '../../../test/support/createMock';
 import type { HttpWideEventInit, WideEventLogger } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
-function buildHttpWideEvent(
-  overrides: Partial<HttpWideEventInit> = {},
-): HttpWideEventInit {
-  return {
-    transport: 'http',
-    requestId: 'request-1',
-    domain: 'other',
-    operation: 'GET /pending',
-    method: 'GET',
-    route: '/pending',
-    ip: '127.0.0.1',
-    userAgent: undefined,
-    visitorId: undefined,
-    client: undefined,
-    clientVersion: undefined,
-    apiVersion: 1,
-    isAuthenticated: false,
-    ...overrides,
-  };
-}
+const httpWideEvent = {
+  transport: 'http',
+  requestId: 'request-1',
+  domain: 'other',
+  operation: 'GET /pending',
+  method: 'GET',
+  route: '/pending',
+  ip: '127.0.0.1',
+  userAgent: undefined,
+  visitorId: undefined,
+  client: undefined,
+  clientVersion: undefined,
+  apiVersion: 1,
+  isAuthenticated: false,
+} satisfies HttpWideEventInit;
 
 function buildWideEventService() {
   const clsService = createMock<ClsService<WideEventClsStore>>();
@@ -37,7 +32,7 @@ function buildWideEventService() {
 describe('WideEventService', () => {
   it('runs the callback inside an initialized context', () => {
     const { clsService, wideEventService } = buildWideEventService();
-    const init = buildHttpWideEvent();
+    const init = httpWideEvent;
     clsService.runWith.mockImplementation((_store, callback) => callback());
 
     const result = wideEventService.run(init, () => 'result');
@@ -55,7 +50,7 @@ describe('WideEventService', () => {
 
   it('enriches the active event with authentication data', () => {
     const { clsService, wideEventService } = buildWideEventService();
-    const init = buildHttpWideEvent();
+    const init = httpWideEvent;
     clsService.get.mockReturnValueOnce(init).mockReturnValueOnce(false);
 
     wideEventService.enrichAuth({
@@ -72,7 +67,7 @@ describe('WideEventService', () => {
 
   it('finalizes an HTTP event once with its resolved route', () => {
     const { clsService, logger, wideEventService } = buildWideEventService();
-    const init = buildHttpWideEvent();
+    const init = httpWideEvent;
     clsService.get
       .mockReturnValueOnce(init)
       .mockReturnValueOnce(false)

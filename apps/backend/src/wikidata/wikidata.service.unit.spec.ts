@@ -1,7 +1,7 @@
 import { createMock } from '../../test/support/createMock';
 import { WikidataService } from './wikidata.service';
 
-function buildFetchResponse(
+function mockResponse(
   body: unknown,
   overrides: Partial<Response> = {},
 ): Response {
@@ -21,7 +21,7 @@ describe('WikidataService', () => {
 
   it('filters unnamed search results and maps descriptions', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue(
-      buildFetchResponse({
+      mockResponse({
         search: [
           { id: 'Q243', label: 'Tour Eiffel', description: 'monument' },
           { id: 'Q1', label: '   ', description: 'ignored' },
@@ -45,7 +45,7 @@ describe('WikidataService', () => {
     jest
       .spyOn(global, 'fetch')
       .mockResolvedValue(
-        buildFetchResponse({}, { ok: false, statusText: 'Unavailable' }),
+        mockResponse({}, { ok: false, statusText: 'Unavailable' }),
       );
     const wikidataService = new WikidataService();
 
@@ -56,7 +56,7 @@ describe('WikidataService', () => {
 
   it('maps an entity without optional image or birthplace', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue(
-      buildFetchResponse({
+      mockResponse({
         entities: {
           Q243: {
             id: 'Q243',
@@ -85,7 +85,7 @@ describe('WikidataService', () => {
     jest
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce(
-        buildFetchResponse({
+        mockResponse({
           entities: {
             Q1: {
               id: 'Q1',
@@ -100,7 +100,7 @@ describe('WikidataService', () => {
         }),
       )
       .mockResolvedValueOnce(
-        buildFetchResponse({
+        mockResponse({
           query: {
             pages: {
               1: { imageinfo: [{ url: 'https://images.test/portrait.jpg' }] },
@@ -109,7 +109,7 @@ describe('WikidataService', () => {
         }),
       )
       .mockResolvedValueOnce(
-        buildFetchResponse({
+        mockResponse({
           entities: {
             Q90: {
               claims: {

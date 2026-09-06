@@ -23,7 +23,8 @@ Chaque comportement est couvert dans **un seul tier**, le plus bas qui permette 
 - Séparer Arrange, Act et Assert par une ligne vide, sans commentaires `Arrange` / `Act` / `Assert`.
 - Pour les doubles typés, importer `createMock<T>()` depuis `test/support/createMock`, configurer explicitement les retours utiles au scénario et ne jamais utiliser `as unknown as`.
 - Pour chaque type métier principal défini dans un package partagé, placer son builder dans ce même package, dans un fichier dédié, puis l'exporter et le réutiliser dans les tests consommateurs. Ne pas redéfinir ce builder dans une app.
-- Ne pas créer de builder partagé pour un DTO secondaire, un type d'infrastructure ou une forme locale ponctuelle : garder ces données près du test.
+- Ne pas créer de builder pour un DTO secondaire, un type d'infrastructure ou une forme locale ponctuelle. Les retours de mocks Prisma sont de simples données d'Arrange : les écrire explicitement près du scénario qui les utilise.
+- Réserver les builders à l'Arrange. Dans un Assert, écrire directement la valeur attendue afin que le contrat vérifié soit visible sans suivre l'implémentation d'un builder.
 - Tous les builders acceptent des overrides typés et retournent des données indépendantes à chaque appel. `test/support/fixtures/` ne contient que les fixtures propres au backend et les éventuelles réexportations de builders partagés utiles à sa suite de tests.
 
 ## Harnais d'intégration et e2e

@@ -1,12 +1,24 @@
 import { buildUser, ErrorCode } from '@cityborn/api';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
+import type { User as PrismaUser } from '@prisma/client';
 import { createMock } from '../../test/support/createMock';
-import { buildPrismaUser } from '../../test/support/fixtures';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserService } from '../user/user.service';
 import { AuthService, type GoogleIdentityClient } from './auth.service';
+
+const prismaUser = {
+  id: '00000000-0000-4000-8000-000000000001',
+  email: 'host@cityborn.test',
+  username: 'host',
+  type: 'email',
+  password: 'hashed-password',
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-02T00:00:00.000Z'),
+  isVerified: true,
+  appleId: null,
+} satisfies PrismaUser;
 
 let mockPasswordMatches = true;
 let mockAppleTokenValid = true;
@@ -72,7 +84,7 @@ function buildAuthService() {
 
 describe('AuthService.signUp', () => {
   it('creates an account, sends verification and returns tokens', async () => {
-    const persistedUser = buildPrismaUser({ isVerified: false });
+    const persistedUser = { ...prismaUser, isVerified: false };
     const { authService, userService, jwtService, eventService, mailService } =
       buildAuthService();
     userService.createUser.mockResolvedValue(persistedUser);
@@ -118,7 +130,7 @@ describe('AuthService.signUp', () => {
 
 describe('AuthService.signIn', () => {
   it('returns tokens for valid credentials', async () => {
-    const persistedUser = buildPrismaUser();
+    const persistedUser = prismaUser;
     const { authService, userService, eventService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
@@ -142,7 +154,7 @@ describe('AuthService.signIn', () => {
 
   it.each([
     ['an unknown identifier', null],
-    ['an OAuth account', buildPrismaUser({ password: null })],
+    ['an OAuth account', { ...prismaUser, password: null }],
   ])('rejects %s', async (_label, persistedUser) => {
     const { authService, userService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
@@ -159,7 +171,7 @@ describe('AuthService.signIn', () => {
 
   it('rejects an invalid password', async () => {
     const { authService, userService } = buildAuthService();
-    userService.findByIdentifier.mockResolvedValue(buildPrismaUser());
+    userService.findByIdentifier.mockResolvedValue(prismaUser);
     mockPasswordMatches = false;
 
     await expect(
@@ -175,7 +187,7 @@ describe('AuthService.signIn', () => {
 
 describe('AuthService account operations', () => {
   it('refreshes both tokens for an existing user', async () => {
-    const persistedUser = buildPrismaUser();
+    const persistedUser = prismaUser;
     const { authService, userService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
@@ -197,7 +209,7 @@ describe('AuthService account operations', () => {
   });
 
   it('returns the authenticated profile', async () => {
-    const persistedUser = buildPrismaUser();
+    const persistedUser = prismaUser;
     const { authService, userService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
@@ -258,7 +270,7 @@ describe('AuthService account operations', () => {
   });
 
   it('verifies an email and returns the public user', async () => {
-    const persistedUser = buildPrismaUser({ isVerified: false });
+    const persistedUser = { ...prismaUser, isVerified: false };
     const { authService, userService } = buildAuthService();
     userService.verifyEmail.mockResolvedValue(persistedUser);
 
@@ -275,22 +287,6 @@ describe('AuthService account operations', () => {
 type GoogleIdentityTicket = Awaited<
   ReturnType<GoogleIdentityClient['verifyIdToken']>
 >;
-type GoogleIdentityPayload = NonNullable<
-  ReturnType<GoogleIdentityTicket['getPayload']>
->;
-
-function buildGoogleTicket(
-  overrides: Partial<GoogleIdentityPayload> = {},
-): GoogleIdentityTicket {
-  const ticket = createMock<GoogleIdentityTicket>();
-  ticket.getPayload.mockReturnValue({
-    email_verified: true,
-    email: 'alice@cityborn.test',
-    name: 'Alice Doe',
-    ...overrides,
-  });
-  return ticket;
-}
 
 describe('AuthService.signInWithGoogle', () => {
   afterEach(() => {
@@ -298,10 +294,16 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('signs in an existing Google user', async () => {
-    const persistedUser = buildPrismaUser({ type: 'google', password: null });
+    const persistedUser = { ...prismaUser, type: 'google', password: null };
     const { authService, userService, googleClient, eventService } =
       buildAuthService();
-    googleClient.verifyIdToken.mockResolvedValue(buildGoogleTicket());
+    const ticket = createMock<GoogleIdentityTicket>();
+    ticket.getPayload.mockReturnValue({
+      email_verified: true,
+      email: 'alice@cityborn.test',
+      name: 'Alice Doe',
+    });
+    googleClient.verifyIdToken.mockResolvedValue(ticket);
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
     const result = await authService.signInWithGoogle(
@@ -319,14 +321,21 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('creates a Google user with an available generated username', async () => {
-    const persistedUser = buildPrismaUser({
+    const persistedUser = {
+      ...prismaUser,
       username: 'alicedoe1000',
       type: 'google',
       password: null,
-    });
+    };
     const { authService, userService, googleClient, eventService } =
       buildAuthService();
-    googleClient.verifyIdToken.mockResolvedValue(buildGoogleTicket());
+    const ticket = createMock<GoogleIdentityTicket>();
+    ticket.getPayload.mockReturnValue({
+      email_verified: true,
+      email: 'alice@cityborn.test',
+      name: 'Alice Doe',
+    });
+    googleClient.verifyIdToken.mockResolvedValue(ticket);
     userService.findByIdentifier
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
@@ -365,9 +374,13 @@ describe('AuthService.signInWithGoogle', () => {
 
   it('rejects an unverified Google email', async () => {
     const { authService, googleClient } = buildAuthService();
-    googleClient.verifyIdToken.mockResolvedValue(
-      buildGoogleTicket({ email_verified: false }),
-    );
+    const ticket = createMock<GoogleIdentityTicket>();
+    ticket.getPayload.mockReturnValue({
+      email_verified: false,
+      email: 'alice@cityborn.test',
+      name: 'Alice Doe',
+    });
+    googleClient.verifyIdToken.mockResolvedValue(ticket);
 
     await expect(
       authService.signInWithGoogle({ idToken: 'google-token' }),
@@ -407,12 +420,13 @@ describe('AuthService.signInWithApple', () => {
   });
 
   it('creates a user during the first Apple connection', async () => {
-    const persistedUser = buildPrismaUser({
+    const persistedUser = {
+      ...prismaUser,
       username: 'aliceapple1000',
       type: 'apple',
       password: null,
       appleId: 'apple-user-1',
-    });
+    };
     const { authService, userService, eventService } = buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
     userService.findByIdentifier

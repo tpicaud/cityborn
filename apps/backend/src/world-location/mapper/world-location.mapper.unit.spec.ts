@@ -1,15 +1,34 @@
 import { WorldLocationSchema } from '@cityborn/api';
-import {
-  buildPrismaWorldLocation,
-  buildPrismaWorldLocationGeometry,
-} from '../../../test/support/fixtures';
+import type {
+  WorldLocation as PrismaWorldLocation,
+  WorldLocationGeometry as PrismaWorldLocationGeometry,
+} from '@prisma/client';
 import { WorldLocationMapper } from './world-location.mapper';
+
+const prismaWorldLocation = {
+  id: 'location-1',
+  osm_type: 'relation',
+  external_id: '7444',
+  name: 'Paris',
+  display_name: 'Paris, France',
+  addresstype: 'city',
+  centroid: [48.8566, 2.3522],
+  source: { provider: 'nominatim', external_id: '7444' },
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+} satisfies PrismaWorldLocation;
+
+const prismaWorldLocationGeometry = {
+  id: 'geometry-1',
+  data: { type: 'Point', coordinates: [2.3522, 48.8566] },
+  world_location_id: 'location-1',
+} satisfies PrismaWorldLocationGeometry;
 
 describe('WorldLocationMapper.toWorldLocation', () => {
   it('maps a persisted location with geometry', () => {
     const location = WorldLocationMapper.toWorldLocation({
-      ...buildPrismaWorldLocation(),
-      geometry: buildPrismaWorldLocationGeometry(),
+      ...prismaWorldLocation,
+      geometry: prismaWorldLocationGeometry,
     });
 
     expect(() => WorldLocationSchema.parse(location)).not.toThrow();

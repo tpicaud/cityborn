@@ -6,13 +6,23 @@ import {
   GameStatus,
   SessionMode,
 } from '@cityborn/api';
+import type { GameRecord as PrismaGameRecord } from '@prisma/client';
 import { createMock } from '../../test/support/createMock';
-import { buildPrismaGameRecord } from '../../test/support/fixtures';
 import type { EventService } from '../event/event.service';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type { IdService } from '../id/id.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { GameService } from './game.service';
+
+const prismaGameRecord = {
+  id: '00000000-0000-4000-8000-000000000040',
+  mode: 'solo',
+  gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
+  players: [],
+  guessObjectsIds: [],
+  results: {},
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+} satisfies PrismaGameRecord;
 
 function buildGameService() {
   const guessObjectService = createMock<GuessObjectService>();
@@ -110,7 +120,7 @@ describe('GameService.endGame', () => {
       buildPlayer('host', true, { id: 'user-1' }),
       buildPlayer('guest', true, { isGuest: true }),
     ];
-    prismaService.gameRecord.create.mockResolvedValue(buildPrismaGameRecord());
+    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
 
     await gameService.endGame(game, players, SessionMode.MULTI, 'visitor-1');
 
@@ -136,7 +146,7 @@ describe('GameService.endGame', () => {
         results: { host: { results: [] } },
       },
     });
-    prismaService.gameRecord.create.mockResolvedValue(buildPrismaGameRecord());
+    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
 
     await gameService.endGame(
       game,
@@ -154,7 +164,7 @@ describe('GameService.endGame', () => {
 
   it('does not track an anonymous finished game', async () => {
     const { gameService, prismaService, eventService } = buildGameService();
-    prismaService.gameRecord.create.mockResolvedValue(buildPrismaGameRecord());
+    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
 
     await gameService.endGame(buildGame(), [buildPlayer()], SessionMode.SOLO);
 
