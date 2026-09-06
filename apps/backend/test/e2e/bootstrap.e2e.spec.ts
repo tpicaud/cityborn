@@ -1,6 +1,7 @@
 import {
   API_CURRENT_VERSION_HEADER_NAME,
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+  buildSession,
   contract,
   ErrorCode,
   getApiVersionInfo,
@@ -10,7 +11,6 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { RedisService } from '../../src/redis/redis.service';
 import { createTestApp } from '../support/createTestApp';
-import { buildSession } from '../support/fixtures';
 
 describe('Production bootstrap', () => {
   let app: NestExpressApplication;

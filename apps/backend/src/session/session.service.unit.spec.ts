@@ -1,7 +1,10 @@
 import {
+  buildGame,
   buildGameConfig,
   buildGameState,
+  buildPlayer,
   buildRound,
+  buildSession,
   buildUser,
   defaultGuess,
   ErrorCode,
@@ -11,7 +14,6 @@ import {
 } from '@cityborn/api';
 import { NotFoundException } from '@nestjs/common';
 import { createMock } from '../../test/support/createMock';
-import { buildGame, buildSession, player } from '../../test/support/fixtures';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
@@ -94,7 +96,11 @@ describe('SessionService.kickPlayer', () => {
 
   it('reassigns the host to another connected player when the host kicks itself', async () => {
     const session = buildSession({
-      players: [player('host'), player('bob'), player('carol', false)],
+      players: [
+        buildPlayer('host'),
+        buildPlayer('bob'),
+        buildPlayer('carol', false),
+      ],
     });
     const { sessionService } = buildSessionService(session);
 
@@ -105,7 +111,7 @@ describe('SessionService.kickPlayer', () => {
 
   it('clears the host when no connected player remains after the kick', async () => {
     const session = buildSession({
-      players: [player('host'), player('bob', false)],
+      players: [buildPlayer('host'), buildPlayer('bob', false)],
     });
     const { sessionService } = buildSessionService(session);
 
@@ -230,7 +236,7 @@ describe('SessionService lobby operations', () => {
 
   it('rejects transferring the host role to a disconnected player', async () => {
     const session = buildSession({
-      players: [player('host'), player('bob', false)],
+      players: [buildPlayer('host'), buildPlayer('bob', false)],
     });
     const { sessionService } = buildSessionService(session);
 
@@ -354,7 +360,7 @@ describe('SessionService game operations', () => {
     });
     const session = buildSession({
       currentGame: game,
-      players: [player('host', false)],
+      players: [buildPlayer('host', false)],
     });
     const { sessionService } = buildSessionService(session);
 
@@ -409,7 +415,7 @@ describe('SessionService connection operations', () => {
     const user = buildUser({ username: 'host' });
     const session = buildSession({
       hostID: '',
-      players: [player('host', false)],
+      players: [buildPlayer('host', false)],
     });
     const { sessionService } = buildSessionService(session);
 
@@ -427,7 +433,7 @@ describe('SessionService connection operations', () => {
 
   it('rejects reconnecting a registered player without credentials', async () => {
     const session = buildSession({
-      players: [player('host', false, { isGuest: false })],
+      players: [buildPlayer('host', false, { isGuest: false })],
     });
     const { sessionService } = buildSessionService(session);
 

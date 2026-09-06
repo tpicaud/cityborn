@@ -1,17 +1,20 @@
 import {
+  buildGame,
+  buildPlayer,
+  buildSession,
+  buildUser,
   GameSchema,
   OnlinePlayerSchema,
   SessionSchema,
   UserSchema,
 } from '@cityborn/api';
-import { buildGame, buildSession, buildUser, player } from '.';
 
 describe('Entity fixtures', () => {
   it('builds valid API entities', () => {
     expect(() => GameSchema.parse(buildGame())).not.toThrow();
     expect(() => SessionSchema.parse(buildSession())).not.toThrow();
     expect(() => UserSchema.parse(buildUser())).not.toThrow();
-    expect(() => OnlinePlayerSchema.parse(player())).not.toThrow();
+    expect(() => OnlinePlayerSchema.parse(buildPlayer())).not.toThrow();
   });
 
   it('isolates mutable state across fixtures and caller overrides', () => {
@@ -34,7 +37,7 @@ describe('Entity fixtures', () => {
   it('applies entity overrides', () => {
     const user = buildUser({ username: 'alice', isVerified: false });
     expect(user).toMatchObject({ username: 'alice', isVerified: false });
-    expect(player(user.username, false, { id: user.id })).toMatchObject({
+    expect(buildPlayer(user.username, false, { id: user.id })).toMatchObject({
       username: 'alice',
       connected: false,
       id: user.id,
