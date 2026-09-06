@@ -111,6 +111,15 @@ export class GameService {
     });
 
     if (visitorId) {
+      const roundResults = Object.values(game.state.results).flatMap(
+        (playerResults) => playerResults.results,
+      );
+      const averageScore =
+        roundResults.length > 0
+          ? roundResults.reduce((sum, result) => sum + result.points, 0) /
+            roundResults.length
+          : 0;
+
       await this.eventService.trackEvent(
         createEvent({
           name: 'game_finished',
@@ -118,16 +127,8 @@ export class GameService {
           properties: {
             gameId: game_record.id.toString(),
             mode,
-            numberOfPlayers: game.state.results
-              ? Object.keys(game.state.results).length
-              : 0,
-            average_score: game.state.results
-              ? Object.values(game.state.results)
-                  .flatMap((res) => res.results)
-                  .reduce((sum, r) => sum + r.points, 0) /
-                Object.values(game.state.results).flatMap((res) => res.results)
-                  .length
-              : 0,
+            numberOfPlayers: Object.keys(game.state.results).length,
+            average_score: averageScore,
           },
         }),
       );

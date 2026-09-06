@@ -1,4 +1,4 @@
-import { buildUser } from '../support/fixtures';
+import { buildUser } from '@cityborn/api';
 import { createTestInfrastructure } from '../support/infrastructure';
 import { resetDb } from '../support/resetDb';
 

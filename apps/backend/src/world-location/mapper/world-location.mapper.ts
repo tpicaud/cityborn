@@ -18,6 +18,7 @@ export const WorldLocationMapper = {
       osm_type: prismaWorldLocation.osm_type,
       name: prismaWorldLocation.name,
       display_name: prismaWorldLocation.display_name,
+      addresstype: prismaWorldLocation.addresstype ?? undefined,
       geometry: (prismaWorldLocation.geometry?.data ?? null) as unknown as {
         type: 'Point' | 'Polygon' | 'MultiPolygon';
         coordinates: number[] | number[][] | number[][][];

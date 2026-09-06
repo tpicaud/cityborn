@@ -86,7 +86,7 @@ export class NominatimService {
         place_rank: item.place_rank,
         geojson: item.geojson ?? {
           type: 'Point',
-          coordinates: [Number(item.lat), Number(item.lon)],
+          coordinates: [Number(item.lon), Number(item.lat)],
         },
       }),
     );
