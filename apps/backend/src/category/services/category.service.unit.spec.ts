@@ -3,68 +3,15 @@ import {
   buildUpdateCategory,
   ErrorCode,
 } from '@cityborn/api';
-import type {
-  Category as PrismaCategory,
-  GuessObject as PrismaGuessObject,
-  WorldLocation as PrismaWorldLocation,
-} from '@prisma/client';
 import { createMock } from '../../../test/support/createMock';
+import {
+  buildPrismaCategory,
+  buildPrismaCategoryWithGuessObjects,
+  buildPrismaGuessObjectWithLocation,
+} from '../../../test/support/fixtures';
 import type { GuessObjectService } from '../../guess-object/guess-object.service';
 import type { PrismaService } from '../../prisma/prisma.service';
-import {
-  CategoryService,
-  type PrismaCategoryWithFullGuessObjects,
-} from './category.service';
-
-function buildPrismaCategory(
-  overrides: Partial<PrismaCategory> = {},
-): PrismaCategory {
-  return {
-    id: '00000000-0000-4000-8000-000000000010',
-    name: 'Monuments',
-    isPublished: true,
-    description: null,
-    parentId: null,
-    ...overrides,
-  };
-}
-
-function buildPrismaWorldLocation(): PrismaWorldLocation {
-  return {
-    id: 'location-1',
-    osm_type: 'relation',
-    external_id: '7444',
-    name: 'Paris',
-    display_name: 'Paris, France',
-    addresstype: 'city',
-    centroid: [48.8566, 2.3522],
-    source: { provider: 'nominatim', external_id: '7444' },
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-  };
-}
-
-function buildPrismaGuessObject(
-  overrides: Partial<PrismaGuessObject> = {},
-): PrismaGuessObject & { world_location: PrismaWorldLocation } {
-  return {
-    id: '00000000-0000-4000-8000-000000000020',
-    name: 'Eiffel Tower',
-    image: null,
-    description: null,
-    short_description: null,
-    source: { provider: 'wikidata', external_id: 'Q243' },
-    world_location_id: 'location-1',
-    world_location: buildPrismaWorldLocation(),
-    ...overrides,
-  };
-}
-
-function buildFullPrismaCategory(
-  guessObjects: PrismaCategoryWithFullGuessObjects['guessObjects'] = [],
-): PrismaCategoryWithFullGuessObjects {
-  return { ...buildPrismaCategory(), guessObjects };
-}
+import { CategoryService } from './category.service';
 
 function buildCategoryService() {
   const prismaService = createMock<PrismaService>();
@@ -287,7 +234,7 @@ describe('CategoryService.delete', () => {
   it('rejects when the category has children', async () => {
     const { categoryService, prismaService } = buildCategoryService();
     prismaService.category.findMany.mockResolvedValue([
-      buildFullPrismaCategory(),
+      buildPrismaCategoryWithGuessObjects(),
     ]);
     prismaService.category.count.mockResolvedValue(1);
 
@@ -301,10 +248,12 @@ describe('CategoryService.delete', () => {
     const { categoryService, prismaService, guessObjectService } =
       buildCategoryService();
     prismaService.category.findMany.mockResolvedValue([
-      buildFullPrismaCategory([
-        buildPrismaGuessObject({ id: 'guess-orphan' }),
-        buildPrismaGuessObject({ id: 'guess-shared' }),
-      ]),
+      buildPrismaCategoryWithGuessObjects({
+        guessObjects: [
+          buildPrismaGuessObjectWithLocation({ id: 'guess-orphan' }),
+          buildPrismaGuessObjectWithLocation({ id: 'guess-shared' }),
+        ],
+      }),
     ]);
     prismaService.category.count
       .mockResolvedValueOnce(0)
@@ -326,7 +275,7 @@ describe('CategoryService.delete', () => {
     const { categoryService, prismaService, guessObjectService } =
       buildCategoryService();
     prismaService.category.findMany.mockResolvedValue([
-      buildFullPrismaCategory(),
+      buildPrismaCategoryWithGuessObjects(),
     ]);
     prismaService.category.count.mockResolvedValue(0);
     prismaService.category.delete.mockResolvedValue(buildPrismaCategory());

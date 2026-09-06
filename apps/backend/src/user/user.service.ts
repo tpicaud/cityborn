@@ -49,10 +49,10 @@ export class UserService {
     return await this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findByAppleId(apple_user_id): Promise<PrismaUser | null> {
+  async findByAppleId(appleUserId: string): Promise<PrismaUser | null> {
     return await this.prisma.user.findFirst({
       where: {
-        appleId: apple_user_id,
+        appleId: appleUserId,
       },
     });
   }

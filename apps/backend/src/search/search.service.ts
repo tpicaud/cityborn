@@ -49,19 +49,29 @@ export class SearchService {
     const drafts_from_db =
       await this.guessObjectService.searchDraftByName(query);
 
-    const dbByExternalId = new Map(
-      drafts_from_db.map((obj) => [obj.source?.external_id, obj]),
-    );
+    const dbByExternalId = new Map<string, GuessObjectDraft>();
+    for (const draft of drafts_from_db) {
+      const externalId = draft.source?.external_id;
+      if (externalId) dbByExternalId.set(externalId, draft);
+    }
 
+    const matchedExternalIds = new Set<string>();
     const merged_drafts = drafts_from_wikidata.map((wikiDraft) => {
-      const dbObj = dbByExternalId.get(wikiDraft.source?.external_id);
-      if (dbObj) {
+      const externalId = wikiDraft.source?.external_id;
+      const dbObj = externalId ? dbByExternalId.get(externalId) : undefined;
+      if (dbObj && externalId) {
+        matchedExternalIds.add(externalId);
         return dbObj;
       }
       return wikiDraft;
     });
 
-    return merged_drafts;
+    const databaseOnlyDrafts = drafts_from_db.filter((draft) => {
+      const externalId = draft.source?.external_id;
+      return !externalId || !matchedExternalIds.has(externalId);
+    });
+
+    return [...merged_drafts, ...databaseOnlyDrafts];
   }
 
   async searchWorldLocationById(
