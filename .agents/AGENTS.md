@@ -65,6 +65,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 | `pnpm --dir apps/backend test:all` / `pnpm --dir apps/backend test:cov` | tous les projets Jest / avec couverture |
 | `pnpm --dir packages/api test` | tests de compatibilité OpenAPI |
 | `pnpm db:start` / `db:migrate` / `db:reset` | DB locale (Docker + Prisma) ; lance aussi Redis (`localhost:6379`) + RedisInsight (`localhost:5540`) |
+| `./scripts/setup-worktree.sh [chemin] [--skip-install]` | prépare un worktree : copie les `.env` du checkout principal puis `pnpm install` (commande `/setup-worktree`) |
 
 ### Stratégie de vérification
 
