@@ -16,13 +16,15 @@ import {
   resolveNextRound,
   toLightGame,
 } from '@cityborn/core';
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  GAME_RECORD_REPOSITORY,
+  type GameRecordRepository,
+} from './repositories/game-record.repository';
 
 export type CreateGameParams = {
   gameConfig: GameConfig;
@@ -35,7 +37,8 @@ export type CreateGameParams = {
 export class GameService {
   constructor(
     private readonly guessObjectService: GuessObjectService,
-    private readonly prisma: PrismaService,
+    @Inject(GAME_RECORD_REPOSITORY)
+    private readonly gameRecordRepository: GameRecordRepository,
     private readonly eventService: EventService,
     private readonly idService: IdService,
   ) {}
@@ -95,20 +98,18 @@ export class GameService {
     mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
-    const game_record = await this.prisma.gameRecord.create({
-      data: {
+    const game_record = await this.gameRecordRepository.create(
+      {
         mode,
-        gameConfig: game.config as unknown as Prisma.InputJsonValue,
-        players: players as unknown as Prisma.InputJsonValue,
+        gameConfig: game.config,
+        players,
         guessObjectsIds: game.state.guessObjectsIds,
-        results: game.state.results as unknown as Prisma.InputJsonValue,
-        users: {
-          connect: players
-            .filter((player) => !player.isGuest)
-            .map((player) => ({ id: player.id })),
-        },
+        results: game.state.results,
       },
-    });
+      players.flatMap((player) =>
+        !player.isGuest && player.id ? [{ id: player.id }] : [],
+      ),
+    );
 
     if (visitorId) {
       const roundResults = Object.values(game.state.results).flatMap(

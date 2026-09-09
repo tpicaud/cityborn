@@ -12,7 +12,10 @@ import type {
   WorldLocation,
 } from '@prisma/client';
 import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
-import type { PrismaCategoryNode } from '../services/category.service';
+
+export type PrismaCategoryNode = PrismaCategory & {
+  children: PrismaCategoryNode[];
+};
 
 type PrismaCategoryWithRelations = PrismaCategory & {
   guessObjects?: (PrismaGuessObject & { world_location: WorldLocation })[];

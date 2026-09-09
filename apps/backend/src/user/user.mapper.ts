@@ -6,9 +6,14 @@ import {
   UserSchema,
 } from '@cityborn/api';
 import type {
+  EmailVerificationToken as PrismaEmailVerificationToken,
   GameRecord as PrismaGameRecord,
   User as PrismaUser,
 } from '@prisma/client';
+import type {
+  EmailVerificationToken,
+  UserWithPassword,
+} from './repositories/user.repository';
 
 type PrismaUserWithRelations = PrismaUser & {
   gameRecords?: PrismaGameRecord[];
@@ -44,5 +49,23 @@ export const UserMapper = {
 
   toPublicUser(user: { id: string; username: string }): PublicUser {
     return PublicUserSchema.parse(user);
+  },
+
+  toUserWithPassword(prismaUser: PrismaUser): UserWithPassword {
+    return {
+      ...UserMapper.toUser(prismaUser),
+      password: prismaUser.password,
+    };
+  },
+
+  toVerificationToken(
+    prismaToken: PrismaEmailVerificationToken,
+  ): EmailVerificationToken {
+    return {
+      id: prismaToken.id,
+      userId: prismaToken.userId,
+      expiresAt: prismaToken.expiresAt,
+      createdAt: prismaToken.createdAt,
+    };
   },
 };

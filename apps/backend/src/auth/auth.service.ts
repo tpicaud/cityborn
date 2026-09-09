@@ -2,7 +2,7 @@ import {
   type AuthResponse,
   type CreateUser,
   ErrorCode,
-  PublicUser,
+  type PublicUser,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
@@ -27,7 +27,7 @@ import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
-import { UserMapper } from '../user/user.mapper';
+import type { UserWithPassword } from '../user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
@@ -118,7 +118,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user: this.toUser(user),
     };
   }
 
@@ -173,7 +173,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user: this.toUser(user),
     };
   }
 
@@ -238,7 +238,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user: this.toUser(user),
     };
   }
 
@@ -322,7 +322,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user: this.toUser(user),
     };
   }
 
@@ -350,7 +350,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user: this.toUser(user),
     };
   }
 
@@ -362,7 +362,7 @@ export class AuthService {
         message: `User not found`,
       });
 
-    return UserMapper.toUser(user);
+    return this.toUser(user);
   }
 
   async deleteUser(user?: User): Promise<void> {
@@ -384,7 +384,11 @@ export class AuthService {
       verifyEmailData.verification_token,
     );
 
-    return UserMapper.toPublicUser(user);
+    return { id: user.id, username: user.username };
+  }
+
+  private toUser({ password: _password, ...user }: UserWithPassword): User {
+    return user;
   }
 
   private async sendVerificationEmail(
