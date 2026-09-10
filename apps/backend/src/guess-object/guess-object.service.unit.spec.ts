@@ -204,13 +204,16 @@ describe('GuessObjectService.create', () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
     worldLocationService.get.mockResolvedValue({ id: 'location-1' });
-    prismaService.guessObject.findFirst.mockResolvedValue(prismaGuessObject);
+    prismaService.guessObject.findUnique.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.create({
       name: 'Eiffel Tower',
       world_location_id: 'location-1',
     });
 
+    expect(prismaService.guessObject.findUnique).toHaveBeenCalledWith({
+      where: { name: 'Eiffel Tower' },
+    });
     expect(id).toBe('00000000-0000-4000-8000-000000000020');
     expect(prismaService.guessObject.create).not.toHaveBeenCalled();
   });
@@ -219,12 +222,13 @@ describe('GuessObjectService.create', () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
     worldLocationService.get.mockResolvedValue({ id: 'location-1' });
-    prismaService.guessObject.findFirst.mockResolvedValue(null);
+    prismaService.guessObject.findUnique.mockResolvedValue(null);
     prismaService.guessObject.create.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.create({
       name: 'Eiffel Tower',
       description: 'A tower',
+      source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: 'location-1',
     });
 
@@ -234,6 +238,7 @@ describe('GuessObjectService.create', () => {
         image: undefined,
         description: 'A tower',
         short_description: undefined,
+        source: { provider: 'wikidata', external_id: 'Q243' },
         world_location_id: 'location-1',
       },
     });

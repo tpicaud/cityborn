@@ -81,6 +81,26 @@ describe('WikidataService', () => {
     });
   });
 
+  it('uses another available label when French and English are absent', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      mockResponse({
+        entities: {
+          Q243: {
+            id: 'Q243',
+            labels: { de: { value: 'Eiffelturm' } },
+            descriptions: {},
+            claims: {},
+          },
+        },
+      }),
+    );
+    const wikidataService = new WikidataService();
+
+    const result = await wikidataService.findById('Q243');
+
+    expect(result.label).toBe('Eiffelturm');
+  });
+
   it('resolves the image and OpenStreetMap relation of an entity', async () => {
     jest
       .spyOn(global, 'fetch')

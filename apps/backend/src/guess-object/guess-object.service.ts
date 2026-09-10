@@ -94,11 +94,8 @@ export class GuessObjectService {
       });
     }
 
-    const existingGuessObject = await this.prisma.guessObject.findFirst({
-      where: {
-        name: createGuessObject.name,
-        world_location_id: world_location.id,
-      },
+    const existingGuessObject = await this.prisma.guessObject.findUnique({
+      where: { name: createGuessObject.name },
     });
 
     if (existingGuessObject) {
@@ -111,6 +108,7 @@ export class GuessObjectService {
         image: createGuessObject.image,
         description: createGuessObject.description,
         short_description: createGuessObject.short_description,
+        source: createGuessObject.source,
         world_location_id: world_location.id,
       },
     });

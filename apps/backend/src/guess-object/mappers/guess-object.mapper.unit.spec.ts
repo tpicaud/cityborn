@@ -121,6 +121,7 @@ describe('GuessObjectMapper.toGuessObjectDraftFromPrisma', () => {
       GuessObjectMapper.toGuessObjectDraftFromPrisma(prismaGuessObject);
 
     expect(draft).toMatchObject({
+      id: '00000000-0000-4000-8000-000000000020',
       name: 'Eiffel Tower',
       source: { external_id: 'Q243' },
     });
