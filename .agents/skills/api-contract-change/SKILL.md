@@ -1,11 +1,9 @@
 ---
 name: api-contract-change
-description: Modifier la surface publique de @cityborn/api (route ts-rest, schéma zod, type ou valeur d'enum exportés) en respectant la rétrocompat obligatoire — règle additive, pnpm check:api-compat (oasdiff), bump de version d'API pour un breaking change, bypass ponctuel via err-ignore.txt. À utiliser dès qu'on ajoute ou change un élément du contrat dans packages/api.
+description: Contrat public @cityborn/api. À utiliser pour modifier une route ts-rest, un schéma zod, un type ou une valeur d'enum exportés depuis packages/api.
 ---
 
 # Modifier un contrat `@cityborn/api`
-
-`packages/api` est la source de vérité des contrats. Le monorepo entier en dépend, et `check:api-compat` (oasdiff) tourne en CI.
 
 ## Règle : additif d'abord
 
