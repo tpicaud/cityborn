@@ -21,7 +21,9 @@ description: Issues GitHub Cityborn. À utiliser pour préparer ou publier une i
 - Fermer ou modifier une issue existante uniquement à la demande de l'utilisateur.
 
 ## Ce qu'il ne faut pas oublier
-- Lors d'une publication, ajouter l'issue au project Cityborn avec le Type `DEV` et le statut `À faire dans l'itération`.
+
+- Lors d'une publication, rattacher l'issue au project Cityborn avec le Type `DEV` et le statut `À faire dans l'itération`.
+- Toute issue publiée porte aussi un Sprint, à renseigner explicitement : le champ a une valeur par défaut qui ne correspond pas au sprint courant. Si l'utilisateur ne l'a pas précisé, lui demander lequel affecter avant de publier, en lui présentant les sprints existants (`gh project field-list 1 --owner tpicaud --format json -q '.fields[] | select(.name=="Sprint") | .options[] | "\(.id) \(.name)"'`).
 
 ## Brouillon ou publication
 

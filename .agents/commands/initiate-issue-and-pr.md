@@ -77,6 +77,20 @@ gh project item-edit --id "$ITEM_ID" \
   --single-select-option-id 47fc9ee4
 ```
 
+Renseigner ensuite le **Sprint**, toujours explicitement : le champ a une valeur
+par défaut qui ne correspond pas au sprint courant. Si l'utilisateur ne l'a pas
+précisé, lister les sprints et lui demander lequel affecter avant de continuer.
+
+```
+gh project field-list 1 --owner tpicaud --format json \
+  -q '.fields[] | select(.name=="Sprint") | .options[] | "\(.id) \(.name)"'
+
+gh project item-edit --id "$ITEM_ID" \
+  --project-id PVT_kwHOBljjK84BRv8N \
+  --field-id PVTSSF_lAHOBljjK84BRv8NzhYmzgU \
+  --single-select-option-id <id-du-sprint-choisi>
+```
+
 L'assigné du projet est hérité de l'assigné GitHub de l'issue (`@me`, donc la
 personne qui exécute la commande) — pas de champ séparé à renseigner pour ça.
 
@@ -128,6 +142,6 @@ git rev-list --count main..HEAD
 ## Étape 6 — Résumer
 
 Donner à l'utilisateur : lien de l'issue créée, confirmation que l'item du
-project a bien Type=DEV / Status=En développement, nom de la branche
+project a bien Type=DEV / Status=En développement / Sprint renseigné, nom de la branche
 courante, et lien de la PR si elle a été créée (sinon rappeler qu'elle reste à
 faire).
