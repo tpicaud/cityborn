@@ -10,8 +10,6 @@ import type { WideEventClsStore } from '../wide-event/wide-event.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Les wide events portent des données personnelles (ip, userAgent, userId) :
-// l'ingestion doit rester sur la région EU d'Axiom.
 const AXIOM_EU_API_URL = 'https://api.eu.axiom.co';
 
 export interface LoggerTransportEnvironment {
@@ -53,9 +51,8 @@ export function buildLoggerTransport(
   environment: LoggerTransportEnvironment,
 ): TransportMultiOptions | undefined {
   const axiom = axiomTarget(environment);
-  // Sans cible Axiom, la production garde l'écriture directe sur stdout plutôt
-  // que de payer un worker thread pour le seul relais du flux.
-  if (!axiom && environment.isProduction) {
+  const writesDirectlyToStdout = !axiom && environment.isProduction;
+  if (writesDirectlyToStdout) {
     return undefined;
   }
   return {
