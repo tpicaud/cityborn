@@ -1,4 +1,4 @@
-import type { User } from '@cityborn/api';
+import type { User } from '../schemas/user.schema';
 
 export function buildUser(overrides: Partial<User> = {}): User {
   return structuredClone({

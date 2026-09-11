@@ -79,6 +79,7 @@ export const GuessObjectMapper = {
     prismaGuessObject: PrismaGuessObject,
   ): GuessObjectDraft {
     return {
+      id: prismaGuessObject.id,
       source:
         (prismaGuessObject.source as unknown as {
           provider: string;

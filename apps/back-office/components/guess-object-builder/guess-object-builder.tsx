@@ -1,6 +1,7 @@
 'use client';
 
 import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
   createWorldLocation,
@@ -22,6 +23,7 @@ export function GuessObjectBuilder({
   guessObjectDraft: GuessObjectDraft | undefined;
   setGuessObjectDraft: Dispatch<SetStateAction<GuessObjectDraft | undefined>>;
 }) {
+  const { invokeError } = useError();
   const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [worldLocationQuery, setWorldLocationQuery] = useState('');
@@ -60,12 +62,30 @@ export function GuessObjectBuilder({
   ) {
     try {
       setIsLoadingFullObject(true);
-      if (!guessObjectDraftPreview?.source?.external_id) return;
+      if (!guessObjectDraftPreview) return;
 
-      const result = await searchGuessObjectByExternalId(
-        guessObjectDraftPreview.source?.external_id,
-      );
-      if (!result.ok) throw new Error(result.error.message);
+      if (guessObjectDraftPreview.id) {
+        const existingResult = await getFullGuessObject(
+          guessObjectDraftPreview.id,
+        );
+        if (!existingResult) return;
+        if (!existingResult.ok) {
+          invokeError(existingResult.error);
+          return;
+        }
+
+        setGuessObjectDraft(existingResult.data);
+        return;
+      }
+
+      const externalId = guessObjectDraftPreview.source?.external_id;
+      if (!externalId) return;
+
+      const result = await searchGuessObjectByExternalId(externalId);
+      if (!result.ok) {
+        invokeError(result.error);
+        return;
+      }
       const fullDraft = result.data;
 
       if (fullDraft) {
@@ -75,19 +95,21 @@ export function GuessObjectBuilder({
             ...fullDraft.world_location,
             source: fullDraft.world_location.source,
           });
-          if (!created.ok) throw new Error(created.error.message);
+          if (!created.ok) {
+            invokeError(created.error);
+            return;
+          }
           world_location = { ...fullDraft.world_location, id: created.data };
         }
 
         setGuessObjectDraft({
           ...fullDraft,
-          id: guessObjectDraft ? guessObjectDraft.id : fullDraft.id,
+          name: guessObjectDraftPreview.name,
           world_location,
         });
       }
     } catch (error) {
-      alert("Erreur lors de la récupération de l'objet sur Wikidata");
-      console.error(error);
+      invokeError(error, "Erreur lors de la récupération de l'objet");
     } finally {
       setIsLoadingFullObject(false);
     }
@@ -104,7 +126,10 @@ export function GuessObjectBuilder({
         world_location.id,
         world_location.osm_type,
       );
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) {
+        invokeError(result.error);
+        return;
+      }
       const fullCandidate = result.data;
       if (!fullCandidate?.source) return;
 
@@ -112,14 +137,16 @@ export function GuessObjectBuilder({
         ...fullCandidate,
         source: fullCandidate.source,
       });
-      if (!created.ok) throw new Error(created.error.message);
+      if (!created.ok) {
+        invokeError(created.error);
+        return;
+      }
 
       updateGuessObjectDraft({
         world_location: { ...fullCandidate, id: created.data },
       });
     } catch (error) {
-      alert('Erreur lors de la récupération de la localisation');
-      console.error(error);
+      invokeError(error, 'Erreur lors de la récupération de la localisation');
     } finally {
       setIsLoadingLocation(false);
     }

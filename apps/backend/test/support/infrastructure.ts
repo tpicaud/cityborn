@@ -1,8 +1,8 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
-import { testDatabaseUrl, testRedisUrl } from './environment';
 import { resetDb } from './resetDb';
+import { testDatabaseUrl, testRedisUrl } from './setupEnvironment';
 
 export function createTestInfrastructure() {
   const prisma = new PrismaClient({

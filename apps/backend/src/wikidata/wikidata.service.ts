@@ -15,6 +15,21 @@ export interface WikidataItemResponse {
   osm_type?: string;
 }
 
+interface WikidataLocalizedValue {
+  value?: string;
+}
+
+function getWikidataLabel(
+  labels: Record<string, WikidataLocalizedValue> | undefined,
+): string {
+  const preferredLabel = labels?.fr?.value ?? labels?.en?.value;
+  if (preferredLabel) return preferredLabel;
+
+  return (
+    Object.values(labels ?? {}).find(({ value }) => value)?.value ?? 'Unknown'
+  );
+}
+
 @Injectable()
 export class WikidataService {
   private WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php';
@@ -77,7 +92,7 @@ export class WikidataService {
 
     const wikidataItem: WikidataItemResponse = {
       id: entity.id.toString(),
-      label: entity.labels.fr?.value || entity.labels.en?.value || 'Unknown',
+      label: getWikidataLabel(entity.labels),
       short_description:
         (entity.descriptions.fr?.value || entity.descriptions.en?.value) ??
         undefined,
