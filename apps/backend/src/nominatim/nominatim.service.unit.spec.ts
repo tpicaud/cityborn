@@ -1,4 +1,4 @@
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import { NominatimService } from './nominatim.service';
 
 function mockFetchResponse(

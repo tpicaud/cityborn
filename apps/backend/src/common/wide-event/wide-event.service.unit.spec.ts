@@ -1,7 +1,7 @@
 import { ErrorCode } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import { BadRequestException } from '@nestjs/common';
 import type { ClsService } from 'nestjs-cls';
-import { createMock } from '../../../test/support/createMock';
 import type { HttpWideEventInit, WideEventLogger } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 

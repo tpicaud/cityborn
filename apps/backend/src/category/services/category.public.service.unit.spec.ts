@@ -1,5 +1,5 @@
+import { createMock } from '@golevelup/ts-jest';
 import type { Category as PrismaCategory } from '@prisma/client';
-import { createMock } from '../../../test/support/createMock';
 import { PublicCategoryService } from './category.public.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
 

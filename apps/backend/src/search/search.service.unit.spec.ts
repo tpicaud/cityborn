@@ -4,7 +4,7 @@ import {
   buildWorldLocation,
   ErrorCode,
 } from '@cityborn/api';
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type { NominatimService } from '../nominatim/nominatim.service';
 import type { WikidataService } from '../wikidata/wikidata.service';

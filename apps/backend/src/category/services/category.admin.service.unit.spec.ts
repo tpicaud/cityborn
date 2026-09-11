@@ -3,8 +3,8 @@ import {
   buildUpdateCategory,
   ErrorCode,
 } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import type { Category as PrismaCategory } from '@prisma/client';
-import { createMock } from '../../../test/support/createMock';
 import { AdminCategoryService } from './category.admin.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
 

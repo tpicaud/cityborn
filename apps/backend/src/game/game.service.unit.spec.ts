@@ -6,8 +6,8 @@ import {
   GameStatus,
   SessionMode,
 } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import type { GameRecord as PrismaGameRecord } from '@prisma/client';
-import { createMock } from '../../test/support/createMock';
 import type { EventService } from '../event/event.service';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type { IdService } from '../id/id.service';

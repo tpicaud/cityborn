@@ -12,8 +12,8 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
-import { createMock } from '../../test/support/createMock';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';

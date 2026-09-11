@@ -1,4 +1,4 @@
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import type { RedisService } from '../redis/redis.service';
 import { ConnectionRegistryService } from './connection-registry.service';
 

@@ -1,4 +1,4 @@
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import { MailService } from './mail.service';
 import type { MailProvider } from './providers/mail.provider';
 

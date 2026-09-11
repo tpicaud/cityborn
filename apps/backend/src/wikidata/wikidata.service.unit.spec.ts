@@ -1,4 +1,4 @@
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import { WikidataService } from './wikidata.service';
 
 function mockResponse(

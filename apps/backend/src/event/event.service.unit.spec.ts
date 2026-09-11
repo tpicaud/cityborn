@@ -1,5 +1,5 @@
 import { SessionMode } from '@cityborn/api';
-import { createMock } from '../../test/support/createMock';
+import { createMock } from '@golevelup/ts-jest';
 import type { PrismaService } from '../prisma/prisma.service';
 import { EventService } from './event.service';
 import { createEvent } from './event.types';

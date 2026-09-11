@@ -1,8 +1,8 @@
 import { buildUser, ErrorCode } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { User as PrismaUser } from '@prisma/client';
-import { createMock } from '../../test/support/createMock';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserService } from '../user/user.service';

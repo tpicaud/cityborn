@@ -1,10 +1,10 @@
 import { buildCreateGameRecord, ErrorCode, SessionMode } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import type {
   EmailVerificationToken,
   GameRecord as PrismaGameRecord,
   User as PrismaUser,
 } from '@prisma/client';
-import { createMock } from '../../test/support/createMock';
 import type { PrismaService } from '../prisma/prisma.service';
 import { UserService } from './user.service';
 

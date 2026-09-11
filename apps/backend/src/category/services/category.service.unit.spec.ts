@@ -3,12 +3,12 @@ import {
   buildUpdateCategory,
   ErrorCode,
 } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
-import { createMock } from '../../../test/support/createMock';
 import type { GuessObjectService } from '../../guess-object/guess-object.service';
 import type { PrismaService } from '../../prisma/prisma.service';
 import {
