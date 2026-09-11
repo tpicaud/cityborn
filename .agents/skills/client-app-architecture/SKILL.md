@@ -1,11 +1,11 @@
 ---
 name: client-app-architecture
-description: Structure et conventions d'une app cliente Cityborn (apps/frontend, apps/back-office, apps/mobile) — organisation par domaine (features/, components/ui/, lib/, contexts/, hooks/), accès à l'API (server actions use-server/ vs loaders server-only/ côté Next, lib/api/ côté mobile), routing App Router. À utiliser dès qu'on crée ou modifie un composant, un hook, une feature ou un accès API dans une de ces trois apps.
+description: Architecture client Cityborn. À utiliser pour placer ou modifier une feature, un composant, un hook, le routing ou un accès API dans apps/frontend, apps/back-office ou apps/mobile.
 ---
 
 # Structure d'une app cliente (front & mobile)
 
-Front (`apps/frontend`, `apps/back-office`) et mobile (`apps/mobile`) suivent la **même** organisation par domaine — garder les deux cohérents lorsqu'on touche un domaine partagé.
+Front (`apps/frontend`, `apps/back-office`) et mobile (`apps/mobile`) suivent la même organisation par domaine. Pour un domaine réellement partagé, vérifier leur cohérence sans élargir le périmètre demandé.
 
 ## Organisation par domaine
 
@@ -30,11 +30,3 @@ Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers,
 ## Spécifique Next (App Router)
 
 `src/app/` = routing uniquement : `layout.tsx`, `page.tsx`, `error.tsx`, `providers.tsx`, `api/`. Pas de logique de domaine ici — elle vit dans `features/`.
-
-## Placement du code partagé
-
-Rappel des frontières (détail dans `AGENTS.md`) :
-
-- partagé front + mobile uniquement, ne transite pas par l'API → `@cityborn/client`
-- transite par l'API → `@cityborn/api`
-- partagé backend + front/mobile → `@cityborn/core`

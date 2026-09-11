@@ -1,6 +1,6 @@
 ---
 name: issue-github
-description: Rédiger, reformuler ou publier une issue GitHub Cityborn selon les conventions du projet. Une demande de rédaction produit un brouillon ; une demande explicite de création ou publication autorise sa publication. À utiliser pour toute demande portant sur la rédaction d'une issue ou d'un ticket GitHub.
+description: Issues GitHub Cityborn. À utiliser pour préparer ou publier une issue selon les conventions du projet.
 ---
 
 # Règles de rédaction de tickets GitHub
@@ -15,9 +15,10 @@ description: Rédiger, reformuler ou publier une issue GitHub Cityborn selon les
 - Être concis : 30 lignes maximum.
 - Utiliser le Markdown seulement quand il rend le ticket plus clair.
 
-## Ce qu'il ne faut PAS faire
-- Ne pas assigner de personne sauf si demandé.
-- Ne pas fermer ou modifier une issue existante sans demande explicite.
+## Autorisations
+
+- Assigner une personne uniquement à la demande de l'utilisateur.
+- Fermer ou modifier une issue existante uniquement à la demande de l'utilisateur.
 
 ## Ce qu'il ne faut pas oublier
 - Lors d'une publication, ajouter l'issue au project Cityborn avec le Type `DEV` et le statut `À faire dans l'itération`.

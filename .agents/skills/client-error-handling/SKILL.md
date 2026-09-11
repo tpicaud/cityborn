@@ -1,6 +1,6 @@
 ---
 name: client-error-handling
-description: Gestion des erreurs côté front & mobile Cityborn — toApiResult / ApiResult, unwrapApiResponse / ApiResponseError, useError() + invokeError, messages FR via ErrorCode de @cityborn/api, installFrenchZodErrorMap, validation de formulaire (zodResolver + schéma partagé). À utiliser quand on affiche ou propage une erreur, qu'on écrit un wrapper d'API (use-server/, apps/mobile/lib/api/) ou un loader de Server Component (server-only/), ou qu'on branche un formulaire.
+description: Erreurs et validation client Cityborn. À utiliser pour modifier un wrapper d'API, un loader de Server Component, l'affichage d'une erreur ou un formulaire dans les apps front et mobile.
 ---
 
 # Gestion des erreurs — front & mobile

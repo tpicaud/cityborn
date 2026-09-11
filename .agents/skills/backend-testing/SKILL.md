@@ -1,13 +1,13 @@
 ---
 name: backend-testing
-description: Conventions des tests backend Cityborn (apps/backend) — choix exclusif entre unitaire / intégration / e2e, nommage, AAA, mocks, fixtures et harnais Jest partagé. À utiliser dès qu'on crée, modifie, relit ou vérifie un test backend, ou qu'on choisit le tier d'un comportement.
+description: Tests backend Cityborn. À utiliser pour choisir le tier ou travailler sur un test unitaire, d'intégration ou e2e dans apps/backend.
 ---
 
 # Tests backend
 
-## Choisir un seul tier
+## Choisir le tier
 
-Chaque comportement est couvert dans **un seul tier**, le plus bas qui permette de l'observer. Ne pas répéter en e2e les branches métier déjà démontrées en unitaire, ni les détails d'infrastructure déjà couverts en intégration.
+Placer chaque branche métier dans le tier le plus bas qui permette de l'observer. Les e2e couvrent des parcours représentatifs du câblage sans répéter la matrice métier démontrée en unitaire ni les détails d'infrastructure couverts en intégration.
 
 | Tier | Suffixe et emplacement | Périmètre exclusif |
 |---|---|---|
@@ -27,78 +27,6 @@ Chaque comportement est couvert dans **un seul tier**, le plus bas qui permette 
 - Réserver les builders à l'Arrange. Dans un Assert, écrire directement la valeur attendue afin que le contrat vérifié soit visible sans suivre l'implémentation d'un builder.
 - Tous les builders acceptent des overrides typés et retournent des données indépendantes à chaque appel. Les tests importent chaque builder directement depuis son package propriétaire : ne créer ni fichier de réexport ni barrel de fixtures. `test/support/fixtures/` ne contient que les fixtures propres au backend.
 
-## Harnais d'intégration et e2e
+## Intégration et e2e
 
-- Les projets Jest `integration` et `e2e` partagent `test/support/`. `globalSetup.ts` déploie les migrations une seule fois par lancement. `setupEnvironment.ts` force PostgreSQL sur `localhost:5433/cityborn_test` et Redis sur `localhost:6380/0` ; ne pas créer de `.env.test`.
-- Avant chaque test, le setup partagé vide les tables applicatives avec `TRUNCATE … RESTART IDENTITY CASCADE` et exécute `FLUSHDB`. Les migrations et les tables d'extension PostGIS sont conservées. Le teardown final nettoie les données et ferme ses connexions.
-- La base est partagée et Jest utilise un seul worker : ne jamais lancer plusieurs commandes d'intégration/e2e en parallèle ni utiliser `test.concurrent`.
-- Un test qui ouvre ses propres clients les ferme dans `afterAll`. Les conteneurs restent disponibles jusqu'à `pnpm db:test:stop`.
-- `main.ts` et `test/support/createTestApp.ts` appellent `configureApp()` : garder la configuration HTTP/WS dans cette fonction partagée. Les filtres globaux et handlers ts-rest restent enregistrés par les modules de production ; ne pas créer de pipeline propre aux tests.
-- Tous les e2e utilisent `createTestApp()` puis `await app.close()` dans `afterAll`. Son callback optionnel sert aux overrides Nest de services externes. Prisma et l'adaptateur Redis WebSocket ferment leurs connexions au teardown Nest.
-
-## Exemples canoniques
-
-Unitaire — dépendances mockées, `describe` au niveau de la méthode et branche métier unique :
-
-```typescript
-describe('SessionService.kickPlayer', () => {
-  it('rejects when the requester is not the host', async () => {
-    const session = buildSession();
-    const { sessionService } = buildSessionService(session);
-
-    const result = sessionService.kickPlayer('bob', session.id, 'host');
-
-    await expect(result).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
-    });
-  });
-});
-```
-
-Intégration — vraie infrastructure, sans transport :
-
-```typescript
-describe('User persistence', () => {
-  const infrastructure = createTestInfrastructure();
-
-  afterAll(async () => {
-    await infrastructure.close();
-  });
-
-  it('persists a user in PostgreSQL', async () => {
-    const user = buildUser();
-    await infrastructure.prisma.user.create({ data: user });
-
-    const persistedUser = await infrastructure.prisma.user.findUniqueOrThrow({
-      where: { id: user.id },
-    });
-
-    expect(persistedUser).toMatchObject(user);
-  });
-});
-```
-
-E2E — application réelle traversée par HTTP :
-
-```typescript
-describe('GET /health', () => {
-  let app: NestExpressApplication;
-
-  beforeAll(async () => {
-    app = await createTestApp();
-  });
-
-  afterAll(async () => {
-    await app.close();
-  });
-
-  it('returns the service health through the production bootstrap', async () => {
-    const path = contract.health.check.path;
-
-    const response = await request(app.getHttpServer()).get(path);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({});
-  });
-});
-```
+Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md).
