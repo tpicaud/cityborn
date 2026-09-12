@@ -27,10 +27,6 @@ export function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
   ]);
 }
 
-/**
- * Chargement des packs côté client, pour les plateformes qui n'ont pas de
- * rendu serveur pour les précharger.
- */
 export function useCategoryTrees(
   fetchCategoryTrees: () => Promise<ApiResult<CategoryTree[]>>,
 ): CategoryTree[] {
@@ -66,10 +62,6 @@ export interface CategorySelection {
   playCategory: (node: CategoryTree) => Promise<void>;
 }
 
-/**
- * Navigation dans l'arbre de packs du lobby. Seul l'hôte pousse la
- * configuration : les autres joueurs se verraient refuser la commande.
- */
 export function useCategorySelection({
   categoryTrees,
   session,

@@ -19,11 +19,6 @@ export interface SessionSocket {
   ) => void;
 }
 
-/**
- * La connexion est tenue en state et non en ref : la factory étant asynchrone,
- * les abonnements des hooks appelants doivent être rejoués une fois la socket
- * ouverte, ce qu'un changement d'identité de `on` / `off` déclenche.
- */
 export function useSocket(createSocket: SocketFactory): SessionSocket {
   const [socket, setSocket] = useState<SocketConnection | null>(null);
   const [connected, setConnected] = useState(false);
