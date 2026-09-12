@@ -1,14 +1,21 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ErrorCode, type User } from '@cityborn/api';
+import {
+  ErrorCode,
+  type User,
+  UserIdSchema,
+  UsernameSchema,
+} from '@cityborn/api';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 import { createAuthApi } from './authApi';
 import { toCreateUser } from './authSchema';
 
+const username = UsernameSchema.parse('citizen');
+
 const user: User = {
-  id: 'user-1',
-  username: 'citizen',
+  id: UserIdSchema.parse('user-1'),
+  username,
   email: 'citizen@cityborn.fr',
   type: 'email',
   isVerified: true,
@@ -131,7 +138,7 @@ test('signOut clears the stored tokens', async () => {
 test('toCreateUser drops confirmPassword from the sign-up payload', () => {
   assert.deepEqual(
     toCreateUser({
-      username: 'citizen',
+      username,
       email: 'citizen@cityborn.fr',
       password: 'Password1',
       confirmPassword: 'Password1',
