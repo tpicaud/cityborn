@@ -1,61 +1,40 @@
-import { SessionMode } from '@cityborn/api';
-import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  useJoinSessionForm,
+  useSessionLauncher,
+} from '@cityborn/client/session';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { z } from 'zod';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { createSession, fetchSession } from '@/lib/api/session';
-
-const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code'),
-});
-
-type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
+import { sessionApi } from '@/lib/api/session';
+import { useNavigation } from '@/lib/navigation';
 
 export default function Play() {
   const { user } = useAuth();
-  const { invokeError } = useError();
   const router = useRouter();
+  const navigation = useNavigation();
   const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<JoinSessionFormValues>({
-    resolver: zodResolver(JoinSessionSchema),
-    defaultValues: { code: '' },
+  } = useJoinSessionForm();
+  const { playSolo, playMulti, joinSession } = useSessionLauncher({
+    sessionApi,
+    navigation,
   });
-
-  const handleSoloPlay = () => {
-    router.navigate('/session/solo');
-  };
 
   const handleMultiPlay = async () => {
-    if (!user) {
-      setOpenConnectionAlert(true);
-    } else {
-      const result = await createSession({ mode: SessionMode.MULTI });
-      if (!result.ok) return invokeError(result.error);
-      router.navigate(`/session/multi/${result.data.id}`);
-    }
+    if (!user) return setOpenConnectionAlert(true);
+    await playMulti();
   };
 
-  const handleJoin = handleSubmit(async (values) => {
-    const result = await fetchSession(values.code);
-    if (result.ok) {
-      router.push(`/session/multi/${values.code}`);
-      return;
-    }
-
-    invokeError(result.error);
-  });
+  const handleJoin = handleSubmit(({ code }) => joinSession(code));
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -110,7 +89,7 @@ export default function Play() {
                 variant="filled"
                 label="SOLO"
                 size="large"
-                onPress={handleSoloPlay}
+                onPress={playSolo}
               />
               <Button
                 color="primary"

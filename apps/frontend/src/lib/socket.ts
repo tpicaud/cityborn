@@ -1,3 +1,7 @@
+import type {
+  SocketConnection,
+  SocketFactory,
+} from '@cityborn/client/platform';
 import { io, type Socket } from 'socket.io-client';
 import { getOrCreateVisitorId } from './visitorId';
 
@@ -24,3 +28,29 @@ export const getSocket = (): Socket => {
   }
   return socket;
 };
+
+function toSocketConnection(socket: Socket): SocketConnection {
+  return {
+    get connected() {
+      return socket.connected;
+    },
+    connect: () => {
+      socket.connect();
+    },
+    disconnect: () => {
+      socket.disconnect();
+    },
+    emit: (event, ...args) => {
+      socket.emit(event, ...args);
+    },
+    on: (event, listener) => {
+      socket.on(event, listener);
+    },
+    off: (event, listener) => {
+      socket.off(event, listener);
+    },
+  };
+}
+
+export const createSocketConnection: SocketFactory = async () =>
+  toSocketConnection(getSocket());

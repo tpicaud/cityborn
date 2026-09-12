@@ -1,3 +1,7 @@
+import type {
+  SocketConnection,
+  SocketFactory,
+} from '@cityborn/client/platform';
 import { io, type Socket } from 'socket.io-client';
 import { tokenStorage } from './tokenStorage';
 import { getOrCreateVisitorId } from './visitorId';
@@ -13,7 +17,10 @@ export async function initSocket(): Promise<Socket> {
     socket = null;
   }
 
-  const access_token = await tokenStorage.getAccessToken();
+  const [access_token, visitor_id] = await Promise.all([
+    tokenStorage.getAccessToken(),
+    getOrCreateVisitorId(),
+  ]);
 
   socket = io(WEBSOCKET_URL, {
     transports: ['websocket'],
@@ -21,7 +28,7 @@ export async function initSocket(): Promise<Socket> {
       access_token: access_token || null,
     },
     query: {
-      'x-visitor-id': getOrCreateVisitorId() || null,
+      'x-visitor-id': visitor_id || null,
     },
   });
   return socket;
@@ -33,3 +40,29 @@ export function getSocket(): Socket {
   }
   return socket;
 }
+
+function toSocketConnection(socket: Socket): SocketConnection {
+  return {
+    get connected() {
+      return socket.connected;
+    },
+    connect: () => {
+      socket.connect();
+    },
+    disconnect: () => {
+      socket.disconnect();
+    },
+    emit: (event, ...args) => {
+      socket.emit(event, ...args);
+    },
+    on: (event, listener) => {
+      socket.on(event, listener);
+    },
+    off: (event, listener) => {
+      socket.off(event, listener);
+    },
+  };
+}
+
+export const createSocketConnection: SocketFactory = async () =>
+  toSocketConnection(await initSocket());

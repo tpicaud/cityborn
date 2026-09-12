@@ -1,0 +1,37 @@
+import type { ApiResult, CreateSession, Game, Session } from '@cityborn/api';
+import { toApiResult } from '@cityborn/api';
+import type { ApiClient } from '../../api/createApiClient';
+import { buildFinalizeGameBody } from './finalizeGame';
+
+export interface SessionApi {
+  createSession(data: CreateSession): Promise<ApiResult<Session>>;
+  fetchSession(id: string): Promise<ApiResult<Session>>;
+  createSoloGame(session: Session): Promise<ApiResult<Game>>;
+  finalizeGame(session: Session): Promise<ApiResult<void>>;
+}
+
+export function createSessionApi(
+  client: Pick<ApiClient, 'session'>,
+): SessionApi {
+  return {
+    async createSession(data) {
+      return toApiResult(await client.session.createSession({ body: data }));
+    },
+
+    async fetchSession(id) {
+      return toApiResult(await client.session.getSession({ params: { id } }));
+    },
+
+    async createSoloGame(session) {
+      return toApiResult(await client.session.createGame({ body: session }));
+    },
+
+    async finalizeGame(session) {
+      const body = buildFinalizeGameBody(session);
+      if (!body) return { ok: true, data: undefined };
+      const result = toApiResult(await client.session.finalizeGame({ body }));
+      if (!result.ok) return result;
+      return { ok: true, data: undefined };
+    },
+  };
+}

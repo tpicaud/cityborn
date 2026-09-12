@@ -1,17 +1,24 @@
 import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
+import { useSoloSession } from '@cityborn/client/session';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
+import { sessionApi } from '@/lib/api/session';
+import { useNavigation } from '@/lib/navigation';
 import { Game } from '../../game/Game';
-import { useSoloSession } from '../hooks/useSoloSession';
 import { SoloLobby } from './SoloLobby';
 
 export default function SoloSession() {
   const { user } = useAuth();
   const { invokeError } = useError();
+  const navigation = useNavigation();
   const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
-  const soloSession = useSoloSession(localPlayerID);
+  const soloSession = useSoloSession({
+    localPlayerID,
+    sessionApi,
+    navigation,
+  });
 
   //////////////////////////
   // Session interactions //
@@ -19,7 +26,7 @@ export default function SoloSession() {
 
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
-      soloSession.updateGameConfig(gameConfig);
+      await soloSession.updateGameConfig(gameConfig);
     } catch (error) {
       invokeError(error);
     }
@@ -39,7 +46,7 @@ export default function SoloSession() {
 
   const handleGuess = async (guess: Guess) => {
     try {
-      soloSession.guess(guess);
+      await soloSession.guess(guess);
     } catch (error) {
       invokeError(error);
     }
@@ -47,7 +54,7 @@ export default function SoloSession() {
 
   const handleNextRound = async () => {
     try {
-      soloSession.nextRound();
+      await soloSession.nextRound();
     } catch (error) {
       invokeError(error);
     }
@@ -97,14 +104,14 @@ export default function SoloSession() {
         handleExitGame={handleExitGame}
       />
     );
-  } else {
-    return (
-      <SoloLobby
-        isHost={soloSession.isHost}
-        session={soloSession.session}
-        handleUpdateGameConfig={handleUpdateGameConfig}
-        handleStartGame={handleStartGame}
-      />
-    );
   }
+
+  return (
+    <SoloLobby
+      isHost={soloSession.isHost}
+      session={soloSession.session}
+      handleUpdateGameConfig={handleUpdateGameConfig}
+      handleStartGame={handleStartGame}
+    />
+  );
 }

@@ -7,9 +7,10 @@ export interface SocketConnection {
     event: string,
     listener: (...args: Args) => void,
   ): void;
+  /** Sans listener, tous les abonnements de l'événement sont retirés. */
   off<Args extends unknown[]>(
     event: string,
-    listener: (...args: Args) => void,
+    listener?: (...args: Args) => void,
   ): void;
 }
 
