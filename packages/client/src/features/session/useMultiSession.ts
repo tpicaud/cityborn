@@ -1,6 +1,12 @@
 'use client';
 
-import type { GameConfig, Guess, Session } from '@cityborn/api';
+import type {
+  GameConfig,
+  Guess,
+  PlayerId,
+  Session,
+  SessionId,
+} from '@cityborn/api';
 import { SessionStatus } from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
@@ -13,8 +19,8 @@ import { emitWithAck } from './socketRequest';
 import { useSocket } from './useSocket';
 
 export interface MultiSessionOptions {
-  localPlayerID: string | undefined;
-  sessionID: string;
+  localPlayerID: PlayerId | undefined;
+  sessionID: SessionId;
   sessionApi: SessionApi;
   navigation: Navigation;
   createSocket: SocketFactory;
@@ -23,9 +29,9 @@ export interface MultiSessionOptions {
 export interface MultiSessionController extends SessionController {
   connected: boolean;
   hasDisconnected: boolean;
-  join: (playerID: string) => Promise<void>;
-  updateHost: (newHostID: string) => Promise<void>;
-  kickPlayer: (playerToKick: string) => Promise<void>;
+  join: (playerID: PlayerId) => Promise<void>;
+  updateHost: (newHostID: PlayerId) => Promise<void>;
+  kickPlayer: (playerToKick: PlayerId) => Promise<void>;
   reconnect: () => Promise<void>;
 }
 
@@ -71,7 +77,7 @@ export function useMultiSession({
   }, [on, off]);
 
   const join = useCallback(
-    async (playerID: string) => {
+    async (playerID: PlayerId) => {
       if (!session || !playerID)
         throw new Error(
           'Joining session failed: session or player not initialized',
@@ -136,7 +142,7 @@ export function useMultiSession({
     return current;
   };
 
-  const updateHost = async (newHostID: string) => {
+  const updateHost = async (newHostID: PlayerId) => {
     requireSession('Updating host');
     await emitWithAck(emit, 'session:updateHost', { newHostID });
   };
@@ -147,7 +153,7 @@ export function useMultiSession({
     await emitWithAck(emit, 'session:updateGameConfig', { gameConfig });
   };
 
-  const kickPlayer = async (playerToKick: string) => {
+  const kickPlayer = async (playerToKick: PlayerId) => {
     requireSession('Kicking player');
     await emitWithAck(emit, 'session:kickPlayer', { playerToKick });
   };

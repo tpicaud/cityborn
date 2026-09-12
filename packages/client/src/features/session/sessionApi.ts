@@ -1,4 +1,10 @@
-import type { ApiResult, CreateSession, Game, Session } from '@cityborn/api';
+import type {
+  ApiResult,
+  CreateSession,
+  Game,
+  Session,
+  SessionId,
+} from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
 import type { ApiClient } from '../../api/createApiClient';
@@ -16,7 +22,7 @@ export function buildFinalizeGameBody(
 
 export interface SessionApi {
   createSession(data: CreateSession): Promise<ApiResult<Session>>;
-  fetchSession(id: string): Promise<ApiResult<Session>>;
+  fetchSession(id: SessionId): Promise<ApiResult<Session>>;
   createSoloGame(session: Session): Promise<ApiResult<Game>>;
   finalizeGame(session: Session): Promise<ApiResult<void>>;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionMode } from '@cityborn/api';
+import { type SessionId, SessionIdSchema, SessionMode } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,13 +9,18 @@ import { useError } from '../../shared/errorContext';
 import type { SessionApi } from './sessionApi';
 
 export const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code'),
+  code: z.string().min(1, 'Veuillez entrer un code').pipe(SessionIdSchema),
 });
 
-export type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
+export type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
+export type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
 
-export function useJoinSessionForm(): UseFormReturn<JoinSessionFormValues> {
-  return useForm<JoinSessionFormValues>({
+export function useJoinSessionForm(): UseFormReturn<
+  JoinSessionFormInput,
+  undefined,
+  JoinSessionFormValues
+> {
+  return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
     defaultValues: { code: '' },
   });
@@ -23,7 +28,7 @@ export function useJoinSessionForm(): UseFormReturn<JoinSessionFormValues> {
 
 export const soloSessionPath = '/session/solo';
 
-export function multiSessionPath(sessionID: string): string {
+export function multiSessionPath(sessionID: SessionId): string {
   return `/session/multi/${sessionID}`;
 }
 
@@ -35,7 +40,7 @@ export interface SessionLauncherOptions {
 export interface SessionLauncher {
   playSolo: () => void;
   playMulti: () => Promise<void>;
-  joinSession: (code: string) => Promise<void>;
+  joinSession: (code: SessionId) => Promise<void>;
 }
 
 export function useSessionLauncher({
@@ -55,7 +60,7 @@ export function useSessionLauncher({
       navigation.push(multiSessionPath(result.data.id));
     },
 
-    joinSession: async (code: string) => {
+    joinSession: async (code: SessionId) => {
       const result = await sessionApi.fetchSession(code);
       if (!result.ok) return invokeError(result.error);
       navigation.push(multiSessionPath(code));

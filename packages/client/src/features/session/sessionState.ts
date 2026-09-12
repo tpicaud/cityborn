@@ -1,4 +1,4 @@
-import type { Game, GameConfig, Guess, Session } from '@cityborn/api';
+import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { SessionStatus } from '@cityborn/api';
 import {
   applyGuess,
@@ -7,7 +7,7 @@ import {
   resolveNextRound,
 } from '@cityborn/core';
 
-export function withHost(session: Session, hostID: string): Session {
+export function withHost(session: Session, hostID: PlayerId): Session {
   return { ...session, hostID };
 }
 
@@ -32,7 +32,7 @@ export function withoutGame(session: Session): Session {
 
 export function isHostOf(
   session: Session | undefined,
-  playerID: string | undefined,
+  playerID: PlayerId | undefined,
 ): boolean {
   if (!session || !playerID) return false;
   return session.hostID === playerID;
@@ -61,7 +61,7 @@ export function startSoloGame(session: Session, createdGame: Game): Session {
 
 export function applySoloGuess(
   session: Session,
-  playerID: string,
+  playerID: PlayerId,
   guess: Guess,
 ): Session {
   const game = session.currentGame;

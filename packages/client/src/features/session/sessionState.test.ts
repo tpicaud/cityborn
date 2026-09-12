@@ -2,10 +2,15 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { FullGuessObject, Game, Guess, Session } from '@cityborn/api';
 import {
+  GameIdSchema,
   GameStatus,
+  GuessObjectIdSchema,
+  PlayerIdSchema,
   RoundStatus,
+  SessionIdSchema,
   SessionMode,
   SessionStatus,
+  WorldLocationIdSchema,
 } from '@cityborn/api';
 import {
   advanceSoloRound,
@@ -20,6 +25,10 @@ import {
   withStatus,
 } from './sessionState';
 
+const citizen = PlayerIdSchema.parse('citizen');
+const firstObjectId = GuessObjectIdSchema.parse('object-1');
+const secondObjectId = GuessObjectIdSchema.parse('object-2');
+
 const guess: Guess = {
   coordinates: { lat: 48.85, lng: 2.35 },
   distance: 120,
@@ -29,20 +38,20 @@ const guess: Guess = {
 
 function createGame(): Game {
   return {
-    id: 'game-1',
+    id: GameIdSchema.parse('game-1'),
     config: { categories: [], timer: 25, nbOfObjects: 2 },
     status: GameStatus.STARTING,
     state: {
-      guessObjectsIds: ['object-1', 'object-2'],
-      results: { citizen: { results: [] } },
+      guessObjectsIds: [firstObjectId, secondObjectId],
+      results: { [citizen]: { results: [] } },
     },
   };
 }
 
 function createSession(currentGame?: Game): Session {
   return {
-    id: 'session-1',
-    hostID: 'citizen',
+    id: SessionIdSchema.parse('session-1'),
+    hostID: citizen,
     mode: SessionMode.SOLO,
     status: SessionStatus.IN_LOBBY,
     gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
@@ -54,7 +63,10 @@ function createSession(currentGame?: Game): Session {
 test('withHost et withStatus ne mutent pas la session reçue', () => {
   const session = createSession();
 
-  assert.equal(withHost(session, 'other').hostID, 'other');
+  assert.equal(
+    withHost(session, PlayerIdSchema.parse('other')).hostID,
+    'other',
+  );
   assert.equal(
     withStatus(session, SessionStatus.IN_GAME).status,
     SessionStatus.IN_GAME,
@@ -85,10 +97,10 @@ test('withGame puis withoutGame ouvrent et referment la partie', () => {
 test('isHostOf est faux sans session ou sans joueur', () => {
   const session = createSession();
 
-  assert.equal(isHostOf(session, 'citizen'), true);
-  assert.equal(isHostOf(session, 'other'), false);
+  assert.equal(isHostOf(session, citizen), true);
+  assert.equal(isHostOf(session, PlayerIdSchema.parse('other')), false);
   assert.equal(isHostOf(session, undefined), false);
-  assert.equal(isHostOf(undefined, 'citizen'), false);
+  assert.equal(isHostOf(undefined, citizen), false);
 });
 
 test('startSoloGame passe la session en jeu et démarre le premier tour', () => {
@@ -98,7 +110,7 @@ test('startSoloGame passe la session en jeu et démarre le premier tour', () => 
   assert.equal(session.currentGame?.status, GameStatus.IN_GAME);
   assert.equal(
     session.currentGame?.state.currentRound?.guessObjectId,
-    'object-1',
+    firstObjectId,
   );
   assert.equal(
     session.currentGame?.state.currentRound?.status,
@@ -109,19 +121,19 @@ test('startSoloGame passe la session en jeu et démarre le premier tour', () => 
 test('applySoloGuess clôture le tour du joueur solo', () => {
   const started = startSoloGame(createSession(), createGame());
 
-  const guessed = applySoloGuess(started, 'citizen', guess);
+  const guessed = applySoloGuess(started, citizen, guess);
 
   const round = guessed.currentGame?.state.currentRound;
   assert.equal(round?.status, RoundStatus.SHOWING_RESULTS);
-  assert.deepEqual(round?.playersGuesses?.citizen, guess);
+  assert.deepEqual(round?.playersGuesses?.[citizen], guess);
 });
 
 test('applySoloGuess est sans effet hors tour en cours', () => {
   const session = createSession(createGame());
 
-  assert.equal(applySoloGuess(session, 'citizen', guess), session);
+  assert.equal(applySoloGuess(session, citizen, guess), session);
   assert.equal(
-    applySoloGuess(createSession(), 'citizen', guess).currentGame,
+    applySoloGuess(createSession(), citizen, guess).currentGame,
     undefined,
   );
 });
@@ -129,7 +141,7 @@ test('applySoloGuess est sans effet hors tour en cours', () => {
 test('advanceSoloRound enchaîne les tours puis signale la fin de partie', () => {
   const firstRound = applySoloGuess(
     startSoloGame(createSession(), createGame()),
-    'citizen',
+    citizen,
     guess,
   );
 
@@ -137,16 +149,14 @@ test('advanceSoloRound enchaîne les tours puis signale la fin de partie', () =>
   assert.equal(second.isGameOver, false);
   assert.equal(
     second.session.currentGame?.state.currentRound?.guessObjectId,
-    'object-2',
+    secondObjectId,
   );
 
-  const last = advanceSoloRound(
-    applySoloGuess(second.session, 'citizen', guess),
-  );
+  const last = advanceSoloRound(applySoloGuess(second.session, citizen, guess));
   assert.equal(last.isGameOver, true);
   assert.equal(last.session.currentGame?.status, GameStatus.IN_RESULTS);
   assert.equal(
-    last.session.currentGame?.state.results.citizen.results.length,
+    last.session.currentGame?.state.results[citizen].results.length,
     2,
   );
 });
@@ -160,10 +170,10 @@ test('advanceSoloRound sans partie ne signale pas de fin de partie', () => {
 test('mergeSessionUpdate conserve les guessObjects locaux absents du serveur', () => {
   const guessObjects: FullGuessObject[] = [
     {
-      id: 'object-1',
+      id: firstObjectId,
       name: 'Ada Lovelace',
       world_location: {
-        id: 'location-1',
+        id: WorldLocationIdSchema.parse('location-1'),
         osm_type: 'relation',
         name: 'Londres',
         display_name: 'Londres, Royaume-Uni',

@@ -1,6 +1,6 @@
 'use client';
 
-import type { GameConfig, Guess, Session } from '@cityborn/api';
+import type { GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { SessionMode } from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
@@ -17,7 +17,7 @@ import {
 } from './sessionState';
 
 export interface SoloSessionOptions {
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   sessionApi: SessionApi;
   navigation: Navigation;
 }
