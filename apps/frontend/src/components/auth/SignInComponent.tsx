@@ -1,11 +1,9 @@
 'use client';
 
-import { type SignIn, SignInSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useSignInForm } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { signIn, signInWithGoogle } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
@@ -17,10 +15,7 @@ export const SignInComponent = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignIn>({
-    resolver: zodResolver(SignInSchema),
-    defaultValues: { identifier: '', password: '' },
-  });
+  } = useSignInForm();
 
   useEffect(() => {
     const handleCredentialResponse = async (response: {

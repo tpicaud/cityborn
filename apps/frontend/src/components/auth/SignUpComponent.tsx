@@ -1,11 +1,9 @@
 'use client';
 
 import { useError } from '@cityborn/client';
-import { SignUpFormSchema, type SignUpFormValues } from '@cityborn/client/auth';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { toCreateUser, useSignUpForm } from '@cityborn/client/auth';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { signInWithGoogle, signUp } from '@/server/use-server/auth';
 
 export const SignUpComponent = () => {
@@ -14,15 +12,7 @@ export const SignUpComponent = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(SignUpFormSchema),
-    defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-  });
+  } = useSignUpForm();
 
   useEffect(() => {
     const handleCredentialResponse = async (response: {
@@ -46,11 +36,7 @@ export const SignUpComponent = () => {
   }, [invokeError]);
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await signUp({
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    });
+    const result = await signUp(toCreateUser(values));
 
     if (result.ok) {
       window.location.reload();

@@ -20,7 +20,7 @@ import ErrorDialog from '@/components/ui/ErrorDialog';
 import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
-import { getCurrentUser } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
 
 installFrenchZodErrorMap();
@@ -65,7 +65,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     let isMounted = true;
-    getCurrentUser()
+    authApi
+      .getCurrentUser()
       .then((fetchedUser) => {
         if (isMounted) {
           setUser(fetchedUser);
@@ -94,7 +95,10 @@ export default function RootLayout() {
         <ErrorProvider ErrorDialogComponent={ErrorDialog}>
           <SafeAreaProvider>
             <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-              <AuthProvider initialValue={user} getCurrentUser={getCurrentUser}>
+              <AuthProvider
+                initialValue={user}
+                getCurrentUser={authApi.getCurrentUser}
+              >
                 <StatusBar hidden={true} />
                 <Stack
                   screenOptions={{

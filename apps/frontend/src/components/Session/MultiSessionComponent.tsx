@@ -7,12 +7,12 @@ import {
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
-import { useAuth } from '@/contexts/AuthContext';
 import { useMultiSession } from '@/hooks/useMultiSession';
 
 export default function MultiSessionComponent({

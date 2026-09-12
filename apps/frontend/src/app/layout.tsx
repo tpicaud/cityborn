@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Script from 'next/script';
-import { getCurrentUser, hasToken } from '@/server/server-only/auth';
+import { getCurrentUser } from '@/server/server-only/auth';
 import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
@@ -14,15 +14,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let user = null;
-  const tokenExists = await hasToken();
-  if (tokenExists) {
-    try {
-      user = await getCurrentUser();
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-    }
-  }
+  const user = await getCurrentUser();
 
   return (
     <html lang="fr" className="h-full">

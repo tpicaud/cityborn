@@ -1,19 +1,14 @@
-import { type CreateUser, resolveErrorMessage } from '@cityborn/api';
-import {
-  SignUpFormSchema,
-  type SignUpFormValues,
-  useAuth,
-} from '@cityborn/client/auth';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { resolveErrorMessage } from '@cityborn/api';
+import { toCreateUser, useAuth, useSignUpForm } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { signUp } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -25,25 +20,12 @@ export const SignUpComponent = () => {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(SignUpFormSchema),
-    defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-  });
+  } = useSignUpForm();
 
   const onSubmit = handleSubmit(async (values) => {
     setErrorMessage(null);
 
-    const createUser: CreateUser = {
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    };
-    const result = await signUp(createUser);
+    const result = await authApi.signUp(toCreateUser(values));
 
     if (result.ok) {
       setUser(result.data);

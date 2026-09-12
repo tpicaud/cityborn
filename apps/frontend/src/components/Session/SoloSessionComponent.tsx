@@ -2,10 +2,10 @@
 
 import type { CategoryTree, GameConfig, Guess } from '@cityborn/api';
 import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { useAuth } from '@/contexts/AuthContext';
 import { useSoloSession } from '@/hooks/useSoloSession';
 
 export default function SoloSessionComponent({

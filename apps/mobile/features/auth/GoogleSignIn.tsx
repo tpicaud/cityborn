@@ -7,7 +7,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
-import { signInWithGoogle } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 GoogleSignin.configure({
@@ -31,7 +31,7 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const result = await signInWithGoogle({ idToken });
+        const result = await authApi.signInWithGoogle({ idToken });
         if (!result.ok) {
           invokeError(result.error);
           return;
