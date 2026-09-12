@@ -9,7 +9,7 @@ export interface SocketConnection {
   ): void;
   off<Args extends unknown[]>(
     event: string,
-    listener: (...args: Args) => void,
+    listener?: (...args: Args) => void,
   ): void;
 }
 

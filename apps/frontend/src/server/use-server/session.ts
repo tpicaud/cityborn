@@ -5,6 +5,7 @@ import {
   type CreateSession,
   type Game,
   type Session,
+  type SessionId,
   toApiResult,
 } from '@cityborn/api';
 import { buildFinalizeGameBody } from '@cityborn/client/session';
@@ -19,7 +20,7 @@ export async function createSession(
 }
 
 export async function fetchSession(
-  sessionId: string,
+  sessionId: SessionId,
 ): Promise<ApiResult<Session>> {
   const client = await getServerClient();
   const result = await client.session.getSession({ params: { id: sessionId } });

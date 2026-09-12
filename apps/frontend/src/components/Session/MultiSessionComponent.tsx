@@ -11,12 +11,15 @@ import {
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
+import { useMultiSession } from '@cityborn/client/session';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
-import { useMultiSession } from '@/hooks/useMultiSession';
+import { useNavigation } from '@/lib/navigation';
+import { sessionApi } from '@/lib/sessionApi';
+import { createSocketConnection } from '@/lib/socket';
 
 export default function MultiSessionComponent({
   categoryTrees,
@@ -25,6 +28,7 @@ export default function MultiSessionComponent({
 }) {
   const { user } = useAuth();
   const { invokeError } = useError();
+  const navigation = useNavigation();
   const { sessionID: rawSessionID } = useParams<{ sessionID: string }>();
   const sessionID = SessionIdSchema.parse(rawSessionID);
 
@@ -32,48 +36,27 @@ export default function MultiSessionComponent({
     user?.username,
   );
 
-  const multiSession = useMultiSession(localPlayerID, sessionID);
-  const hasJoinedSession = useRef(false);
-
-  const handleJoinSession = useCallback(
-    async (playerID: string) => {
-      try {
-        const parsedPlayerId = PlayerIdSchema.parse(playerID);
-        hasJoinedSession.current = true;
-        await multiSession.join(parsedPlayerId);
-        setLocalPlayerID(parsedPlayerId);
-      } catch (error) {
-        invokeError(error, 'Une erreur est survenue');
-      }
-    },
-    [multiSession.join, invokeError],
-  );
-
-  ////////////////
-  // useEffects //
-  ////////////////
-
-  useEffect(() => {
-    if (
-      multiSession.session &&
-      localPlayerID &&
-      !multiSession.connected &&
-      multiSession.socket.connected &&
-      !hasJoinedSession.current
-    ) {
-      handleJoinSession(localPlayerID);
-    }
-  }, [
-    multiSession.session,
-    multiSession.socket.connected,
-    handleJoinSession,
+  const multiSession = useMultiSession({
     localPlayerID,
-    multiSession.connected,
-  ]);
+    sessionID,
+    sessionApi,
+    navigation,
+    createSocket: createSocketConnection,
+  });
 
   //////////////////////////
   // Session interactions //
   //////////////////////////
+
+  const handleJoinSession = async (playerID: string) => {
+    try {
+      const parsedPlayerId = PlayerIdSchema.parse(playerID);
+      await multiSession.join(parsedPlayerId);
+      setLocalPlayerID(parsedPlayerId);
+    } catch (error) {
+      invokeError(error, 'Une erreur est survenue');
+    }
+  };
 
   const handleUpdateHost = async (newHostID: string) => {
     try {

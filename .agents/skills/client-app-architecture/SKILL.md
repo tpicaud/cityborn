@@ -27,6 +27,8 @@ Avant de créer un fichier, inspecter les fichiers voisins et suivre le précéd
 
 L'authentification fait exception : ses appels HTTP vivent dans `createAuthApi` (`@cityborn/client/auth`). Chaque app se contente de l'instancier avec son `TokenStorage` — `lib/api/auth.ts` côté mobile, `getServerAuthApi()` côté Next, les server actions n'étant que des passe-plats. Ajouter un appel d'auth se fait dans `AuthApi`, jamais dans une app.
 
+Les sessions suivent le même principe avec un port : les hooks de `@cityborn/client/session` reçoivent un `SessionApi`. Le mobile l'obtient par `createSessionApi(client)` (`lib/api/session.ts`), Next l'implémente avec ses server actions (`lib/sessionApi.ts`) pour garder ses appels côté serveur. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
+
 Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers, voir le skill `client-error-handling`.
 
 ## Spécifique Next (App Router)
@@ -42,7 +44,7 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
 | `@cityborn/client/api` | `src/api/` | Transport : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`, `socketRequest`) et les transitions (`sessionState`) restent privés au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | Partie en cours, résultats, contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 

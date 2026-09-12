@@ -8,10 +8,12 @@ import {
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
+import { useSoloSession } from '@cityborn/client/session';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { useSoloSession } from '@/hooks/useSoloSession';
+import { useNavigation } from '@/lib/navigation';
+import { sessionApi } from '@/lib/sessionApi';
 
 export default function SoloSessionComponent({
   categoryTrees,
@@ -20,8 +22,13 @@ export default function SoloSessionComponent({
 }) {
   const { user } = useAuth();
   const { invokeError } = useError();
+  const navigation = useNavigation();
   const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
-  const soloSession = useSoloSession(localPlayerID);
+  const soloSession = useSoloSession({
+    localPlayerID,
+    sessionApi,
+    navigation,
+  });
 
   //////////////////////////
   // Session interactions //
@@ -31,7 +38,7 @@ export default function SoloSessionComponent({
 
   const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
     try {
-      soloSession.updateGameConfig(gameConfig);
+      await soloSession.updateGameConfig(gameConfig);
     } catch (error) {
       invokeError(error, 'Une erreur est survenue');
     }
@@ -51,7 +58,7 @@ export default function SoloSessionComponent({
 
   const handleGuess = async (guess: Guess) => {
     try {
-      soloSession.guess(guess);
+      await soloSession.guess(guess);
     } catch (error) {
       invokeError(error, 'Une erreur est survenue');
     }
@@ -59,7 +66,7 @@ export default function SoloSessionComponent({
 
   const handleNextRound = async () => {
     try {
-      soloSession.nextRound();
+      await soloSession.nextRound();
     } catch (error) {
       invokeError(error, 'Une erreur est survenue');
     }
@@ -110,17 +117,17 @@ export default function SoloSessionComponent({
         handleExitGame={handleExitGame}
       />
     );
-  } else {
-    return (
-      <LobbyComponent
-        localPlayerID={localPlayerID}
-        isHost={soloSession.isHost}
-        session={soloSession.session}
-        categoryTrees={categoryTrees}
-        handleUpdateGameConfig={handleUpdateGameConfig}
-        handleStartGame={handleStartGame}
-        handleJoinSession={handleJoinSession}
-      />
-    );
   }
+
+  return (
+    <LobbyComponent
+      localPlayerID={localPlayerID}
+      isHost={soloSession.isHost}
+      session={soloSession.session}
+      categoryTrees={categoryTrees}
+      handleUpdateGameConfig={handleUpdateGameConfig}
+      handleStartGame={handleStartGame}
+      handleJoinSession={handleJoinSession}
+    />
+  );
 }

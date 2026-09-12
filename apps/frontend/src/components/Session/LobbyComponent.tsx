@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  type Category,
   type CategoryTree,
   type GameConfig,
   type OnlinePlayer,
   type Session,
   SessionMode,
 } from '@cityborn/api';
+import { useCategorySelection } from '@cityborn/client/session';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -24,30 +24,10 @@ import {
   Typography,
 } from '@mui/material';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { useNavigation } from '@/lib/navigation';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
-
-const flattenCategoryTree = (nodes: CategoryTree[]): Category[] =>
-  nodes.flatMap((node) => [
-    {
-      id: node.id,
-      name: node.name,
-      isPublished: node.isPublished,
-      description: node.description,
-      parentId: node.parentId,
-    },
-    ...flattenCategoryTree(node.children),
-  ]);
-
-const toCategory = (node: CategoryTree): Category => ({
-  id: node.id,
-  name: node.name,
-  isPublished: node.isPublished,
-  description: node.description,
-  parentId: node.parentId,
-});
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -58,11 +38,11 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const LobbyComponent = ({
   localPlayerID,
   session,
   categoryTrees,
+  isHost,
   handleUpdateGameConfig,
   handleStartGame,
   handleJoinSession,
@@ -79,37 +59,21 @@ export const LobbyComponent = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [currentInput, setCurrentInput] = useState<string>('');
-  const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
-  const router = useRouter();
-  const flatCategories = useMemo(
-    () => flattenCategoryTree(categoryTrees),
-    [categoryTrees],
-  );
-  useEffect(() => {
-    if (
-      flatCategories.length > 0 &&
-      session.gameConfig.categories.length === 0 &&
-      session.players.find((p) => p.username === localPlayerID)
-    ) {
-      handleUpdateGameConfig({ categories: flatCategories });
-    }
-  }, [
-    flatCategories,
-    session.gameConfig.categories.length,
-    handleUpdateGameConfig,
-    session.players,
-    localPlayerID,
-  ]);
-
-  const currentCategoryNodes =
-    selectedPath.length === 0
-      ? categoryTrees
-      : selectedPath[selectedPath.length - 1].children;
-
-  const handlePlayCategory = async (node: CategoryTree) => {
-    await handleUpdateGameConfig({ categories: [toCategory(node)] });
-    await handleStartGame();
-  };
+  const navigation = useNavigation();
+  const {
+    selectedPath,
+    currentNodes,
+    currentName,
+    openCategory,
+    goBack,
+    playCategory,
+  } = useCategorySelection({
+    categoryTrees,
+    session,
+    isHost,
+    updateGameConfig: handleUpdateGameConfig,
+    startGame: handleStartGame,
+  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
@@ -233,17 +197,12 @@ export const LobbyComponent = ({
             >
               <div className="flex items-center gap-1">
                 {selectedPath.length > 0 && (
-                  <IconButton
-                    size="small"
-                    onClick={() => setSelectedPath((path) => path.slice(0, -1))}
-                  >
+                  <IconButton size="small" onClick={goBack}>
                     <ArrowBackIcon fontSize="small" />
                   </IconButton>
                 )}
                 <Typography variant="subtitle1" noWrap>
-                  {selectedPath.length === 0
-                    ? 'Packs'
-                    : selectedPath[selectedPath.length - 1].name}
+                  {currentName ?? 'Packs'}
                 </Typography>
               </div>
               <Box
@@ -255,7 +214,7 @@ export const LobbyComponent = ({
                   overflowY: 'auto',
                 }}
               >
-                {currentCategoryNodes.map((node) => (
+                {currentNodes.map((node) => (
                   <Box
                     key={node.id}
                     sx={{
@@ -287,7 +246,7 @@ export const LobbyComponent = ({
                         size="small"
                         variant="contained"
                         disabled={session.hostID !== localPlayerID}
-                        onClick={() => handlePlayCategory(node)}
+                        onClick={() => playCategory(node)}
                         sx={{ width: 96, fontSize: '0.7rem' }}
                       >
                         Jouer
@@ -296,9 +255,7 @@ export const LobbyComponent = ({
                         <Button
                           size="small"
                           variant="outlined"
-                          onClick={() =>
-                            setSelectedPath((path) => [...path, node])
-                          }
+                          onClick={() => openCategory(node)}
                           sx={{ width: 96, fontSize: '0.7rem' }}
                         >
                           Sous-packs
@@ -316,7 +273,7 @@ export const LobbyComponent = ({
             color="primary"
             fullWidth
             disabled={session.hostID !== localPlayerID}
-            onClick={() => router.push('/')}
+            onClick={() => navigation.push('/')}
           >
             Menu
           </LoadingButton>
