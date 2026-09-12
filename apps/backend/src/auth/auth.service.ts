@@ -406,8 +406,8 @@ export class AuthService {
 
   private async generateToken(
     type: 'access' | 'refresh',
-    id: unknown,
-    username: unknown,
+    id: string,
+    username: string,
     email: string,
   ): Promise<string> {
     const payload = {
