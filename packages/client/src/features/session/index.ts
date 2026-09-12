@@ -1,10 +1,18 @@
-export * from './categorySelection';
+export {
+  type CategorySelection,
+  type CategorySelectionOptions,
+  useCategorySelection,
+  useCategoryTrees,
+} from './categorySelection';
 export * from './finalizeGame';
 export * from './sessionApi';
-export * from './sessionLauncher';
-export * from './sessionState';
-export * from './socketRequest';
+export {
+  type JoinSessionFormValues,
+  type SessionLauncher,
+  type SessionLauncherOptions,
+  useJoinSessionForm,
+  useSessionLauncher,
+} from './sessionLauncher';
 export * from './useMultiSession';
 export * from './useSession';
-export * from './useSocket';
 export * from './useSoloSession';
