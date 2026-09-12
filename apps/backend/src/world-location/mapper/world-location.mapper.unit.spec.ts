@@ -1,4 +1,7 @@
-import { WorldLocationSchema } from '@cityborn/api';
+import {
+  WorldLocationSchema,
+  WorldLocationSearchResultSchema,
+} from '@cityborn/api';
 import type {
   WorldLocation as PrismaWorldLocation,
   WorldLocationGeometry as PrismaWorldLocationGeometry,
@@ -54,7 +57,7 @@ describe('WorldLocationMapper.toWorldLocationFromNominatimItem', () => {
       geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
     });
 
-    expect(() => WorldLocationSchema.parse(location)).not.toThrow();
+    expect(() => WorldLocationSearchResultSchema.parse(location)).not.toThrow();
     expect(location).toMatchObject({
       id: '7444',
       centroid: [48.8566, 2.3522],

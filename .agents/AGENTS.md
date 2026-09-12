@@ -28,6 +28,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 ## Principes
 
 - Le typage prime : un typage clair est une part majeure de la DX. Corriger en amont (narrowing, generics, zod) plutôt qu'un cast.
+- **Identifiants métier** : utiliser les types brandés de `@cityborn/api`. Valider une fois à l'entrée du domaine puis propager le type brandé ; réserver `unknown` aux sources réellement non typées et les schémas UUID aux identifiants dont ce format est garanti. Le branding conserve un format JSON/OpenAPI `string`.
 - Si l'architecture touchée par une tâche est mauvaise : le **signaler en fin de réponse** avec une piste, sans implémenter le refacto ni dévier de la tâche demandée.
 - Les instructions explicites de l'utilisateur priment sur les préférences de workflow de ce guide et des skills, sans lever les garde-fous de sécurité ni élargir le périmètre demandé.
 - Avancer de façon autonome pour les actions réversibles et dans le périmètre demandé. Poser une question uniquement si une information manquante change matériellement le résultat ou si une autorisation listée ci-dessous est nécessaire.

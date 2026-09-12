@@ -2,6 +2,7 @@ import {
   type Game,
   type GameConfig,
   type Guess,
+  type PlayerId,
   type Session,
   SessionMode,
   SessionStatus,
@@ -17,7 +18,7 @@ import {
 } from '@/server/use-server/session';
 import type { IUseSession } from './IUseSession';
 
-export function useSoloSession(localPlayerID: string): IUseSession {
+export function useSoloSession(localPlayerID: PlayerId): IUseSession {
   const router = useRouter();
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();

@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { GuessObjectDraft } from '@cityborn/api';
+import type { GuessObjectSearchResult } from '@cityborn/api';
 import {
   type ChangeEventHandler,
   startTransition,
@@ -27,12 +27,12 @@ export function GuessObjectSearchInput({
   value: string | undefined;
   disabled: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
-  onSelect: (draft: GuessObjectDraft | undefined) => void;
+  onSelect: (draft: GuessObjectSearchResult | undefined) => void;
   className?: string;
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<GuessObjectDraft[]>([]);
+  const [matches, setMatches] = useState<GuessObjectSearchResult[]>([]);
 
   useEffect(() => {
     if (!searchValue) {

@@ -4,11 +4,15 @@ import type { SignIn } from '@cityborn/api';
 import { SignInSchema } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type UseFormReturn, useForm } from 'react-hook-form';
-import { SignUpFormSchema, type SignUpFormValues } from './authSchema';
+import {
+  type SignUpFormInput,
+  SignUpFormSchema,
+  type SignUpFormValues,
+} from './authSchema';
 
 const signInFormDefaultValues: SignIn = { identifier: '', password: '' };
 
-const signUpFormDefaultValues: SignUpFormValues = {
+const signUpFormDefaultValues: SignUpFormInput = {
   username: '',
   email: '',
   password: '',
@@ -22,8 +26,12 @@ export function useSignInForm(): UseFormReturn<SignIn> {
   });
 }
 
-export function useSignUpForm(): UseFormReturn<SignUpFormValues> {
-  return useForm<SignUpFormValues>({
+export function useSignUpForm(): UseFormReturn<
+  SignUpFormInput,
+  undefined,
+  SignUpFormValues
+> {
+  return useForm<SignUpFormInput, undefined, SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: signUpFormDefaultValues,
   });

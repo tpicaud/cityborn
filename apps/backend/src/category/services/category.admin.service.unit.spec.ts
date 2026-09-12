@@ -1,12 +1,15 @@
 import {
   buildCreateCategory,
   buildUpdateCategory,
+  CategoryIdSchema,
   ErrorCode,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { Category as PrismaCategory } from '@prisma/client';
 import { AdminCategoryService } from './category.admin.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
+
+const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
 const prismaCategory = {
   id: '00000000-0000-4000-8000-000000000010',
@@ -48,11 +51,11 @@ describe('AdminCategoryService.findBy', () => {
     categoryService.findBy.mockResolvedValue([prismaCategory]);
 
     const categories = await adminCategoryService.findBy({
-      ids: ['category-1'],
+      ids: [categoryId('category-1')],
     });
 
     expect(categoryService.findBy).toHaveBeenCalledWith({
-      ids: ['category-1'],
+      ids: [categoryId('category-1')],
     });
     expect(categories).toHaveLength(1);
   });
@@ -66,7 +69,9 @@ describe('AdminCategoryService.findFullBy', () => {
       { ...prismaCategory, guessObjects: [] },
     ]);
 
-    const category = await adminCategoryService.findFullBy('category-1');
+    const category = await adminCategoryService.findFullBy(
+      categoryId('category-1'),
+    );
 
     expect(category.guessObjects).toEqual([]);
   });
@@ -77,7 +82,7 @@ describe('AdminCategoryService.findFullBy', () => {
     categoryService.findFullBy.mockResolvedValue([]);
 
     await expect(
-      adminCategoryService.findFullBy('missing'),
+      adminCategoryService.findFullBy(categoryId('missing')),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.CATEGORY_NOT_FOUND },
     });
@@ -109,9 +114,15 @@ describe('AdminCategoryService.update', () => {
     });
     const payload = buildUpdateCategory({ name: 'Landmarks' });
 
-    const category = await adminCategoryService.update('category-1', payload);
+    const category = await adminCategoryService.update(
+      categoryId('category-1'),
+      payload,
+    );
 
-    expect(categoryService.update).toHaveBeenCalledWith('category-1', payload);
+    expect(categoryService.update).toHaveBeenCalledWith(
+      categoryId('category-1'),
+      payload,
+    );
     expect(category.name).toBe('Landmarks');
   });
 });
@@ -122,9 +133,11 @@ describe('AdminCategoryService.delete', () => {
       buildAdminCategoryService();
     categoryService.delete.mockResolvedValue(undefined);
 
-    await adminCategoryService.delete('category-1');
+    await adminCategoryService.delete(categoryId('category-1'));
 
-    expect(categoryService.delete).toHaveBeenCalledWith('category-1');
+    expect(categoryService.delete).toHaveBeenCalledWith(
+      categoryId('category-1'),
+    );
   });
 });
 

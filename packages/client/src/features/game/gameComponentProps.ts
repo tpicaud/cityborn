@@ -1,8 +1,8 @@
-import type { Game, Guess } from '@cityborn/api';
+import type { Game, Guess, PlayerId } from '@cityborn/api';
 
 export interface GameComponentProps {
   game: Game;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   handleGuess: (guess: Guess) => void;
   handleNextRound: () => void;
 }

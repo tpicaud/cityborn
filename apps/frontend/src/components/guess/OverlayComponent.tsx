@@ -4,6 +4,7 @@ import {
   type FullGuessObject,
   type Game,
   type Guess,
+  type PlayerId,
   type Round,
   RoundStatus,
   type Session,
@@ -50,7 +51,7 @@ function GuessResult({
 }: {
   currentRound: Round;
   guessObject: FullGuessObject;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
 }) {
   return (
     currentRound.playersGuesses &&
@@ -115,7 +116,7 @@ function GuessResult({
 }
 
 interface OverlayComponentProps {
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   preGuess: Guess | undefined;
   session: Session;
   game: Game;

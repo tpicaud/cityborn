@@ -1,6 +1,10 @@
+import { PlayerIdSchema, SessionIdSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { RedisService } from '../redis/redis.service';
 import { ConnectionRegistryService } from './connection-registry.service';
+
+const playerId = (value: string) => PlayerIdSchema.parse(value);
+const sessionId = (value: string) => SessionIdSchema.parse(value);
 
 function buildConnectionRegistryService() {
   const redisService = createMock<RedisService>();
@@ -17,16 +21,16 @@ describe('ConnectionRegistryService.register', () => {
 
     await connectionRegistryService.register(
       'socket-1',
-      'player-1',
-      'session-1',
+      playerId('player-1'),
+      sessionId('session-1'),
       true,
     );
 
     expect(redisService.setJSON).toHaveBeenCalledWith(
       'connection:socket-1',
       {
-        playerID: 'player-1',
-        sessionID: 'session-1',
+        playerID: playerId('player-1'),
+        sessionID: sessionId('session-1'),
         isGuest: true,
       },
       3600,
@@ -50,8 +54,8 @@ describe('ConnectionRegistryService.getConnection', () => {
     const { connectionRegistryService, redisService } =
       buildConnectionRegistryService();
     const storedConnection = {
-      playerID: 'player-1',
-      sessionID: 'session-1',
+      playerID: playerId('player-1'),
+      sessionID: sessionId('session-1'),
       isGuest: false,
     };
     redisService.getJSON.mockResolvedValue(storedConnection);

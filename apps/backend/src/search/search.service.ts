@@ -1,4 +1,8 @@
-import { ErrorCode, GuessObjectDraft, WorldLocation } from '@cityborn/api';
+import {
+  ErrorCode,
+  type GuessObjectSearchResult,
+  type WorldLocationSearchResult,
+} from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { GuessObjectMapper } from '../guess-object/mappers/guess-object.mapper';
@@ -6,6 +10,13 @@ import { NominatimService } from '../nominatim/nominatim.service';
 import { WikidataService } from '../wikidata/wikidata.service';
 import { WorldLocationMapper } from '../world-location/mapper/world-location.mapper';
 import { WorldLocationService } from '../world-location/world-location.service';
+
+type NominatimOsmType = 'node' | 'way' | 'relation';
+
+function normalizeNominatimOsmType(osmType: string): NominatimOsmType {
+  if (osmType === 'node' || osmType === 'way') return osmType;
+  return 'relation';
+}
 
 @Injectable()
 export class SearchService {
@@ -18,30 +29,32 @@ export class SearchService {
 
   async searchGuessObjectByExternalId(
     source_id: string,
-  ): Promise<GuessObjectDraft> {
+  ): Promise<GuessObjectSearchResult> {
     const [guessObjectInDB] = await this.guessObjectService.findFullBy({
       external_id: source_id,
     });
     if (guessObjectInDB) {
       return guessObjectInDB;
-    } else {
-      const wikidata_response = await this.wikidataService.findById(source_id);
-      const guessObjectDraft =
-        GuessObjectMapper.toGuessObjectDraft(wikidata_response);
-
-      if (wikidata_response.world_location_id && wikidata_response.osm_type) {
-        const world_location = await this.searchWorldLocationById(
-          wikidata_response.world_location_id,
-          wikidata_response.osm_type,
-        );
-        if (world_location) guessObjectDraft.world_location = world_location;
-      }
-
-      return guessObjectDraft;
     }
+
+    const wikidata_response = await this.wikidataService.findById(source_id);
+    const guessObjectDraft =
+      GuessObjectMapper.toGuessObjectDraft(wikidata_response);
+
+    if (wikidata_response.world_location_id && wikidata_response.osm_type) {
+      const worldLocation = await this.searchWorldLocationById(
+        wikidata_response.world_location_id,
+        wikidata_response.osm_type,
+      );
+      return { ...guessObjectDraft, world_location: worldLocation };
+    }
+
+    return guessObjectDraft;
   }
 
-  async searchGuessObjectByName(query: string): Promise<GuessObjectDraft[]> {
+  async searchGuessObjectByName(
+    query: string,
+  ): Promise<GuessObjectSearchResult[]> {
     const wikidata_response = await this.wikidataService.searchByName(query);
     const drafts_from_wikidata =
       GuessObjectMapper.toGuessObjectsSearchResponse(wikidata_response);
@@ -49,7 +62,7 @@ export class SearchService {
     const drafts_from_db =
       await this.guessObjectService.searchDraftByName(query);
 
-    const dbByExternalId = new Map<string, GuessObjectDraft>();
+    const dbByExternalId = new Map<string, GuessObjectSearchResult>();
     for (const draft of drafts_from_db) {
       const externalId = draft.source?.external_id;
       if (externalId) dbByExternalId.set(externalId, draft);
@@ -77,16 +90,20 @@ export class SearchService {
   async searchWorldLocationById(
     id: string,
     osm_type: string,
-  ): Promise<WorldLocation> {
+  ): Promise<WorldLocationSearchResult> {
+    const nominatimOsmType = normalizeNominatimOsmType(osm_type);
     const db_world_location =
-      await this.worldLocationService.getWithGeometry(id);
+      await this.worldLocationService.findByExternalIdentifier(
+        nominatimOsmType,
+        id,
+      );
     if (db_world_location) {
       return db_world_location;
     }
 
     const nominatim_response = await this.nominatimService.findByOsmId(
       id,
-      osm_type as 'node' | 'way' | 'relation',
+      nominatimOsmType,
     );
 
     if (!nominatim_response) {
@@ -102,7 +119,9 @@ export class SearchService {
     return world_locations;
   }
 
-  async searchWorldLocationByName(query: string): Promise<WorldLocation[]> {
+  async searchWorldLocationByName(
+    query: string,
+  ): Promise<WorldLocationSearchResult[]> {
     const nominatim_response = await this.nominatimService.searchByName(query);
     return nominatim_response.results.map((res) =>
       WorldLocationMapper.toWorldLocationFromNominatimItem(res),

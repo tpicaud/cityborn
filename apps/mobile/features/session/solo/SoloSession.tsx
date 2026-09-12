@@ -1,4 +1,4 @@
-import type { GameConfig, Guess } from '@cityborn/api';
+import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import LoaderIcon from '@/components/ui/LoaderIcon';
@@ -10,7 +10,7 @@ import { SoloLobby } from './SoloLobby';
 export default function SoloSession() {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const localPlayerID = user ? user.username : 'guest';
+  const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
   const soloSession = useSoloSession(localPlayerID);
 
   //////////////////////////

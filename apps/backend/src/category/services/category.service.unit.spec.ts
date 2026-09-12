@@ -1,6 +1,7 @@
 import {
   buildCreateCategory,
   buildUpdateCategory,
+  CategoryIdSchema,
   ErrorCode,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
@@ -15,6 +16,8 @@ import {
   CategoryService,
   type PrismaCategoryWithFullGuessObjects,
 } from './category.service';
+
+const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
 const prismaCategory = {
   id: '00000000-0000-4000-8000-000000000010',
@@ -123,12 +126,12 @@ describe('CategoryService.findBy', () => {
     prismaService.category.findMany.mockResolvedValue([]);
 
     await categoryService.findBy({
-      ids: ['category-1'],
+      ids: [categoryId('category-1')],
       isPublished: true,
     });
 
     expect(prismaService.category.findMany).toHaveBeenCalledWith({
-      where: { id: { in: ['category-1'] }, isPublished: true },
+      where: { id: { in: [categoryId('category-1')] }, isPublished: true },
     });
   });
 
@@ -148,12 +151,12 @@ describe('CategoryService.findFullBy', () => {
     prismaService.category.findMany.mockResolvedValue([]);
 
     await categoryService.findFullBy({
-      ids: ['category-1'],
+      ids: [categoryId('category-1')],
       isPublished: false,
     });
 
     expect(prismaService.category.findMany).toHaveBeenCalledWith({
-      where: { id: { in: ['category-1'] }, isPublished: false },
+      where: { id: { in: [categoryId('category-1')] }, isPublished: false },
       include: { guessObjects: { include: { world_location: true } } },
     });
   });
@@ -219,16 +222,16 @@ describe('CategoryService.update', () => {
     guessObjectService.delete.mockResolvedValue(undefined);
 
     await categoryService.update(
-      'category-1',
+      categoryId('category-1'),
       buildUpdateCategory({
-        id: 'category-1',
+        id: categoryId('category-1'),
         connectIds: ['guess-connected'],
         disconnectIds: ['guess-orphan', 'guess-shared'],
       }),
     );
 
     expect(prismaService.category.update).toHaveBeenCalledWith({
-      where: { id: 'category-1' },
+      where: { id: categoryId('category-1') },
       data: {
         name: 'Monuments',
         isPublished: true,
@@ -249,8 +252,8 @@ describe('CategoryService.update', () => {
     prismaService.category.update.mockResolvedValue(prismaCategory);
 
     await categoryService.update(
-      'category-1',
-      buildUpdateCategory({ id: 'category-1', name: 'Landmarks' }),
+      categoryId('category-1'),
+      buildUpdateCategory({ id: categoryId('category-1'), name: 'Landmarks' }),
     );
 
     expect(prismaService.category.update).toHaveBeenCalledWith(
@@ -267,8 +270,8 @@ describe('CategoryService.update', () => {
     prismaService.category.update.mockResolvedValue(prismaCategory);
 
     await categoryService.update(
-      'category-1',
-      buildUpdateCategory({ id: 'category-1', disconnectIds: [] }),
+      categoryId('category-1'),
+      buildUpdateCategory({ id: categoryId('category-1'), disconnectIds: [] }),
     );
 
     expect(prismaService.category.count).not.toHaveBeenCalled();
@@ -280,7 +283,9 @@ describe('CategoryService.delete', () => {
     const { categoryService, prismaService } = buildCategoryService();
     prismaService.category.findMany.mockResolvedValue([]);
 
-    await expect(categoryService.delete('missing')).rejects.toMatchObject({
+    await expect(
+      categoryService.delete(categoryId('missing')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.CATEGORY_NOT_FOUND },
     });
   });
@@ -292,7 +297,9 @@ describe('CategoryService.delete', () => {
     ]);
     prismaService.category.count.mockResolvedValue(1);
 
-    await expect(categoryService.delete('category-1')).rejects.toMatchObject({
+    await expect(
+      categoryService.delete(categoryId('category-1')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.CATEGORY_HAS_CHILDREN },
     });
     expect(prismaService.category.delete).not.toHaveBeenCalled();
@@ -311,10 +318,10 @@ describe('CategoryService.delete', () => {
     prismaService.category.delete.mockResolvedValue(prismaCategory);
     guessObjectService.delete.mockResolvedValue(undefined);
 
-    await categoryService.delete('category-1');
+    await categoryService.delete(categoryId('category-1'));
 
     expect(prismaService.category.delete).toHaveBeenCalledWith({
-      where: { id: 'category-1' },
+      where: { id: categoryId('category-1') },
     });
     expect(guessObjectService.delete).toHaveBeenCalledTimes(1);
     expect(guessObjectService.delete).toHaveBeenCalledWith('guess-orphan');
@@ -329,7 +336,7 @@ describe('CategoryService.delete', () => {
     prismaService.category.count.mockResolvedValue(0);
     prismaService.category.delete.mockResolvedValue(prismaCategory);
 
-    await categoryService.delete('category-1');
+    await categoryService.delete(categoryId('category-1'));
 
     expect(guessObjectService.delete).not.toHaveBeenCalled();
   });

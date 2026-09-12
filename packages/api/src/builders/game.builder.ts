@@ -1,22 +1,30 @@
+import type { z } from 'zod';
 import { GameStatus, RoundStatus, SessionMode } from '../schemas/enums';
 import {
   type CreateGameRecord,
+  CreateGameRecordSchema,
   defaultGameConfig,
   type Game,
   type GameConfig,
+  GameConfigSchema,
+  GameSchema,
   type GameState,
+  GameStateSchema,
   type Round,
+  RoundSchema,
 } from '../schemas/game.schema';
 import { buildPlayer } from './player.builder';
 
 export function buildGameConfig(
-  overrides: Partial<GameConfig> = {},
+  overrides: Partial<z.input<typeof GameConfigSchema>> = {},
 ): GameConfig {
-  return structuredClone({ ...defaultGameConfig, ...overrides });
+  return GameConfigSchema.parse({ ...defaultGameConfig, ...overrides });
 }
 
-export function buildGame(overrides: Partial<Game> = {}): Game {
-  return structuredClone({
+export function buildGame(
+  overrides: Partial<z.input<typeof GameSchema>> = {},
+): Game {
+  return GameSchema.parse({
     id: 'game-1',
     config: buildGameConfig(),
     status: GameStatus.IN_GAME,
@@ -26,11 +34,11 @@ export function buildGame(overrides: Partial<Game> = {}): Game {
 }
 
 export function buildCreateGameRecord(
-  overrides: Partial<CreateGameRecord> = {},
+  overrides: Partial<z.input<typeof CreateGameRecordSchema>> = {},
 ): CreateGameRecord {
   const player = buildPlayer();
 
-  return structuredClone({
+  return CreateGameRecordSchema.parse({
     mode: SessionMode.SOLO,
     gameConfig: buildGameConfig(),
     players: [player],
@@ -40,16 +48,20 @@ export function buildCreateGameRecord(
   });
 }
 
-export function buildRound(overrides: Partial<Round> = {}): Round {
-  return structuredClone({
+export function buildRound(
+  overrides: Partial<z.input<typeof RoundSchema>> = {},
+): Round {
+  return RoundSchema.parse({
     status: RoundStatus.GUESSING,
     guessObjectId: 'guess-object-1',
     ...overrides,
   });
 }
 
-export function buildGameState(overrides: Partial<GameState> = {}): GameState {
-  return structuredClone({
+export function buildGameState(
+  overrides: Partial<z.input<typeof GameStateSchema>> = {},
+): GameState {
+  return GameStateSchema.parse({
     guessObjectsIds: [],
     results: {},
     ...overrides,

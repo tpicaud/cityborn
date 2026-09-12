@@ -1,8 +1,9 @@
 import * as Ariakit from '@ariakit/react';
-import { resolveErrorMessage } from '@cityborn/api';
+import { type GuessObjectId, resolveErrorMessage } from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
+  createWorldLocation,
   saveGuessObject,
   searchGuessObjectByExternalId,
   searchGuessObjectByName,
@@ -25,7 +26,7 @@ interface ImportRecap {
 export function ImportCSVPopup({
   addOrUpdateGuessObjectToCategory,
 }: {
-  addOrUpdateGuessObjectToCategory: (id: string) => Promise<void>;
+  addOrUpdateGuessObjectToCategory: (id: GuessObjectId) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const [file, setFile] = useState<File>();
@@ -117,12 +118,21 @@ export function ImportCSVPopup({
         if (!full_obj) throw new Error('Objet introuvable');
         if (obj.description) full_obj.short_description = obj.description;
 
-        const locationId = full_obj.world_location?.id;
-        if (!locationId) throw new Error('Localisation introuvable');
+        const worldLocation = full_obj.world_location;
+        if (!worldLocation) throw new Error('Localisation introuvable');
+
+        const locationResult = await createWorldLocation(worldLocation);
+        if (!locationResult.ok) throw locationResult.error;
+
+        const {
+          id: _id,
+          world_location: _worldLocation,
+          ...createGuessObject
+        } = full_obj;
 
         const saveResult = await saveGuessObject({
-          ...full_obj,
-          world_location_id: locationId,
+          ...createGuessObject,
+          world_location_id: locationResult.data,
         });
         if (!saveResult.ok) throw saveResult.error;
 

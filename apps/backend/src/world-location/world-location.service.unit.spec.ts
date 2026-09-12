@@ -1,4 +1,4 @@
-import { buildWorldLocation } from '@cityborn/api';
+import { buildWorldLocation, WorldLocationIdSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type {
   WorldLocation as PrismaWorldLocation,
@@ -8,8 +8,10 @@ import type { PrismaService } from '../prisma/prisma.service';
 import type { PrismaWorldLocationWithGeometry } from './mapper/world-location.mapper';
 import { WorldLocationService } from './world-location.service';
 
+const worldLocationId = (value: string) => WorldLocationIdSchema.parse(value);
+
 const prismaWorldLocation = {
-  id: 'location-1',
+  id: worldLocationId('location-1'),
   osm_type: 'relation',
   external_id: '7444',
   name: 'Paris',
@@ -24,7 +26,7 @@ const prismaWorldLocation = {
 const prismaWorldLocationGeometry = {
   id: 'geometry-1',
   data: { type: 'Point', coordinates: [2.3522, 48.8566] },
-  world_location_id: 'location-1',
+  world_location_id: worldLocationId('location-1'),
 } satisfies PrismaWorldLocationGeometry;
 
 const prismaWorldLocationWithGeometry = {
@@ -44,7 +46,7 @@ describe('WorldLocationService.get', () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.findUnique.mockResolvedValue(null);
 
-    const location = await worldLocationService.get('missing');
+    const location = await worldLocationService.get(worldLocationId('missing'));
 
     expect(location).toBeNull();
   });
@@ -55,9 +57,11 @@ describe('WorldLocationService.get', () => {
       prismaWorldLocation,
     );
 
-    const location = await worldLocationService.get('location-1');
+    const location = await worldLocationService.get(
+      worldLocationId('location-1'),
+    );
 
-    expect(location).toEqual({ id: 'location-1' });
+    expect(location).toEqual({ id: worldLocationId('location-1') });
   });
 });
 
@@ -66,7 +70,9 @@ describe('WorldLocationService.getWithGeometry', () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.findUnique.mockResolvedValue(null);
 
-    const location = await worldLocationService.getWithGeometry('missing');
+    const location = await worldLocationService.getWithGeometry(
+      worldLocationId('missing'),
+    );
 
     expect(location).toBeNull();
   });
@@ -77,12 +83,39 @@ describe('WorldLocationService.getWithGeometry', () => {
       prismaWorldLocationWithGeometry,
     );
 
-    const location = await worldLocationService.getWithGeometry('location-1');
+    const location = await worldLocationService.getWithGeometry(
+      worldLocationId('location-1'),
+    );
 
     expect(location).toMatchObject({
-      id: 'location-1',
+      id: worldLocationId('location-1'),
       geometry: { type: 'Point' },
     });
+  });
+});
+
+describe('WorldLocationService.findByExternalIdentifier', () => {
+  it('queries the external identifier without branding it as a persisted ID', async () => {
+    const { prismaService, worldLocationService } = buildWorldLocationService();
+    prismaService.worldLocation.findUnique.mockResolvedValue(
+      prismaWorldLocationWithGeometry,
+    );
+
+    const location = await worldLocationService.findByExternalIdentifier(
+      'relation',
+      '7444',
+    );
+
+    expect(prismaService.worldLocation.findUnique).toHaveBeenCalledWith({
+      where: {
+        osm_type_external_id: {
+          osm_type: 'relation',
+          external_id: '7444',
+        },
+      },
+      include: { geometry: true },
+    });
+    expect(location?.id).toBe(worldLocationId('location-1'));
   });
 });
 
@@ -97,7 +130,7 @@ describe('WorldLocationService.findOrCreate', () => {
       buildWorldLocation(),
     );
 
-    expect(location.id).toBe('location-1');
+    expect(location.id).toBe(worldLocationId('location-1'));
     expect(prismaService.worldLocation.create).not.toHaveBeenCalled();
   });
 
@@ -124,7 +157,7 @@ describe('WorldLocationService.findOrCreate', () => {
       },
       include: { geometry: true },
     });
-    expect(location.id).toBe('location-1');
+    expect(location.id).toBe(worldLocationId('location-1'));
   });
 });
 
@@ -133,10 +166,10 @@ describe('WorldLocationService.delete', () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();
     prismaService.worldLocation.delete.mockResolvedValue(prismaWorldLocation);
 
-    await worldLocationService.delete('location-1');
+    await worldLocationService.delete(worldLocationId('location-1'));
 
     expect(prismaService.worldLocation.delete).toHaveBeenCalledWith({
-      where: { id: 'location-1' },
+      where: { id: worldLocationId('location-1') },
     });
   });
 });

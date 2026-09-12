@@ -5,6 +5,7 @@ import {
   type Coord,
   type FullGuessObject,
   type Guess,
+  type PlayerId,
   type Round,
   RoundStatus,
 } from '@cityborn/api';
@@ -147,7 +148,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({
 const OtherPlayersGuesses: React.FC<{
   currentRound: Round;
   guessObject: FullGuessObject;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
 }> = ({ currentRound, guessObject, localPlayerID }) => {
   const guesses = currentRound.playersGuesses
     ? Object.entries(currentRound.playersGuesses).filter(
@@ -190,7 +191,7 @@ const OtherPlayersGuesses: React.FC<{
 const LocalPlayerGuess: React.FC<{
   currentRound: Round;
   guessObject: FullGuessObject;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
 }> = ({ currentRound, guessObject, localPlayerID }) => {
   const guess = currentRound.playersGuesses?.[localPlayerID];
 

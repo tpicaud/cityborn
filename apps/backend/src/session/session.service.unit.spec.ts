@@ -8,7 +8,9 @@ import {
   buildUser,
   defaultGuess,
   ErrorCode,
+  PlayerIdSchema,
   type Session,
+  SessionIdSchema,
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
@@ -20,6 +22,9 @@ import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { SessionService } from './session.service';
+
+const playerId = (value: string) => PlayerIdSchema.parse(value);
+const sessionId = (value: string) => SessionIdSchema.parse(value);
 
 function buildSessionService(session: Session | null) {
   const redisService = createMock<RedisService>();
@@ -49,9 +54,13 @@ describe('SessionService.kickPlayer', () => {
     const session = buildSession();
     const { sessionService, redisService } = buildSessionService(session);
 
-    const result = await sessionService.kickPlayer('host', 's1', 'bob');
+    const result = await sessionService.kickPlayer(
+      playerId('host'),
+      sessionId('s1'),
+      playerId('bob'),
+    );
 
-    expect(result.players.map((p) => p.username)).toEqual(['host']);
+    expect(result.players.map((p) => p.username)).toEqual([playerId('host')]);
     expect(redisService.setJSON).toHaveBeenCalledTimes(1);
   });
 
@@ -59,7 +68,11 @@ describe('SessionService.kickPlayer', () => {
     const { sessionService } = buildSessionService(buildSession());
 
     await expect(
-      sessionService.kickPlayer('bob', 's1', 'host'),
+      sessionService.kickPlayer(
+        playerId('bob'),
+        sessionId('s1'),
+        playerId('host'),
+      ),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
     });
@@ -69,7 +82,11 @@ describe('SessionService.kickPlayer', () => {
     const { sessionService } = buildSessionService(buildSession());
 
     await expect(
-      sessionService.kickPlayer('host', 's1', 'unknown'),
+      sessionService.kickPlayer(
+        playerId('host'),
+        sessionId('s1'),
+        playerId('unknown'),
+      ),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
     });
@@ -80,7 +97,11 @@ describe('SessionService.kickPlayer', () => {
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.kickPlayer('host', 's1', 'bob'),
+      sessionService.kickPlayer(
+        playerId('host'),
+        sessionId('s1'),
+        playerId('bob'),
+      ),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_ALREADY_IN_GAME },
     });
@@ -90,32 +111,47 @@ describe('SessionService.kickPlayer', () => {
     const { sessionService } = buildSessionService(null);
 
     await expect(
-      sessionService.kickPlayer('host', 's1', 'bob'),
+      sessionService.kickPlayer(
+        playerId('host'),
+        sessionId('s1'),
+        playerId('bob'),
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('reassigns the host to another connected player when the host kicks itself', async () => {
     const session = buildSession({
       players: [
-        buildPlayer('host'),
-        buildPlayer('bob'),
-        buildPlayer('carol', false),
+        buildPlayer(playerId('host')),
+        buildPlayer(playerId('bob')),
+        buildPlayer(playerId('carol'), false),
       ],
     });
     const { sessionService } = buildSessionService(session);
 
-    const result = await sessionService.kickPlayer('host', 's1', 'host');
+    const result = await sessionService.kickPlayer(
+      playerId('host'),
+      sessionId('s1'),
+      playerId('host'),
+    );
 
-    expect(result.hostID).toBe('bob');
+    expect(result.hostID).toBe(playerId('bob'));
   });
 
   it('clears the host when no connected player remains after the kick', async () => {
     const session = buildSession({
-      players: [buildPlayer('host'), buildPlayer('bob', false)],
+      players: [
+        buildPlayer(playerId('host')),
+        buildPlayer(playerId('bob'), false),
+      ],
     });
     const { sessionService } = buildSessionService(session);
 
-    const result = await sessionService.kickPlayer('host', 's1', 'host');
+    const result = await sessionService.kickPlayer(
+      playerId('host'),
+      sessionId('s1'),
+      playerId('host'),
+    );
 
     expect(result.hostID).toBe('');
   });
@@ -184,28 +220,36 @@ describe('SessionService lobby operations', () => {
     const session = buildSession();
     const { sessionService } = buildSessionService(session);
 
-    await expect(sessionService.getById(session.id)).resolves.toBe(session);
+    await expect(sessionService.getById(session.id)).resolves.toStrictEqual(
+      session,
+    );
   });
 
   it('rejects a missing session', async () => {
     const { sessionService } = buildSessionService(null);
 
-    await expect(sessionService.getById('missing')).rejects.toMatchObject({
+    await expect(
+      sessionService.getById(sessionId('missing')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_NOT_FOUND },
     });
   });
 
   it('adds the first player as host', async () => {
     const session = buildSession({ hostID: '', players: [] });
-    const user = buildUser({ username: 'alice' });
+    const user = buildUser({ username: playerId('alice') });
     const { sessionService, redisService } = buildSessionService(session);
 
-    const result = await sessionService.join(session.id, 'alice', user);
+    const result = await sessionService.join(
+      session.id,
+      playerId('alice'),
+      user,
+    );
 
-    expect(result.hostID).toBe('alice');
+    expect(result.hostID).toBe(playerId('alice'));
     expect(result.players).toEqual([
       expect.objectContaining({
-        username: 'alice',
+        username: playerId('alice'),
         id: user.id,
         isGuest: false,
         connected: true,
@@ -218,30 +262,37 @@ describe('SessionService lobby operations', () => {
     const session = buildSession();
     const { sessionService } = buildSessionService(session);
 
-    await expect(sessionService.join(session.id, 'host')).rejects.toMatchObject(
-      {
-        response: { code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS },
-      },
-    );
+    await expect(
+      sessionService.join(session.id, playerId('host')),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS },
+    });
   });
 
   it('transfers the host role to a connected player', async () => {
     const session = buildSession();
     const { sessionService } = buildSessionService(session);
 
-    const result = await sessionService.updateHost('host', session.id, 'bob');
+    const result = await sessionService.updateHost(
+      playerId('host'),
+      session.id,
+      playerId('bob'),
+    );
 
-    expect(result.hostID).toBe('bob');
+    expect(result.hostID).toBe(playerId('bob'));
   });
 
   it('rejects transferring the host role to a disconnected player', async () => {
     const session = buildSession({
-      players: [buildPlayer('host'), buildPlayer('bob', false)],
+      players: [
+        buildPlayer(playerId('host')),
+        buildPlayer(playerId('bob'), false),
+      ],
     });
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.updateHost('host', session.id, 'bob'),
+      sessionService.updateHost(playerId('host'), session.id, playerId('bob')),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
     });
@@ -253,7 +304,7 @@ describe('SessionService lobby operations', () => {
     const { sessionService } = buildSessionService(session);
 
     const result = await sessionService.updateGameConfig(
-      'host',
+      playerId('host'),
       session.id,
       gameConfig,
     );
@@ -266,7 +317,11 @@ describe('SessionService lobby operations', () => {
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.updateGameConfig('bob', session.id, buildGameConfig()),
+      sessionService.updateGameConfig(
+        playerId('bob'),
+        session.id,
+        buildGameConfig(),
+      ),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
     });
@@ -286,7 +341,7 @@ describe('SessionService game operations', () => {
     gameService.toLightGame.mockReturnValue(lightGame);
 
     const result = await sessionService.startGame(
-      'host',
+      playerId('host'),
       session.id,
       'visitor-1',
     );
@@ -305,7 +360,7 @@ describe('SessionService game operations', () => {
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.startGame('host', session.id),
+      sessionService.startGame(playerId('host'), session.id),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_ALREADY_IN_GAME },
     });
@@ -325,16 +380,16 @@ describe('SessionService game operations', () => {
     gameService.applyGuess.mockReturnValue(updatedGame);
 
     const result = await sessionService.handleGuess(
-      'host',
+      playerId('host'),
       session.id,
       defaultGuess,
     );
 
     expect(gameService.applyGuess).toHaveBeenCalledWith(
       game,
-      'host',
+      playerId('host'),
       defaultGuess,
-      ['host', 'bob'],
+      [playerId('host'), playerId('bob')],
     );
     expect(result.currentGame).toBe(updatedGame);
     expect(redisService.setJSON).toHaveBeenCalledTimes(1);
@@ -349,7 +404,11 @@ describe('SessionService game operations', () => {
       buildSessionService(session);
     gameService.applyGuess.mockImplementation((currentGame) => currentGame);
 
-    await sessionService.handleGuess('host', session.id, defaultGuess);
+    await sessionService.handleGuess(
+      playerId('host'),
+      session.id,
+      defaultGuess,
+    );
 
     expect(redisService.setJSON).not.toHaveBeenCalled();
   });
@@ -360,12 +419,12 @@ describe('SessionService game operations', () => {
     });
     const session = buildSession({
       currentGame: game,
-      players: [buildPlayer('host', false)],
+      players: [buildPlayer(playerId('host'), false)],
     });
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.handleGuess('host', session.id, defaultGuess),
+      sessionService.handleGuess(playerId('host'), session.id, defaultGuess),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED },
     });
@@ -387,7 +446,7 @@ describe('SessionService game operations', () => {
     gameService.endGame.mockResolvedValue(undefined);
 
     const result = await sessionService.handleNextRound(
-      'host',
+      playerId('host'),
       session.id,
       'visitor-1',
     );
@@ -412,20 +471,20 @@ describe('SessionService game operations', () => {
 
 describe('SessionService connection operations', () => {
   it('reconnects a player and restores the vacant host role', async () => {
-    const user = buildUser({ username: 'host' });
+    const user = buildUser({ username: playerId('host') });
     const session = buildSession({
       hostID: '',
-      players: [buildPlayer('host', false)],
+      players: [buildPlayer(playerId('host'), false)],
     });
     const { sessionService } = buildSessionService(session);
 
     const result = await sessionService.reconnectPlayer(
       session.id,
-      'host',
+      playerId('host'),
       user,
     );
 
-    expect(result.hostID).toBe('host');
+    expect(result.hostID).toBe(playerId('host'));
     expect(result.players[0]).toEqual(
       expect.objectContaining({ connected: true }),
     );
@@ -433,12 +492,12 @@ describe('SessionService connection operations', () => {
 
   it('rejects reconnecting a registered player without credentials', async () => {
     const session = buildSession({
-      players: [buildPlayer('host', false, { isGuest: false })],
+      players: [buildPlayer(playerId('host'), false, { isGuest: false })],
     });
     const { sessionService } = buildSessionService(session);
 
     await expect(
-      sessionService.reconnectPlayer(session.id, 'host'),
+      sessionService.reconnectPlayer(session.id, playerId('host')),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
     });
@@ -448,9 +507,12 @@ describe('SessionService connection operations', () => {
     const session = buildSession();
     const { sessionService } = buildSessionService(session);
 
-    const result = await sessionService.disconnectPlayer('host', session.id);
+    const result = await sessionService.disconnectPlayer(
+      playerId('host'),
+      session.id,
+    );
 
-    expect(result.hostID).toBe('bob');
+    expect(result.hostID).toBe(playerId('bob'));
     expect(result.players[0]).toEqual(
       expect.objectContaining({ connected: false }),
     );

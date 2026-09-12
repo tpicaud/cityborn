@@ -1,10 +1,11 @@
 import {
-  Category,
-  CategoryTree,
-  CreateCategory,
+  type Category,
+  type CategoryId,
+  type CategoryTree,
+  type CreateCategory,
   ErrorCode,
-  FullCategory,
-  UpdateCategory,
+  type FullCategory,
+  type UpdateCategory,
 } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryMapper } from '../mappers/category.mapper';
@@ -19,12 +20,12 @@ export class AdminCategoryService {
     return CategoryMapper.toCategories(categories);
   }
 
-  async findBy(filter: { ids?: string[] }): Promise<Category[]> {
+  async findBy(filter: { ids?: CategoryId[] }): Promise<Category[]> {
     const categories = await this.categoryService.findBy(filter);
     return CategoryMapper.toCategories(categories);
   }
 
-  async findFullBy(id: string): Promise<FullCategory> {
+  async findFullBy(id: CategoryId): Promise<FullCategory> {
     const [category] = await this.categoryService.findFullBy({ ids: [id] });
     if (!category) {
       throw new NotFoundException({
@@ -40,12 +41,12 @@ export class AdminCategoryService {
     return CategoryMapper.toCategory(category);
   }
 
-  async update(id: string, data: UpdateCategory): Promise<Category> {
+  async update(id: CategoryId, data: UpdateCategory): Promise<Category> {
     const updated_category = await this.categoryService.update(id, data);
     return CategoryMapper.toCategory(updated_category);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: CategoryId): Promise<void> {
     await this.categoryService.delete(id);
   }
 

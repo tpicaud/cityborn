@@ -1,11 +1,13 @@
 'use client';
 
-import type {
-  Category,
-  FullCategory,
-  GuessObject,
-  GuessObjectDraft,
-  UpdateCategory,
+import {
+  type Category,
+  CategoryIdSchema,
+  type FullCategory,
+  type GuessObject,
+  type GuessObjectDraft,
+  type GuessObjectId,
+  type UpdateCategory,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useRouter } from 'next/navigation';
@@ -59,7 +61,6 @@ export function CategoryBuilder({
   function handleCreateGuessObject() {
     setGuessObjectDraft({
       name: '',
-      id: '',
     });
   }
 
@@ -90,7 +91,7 @@ export function CategoryBuilder({
         ...rest
       } = guessObjectDraft;
 
-      let id: string;
+      let id: GuessObjectId;
       if (guessObjectDraft.id) {
         const result = await patchGuessObject(guessObjectDraft.id, {
           ...rest,
@@ -167,7 +168,7 @@ export function CategoryBuilder({
     }
   }
 
-  async function addOrUpdateGuessObjectToCategory(id: string) {
+  async function addOrUpdateGuessObjectToCategory(id: GuessObjectId) {
     try {
       const objectResult = await getGuessObject(id, ['world_location_preview']);
       if (!objectResult) return;
@@ -308,7 +309,11 @@ export function CategoryBuilder({
                   id="parent"
                   value={category.parentId ?? ''}
                   onChange={(e) =>
-                    updateCategory({ parentId: e.target.value || null })
+                    updateCategory({
+                      parentId: e.target.value
+                        ? CategoryIdSchema.parse(e.target.value)
+                        : null,
+                    })
                   }
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 >

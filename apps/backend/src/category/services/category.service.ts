@@ -1,4 +1,11 @@
-import { CreateCategory, ErrorCode, UpdateCategory } from '@cityborn/api';
+import {
+  type CategoryId,
+  type CreateCategory,
+  ErrorCode,
+  type GuessObjectId,
+  GuessObjectIdSchema,
+  type UpdateCategory,
+} from '@cityborn/api';
 import {
   BadRequestException,
   Injectable,
@@ -53,7 +60,7 @@ export class CategoryService {
     return this.prisma.category.findMany();
   }
 
-  async findBy(filter: { ids?: string[]; isPublished?: boolean }) {
+  async findBy(filter: { ids?: CategoryId[]; isPublished?: boolean }) {
     return this.prisma.category.findMany({
       where: {
         ...(filter.ids && { id: { in: filter.ids } }),
@@ -65,7 +72,7 @@ export class CategoryService {
   }
 
   async findFullBy(filter: {
-    ids?: string[];
+    ids?: CategoryId[];
     isPublished?: boolean;
   }): Promise<PrismaCategoryWithFullGuessObjects[]> {
     return this.prisma.category.findMany({
@@ -92,12 +99,12 @@ export class CategoryService {
     });
   }
 
-  async update(categoryId: string, data: UpdateCategory) {
+  async update(categoryId: CategoryId, data: UpdateCategory) {
     const { connectIds, disconnectIds, id, ...categoryData } = data;
 
     const relationUpdate: {
-      connect?: { id: string }[];
-      disconnect?: { id: string }[];
+      connect?: { id: GuessObjectId }[];
+      disconnect?: { id: GuessObjectId }[];
     } = {};
     if (connectIds) relationUpdate.connect = connectIds.map((id) => ({ id }));
     if (disconnectIds)
@@ -131,7 +138,7 @@ export class CategoryService {
     return updated_category;
   }
 
-  async delete(id: string) {
+  async delete(id: CategoryId) {
     const [category] = await this.findFullBy({ ids: [id] });
 
     if (!category) {
@@ -161,8 +168,11 @@ export class CategoryService {
             const count = await this.prisma.category.count({
               where: { guessObjects: { some: { id: guessObject.id } } },
             });
-            if (count === 0)
-              await this.guessObjectService.delete(guessObject.id);
+            if (count === 0) {
+              await this.guessObjectService.delete(
+                GuessObjectIdSchema.parse(guessObject.id),
+              );
+            }
           }),
         ),
       );

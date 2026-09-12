@@ -2,7 +2,9 @@ import {
   type ApiError,
   type GameConfig,
   type Guess,
+  type PlayerId,
   type Session,
+  type SessionId,
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -32,15 +34,15 @@ function socketError(err?: {
 }
 
 export function useMultiSession(
-  localPlayerID: string | undefined,
-  sessionID: string,
+  localPlayerID: PlayerId | undefined,
+  sessionID: SessionId,
 ): IUseSession & {
   connected: boolean;
   socket: Socket;
   hasDisconnected: boolean;
-  join: (playerID: string) => Promise<void>;
-  updateHost: (newHostID: string) => Promise<void>;
-  kickPlayer: (playerToKick: string) => Promise<void>;
+  join: (playerID: PlayerId) => Promise<void>;
+  updateHost: (newHostID: PlayerId) => Promise<void>;
+  kickPlayer: (playerToKick: PlayerId) => Promise<void>;
   reconnect: () => void;
 } {
   const router = useRouter();
@@ -123,7 +125,7 @@ export function useMultiSession(
   }, [on, off]);
 
   const join = useCallback(
-    async (playerID: string) => {
+    async (playerID: PlayerId) => {
       if (!session || !playerID)
         throw new Error(
           'Joining session failed: session or player not initialized',
@@ -144,7 +146,7 @@ export function useMultiSession(
     [session, emit],
   );
 
-  const updateHost = async (newHostID: string) => {
+  const updateHost = async (newHostID: PlayerId) => {
     if (!session)
       throw new Error('Updating host failed: session not initialized');
     return new Promise<void>((resolve, reject) => {
@@ -171,7 +173,7 @@ export function useMultiSession(
     });
   };
 
-  const kickPlayer = async (playerToKick: string) => {
+  const kickPlayer = async (playerToKick: PlayerId) => {
     if (!session)
       throw new Error('Kicking player failed: session not initialized');
     return new Promise<void>((resolve, reject) => {

@@ -1,11 +1,9 @@
 import {
-  AccountType,
-  GameConfig,
-  Player,
-  PlayerResults,
-  PublicUser,
-  SessionMode,
-  User,
+  GameRecordSchema,
+  type PublicUser,
+  PublicUserSchema,
+  type User,
+  UserSchema,
 } from '@cityborn/api';
 import type {
   GameRecord as PrismaGameRecord,
@@ -15,36 +13,36 @@ import type {
 type PrismaUserWithRelations = PrismaUser & {
   gameRecords?: PrismaGameRecord[];
 };
+
 export const UserMapper = {
   toUser(prismaUser: PrismaUserWithRelations): User {
-    return {
+    return UserSchema.parse({
       id: prismaUser.id,
-      type: prismaUser.type as AccountType,
+      type: prismaUser.type,
       email: prismaUser.email,
       username: prismaUser.username,
       isVerified: prismaUser.isVerified,
       createdAt: prismaUser.createdAt.toISOString(),
-      updatedAt: prismaUser.updatedAt
-        ? prismaUser.updatedAt.toISOString()
-        : undefined,
+      updatedAt: prismaUser.updatedAt?.toISOString(),
       relations: {
-        games: prismaUser.gameRecords?.map((game) => ({
-          id: game.id,
-          mode: game.mode as SessionMode,
-          gameConfig: game.gameConfig as unknown as GameConfig,
-          players: game.players as unknown as Player[],
-          guessObjectsIds: game.guessObjectsIds,
-          results: game.results as unknown as Record<string, PlayerResults>,
-          createdAt: game.createdAt.toISOString(),
-        })),
+        games: prismaUser.gameRecords
+          ? prismaUser.gameRecords.map((game) =>
+              GameRecordSchema.parse({
+                id: game.id,
+                mode: game.mode,
+                gameConfig: game.gameConfig,
+                players: game.players,
+                guessObjectsIds: game.guessObjectsIds,
+                results: game.results,
+                createdAt: game.createdAt.toISOString(),
+              }),
+            )
+          : undefined,
       },
-    };
+    });
   },
 
   toPublicUser(user: { id: string; username: string }): PublicUser {
-    return {
-      id: user.id,
-      username: user.username,
-    };
+    return PublicUserSchema.parse(user);
   },
 };

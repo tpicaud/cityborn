@@ -1,4 +1,11 @@
-import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
+import {
+  type GameConfig,
+  type Guess,
+  type PlayerId,
+  PlayerIdSchema,
+  type SessionId,
+  SessionStatus,
+} from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -9,14 +16,14 @@ import { useMultiSession } from '../hooks/useMultiSession';
 import { MultiLobby } from './MultiLobby';
 
 interface MultiSessionProps {
-  sessionID: string;
+  sessionID: SessionId;
 }
 
 export default function MultiSession({ sessionID }: MultiSessionProps) {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(
-    user ? user.username : undefined,
+  const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
+    user?.username,
   );
   const multiSession = useMultiSession(localPlayerID, sessionID);
   const hasJoinedSession = useRef(false);
@@ -28,9 +35,10 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const handleJoinSession = useCallback(
     async (playerID: string) => {
       try {
+        const parsedPlayerId = PlayerIdSchema.parse(playerID);
         hasJoinedSession.current = true;
-        await multiSession.join(playerID);
-        setLocalPlayerID(playerID);
+        await multiSession.join(parsedPlayerId);
+        setLocalPlayerID(parsedPlayerId);
       } catch (error) {
         invokeError(error);
       }

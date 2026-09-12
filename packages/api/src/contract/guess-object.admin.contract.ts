@@ -4,8 +4,8 @@ import { commonErrorResponses } from '../schemas/api-error.schema';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
-  IdParamSchema,
-  IdSchema,
+  GuessObjectIdParamSchema,
+  GuessObjectUuidIdSchema,
   IncludeQuerySchema,
 } from '../schemas/common.schema';
 import {
@@ -24,7 +24,7 @@ export const guessObjectAdminContract = c.router(
     getGuessObject: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: GuessObjectSchema, ...commonErrorResponses },
     },
@@ -37,7 +37,7 @@ export const guessObjectAdminContract = c.router(
     getFullGuessObject: {
       method: 'GET',
       path: '/:id/full',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
     },
     getFullGuessObjects: {
@@ -50,19 +50,19 @@ export const guessObjectAdminContract = c.router(
       method: 'POST',
       path: '/',
       body: CreateGuessObjectSchema,
-      responses: { 201: IdSchema, ...commonErrorResponses },
+      responses: { 201: GuessObjectUuidIdSchema, ...commonErrorResponses },
     },
     updateGuessObject: {
       method: 'PATCH',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       body: PatchGuessObjectSchema,
-      responses: { 200: IdSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectUuidIdSchema, ...commonErrorResponses },
     },
     deleteGuessObject: {
       method: 'DELETE',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },

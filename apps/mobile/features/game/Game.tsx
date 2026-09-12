@@ -2,6 +2,7 @@ import {
   GameStatus,
   type Game as GameType,
   type Guess as GuessType,
+  type PlayerId,
 } from '@cityborn/api';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -23,7 +24,7 @@ export const Game = ({
   handlePlayAgain: _handlePlayAgain,
   handleExitGame,
 }: {
-  localPlayerID: string | undefined;
+  localPlayerID: PlayerId | undefined;
   isHost: boolean;
   game: GameType;
   handleGuess: (guess: GuessType) => Promise<void>;

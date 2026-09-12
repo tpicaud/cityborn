@@ -1,11 +1,15 @@
+import { PlayerIdSchema, SessionIdSchema } from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
+import { z } from 'zod';
 import { RedisService } from '../redis/redis.service';
 
-export interface ConnectionInfo {
-  playerID: string;
-  sessionID: string;
-  isGuest: boolean;
-}
+const ConnectionInfoSchema = z.object({
+  playerID: PlayerIdSchema,
+  sessionID: SessionIdSchema,
+  isGuest: z.boolean(),
+});
+
+export type ConnectionInfo = z.infer<typeof ConnectionInfoSchema>;
 
 @Injectable()
 export class ConnectionRegistryService {
@@ -20,8 +24,8 @@ export class ConnectionRegistryService {
 
   async register(
     socketID: string,
-    playerID: string,
-    sessionID: string,
+    playerID: ConnectionInfo['playerID'],
+    sessionID: ConnectionInfo['sessionID'],
     isGuest: boolean,
   ) {
     const connectionInfo: ConnectionInfo = { playerID, sessionID, isGuest };
@@ -34,8 +38,10 @@ export class ConnectionRegistryService {
 
   async getConnection(socketID: string): Promise<ConnectionInfo | null> {
     const key = this.getKey(socketID);
-    const connectionInfo = await this.redisService.getJSON<ConnectionInfo>(key);
-    if (!connectionInfo) return null;
+    const storedConnectionInfo = await this.redisService.getJSON<unknown>(key);
+    if (!storedConnectionInfo) return null;
+
+    const connectionInfo = ConnectionInfoSchema.parse(storedConnectionInfo);
 
     await this.redisService.expire(key, this.CONNECTION_TTL);
 

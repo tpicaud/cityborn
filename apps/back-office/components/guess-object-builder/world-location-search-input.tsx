@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import type { WorldLocation } from '@cityborn/api';
+import type { WorldLocationSearchResult } from '@cityborn/api';
 import {
   type ChangeEventHandler,
   startTransition,
@@ -27,12 +27,12 @@ export function WorldLocationSearchInput({
   value: string | undefined;
   disabled: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement> | undefined;
-  onSelect: (candidate: WorldLocation | undefined) => void;
+  onSelect: (candidate: WorldLocationSearchResult | undefined) => void;
   className?: string;
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<WorldLocation[]>([]);
+  const [matches, setMatches] = useState<WorldLocationSearchResult[]>([]);
 
   useEffect(() => {
     if (!searchValue) {

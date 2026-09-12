@@ -1,7 +1,10 @@
-import type { User } from '../schemas/user.schema';
+import type { z } from 'zod';
+import { type User, UserSchema } from '../schemas/user.schema';
 
-export function buildUser(overrides: Partial<User> = {}): User {
-  return structuredClone({
+export function buildUser(
+  overrides: Partial<z.input<typeof UserSchema>> = {},
+): User {
+  return UserSchema.parse({
     id: '00000000-0000-4000-8000-000000000001',
     username: 'host',
     email: 'host@cityborn.test',

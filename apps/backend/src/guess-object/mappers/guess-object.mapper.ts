@@ -1,4 +1,11 @@
-import { FullGuessObject, GuessObject, GuessObjectDraft } from '@cityborn/api';
+import {
+  type FullGuessObject,
+  FullGuessObjectSchema,
+  type GuessObject,
+  type GuessObjectDraft,
+  GuessObjectDraftSchema,
+  GuessObjectSchema,
+} from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
@@ -22,74 +29,58 @@ export type PrismaGuessObjectWithFullLocation = PrismaGuessObject & {
 
 export const GuessObjectMapper = {
   toGuessObject(prismaGuessObject: PrismaGuessObjectWithLocation): GuessObject {
-    return {
+    return GuessObjectSchema.parse({
       id: prismaGuessObject.id,
       name: prismaGuessObject.name,
       image: prismaGuessObject.image ?? undefined,
       description: prismaGuessObject.description ?? undefined,
       short_description: prismaGuessObject.short_description ?? undefined,
-      source:
-        (prismaGuessObject.source as unknown as {
-          provider: string;
-          external_id: string;
-        }) ?? undefined,
+      source: prismaGuessObject.source ?? undefined,
       world_location_preview: {
         id: prismaGuessObject.world_location.id,
         name: prismaGuessObject.world_location.name,
-        display_name:
-          prismaGuessObject.world_location.display_name ?? undefined,
+        display_name: prismaGuessObject.world_location.display_name,
       },
-    };
+    });
   },
 
   toFullGuessObject(
     prismaGuessObject: PrismaGuessObjectWithFullLocation,
   ): FullGuessObject {
-    return {
+    return FullGuessObjectSchema.parse({
       id: prismaGuessObject.id,
       name: prismaGuessObject.name,
       image: prismaGuessObject.image ?? undefined,
       description: prismaGuessObject.description ?? undefined,
       short_description: prismaGuessObject.short_description ?? undefined,
-      source:
-        (prismaGuessObject.source as unknown as {
-          provider: string;
-          external_id: string;
-        }) ?? undefined,
+      source: prismaGuessObject.source ?? undefined,
       world_location: WorldLocationMapper.toWorldLocation(
         prismaGuessObject.world_location,
       ),
-    };
+    });
   },
 
   toGuessObjectDraft(response: WikidataItemResponse): GuessObjectDraft {
-    return {
-      source: {
-        provider: 'wikidata',
-        external_id: response.id,
-      },
+    return GuessObjectDraftSchema.parse({
+      source: { provider: 'wikidata', external_id: response.id },
       name: response.label,
       description: response.description ?? undefined,
       short_description: response.short_description ?? undefined,
       image: response.image ?? undefined,
-    };
+    });
   },
 
   toGuessObjectDraftFromPrisma(
     prismaGuessObject: PrismaGuessObject,
   ): GuessObjectDraft {
-    return {
+    return GuessObjectDraftSchema.parse({
       id: prismaGuessObject.id,
-      source:
-        (prismaGuessObject.source as unknown as {
-          provider: string;
-          external_id: string;
-        }) ?? undefined,
+      source: prismaGuessObject.source ?? undefined,
       name: prismaGuessObject.name,
       description: prismaGuessObject.description ?? undefined,
       short_description: prismaGuessObject.short_description ?? undefined,
       image: prismaGuessObject.image ?? undefined,
-    };
+    });
   },
 
   toGuessObjectsSearchResponse(
