@@ -13,7 +13,7 @@ import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { deleteUser, signOut } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { getGameRecords } from '@/lib/api/user';
 
 export default function Profile() {
@@ -44,9 +44,9 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    const result = await deleteUser();
+    const result = await authApi.deleteUser();
     if (!result.ok) return invokeError(result.error);
-    await signOut();
+    await authApi.signOut();
     setUser(null);
     setDeleteAccountModalOpen(false);
     router.replace('/');

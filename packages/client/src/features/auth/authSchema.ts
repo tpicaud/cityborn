@@ -1,3 +1,4 @@
+import type { CreateUser } from '@cityborn/api';
 import { CreateUserSchema } from '@cityborn/api';
 import { z } from 'zod';
 
@@ -9,3 +10,11 @@ export const SignUpFormSchema = CreateUserSchema.extend({
 });
 
 export type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
+
+export function toCreateUser({
+  username,
+  email,
+  password,
+}: SignUpFormValues): CreateUser {
+  return { username, email, password };
+}

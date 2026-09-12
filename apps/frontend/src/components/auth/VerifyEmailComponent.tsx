@@ -1,11 +1,11 @@
 'use client';
 
+import { useAuth } from '@cityborn/client/auth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { verifyEmail } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
@@ -36,16 +36,24 @@ export function VerifyEmailComponent({
         return;
       }
 
-      try {
-        await verifyEmail({ verification_token: verificationToken });
-        await refreshUser();
-        setStatus('success');
-        setMessage('Votre adresse e-mail est maintenant vérifiée.');
-      } catch {
+      const failVerification = () => {
         setStatus('error');
         setMessage(
           'Le lien de vérification est invalide, expiré, ou a déjà été utilisé.',
         );
+      };
+
+      try {
+        const result = await verifyEmail({
+          verification_token: verificationToken,
+        });
+        if (!result.ok) return failVerification();
+
+        await refreshUser();
+        setStatus('success');
+        setMessage('Votre adresse e-mail est maintenant vérifiée.');
+      } catch {
+        failVerification();
       }
     };
 

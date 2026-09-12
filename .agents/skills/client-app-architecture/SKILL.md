@@ -25,6 +25,8 @@ Avant de créer un fichier, inspecter les fichiers voisins et suivre le précéd
   - `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
   - `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
 
+L'authentification fait exception : ses appels HTTP vivent dans `createAuthApi` (`@cityborn/client/auth`). Chaque app se contente de l'instancier avec son `TokenStorage` — `lib/api/auth.ts` côté mobile, `getServerAuthApi()` côté Next, les server actions n'étant que des passe-plats. Ajouter un appel d'auth se fait dans `AuthApi`, jamais dans une app.
+
 Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers, voir le skill `client-error-handling`.
 
 ## Spécifique Next (App Router)
@@ -39,7 +41,7 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
 | `@cityborn/client/api` | `src/api/` | Transport : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
-| `@cityborn/client/auth` | `src/features/auth/` | `AuthProvider`, schémas de formulaire d'inscription. |
+| `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi. |
 | `@cityborn/client/game` | `src/features/game/` | Partie en cours, résultats, contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |

@@ -1,15 +1,14 @@
-import { resolveErrorMessage, type SignIn, SignInSchema } from '@cityborn/api';
-import { useAuth } from '@cityborn/client/auth';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { resolveErrorMessage } from '@cityborn/api';
+import { useAuth, useSignInForm } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { signIn } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -21,14 +20,11 @@ export const SignInComponent = () => {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignIn>({
-    resolver: zodResolver(SignInSchema),
-    defaultValues: { identifier: '', password: '' },
-  });
+  } = useSignInForm();
 
   const onSubmit = handleSubmit(async (values) => {
     setErrorMessage(null);
-    const result = await signIn(values);
+    const result = await authApi.signIn(values);
 
     if (result.ok) {
       setUser(result.data);

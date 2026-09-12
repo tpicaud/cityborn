@@ -6,7 +6,7 @@ import { CodedError } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { signInWithApple } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
@@ -31,7 +31,7 @@ export const SignInWithAppleButton = () => {
 
       const userDetails = extractAppleUserDetails(credential);
 
-      const result = await signInWithApple({
+      const result = await authApi.signInWithApple({
         identity_token: credential.identityToken,
         apple_user_id: credential.user,
         details: userDetails,

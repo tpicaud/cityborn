@@ -6,7 +6,7 @@ import { AppState, Image, Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { resendVerificationEmail, signOut } from '@/lib/api/auth';
+import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 export default function Home() {
@@ -26,7 +26,7 @@ export default function Home() {
 
   const handleResendVerificationEmail = async () => {
     setIsSendingVerificationEmail(true);
-    const result = await resendVerificationEmail();
+    const result = await authApi.resendVerificationEmail();
     setIsSendingVerificationEmail(false);
     if (!result.ok) return invokeError(result.error);
     setVerificationEmailSent(true);
@@ -87,7 +87,7 @@ export default function Home() {
                 variant="default"
                 label="Déconnexion"
                 onPress={async () => {
-                  await signOut();
+                  await authApi.signOut();
                   setUser(null);
                 }}
               />
