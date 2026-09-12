@@ -3,6 +3,7 @@ import { GuessObjectIdSchema, WorldLocationIdSchema } from './common.schema';
 import {
   WorldLocationPreviewSchema,
   WorldLocationSchema,
+  WorldLocationSearchResultSchema,
 } from './world-location.schema';
 
 export const BaseGuessObjectSchema = z.object({
@@ -43,6 +44,13 @@ export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
 
 export const GuessObjectDraftsSchema = z.array(GuessObjectDraftSchema);
 
+export const GuessObjectSearchResultSchema = GuessObjectDraftSchema.extend({
+  world_location: WorldLocationSearchResultSchema.optional(),
+});
+export const GuessObjectSearchResultsSchema = z.array(
+  GuessObjectSearchResultSchema,
+);
+
 export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
   id: true,
 })
@@ -54,5 +62,8 @@ export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
 export type FullGuessObject = z.infer<typeof FullGuessObjectSchema>;
 export type GuessObjectDraft = z.infer<typeof GuessObjectDraftSchema>;
+export type GuessObjectSearchResult = z.infer<
+  typeof GuessObjectSearchResultSchema
+>;
 export type CreateGuessObject = z.infer<typeof CreateGuessObjectSchema>;
 export type PatchGuessObject = z.infer<typeof PatchGuessObjectSchema>;

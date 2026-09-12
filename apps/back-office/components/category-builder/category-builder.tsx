@@ -7,7 +7,6 @@ import {
   type GuessObject,
   type GuessObjectDraft,
   type GuessObjectId,
-  GuessObjectIdSchema,
   type UpdateCategory,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -62,7 +61,6 @@ export function CategoryBuilder({
   function handleCreateGuessObject() {
     setGuessObjectDraft({
       name: '',
-      id: GuessObjectIdSchema.parse(''),
     });
   }
 

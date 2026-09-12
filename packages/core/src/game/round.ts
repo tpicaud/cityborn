@@ -3,7 +3,6 @@ import {
   type Game,
   GameStatus,
   type Guess,
-  GuessObjectIdSchema,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -79,9 +78,9 @@ export function aggregateGameResults(
   game: Game,
 ): Record<PlayerId, PlayerResults> {
   const currentRound = game.state.currentRound;
-  const guessObjectId =
-    currentRound?.guessObjectId ?? GuessObjectIdSchema.parse('');
-  const playersGuesses = currentRound?.playersGuesses;
+  if (!currentRound) return game.state.results;
+
+  const { guessObjectId, playersGuesses } = currentRound;
   const updatedResults: Record<PlayerId, PlayerResults> = {
     ...game.state.results,
   };

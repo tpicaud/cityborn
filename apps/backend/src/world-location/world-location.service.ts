@@ -28,6 +28,23 @@ export class WorldLocationService {
     return WorldLocationMapper.toWorldLocation(row);
   }
 
+  async findByExternalIdentifier(
+    osmType: string,
+    externalId: string,
+  ): Promise<WorldLocation | null> {
+    const row = await this.prisma.worldLocation.findUnique({
+      where: {
+        osm_type_external_id: {
+          osm_type: osmType,
+          external_id: externalId,
+        },
+      },
+      include: { geometry: true },
+    });
+    if (!row) return null;
+    return WorldLocationMapper.toWorldLocation(row);
+  }
+
   async findOrCreate(
     createWorldLocation: CreateWorldLocation,
   ): Promise<WorldLocation> {

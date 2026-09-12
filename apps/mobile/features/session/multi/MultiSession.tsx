@@ -23,7 +23,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const { user } = useAuth();
   const { invokeError } = useError();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
-    user ? PlayerIdSchema.parse(user.username) : undefined,
+    user?.username,
   );
   const multiSession = useMultiSession(localPlayerID, sessionID);
   const hasJoinedSession = useRef(false);

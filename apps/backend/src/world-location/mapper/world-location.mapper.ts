@@ -1,4 +1,9 @@
-import { type WorldLocation, WorldLocationSchema } from '@cityborn/api';
+import {
+  type WorldLocation,
+  WorldLocationSchema,
+  type WorldLocationSearchResult,
+  WorldLocationSearchResultSchema,
+} from '@cityborn/api';
 import type {
   WorldLocation as PrismaWorldLocation,
   WorldLocationGeometry as PrismaWorldLocationGeometry,
@@ -27,8 +32,8 @@ export const WorldLocationMapper = {
 
   toWorldLocationFromNominatimItem(
     nominatimItem: NominatimItemResponse,
-  ): WorldLocation {
-    return WorldLocationSchema.parse({
+  ): WorldLocationSearchResult {
+    return WorldLocationSearchResultSchema.parse({
       id: nominatimItem.osm_id.toString(),
       osm_type: nominatimItem.osm_type,
       name: nominatimItem.name,

@@ -1,6 +1,11 @@
 'use client';
 
-import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
+import type {
+  GuessObjectDraft,
+  GuessObjectSearchResult,
+  WorldLocation,
+  WorldLocationSearchResult,
+} from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
@@ -58,7 +63,7 @@ export function GuessObjectBuilder({
   };
 
   async function handleFetchGuessObjectDraft(
-    guessObjectDraftPreview: GuessObjectDraft | undefined,
+    guessObjectDraftPreview: GuessObjectSearchResult | undefined,
   ) {
     try {
       setIsLoadingFullObject(true);
@@ -89,7 +94,7 @@ export function GuessObjectBuilder({
       const fullDraft = result.data;
 
       if (fullDraft) {
-        let world_location = fullDraft.world_location;
+        let worldLocation: WorldLocation | undefined;
         if (fullDraft.world_location?.source) {
           const created = await createWorldLocation({
             ...fullDraft.world_location,
@@ -99,13 +104,13 @@ export function GuessObjectBuilder({
             invokeError(created.error);
             return;
           }
-          world_location = { ...fullDraft.world_location, id: created.data };
+          worldLocation = { ...fullDraft.world_location, id: created.data };
         }
 
         setGuessObjectDraft({
           ...fullDraft,
           name: guessObjectDraftPreview.name,
-          world_location,
+          world_location: worldLocation,
         });
       }
     } catch (error) {
@@ -116,7 +121,7 @@ export function GuessObjectBuilder({
   }
 
   async function handleFetchWorldLocationCandidate(
-    world_location: WorldLocation | undefined,
+    world_location: WorldLocationSearchResult | undefined,
   ) {
     try {
       setIsLoadingLocation(true);

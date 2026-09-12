@@ -18,6 +18,10 @@ export const WorldLocationSchema = z.object({
   }),
 });
 
+export const WorldLocationSearchResultSchema = WorldLocationSchema.extend({
+  id: z.string(),
+});
+
 export const WorldLocationPreviewSchema = WorldLocationSchema.pick({
   id: true,
   name: true,
@@ -25,12 +29,21 @@ export const WorldLocationPreviewSchema = WorldLocationSchema.pick({
 });
 
 export const WorldLocationsSchema = z.array(WorldLocationSchema);
+export const WorldLocationSearchResultsSchema = z.array(
+  WorldLocationSearchResultSchema,
+);
 
 export const CreateWorldLocationSchema = WorldLocationSchema.omit({
   id: true,
 });
 
 export type WorldLocation = z.infer<typeof WorldLocationSchema>;
+export type WorldLocationSearchResult = z.infer<
+  typeof WorldLocationSearchResultSchema
+>;
 export type WorldLocationPreview = z.infer<typeof WorldLocationPreviewSchema>;
 export type WorldLocations = z.infer<typeof WorldLocationsSchema>;
+export type WorldLocationSearchResults = z.infer<
+  typeof WorldLocationSearchResultsSchema
+>;
 export type CreateWorldLocation = z.infer<typeof CreateWorldLocationSchema>;

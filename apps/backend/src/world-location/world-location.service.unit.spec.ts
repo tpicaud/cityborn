@@ -94,6 +94,31 @@ describe('WorldLocationService.getWithGeometry', () => {
   });
 });
 
+describe('WorldLocationService.findByExternalIdentifier', () => {
+  it('queries the external identifier without branding it as a persisted ID', async () => {
+    const { prismaService, worldLocationService } = buildWorldLocationService();
+    prismaService.worldLocation.findUnique.mockResolvedValue(
+      prismaWorldLocationWithGeometry,
+    );
+
+    const location = await worldLocationService.findByExternalIdentifier(
+      'relation',
+      '7444',
+    );
+
+    expect(prismaService.worldLocation.findUnique).toHaveBeenCalledWith({
+      where: {
+        osm_type_external_id: {
+          osm_type: 'relation',
+          external_id: '7444',
+        },
+      },
+      include: { geometry: true },
+    });
+    expect(location?.id).toBe(worldLocationId('location-1'));
+  });
+});
+
 describe('WorldLocationService.findOrCreate', () => {
   it('returns an existing location without creating a duplicate', async () => {
     const { prismaService, worldLocationService } = buildWorldLocationService();

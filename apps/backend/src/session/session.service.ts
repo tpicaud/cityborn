@@ -59,11 +59,11 @@ export class SessionService {
     const { mode } = dto;
 
     const sessionID: SessionId = await this.generateUniqueSessionID();
-    const playerId = PlayerIdSchema.parse(user?.username ?? 'guest');
+    const playerId = user?.username ?? PlayerIdSchema.parse('guest');
 
     const newSession: Session = {
       id: sessionID,
-      hostID: mode === SessionMode.SOLO ? playerId : PlayerIdSchema.parse(''),
+      hostID: mode === SessionMode.SOLO ? playerId : '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
@@ -547,9 +547,7 @@ export class SessionService {
       (player) => player.connected && player.username !== removedPlayerID,
     );
     session.hostID =
-      connectedPlayers.length > 0
-        ? connectedPlayers[0].username
-        : PlayerIdSchema.parse('');
+      connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
   }
 
   private async generateUniqueSessionID(): Promise<SessionId> {

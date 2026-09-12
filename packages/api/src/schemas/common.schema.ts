@@ -16,8 +16,8 @@ export const GameRecordIdSchema = z.string().brand<'GameRecordId'>();
 export const SentenceIdSchema = z.string().brand<'SentenceId'>();
 export const SessionIdSchema = z.string().brand<'SessionId'>();
 export const GameIdSchema = z.string().brand<'GameId'>();
-export const UsernameSchema = z.string().brand<'Username'>();
 export const PlayerIdSchema = z.string().brand<'PlayerId'>();
+export const UsernameSchema = PlayerIdSchema.brand<'Username'>();
 
 export const CategoryIdParamSchema = z.object({ id: CategoryIdSchema });
 export const GuessObjectIdParamSchema = z.object({ id: GuessObjectIdSchema });

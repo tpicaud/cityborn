@@ -1,12 +1,12 @@
 import {
   type ApiError,
   ErrorCode,
-  GameConfig,
-  Guess,
+  GameConfigSchema,
+  GuessSchema,
   PlayerIdSchema,
   type Session,
   SessionIdSchema,
-  User,
+  type User,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -25,6 +25,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import type { output, ZodTypeAny } from 'zod';
 import { getJwtConstants } from '../auth/constants';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
@@ -89,6 +90,22 @@ export class SessionGateway
     });
 
     return connection;
+  }
+
+  private parseClientPayload<Schema extends ZodTypeAny>(
+    schema: Schema,
+    payload: unknown,
+    fieldName: string,
+  ): output<Schema> {
+    const result = schema.safeParse(payload);
+    if (!result.success) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: `${fieldName} invalid.`,
+      });
+    }
+
+    return result.data;
   }
 
   private enrichGame(session: Session): void {
@@ -174,8 +191,16 @@ export class SessionGateway
       });
     }
 
-    const sessionID = SessionIdSchema.parse(rawSessionID);
-    const playerID = PlayerIdSchema.parse(rawPlayerID);
+    const sessionID = this.parseClientPayload(
+      SessionIdSchema,
+      rawSessionID,
+      'sessionID',
+    );
+    const playerID = this.parseClientPayload(
+      PlayerIdSchema,
+      rawPlayerID,
+      'playerID',
+    );
 
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
@@ -208,7 +233,11 @@ export class SessionGateway
       });
     }
 
-    const newHostID = PlayerIdSchema.parse(rawNewHostID);
+    const newHostID = this.parseClientPayload(
+      PlayerIdSchema,
+      rawNewHostID,
+      'newHostID',
+    );
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.updateHost(
@@ -224,14 +253,20 @@ export class SessionGateway
   @SubscribeMessage('session:updateGameConfig')
   async updateGameConfig(
     @ConnectedSocket() socket: Socket,
-    @MessageBody('gameConfig') gameConfig: GameConfig,
+    @MessageBody('gameConfig') rawGameConfig: unknown,
   ): Promise<WSResponse> {
-    if (!gameConfig) {
+    if (!rawGameConfig) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'gameConfig required.',
       });
     }
+
+    const gameConfig = this.parseClientPayload(
+      GameConfigSchema,
+      rawGameConfig,
+      'gameConfig',
+    );
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.updateGameConfig(
@@ -256,7 +291,11 @@ export class SessionGateway
       });
     }
 
-    const playerToKick = PlayerIdSchema.parse(rawPlayerToKick);
+    const playerToKick = this.parseClientPayload(
+      PlayerIdSchema,
+      rawPlayerToKick,
+      'playerToKick',
+    );
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.kickPlayer(
@@ -307,14 +346,16 @@ export class SessionGateway
   @SubscribeMessage('session:guess')
   async handleGuess(
     @ConnectedSocket() socket: Socket,
-    @MessageBody('guess') guess: Guess,
+    @MessageBody('guess') rawGuess: unknown,
   ): Promise<WSResponse> {
-    if (!guess) {
+    if (!rawGuess) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'guess required.',
       });
     }
+
+    const guess = this.parseClientPayload(GuessSchema, rawGuess, 'guess');
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.handleGuess(
@@ -381,8 +422,16 @@ export class SessionGateway
       });
     }
 
-    const sessionID = SessionIdSchema.parse(rawSessionID);
-    const playerID = PlayerIdSchema.parse(rawPlayerID);
+    const sessionID = this.parseClientPayload(
+      SessionIdSchema,
+      rawSessionID,
+      'sessionID',
+    );
+    const playerID = this.parseClientPayload(
+      PlayerIdSchema,
+      rawPlayerID,
+      'playerID',
+    );
 
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,

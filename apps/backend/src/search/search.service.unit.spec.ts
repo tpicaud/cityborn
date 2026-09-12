@@ -72,7 +72,7 @@ describe('SearchService.searchGuessObjectByExternalId', () => {
       world_location_id: '7444',
       osm_type: 'relation',
     });
-    worldLocationService.getWithGeometry.mockResolvedValue(null);
+    worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(nominatimItem);
 
     const result = await searchService.searchGuessObjectByExternalId('Q243');
@@ -122,7 +122,7 @@ describe('SearchService.searchWorldLocationById', () => {
   it('returns a persisted location without calling Nominatim', async () => {
     const { searchService, worldLocationService, nominatimService } =
       buildSearchService();
-    worldLocationService.getWithGeometry.mockResolvedValue(
+    worldLocationService.findByExternalIdentifier.mockResolvedValue(
       buildWorldLocation(),
     );
 
@@ -132,13 +132,17 @@ describe('SearchService.searchWorldLocationById', () => {
     );
 
     expect(location.id).toBe('location-1');
+    expect(worldLocationService.findByExternalIdentifier).toHaveBeenCalledWith(
+      'relation',
+      '7444',
+    );
     expect(nominatimService.findByOsmId).not.toHaveBeenCalled();
   });
 
   it('rejects when neither source has the location', async () => {
     const { searchService, worldLocationService, nominatimService } =
       buildSearchService();
-    worldLocationService.getWithGeometry.mockResolvedValue(null);
+    worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(null);
 
     await expect(
@@ -151,7 +155,7 @@ describe('SearchService.searchWorldLocationById', () => {
   it('maps a Nominatim location', async () => {
     const { searchService, worldLocationService, nominatimService } =
       buildSearchService();
-    worldLocationService.getWithGeometry.mockResolvedValue(null);
+    worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(nominatimItem);
 
     const location = await searchService.searchWorldLocationById(

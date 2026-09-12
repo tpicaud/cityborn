@@ -4,7 +4,6 @@ import {
   GameIdSchema,
   GameRecordIdSchema,
   GuessObjectIdSchema,
-  type PlayerId,
   PlayerIdSchema,
 } from './common.schema';
 import {
@@ -14,6 +13,12 @@ import {
 } from './enums';
 import { FullGuessObjectSchema } from './guess-object.schema';
 import { PlayerResultsSchema, PlayerSchema } from './player.schema';
+
+function isCompleteRecord<Key extends string, Value>(
+  record: Partial<Record<Key, Value>>,
+): record is Record<Key, Value> {
+  return Object.values(record).every((value) => value !== undefined);
+}
 
 export const CoordSchema = z.object({
   lat: z.number(),
@@ -27,21 +32,12 @@ export const GuessSchema = z.object({
   win: z.boolean(),
 });
 
-function brandPlayerRecord<T>(record: Record<string, T>): Record<PlayerId, T> {
-  return Object.fromEntries(
-    Object.entries(record).map(([playerId, value]) => [
-      PlayerIdSchema.parse(playerId),
-      value,
-    ]),
-  );
-}
-
 const PlayerGuessesSchema = z
-  .record(z.string(), GuessSchema)
-  .transform(brandPlayerRecord);
+  .record(PlayerIdSchema, GuessSchema)
+  .refine(isCompleteRecord);
 const PlayerResultsByIdSchema = z
-  .record(z.string(), PlayerResultsSchema)
-  .transform(brandPlayerRecord);
+  .record(PlayerIdSchema, PlayerResultsSchema)
+  .refine(isCompleteRecord);
 
 export const GameConfigSchema = z.object({
   categories: z.array(CategorySchema),

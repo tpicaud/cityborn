@@ -23,7 +23,7 @@ export const UserSchema = PublicUserSchema.extend({
 });
 
 export const CreateUserSchema = z.object({
-  username: z.string().min(3).max(20).brand<'Username'>(),
+  username: z.string().min(3).max(20).pipe(UsernameSchema),
   email: z.string().email(),
   password: z
     .string()

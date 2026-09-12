@@ -1,4 +1,4 @@
-import { type GameRecord, PlayerIdSchema } from '@cityborn/api';
+import type { GameRecord } from '@cityborn/api';
 import { isoToLocalDate, useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { calculateTotalPoints } from '@cityborn/core';
@@ -142,9 +142,7 @@ export default function Profile() {
                       </View>
                       <View className="flex flex-col justify-between items-center">
                         <Text className="font-bold">
-                          {calculateTotalPoints(
-                            record.results[PlayerIdSchema.parse(user.username)],
-                          )}
+                          {calculateTotalPoints(record.results[user.username])}
                         </Text>
                         <Text>pts</Text>
                       </View>

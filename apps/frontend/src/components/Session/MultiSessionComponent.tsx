@@ -29,7 +29,7 @@ export default function MultiSessionComponent({
   const sessionID = SessionIdSchema.parse(rawSessionID);
 
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
-    user ? PlayerIdSchema.parse(user.username) : undefined,
+    user?.username,
   );
 
   const multiSession = useMultiSession(localPlayerID, sessionID);

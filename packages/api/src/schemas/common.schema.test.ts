@@ -10,16 +10,17 @@ import {
 
 type IsAssignable<From, To> = From extends To ? true : false;
 type AssertFalse<Value extends false> = Value;
+type AssertTrue<Value extends true> = Value;
 
-const brandedIdentifiersAreDistinct: [
+const brandedIdentifierAssignability: [
   AssertFalse<IsAssignable<UserId, CategoryId>>,
   AssertFalse<IsAssignable<CategoryId, UserId>>,
-  AssertFalse<IsAssignable<Username, PlayerId>>,
+  AssertTrue<IsAssignable<Username, PlayerId>>,
   AssertFalse<IsAssignable<PlayerId, Username>>,
-] = [false, false, false, false];
+] = [false, false, true, false];
 
-test('ID brands are mutually incompatible', () => {
-  assert.deepEqual(brandedIdentifiersAreDistinct, [false, false, false, false]);
+test('ID brands preserve intended assignability', () => {
+  assert.deepEqual(brandedIdentifierAssignability, [false, false, true, false]);
 });
 
 test('ID schemas preserve their wire values', () => {

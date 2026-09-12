@@ -10,7 +10,7 @@ import { SoloLobby } from './SoloLobby';
 export default function SoloSession() {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const localPlayerID = PlayerIdSchema.parse(user?.username ?? 'guest');
+  const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
   const soloSession = useSoloSession(localPlayerID);
 
   //////////////////////////
