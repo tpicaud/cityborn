@@ -7,7 +7,7 @@ import type {
   GuessObjectDraft,
   UpdateCategory,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { useError } from '@cityborn/client/infrastructure/react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { deleteCategory, saveCategory } from '@/server/use-server/category';

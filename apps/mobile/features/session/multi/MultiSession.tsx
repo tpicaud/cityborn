@@ -1,10 +1,14 @@
-import { type GameConfig, type Guess, SessionStatus } from '@cityborn/api';
-import { useAuth, useError } from '@cityborn/client';
+import { SessionStatus } from '@cityborn/api';
+import { useAuth } from '@cityborn/client/auth/react';
+import { useError } from '@cityborn/client/infrastructure/react';
+import { useMultiSession } from '@cityborn/client/session/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
-import { useMultiSession } from '../hooks/useMultiSession';
+import { sessionGateway } from '@/lib/gateways';
+import { useSessionNavigation } from '@/lib/navigation';
+import { connectSessionSocket } from '@/lib/socket';
 import { MultiLobby } from './MultiLobby';
 
 interface MultiSessionProps {
@@ -14,15 +18,16 @@ interface MultiSessionProps {
 export default function MultiSession({ sessionID }: MultiSessionProps) {
   const { user } = useAuth();
   const { invokeError } = useError();
+  const navigation = useSessionNavigation();
   const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(
     user ? user.username : undefined,
   );
-  const multiSession = useMultiSession(localPlayerID, sessionID);
+  const multiSession = useMultiSession(localPlayerID, sessionID, {
+    sessionGateway,
+    connectSocket: connectSessionSocket,
+    navigation,
+  });
   const hasJoinedSession = useRef(false);
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
 
   const handleJoinSession = useCallback(
     async (playerID: string) => {
@@ -31,94 +36,29 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
         await multiSession.join(playerID);
         setLocalPlayerID(playerID);
       } catch (error) {
-        invokeError(error);
+        invokeError(error, 'Une erreur est survenue');
       }
     },
-    [multiSession, invokeError],
+    [multiSession.join, invokeError],
   );
-
-  ////////////////
-  // useEffects //
-  ////////////////
 
   useEffect(() => {
     if (
       multiSession.session &&
       localPlayerID &&
-      !multiSession.connected &&
-      multiSession.socket?.connected &&
+      !multiSession.isJoined &&
+      multiSession.isSocketConnected &&
       !hasJoinedSession.current
     ) {
       handleJoinSession(localPlayerID);
     }
   }, [
     multiSession.session,
-    multiSession.socket,
-    multiSession.socket?.connected,
+    multiSession.isSocketConnected,
+    multiSession.isJoined,
     handleJoinSession,
     localPlayerID,
-    multiSession.connected,
   ]);
-
-  const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
-    try {
-      await multiSession.updateGameConfig(gameConfig);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  ///////////////////////
-  // Game interactions //
-  ///////////////////////
-
-  const handleStartGame = async () => {
-    try {
-      await multiSession.startGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleGuess = async (guess: Guess) => {
-    try {
-      multiSession.guess(guess);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleNextRound = async () => {
-    try {
-      multiSession.nextRound();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleEndGame = async () => {
-    try {
-      await multiSession.endGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handlePlayAgain = async () => {
-    try {
-      await multiSession.playAgain();
-    } catch {}
-  };
-
-  const handleExitGame = async () => {
-    try {
-      await multiSession.exitGame();
-    } catch {}
-  };
-
-  ///////////////
-  // Rendering //
-  ///////////////
 
   if (!multiSession.session) {
     return (
@@ -129,7 +69,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     );
   }
 
-  if (multiSession.hasDisconnected && !multiSession.connected) {
+  if (multiSession.hasDisconnected && !multiSession.isJoined) {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
@@ -145,25 +85,18 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     return (
       <Game
         localPlayerID={localPlayerID}
-        isHost={multiSession.isHost}
         game={multiSession.session.currentGame}
-        handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
-        handleEndGame={handleEndGame}
-        handlePlayAgain={handlePlayAgain}
-        handleExitGame={handleExitGame}
-      />
-    );
-  } else {
-    return (
-      <MultiLobby
-        localPlayerID={localPlayerID}
-        isHost={multiSession.isHost}
-        session={multiSession.session}
-        handleUpdateGameConfig={handleUpdateGameConfig}
-        handleStartGame={handleStartGame}
-        handleJoinSession={handleJoinSession}
+        sessionController={multiSession}
       />
     );
   }
+
+  return (
+    <MultiLobby
+      localPlayerID={localPlayerID}
+      session={multiSession.session}
+      sessionController={multiSession}
+      handleJoinSession={handleJoinSession}
+    />
+  );
 }

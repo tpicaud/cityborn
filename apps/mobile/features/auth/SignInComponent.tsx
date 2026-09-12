@@ -1,5 +1,6 @@
 import { resolveErrorMessage, type SignIn, SignInSchema } from '@cityborn/api';
-import { useAuth } from '@cityborn/client';
+import { SIGN_IN_FORM_DEFAULT_VALUES } from '@cityborn/client/auth';
+import { useAuth } from '@cityborn/client/auth/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -23,7 +24,7 @@ export const SignInComponent = () => {
     formState: { errors, isSubmitting },
   } = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
-    defaultValues: { identifier: '', password: '' },
+    defaultValues: SIGN_IN_FORM_DEFAULT_VALUES,
   });
 
   const onSubmit = handleSubmit(async (values) => {

@@ -1,60 +1,42 @@
-import { SessionMode } from '@cityborn/api';
-import { useAuth, useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth/react';
+import {
+  JOIN_SESSION_FORM_DEFAULT_VALUES,
+  type JoinSessionFormValues,
+  JoinSessionSchema,
+} from '@cityborn/client/play';
+import { usePlayActions } from '@cityborn/client/play/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { z } from 'zod';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { createSession, fetchSession } from '@/lib/api/session';
-
-const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code'),
-});
-
-type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
+import { sessionGateway } from '@/lib/gateways';
+import { usePlayNavigation } from '@/lib/navigation';
 
 export default function Play() {
   const { user } = useAuth();
-  const { invokeError } = useError();
   const router = useRouter();
-  const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+  const navigation = usePlayNavigation();
+  const playActions = usePlayActions({
+    isAuthenticated: !!user,
+    sessionGateway,
+    navigation,
+  });
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
-    defaultValues: { code: '' },
+    defaultValues: JOIN_SESSION_FORM_DEFAULT_VALUES,
   });
 
-  const handleSoloPlay = () => {
-    router.navigate('/session/solo');
-  };
-
-  const handleMultiPlay = async () => {
-    if (!user) {
-      setOpenConnectionAlert(true);
-    } else {
-      const result = await createSession({ mode: SessionMode.MULTI });
-      if (!result.ok) return invokeError(result.error);
-      router.navigate(`/session/multi/${result.data.id}`);
-    }
-  };
-
-  const handleJoin = handleSubmit(async (values) => {
-    const result = await fetchSession(values.code);
-    if (result.ok) {
-      router.push(`/session/multi/${values.code}`);
-      return;
-    }
-
-    invokeError(result.error);
-  });
+  const handleJoin = handleSubmit((values) =>
+    playActions.joinSession(values.code),
+  );
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -109,22 +91,22 @@ export default function Play() {
                 variant="filled"
                 label="SOLO"
                 size="large"
-                onPress={handleSoloPlay}
+                onPress={playActions.playSolo}
               />
               <Button
                 color="primary"
                 variant="filled"
                 label="MULTI"
                 size="large"
-                onPress={handleMultiPlay}
+                onPress={playActions.playMulti}
               />
             </View>
           </View>
         </View>
 
         <Dialog
-          visible={openConnectionAlert}
-          onClose={() => setOpenConnectionAlert(false)}
+          visible={playActions.isAuthenticationRequired}
+          onClose={playActions.dismissAuthenticationRequired}
           className="h-auto"
         >
           <View className="p-5">
@@ -137,7 +119,7 @@ export default function Play() {
                 size="medium"
                 variant="outlined"
                 onPress={() => {
-                  setOpenConnectionAlert(false);
+                  playActions.dismissAuthenticationRequired();
                   router.navigate('/auth/sign-in');
                 }}
               />
@@ -146,7 +128,7 @@ export default function Play() {
                 size="medium"
                 variant="filled"
                 onPress={() => {
-                  setOpenConnectionAlert(false);
+                  playActions.dismissAuthenticationRequired();
                   router.navigate('/auth/sign-up');
                 }}
               />

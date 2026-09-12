@@ -1,3 +1,4 @@
+import type { SocketConnection } from '@cityborn/client/ports';
 import { io, type Socket } from 'socket.io-client';
 import { getOrCreateVisitorId } from './visitorId';
 
@@ -6,21 +7,40 @@ const WEBSOCKET_URL =
 
 let socket: Socket | null = null;
 
-declare global {
-  interface Window {
-    socket: Socket;
-  }
-}
-
-export const getSocket = (): Socket => {
+async function getSocket(): Promise<Socket> {
   if (!socket) {
     socket = io(WEBSOCKET_URL, {
       transports: ['websocket'],
       withCredentials: true,
       query: {
-        'x-visitor-id': getOrCreateVisitorId() || null,
+        'x-visitor-id': await getOrCreateVisitorId(),
       },
     });
   }
   return socket;
-};
+}
+
+export async function connectSessionSocket(): Promise<SocketConnection> {
+  const connectedSocket = await getSocket();
+
+  return {
+    get connected() {
+      return connectedSocket.connected;
+    },
+    connect: () => {
+      connectedSocket.connect();
+    },
+    disconnect: () => {
+      connectedSocket.disconnect();
+    },
+    emit: (event, ...args) => {
+      connectedSocket.emit(event, ...args);
+    },
+    on: (event, listener) => {
+      connectedSocket.on(event, listener);
+    },
+    off: (event, listener) => {
+      connectedSocket.off(event, listener);
+    },
+  };
+}

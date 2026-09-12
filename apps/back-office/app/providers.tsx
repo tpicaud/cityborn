@@ -1,7 +1,7 @@
 'use client';
 
 import { installFrenchZodErrorMap } from '@cityborn/api';
-import { ErrorProvider } from '@cityborn/client';
+import { ErrorProvider } from '@cityborn/client/infrastructure/react';
 import type { ReactNode } from 'react';
 import { ErrorDialog } from '@/components/ui/ErrorDialog';
 

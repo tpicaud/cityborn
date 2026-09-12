@@ -1,6 +1,6 @@
-import type { GameRecord } from '@cityborn/api';
-import { isoToLocalDate, useAuth, useError } from '@cityborn/client';
-import { calculateTotalPoints } from '@cityborn/core';
+import { useAuth } from '@cityborn/client/auth/react';
+import { useError } from '@cityborn/client/infrastructure/react';
+import { useGameRecords } from '@cityborn/client/profile/react';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router/react-navigation';
@@ -13,32 +13,23 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { deleteUser, signOut } from '@/lib/api/auth';
-import { getGameRecords } from '@/lib/api/user';
+import { userGateway } from '@/lib/gateways';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const router = useRouter();
-  const [gamesRecords, setGamesRecords] = useState<GameRecord[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] =
     useState<boolean>(false);
-
-  const fetchGameRecords = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    const result = await getGameRecords();
-    setLoading(false);
-    if (!result.ok) return invokeError(result.error);
-    setGamesRecords(result.data);
-  }, [user, invokeError]);
+  const { gameRecords, isLoading, reload } = useGameRecords(
+    userGateway,
+    user?.username,
+  );
 
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        fetchGameRecords();
-      }
-    }, [user, fetchGameRecords]),
+      reload();
+    }, [reload]),
   );
 
   const handleDeleteAccount = async () => {
@@ -117,11 +108,11 @@ export default function Profile() {
               Historique des parties
             </Text>
             <View className="flex-1 border-t rounded-xl overflow-y-auto p-0">
-              {loading ? (
+              {isLoading ? (
                 <View className="self-center">
                   <LoaderIcon />
                 </View>
-              ) : gamesRecords.length === 0 ? (
+              ) : gameRecords.length === 0 ? (
                 <Text className="text-center mt-2 text-neutral-600 italic">
                   Aucunes parties trouvées.
                 </Text>
@@ -130,19 +121,17 @@ export default function Profile() {
                   className="flex-1 p-2"
                   contentContainerStyle={{ paddingBottom: 8 }}
                 >
-                  {gamesRecords.map((record) => (
+                  {gameRecords.map((record) => (
                     <View
                       key={record.id}
                       className="flex flex-row justify-between items-center p-4 border border-b rounded-xl mb-2"
                     >
                       <View className="flex flex-col justify-between items-start">
                         <Text>{record.mode}</Text>
-                        <Text>{isoToLocalDate(record.createdAt)}</Text>
+                        <Text>{record.playedAt}</Text>
                       </View>
                       <View className="flex flex-col justify-between items-center">
-                        <Text className="font-bold">
-                          {calculateTotalPoints(record.results[user.username])}
-                        </Text>
+                        <Text className="font-bold">{record.totalPoints}</Text>
                         <Text>pts</Text>
                       </View>
                     </View>

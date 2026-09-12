@@ -1,8 +1,11 @@
-import { type Game, type Guess as GuessType, RoundStatus } from '@cityborn/api';
-import type { MapProps } from '@cityborn/client';
-import { useCallback, useEffect, useState } from 'react';
+import type { Game, Guess as GuessType } from '@cityborn/api';
+import {
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  type MapProps,
+} from '@cityborn/client/game';
+import { useGuessRound } from '@cityborn/client/game/react';
 import { View } from 'react-native';
-import useGuess from '../hooks/useGuess';
 import GameMap from './Map';
 import Overlay from './Overlay';
 import RoundCountdown from './RoundCountdown';
@@ -22,44 +25,23 @@ const Guess: React.FC<GuessProps> = ({
   handleGuess,
   handleNextRound,
 }) => {
-  const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
-    useGuess(handleGuess);
-  const [internalRoundStatus, setInternalRoundStatus] = useState<
-    'countdown' | 'guessing' | 'results'
-  >('countdown');
+  const {
+    preGuess,
+    phase,
+    isOverlayVisible,
+    handlePreGuess,
+    handleIsTimeUp,
+    handleCountdownEnd,
+  } = useGuessRound(game.state.currentRound?.status, handleGuess);
 
-  // Map properties
   const mapProps: MapProps = {
-    center: { lat: 48.8566, lng: 2.3522 },
-    zoom: 2,
+    center: DEFAULT_MAP_CENTER,
+    zoom: DEFAULT_MAP_ZOOM,
     preGuess,
     localPlayerID,
     game,
     handlePreGuess,
   };
-
-  useEffect(() => {
-    switch (game.state.currentRound?.status) {
-      case RoundStatus.GUESSING:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-
-      case RoundStatus.SHOWING_RESULTS:
-        setInternalRoundStatus('results');
-        break;
-
-      default:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-    }
-  }, [game.state.currentRound?.status, resetPreGuess]);
-
-  const handleCountdownEnd = useCallback(
-    () => setInternalRoundStatus('guessing'),
-    [],
-  );
 
   return (
     <View className="flex-1">
@@ -67,33 +49,28 @@ const Guess: React.FC<GuessProps> = ({
         <GameMap mapProps={mapProps} />
       </View>
 
-      {internalRoundStatus === 'countdown' && (
+      {phase === 'countdown' && (
         <View className="absolute inset-0 z-20">
           <RoundCountdown onCountdownEnd={handleCountdownEnd} />
         </View>
       )}
 
-      {(internalRoundStatus === 'guessing' ||
-        internalRoundStatus === 'results') &&
-        !(
-          internalRoundStatus === 'results' &&
-          game.state.currentRound?.status === RoundStatus.GUESSING
-        ) && (
-          <View
-            className="absolute inset-0 z-10 bg-transparent"
-            pointerEvents="box-none"
-          >
-            <Overlay
-              localPlayerID={localPlayerID}
-              preGuess={preGuess}
-              game={game}
-              isHost={isHost}
-              handleGuess={handleGuess}
-              handleIsTimeUp={handleIsTimeUp}
-              handleNextRound={handleNextRound}
-            />
-          </View>
-        )}
+      {isOverlayVisible && (
+        <View
+          className="absolute inset-0 z-10 bg-transparent"
+          pointerEvents="box-none"
+        >
+          <Overlay
+            localPlayerID={localPlayerID}
+            preGuess={preGuess}
+            game={game}
+            isHost={isHost}
+            handleGuess={handleGuess}
+            handleIsTimeUp={handleIsTimeUp}
+            handleNextRound={handleNextRound}
+          />
+        </View>
+      )}
     </View>
   );
 };

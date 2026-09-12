@@ -1,8 +1,5 @@
-import {
-  GameStatus,
-  type Game as GameType,
-  type Guess as GuessType,
-} from '@cityborn/api';
+import { GameStatus, type Game as GameType } from '@cityborn/api';
+import type { SessionController } from '@cityborn/client/session';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -15,22 +12,12 @@ import Results from './components/Results';
 
 export const Game = ({
   localPlayerID,
-  isHost,
   game,
-  handleGuess,
-  handleNextRound,
-  handleEndGame,
-  handlePlayAgain: _handlePlayAgain,
-  handleExitGame,
+  sessionController,
 }: {
   localPlayerID: string | undefined;
-  isHost: boolean;
   game: GameType;
-  handleGuess: (guess: GuessType) => Promise<void>;
-  handleNextRound: () => Promise<void>;
-  handleEndGame: () => Promise<void>;
-  handlePlayAgain: () => Promise<void>;
-  handleExitGame: () => Promise<void>;
+  sessionController: SessionController;
 }) => {
   const navigation = useNavigation();
   const [showResults, setShowResults] = useState(false);
@@ -74,9 +61,9 @@ export const Game = ({
         <Guess
           localPlayerID={localPlayerID}
           game={game}
-          isHost={isHost}
-          handleGuess={handleGuess}
-          handleNextRound={handleNextRound}
+          isHost={sessionController.isHost}
+          handleGuess={sessionController.guess}
+          handleNextRound={sessionController.nextRound}
         />
       </View>
 
@@ -96,7 +83,7 @@ export const Game = ({
                 label="Rejouer"
                 onPress={async () => {
                   setShowResults(false);
-                  await handleEndGame();
+                  await sessionController.endGame();
                 }}
               />
               <Button
@@ -104,7 +91,7 @@ export const Game = ({
                 label="Menu"
                 onPress={async () => {
                   setShowResults(false);
-                  await handleExitGame();
+                  await sessionController.exitGame();
                 }}
               />
             </View>

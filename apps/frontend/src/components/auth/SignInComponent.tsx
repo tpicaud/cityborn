@@ -1,7 +1,8 @@
 'use client';
 
 import { type SignIn, SignInSchema } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { SIGN_IN_FORM_DEFAULT_VALUES } from '@cityborn/client/auth';
+import { useError } from '@cityborn/client/infrastructure/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -19,7 +20,7 @@ export const SignInComponent = () => {
     formState: { errors, isSubmitting },
   } = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
-    defaultValues: { identifier: '', password: '' },
+    defaultValues: SIGN_IN_FORM_DEFAULT_VALUES,
   });
 
   useEffect(() => {

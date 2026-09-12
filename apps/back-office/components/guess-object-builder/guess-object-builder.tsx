@@ -1,7 +1,7 @@
 'use client';
 
 import type { GuessObjectDraft, WorldLocation } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { useError } from '@cityborn/client/infrastructure/react';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import {
   createWorldLocation,

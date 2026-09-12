@@ -3,10 +3,10 @@
 import {
   type Game,
   GameStatus,
-  type Guess,
   RoundStatus,
   type Session,
 } from '@cityborn/api';
+import type { SessionController } from '@cityborn/client/session';
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
 import GuessComponent from '@/components/guess/GuessComponent';
@@ -16,24 +16,14 @@ import ResultsComponent from './ResultsComponent';
 
 export const GameComponent = ({
   localPlayerID,
-  isHost,
   session,
   game,
-  handleGuess,
-  handleNextRound,
-  handleEndGame,
-  handlePlayAgain,
-  handleExitGame,
+  sessionController,
 }: {
   localPlayerID: string | undefined;
-  isHost: boolean;
   session: Session;
   game: Game;
-  handleGuess: (guess: Guess) => Promise<void>;
-  handleNextRound: () => Promise<void>;
-  handleEndGame: () => Promise<void>;
-  handlePlayAgain: () => Promise<void>;
-  handleExitGame: () => Promise<void>;
+  sessionController: SessionController;
 }) => {
   const NextButton: React.FC = () => {
     if (!game.state.currentRound) return null;
@@ -42,10 +32,8 @@ export const GameComponent = ({
       <LoadingButton
         variant="contained"
         color="error"
-        disabled={!isHost}
-        onClick={async () => {
-          await handleNextRound();
-        }}
+        disabled={!sessionController.isHost}
+        onClick={sessionController.nextRound}
         sx={{
           borderRadius: 6,
           color: 'white',
@@ -74,8 +62,8 @@ export const GameComponent = ({
         localPlayerID={localPlayerID}
         session={session}
         game={game}
-        handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
+        handleGuess={sessionController.guess}
+        handleNextRound={sessionController.nextRound}
       />
       {game.state.currentRound && (
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
@@ -101,11 +89,8 @@ export const GameComponent = ({
                 <ResultsComponent
                   game={game}
                   localPlayerID={localPlayerID}
-                  isHost={isHost}
                   mode={session.mode}
-                  handleEndGame={handleEndGame}
-                  handlePlayAgain={handlePlayAgain}
-                  handleExitGame={handleExitGame}
+                  sessionController={sessionController}
                 />
               </div>
             </Backdrop>

@@ -4,6 +4,7 @@ import type {
   CreateUser,
   SignIn,
   SignInWithGoogle,
+  User,
   VerifyEmailData,
 } from '@cityborn/api';
 import { type ApiResult, toApiResult } from '@cityborn/api';
@@ -12,6 +13,11 @@ import {
   storeTokensInCookies,
 } from '@/app/api/auth/utils';
 import { getServerClient } from '@/lib/serverClient';
+import { getCurrentUser as loadCurrentUser } from '@/server/server-only/auth';
+
+export async function getCurrentUser(): Promise<User | null> {
+  return loadCurrentUser();
+}
 
 export async function signUp(data: CreateUser): Promise<ApiResult<void>> {
   const client = await getServerClient();

@@ -1,5 +1,9 @@
 import type { Game, PlayerResults } from '@cityborn/api';
-import { getGameResult } from '@cityborn/client';
+import {
+  getGameResult,
+  getGuessObjectName,
+  sortPlayersByTotalPoints,
+} from '@cityborn/client/game';
 import { calculateTotalPoints } from '@cityborn/core';
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
@@ -13,7 +17,7 @@ const Results = ({
   game: Game;
   localPlayerID: string;
 }) => {
-  const playersResults = new Map<string, PlayerResults>(getGameResult(game));
+  const playersResults = getGameResult(game);
   const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
 
   useEffect(() => {
@@ -22,11 +26,6 @@ const Results = ({
 
     setLocalPlayerResults(currentPlayerResults);
   }, [localPlayerID, playersResults.get]);
-
-  function getGuessObjectName(id: string): string {
-    const guessObject = game.state.guessObjects?.find((obj) => obj.id === id);
-    return guessObject ? guessObject.name : id;
-  }
 
   if (!localPlayerResults) {
     return (
@@ -54,12 +53,8 @@ const Results = ({
             <Text className="flex-1 text-left font-semibold">Nom</Text>
             <Text className="flex-1 text-right font-semibold">Score</Text>
           </View>
-          {Array.from(playersResults.entries())
-            .sort(
-              ([, a], [, b]) =>
-                calculateTotalPoints(b) - calculateTotalPoints(a),
-            )
-            .map(([username, playerResult]) => (
+          {sortPlayersByTotalPoints(playersResults).map(
+            ([username, playerResult]) => (
               <View
                 key={username}
                 className="flex-row border-b border-gray-300 py-2 w-full"
@@ -69,7 +64,8 @@ const Results = ({
                   {calculateTotalPoints(playerResult)}
                 </Text>
               </View>
-            ))}
+            ),
+          )}
         </View>
       ) : (
         <View className="flex-1 pb-4">
@@ -91,7 +87,7 @@ const Results = ({
                 className="flex-row border-b border-gray-300 py-2 w-full"
               >
                 <Text className="flex-1 text-left text-sm">
-                  {getGuessObjectName(res.guessObjectId)}
+                  {getGuessObjectName(game, res.guessObjectId)}
                 </Text>
                 <Text className="flex-1 text-center text-sm">
                   {res.distance !== -1

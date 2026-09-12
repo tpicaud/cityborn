@@ -1,28 +1,26 @@
 'use client';
 
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import 'leaflet/dist/leaflet.css';
-import { type Session, SessionMode } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth/react';
+import { useError } from '@cityborn/client/infrastructure/react';
+import {
+  JOIN_SESSION_FORM_DEFAULT_VALUES,
+  type JoinSessionFormValues,
+  JoinSessionSchema,
+} from '@cityborn/client/play';
+import { usePlayActions } from '@cityborn/client/play/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { useAuth } from '@/contexts/AuthContext';
+import { sessionGateway } from '@/lib/gateways';
+import { usePlayNavigation } from '@/lib/navigation';
 import { resendVerificationEmail } from '@/server/use-server/auth';
-import { createSession, fetchSession } from '@/server/use-server/session';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
-
-const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code'),
-});
-
-type JoinSessionFormValues = z.infer<typeof JoinSessionSchema>;
 
 export default function MenuComponent({
   setState,
@@ -31,44 +29,27 @@ export default function MenuComponent({
     SetStateAction<'menu' | 'sign-in' | 'sign-up' | 'profile'>
   >;
 }) {
-  const router = useRouter();
   const { user } = useAuth();
   const { invokeError } = useError();
-  const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
+  const navigation = usePlayNavigation();
   const [verificationEmailSent, setVerificationEmailSent] = useState(false);
+  const playActions = usePlayActions({
+    isAuthenticated: !!user,
+    sessionGateway,
+    navigation,
+  });
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
-    defaultValues: { code: '' },
+    defaultValues: JOIN_SESSION_FORM_DEFAULT_VALUES,
   });
 
-  const handleSoloPlay = () => {
-    router.push(`/session/solo`);
-  };
-
-  const handleMultiPlay = async () => {
-    if (!user) {
-      setOpenConnectionAlert(true);
-    } else {
-      const result = await createSession({ mode: SessionMode.MULTI });
-      if (!result.ok) return invokeError(result.error);
-      const session: Session = result.data;
-      router.push(`/session/multi/${session.id}`);
-    }
-  };
-
-  const handleJoin = handleSubmit(async (values) => {
-    const result = await fetchSession(values.code);
-    if (result.ok) {
-      router.push(`/session/multi/${values.code}`);
-      return;
-    }
-
-    invokeError(result.error);
-  });
+  const handleJoin = handleSubmit((values) =>
+    playActions.joinSession(values.code),
+  );
 
   const handleResendVerificationEmail = async () => {
     try {
@@ -181,7 +162,7 @@ export default function MenuComponent({
             variant="contained"
             color="primary"
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-            onClick={handleSoloPlay}
+            onClick={playActions.playSolo}
           >
             <b>SOLO</b>
           </LoadingButton>
@@ -189,7 +170,7 @@ export default function MenuComponent({
             variant="contained"
             color="primary"
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-            onClick={handleMultiPlay}
+            onClick={playActions.playMulti}
           >
             <b>MULTI</b>
           </LoadingButton>
@@ -205,8 +186,8 @@ export default function MenuComponent({
       </div>
 
       <Dialog
-        open={openConnectionAlert}
-        onClose={() => setOpenConnectionAlert(false)}
+        open={playActions.isAuthenticationRequired}
+        onClose={playActions.dismissAuthenticationRequired}
       >
         <DialogTitle sx={{ mt: 2, mx: 3, paddingX: 2, paddingTop: 2 }}>
           <p>Vous devez être connecté pour jouer en mode multi !</p>

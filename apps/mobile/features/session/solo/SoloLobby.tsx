@@ -1,69 +1,30 @@
-import type { CategoryTree, GameConfig, Session } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import type { Session } from '@cityborn/api';
+import {
+  useCategorySelection,
+  useCategoryTrees,
+} from '@cityborn/client/lobby/react';
+import type { SessionController } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
-import { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import {
-  categoryTreeToCategory,
-  fetchCategoryTrees,
-  flattenCategoryTree,
-} from '@/lib/api/category';
+import { categoryGateway } from '@/lib/gateways';
 
 interface SoloLobbyProps {
   session: Session;
-  isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
-  handleStartGame: () => Promise<void>;
+  sessionController: SessionController;
 }
 
-export function SoloLobby({
-  session,
-  isHost,
-  handleUpdateGameConfig,
-  handleStartGame,
-}: SoloLobbyProps) {
-  const { invokeError } = useError();
-  const [categoryTrees, setCategoryTrees] = useState<CategoryTree[]>([]);
-  const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
-
-  useEffect(() => {
-    const loadCategoryTrees = async () => {
-      const result = await fetchCategoryTrees();
-      if (!result.ok) return invokeError(result.error);
-      setCategoryTrees(result.data);
-    };
-    loadCategoryTrees();
-  }, [invokeError]);
-
-  useEffect(() => {
-    if (
-      categoryTrees.length > 0 &&
-      session.gameConfig.categories.length === 0
-    ) {
-      handleUpdateGameConfig({
-        categories: flattenCategoryTree(categoryTrees),
-      });
-    }
-  }, [
+export function SoloLobby({ session, sessionController }: SoloLobbyProps) {
+  const { categoryTrees } = useCategoryTrees(categoryGateway);
+  const categorySelection = useCategorySelection({
     categoryTrees,
-    session.gameConfig.categories.length,
-    handleUpdateGameConfig,
-  ]);
-
-  const currentCategoryNodes =
-    selectedPath.length === 0
-      ? categoryTrees
-      : selectedPath[selectedPath.length - 1].children;
-
-  const handlePlayCategory = async (node: CategoryTree) => {
-    await handleUpdateGameConfig({
-      categories: [categoryTreeToCategory(node)],
-    });
-    await handleStartGame();
-  };
+    selectedCategoriesCount: session.gameConfig.categories.length,
+    canConfigure: true,
+    updateGameConfig: sessionController.updateGameConfig,
+    startGame: sessionController.startGame,
+  });
 
   return (
     <View className="flex-1 justify-center items-center">
@@ -72,10 +33,8 @@ export function SoloLobby({
 
         <View className="flex flex-col gap-2 w-full">
           <View className="flex-row items-center gap-1">
-            {selectedPath.length > 0 && (
-              <Pressable
-                onPress={() => setSelectedPath((path) => path.slice(0, -1))}
-              >
+            {categorySelection.canGoBack && (
+              <Pressable onPress={categorySelection.goBack}>
                 <Icon
                   name="chevron_back_outline"
                   size={20}
@@ -83,16 +42,12 @@ export function SoloLobby({
                 />
               </Pressable>
             )}
-            <Text className="text-xl">
-              {selectedPath.length === 0
-                ? 'Packs'
-                : selectedPath[selectedPath.length - 1].name}
-            </Text>
+            <Text className="text-xl">{categorySelection.pathLabel}</Text>
           </View>
           <View className="w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
           <ScrollView className="max-h-96">
             <View className="flex flex-col gap-2 w-full">
-              {currentCategoryNodes.map((node) => (
+              {categorySelection.visibleNodes.map((node) => (
                 <View
                   key={node.id}
                   className="flex-row items-center justify-between gap-3 py-2 border-b border-foreground/10"
@@ -104,8 +59,8 @@ export function SoloLobby({
                     <Button
                       size="small"
                       label="Jouer"
-                      disabled={!isHost}
-                      onPress={() => handlePlayCategory(node)}
+                      disabled={!sessionController.isHost}
+                      onPress={() => categorySelection.playNode(node)}
                       className="w-26 h-9"
                     />
                     {node.children.length > 0 && (
@@ -113,9 +68,7 @@ export function SoloLobby({
                         variant="outlined"
                         size="small"
                         label="Sous-packs"
-                        onPress={() =>
-                          setSelectedPath((path) => [...path, node])
-                        }
+                        onPress={() => categorySelection.openNode(node)}
                         className="w-26 h-9 px-0"
                       />
                     )}

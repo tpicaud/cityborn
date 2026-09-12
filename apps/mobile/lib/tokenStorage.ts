@@ -1,4 +1,4 @@
-import type { TokenStorage } from '@cityborn/client';
+import type { TokenStorage } from '@cityborn/client/ports';
 import * as SecureStore from 'expo-secure-store';
 
 export class MobileTokenStorage implements TokenStorage {

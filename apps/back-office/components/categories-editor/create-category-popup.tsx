@@ -5,7 +5,7 @@ import {
   type CreateCategory,
   CreateCategorySchema,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import { useError } from '@cityborn/client/infrastructure/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';

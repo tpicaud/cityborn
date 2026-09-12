@@ -1,10 +1,11 @@
 'use client';
 
 import {
+  SIGN_UP_FORM_DEFAULT_VALUES,
   SignUpFormSchema,
   type SignUpFormValues,
-  useError,
-} from '@cityborn/client';
+} from '@cityborn/client/auth';
+import { useError } from '@cityborn/client/infrastructure/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
@@ -19,12 +20,7 @@ export const SignUpComponent = () => {
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema),
-    defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
+    defaultValues: SIGN_UP_FORM_DEFAULT_VALUES,
   });
 
   useEffect(() => {

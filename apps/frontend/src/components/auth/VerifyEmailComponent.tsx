@@ -1,11 +1,11 @@
 'use client';
 
+import { useAuth } from '@cityborn/client/auth/react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { verifyEmail } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 

@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  type Category,
   type CategoryTree,
-  type GameConfig,
   type OnlinePlayer,
   type Session,
   SessionMode,
 } from '@cityborn/api';
+import { useCategorySelection } from '@cityborn/client/lobby/react';
+import type { SessionController } from '@cityborn/client/session';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -25,29 +25,9 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
-
-const flattenCategoryTree = (nodes: CategoryTree[]): Category[] =>
-  nodes.flatMap((node) => [
-    {
-      id: node.id,
-      name: node.name,
-      isPublished: node.isPublished,
-      description: node.description,
-      parentId: node.parentId,
-    },
-    ...flattenCategoryTree(node.children),
-  ]);
-
-const toCategory = (node: CategoryTree): Category => ({
-  id: node.id,
-  name: node.name,
-  isPublished: node.isPublished,
-  description: node.description,
-  parentId: node.parentId,
-});
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -58,58 +38,32 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const LobbyComponent = ({
   localPlayerID,
   session,
   categoryTrees,
-  handleUpdateGameConfig,
-  handleStartGame,
+  sessionController,
   handleJoinSession,
 }: {
   localPlayerID: string | undefined;
   session: Session;
   categoryTrees: CategoryTree[];
-  isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
-  handleStartGame: () => Promise<void>;
-  handleUpdateHost?: (newHostID: string) => Promise<void>;
-  handleKickPlayer?: (playerToKick: string) => Promise<void>;
-  handleJoinSession: (playerID: string) => Promise<void>;
+  sessionController: SessionController;
+  handleJoinSession?: (playerID: string) => Promise<void>;
 }) => {
   const [copied, setCopied] = useState(false);
   const [currentInput, setCurrentInput] = useState<string>('');
-  const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
   const router = useRouter();
-  const flatCategories = useMemo(
-    () => flattenCategoryTree(categoryTrees),
-    [categoryTrees],
-  );
-  useEffect(() => {
-    if (
-      flatCategories.length > 0 &&
-      session.gameConfig.categories.length === 0 &&
-      session.players.find((p) => p.username === localPlayerID)
-    ) {
-      handleUpdateGameConfig({ categories: flatCategories });
-    }
-  }, [
-    flatCategories,
-    session.gameConfig.categories.length,
-    handleUpdateGameConfig,
-    session.players,
-    localPlayerID,
-  ]);
 
-  const currentCategoryNodes =
-    selectedPath.length === 0
-      ? categoryTrees
-      : selectedPath[selectedPath.length - 1].children;
-
-  const handlePlayCategory = async (node: CategoryTree) => {
-    await handleUpdateGameConfig({ categories: [toCategory(node)] });
-    await handleStartGame();
-  };
+  const categorySelection = useCategorySelection({
+    categoryTrees,
+    selectedCategoriesCount: session.gameConfig.categories.length,
+    canConfigure: session.players.some(
+      (player) => player.username === localPlayerID,
+    ),
+    updateGameConfig: sessionController.updateGameConfig,
+    startGame: sessionController.startGame,
+  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
@@ -135,7 +89,7 @@ export const LobbyComponent = ({
       </div>
 
       <div
-        className="relative z-10 flex flex-col items-center justify-center 
+        className="relative z-10 flex flex-col items-center justify-center
                             bg-transparent h-full w-full pointer-events-none"
       >
         <Box
@@ -232,18 +186,13 @@ export const LobbyComponent = ({
               }
             >
               <div className="flex items-center gap-1">
-                {selectedPath.length > 0 && (
-                  <IconButton
-                    size="small"
-                    onClick={() => setSelectedPath((path) => path.slice(0, -1))}
-                  >
+                {categorySelection.canGoBack && (
+                  <IconButton size="small" onClick={categorySelection.goBack}>
                     <ArrowBackIcon fontSize="small" />
                   </IconButton>
                 )}
                 <Typography variant="subtitle1" noWrap>
-                  {selectedPath.length === 0
-                    ? 'Packs'
-                    : selectedPath[selectedPath.length - 1].name}
+                  {categorySelection.pathLabel}
                 </Typography>
               </div>
               <Box
@@ -255,7 +204,7 @@ export const LobbyComponent = ({
                   overflowY: 'auto',
                 }}
               >
-                {currentCategoryNodes.map((node) => (
+                {categorySelection.visibleNodes.map((node) => (
                   <Box
                     key={node.id}
                     sx={{
@@ -287,7 +236,7 @@ export const LobbyComponent = ({
                         size="small"
                         variant="contained"
                         disabled={session.hostID !== localPlayerID}
-                        onClick={() => handlePlayCategory(node)}
+                        onClick={() => categorySelection.playNode(node)}
                         sx={{ width: 96, fontSize: '0.7rem' }}
                       >
                         Jouer
@@ -296,9 +245,7 @@ export const LobbyComponent = ({
                         <Button
                           size="small"
                           variant="outlined"
-                          onClick={() =>
-                            setSelectedPath((path) => [...path, node])
-                          }
+                          onClick={() => categorySelection.openNode(node)}
                           sx={{ width: 96, fontSize: '0.7rem' }}
                         >
                           Sous-packs
@@ -323,30 +270,32 @@ export const LobbyComponent = ({
         </Box>
       </div>
 
-      <Dialog open={!localPlayerID}>
-        <DialogTitle>
-          <p>Entrez votre pseudo</p>
-        </DialogTitle>
-        <DialogContent className="flex flex-col justify-center">
-          <TextField
-            fullWidth
-            style={{ marginTop: 10 }}
-            label={'Pseudo'}
-            variant="outlined"
-            value={currentInput}
-            onChange={(e) => setCurrentInput(e.target.value)}
-          />
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            style={{ marginTop: 10 }}
-            disabled={currentInput.trim() === ''}
-            onClick={async () => await handleJoinSession(currentInput)}
-          >
-            <ArrowCircleRightIcon />
-          </LoadingButton>
-        </DialogContent>
-      </Dialog>
+      {handleJoinSession && (
+        <Dialog open={!localPlayerID}>
+          <DialogTitle>
+            <p>Entrez votre pseudo</p>
+          </DialogTitle>
+          <DialogContent className="flex flex-col justify-center">
+            <TextField
+              fullWidth
+              style={{ marginTop: 10 }}
+              label={'Pseudo'}
+              variant="outlined"
+              value={currentInput}
+              onChange={(e) => setCurrentInput(e.target.value)}
+            />
+            <LoadingButton
+              variant="contained"
+              color="primary"
+              style={{ marginTop: 10 }}
+              disabled={currentInput.trim() === ''}
+              onClick={() => handleJoinSession(currentInput)}
+            >
+              <ArrowCircleRightIcon />
+            </LoadingButton>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

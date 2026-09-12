@@ -8,11 +8,11 @@ import {
   isApiVersionOutdated,
   type User,
 } from '@cityborn/api';
+import { AuthProvider } from '@cityborn/client/auth/react';
 import {
-  AuthProvider,
   ErrorProvider,
   useMinSupportedApiVersion,
-} from '@cityborn/client';
+} from '@cityborn/client/infrastructure/react';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
@@ -25,6 +25,7 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { getCurrentUser } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
+import { authGateway } from '@/lib/gateways';
 
 installFrenchZodErrorMap();
 
@@ -97,7 +98,7 @@ export default function RootLayout() {
         <ErrorProvider ErrorDialogComponent={ErrorDialog}>
           <SafeAreaProvider>
             <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-              <AuthProvider initialValue={user} getCurrentUser={getCurrentUser}>
+              <AuthProvider initialValue={user} authGateway={authGateway}>
                 <StatusBar hidden={true} />
                 <Stack
                   screenOptions={{

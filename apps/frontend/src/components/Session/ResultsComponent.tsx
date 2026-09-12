@@ -1,6 +1,12 @@
 'use client';
 
 import { type Game, type PlayerResults, SessionMode } from '@cityborn/api';
+import {
+  getGameResult,
+  getGuessObjectName,
+  sortPlayersByTotalPoints,
+} from '@cityborn/client/game';
+import type { SessionController } from '@cityborn/client/session';
 import { calculateTotalPoints } from '@cityborn/core';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
@@ -17,28 +23,21 @@ import {
   TableRow,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { getGameResult } from '@/utils/getGameResult';
 import LoadingComponent from '../others/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 const ResultsComponent = ({
   game,
   localPlayerID,
-  isHost,
   mode,
-  handleEndGame,
-  handlePlayAgain,
-  handleExitGame,
+  sessionController,
 }: {
   game: Game;
   localPlayerID: string;
-  isHost: boolean;
   mode: SessionMode;
-  handleEndGame: () => Promise<void>;
-  handlePlayAgain: () => Promise<void>;
-  handleExitGame: () => Promise<void>;
+  sessionController: SessionController;
 }) => {
-  const playersResults = new Map<string, PlayerResults>(getGameResult(game));
+  const playersResults = getGameResult(game);
   const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
 
   useEffect(() => {
@@ -47,11 +46,6 @@ const ResultsComponent = ({
 
     setLocalPlayerResults(currentPlayerResults);
   }, [localPlayerID, playersResults.get]);
-
-  function getGuessObjectName(id: string): string {
-    const guessObject = game.state.guessObjects?.find((obj) => obj.id === id);
-    return guessObject ? guessObject.name : id;
-  }
 
   if (!localPlayerResults) {
     return <LoadingComponent message="Chargement des résultats" />;
@@ -112,7 +106,10 @@ const ResultsComponent = ({
                                 }}
                               >
                                 <TableCell component="th" scope="row">
-                                  {getGuessObjectName(result.guessObjectId)}
+                                  {getGuessObjectName(
+                                    game,
+                                    result.guessObjectId,
+                                  )}
                                 </TableCell>
                                 <TableCell align="right">
                                   {result.distance !== -1 ? (
@@ -132,13 +129,8 @@ const ResultsComponent = ({
                     </div>
                   ),
                 )
-              : Array.from(playersResults.entries())
-                  .sort(
-                    ([, aResults], [, bResults]) =>
-                      calculateTotalPoints(bResults) -
-                      calculateTotalPoints(aResults),
-                  )
-                  .map(([player, playerResults]) => (
+              : sortPlayersByTotalPoints(playersResults).map(
+                  ([player, playerResults]) => (
                     <Accordion key={player} className="w-full">
                       <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
                         <h3 className="font-bold">
@@ -187,7 +179,10 @@ const ResultsComponent = ({
                                   }}
                                 >
                                   <TableCell component="th" scope="row">
-                                    {getGuessObjectName(result.guessObjectId)}
+                                    {getGuessObjectName(
+                                      game,
+                                      result.guessObjectId,
+                                    )}
                                   </TableCell>
                                   <TableCell align="right">
                                     {result.distance !== -1 ? (
@@ -206,17 +201,16 @@ const ResultsComponent = ({
                         </TableContainer>
                       </AccordionDetails>
                     </Accordion>
-                  ))}
+                  ),
+                )}
           </div>
 
           <div className="flex flex-col justify-center items-center w-full gap-3">
             <LoadingButton
               variant="contained"
               color="primary"
-              onClick={async () => {
-                await handlePlayAgain();
-              }}
-              disabled={mode !== SessionMode.SOLO && !isHost}
+              onClick={sessionController.playAgain}
+              disabled={mode !== SessionMode.SOLO && !sessionController.isHost}
               className="w-24"
             >
               Rejouer
@@ -225,9 +219,7 @@ const ResultsComponent = ({
               <LoadingButton
                 variant="contained"
                 color="primary"
-                onClick={async () => {
-                  await handleEndGame();
-                }}
+                onClick={sessionController.endGame}
                 className="w-24"
               >
                 Lobby
@@ -235,9 +227,7 @@ const ResultsComponent = ({
               <LoadingButton
                 variant="contained"
                 color="primary"
-                onClick={async () => {
-                  await handleExitGame();
-                }}
+                onClick={sessionController.exitGame}
                 className="w-24"
               >
                 Menu

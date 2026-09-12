@@ -1,6 +1,7 @@
-import type { GameRecord, User } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { calculateTotalPoints } from '@cityborn/core';
+'use client';
+
+import type { User } from '@cityborn/api';
+import { useGameRecords } from '@cityborn/client/profile/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -13,27 +14,10 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getGameRecords } from '@/server/use-server/user';
+import { userGateway } from '@/lib/gateways';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
-  const { invokeError } = useError();
-  const [games, setGames] = useState<GameRecord[]>();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const result = await getGameRecords();
-        if (!result.ok) return invokeError(result.error);
-        const gameRecords: GameRecord[] = result.data;
-        setGames(gameRecords);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [invokeError]);
+  const { gameRecords, isLoading } = useGameRecords(userGateway, user.username);
 
   return (
     <Box
@@ -61,9 +45,9 @@ export const ProfileComponent = ({ user }: { user: User }) => {
         </Typography>
       </Box>
 
-      <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
+      <Accordion disabled={isLoading} sx={{ p: 0, m: 0 }}>
         <AccordionSummary
-          expandIcon={!loading ? <ExpandMoreIcon /> : null}
+          expandIcon={!isLoading ? <ExpandMoreIcon /> : null}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -71,12 +55,12 @@ export const ProfileComponent = ({ user }: { user: User }) => {
             width: '100%',
           }}
         >
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center w-full h-full ">
               <CircularProgress size={20} />
             </div>
           ) : (
-            <Typography>Games ({games?.length ?? 0})</Typography>
+            <Typography>Games ({gameRecords.length})</Typography>
           )}
         </AccordionSummary>
         <AccordionDetails
@@ -85,7 +69,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
             m: 0,
           }}
         >
-          {loading ? (
+          {isLoading ? (
             <List dense>
               {[1, 2, 3].map((i) => (
                 <ListItem key={i} divider>
@@ -93,14 +77,19 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 </ListItem>
               ))}
             </List>
-          ) : !games || games.length === 0 ? (
+          ) : gameRecords.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Aucune partie jouée
             </Typography>
           ) : (
             <List dense>
-              {games.map((game) => (
-                <ListItem key={game.id} divider disableGutters sx={{ p: 0 }}>
+              {gameRecords.map((gameRecord) => (
+                <ListItem
+                  key={gameRecord.id}
+                  divider
+                  disableGutters
+                  sx={{ p: 0 }}
+                >
                   <Accordion
                     elevation={0}
                     disableGutters
@@ -109,35 +98,28 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                     <AccordionSummary>
                       <div className="flex flex-col w-full">
                         <Typography variant="subtitle2">
-                          Partie #{game.id ?? '-'} - {game.createdAt}
+                          Partie #{gameRecord.id} - {gameRecord.playedAt}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {game.mode.toUpperCase()} •{' '}
-                          {calculateTotalPoints(game.results[user.username])}
+                          {gameRecord.mode.toUpperCase()} •{' '}
+                          {gameRecord.totalPoints}
                         </Typography>
                       </div>
                     </AccordionSummary>
                     <AccordionDetails>
                       <div className="flex flex-col gap-2">
                         <Typography variant="body2">
-                          Joueurs :{' '}
-                          {game.players.map((p) => p.username).join(', ')}
+                          Joueurs : {gameRecord.playerUsernames.join(', ')}
                         </Typography>
                         <Typography variant="body2">Scores :</Typography>
                         <List dense>
-                          {Object.entries(game.results).map(
-                            ([playerId, result]) => (
-                              <ListItem key={playerId} disableGutters>
-                                <ListItemText
-                                  primary={`${
-                                    game.players.find(
-                                      (p) => p.username === playerId,
-                                    )?.username ?? playerId
-                                  } : ${calculateTotalPoints(result)}`}
-                                />
-                              </ListItem>
-                            ),
-                          )}
+                          {gameRecord.scores.map((score) => (
+                            <ListItem key={score.username} disableGutters>
+                              <ListItemText
+                                primary={`${score.username} : ${score.totalPoints}`}
+                              />
+                            </ListItem>
+                          ))}
                         </List>
                       </div>
                     </AccordionDetails>
