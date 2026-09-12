@@ -1,7 +1,22 @@
 import type { ApiResult, CreateSession, Game, Session } from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
+import { toLightGame } from '@cityborn/core';
 import type { ApiClient } from '../../api/createApiClient';
-import { buildFinalizeGameBody } from './finalizeGame';
+
+type FinalizedSession = Session & {
+  currentGame: NonNullable<Session['currentGame']>;
+};
+
+/**
+ * Les guessObjects ne sont pas renvoyés au serveur : il les connaît déjà et le
+ * corps de la requête serait inutilement volumineux.
+ */
+export function buildFinalizeGameBody(
+  session: Session,
+): FinalizedSession | null {
+  if (!session.currentGame) return null;
+  return { ...session, currentGame: toLightGame(session.currentGame) };
+}
 
 export interface SessionApi {
   createSession(data: CreateSession): Promise<ApiResult<Session>>;

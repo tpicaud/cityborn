@@ -5,7 +5,7 @@ import type { GameConfig, Guess, Session } from '@cityborn/api';
  * promesse : le solo résout de façon synchrone là où le multi attend l'accusé
  * de réception du serveur, et les écrans attendent les deux de la même manière.
  */
-export interface IUseSession {
+export interface SessionController {
   session: Session | undefined;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;

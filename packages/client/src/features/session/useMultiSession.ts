@@ -7,9 +7,9 @@ import type { Navigation } from '../../platform/navigation';
 import type { SocketFactory } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
 import type { SessionApi } from './sessionApi';
+import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { emitWithAck } from './socketRequest';
-import type { IUseSession } from './useSession';
 import { useSocket } from './useSocket';
 
 export interface MultiSessionOptions {
@@ -20,7 +20,7 @@ export interface MultiSessionOptions {
   createSocket: SocketFactory;
 }
 
-export interface MultiSession extends IUseSession {
+export interface MultiSessionController extends SessionController {
   connected: boolean;
   hasDisconnected: boolean;
   join: (playerID: string) => Promise<void>;
@@ -35,7 +35,7 @@ export function useMultiSession({
   sessionApi,
   navigation,
   createSocket,
-}: MultiSessionOptions): MultiSession {
+}: MultiSessionOptions): MultiSessionController {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
   const [connected, setConnected] = useState(false);

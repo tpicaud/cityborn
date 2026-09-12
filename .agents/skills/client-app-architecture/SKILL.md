@@ -44,7 +44,7 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
 | `@cityborn/client/api` | `src/api/` | Transport : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : port `SessionApi`, hooks `useSoloSession` / `useMultiSession` / `useSocket`, transitions pures (`sessionState`), lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`, `socketRequest`) et les transitions (`sessionState`) restent privés au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | Partie en cours, résultats, contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 

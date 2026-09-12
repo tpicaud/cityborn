@@ -4,8 +4,8 @@ export {
   useCategorySelection,
   useCategoryTrees,
 } from './categorySelection';
-export * from './finalizeGame';
 export * from './sessionApi';
+export * from './sessionContract';
 export {
   type JoinSessionFormValues,
   type SessionLauncher,
@@ -14,5 +14,4 @@ export {
   useSessionLauncher,
 } from './sessionLauncher';
 export * from './useMultiSession';
-export * from './useSession';
 export * from './useSoloSession';

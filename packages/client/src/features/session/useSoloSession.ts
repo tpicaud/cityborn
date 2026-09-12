@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { useError } from '../../shared/errorContext';
 import type { SessionApi } from './sessionApi';
+import type { SessionController } from './sessionContract';
 import {
   advanceSoloRound,
   applySoloGuess,
@@ -14,7 +15,6 @@ import {
   withHost,
   withoutGame,
 } from './sessionState';
-import type { IUseSession } from './useSession';
 
 export interface SoloSessionOptions {
   localPlayerID: string;
@@ -26,7 +26,7 @@ export function useSoloSession({
   localPlayerID,
   sessionApi,
   navigation,
-}: SoloSessionOptions): IUseSession {
+}: SoloSessionOptions): SessionController {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
   const sessionRef = useRef<Session | undefined>(undefined);
