@@ -1,5 +1,6 @@
 import type { GameRecord } from '@cityborn/api';
-import { isoToLocalDate, useAuth, useError } from '@cityborn/client';
+import { isoToLocalDate, useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import { calculateTotalPoints } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';

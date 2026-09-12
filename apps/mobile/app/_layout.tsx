@@ -8,11 +8,8 @@ import {
   isApiVersionOutdated,
   type User,
 } from '@cityborn/api';
-import {
-  AuthProvider,
-  ErrorProvider,
-  useMinSupportedApiVersion,
-} from '@cityborn/client';
+import { ErrorProvider, useMinSupportedApiVersion } from '@cityborn/client';
+import { AuthProvider } from '@cityborn/client/auth';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';

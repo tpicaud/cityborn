@@ -1,6 +1,6 @@
 import { contract } from '@cityborn/api';
 import { initClient } from '@ts-rest/core';
-import type { TokenStorage } from '../types/token-storage';
+import type { TokenStorage } from '../platform/token-storage';
 import { AuthFetch, type AuthFetchOptions } from './auth-fetch';
 
 export function createApiClient(

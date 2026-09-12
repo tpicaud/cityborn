@@ -1,5 +1,6 @@
 import { SessionMode } from '@cityborn/api';
-import { useAuth, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';

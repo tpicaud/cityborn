@@ -1,9 +1,15 @@
 {
   "name": "@cityborn/client",
   "version": "1.0.0",
-  "main": "index.ts",
-  "types": "index.ts",
   "type": "module",
+  "exports": {
+    ".": "./src/shared/index.ts",
+    "./api": "./src/api/index.ts",
+    "./auth": "./src/features/auth/index.ts",
+    "./session": "./src/features/session/index.ts",
+    "./game": "./src/features/game/index.ts",
+    "./platform": "./src/platform/index.ts"
+  },
   "author": "Tom Picaud",
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -20,7 +26,6 @@
   },
   "peerDependencies": {
     "react": "19.2.3",
-    "react-dom": "19.2.3",
     "@types/react": "~19.2.14"
   },
   "license": "ISC"

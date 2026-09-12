@@ -1,4 +1,4 @@
-import { generateVisitorId } from '@cityborn/client';
+import { generateVisitorId } from '@cityborn/client/api';
 
 export function getOrCreateVisitorId(): string {
   let visitor_id = localStorage.getItem('visitor_id');

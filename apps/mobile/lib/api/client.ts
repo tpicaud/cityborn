@@ -1,5 +1,6 @@
 import { API_MIN_SUPPORTED_VERSION_HEADER_NAME } from '@cityborn/api';
-import { createApiClient, setMinSupportedApiVersion } from '@cityborn/client';
+import { setMinSupportedApiVersion } from '@cityborn/client';
+import { createApiClient } from '@cityborn/client/api';
 import { tokenStorage } from '../tokenStorage';
 import { getAppVersion, getBaseUrl } from '../utils';
 import { getOrCreateVisitorId } from '../visitorId';

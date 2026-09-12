@@ -1,10 +1,7 @@
 'use client';
 
-import {
-  SignUpFormSchema,
-  type SignUpFormValues,
-  useError,
-} from '@cityborn/client';
+import { useError } from '@cityborn/client';
+import { SignUpFormSchema, type SignUpFormValues } from '@cityborn/client/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';

@@ -1,5 +1,5 @@
 import type { Game, PlayerResults } from '@cityborn/api';
-import { getGameResult } from '@cityborn/client';
+import { getGameResult } from '@cityborn/client/game';
 import { calculateTotalPoints } from '@cityborn/core';
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';

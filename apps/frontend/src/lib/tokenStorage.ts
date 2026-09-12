@@ -1,4 +1,4 @@
-import type { TokenStorage } from '@cityborn/client';
+import type { TokenStorage } from '@cityborn/client/platform';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
 export class WebTokenStorage implements TokenStorage {

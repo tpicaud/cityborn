@@ -1,4 +1,5 @@
-import { useAuth, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
