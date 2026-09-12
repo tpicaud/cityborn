@@ -1,3 +1,3 @@
-export * from './game-component.props';
-export * from './game-result';
-export * from './map.props';
+export * from './gameComponentProps';
+export * from './gameResult';
+export * from './mapProps';

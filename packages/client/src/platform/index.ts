@@ -1,4 +1,4 @@
-export * from './key-value-storage';
+export * from './keyValueStorage';
 export * from './navigation';
 export * from './socket';
-export * from './token-storage';
+export * from './tokenStorage';

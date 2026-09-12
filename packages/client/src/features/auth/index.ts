@@ -1,2 +1,2 @@
-export * from './auth.schema';
-export * from './auth-context';
+export * from './authContext';
+export * from './authSchema';

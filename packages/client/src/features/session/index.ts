@@ -1,1 +1,1 @@
-export * from './finalize-game';
+export * from './finalizeGame';

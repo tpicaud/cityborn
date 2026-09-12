@@ -1,3 +1,3 @@
-export * from './auth-fetch';
-export * from './create-api-client';
-export * from './visitor-id';
+export * from './authFetch';
+export * from './createApiClient';
+export * from './visitorId';
