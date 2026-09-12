@@ -1,13 +1,9 @@
-import type {
-  CreateGameRecord,
-  GameRecord,
-  Player,
-  UserId,
-} from '@cityborn/api';
+import type { CreateGameRecord, GameRecord, UserId } from '@cityborn/api';
+import { GameRecordIdSchema } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
-import { GameMapper } from '../game.mapper';
+import { GameMapper } from '../mappers/game.mapper';
 import type { GameRecordRepository } from './game-record.repository';
 
 @Injectable()
@@ -18,18 +14,25 @@ export class PrismaGameRecordRepository implements GameRecordRepository {
 
   async create(
     createGameRecord: CreateGameRecord,
-    users: Pick<Player, 'id'>[],
+    users: { id: UserId }[],
   ): Promise<Pick<GameRecord, 'id'>> {
-    const game_record = await this.txHost.tx.gameRecord.create({
-      data: GameMapper.toPrismaCreateInput(createGameRecord, users),
+    const gameRecord = await this.txHost.tx.gameRecord.create({
+      data: {
+        mode: createGameRecord.mode,
+        gameConfig: createGameRecord.gameConfig,
+        players: createGameRecord.players,
+        guessObjectsIds: createGameRecord.guessObjectsIds,
+        results: createGameRecord.results,
+        users: { connect: users.map((user) => ({ id: user.id })) },
+      },
     });
 
-    return { id: game_record.id };
+    return { id: GameRecordIdSchema.parse(gameRecord.id) };
   }
 
-  async findRecentByUserId(user_id: UserId): Promise<GameRecord[] | null> {
+  async findRecentByUserId(userId: UserId): Promise<GameRecord[] | null> {
     const user = await this.txHost.tx.user.findUnique({
-      where: { id: user_id },
+      where: { id: userId },
       include: {
         gameRecords: {
           take: 5,

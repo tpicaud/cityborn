@@ -15,6 +15,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import {
+  CATEGORY_REPOSITORY,
+  type CategoryRepository,
+} from '../category/repositories/category.repository';
 import { WorldLocationService } from '../world-location/world-location.service';
 import {
   GUESS_OBJECT_REPOSITORY,
@@ -27,6 +31,8 @@ export class GuessObjectService {
   constructor(
     @Inject(GUESS_OBJECT_REPOSITORY)
     private readonly guessObjectRepository: GuessObjectRepository,
+    @Inject(CATEGORY_REPOSITORY)
+    private readonly categoryRepository: CategoryRepository,
     private readonly worldLocationService: WorldLocationService,
   ) {}
 
@@ -82,15 +88,19 @@ export class GuessObjectService {
 
   @Transactional()
   async delete(id: GuessObjectId): Promise<void> {
-    const guess_object = await this.guessObjectRepository.findForDeletion(id);
-    if (!guess_object) {
+    const [guessObject] = await this.guessObjectRepository.findBy({
+      ids: [id],
+    });
+    if (!guessObject) {
       throw new NotFoundException({
         code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
         message: `Guess object not found`,
       });
     }
 
-    if (guess_object.categories.length > 0) {
+    const categoriesCount =
+      await this.categoryRepository.countByGuessObjectId(id);
+    if (categoriesCount > 0) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: `Cannot delete guess object because it belongs to one or more categories`,
@@ -99,10 +109,12 @@ export class GuessObjectService {
 
     await this.guessObjectRepository.delete(id);
     const count = await this.guessObjectRepository.countByWorldLocationId(
-      guess_object.world_location_id,
+      guessObject.world_location_preview.id,
     );
     if (count === 0) {
-      await this.worldLocationService.delete(guess_object.world_location_id);
+      await this.worldLocationService.delete(
+        guessObject.world_location_preview.id,
+      );
     }
   }
 

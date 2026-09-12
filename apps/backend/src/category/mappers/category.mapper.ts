@@ -14,7 +14,7 @@ import type {
 import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
 
 export type PrismaCategoryNode = PrismaCategory & {
-  children: PrismaCategoryNode[];
+  children: (PrismaCategoryNode | PrismaCategory)[];
 };
 
 type PrismaCategoryWithRelations = PrismaCategory & {
@@ -22,7 +22,7 @@ type PrismaCategoryWithRelations = PrismaCategory & {
 };
 
 export const CategoryMapper = {
-  toCategory(prismaCategory: PrismaCategoryWithRelations): Category {
+  toCategory(prismaCategory: PrismaCategory): Category {
     return CategorySchema.parse({
       id: prismaCategory.id,
       name: prismaCategory.name,
@@ -60,16 +60,17 @@ export const CategoryMapper = {
     );
   },
 
-  toCategoryTree(node: PrismaCategoryNode): CategoryTree {
+  toCategoryTree(node: PrismaCategoryNode | PrismaCategory): CategoryTree {
     return CategoryTreeSchema.parse({
       id: node.id,
       name: node.name,
       isPublished: node.isPublished,
       description: node.description ?? undefined,
       parentId: node.parentId ?? undefined,
-      children: node.children.map((child) =>
-        CategoryMapper.toCategoryTree(child),
-      ),
+      children:
+        'children' in node
+          ? node.children.map((child) => CategoryMapper.toCategoryTree(child))
+          : [],
     });
   },
 

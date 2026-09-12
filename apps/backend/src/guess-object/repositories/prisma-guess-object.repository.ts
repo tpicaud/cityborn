@@ -13,7 +13,6 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { GuessObjectMapper } from '../mappers/guess-object.mapper';
 import type {
-  GuessObjectDeletionDetails,
   GuessObjectFilter,
   GuessObjectRepository,
 } from './guess-object.repository';
@@ -55,10 +54,10 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
 
   async findByNameAndWorldLocation(
     name: string,
-    world_location_id: WorldLocationId,
+    worldLocationId: WorldLocationId,
   ): Promise<Pick<GuessObject, 'id'> | null> {
     const existingGuessObject = await this.txHost.tx.guessObject.findFirst({
-      where: { name, world_location_id },
+      where: { name, world_location_id: worldLocationId },
     });
     return existingGuessObject
       ? { id: GuessObjectIdSchema.parse(existingGuessObject.id) }
@@ -66,7 +65,7 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
   }
 
   async create(createGuessObject: CreateGuessObject): Promise<GuessObjectId> {
-    const prisma_guess_object = await this.txHost.tx.guessObject.create({
+    const prismaGuessObject = await this.txHost.tx.guessObject.create({
       data: {
         name: createGuessObject.name,
         image: createGuessObject.image,
@@ -76,7 +75,7 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
         world_location_id: createGuessObject.world_location_id,
       },
     });
-    return GuessObjectIdSchema.parse(prisma_guess_object.id);
+    return GuessObjectIdSchema.parse(prismaGuessObject.id);
   }
 
   async update(
@@ -93,22 +92,11 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
       }),
     };
 
-    const updated_object = await this.txHost.tx.guessObject.update({
+    const updatedObject = await this.txHost.tx.guessObject.update({
       where: { id },
       data,
     });
-    return GuessObjectIdSchema.parse(updated_object.id);
-  }
-
-  async findForDeletion(
-    id: GuessObjectId,
-  ): Promise<GuessObjectDeletionDetails | null> {
-    const guess_object = await this.txHost.tx.guessObject.findUnique({
-      where: { id },
-      include: { categories: true },
-    });
-    if (!guess_object) return null;
-    return GuessObjectMapper.toDeletionDetails(guess_object);
+    return GuessObjectIdSchema.parse(updatedObject.id);
   }
 
   async delete(id: GuessObjectId): Promise<void> {
@@ -116,18 +104,18 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
   }
 
   async countByWorldLocationId(
-    world_location_id: WorldLocationId,
+    worldLocationId: WorldLocationId,
   ): Promise<number> {
     return this.txHost.tx.guessObject.count({
-      where: { world_location_id },
+      where: { world_location_id: worldLocationId },
     });
   }
 
   async searchDraftByName(name: string): Promise<GuessObjectDraft[]> {
-    const prisma_guess_objects = await this.txHost.tx.guessObject.findMany({
+    const prismaGuessObjects = await this.txHost.tx.guessObject.findMany({
       where: { name: { contains: name, mode: 'insensitive' } },
     });
-    return prisma_guess_objects.map((obj) =>
+    return prismaGuessObjects.map((obj) =>
       GuessObjectMapper.toGuessObjectDraftFromPrisma(obj),
     );
   }

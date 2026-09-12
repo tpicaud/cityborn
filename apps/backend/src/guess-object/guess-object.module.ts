@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CategoryRepositoryModule } from '../category/repositories/category-repository.module';
 import { PrismaClsModule } from '../prisma/prisma-cls.module';
 import { WorldLocationModule } from '../world-location/world-location.module';
 import { AdminGuessObjectController } from './controllers/guess-object.admin.controller';
@@ -8,7 +9,7 @@ import { GUESS_OBJECT_REPOSITORY } from './repositories/guess-object.repository'
 import { PrismaGuessObjectRepository } from './repositories/prisma-guess-object.repository';
 
 @Module({
-  imports: [PrismaClsModule, WorldLocationModule],
+  imports: [PrismaClsModule, WorldLocationModule, CategoryRepositoryModule],
   controllers: [PublicGuessObjectController, AdminGuessObjectController],
   providers: [
     GuessObjectService,

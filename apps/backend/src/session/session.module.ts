@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConnectionRegistryModule } from '../connection-registry/connection-registry.module';
 import { EventModule } from '../event/event.module';
 import { GameService } from '../game/game.service';
-import { GameRecordPersistenceModule } from '../game/game-record-persistence.module';
+import { GameRecordModule } from '../game-record/game-record.module';
 import { GuessObjectModule } from '../guess-object/guess-object.module';
 import { IdModule } from '../id/id.module';
 import { LockModule } from '../lock/lock.module';
@@ -19,7 +19,7 @@ import { SessionService } from './session.service';
     ConnectionRegistryModule,
     IdModule,
     GuessObjectModule,
-    GameRecordPersistenceModule,
+    GameRecordModule,
     EventModule,
     RateLimitModule,
   ],

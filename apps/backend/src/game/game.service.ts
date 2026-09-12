@@ -16,15 +16,12 @@ import {
   resolveNextRound,
   toLightGame,
 } from '@cityborn/core';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
+import { GameRecordService } from '../game-record/game-record.service';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
-import {
-  GAME_RECORD_REPOSITORY,
-  type GameRecordRepository,
-} from './repositories/game-record.repository';
 
 export type CreateGameParams = {
   gameConfig: GameConfig;
@@ -37,8 +34,7 @@ export type CreateGameParams = {
 export class GameService {
   constructor(
     private readonly guessObjectService: GuessObjectService,
-    @Inject(GAME_RECORD_REPOSITORY)
-    private readonly gameRecordRepository: GameRecordRepository,
+    private readonly gameRecordService: GameRecordService,
     private readonly eventService: EventService,
     private readonly idService: IdService,
   ) {}
@@ -98,7 +94,7 @@ export class GameService {
     mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
-    const game_record = await this.gameRecordRepository.create(
+    const gameRecord = await this.gameRecordService.create(
       {
         mode,
         gameConfig: game.config,
@@ -126,7 +122,7 @@ export class GameService {
           name: 'game_finished',
           visitorId,
           properties: {
-            gameId: game_record.id.toString(),
+            gameId: gameRecord.id.toString(),
             mode,
             numberOfPlayers: Object.keys(game.state.results).length,
             average_score: averageScore,

@@ -16,15 +16,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { GameRecordService } from '../game-record/game-record.service';
 import {
-  GAME_RECORD_REPOSITORY,
-  type GameRecordRepository,
-} from '../game/repositories/game-record.repository';
+  EMAIL_VERIFICATION_TOKEN_REPOSITORY,
+  type EmailVerificationTokenRepository,
+} from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
   USER_REPOSITORY,
+  type UserCredentials,
   type UserRepository,
-  type UserWithPassword,
 } from './repositories/user.repository';
 
 @Injectable()
@@ -32,11 +33,12 @@ export class UserService {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: UserRepository,
-    @Inject(GAME_RECORD_REPOSITORY)
-    private readonly gameRecordRepository: GameRecordRepository,
+    @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
+    private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
+    private readonly gameRecordService: GameRecordService,
   ) {}
 
-  async createUser(data: CreateUserData): Promise<UserWithPassword> {
+  async createUser(data: CreateUserData): Promise<User> {
     return this.userRepository.create(data);
   }
 
@@ -44,15 +46,25 @@ export class UserService {
     await this.userRepository.delete(user_id);
   }
 
-  async findByIdentifier(identifier: string): Promise<UserWithPassword | null> {
+  async findByIdentifier(identifier: string): Promise<User | null> {
     return this.userRepository.findByIdentifier(identifier);
+  }
+
+  async findCredentialsByIdentifier(
+    identifier: string,
+  ): Promise<UserCredentials | null> {
+    return this.userRepository.findCredentialsByIdentifier(identifier);
+  }
+
+  async existsByUsername(username: Username): Promise<boolean> {
+    return this.userRepository.existsByUsername(username);
   }
 
   async findById(id: UserId): Promise<User | null> {
     return this.userRepository.findById(id);
   }
 
-  async findByAppleId(appleUserId: string): Promise<UserWithPassword | null> {
+  async findByAppleId(appleUserId: string): Promise<User | null> {
     return this.userRepository.findByAppleId(appleUserId);
   }
 
@@ -86,7 +98,9 @@ export class UserService {
   ): Promise<string> {
     if (cooldownMs) {
       const existingToken =
-        await this.userRepository.findLatestVerificationToken(userId);
+        await this.emailVerificationTokenRepository.findLatestVerificationToken(
+          userId,
+        );
 
       if (
         existingToken &&
@@ -102,8 +116,10 @@ export class UserService {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await this.userRepository.deleteVerificationTokens(userId);
-    await this.userRepository.createVerificationToken({
+    await this.emailVerificationTokenRepository.deleteVerificationTokens(
+      userId,
+    );
+    await this.emailVerificationTokenRepository.createVerificationToken({
       userId,
       token,
       expiresAt,
@@ -114,11 +130,15 @@ export class UserService {
 
   async verifyEmail(verificationToken: string): Promise<User> {
     const token =
-      await this.userRepository.findVerificationToken(verificationToken);
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
 
     if (!token || token.expiresAt < new Date()) {
       if (token) {
-        await this.userRepository.deleteVerificationToken(token.id);
+        await this.emailVerificationTokenRepository.deleteVerificationToken(
+          token.id,
+        );
       }
 
       throw new UnauthorizedException({
@@ -132,7 +152,7 @@ export class UserService {
 
   async getGameRecords(user_id: UserId): Promise<GameRecord[]> {
     const gameRecords =
-      await this.gameRecordRepository.findRecentByUserId(user_id);
+      await this.gameRecordService.findRecentByUserId(user_id);
 
     if (!gameRecords)
       throw new UnauthorizedException({
@@ -154,13 +174,15 @@ export class UserService {
       });
     }
 
-    await this.gameRecordRepository.create(createGameRecord, [{ id: user_id }]);
+    await this.gameRecordService.create(createGameRecord, [{ id: user_id }]);
   }
 
   @Transactional()
   private async completeEmailVerification(userId: UserId): Promise<User> {
     const user = await this.userRepository.markEmailVerified(userId);
-    await this.userRepository.deleteVerificationTokens(userId);
+    await this.emailVerificationTokenRepository.deleteVerificationTokens(
+      userId,
+    );
     return user;
   }
 }

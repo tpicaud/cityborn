@@ -4,12 +4,9 @@ import {
   type GuessObject,
   type GuessObjectDraft,
   GuessObjectDraftSchema,
-  GuessObjectIdSchema,
   GuessObjectSchema,
-  WorldLocationIdSchema,
 } from '@cityborn/api';
 import type {
-  Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
   WorldLocationGeometry as PrismaWorldLocationGeometry,
@@ -19,7 +16,6 @@ import type {
   WikidataSearchResponse,
 } from '../../wikidata/wikidata.service';
 import { WorldLocationMapper } from '../../world-location/mapper/world-location.mapper';
-import type { GuessObjectDeletionDetails } from '../repositories/guess-object.repository';
 
 type PrismaGuessObjectWithLocation = PrismaGuessObject & {
   world_location: PrismaWorldLocation;
@@ -93,21 +89,5 @@ export const GuessObjectMapper = {
     return response.results.map((item) =>
       GuessObjectMapper.toGuessObjectDraft(item),
     );
-  },
-
-  toDeletionDetails(
-    guess_object: Pick<PrismaGuessObject, 'id' | 'world_location_id'> & {
-      categories: PrismaCategory[];
-    },
-  ): GuessObjectDeletionDetails {
-    return {
-      id: GuessObjectIdSchema.parse(guess_object.id),
-      world_location_id: WorldLocationIdSchema.parse(
-        guess_object.world_location_id,
-      ),
-      categories: guess_object.categories.map((category) => ({
-        id: category.id,
-      })),
-    };
   },
 };

@@ -9,19 +9,32 @@ import type {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import type { Prisma } from '@prisma/client';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
-import {
-  CategoryMapper,
-  type PrismaCategoryNode,
-} from '../mappers/category.mapper';
+import { CategoryMapper } from '../mappers/category.mapper';
 import type { CategoryFilter, CategoryRepository } from './category.repository';
 
-const TREE_DEPTH = 6;
-
-function buildChildrenInclude(depth: number): object {
-  if (depth === 0) return {};
-  return { children: { include: buildChildrenInclude(depth - 1) } };
-}
+const categoryTreeInclude = {
+  children: {
+    include: {
+      children: {
+        include: {
+          children: {
+            include: {
+              children: {
+                include: {
+                  children: {
+                    include: { children: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.CategoryInclude;
 
 @Injectable()
 export class PrismaCategoryRepository implements CategoryRepository {
@@ -39,9 +52,9 @@ export class PrismaCategoryRepository implements CategoryRepository {
           isPublished: filter.isPublished,
         }),
       },
-      include: buildChildrenInclude(TREE_DEPTH),
+      include: categoryTreeInclude,
     });
-    return CategoryMapper.toCategoryTrees(roots as PrismaCategoryNode[]);
+    return CategoryMapper.toCategoryTrees(roots);
   }
 
   async findBy(filter: CategoryFilter): Promise<Category[]> {

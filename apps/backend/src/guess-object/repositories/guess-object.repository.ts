@@ -1,5 +1,4 @@
 import type {
-  Category,
   CategoryId,
   CreateGuessObject,
   FullGuessObject,
@@ -18,28 +17,19 @@ export interface GuessObjectFilter {
   categoryIds?: CategoryId[];
 }
 
-export interface GuessObjectDeletionDetails {
-  id: GuessObjectId;
-  world_location_id: WorldLocationId;
-  categories: Pick<Category, 'id'>[];
-}
-
 export interface GuessObjectRepository {
   findBy(filter: GuessObjectFilter): Promise<GuessObject[]>;
   findFullBy(filter: GuessObjectFilter): Promise<FullGuessObject[]>;
   findByNameAndWorldLocation(
     name: string,
-    world_location_id: WorldLocationId,
+    worldLocationId: WorldLocationId,
   ): Promise<Pick<GuessObject, 'id'> | null>;
   create(createGuessObject: CreateGuessObject): Promise<GuessObjectId>;
   update(
     id: GuessObjectId,
     updatedFields: PatchGuessObject,
   ): Promise<GuessObjectId>;
-  findForDeletion(
-    id: GuessObjectId,
-  ): Promise<GuessObjectDeletionDetails | null>;
   delete(id: GuessObjectId): Promise<void>;
-  countByWorldLocationId(world_location_id: WorldLocationId): Promise<number>;
+  countByWorldLocationId(worldLocationId: WorldLocationId): Promise<number>;
   searchDraftByName(name: string): Promise<GuessObjectDraft[]>;
 }
