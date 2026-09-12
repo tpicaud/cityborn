@@ -7,6 +7,9 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  UserIdSchema,
+  type Username,
+  UsernameSchema,
   VerifyEmailData,
 } from '@cityborn/api';
 import {
@@ -386,7 +389,7 @@ export class AuthService {
   ): Promise<void> {
     const verificationToken =
       await this.userService.createEmailVerificationToken(
-        user.id,
+        UserIdSchema.parse(user.id),
         resendCooldownMs,
       );
     await this.mailService.sendMail(
@@ -403,13 +406,13 @@ export class AuthService {
 
   private async generateToken(
     type: 'access' | 'refresh',
-    id: string,
-    username: string,
+    id: unknown,
+    username: unknown,
     email: string,
   ): Promise<string> {
     const payload = {
-      id,
-      username,
+      id: UserIdSchema.parse(id),
+      username: UsernameSchema.parse(username),
       email,
     };
 
@@ -458,7 +461,7 @@ export class AuthService {
     };
   }
 
-  private async generateUniqueUsername(base: string): Promise<string> {
+  private async generateUniqueUsername(base: string): Promise<Username> {
     const sanitized = base.replace(/\s+/g, '').toLowerCase();
 
     let username: string = sanitized;
@@ -471,6 +474,6 @@ export class AuthService {
       exists = !!(await this.userService.findByIdentifier(username));
     }
 
-    return username;
+    return UsernameSchema.parse(username);
   }
 }

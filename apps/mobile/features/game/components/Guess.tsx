@@ -1,4 +1,9 @@
-import { type Game, type Guess as GuessType, RoundStatus } from '@cityborn/api';
+import {
+  type Game,
+  type Guess as GuessType,
+  type PlayerId,
+  RoundStatus,
+} from '@cityborn/api';
 import type { MapProps } from '@cityborn/client/game';
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -8,7 +13,7 @@ import Overlay from './Overlay';
 import RoundCountdown from './RoundCountdown';
 
 interface GuessProps {
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   game: Game;
   isHost: boolean;
   handleGuess: (guess: GuessType) => void;

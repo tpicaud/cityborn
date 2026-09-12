@@ -4,6 +4,7 @@ import {
   type Game,
   GameStatus,
   type Guess,
+  type PlayerId,
   RoundStatus,
   type Session,
 } from '@cityborn/api';
@@ -25,7 +26,7 @@ export const GameComponent = ({
   handlePlayAgain,
   handleExitGame,
 }: {
-  localPlayerID: string | undefined;
+  localPlayerID: PlayerId | undefined;
   isHost: boolean;
   session: Session;
   game: Game;

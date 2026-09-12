@@ -1,12 +1,14 @@
 import {
   type Game,
   type GameConfig,
+  type GameId,
+  GameIdSchema,
   GameStatus,
   type Guess,
-  type OnlinePlayer,
-  type Player,
+  type PlayerId,
   type PlayerResults,
   SessionMode,
+  type SessionPlayer,
 } from '@cityborn/api';
 import {
   applyGuess,
@@ -24,7 +26,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 export type CreateGameParams = {
   gameConfig: GameConfig;
-  players: Player[];
+  players: SessionPlayer[];
   mode: SessionMode;
   visitorId?: string;
 };
@@ -61,7 +63,7 @@ export class GameService {
             acc[player.username] = { results: [] };
             return acc;
           },
-          {} satisfies Record<string, PlayerResults>,
+          {} satisfies Record<PlayerId, PlayerResults>,
         ),
         guessObjects: guessObjects,
       },
@@ -78,9 +80,7 @@ export class GameService {
             numberOfPlayers:
               mode === SessionMode.SOLO
                 ? players.length
-                : (players as OnlinePlayer[]).filter(
-                    (player) => player.connected,
-                  ).length,
+                : players.filter((player) => player.connected).length,
           },
         }),
       );
@@ -91,7 +91,7 @@ export class GameService {
 
   async endGame(
     game: Game,
-    players: Player[],
+    players: SessionPlayer[],
     mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
@@ -141,11 +141,11 @@ export class GameService {
 
   applyGuess(
     game: Game,
-    playerID: string,
+    playerID: PlayerId,
     guess: Guess,
-    connectedPlayerUsernames: string[],
+    connectedPlayerIds: PlayerId[],
   ): Game {
-    return applyGuess(game, playerID, guess, connectedPlayerUsernames);
+    return applyGuess(game, playerID, guess, connectedPlayerIds);
   }
 
   resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {
@@ -156,8 +156,8 @@ export class GameService {
     return toLightGame(game);
   }
 
-  private async generateUniqueGameID(): Promise<string> {
+  private async generateUniqueGameID(): Promise<GameId> {
     const candidateId = this.idService.generateUniqueNamesId();
-    return candidateId.toString(); // TODO Check in supabase and redis for conflicts
+    return GameIdSchema.parse(candidateId); // TODO Check in supabase and redis for conflicts
   }
 }

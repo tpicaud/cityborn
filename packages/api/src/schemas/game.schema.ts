@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { CategorySchema } from './category.schema';
 import {
+  GameIdSchema,
+  GameRecordIdSchema,
+  GuessObjectIdSchema,
+  type PlayerId,
+  PlayerIdSchema,
+} from './common.schema';
+import {
   GameStatusSchema,
   RoundStatusSchema,
   SessionModeSchema,
@@ -20,6 +27,22 @@ export const GuessSchema = z.object({
   win: z.boolean(),
 });
 
+function brandPlayerRecord<T>(record: Record<string, T>): Record<PlayerId, T> {
+  return Object.fromEntries(
+    Object.entries(record).map(([playerId, value]) => [
+      PlayerIdSchema.parse(playerId),
+      value,
+    ]),
+  );
+}
+
+const PlayerGuessesSchema = z
+  .record(z.string(), GuessSchema)
+  .transform(brandPlayerRecord);
+const PlayerResultsByIdSchema = z
+  .record(z.string(), PlayerResultsSchema)
+  .transform(brandPlayerRecord);
+
 export const GameConfigSchema = z.object({
   categories: z.array(CategorySchema),
   timer: z.number(),
@@ -28,31 +51,31 @@ export const GameConfigSchema = z.object({
 
 export const RoundSchema = z.object({
   status: RoundStatusSchema,
-  guessObjectId: z.string(),
-  playersGuesses: z.record(z.string(), GuessSchema).optional(),
+  guessObjectId: GuessObjectIdSchema,
+  playersGuesses: PlayerGuessesSchema.optional(),
 });
 
 export const GameStateSchema = z.object({
-  guessObjectsIds: z.array(z.string()),
-  results: z.record(z.string(), PlayerResultsSchema),
+  guessObjectsIds: z.array(GuessObjectIdSchema),
+  results: PlayerResultsByIdSchema,
   currentRound: RoundSchema.optional(),
   guessObjects: z.array(FullGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({
-  id: z.string(),
+  id: GameIdSchema,
   config: GameConfigSchema,
   status: GameStatusSchema,
   state: GameStateSchema,
 });
 
 export const GameRecordSchema = z.object({
-  id: z.string(),
+  id: GameRecordIdSchema,
   mode: SessionModeSchema,
   gameConfig: GameConfigSchema,
   players: z.array(PlayerSchema),
-  guessObjectsIds: z.array(z.string()),
-  results: z.record(z.string(), PlayerResultsSchema),
+  guessObjectsIds: z.array(GuessObjectIdSchema),
+  results: PlayerResultsByIdSchema,
   createdAt: z.string(),
 });
 

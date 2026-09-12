@@ -3,6 +3,7 @@
 import {
   type Game,
   type Guess,
+  type PlayerId,
   RoundStatus,
   type Session,
 } from '@cityborn/api';
@@ -20,7 +21,7 @@ const GoogleMapComponent = dynamic(
 const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
 
 interface GuessComponentProps {
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   session: Session;
   game: Game;
   handleGuess: (guess: Guess) => void;

@@ -3,8 +3,10 @@ import {
   AccountType,
   type CreateGameRecord,
   ErrorCode,
-  GameRecord,
+  type GameRecord,
   SessionMode,
+  type UserId,
+  type Username,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -12,7 +14,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma, User as PrismaUser } from '@prisma/client';
+import { Prisma, type User as PrismaUser } from '@prisma/client';
 import { GameMapper } from '../game/game.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -22,7 +24,7 @@ export class UserService {
 
   async createUser(data: {
     email: string;
-    username: string;
+    username: Username;
     type: AccountType;
     isVerified?: boolean;
     password?: string;
@@ -31,7 +33,7 @@ export class UserService {
     return await this.prisma.user.create({ data });
   }
 
-  async deleteUser(user_id: string): Promise<void> {
+  async deleteUser(user_id: UserId): Promise<void> {
     await this.prisma.user.delete({
       where: { id: user_id },
     });
@@ -45,7 +47,7 @@ export class UserService {
     });
   }
 
-  async findById(id: string): Promise<PrismaUser | null> {
+  async findById(id: UserId): Promise<PrismaUser | null> {
     return await this.prisma.user.findUnique({ where: { id } });
   }
 
@@ -57,7 +59,7 @@ export class UserService {
     });
   }
 
-  async validateIdentifiers(username: string, email: string): Promise<void> {
+  async validateIdentifiers(username: Username, email: string): Promise<void> {
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ username }, { email }],
@@ -82,7 +84,7 @@ export class UserService {
   }
 
   async createEmailVerificationToken(
-    userId: string,
+    userId: UserId,
     cooldownMs?: number,
   ): Promise<string> {
     if (cooldownMs) {
@@ -157,7 +159,7 @@ export class UserService {
   ///////////////
   // Relations //
   ///////////////
-  async getGameRecords(user_id: string): Promise<GameRecord[]> {
+  async getGameRecords(user_id: UserId): Promise<GameRecord[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: user_id },
       include: {
@@ -177,7 +179,7 @@ export class UserService {
   }
 
   async saveSoloGameRecord(
-    user_id: string,
+    user_id: UserId,
     createGameRecord: CreateGameRecord,
   ): Promise<void> {
     if (createGameRecord.mode !== SessionMode.SOLO) {

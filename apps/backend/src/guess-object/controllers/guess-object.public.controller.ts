@@ -1,4 +1,4 @@
-import { contract, ErrorCode } from '@cityborn/api';
+import { contract, ErrorCode, GuessObjectIdSchema } from '@cityborn/api';
 import { Controller, NotFoundException } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { GuessObjectService } from '../guess-object.service';
@@ -24,7 +24,9 @@ export class PublicGuessObjectController {
       },
 
       getGuessObjects: async ({ query }) => {
-        const idsArray = query.guessObjectsIds.split(',');
+        const idsArray = query.guessObjectsIds
+          .split(',')
+          .map((id) => GuessObjectIdSchema.parse(id));
         return {
           status: 200 as const,
           body: await this.guessObjectsService.findBy({ ids: idsArray }),
@@ -45,7 +47,9 @@ export class PublicGuessObjectController {
       },
 
       getFullGuessObjects: async ({ query }) => {
-        const idsArray = query.guessObjectsIds.split(',');
+        const idsArray = query.guessObjectsIds
+          .split(',')
+          .map((id) => GuessObjectIdSchema.parse(id));
         return {
           status: 200 as const,
           body: await this.guessObjectsService.findFullBy({ ids: idsArray }),

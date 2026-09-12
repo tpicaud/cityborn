@@ -1,11 +1,14 @@
 import {
-  CreateGuessObject,
+  type CreateGuessObject,
   ErrorCode,
-  FullGuessObject,
-  GameConfig,
-  GuessObject,
-  GuessObjectDraft,
-  PatchGuessObject,
+  type FullGuessObject,
+  type GameConfig,
+  type GuessObject,
+  type GuessObjectDraft,
+  type GuessObjectId,
+  GuessObjectIdSchema,
+  type PatchGuessObject,
+  WorldLocationIdSchema,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -25,7 +28,7 @@ export class GuessObjectService {
   ) {}
 
   async findBy(filter: {
-    ids?: string[];
+    ids?: GuessObjectId[];
     external_id?: string;
   }): Promise<GuessObject[]> {
     const rowsGuessObject = await this.prisma.guessObject.findMany({
@@ -43,7 +46,7 @@ export class GuessObjectService {
   }
 
   async findFullBy(filter: {
-    ids?: string[];
+    ids?: GuessObjectId[];
     external_id?: string;
   }): Promise<FullGuessObject[]> {
     const rows = await this.prisma.guessObject.findMany({
@@ -83,7 +86,7 @@ export class GuessObjectService {
     return selected.map((obj) => GuessObjectMapper.toFullGuessObject(obj));
   }
 
-  async create(createGuessObject: CreateGuessObject): Promise<string> {
+  async create(createGuessObject: CreateGuessObject): Promise<GuessObjectId> {
     const world_location = await this.worldLocationService.get(
       createGuessObject.world_location_id,
     );
@@ -99,7 +102,7 @@ export class GuessObjectService {
     });
 
     if (existingGuessObject) {
-      return existingGuessObject.id;
+      return GuessObjectIdSchema.parse(existingGuessObject.id);
     }
 
     const prisma_guess_object = await this.prisma.guessObject.create({
@@ -113,10 +116,13 @@ export class GuessObjectService {
       },
     });
 
-    return prisma_guess_object.id;
+    return GuessObjectIdSchema.parse(prisma_guess_object.id);
   }
 
-  async update(id: string, updatedFields: PatchGuessObject): Promise<string> {
+  async update(
+    id: GuessObjectId,
+    updatedFields: PatchGuessObject,
+  ): Promise<GuessObjectId> {
     const data = {
       name: updatedFields.name,
       image: updatedFields.image,
@@ -132,10 +138,10 @@ export class GuessObjectService {
       data,
     });
 
-    return updated_object.id;
+    return GuessObjectIdSchema.parse(updated_object.id);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: GuessObjectId): Promise<void> {
     const guess_object = await this.prisma.guessObject.findUnique({
       where: { id },
       include: { categories: true },
@@ -164,7 +170,9 @@ export class GuessObjectService {
     });
 
     if (count === 0) {
-      await this.worldLocationService.delete(guess_object.world_location_id);
+      await this.worldLocationService.delete(
+        WorldLocationIdSchema.parse(guess_object.world_location_id),
+      );
     }
   }
 

@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { UserIdSchema, UsernameSchema } from './common.schema';
 import { GameRecordSchema } from './game.schema';
 
 export const AccountTypeSchema = z.enum(['email', 'google', 'apple']);
 
 export const PublicUserSchema = z.object({
-  id: z.string(),
-  username: z.string(),
+  id: UserIdSchema,
+  username: UsernameSchema,
 });
 
 export const UserSchema = PublicUserSchema.extend({
@@ -22,7 +23,7 @@ export const UserSchema = PublicUserSchema.extend({
 });
 
 export const CreateUserSchema = z.object({
-  username: z.string().min(3).max(20),
+  username: z.string().min(3).max(20).brand<'Username'>(),
   email: z.string().email(),
   password: z
     .string()

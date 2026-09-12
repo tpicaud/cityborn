@@ -1,16 +1,20 @@
-import type {
-  FullGuessObject,
-  GuessObject,
-  GuessObjectDraft,
+import type { z } from 'zod';
+import {
+  type FullGuessObject,
+  FullGuessObjectSchema,
+  type GuessObject,
+  type GuessObjectDraft,
+  GuessObjectDraftSchema,
+  GuessObjectSchema,
 } from '../schemas/guess-object.schema';
 import { buildWorldLocation } from './world-location.builder';
 
 export function buildGuessObject(
-  overrides: Partial<GuessObject> = {},
+  overrides: Partial<z.input<typeof GuessObjectSchema>> = {},
 ): GuessObject {
   const worldLocation = buildWorldLocation();
 
-  return structuredClone({
+  return GuessObjectSchema.parse({
     id: '00000000-0000-4000-8000-000000000020',
     name: 'Eiffel Tower',
     image: 'https://example.com/eiffel.jpg',
@@ -27,11 +31,11 @@ export function buildGuessObject(
 }
 
 export function buildFullGuessObject(
-  overrides: Partial<FullGuessObject> = {},
+  overrides: Partial<z.input<typeof FullGuessObjectSchema>> = {},
 ): FullGuessObject {
   const guessObject = buildGuessObject();
 
-  return structuredClone({
+  return FullGuessObjectSchema.parse({
     id: guessObject.id,
     name: guessObject.name,
     image: guessObject.image,
@@ -44,11 +48,11 @@ export function buildFullGuessObject(
 }
 
 export function buildGuessObjectDraft(
-  overrides: Partial<GuessObjectDraft> = {},
+  overrides: Partial<z.input<typeof GuessObjectDraftSchema>> = {},
 ): GuessObjectDraft {
   const guessObject = buildGuessObject();
 
-  return structuredClone({
+  return GuessObjectDraftSchema.parse({
     name: guessObject.name,
     image: guessObject.image,
     description: guessObject.description,

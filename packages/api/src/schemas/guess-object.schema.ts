@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { GuessObjectIdSchema, WorldLocationIdSchema } from './common.schema';
 import {
   WorldLocationPreviewSchema,
   WorldLocationSchema,
 } from './world-location.schema';
 
 export const BaseGuessObjectSchema = z.object({
-  id: z.string(),
+  id: GuessObjectIdSchema,
   name: z.string(),
   image: z.string().optional(),
   description: z.string().optional(),
@@ -30,13 +31,13 @@ export const FullGuessObjectsSchema = z.array(FullGuessObjectSchema);
 export const CreateGuessObjectSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
-  world_location_id: z.string(),
+  world_location_id: WorldLocationIdSchema,
 });
 
 export const GuessObjectDraftSchema = BaseGuessObjectSchema.omit({
   id: true,
 }).extend({
-  id: z.string().optional(),
+  id: GuessObjectIdSchema.optional(),
   world_location: WorldLocationSchema.optional(),
 });
 
@@ -47,7 +48,7 @@ export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
 })
   .partial()
   .extend({
-    world_location_id: z.string().optional(),
+    world_location_id: WorldLocationIdSchema.optional(),
   });
 
 export type GuessObject = z.infer<typeof GuessObjectSchema>;

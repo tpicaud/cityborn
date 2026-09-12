@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { WorldLocationIdSchema } from './common.schema';
 
 export const WorldLocationSchema = z.object({
-  id: z.string(),
+  id: WorldLocationIdSchema,
   osm_type: z.string(),
   name: z.string(),
   display_name: z.string(),

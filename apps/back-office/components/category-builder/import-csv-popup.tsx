@@ -1,5 +1,5 @@
 import * as Ariakit from '@ariakit/react';
-import { resolveErrorMessage } from '@cityborn/api';
+import { type GuessObjectId, resolveErrorMessage } from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -25,7 +25,7 @@ interface ImportRecap {
 export function ImportCSVPopup({
   addOrUpdateGuessObjectToCategory,
 }: {
-  addOrUpdateGuessObjectToCategory: (id: string) => Promise<void>;
+  addOrUpdateGuessObjectToCategory: (id: GuessObjectId) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const [file, setFile] = useState<File>();

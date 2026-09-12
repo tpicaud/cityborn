@@ -2,6 +2,7 @@ import {
   type FullGuessObject,
   type Game,
   type Guess,
+  type PlayerId,
   type Round,
   RoundStatus,
 } from '@cityborn/api';
@@ -20,7 +21,7 @@ function GuessResult({
 }: {
   currentRound: Round;
   guessObject: FullGuessObject;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
 }) {
   if (
     !currentRound.playersGuesses ||
@@ -95,7 +96,7 @@ function GuessResult({
 }
 
 interface OverlayProps {
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   preGuess: Guess | undefined;
   game: Game;
   isHost: boolean;

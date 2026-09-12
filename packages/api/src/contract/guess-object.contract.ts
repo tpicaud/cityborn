@@ -1,7 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { commonErrorResponses } from '../schemas/api-error.schema';
-import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema';
+import {
+  GuessObjectIdParamSchema,
+  IncludeQuerySchema,
+} from '../schemas/common.schema';
 import {
   FullGuessObjectSchema,
   FullGuessObjectsSchema,
@@ -22,14 +25,14 @@ export const guessObjectContract = c.router(
     getGuessObject: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: GuessObjectSchema, ...commonErrorResponses },
     },
     getFullGuessObject: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
     },

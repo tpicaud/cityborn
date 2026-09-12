@@ -1,4 +1,8 @@
-import { Category, CategoryTree } from '@cityborn/api';
+import {
+  type Category,
+  type CategoryId,
+  type CategoryTree,
+} from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
 import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
@@ -12,7 +16,7 @@ export class PublicCategoryService {
     return CategoryMapper.toCategories(categories);
   }
 
-  async findBy(filter: { ids?: string[] }): Promise<Category[]> {
+  async findBy(filter: { ids?: CategoryId[] }): Promise<Category[]> {
     const categories = await this.categoryService.findBy({
       ...filter,
       isPublished: true,

@@ -9,7 +9,8 @@ export const SignUpFormSchema = CreateUserSchema.extend({
   path: ['confirmPassword'],
 });
 
-export type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
+export type SignUpFormInput = z.input<typeof SignUpFormSchema>;
+export type SignUpFormValues = z.output<typeof SignUpFormSchema>;
 
 export function toCreateUser({
   username,

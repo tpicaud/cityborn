@@ -1,7 +1,10 @@
+import { CategoryIdSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { Category as PrismaCategory } from '@prisma/client';
 import { PublicCategoryService } from './category.public.service';
 import type { CategoryService, PrismaCategoryNode } from './category.service';
+
+const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
 const prismaCategory = {
   id: '00000000-0000-4000-8000-000000000010',
@@ -38,7 +41,7 @@ describe('PublicCategoryService.findBy', () => {
     categoryService.findBy.mockResolvedValue([prismaCategory]);
 
     const categories = await publicCategoryService.findBy({
-      ids: ['category-1'],
+      ids: [categoryId('category-1')],
     });
 
     expect(categoryService.findBy).toHaveBeenCalledWith({

@@ -1,3 +1,4 @@
+import { SessionIdSchema } from '@cityborn/api';
 import { useLocalSearchParams } from 'expo-router';
 import ScreenLayout from '@/components/ScreenLayout';
 import MultiSession from '@/features/session/multi/MultiSession';
@@ -7,7 +8,7 @@ export default function MultiSessionScreen() {
 
   return (
     <ScreenLayout fullBleed>
-      <MultiSession sessionID={sessionID} />
+      <MultiSession sessionID={SessionIdSchema.parse(sessionID)} />
     </ScreenLayout>
   );
 }

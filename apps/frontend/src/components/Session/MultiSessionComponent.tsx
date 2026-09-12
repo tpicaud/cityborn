@@ -4,6 +4,9 @@ import {
   type CategoryTree,
   type GameConfig,
   type Guess,
+  type PlayerId,
+  PlayerIdSchema,
+  SessionIdSchema,
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -22,10 +25,11 @@ export default function MultiSessionComponent({
 }) {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const { sessionID } = useParams<{ sessionID: string }>();
+  const { sessionID: rawSessionID } = useParams<{ sessionID: string }>();
+  const sessionID = SessionIdSchema.parse(rawSessionID);
 
-  const [localPlayerID, setLocalPlayerID] = useState<string | undefined>(
-    user ? user.username : undefined,
+  const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
+    user ? PlayerIdSchema.parse(user.username) : undefined,
   );
 
   const multiSession = useMultiSession(localPlayerID, sessionID);
@@ -34,9 +38,10 @@ export default function MultiSessionComponent({
   const handleJoinSession = useCallback(
     async (playerID: string) => {
       try {
+        const parsedPlayerId = PlayerIdSchema.parse(playerID);
         hasJoinedSession.current = true;
-        await multiSession.join(playerID);
-        setLocalPlayerID(playerID);
+        await multiSession.join(parsedPlayerId);
+        setLocalPlayerID(parsedPlayerId);
       } catch (error) {
         invokeError(error, 'Une erreur est survenue');
       }
@@ -72,7 +77,7 @@ export default function MultiSessionComponent({
 
   const handleUpdateHost = async (newHostID: string) => {
     try {
-      await multiSession.updateHost(newHostID);
+      await multiSession.updateHost(PlayerIdSchema.parse(newHostID));
     } catch (error) {
       invokeError(error, 'Une erreur est survenue');
     }
@@ -88,7 +93,7 @@ export default function MultiSessionComponent({
 
   const handleKickPlayer = async (playerToKick: string) => {
     try {
-      await multiSession.kickPlayer(playerToKick);
+      await multiSession.kickPlayer(PlayerIdSchema.parse(playerToKick));
     } catch (error) {
       invokeError(error, 'Une erreur est survenue');
     }

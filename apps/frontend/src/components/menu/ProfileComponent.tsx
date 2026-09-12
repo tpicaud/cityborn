@@ -1,4 +1,4 @@
-import type { GameRecord, User } from '@cityborn/api';
+import { type GameRecord, PlayerIdSchema, type User } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { calculateTotalPoints } from '@cityborn/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -113,7 +113,9 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {game.mode.toUpperCase()} •{' '}
-                          {calculateTotalPoints(game.results[user.username])}
+                          {calculateTotalPoints(
+                            game.results[PlayerIdSchema.parse(user.username)],
+                          )}
                         </Typography>
                       </div>
                     </AccordionSummary>

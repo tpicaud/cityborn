@@ -9,9 +9,9 @@ import {
   UpdateCategorySchema,
 } from '../schemas/category.schema';
 import {
+  CategoryIdParamSchema,
   emptyRequestBodySchema,
   emptyResponseSchema,
-  IdParamSchema,
   IncludeQuerySchema,
 } from '../schemas/common.schema';
 
@@ -33,13 +33,13 @@ export const categoryAdminContract = c.router(
     getCategory: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: CategoryIdParamSchema,
       responses: { 200: CategorySchema, ...commonErrorResponses },
     },
     getFullCategory: {
       method: 'GET',
       path: '/:id/full',
-      pathParams: IdParamSchema,
+      pathParams: CategoryIdParamSchema,
       responses: { 200: FullCategorySchema, ...commonErrorResponses },
     },
     createCategory: {
@@ -51,14 +51,14 @@ export const categoryAdminContract = c.router(
     updateCategory: {
       method: 'PUT',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: CategoryIdParamSchema,
       body: UpdateCategorySchema,
       responses: { 200: CategorySchema, ...commonErrorResponses },
     },
     deleteCategory: {
       method: 'DELETE',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: CategoryIdParamSchema,
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },

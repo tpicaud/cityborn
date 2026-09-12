@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { commonErrorResponses } from '../schemas/api-error.schema';
-import { IdSchema } from '../schemas/common.schema';
+import { WorldLocationUuidIdSchema } from '../schemas/common.schema';
 import { CreateWorldLocationSchema } from '../schemas/world-location.schema';
 
 const c = initContract();
@@ -11,7 +11,7 @@ export const worldLocationAdminContract = c.router(
       method: 'POST',
       path: '/',
       body: CreateWorldLocationSchema,
-      responses: { 201: IdSchema, ...commonErrorResponses },
+      responses: { 201: WorldLocationUuidIdSchema, ...commonErrorResponses },
     },
   },
   { pathPrefix: '/world-location' },

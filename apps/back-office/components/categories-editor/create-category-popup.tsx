@@ -3,6 +3,7 @@ import {
   type ApiResult,
   type Category,
   type CreateCategory,
+  type CreateCategoryInput,
   CreateCategorySchema,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -25,7 +26,7 @@ export function CreateCategoryDialog({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateCategory>({
+  } = useForm<CreateCategoryInput, undefined, CreateCategory>({
     resolver: zodResolver(CreateCategorySchema),
     defaultValues: { name: '', description: '', isPublished: false },
   });

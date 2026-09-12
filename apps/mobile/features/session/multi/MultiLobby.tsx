@@ -2,6 +2,7 @@ import type {
   CategoryTree,
   GameConfig,
   OnlinePlayer,
+  PlayerId,
   Session,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -21,7 +22,7 @@ import {
 } from '@/lib/api/category';
 
 interface MultiLobbyProps {
-  localPlayerID: string | undefined;
+  localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;

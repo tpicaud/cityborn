@@ -1,6 +1,9 @@
 import { initContract } from '@ts-rest/core';
 import { commonErrorResponses } from '../schemas/api-error.schema';
-import { emptyResponseSchema, IdParamSchema } from '../schemas/common.schema';
+import {
+  emptyResponseSchema,
+  SessionIdParamSchema,
+} from '../schemas/common.schema';
 import { GameSchema, GameStateSchema } from '../schemas/game.schema';
 import { CreateSessionSchema, SessionSchema } from '../schemas/session.schema';
 
@@ -23,7 +26,7 @@ export const sessionContract = c.router(
     getSession: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: SessionIdParamSchema,
       responses: { 200: SessionSchema, ...commonErrorResponses },
     },
     createGame: {

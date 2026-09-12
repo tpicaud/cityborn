@@ -1,4 +1,4 @@
-import { type User } from '@cityborn/api';
+import { type User, UserIdSchema } from '@cityborn/api';
 import { type JwtService } from '@nestjs/jwt';
 import { UserMapper } from '../../user/user.mapper';
 import type { UserService } from '../../user/user.service';
@@ -14,10 +14,10 @@ export async function validateAccessToken(
 }
 
 export async function resolveFullUser(
-  userId: string,
+  userId: unknown,
   userService: UserService,
 ): Promise<User | null> {
-  const fullUser = await userService.findById(userId);
+  const fullUser = await userService.findById(UserIdSchema.parse(userId));
   return fullUser ? UserMapper.toUser(fullUser) : null;
 }
 

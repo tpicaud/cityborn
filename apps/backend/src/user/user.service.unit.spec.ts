@@ -1,4 +1,10 @@
-import { buildCreateGameRecord, ErrorCode, SessionMode } from '@cityborn/api';
+import {
+  buildCreateGameRecord,
+  ErrorCode,
+  SessionMode,
+  UserIdSchema,
+  UsernameSchema,
+} from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type {
   EmailVerificationToken,
@@ -7,6 +13,9 @@ import type {
 } from '@prisma/client';
 import type { PrismaService } from '../prisma/prisma.service';
 import { UserService } from './user.service';
+
+const userId = (value: string) => UserIdSchema.parse(value);
+const username = (value: string) => UsernameSchema.parse(value);
 
 const prismaUser = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -62,7 +71,7 @@ describe('UserService persistence', () => {
 
     const user = await userService.createUser({
       email: persistedUser.email,
-      username: persistedUser.username,
+      username: UsernameSchema.parse(persistedUser.username),
       type: 'email',
     });
 
@@ -73,10 +82,10 @@ describe('UserService persistence', () => {
     const { prismaService, userService } = buildUserService();
     prismaService.user.delete.mockResolvedValue(prismaUser);
 
-    await userService.deleteUser('user-1');
+    await userService.deleteUser(userId('user-1'));
 
     expect(prismaService.user.delete).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
+      where: { id: userId('user-1') },
     });
   });
 
@@ -109,7 +118,7 @@ describe('UserService.validateIdentifiers', () => {
     prismaService.user.findFirst.mockResolvedValue(null);
 
     await expect(
-      userService.validateIdentifiers('alice', 'alice@cityborn.test'),
+      userService.validateIdentifiers(username('alice'), 'alice@cityborn.test'),
     ).resolves.toBeUndefined();
   });
 
@@ -117,11 +126,11 @@ describe('UserService.validateIdentifiers', () => {
     const { prismaService, userService } = buildUserService();
     prismaService.user.findFirst.mockResolvedValue({
       ...prismaUser,
-      username: 'alice',
+      username: username('alice'),
     });
 
     await expect(
-      userService.validateIdentifiers('alice', 'other@cityborn.test'),
+      userService.validateIdentifiers(username('alice'), 'other@cityborn.test'),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_USERNAME_ALREADY_EXISTS },
     });
@@ -136,7 +145,7 @@ describe('UserService.validateIdentifiers', () => {
     });
 
     await expect(
-      userService.validateIdentifiers('alice', 'alice@cityborn.test'),
+      userService.validateIdentifiers(username('alice'), 'alice@cityborn.test'),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
     });
@@ -152,7 +161,7 @@ describe('UserService.createEmailVerificationToken', () => {
     });
 
     await expect(
-      userService.createEmailVerificationToken('user-1', 60_000),
+      userService.createEmailVerificationToken(userId('user-1'), 60_000),
     ).rejects.toMatchObject({
       response: {
         code: ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON,
@@ -166,7 +175,7 @@ describe('UserService.createEmailVerificationToken', () => {
     prismaService.$transaction.mockResolvedValue([]);
 
     const token = await userService.createEmailVerificationToken(
-      'user-1',
+      userId('user-1'),
       60_000,
     );
 
@@ -225,7 +234,9 @@ describe('UserService.getGameRecords', () => {
     const { prismaService, userService } = buildUserService();
     prismaService.user.findUnique.mockResolvedValue(null);
 
-    await expect(userService.getGameRecords('missing')).rejects.toMatchObject({
+    await expect(
+      userService.getGameRecords(userId('missing')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
     });
   });
@@ -234,10 +245,10 @@ describe('UserService.getGameRecords', () => {
     const { prismaService, userService } = buildUserService();
     prismaService.user.findUnique.mockResolvedValue(prismaUserWithGameRecords);
 
-    const records = await userService.getGameRecords('user-1');
+    const records = await userService.getGameRecords(userId('user-1'));
 
     expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
+      where: { id: userId('user-1') },
       include: {
         gameRecords: { take: 5, orderBy: { createdAt: 'desc' } },
       },
@@ -252,7 +263,7 @@ describe('UserService.saveSoloGameRecord', () => {
 
     await expect(
       userService.saveSoloGameRecord(
-        'user-1',
+        userId('user-1'),
         buildCreateGameRecord({ mode: SessionMode.MULTI }),
       ),
     ).rejects.toMatchObject({
@@ -265,7 +276,7 @@ describe('UserService.saveSoloGameRecord', () => {
     const record = buildCreateGameRecord();
     prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
 
-    await userService.saveSoloGameRecord('user-1', record);
+    await userService.saveSoloGameRecord(userId('user-1'), record);
 
     expect(prismaService.gameRecord.create).toHaveBeenCalledWith({
       data: {
@@ -274,7 +285,7 @@ describe('UserService.saveSoloGameRecord', () => {
         players: record.players,
         guessObjectsIds: record.guessObjectsIds,
         results: record.results,
-        users: { connect: { id: 'user-1' } },
+        users: { connect: { id: userId('user-1') } },
       },
     });
   });

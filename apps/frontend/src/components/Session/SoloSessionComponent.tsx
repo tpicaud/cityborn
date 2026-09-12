@@ -1,6 +1,11 @@
 'use client';
 
-import type { CategoryTree, GameConfig, Guess } from '@cityborn/api';
+import {
+  type CategoryTree,
+  type GameConfig,
+  type Guess,
+  PlayerIdSchema,
+} from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import LoadingComponent from '@/components/others/LoadingComponent';
@@ -15,7 +20,7 @@ export default function SoloSessionComponent({
 }) {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const localPlayerID = user ? user.username : 'guest';
+  const localPlayerID = PlayerIdSchema.parse(user?.username ?? 'guest');
   const soloSession = useSoloSession(localPlayerID);
 
   //////////////////////////

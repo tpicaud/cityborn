@@ -4,9 +4,13 @@ import {
   ErrorCode,
   type GameConfig,
   type Guess,
-  type OnlinePlayer,
+  type PlayerId,
+  PlayerIdSchema,
   type Session,
+  type SessionId,
+  SessionIdSchema,
   SessionMode,
+  SessionSchema,
   SessionStatus,
   type User,
 } from '@cityborn/api';
@@ -39,7 +43,7 @@ export class SessionService {
     private readonly eventService: EventService,
   ) {}
 
-  private getKey(id: string): string {
+  private getKey(id: SessionId): string {
     return `${this.prefix}${id}`;
   }
 
@@ -54,11 +58,12 @@ export class SessionService {
   ): Promise<Session> {
     const { mode } = dto;
 
-    const sessionID: string = await this.generateUniqueSessionID();
+    const sessionID: SessionId = await this.generateUniqueSessionID();
+    const playerId = PlayerIdSchema.parse(user?.username ?? 'guest');
 
     const newSession: Session = {
       id: sessionID,
-      hostID: mode === SessionMode.SOLO ? (user ? user.username : 'guest') : '',
+      hostID: mode === SessionMode.SOLO ? playerId : PlayerIdSchema.parse(''),
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
@@ -66,7 +71,7 @@ export class SessionService {
         mode === SessionMode.SOLO
           ? [
               {
-                username: user ? user.username : 'guest',
+                username: playerId,
                 isGuest: !user,
                 id: user ? user.id : undefined,
               },
@@ -91,7 +96,7 @@ export class SessionService {
     return newSession;
   }
 
-  async getById(sessionID: string): Promise<Session> {
+  async getById(sessionID: SessionId): Promise<Session> {
     const session = await this.getSession(sessionID);
 
     if (!session) {
@@ -104,7 +109,7 @@ export class SessionService {
     return session;
   }
 
-  async join(sessionID: string, playerID: string, user?: User) {
+  async join(sessionID: SessionId, playerID: PlayerId, user?: User) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -133,7 +138,7 @@ export class SessionService {
 
         const isGuest = !user;
 
-        const newPlayer: OnlinePlayer = {
+        const newPlayer: Session['players'][number] = {
           username: playerID,
           isGuest,
           id: isGuest ? undefined : user?.id,
@@ -150,7 +155,11 @@ export class SessionService {
     );
   }
 
-  async updateHost(playerID: string, sessionID: string, newHostID: string) {
+  async updateHost(
+    playerID: PlayerId,
+    sessionID: SessionId,
+    newHostID: PlayerId,
+  ) {
     const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -170,7 +179,7 @@ export class SessionService {
         message: `Player is not the host`,
       });
 
-    const newHost = (session.players as OnlinePlayer[]).find(
+    const newHost = session.players.find(
       (player) => player.username === newHostID && player.connected,
     );
     if (!newHost)
@@ -186,8 +195,8 @@ export class SessionService {
   }
 
   async updateGameConfig(
-    playerID: string,
-    sessionID: string,
+    playerID: PlayerId,
+    sessionID: SessionId,
     gameConfig: GameConfig,
   ) {
     const session: Session | null = await this.getSession(sessionID);
@@ -215,7 +224,11 @@ export class SessionService {
     return session;
   }
 
-  async startGame(playerID: string, sessionID: string, visitorId?: string) {
+  async startGame(
+    playerID: PlayerId,
+    sessionID: SessionId,
+    visitorId?: string,
+  ) {
     const session: Session | null = await this.getSession(sessionID);
     if (!session)
       throw new NotFoundException({
@@ -253,7 +266,7 @@ export class SessionService {
   // Current game method //
   /////////////////////////
 
-  async handleGuess(playerID: string, sessionID: string, guess: Guess) {
+  async handleGuess(playerID: PlayerId, sessionID: SessionId, guess: Guess) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -281,7 +294,7 @@ export class SessionService {
             message: `Player not found in session`,
           });
 
-        const playerConnected = (session.players as OnlinePlayer[]).some(
+        const playerConnected = session.players.some(
           (player) => player.username === playerID && player.connected,
         );
         if (!playerConnected)
@@ -296,7 +309,7 @@ export class SessionService {
             message: `No active round on current game`,
           });
 
-        const connectedPlayerUsernames = (session.players as OnlinePlayer[])
+        const connectedPlayerUsernames = session.players
           .filter((player) => player.connected)
           .map((player) => player.username);
 
@@ -316,8 +329,8 @@ export class SessionService {
   }
 
   async handleNextRound(
-    playerID: string,
-    sessionID: string,
+    playerID: PlayerId,
+    sessionID: SessionId,
     visitorId?: string,
   ) {
     return await this.lockService.withLock(
@@ -378,7 +391,7 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer(sessionID: string, playerID: string, user?: User) {
+  async reconnectPlayer(sessionID: SessionId, playerID: PlayerId, user?: User) {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -390,7 +403,7 @@ export class SessionService {
             message: `Session not found`,
           });
 
-        const players = session.players as OnlinePlayer[];
+        const players = session.players;
 
         const playerIndex = players.findIndex(
           (player) => player.username === playerID,
@@ -419,8 +432,8 @@ export class SessionService {
   }
 
   async disconnectPlayer(
-    playerID: string,
-    sessionID: string,
+    playerID: PlayerId,
+    sessionID: SessionId,
   ): Promise<Session> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
@@ -442,7 +455,7 @@ export class SessionService {
             message: `Player not found in session`,
           });
 
-        (session.players[playerIndex] as OnlinePlayer).connected = false;
+        session.players[playerIndex].connected = false;
 
         this.reassignHostAfterRemoval(session, playerID);
 
@@ -454,9 +467,9 @@ export class SessionService {
   }
 
   async kickPlayer(
-    playerID: string,
-    sessionID: string,
-    playerToKick: string,
+    playerID: PlayerId,
+    sessionID: SessionId,
+    playerToKick: PlayerId,
   ): Promise<Session> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
@@ -505,8 +518,12 @@ export class SessionService {
   // Store //
   ///////////
 
-  private async getSession(sessionID: string): Promise<Session | null> {
-    return await this.redisService.getJSON<Session>(this.getKey(sessionID));
+  private async getSession(sessionID: SessionId): Promise<Session | null> {
+    const storedSession = await this.redisService.getJSON<unknown>(
+      this.getKey(sessionID),
+    );
+    if (!storedSession) return null;
+    return SessionSchema.parse(storedSession);
   }
 
   private async saveSession(
@@ -522,23 +539,27 @@ export class SessionService {
 
   private reassignHostAfterRemoval(
     session: Session,
-    removedPlayerID: string,
+    removedPlayerID: PlayerId,
   ): void {
     if (session.hostID !== removedPlayerID) return;
 
-    const connectedPlayers = (session.players as OnlinePlayer[]).filter(
+    const connectedPlayers = session.players.filter(
       (player) => player.connected && player.username !== removedPlayerID,
     );
     session.hostID =
-      connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
+      connectedPlayers.length > 0
+        ? connectedPlayers[0].username
+        : PlayerIdSchema.parse('');
   }
 
-  private async generateUniqueSessionID(): Promise<string> {
+  private async generateUniqueSessionID(): Promise<SessionId> {
     const MAX_ATTEMPTS = 3;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const candidateId = this.idService.generateNanoId();
-      if (!(await this.getSession(candidateId))) return candidateId.toString();
+      const candidateId = SessionIdSchema.parse(
+        this.idService.generateNanoId(),
+      );
+      if (!(await this.getSession(candidateId))) return candidateId;
     }
 
     throw new InternalServerErrorException({

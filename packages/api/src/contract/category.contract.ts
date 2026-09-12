@@ -5,7 +5,10 @@ import {
   CategorySchema,
   CategoryTreesSchema,
 } from '../schemas/category.schema';
-import { IdParamSchema, IncludeQuerySchema } from '../schemas/common.schema';
+import {
+  CategoryIdParamSchema,
+  IncludeQuerySchema,
+} from '../schemas/common.schema';
 
 const c = initContract();
 
@@ -19,7 +22,7 @@ export const categoryContract = c.router(
     getCategory: {
       method: 'GET',
       path: '/:id',
-      pathParams: IdParamSchema,
+      pathParams: CategoryIdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: CategorySchema, ...commonErrorResponses },
     },

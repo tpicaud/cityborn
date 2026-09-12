@@ -1,4 +1,4 @@
-import { buildUser, ErrorCode } from '@cityborn/api';
+import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
@@ -96,7 +96,7 @@ describe('AuthService.signUp', () => {
     const result = await authService.signUp(
       {
         email: persistedUser.email,
-        username: persistedUser.username,
+        username: UsernameSchema.parse(persistedUser.username),
         password: 'plain-password',
       },
       'visitor-1',

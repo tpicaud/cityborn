@@ -1,11 +1,15 @@
-import type { OnlinePlayer } from '../schemas/player.schema';
+import type { z } from 'zod';
+import {
+  type OnlinePlayer,
+  OnlinePlayerSchema,
+} from '../schemas/player.schema';
 
 export function buildPlayer(
   username = 'host',
   connected = true,
-  overrides: Partial<OnlinePlayer> = {},
+  overrides: Partial<z.input<typeof OnlinePlayerSchema>> = {},
 ): OnlinePlayer {
-  return structuredClone({
+  return OnlinePlayerSchema.parse({
     username,
     isGuest: false,
     connected,

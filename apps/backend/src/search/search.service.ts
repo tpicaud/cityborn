@@ -1,4 +1,9 @@
-import { ErrorCode, GuessObjectDraft, WorldLocation } from '@cityborn/api';
+import {
+  ErrorCode,
+  type GuessObjectDraft,
+  type WorldLocation,
+  WorldLocationIdSchema,
+} from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { GuessObjectMapper } from '../guess-object/mappers/guess-object.mapper';
@@ -78,8 +83,9 @@ export class SearchService {
     id: string,
     osm_type: string,
   ): Promise<WorldLocation> {
-    const db_world_location =
-      await this.worldLocationService.getWithGeometry(id);
+    const db_world_location = await this.worldLocationService.getWithGeometry(
+      WorldLocationIdSchema.parse(id),
+    );
     if (db_world_location) {
       return db_world_location;
     }

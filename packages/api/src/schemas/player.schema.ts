@@ -1,9 +1,14 @@
 import { z } from 'zod';
+import {
+  GuessObjectIdSchema,
+  PlayerIdSchema,
+  UserIdSchema,
+} from './common.schema';
 
 export const PlayerSchema = z.object({
-  username: z.string(),
+  username: PlayerIdSchema,
   isGuest: z.boolean(),
-  id: z.string().optional(),
+  id: UserIdSchema.optional(),
 });
 
 export const OnlinePlayerSchema = PlayerSchema.extend({
@@ -19,7 +24,7 @@ export const GamePlayerSchema = PlayerSchema.extend({
 });
 
 export const ResultSchema = z.object({
-  guessObjectId: z.string(),
+  guessObjectId: GuessObjectIdSchema,
   distance: z.number(),
   points: z.number(),
 });

@@ -3,6 +3,9 @@ import {
   type Game,
   GameStatus,
   type Guess,
+  GuessObjectIdSchema,
+  type PlayerId,
+  PlayerIdSchema,
   type PlayerResults,
   type Result,
   RoundStatus,
@@ -25,9 +28,9 @@ export function beginGame(game: Game): Game {
 
 export function applyGuess(
   game: Game,
-  playerID: string,
+  playerID: PlayerId,
   guess: Guess,
-  connectedPlayerUsernames: string[],
+  connectedPlayerIds: PlayerId[],
 ): Game {
   const currentRound = game.state.currentRound;
   if (!currentRound) return game;
@@ -35,13 +38,13 @@ export function applyGuess(
   const existingGuesses = currentRound.playersGuesses ?? {};
   if (existingGuesses[playerID]) return game;
 
-  const playersGuesses: Record<string, Guess> = {
+  const playersGuesses: Record<PlayerId, Guess> = {
     ...existingGuesses,
     [playerID]: guess,
   };
 
-  const allConnectedPlayersGuessed = connectedPlayerUsernames.every(
-    (username) => Object.hasOwn(playersGuesses, username),
+  const allConnectedPlayersGuessed = connectedPlayerIds.every((playerId) =>
+    Object.hasOwn(playersGuesses, playerId),
   );
 
   if (!allConnectedPlayersGuessed) {
@@ -54,10 +57,9 @@ export function applyGuess(
     };
   }
 
-  for (const username of Object.keys(game.state.results)) {
-    if (!playersGuesses[username]) {
-      playersGuesses[username] = defaultGuess;
-    }
+  for (const rawPlayerId of Object.keys(game.state.results)) {
+    const playerId = PlayerIdSchema.parse(rawPlayerId);
+    if (!playersGuesses[playerId]) playersGuesses[playerId] = defaultGuess;
   }
 
   return {
@@ -75,25 +77,26 @@ export function applyGuess(
 
 export function aggregateGameResults(
   game: Game,
-): Record<string, PlayerResults> {
+): Record<PlayerId, PlayerResults> {
   const currentRound = game.state.currentRound;
-  const guessObjectId = currentRound?.guessObjectId ?? '';
+  const guessObjectId =
+    currentRound?.guessObjectId ?? GuessObjectIdSchema.parse('');
   const playersGuesses = currentRound?.playersGuesses;
-
-  const updatedResults: Record<string, PlayerResults> = {
+  const updatedResults: Record<PlayerId, PlayerResults> = {
     ...game.state.results,
   };
 
-  for (const username of Object.keys(game.state.results)) {
-    const guess = playersGuesses?.[username];
+  for (const rawPlayerId of Object.keys(game.state.results)) {
+    const playerId = PlayerIdSchema.parse(rawPlayerId);
+    const guess = playersGuesses?.[playerId];
     const newResult: Result = {
       guessObjectId,
       distance: guess ? guess.distance : -1,
       points: guess ? guess.points : 0,
     };
 
-    const playerResults = updatedResults[username];
-    updatedResults[username] = playerResults
+    const playerResults = updatedResults[playerId];
+    updatedResults[playerId] = playerResults
       ? { results: [...playerResults.results, newResult] }
       : { results: [newResult] };
   }
@@ -106,9 +109,10 @@ export function resolveNextRound(game: Game): {
   isGameOver: boolean;
 } {
   const results = aggregateGameResults(game);
-  const currentIndex = game.state.guessObjectsIds.indexOf(
-    game.state.currentRound?.guessObjectId ?? '',
-  );
+  const currentGuessObjectId = game.state.currentRound?.guessObjectId;
+  const currentIndex = currentGuessObjectId
+    ? game.state.guessObjectsIds.indexOf(currentGuessObjectId)
+    : -1;
 
   if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
     return {

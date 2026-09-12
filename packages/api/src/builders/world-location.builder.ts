@@ -1,9 +1,13 @@
-import type { WorldLocation } from '../schemas/world-location.schema';
+import type { z } from 'zod';
+import {
+  type WorldLocation,
+  WorldLocationSchema,
+} from '../schemas/world-location.schema';
 
 export function buildWorldLocation(
-  overrides: Partial<WorldLocation> = {},
+  overrides: Partial<z.input<typeof WorldLocationSchema>> = {},
 ): WorldLocation {
-  return structuredClone({
+  return WorldLocationSchema.parse({
     id: 'location-1',
     osm_type: 'relation',
     name: 'Paris',

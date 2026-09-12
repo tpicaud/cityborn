@@ -1,4 +1,10 @@
-import { buildCategory, buildGameConfig, ErrorCode } from '@cityborn/api';
+import {
+  buildCategory,
+  buildGameConfig,
+  ErrorCode,
+  GuessObjectIdSchema,
+  WorldLocationIdSchema,
+} from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type {
   Category as PrismaCategory,
@@ -10,6 +16,9 @@ import type { PrismaService } from '../prisma/prisma.service';
 import type { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectService } from './guess-object.service';
 
+const guessObjectId = (value: string) => GuessObjectIdSchema.parse(value);
+const worldLocationId = (value: string) => WorldLocationIdSchema.parse(value);
+
 const prismaCategory = {
   id: '00000000-0000-4000-8000-000000000010',
   name: 'Monuments',
@@ -19,7 +28,7 @@ const prismaCategory = {
 } satisfies PrismaCategory;
 
 const prismaWorldLocation = {
-  id: 'location-1',
+  id: worldLocationId('location-1'),
   osm_type: 'relation',
   external_id: '7444',
   name: 'Paris',
@@ -34,7 +43,7 @@ const prismaWorldLocation = {
 const prismaWorldLocationGeometry = {
   id: 'geometry-1',
   data: { type: 'Point', coordinates: [2.3522, 48.8566] },
-  world_location_id: 'location-1',
+  world_location_id: worldLocationId('location-1'),
 } satisfies PrismaWorldLocationGeometry;
 
 const prismaGuessObject = {
@@ -44,7 +53,7 @@ const prismaGuessObject = {
   description: 'A wrought-iron tower',
   short_description: 'Paris landmark',
   source: { provider: 'wikidata', external_id: 'Q243' },
-  world_location_id: 'location-1',
+  world_location_id: worldLocationId('location-1'),
 } satisfies PrismaGuessObject;
 
 type PrismaGuessObjectWithLocation = PrismaGuessObject & {
@@ -97,13 +106,13 @@ describe('GuessObjectService.findBy', () => {
     ]);
 
     const objects = await guessObjectService.findBy({
-      ids: ['guess-1'],
+      ids: [guessObjectId('guess-1')],
       external_id: 'Q243',
     });
 
     expect(prismaService.guessObject.findMany).toHaveBeenCalledWith({
       where: {
-        id: { in: ['guess-1'] },
+        id: { in: [guessObjectId('guess-1')] },
         source: { path: ['external_id'], equals: 'Q243' },
       },
       include: { world_location: true },
@@ -193,7 +202,7 @@ describe('GuessObjectService.create', () => {
     await expect(
       guessObjectService.create({
         name: 'Eiffel Tower',
-        world_location_id: 'missing',
+        world_location_id: worldLocationId('missing'),
       }),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.BAD_REQUEST },
@@ -203,12 +212,14 @@ describe('GuessObjectService.create', () => {
   it('returns an existing object identifier', async () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
-    worldLocationService.get.mockResolvedValue({ id: 'location-1' });
+    worldLocationService.get.mockResolvedValue({
+      id: worldLocationId('location-1'),
+    });
     prismaService.guessObject.findUnique.mockResolvedValue(prismaGuessObject);
 
     const id = await guessObjectService.create({
       name: 'Eiffel Tower',
-      world_location_id: 'location-1',
+      world_location_id: worldLocationId('location-1'),
     });
 
     expect(prismaService.guessObject.findUnique).toHaveBeenCalledWith({
@@ -221,7 +232,9 @@ describe('GuessObjectService.create', () => {
   it('creates a missing object', async () => {
     const { guessObjectService, prismaService, worldLocationService } =
       buildGuessObjectService();
-    worldLocationService.get.mockResolvedValue({ id: 'location-1' });
+    worldLocationService.get.mockResolvedValue({
+      id: worldLocationId('location-1'),
+    });
     prismaService.guessObject.findUnique.mockResolvedValue(null);
     prismaService.guessObject.create.mockResolvedValue(prismaGuessObject);
 
@@ -229,7 +242,7 @@ describe('GuessObjectService.create', () => {
       name: 'Eiffel Tower',
       description: 'A tower',
       source: { provider: 'wikidata', external_id: 'Q243' },
-      world_location_id: 'location-1',
+      world_location_id: worldLocationId('location-1'),
     });
 
     expect(prismaService.guessObject.create).toHaveBeenCalledWith({
@@ -239,7 +252,7 @@ describe('GuessObjectService.create', () => {
         description: 'A tower',
         short_description: undefined,
         source: { provider: 'wikidata', external_id: 'Q243' },
-        world_location_id: 'location-1',
+        world_location_id: worldLocationId('location-1'),
       },
     });
     expect(id).toBe('00000000-0000-4000-8000-000000000020');
@@ -251,19 +264,19 @@ describe('GuessObjectService.update', () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.update.mockResolvedValue(prismaGuessObject);
 
-    const id = await guessObjectService.update('guess-1', {
+    const id = await guessObjectService.update(guessObjectId('guess-1'), {
       name: 'Tower',
-      world_location_id: 'location-2',
+      world_location_id: worldLocationId('location-2'),
     });
 
     expect(prismaService.guessObject.update).toHaveBeenCalledWith({
-      where: { id: 'guess-1' },
+      where: { id: guessObjectId('guess-1') },
       data: {
         name: 'Tower',
         image: undefined,
         description: undefined,
         short_description: undefined,
-        world_location_id: 'location-2',
+        world_location_id: worldLocationId('location-2'),
       },
     });
     expect(id).toBe('00000000-0000-4000-8000-000000000020');
@@ -275,7 +288,9 @@ describe('GuessObjectService.delete', () => {
     const { guessObjectService, prismaService } = buildGuessObjectService();
     prismaService.guessObject.findUnique.mockResolvedValue(null);
 
-    await expect(guessObjectService.delete('missing')).rejects.toMatchObject({
+    await expect(
+      guessObjectService.delete(guessObjectId('missing')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.GUESS_OBJECTS_NOT_FOUND },
     });
   });
@@ -286,7 +301,9 @@ describe('GuessObjectService.delete', () => {
       prismaGuessObjectWithCategory,
     );
 
-    await expect(guessObjectService.delete('guess-1')).rejects.toMatchObject({
+    await expect(
+      guessObjectService.delete(guessObjectId('guess-1')),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.BAD_REQUEST },
     });
   });
@@ -301,9 +318,11 @@ describe('GuessObjectService.delete', () => {
     prismaService.guessObject.count.mockResolvedValue(0);
     worldLocationService.delete.mockResolvedValue(undefined);
 
-    await guessObjectService.delete('guess-1');
+    await guessObjectService.delete(guessObjectId('guess-1'));
 
-    expect(worldLocationService.delete).toHaveBeenCalledWith('location-1');
+    expect(worldLocationService.delete).toHaveBeenCalledWith(
+      worldLocationId('location-1'),
+    );
   });
 
   it('keeps a location still referenced by another object', async () => {
@@ -315,7 +334,7 @@ describe('GuessObjectService.delete', () => {
     prismaService.guessObject.delete.mockResolvedValue(prismaGuessObject);
     prismaService.guessObject.count.mockResolvedValue(1);
 
-    await guessObjectService.delete('guess-1');
+    await guessObjectService.delete(guessObjectId('guess-1'));
 
     expect(worldLocationService.delete).not.toHaveBeenCalled();
   });

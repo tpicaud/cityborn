@@ -3,7 +3,9 @@ import {
   ErrorCode,
   GameConfig,
   Guess,
+  PlayerIdSchema,
   type Session,
+  SessionIdSchema,
   User,
 } from '@cityborn/api';
 import {
@@ -162,15 +164,18 @@ export class SessionGateway
   async handleJoin(
     @ConnectedSocket() socket: Socket,
     @CurrentUser() user: User | undefined,
-    @MessageBody('sessionID') sessionID: string,
-    @MessageBody('playerID') playerID: string,
+    @MessageBody('sessionID') rawSessionID: unknown,
+    @MessageBody('playerID') rawPlayerID: unknown,
   ): Promise<WSResponse> {
-    if (!sessionID || !playerID) {
+    if (!rawSessionID || !rawPlayerID) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'sessionID et playerID required.',
       });
     }
+
+    const sessionID = SessionIdSchema.parse(rawSessionID);
+    const playerID = PlayerIdSchema.parse(rawPlayerID);
 
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
@@ -194,14 +199,16 @@ export class SessionGateway
   @SubscribeMessage('session:updateHost')
   async updateHost(
     @ConnectedSocket() socket: Socket,
-    @MessageBody('newHostID') newHostID: string,
+    @MessageBody('newHostID') rawNewHostID: unknown,
   ): Promise<WSResponse> {
-    if (!newHostID) {
+    if (!rawNewHostID) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'newHostID required.',
       });
     }
+
+    const newHostID = PlayerIdSchema.parse(rawNewHostID);
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.updateHost(
@@ -240,14 +247,16 @@ export class SessionGateway
   @SubscribeMessage('session:kickPlayer')
   async kickPlayer(
     @ConnectedSocket() socket: Socket,
-    @MessageBody('playerToKick') playerToKick: string,
+    @MessageBody('playerToKick') rawPlayerToKick: unknown,
   ): Promise<WSResponse> {
-    if (!playerToKick) {
+    if (!rawPlayerToKick) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'playerToKick required.',
       });
     }
+
+    const playerToKick = PlayerIdSchema.parse(rawPlayerToKick);
 
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.kickPlayer(
@@ -362,15 +371,18 @@ export class SessionGateway
   async reconnect(
     @ConnectedSocket() socket: Socket,
     @CurrentUser() user: User | undefined,
-    @MessageBody('sessionID') sessionID: string,
-    @MessageBody('playerID') playerID: string,
+    @MessageBody('sessionID') rawSessionID: unknown,
+    @MessageBody('playerID') rawPlayerID: unknown,
   ): Promise<WSResponse & { isInGame?: boolean }> {
-    if (!sessionID || !playerID) {
+    if (!rawSessionID || !rawPlayerID) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: 'sessionID and playerID required.',
       });
     }
+
+    const sessionID = SessionIdSchema.parse(rawSessionID);
+    const playerID = PlayerIdSchema.parse(rawPlayerID);
 
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
