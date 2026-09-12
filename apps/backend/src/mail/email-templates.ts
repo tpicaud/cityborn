@@ -5,7 +5,7 @@ const logoFilename = 'logo-transparent.png';
 const logoContentId = logoFilename;
 const logoPath = resolve(
   __dirname,
-  '../../../frontend/assets/logo-transparent.png',
+  '../../frontend/assets/logo-transparent.png',
 );
 
 type EmailTemplateHeaderParams = {
