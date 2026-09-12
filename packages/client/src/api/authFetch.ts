@@ -5,7 +5,7 @@ import {
   parseApiError,
 } from '@cityborn/api';
 import type { ApiFetcherArgs } from '@ts-rest/core';
-import type { TokenStorage } from '../types/token-storage';
+import type { TokenStorage } from '../platform/tokenStorage';
 
 export type ClientName = 'web' | 'mobile' | 'back-office';
 

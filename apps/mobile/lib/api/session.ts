@@ -5,7 +5,7 @@ import {
   type Session,
   toApiResult,
 } from '@cityborn/api';
-import { buildFinalizeGameBody } from '@cityborn/client';
+import { buildFinalizeGameBody } from '@cityborn/client/session';
 import { client } from './client';
 
 export async function createSession(

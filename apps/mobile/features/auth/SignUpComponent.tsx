@@ -3,7 +3,7 @@ import {
   SignUpFormSchema,
   type SignUpFormValues,
   useAuth,
-} from '@cityborn/client';
+} from '@cityborn/client/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';

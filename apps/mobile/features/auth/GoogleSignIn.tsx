@@ -1,4 +1,5 @@
-import { useAuth, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import {
   GoogleSignin,
   isSuccessResponse,

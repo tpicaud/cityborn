@@ -1,4 +1,5 @@
-import { useAuth, useError } from '@cityborn/client';
+import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AppState, Image, Pressable } from 'react-native';

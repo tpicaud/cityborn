@@ -5,6 +5,34 @@
   "linter": {
     "domains": {
       "react": "recommended"
+    },
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": [
+                  "next",
+                  "next/**",
+                  "expo",
+                  "expo-*",
+                  "expo-*/**",
+                  "react-native",
+                  "react-native-*",
+                  "react-native-*/**",
+                  "react-dom",
+                  "react-dom/**",
+                  "@cityborn/design-system",
+                  "@cityborn/design-system/**"
+                ],
+                "message": "@cityborn/client doit rester agnostique de la plateforme et du rendu : déclarer un port dans src/platform et l'implémenter dans le lib/ de l'app."
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }

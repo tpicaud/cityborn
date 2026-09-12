@@ -8,7 +8,7 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
-import type { MapProps } from '@cityborn/client';
+import type { MapProps } from '@cityborn/client/game';
 import { calculatePoints } from '@cityborn/core';
 import * as turf from '@turf/turf';
 import {
