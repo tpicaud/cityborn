@@ -1,2 +1,3 @@
 export * from './profileApi';
-export * from './profileViewModel';
+export * from './profileGame';
+export * from './useProfile';

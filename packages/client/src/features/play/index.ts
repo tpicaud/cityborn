@@ -1,1 +1,1 @@
-export * from './playViewModel';
+export * from './usePlay';

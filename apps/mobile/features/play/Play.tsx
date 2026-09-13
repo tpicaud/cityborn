@@ -1,5 +1,5 @@
 import { useAuth } from '@cityborn/client/auth';
-import { usePlayViewModel } from '@cityborn/client/play';
+import { usePlay } from '@cityborn/client/play';
 import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
@@ -24,7 +24,7 @@ export default function Play() {
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlayViewModel({
+  } = usePlay({
     isAuthenticated: user !== null,
     sessionApi,
     navigation,

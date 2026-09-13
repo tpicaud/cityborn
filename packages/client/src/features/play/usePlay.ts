@@ -8,17 +8,17 @@ import {
   useSessionLauncher,
 } from '../session';
 
-export interface PlayViewModelOptions {
+export interface PlayOptions {
   isAuthenticated: boolean;
   sessionApi: SessionApi;
   navigation: Navigation;
 }
 
-export function usePlayViewModel({
+export function usePlay({
   isAuthenticated,
   sessionApi,
   navigation,
-}: PlayViewModelOptions) {
+}: PlayOptions) {
   const [authenticationRequired, setAuthenticationRequired] = useState(false);
   const joinSessionForm = useJoinSessionForm();
   const sessionLauncher = useSessionLauncher({ sessionApi, navigation });

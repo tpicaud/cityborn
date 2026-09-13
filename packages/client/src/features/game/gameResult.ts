@@ -1,28 +1,28 @@
 import type {
+  PlayerResults as ApiPlayerResults,
   Game,
   GuessObjectId,
   PlayerId,
-  PlayerResults,
 } from '@cityborn/api';
 import { PlayerIdSchema } from '@cityborn/api';
 import { calculateTotalPoints } from '@cityborn/core';
 
-export interface RoundResultViewModel {
+export interface GameRoundResult {
   guessObjectID: GuessObjectId;
   guessObjectName: string;
   distanceInKm: number | undefined;
   points: number;
 }
 
-export interface PlayerResultsViewModel {
+export interface GamePlayerResults {
   playerID: PlayerId;
   totalPoints: number;
-  roundResults: RoundResultViewModel[];
+  roundResults: GameRoundResult[];
 }
 
-export interface GameResultsViewModel {
-  localPlayerResults: PlayerResultsViewModel | undefined;
-  playersResults: PlayerResultsViewModel[];
+export interface GameResults {
+  localPlayerResults: GamePlayerResults | undefined;
+  playersResults: GamePlayerResults[];
   isMultiplayer: boolean;
 }
 
@@ -33,11 +33,11 @@ function getGuessObjectName(game: Game, guessObjectID: GuessObjectId): string {
   );
 }
 
-function createPlayerResultsViewModel(
+function createGamePlayerResults(
   game: Game,
   playerID: PlayerId,
-  results: PlayerResults,
-): PlayerResultsViewModel {
+  results: ApiPlayerResults,
+): GamePlayerResults {
   return {
     playerID,
     totalPoints: calculateTotalPoints(results),
@@ -50,18 +50,14 @@ function createPlayerResultsViewModel(
   };
 }
 
-export function createGameResultsViewModel(
+export function createGameResults(
   game: Game,
   localPlayerID: PlayerId,
-): GameResultsViewModel {
+): GameResults {
   const playersResults = Object.keys(game.state.results)
     .map((playerID) => PlayerIdSchema.parse(playerID))
     .map((playerID) =>
-      createPlayerResultsViewModel(
-        game,
-        playerID,
-        game.state.results[playerID],
-      ),
+      createGamePlayerResults(game, playerID, game.state.results[playerID]),
     )
     .sort((first, second) => second.totalPoints - first.totalPoints);
 

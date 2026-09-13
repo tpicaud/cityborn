@@ -1,5 +1,5 @@
 import type { Game, PlayerId } from '@cityborn/api';
-import { createGameResultsViewModel } from '@cityborn/client/game';
+import { createGameResults } from '@cityborn/client/game';
 import { ScrollView } from 'react-native';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -11,7 +11,7 @@ const Results = ({
   game: Game;
   localPlayerID: PlayerId;
 }) => {
-  const gameResults = createGameResultsViewModel(game, localPlayerID);
+  const gameResults = createGameResults(game, localPlayerID);
   const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {

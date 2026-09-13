@@ -1,7 +1,7 @@
 'use client';
 
 import { type Game, type PlayerId, SessionMode } from '@cityborn/api';
-import { createGameResultsViewModel } from '@cityborn/client/game';
+import { createGameResults } from '@cityborn/client/game';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,
@@ -36,7 +36,7 @@ const ResultsComponent = ({
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
 }) => {
-  const gameResults = createGameResultsViewModel(game, localPlayerID);
+  const gameResults = createGameResults(game, localPlayerID);
   const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {

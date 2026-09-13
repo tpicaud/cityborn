@@ -1,5 +1,5 @@
 import {
-  createGameViewModel,
+  createGameDisplay,
   type GameComponentProps,
 } from '@cityborn/client/game';
 import { useFocusEffect, useNavigation } from 'expo-router';
@@ -22,7 +22,7 @@ export const Game = ({
   handleExitGame,
 }: GameComponentProps) => {
   const navigation = useNavigation();
-  const gameViewModel = createGameViewModel(game, localPlayerID);
+  const gameDisplay = createGameDisplay(game, localPlayerID);
 
   useFocusEffect(
     useCallback(() => {
@@ -34,14 +34,14 @@ export const Game = ({
     }, [navigation.setOptions]),
   );
 
-  if (gameViewModel.displayState === 'loading') {
+  if (gameDisplay.state === 'loading') {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
       </View>
     );
   }
-  if (gameViewModel.displayState === 'unavailable') {
+  if (gameDisplay.state === 'unavailable') {
     return (
       <View className="flex-1 items-center justify-center">
         <Text>La partie est déjà en cours</Text>
@@ -49,7 +49,7 @@ export const Game = ({
       </View>
     );
   }
-  const activePlayerID = gameViewModel.localPlayerID;
+  const activePlayerID = gameDisplay.localPlayerID;
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -63,7 +63,7 @@ export const Game = ({
         />
       </View>
 
-      {gameViewModel.showResults && (
+      {gameDisplay.showResults && (
         <View>
           <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
             <View className="flex-1 w-full">

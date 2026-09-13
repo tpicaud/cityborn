@@ -8,15 +8,14 @@ import {
   shouldShowRoundOverlay,
   synchronizeRoundDisplayState,
 } from './gameRound';
-import type { MapProps } from './mapProps';
+import type { MapProps } from './viewContracts';
 
 const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
 const DEFAULT_MAP_ZOOM = 2;
 
-export interface GameRoundViewModel {
+export interface GameRoundController {
   mapProps: MapProps;
   preGuess: Guess | undefined;
-  displayState: RoundDisplayState;
   showCountdown: boolean;
   showOverlay: boolean;
   handleCountdownEnd: () => void;
@@ -49,16 +48,15 @@ export function useGameRound({
   game: Game;
   localPlayerID: PlayerId;
   handleGuess: (guess: Guess) => void;
-}): GameRoundViewModel {
+}): GameRoundController {
   const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
     useGuess(handleGuess);
-  const [displayState, setDisplayState] =
-    useState<RoundDisplayState>('countdown');
+  const [state, setState] = useState<RoundDisplayState>('countdown');
   const roundStatus = game.state.currentRound?.status;
 
   useEffect(() => {
     const synchronizedDisplayState = synchronizeRoundDisplayState(roundStatus);
-    setDisplayState(synchronizedDisplayState);
+    setState(synchronizedDisplayState);
     if (synchronizedDisplayState === 'results') {
       return;
     }
@@ -67,7 +65,7 @@ export function useGameRound({
   }, [resetPreGuess, roundStatus]);
 
   const handleCountdownEnd = useCallback(() => {
-    setDisplayState('guessing');
+    setState('guessing');
   }, []);
 
   const mapProps = useMemo<MapProps>(
@@ -85,9 +83,8 @@ export function useGameRound({
   return {
     mapProps,
     preGuess,
-    displayState,
-    showCountdown: displayState === 'countdown',
-    showOverlay: shouldShowRoundOverlay(displayState, roundStatus),
+    showCountdown: state === 'countdown',
+    showOverlay: shouldShowRoundOverlay(state, roundStatus),
     handleCountdownEnd,
     handleIsTimeUp,
   };

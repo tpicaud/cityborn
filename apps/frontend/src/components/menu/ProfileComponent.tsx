@@ -1,5 +1,5 @@
 import type { User } from '@cityborn/api';
-import { useProfileViewModel } from '@cityborn/client/profile';
+import { useProfile } from '@cityborn/client/profile';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -16,7 +16,7 @@ import { useEffect } from 'react';
 import { profileApi } from '@/lib/profileApi';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
-  const { games, loading, refreshGames } = useProfileViewModel({
+  const { games, loading, refreshGames } = useProfile({
     profileApi,
     localPlayerID: user.username,
   });

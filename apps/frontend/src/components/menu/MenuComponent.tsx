@@ -4,7 +4,7 @@ import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { usePlayViewModel } from '@cityborn/client/play';
+import { usePlay } from '@cityborn/client/play';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
@@ -36,7 +36,7 @@ export default function MenuComponent({
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlayViewModel({
+  } = usePlay({
     isAuthenticated: user !== null,
     sessionApi,
     navigation,

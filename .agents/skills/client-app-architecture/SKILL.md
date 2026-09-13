@@ -45,12 +45,14 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 | `@cityborn/client/api` | `src/api/` | Transport : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`, `socketRequest`) et les transitions (`sessionState`) restent privés au domaine. |
-| `@cityborn/client/game` | `src/features/game/` | Partie en cours, résultats, contrats de props (`MapProps`, `GameComponentProps`). |
-| `@cityborn/client/play` | `src/features/play/` | View model du jeu rapide : formulaire de jonction, lancement solo / multi et garde d'authentification. |
-| `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, chargement de l'historique et view models de scores. |
+| `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
+| `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
+| `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil et hook `useProfile`. |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 
 Un nouveau domaine se crée en ajoutant `src/features/<domaine>/index.ts` **et** son entrée dans l'`exports` map. Un type ou un helper vit dans son domaine ; `src/shared/` ne reçoit que ce qui sert à plusieurs domaines.
+
+La logique de présentation suit les conventions React existantes : un hook headless porte le nom `use<Comportement>` (`useSoloSession`, `useGameRound`, `useProfile`) ; une transformation pure porte le nom précis de son résultat (`gameDisplay`, `gameResult`, `sessionState`). Les contrats de vue restent colocalisés dans leur domaine.
 
 ### Ports plateforme
 

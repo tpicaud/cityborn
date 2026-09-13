@@ -2,7 +2,7 @@
 
 import type { Session } from '@cityborn/api';
 import {
-  createGameViewModel,
+  createGameDisplay,
   type GameComponentProps,
 } from '@cityborn/client/game';
 import { ArrowForward } from '@mui/icons-material';
@@ -25,12 +25,12 @@ export const GameComponent = ({
 }: GameComponentProps & {
   session: Session;
 }) => {
-  const gameViewModel = createGameViewModel(game, localPlayerID);
+  const gameDisplay = createGameDisplay(game, localPlayerID);
 
-  if (gameViewModel.displayState === 'loading') return <LoadingComponent />;
-  if (gameViewModel.displayState === 'unavailable')
+  if (gameDisplay.state === 'loading') return <LoadingComponent />;
+  if (gameDisplay.state === 'unavailable')
     return <p>La partie est déjà en cours</p>;
-  const activePlayerID = gameViewModel.localPlayerID;
+  const activePlayerID = gameDisplay.localPlayerID;
 
   return (
     <div>
@@ -41,10 +41,10 @@ export const GameComponent = ({
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
       />
-      {gameViewModel.roundNumber !== undefined && (
+      {gameDisplay.roundNumber !== undefined && (
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
           <div className="flex flex-col gap-2">
-            {gameViewModel.showNextRound && (
+            {gameDisplay.showNextRound && (
               <LoadingButton
                 variant="contained"
                 color="error"
@@ -67,13 +67,13 @@ export const GameComponent = ({
               </LoadingButton>
             )}
             <div className="bg-gray-200 text-black text-center px-3 py-1 rounded-full shadow text-sm font-semibold">
-              {gameViewModel.roundNumber}/{gameViewModel.roundCount}
+              {gameDisplay.roundNumber}/{gameDisplay.roundCount}
             </div>
           </div>
         </div>
       )}
 
-      {gameViewModel.showResults && (
+      {gameDisplay.showResults && (
         <div className="absolute h-full w-full">
           <div className="flex flex-row w-full h-full items-center justify-center">
             <Backdrop open={true}>

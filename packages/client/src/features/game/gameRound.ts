@@ -19,11 +19,11 @@ export function synchronizeRoundDisplayState(
 }
 
 export function shouldShowRoundOverlay(
-  displayState: RoundDisplayState,
+  state: RoundDisplayState,
   roundStatus: RoundStatusValue | undefined,
 ): boolean {
   return (
-    displayState === 'guessing' ||
-    (displayState === 'results' && roundStatus !== RoundStatus.GUESSING)
+    state === 'guessing' ||
+    (state === 'results' && roundStatus !== RoundStatus.GUESSING)
   );
 }

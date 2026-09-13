@@ -1,24 +1,24 @@
 import type { Game, PlayerId } from '@cityborn/api';
 import { GameStatus, RoundStatus } from '@cityborn/api';
 
-interface GameViewModelBase {
+interface GameDisplayBase {
   showNextRound: boolean;
   showResults: boolean;
   roundNumber: number | undefined;
   roundCount: number;
 }
 
-export type GameViewModel = GameViewModelBase &
+export type GameDisplay = GameDisplayBase &
   (
-    | { displayState: 'loading'; localPlayerID: undefined }
-    | { displayState: 'unavailable'; localPlayerID: undefined }
-    | { displayState: 'playing'; localPlayerID: PlayerId }
+    | { state: 'loading'; localPlayerID: undefined }
+    | { state: 'unavailable'; localPlayerID: undefined }
+    | { state: 'playing'; localPlayerID: PlayerId }
   );
 
-export function createGameViewModel(
+export function createGameDisplay(
   game: Game,
   localPlayerID: PlayerId | undefined,
-): GameViewModel {
+): GameDisplay {
   const isLoading =
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
     game.status === GameStatus.STARTING;
@@ -27,8 +27,7 @@ export function createGameViewModel(
   const roundIndex = currentRound
     ? game.state.guessObjectsIds.indexOf(currentRound.guessObjectId)
     : -1;
-
-  const gameViewModelBase: GameViewModelBase = {
+  const gameDisplayBase: GameDisplayBase = {
     showNextRound: currentRound?.status === RoundStatus.SHOWING_RESULTS,
     showResults: game.status === GameStatus.IN_RESULTS,
     roundNumber: roundIndex === -1 ? undefined : roundIndex + 1,
@@ -37,19 +36,19 @@ export function createGameViewModel(
 
   if (isLoading) {
     return {
-      ...gameViewModelBase,
-      displayState: 'loading',
+      ...gameDisplayBase,
+      state: 'loading',
       localPlayerID: undefined,
     };
   }
 
   if (!localPlayerID) {
     return {
-      ...gameViewModelBase,
-      displayState: 'unavailable',
+      ...gameDisplayBase,
+      state: 'unavailable',
       localPlayerID: undefined,
     };
   }
 
-  return { ...gameViewModelBase, displayState: 'playing', localPlayerID };
+  return { ...gameDisplayBase, state: 'playing', localPlayerID };
 }

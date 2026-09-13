@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { GameRecordSchema, PlayerIdSchema, SessionMode } from '@cityborn/api';
-import { createProfileGameViewModels } from './profileViewModel';
+import { createProfileGames } from './profileGame';
 
-test('createProfileGameViewModels calcule les scores une seule fois', () => {
+test('createProfileGames calcule les scores du profil', () => {
   const localPlayerID = PlayerIdSchema.parse('local-player');
   const otherPlayerID = PlayerIdSchema.parse('other-player');
   const gameRecord = GameRecordSchema.parse({
@@ -26,10 +26,10 @@ test('createProfileGameViewModels calcule les scores une seule fois', () => {
     createdAt: '2026-09-13T10:00:00.000Z',
   });
 
-  const [viewModel] = createProfileGameViewModels([gameRecord], localPlayerID);
+  const [profileGame] = createProfileGames([gameRecord], localPlayerID);
 
-  assert.equal(viewModel.localPlayerPoints, 900);
-  assert.deepEqual(viewModel.playerScores, [
+  assert.equal(profileGame.localPlayerPoints, 900);
+  assert.deepEqual(profileGame.playerScores, [
     { playerID: localPlayerID, points: 900 },
     { playerID: otherPlayerID, points: 700 },
   ]);

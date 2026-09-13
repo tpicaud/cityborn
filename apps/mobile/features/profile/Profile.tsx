@@ -1,6 +1,6 @@
 import { isoToLocalDate, useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { useProfileViewModel } from '@cityborn/client/profile';
+import { useProfile } from '@cityborn/client/profile';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router/react-navigation';
@@ -19,7 +19,7 @@ export default function Profile() {
   const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const router = useRouter();
-  const { games, loading, refreshGames } = useProfileViewModel({
+  const { games, loading, refreshGames } = useProfile({
     profileApi,
     localPlayerID: user?.username,
   });
