@@ -34,8 +34,27 @@ vers les transports : les champs masqués ne quittent jamais le process en clair
 - **Axiom** — cible additionnelle `@axiomhq/pino`. Le transport tourne dans un
   worker thread : une panne d'ingestion n'interrompt ni la requête ni stdout.
 
-## Requêtes
+## Champs des wide events
 
-Les requêtes APL de référence sont versionnées dans
-[`apl-queries.md`](./apl-queries.md). Toute requête utile à l'exploitation doit
-y être ajoutée plutôt que de rester dans l'UI d'Axiom.
+Le contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts)
+et toute requête, où qu'elle vive. Renommer un champ ici oblige à reprendre les
+requêtes sauvegardées, les dashboards et les monitors côté Axiom, qu'aucun
+`grep` n'atteint.
+
+Communs : `event` (`http_request` | `ws_message` | `ws_connection` |
+`ws_disconnection`), `transport`, `requestId`, `domain`, `operation`,
+`outcome`, `statusCode`, `durationMs`, `level`, `ip`, `userAgent`, `visitorId`,
+`client`, `clientVersion`.
+
+HTTP : `method`, `route`, `apiVersion`.
+WS : `kind`, `eventName`, `socketId`.
+Auth : `isAuthenticated`, `userId`.
+Métier : `sessionId`, `playerId`, `gameId`.
+Erreur : `errorCode`, `errorMessage`, `errorStack`, `errorCauses`.
+Rate limit : `rateLimitBucket`, `rateLimitStatus`, `rateLimitRemaining`.
+
+## Requêtes et alertes
+
+Elles vivent dans Axiom — requêtes sauvegardées, dashboards et monitors. Le
+repo ne garde pas de copie du texte APL : Axiom en est propriétaire, une copie
+ici dériverait sans que rien ne le signale.
