@@ -16,13 +16,13 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
@@ -52,14 +52,13 @@ export interface GoogleIdentityClient {
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly eventService: EventService,
     private readonly mailService: MailService,
+    private readonly wideEventService: WideEventService,
     @Inject('GOOGLE_CLIENT')
     private readonly googleClient: GoogleIdentityClient,
   ) {}
@@ -84,10 +83,11 @@ export class AuthService {
       });
 
     void this.sendVerificationEmail(user).catch((error: unknown) => {
-      this.logger.error(
-        'Failed to send verification email after signup',
-        error,
-      );
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: user.id,
+      });
     });
 
     const access_token = await this.generateToken(

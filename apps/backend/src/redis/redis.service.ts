@@ -1,21 +1,25 @@
 import {
   Inject,
   Injectable,
-  Logger,
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
 import type Redis from 'ioredis';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(RedisService.name);
-
-  constructor(@Inject('REDIS_CLIENT') readonly redisClient: Redis) {}
+  constructor(
+    @Inject('REDIS_CLIENT') readonly redisClient: Redis,
+    private readonly wideEventService: WideEventService,
+  ) {}
 
   async onModuleInit() {
     this.redisClient.on('error', (err) => {
-      this.logger.error('Redis Client Error:', err);
+      this.wideEventService.recordOperationError(err, {
+        domain: 'infrastructure',
+        operation: 'redis.client',
+      });
     });
   }
 

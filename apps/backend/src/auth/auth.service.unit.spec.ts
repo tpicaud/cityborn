@@ -1,9 +1,9 @@
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import { Logger } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { User as PrismaUser } from '@prisma/client';
+import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserService } from '../user/user.service';
@@ -53,6 +53,7 @@ function buildAuthService() {
   const configService = createMock<ConfigService>();
   const eventService = createMock<EventService>();
   const mailService = createMock<MailService>();
+  const wideEventService = createMock<WideEventService>();
   const googleClient = createMock<GoogleIdentityClient>();
   const authService = new AuthService(
     userService,
@@ -60,6 +61,7 @@ function buildAuthService() {
     configService,
     eventService,
     mailService,
+    wideEventService,
     googleClient,
   );
 
@@ -79,6 +81,7 @@ function buildAuthService() {
     jwtService,
     eventService,
     mailService,
+    wideEventService,
     googleClient,
   };
 }
@@ -157,10 +160,8 @@ describe('AuthService.signUp', () => {
   it('logs a verification email failure without rejecting', async () => {
     const persistedUser = { ...prismaUser, isVerified: false };
     const mailError = new Error('Mailer unavailable');
-    const loggerError = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
-    const { authService, userService, mailService } = buildAuthService();
+    const { authService, userService, mailService, wideEventService } =
+      buildAuthService();
     userService.createUser.mockResolvedValue(persistedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
@@ -177,12 +178,14 @@ describe('AuthService.signUp', () => {
       access_token: 'access-token',
       refresh_token: 'refresh-token',
     });
-    expect(loggerError).toHaveBeenCalledWith(
-      'Failed to send verification email after signup',
+    expect(wideEventService.recordOperationError).toHaveBeenCalledWith(
       mailError,
+      {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: persistedUser.id,
+      },
     );
-
-    loggerError.mockRestore();
   });
 });
 
