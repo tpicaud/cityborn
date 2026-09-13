@@ -62,6 +62,23 @@ export interface WideEventFinalization {
   route?: string;
 }
 
+export interface WideEventOperationContext {
+  domain: WideEventDomain;
+  operation: string;
+  userId?: string;
+}
+
+export interface OperationErrorWideEvent extends WideEventOperationContext {
+  event: 'operation_error';
+  requestId?: string;
+  statusCode: number;
+  outcome: WideEventOutcome;
+  errorCode: ErrorCode;
+  errorMessage: string;
+  errorStack?: string;
+  errorCauses?: ErrorDiagnostic['causes'];
+}
+
 export type WideEventAuthContext =
   | { isAuthenticated: false; userId?: never }
   | { isAuthenticated: true; userId: string };
@@ -103,6 +120,7 @@ export const WIDE_EVENT_DOMAINS = [
   'game',
   'guess-object',
   'health',
+  'infrastructure',
   'search',
   'sentence',
   'session',

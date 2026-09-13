@@ -1,5 +1,4 @@
 import type { INestApplicationContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import type { MessageMappingProperties } from '@nestjs/websockets';
 import { createAdapter } from '@socket.io/redis-adapter';
@@ -7,6 +6,7 @@ import { createClient } from 'redis';
 import { isObservable, type Observable } from 'rxjs';
 import type { Server, ServerOptions } from 'socket.io';
 import type { SessionSocket } from '../common/types/session-socket';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 
 export class RedisIoAdapter extends IoAdapter {
@@ -20,15 +20,21 @@ export class RedisIoAdapter extends IoAdapter {
   }
 
   static async create(app: INestApplicationContext): Promise<RedisIoAdapter> {
-    const logger = new Logger(RedisIoAdapter.name);
+    const wideEventService = app.get(WideEventService);
     const pubClient = createClient({ url: process.env.REDIS_URL });
     const subClient = pubClient.duplicate();
 
     pubClient.on('error', (err) => {
-      logger.error('Redis Pub Error:', err);
+      wideEventService.recordOperationError(err, {
+        domain: 'infrastructure',
+        operation: 'redis.pub',
+      });
     });
     subClient.on('error', (err) => {
-      logger.error('Redis Sub Error:', err);
+      wideEventService.recordOperationError(err, {
+        domain: 'infrastructure',
+        operation: 'redis.sub',
+      });
     });
 
     let connected = false;

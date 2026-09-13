@@ -3,6 +3,7 @@ import { createMock } from '@golevelup/ts-jest';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { User as PrismaUser } from '@prisma/client';
+import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserService } from '../user/user.service';
@@ -52,6 +53,7 @@ function buildAuthService() {
   const configService = createMock<ConfigService>();
   const eventService = createMock<EventService>();
   const mailService = createMock<MailService>();
+  const wideEventService = createMock<WideEventService>();
   const googleClient = createMock<GoogleIdentityClient>();
   const authService = new AuthService(
     userService,
@@ -59,6 +61,7 @@ function buildAuthService() {
     configService,
     eventService,
     mailService,
+    wideEventService,
     googleClient,
   );
 
@@ -78,6 +81,7 @@ function buildAuthService() {
     jwtService,
     eventService,
     mailService,
+    wideEventService,
     googleClient,
   };
 }
@@ -124,6 +128,63 @@ describe('AuthService.signUp', () => {
         name: 'user_signed_up',
         visitorId: 'visitor-1',
       }),
+    );
+  });
+
+  it('returns tokens without waiting for the verification email', async () => {
+    const persistedUser = { ...prismaUser, isVerified: false };
+    const { authService, userService, mailService } = buildAuthService();
+    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockReturnValue(new Promise<void>(() => undefined));
+
+    const signUpOutcome = await Promise.race([
+      authService.signUp({
+        email: persistedUser.email,
+        username: UsernameSchema.parse(persistedUser.username),
+        password: 'plain-password',
+      }),
+      new Promise<undefined>((resolve) =>
+        setImmediate(() => resolve(undefined)),
+      ),
+    ]);
+
+    expect(signUpOutcome).toMatchObject({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    });
+  });
+
+  it('logs a verification email failure without rejecting', async () => {
+    const persistedUser = { ...prismaUser, isVerified: false };
+    const mailError = new Error('Mailer unavailable');
+    const { authService, userService, mailService, wideEventService } =
+      buildAuthService();
+    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockRejectedValue(mailError);
+
+    await expect(
+      authService.signUp({
+        email: persistedUser.email,
+        username: UsernameSchema.parse(persistedUser.username),
+        password: 'plain-password',
+      }),
+    ).resolves.toMatchObject({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    });
+    expect(wideEventService.recordOperationError).toHaveBeenCalledWith(
+      mailError,
+      {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: persistedUser.id,
+      },
     );
   });
 });

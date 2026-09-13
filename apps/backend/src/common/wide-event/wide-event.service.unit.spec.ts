@@ -111,8 +111,39 @@ describe('WideEventService', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         event: 'operation_error',
-        source: 'test',
+        domain: 'other',
+        operation: 'test',
         statusCode: 400,
+        outcome: 'client_error',
+        errorCode: ErrorCode.BAD_REQUEST,
+      }),
+      'operation error',
+    );
+  });
+
+  it('logs an operation error without enriching the active event', () => {
+    const { clsService, logger, wideEventService } = buildWideEventService();
+    clsService.get.mockReturnValue(httpWideEvent);
+
+    wideEventService.recordOperationError(new Error('Mailer unavailable'), {
+      domain: 'auth',
+      operation: 'send_verification_email',
+      userId: 'user-1',
+    });
+
+    expect(clsService.set).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'operation_error',
+        requestId: 'request-1',
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: 'user-1',
+        statusCode: 500,
+        outcome: 'server_error',
+        errorCode: ErrorCode.UNKNOWN_ERROR,
+        errorMessage: 'Mailer unavailable',
+        errorStack: expect.any(String),
       }),
       'operation error',
     );

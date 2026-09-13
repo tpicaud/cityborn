@@ -25,7 +25,15 @@ Dans un checkout que l'utilisateur a explicitement demandé d'utiliser directeme
 3. Charger les skills métier déclenchées par les fichiers ou comportements concernés.
 4. Implémenter le périmètre demandé. Ajouter ou adapter les tests qui démontrent un comportement ou invariant significatif, puis exécuter les vérifications ciblées et transverses requises.
 5. Pour une interface, fournir la procédure de validation manuelle.
-6. Pousser, créer une PR, modifier l'issue ou changer son statut de projet uniquement à la demande de l'utilisateur.
+
+## Livrer l'issue
+
+Une demande d'implémenter une issue inclut sa livraison sur GitHub :
+
+1. Créer un commit dès qu'une étape cohérente est complète et vérifiée. Garder séparées les étapes indépendantes et respecter les conventions de commit d'`AGENTS.md`.
+2. Après les vérifications finales, pousser la branche liée à l'issue.
+3. Créer une PR draft si la branche n'en possède pas, sinon mettre à jour la PR existante. Respecter les conventions de PR d'`AGENTS.md` et inclure dans sa description le résultat, les vérifications exécutées et la fermeture automatique de l'issue.
+4. Réserver le passage de la PR en ready, le merge, la modification de l'issue et les changements de statut de projet à une demande explicite de l'utilisateur.
 
 ## Compte rendu final
 

@@ -1,20 +1,26 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import Redlock from 'redlock';
+import { WideEventService } from '../common/wide-event/wide-event.service';
 
 @Injectable()
 export class LockService {
-  private readonly logger = new Logger(LockService.name);
   private redlock: Redlock;
 
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    private readonly wideEventService: WideEventService,
+  ) {
     this.redlock = new Redlock([this.redisClient], {
       retryCount: 3,
       retryDelay: 100,
     });
 
     this.redlock.on('clientError', (err) => {
-      this.logger.error('A Redis client error occurred:', err);
+      this.wideEventService.recordOperationError(err, {
+        domain: 'infrastructure',
+        operation: 'redlock.client',
+      });
     });
   }
 

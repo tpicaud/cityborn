@@ -2,12 +2,16 @@ import { type ApiError, ErrorCode } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClsService, type ClsStore } from 'nestjs-cls';
 import { PinoLogger } from 'nestjs-pino';
-import { normalizeException } from '../errors/exception-to-api-error';
+import {
+  type ErrorDiagnostic,
+  normalizeException,
+} from '../errors/exception-to-api-error';
 import {
   deriveHttpDomain,
   deriveWideEventLevel,
   deriveWideEventOutcome,
   emitWideEventLine,
+  type OperationErrorWideEvent,
   type WideEvent,
   type WideEventAuthContext,
   type WideEventBusinessContext,
@@ -15,6 +19,7 @@ import {
   type WideEventFinalization,
   type WideEventInit,
   type WideEventLogger,
+  type WideEventOperationContext,
   type WideEventRateLimitContext,
 } from './wide-event';
 
@@ -68,18 +73,21 @@ export class WideEventService {
         errorCauses: diagnostic.causes,
       })
     ) {
-      const level = deriveWideEventLevel(apiError.statusCode);
-      this.logger[level](
-        {
-          event: 'operation_error',
-          source,
-          statusCode: apiError.statusCode,
-          ...diagnostic,
-        },
-        'operation error',
-      );
+      this.emitOperationError(apiError.statusCode, diagnostic, {
+        domain: this.get()?.domain ?? 'other',
+        operation: source,
+      });
     }
     return apiError;
+  }
+
+  recordOperationError(
+    exception: unknown,
+    context: WideEventOperationContext,
+  ): void {
+    const { apiError, diagnostic } = normalizeException(exception);
+
+    this.emitOperationError(apiError.statusCode, diagnostic, context);
   }
 
   finish(fields: WideEventFinalization = {}): void {
@@ -119,5 +127,26 @@ export class WideEventService {
     }
     this.cls.set('wideEvent', { ...current, ...fields });
     return true;
+  }
+
+  private emitOperationError(
+    statusCode: number,
+    diagnostic: ErrorDiagnostic,
+    context: WideEventOperationContext,
+  ): void {
+    const level = deriveWideEventLevel(statusCode);
+    const requestId = this.get()?.requestId;
+    const operationErrorWideEvent = {
+      event: 'operation_error',
+      ...(requestId ? { requestId } : {}),
+      ...context,
+      statusCode,
+      outcome: deriveWideEventOutcome(statusCode),
+      errorCode: diagnostic.code,
+      errorMessage: diagnostic.message,
+      errorStack: diagnostic.stack,
+      errorCauses: diagnostic.causes,
+    } satisfies OperationErrorWideEvent;
+    this.logger[level](operationErrorWideEvent, 'operation error');
   }
 }
