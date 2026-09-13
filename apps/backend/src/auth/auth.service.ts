@@ -16,6 +16,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -51,6 +52,8 @@ export interface GoogleIdentityClient {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -80,7 +83,12 @@ export class AuthService {
         message: `Error creating user in database`,
       });
 
-    await this.sendVerificationEmail(user);
+    void this.sendVerificationEmail(user).catch((error: unknown) => {
+      this.logger.error(
+        'Failed to send verification email after signup',
+        error,
+      );
+    });
 
     const access_token = await this.generateToken(
       'access',

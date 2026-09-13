@@ -1,5 +1,6 @@
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
+import { Logger } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { User as PrismaUser } from '@prisma/client';
@@ -125,6 +126,63 @@ describe('AuthService.signUp', () => {
         visitorId: 'visitor-1',
       }),
     );
+  });
+
+  it('returns tokens without waiting for the verification email', async () => {
+    const persistedUser = { ...prismaUser, isVerified: false };
+    const { authService, userService, mailService } = buildAuthService();
+    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockReturnValue(new Promise<void>(() => undefined));
+
+    const signUpOutcome = await Promise.race([
+      authService.signUp({
+        email: persistedUser.email,
+        username: UsernameSchema.parse(persistedUser.username),
+        password: 'plain-password',
+      }),
+      new Promise<undefined>((resolve) =>
+        setImmediate(() => resolve(undefined)),
+      ),
+    ]);
+
+    expect(signUpOutcome).toMatchObject({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    });
+  });
+
+  it('logs a verification email failure without rejecting', async () => {
+    const persistedUser = { ...prismaUser, isVerified: false };
+    const mailError = new Error('Mailer unavailable');
+    const loggerError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const { authService, userService, mailService } = buildAuthService();
+    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockRejectedValue(mailError);
+
+    await expect(
+      authService.signUp({
+        email: persistedUser.email,
+        username: UsernameSchema.parse(persistedUser.username),
+        password: 'plain-password',
+      }),
+    ).resolves.toMatchObject({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    });
+    expect(loggerError).toHaveBeenCalledWith(
+      'Failed to send verification email after signup',
+      mailError,
+    );
+
+    loggerError.mockRestore();
   });
 });
 
