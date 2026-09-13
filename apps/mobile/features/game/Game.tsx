@@ -1,11 +1,9 @@
 import {
-  GameStatus,
-  type Game as GameType,
-  type Guess as GuessType,
-  type PlayerId,
-} from '@cityborn/api';
+  createGameDisplay,
+  type GameComponentProps,
+} from '@cityborn/client/game';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
@@ -20,25 +18,11 @@ export const Game = ({
   game,
   handleGuess,
   handleNextRound,
-  handleEndGame,
-  handlePlayAgain: _handlePlayAgain,
+  handlePlayAgain,
   handleExitGame,
-}: {
-  localPlayerID: PlayerId | undefined;
-  isHost: boolean;
-  game: GameType;
-  handleGuess: (guess: GuessType) => Promise<void>;
-  handleNextRound: () => Promise<void>;
-  handleEndGame: () => Promise<void>;
-  handlePlayAgain: () => Promise<void>;
-  handleExitGame: () => Promise<void>;
-}) => {
+}: GameComponentProps) => {
   const navigation = useNavigation();
-  const [showResults, setShowResults] = useState(false);
-
-  useEffect(() => {
-    setShowResults(game.status === GameStatus.IN_RESULTS);
-  }, [game.status]);
+  const gameDisplay = createGameDisplay(game, localPlayerID);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,17 +34,14 @@ export const Game = ({
     }, [navigation.setOptions]),
   );
 
-  if (
-    (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
-    game.status === GameStatus.STARTING
-  ) {
+  if (gameDisplay.state === 'loading') {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
       </View>
     );
   }
-  if (!localPlayerID) {
+  if (gameDisplay.state === 'unavailable') {
     return (
       <View className="flex-1 items-center justify-center">
         <Text>La partie est déjà en cours</Text>
@@ -68,12 +49,13 @@ export const Game = ({
       </View>
     );
   }
+  const activePlayerID = gameDisplay.localPlayerID;
 
   return (
     <View style={StyleSheet.absoluteFill}>
       <View style={StyleSheet.absoluteFill}>
         <Guess
-          localPlayerID={localPlayerID}
+          localPlayerID={activePlayerID}
           game={game}
           isHost={isHost}
           handleGuess={handleGuess}
@@ -81,14 +63,11 @@ export const Game = ({
         />
       </View>
 
-      {game.status === GameStatus.IN_RESULTS && (
+      {gameDisplay.showResults && (
         <View>
-          <Dialog
-            visible={showResults}
-            className="absolute h-[80%] w-[90%] p-8"
-          >
+          <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
             <View className="flex-1 w-full">
-              <Results game={game} localPlayerID={localPlayerID} />
+              <Results game={game} localPlayerID={activePlayerID} />
             </View>
             <View className="flex gap-4 items-center justify-center">
               <Button
@@ -96,15 +75,13 @@ export const Game = ({
                 size="large"
                 label="Rejouer"
                 onPress={async () => {
-                  setShowResults(false);
-                  await handleEndGame();
+                  await handlePlayAgain();
                 }}
               />
               <Button
                 variant="default"
                 label="Menu"
                 onPress={async () => {
-                  setShowResults(false);
                   await handleExitGame();
                 }}
               />

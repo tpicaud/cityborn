@@ -8,6 +8,8 @@
     "./auth": "./src/features/auth/index.ts",
     "./session": "./src/features/session/index.ts",
     "./game": "./src/features/game/index.ts",
+    "./play": "./src/features/play/index.ts",
+    "./profile": "./src/features/profile/index.ts",
     "./platform": "./src/platform/index.ts"
   },
   "author": "Tom Picaud",
