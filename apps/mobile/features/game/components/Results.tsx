@@ -1,7 +1,5 @@
-import type { Game, PlayerResults } from '@cityborn/api';
-import { getGameResult } from '@cityborn/client/game';
-import { calculateTotalPoints } from '@cityborn/core';
-import { useEffect, useState } from 'react';
+import type { Game, PlayerId } from '@cityborn/api';
+import { createGameResultsViewModel } from '@cityborn/client/game';
 import { ScrollView } from 'react-native';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -11,22 +9,10 @@ const Results = ({
   localPlayerID,
 }: {
   game: Game;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
 }) => {
-  const playersResults = new Map<string, PlayerResults>(getGameResult(game));
-  const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
-
-  useEffect(() => {
-    const currentPlayerResults = playersResults.get(localPlayerID);
-    if (!currentPlayerResults) return;
-
-    setLocalPlayerResults(currentPlayerResults);
-  }, [localPlayerID, playersResults.get]);
-
-  function getGuessObjectName(id: string): string {
-    const guessObject = game.state.guessObjects?.find((obj) => obj.id === id);
-    return guessObject ? guessObject.name : id;
-  }
+  const gameResults = createGameResultsViewModel(game, localPlayerID);
+  const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {
     return (
@@ -42,34 +28,27 @@ const Results = ({
       <View className="p-4 w-full items-center">
         <Text className="text-2xl p-2 mb-2">
           <Text className="font-bold text-4xl">
-            {calculateTotalPoints(localPlayerResults)}
+            {localPlayerResults.totalPoints}
           </Text>{' '}
           pts
         </Text>
       </View>
-      {playersResults.size > 1 ? (
+      {gameResults.isMultiplayer ? (
         <View className="flex flex-col p-4">
           <Text className="font-bold text-center text-lg">Classement</Text>
           <View className="flex-row border-b border-gray-400 py-2 w-full">
             <Text className="flex-1 text-left font-semibold">Nom</Text>
             <Text className="flex-1 text-right font-semibold">Score</Text>
           </View>
-          {Array.from(playersResults.entries())
-            .sort(
-              ([, a], [, b]) =>
-                calculateTotalPoints(b) - calculateTotalPoints(a),
-            )
-            .map(([username, playerResult]) => (
-              <View
-                key={username}
-                className="flex-row border-b border-gray-300 py-2 w-full"
-              >
-                <Text className="flex-1 text-left text-sm">{username}</Text>
-                <Text className="flex-1 text-right text-sm">
-                  {calculateTotalPoints(playerResult)}
-                </Text>
-              </View>
-            ))}
+          {gameResults.playersResults.map(({ playerID, totalPoints }) => (
+            <View
+              key={playerID}
+              className="flex-row border-b border-gray-300 py-2 w-full"
+            >
+              <Text className="flex-1 text-left text-sm">{playerID}</Text>
+              <Text className="flex-1 text-right text-sm">{totalPoints}</Text>
+            </View>
+          ))}
         </View>
       ) : (
         <View className="flex-1 pb-4">
@@ -85,20 +64,22 @@ const Results = ({
               <Text className="flex-1 text-right font-semibold">Points</Text>
             </View>
 
-            {localPlayerResults.results.map((res) => (
+            {localPlayerResults.roundResults.map((roundResult) => (
               <View
-                key={res.guessObjectId}
+                key={roundResult.guessObjectID}
                 className="flex-row border-b border-gray-300 py-2 w-full"
               >
                 <Text className="flex-1 text-left text-sm">
-                  {getGuessObjectName(res.guessObjectId)}
+                  {roundResult.guessObjectName}
                 </Text>
                 <Text className="flex-1 text-center text-sm">
-                  {res.distance !== -1
-                    ? res.distance.toFixed(2)
+                  {roundResult.distanceInKm !== undefined
+                    ? roundResult.distanceInKm.toFixed(2)
                     : 'Pas de guess'}
                 </Text>
-                <Text className="flex-1 text-right text-sm">{res.points}</Text>
+                <Text className="flex-1 text-right text-sm">
+                  {roundResult.points}
+                </Text>
               </View>
             ))}
           </ScrollView>

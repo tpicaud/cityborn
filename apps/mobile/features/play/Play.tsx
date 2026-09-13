@@ -1,10 +1,6 @@
 import { useAuth } from '@cityborn/client/auth';
-import {
-  useJoinSessionForm,
-  useSessionLauncher,
-} from '@cityborn/client/session';
+import { usePlayViewModel } from '@cityborn/client/play';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -18,23 +14,21 @@ export default function Play() {
   const { user } = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
-  const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
   const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useJoinSessionForm();
-  const { playSolo, playMulti, joinSession } = useSessionLauncher({
+    joinSessionForm: {
+      control,
+      formState: { errors, isSubmitting },
+    },
+    playSolo,
+    playMulti,
+    joinSession,
+    authenticationRequired,
+    dismissAuthenticationRequired,
+  } = usePlayViewModel({
+    isAuthenticated: user !== null,
     sessionApi,
     navigation,
   });
-
-  const handleMultiPlay = async () => {
-    if (!user) return setOpenConnectionAlert(true);
-    await playMulti();
-  };
-
-  const handleJoin = handleSubmit(({ code }) => joinSession(code));
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -65,7 +59,7 @@ export default function Play() {
                 label="GO"
                 className="w-16 rounded-l-none h-full border border-primary-500"
                 disabled={isSubmitting}
-                onPress={handleJoin}
+                onPress={joinSession}
               />
             </View>
             {errors.code && (
@@ -96,15 +90,15 @@ export default function Play() {
                 variant="filled"
                 label="MULTI"
                 size="large"
-                onPress={handleMultiPlay}
+                onPress={playMulti}
               />
             </View>
           </View>
         </View>
 
         <Dialog
-          visible={openConnectionAlert}
-          onClose={() => setOpenConnectionAlert(false)}
+          visible={authenticationRequired}
+          onClose={dismissAuthenticationRequired}
           className="h-auto"
         >
           <View className="p-5">
@@ -117,7 +111,7 @@ export default function Play() {
                 size="medium"
                 variant="outlined"
                 onPress={() => {
-                  setOpenConnectionAlert(false);
+                  dismissAuthenticationRequired();
                   router.navigate('/auth/sign-in');
                 }}
               />
@@ -126,7 +120,7 @@ export default function Play() {
                 size="medium"
                 variant="filled"
                 onPress={() => {
-                  setOpenConnectionAlert(false);
+                  dismissAuthenticationRequired();
                   router.navigate('/auth/sign-up');
                 }}
               />

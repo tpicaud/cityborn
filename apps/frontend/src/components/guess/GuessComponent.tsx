@@ -1,16 +1,9 @@
 'use client';
 
-import {
-  type Game,
-  type Guess,
-  type PlayerId,
-  RoundStatus,
-  type Session,
-} from '@cityborn/api';
+import type { PlayerId, Session } from '@cityborn/api';
+import { type GameComponentProps, useGameRound } from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
 import OverlayComponent from '@/components/guess/OverlayComponent';
-import useGuess from '@/hooks/useGuess';
 import RoundCountdownComponent from './RoundCountdown';
 
 const GoogleMapComponent = dynamic(
@@ -18,15 +11,13 @@ const GoogleMapComponent = dynamic(
   { ssr: false },
 );
 
-const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
-
-interface GuessComponentProps {
+type GuessComponentProps = Pick<
+  GameComponentProps,
+  'game' | 'handleGuess' | 'handleNextRound'
+> & {
   localPlayerID: PlayerId;
   session: Session;
-  game: Game;
-  handleGuess: (guess: Guess) => void;
-  handleNextRound: () => void;
-}
+};
 
 const GuessComponent: React.FC<GuessComponentProps> = ({
   localPlayerID,
@@ -35,74 +26,41 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   handleGuess,
   handleNextRound,
 }) => {
-  const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
-    useGuess(handleGuess);
-  const [internalRoundStatus, setInternalRoundStatus] = useState<
-    'countdown' | 'guessing' | 'results'
-  >('countdown');
+  const gameRound = useGameRound({ game, localPlayerID, handleGuess });
 
   const googleMapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY;
   if (!googleMapApiKey) {
     throw new Error('NEXT_PUBLIC_GOOGLE_MAP_API_KEY is not set');
   }
 
-  const mapProps = {
-    center: DEFAULT_MAP_CENTER,
-    zoom: 2,
-    preGuess,
-    localPlayerID,
-    game,
-    handlePreGuess,
-  };
-
-  useEffect(() => {
-    switch (game.state.currentRound?.status) {
-      case RoundStatus.GUESSING:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-
-      case RoundStatus.SHOWING_RESULTS:
-        setInternalRoundStatus('results');
-        break;
-
-      default:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-    }
-  }, [game.state.currentRound?.status, resetPreGuess]);
-
   return (
     <div>
       <div className="fixed w-full h-full z-0">
-        <GoogleMapComponent API_KEY={googleMapApiKey} mapProps={mapProps} />
+        <GoogleMapComponent
+          API_KEY={googleMapApiKey}
+          mapProps={gameRound.mapProps}
+        />
       </div>
 
-      {internalRoundStatus === 'countdown' && (
+      {gameRound.showCountdown && (
         <RoundCountdownComponent
-          onCountdownEnd={() => setInternalRoundStatus('guessing')}
+          onCountdownEnd={gameRound.handleCountdownEnd}
         />
       )}
 
-      {(internalRoundStatus === 'guessing' ||
-        internalRoundStatus === 'results') &&
-        !(
-          internalRoundStatus === 'results' &&
-          game.state.currentRound?.status === RoundStatus.GUESSING
-        ) && (
-          <div className="z-10">
-            <OverlayComponent
-              localPlayerID={localPlayerID}
-              preGuess={preGuess}
-              session={session}
-              game={game}
-              handleGuess={handleGuess}
-              handleIsTimeUp={handleIsTimeUp}
-              handleNextRound={handleNextRound}
-            />
-          </div>
-        )}
+      {gameRound.showOverlay && (
+        <div className="z-10">
+          <OverlayComponent
+            localPlayerID={localPlayerID}
+            preGuess={gameRound.preGuess}
+            session={session}
+            game={game}
+            handleGuess={handleGuess}
+            handleIsTimeUp={gameRound.handleIsTimeUp}
+            handleNextRound={handleNextRound}
+          />
+        </div>
+      )}
     </div>
   );
 };

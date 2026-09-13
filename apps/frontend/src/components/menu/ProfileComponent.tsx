@@ -1,6 +1,5 @@
-import type { GameRecord, User } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { calculateTotalPoints } from '@cityborn/core';
+import type { User } from '@cityborn/api';
+import { useProfileViewModel } from '@cityborn/client/profile';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -13,27 +12,18 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getGameRecords } from '@/server/use-server/user';
+import { useEffect } from 'react';
+import { profileApi } from '@/lib/profileApi';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
-  const { invokeError } = useError();
-  const [games, setGames] = useState<GameRecord[]>();
-  const [loading, setLoading] = useState(true);
+  const { games, loading, refreshGames } = useProfileViewModel({
+    profileApi,
+    localPlayerID: user.username,
+  });
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const result = await getGameRecords();
-        if (!result.ok) return invokeError(result.error);
-        const gameRecords: GameRecord[] = result.data;
-        setGames(gameRecords);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [invokeError]);
+    refreshGames();
+  }, [refreshGames]);
 
   return (
     <Box
@@ -76,7 +66,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
               <CircularProgress size={20} />
             </div>
           ) : (
-            <Typography>Games ({games?.length ?? 0})</Typography>
+            <Typography>Games ({games.length})</Typography>
           )}
         </AccordionSummary>
         <AccordionDetails
@@ -93,14 +83,19 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 </ListItem>
               ))}
             </List>
-          ) : !games || games.length === 0 ? (
+          ) : games.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Aucune partie jouée
             </Typography>
           ) : (
             <List dense>
-              {games.map((game) => (
-                <ListItem key={game.id} divider disableGutters sx={{ p: 0 }}>
+              {games.map(({ gameRecord, localPlayerPoints, playerScores }) => (
+                <ListItem
+                  key={gameRecord.id}
+                  divider
+                  disableGutters
+                  sx={{ p: 0 }}
+                >
                   <Accordion
                     elevation={0}
                     disableGutters
@@ -109,11 +104,10 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                     <AccordionSummary>
                       <div className="flex flex-col w-full">
                         <Typography variant="subtitle2">
-                          Partie #{game.id ?? '-'} - {game.createdAt}
+                          Partie #{gameRecord.id} - {gameRecord.createdAt}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {game.mode.toUpperCase()} •{' '}
-                          {calculateTotalPoints(game.results[user.username])}
+                          {gameRecord.mode.toUpperCase()} • {localPlayerPoints}
                         </Typography>
                       </div>
                     </AccordionSummary>
@@ -121,23 +115,19 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                       <div className="flex flex-col gap-2">
                         <Typography variant="body2">
                           Joueurs :{' '}
-                          {game.players.map((p) => p.username).join(', ')}
+                          {gameRecord.players
+                            .map(({ username }) => username)
+                            .join(', ')}
                         </Typography>
                         <Typography variant="body2">Scores :</Typography>
                         <List dense>
-                          {Object.entries(game.results).map(
-                            ([playerId, result]) => (
-                              <ListItem key={playerId} disableGutters>
-                                <ListItemText
-                                  primary={`${
-                                    game.players.find(
-                                      (p) => p.username === playerId,
-                                    )?.username ?? playerId
-                                  } : ${calculateTotalPoints(result)}`}
-                                />
-                              </ListItem>
-                            ),
-                          )}
+                          {playerScores.map(({ playerID, points }) => (
+                            <ListItem key={playerID} disableGutters>
+                              <ListItemText
+                                primary={`${playerID} : ${points}`}
+                              />
+                            </ListItem>
+                          ))}
                         </List>
                       </div>
                     </AccordionDetails>

@@ -1,8 +1,12 @@
 import type { Game, Guess, PlayerId } from '@cityborn/api';
 
 export interface GameComponentProps {
+  localPlayerID: PlayerId | undefined;
+  isHost: boolean;
   game: Game;
-  localPlayerID: PlayerId;
-  handleGuess: (guess: Guess) => void;
-  handleNextRound: () => void;
+  handleGuess: (guess: Guess) => Promise<void>;
+  handleNextRound: () => Promise<void>;
+  handleEndGame: () => Promise<void>;
+  handlePlayAgain: () => Promise<void>;
+  handleExitGame: () => Promise<void>;
 }

@@ -1,24 +1,16 @@
-import {
-  type Game,
-  type Guess as GuessType,
-  type PlayerId,
-  RoundStatus,
-} from '@cityborn/api';
-import type { MapProps } from '@cityborn/client/game';
-import { useCallback, useEffect, useState } from 'react';
+import type { PlayerId } from '@cityborn/api';
+import { type GameComponentProps, useGameRound } from '@cityborn/client/game';
 import { View } from 'react-native';
-import useGuess from '../hooks/useGuess';
 import GameMap from './Map';
 import Overlay from './Overlay';
 import RoundCountdown from './RoundCountdown';
 
-interface GuessProps {
+type GuessProps = Pick<
+  GameComponentProps,
+  'game' | 'isHost' | 'handleGuess' | 'handleNextRound'
+> & {
   localPlayerID: PlayerId;
-  game: Game;
-  isHost: boolean;
-  handleGuess: (guess: GuessType) => void;
-  handleNextRound: () => void;
-}
+};
 
 const Guess: React.FC<GuessProps> = ({
   localPlayerID,
@@ -27,78 +19,36 @@ const Guess: React.FC<GuessProps> = ({
   handleGuess,
   handleNextRound,
 }) => {
-  const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
-    useGuess(handleGuess);
-  const [internalRoundStatus, setInternalRoundStatus] = useState<
-    'countdown' | 'guessing' | 'results'
-  >('countdown');
-
-  // Map properties
-  const mapProps: MapProps = {
-    center: { lat: 48.8566, lng: 2.3522 },
-    zoom: 2,
-    preGuess,
-    localPlayerID,
-    game,
-    handlePreGuess,
-  };
-
-  useEffect(() => {
-    switch (game.state.currentRound?.status) {
-      case RoundStatus.GUESSING:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-
-      case RoundStatus.SHOWING_RESULTS:
-        setInternalRoundStatus('results');
-        break;
-
-      default:
-        resetPreGuess();
-        setInternalRoundStatus('countdown');
-        break;
-    }
-  }, [game.state.currentRound?.status, resetPreGuess]);
-
-  const handleCountdownEnd = useCallback(
-    () => setInternalRoundStatus('guessing'),
-    [],
-  );
+  const gameRound = useGameRound({ game, localPlayerID, handleGuess });
 
   return (
     <View className="flex-1">
       <View className="absolute inset-0 z-0">
-        <GameMap mapProps={mapProps} />
+        <GameMap mapProps={gameRound.mapProps} />
       </View>
 
-      {internalRoundStatus === 'countdown' && (
+      {gameRound.showCountdown && (
         <View className="absolute inset-0 z-20">
-          <RoundCountdown onCountdownEnd={handleCountdownEnd} />
+          <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
         </View>
       )}
 
-      {(internalRoundStatus === 'guessing' ||
-        internalRoundStatus === 'results') &&
-        !(
-          internalRoundStatus === 'results' &&
-          game.state.currentRound?.status === RoundStatus.GUESSING
-        ) && (
-          <View
-            className="absolute inset-0 z-10 bg-transparent"
-            pointerEvents="box-none"
-          >
-            <Overlay
-              localPlayerID={localPlayerID}
-              preGuess={preGuess}
-              game={game}
-              isHost={isHost}
-              handleGuess={handleGuess}
-              handleIsTimeUp={handleIsTimeUp}
-              handleNextRound={handleNextRound}
-            />
-          </View>
-        )}
+      {gameRound.showOverlay && (
+        <View
+          className="absolute inset-0 z-10 bg-transparent"
+          pointerEvents="box-none"
+        >
+          <Overlay
+            localPlayerID={localPlayerID}
+            preGuess={gameRound.preGuess}
+            game={game}
+            isHost={isHost}
+            handleGuess={handleGuess}
+            handleIsTimeUp={gameRound.handleIsTimeUp}
+            handleNextRound={handleNextRound}
+          />
+        </View>
+      )}
     </View>
   );
 };

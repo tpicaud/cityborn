@@ -4,10 +4,7 @@ import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import {
-  useJoinSessionForm,
-  useSessionLauncher,
-} from '@cityborn/client/session';
+import { usePlayViewModel } from '@cityborn/client/play';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
@@ -28,24 +25,22 @@ export default function MenuComponent({
   const { user } = useAuth();
   const { invokeError } = useError();
   const navigation = useNavigation();
-  const [openConnectionAlert, setOpenConnectionAlert] = useState(false);
   const [verificationEmailSent, setVerificationEmailSent] = useState(false);
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useJoinSessionForm();
-  const { playSolo, playMulti, joinSession } = useSessionLauncher({
+    joinSessionForm: {
+      register,
+      formState: { errors },
+    },
+    playSolo,
+    playMulti,
+    joinSession,
+    authenticationRequired,
+    dismissAuthenticationRequired,
+  } = usePlayViewModel({
+    isAuthenticated: user !== null,
     sessionApi,
     navigation,
   });
-
-  const handleMultiPlay = async () => {
-    if (!user) return setOpenConnectionAlert(true);
-    await playMulti();
-  };
-
-  const handleJoin = handleSubmit(({ code }) => joinSession(code));
 
   const handleResendVerificationEmail = async () => {
     try {
@@ -129,7 +124,7 @@ export default function MenuComponent({
           <Typography variant="h6">Jouer</Typography>
           <div className="flex-1 h-px bg-black rounded-full"></div>
         </div>
-        <form onSubmit={handleJoin} className="flex flex-col gap-1 w-full">
+        <form onSubmit={joinSession} className="flex flex-col gap-1 w-full">
           <div className="flex flex-row gap-2 items-center justify-center w-full">
             <input
               type="text"
@@ -142,7 +137,7 @@ export default function MenuComponent({
               variant="contained"
               color="primary"
               className="text-white px-6 py-2 rounded"
-              onClick={handleJoin}
+              onClick={joinSession}
             >
               <p className="px-3">Rejoindre</p>
             </LoadingButton>
@@ -166,7 +161,7 @@ export default function MenuComponent({
             variant="contained"
             color="primary"
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-            onClick={handleMultiPlay}
+            onClick={playMulti}
           >
             <b>MULTI</b>
           </LoadingButton>
@@ -182,8 +177,8 @@ export default function MenuComponent({
       </div>
 
       <Dialog
-        open={openConnectionAlert}
-        onClose={() => setOpenConnectionAlert(false)}
+        open={authenticationRequired}
+        onClose={dismissAuthenticationRequired}
       >
         <DialogTitle sx={{ mt: 2, mx: 3, paddingX: 2, paddingTop: 2 }}>
           <p>Vous devez être connecté pour jouer en mode multi !</p>

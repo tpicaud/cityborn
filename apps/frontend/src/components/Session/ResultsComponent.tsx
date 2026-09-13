@@ -1,7 +1,7 @@
 'use client';
 
-import { type Game, type PlayerResults, SessionMode } from '@cityborn/api';
-import { calculateTotalPoints } from '@cityborn/core';
+import { type Game, type PlayerId, SessionMode } from '@cityborn/api';
+import { createGameResultsViewModel } from '@cityborn/client/game';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,
@@ -16,8 +16,6 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getGameResult } from '@/utils/getGameResult';
 import LoadingComponent from '../others/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
@@ -31,27 +29,15 @@ const ResultsComponent = ({
   handleExitGame,
 }: {
   game: Game;
-  localPlayerID: string;
+  localPlayerID: PlayerId;
   isHost: boolean;
   mode: SessionMode;
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
 }) => {
-  const playersResults = new Map<string, PlayerResults>(getGameResult(game));
-  const [localPlayerResults, setLocalPlayerResults] = useState<PlayerResults>();
-
-  useEffect(() => {
-    const currentPlayerResults = playersResults.get(localPlayerID);
-    if (!currentPlayerResults) return;
-
-    setLocalPlayerResults(currentPlayerResults);
-  }, [localPlayerID, playersResults.get]);
-
-  function getGuessObjectName(id: string): string {
-    const guessObject = game.state.guessObjects?.find((obj) => obj.id === id);
-    return guessObject ? guessObject.name : id;
-  }
+  const gameResults = createGameResultsViewModel(game, localPlayerID);
+  const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {
     return <LoadingComponent message="Chargement des résultats" />;
@@ -63,86 +49,77 @@ const ResultsComponent = ({
         <div className="w-full h-full flex flex-col justify-center items-center gap-2">
           <div className="flex flex-col justify-center items-center gap-2">
             <h1 className="font-bold flex flex-row items-end">
-              <p className="text-4xl">
-                {calculateTotalPoints(localPlayerResults)}
-              </p>
+              <p className="text-4xl">{localPlayerResults.totalPoints}</p>
               <p className="ml-2 mb-1 text-xl">pts</p>
             </h1>
           </div>
 
           <div className="w-full max-h-[40vh] overflow-auto flex flex-col justify-start items-center">
-            {playersResults.size === 1
-              ? Array.from(playersResults.entries()).map(
-                  ([player, playerResults]) => (
-                    <div
-                      key={player}
-                      className="w-full border border-gray-200 rounded-lg shadow-lg"
-                    >
-                      <TableContainer component={Paper} className="shadow-lg">
-                        <Table
-                          size="small"
-                          sx={{
-                            '& td, & th': {
-                              padding: {
-                                xs: '4px 8px',
-                              },
-                              fontSize: {
-                                xs: '0.8rem',
-                                sm: '1rem',
-                                md: '1.2rem',
-                              },
+            {!gameResults.isMultiplayer
+              ? gameResults.playersResults.map(({ playerID, roundResults }) => (
+                  <div
+                    key={playerID}
+                    className="w-full border border-gray-200 rounded-lg shadow-lg"
+                  >
+                    <TableContainer component={Paper} className="shadow-lg">
+                      <Table
+                        size="small"
+                        sx={{
+                          '& td, & th': {
+                            padding: {
+                              xs: '4px 8px',
                             },
-                          }}
-                        >
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Nom</TableCell>
-                              <TableCell align="right">Distance (km)</TableCell>
-                              <TableCell align="right">Points</TableCell>
+                            fontSize: {
+                              xs: '0.8rem',
+                              sm: '1rem',
+                              md: '1.2rem',
+                            },
+                          },
+                        }}
+                      >
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Nom</TableCell>
+                            <TableCell align="right">Distance (km)</TableCell>
+                            <TableCell align="right">Points</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {roundResults.map((roundResult) => (
+                            <TableRow
+                              key={roundResult.guessObjectID}
+                              sx={{
+                                '&:last-child td, &:last-child th': {
+                                  border: 0,
+                                },
+                              }}
+                            >
+                              <TableCell component="th" scope="row">
+                                {roundResult.guessObjectName}
+                              </TableCell>
+                              <TableCell align="right">
+                                {roundResult.distanceInKm !== undefined ? (
+                                  <p>{roundResult.distanceInKm.toFixed(2)}</p>
+                                ) : (
+                                  <p>Pas de guess</p>
+                                )}
+                              </TableCell>
+                              <TableCell align="right">
+                                {roundResult.points}
+                              </TableCell>
                             </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {playerResults.results.map((result) => (
-                              <TableRow
-                                key={result.guessObjectId}
-                                sx={{
-                                  '&:last-child td, &:last-child th': {
-                                    border: 0,
-                                  },
-                                }}
-                              >
-                                <TableCell component="th" scope="row">
-                                  {getGuessObjectName(result.guessObjectId)}
-                                </TableCell>
-                                <TableCell align="right">
-                                  {result.distance !== -1 ? (
-                                    <p>{result.distance.toFixed(2)}</p>
-                                  ) : (
-                                    <p>Pas de guess</p>
-                                  )}
-                                </TableCell>
-                                <TableCell align="right">
-                                  {result.points}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </div>
-                  ),
-                )
-              : Array.from(playersResults.entries())
-                  .sort(
-                    ([, aResults], [, bResults]) =>
-                      calculateTotalPoints(bResults) -
-                      calculateTotalPoints(aResults),
-                  )
-                  .map(([player, playerResults]) => (
-                    <Accordion key={player} className="w-full">
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </div>
+                ))
+              : gameResults.playersResults.map(
+                  ({ playerID, totalPoints, roundResults }) => (
+                    <Accordion key={playerID} className="w-full">
                       <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
                         <h3 className="font-bold">
-                          {player} - {calculateTotalPoints(playerResults)} pts
+                          {playerID} - {totalPoints} pts
                         </h3>
                       </AccordionSummary>
                       <AccordionDetails>
@@ -177,9 +154,9 @@ const ResultsComponent = ({
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {playerResults.results.map((result) => (
+                              {roundResults.map((roundResult) => (
                                 <TableRow
-                                  key={result.guessObjectId}
+                                  key={roundResult.guessObjectID}
                                   sx={{
                                     '&:last-child td, &:last-child th': {
                                       border: 0,
@@ -187,17 +164,19 @@ const ResultsComponent = ({
                                   }}
                                 >
                                   <TableCell component="th" scope="row">
-                                    {getGuessObjectName(result.guessObjectId)}
+                                    {roundResult.guessObjectName}
                                   </TableCell>
                                   <TableCell align="right">
-                                    {result.distance !== -1 ? (
-                                      <p>{result.distance.toFixed(2)}</p>
+                                    {roundResult.distanceInKm !== undefined ? (
+                                      <p>
+                                        {roundResult.distanceInKm.toFixed(2)}
+                                      </p>
                                     ) : (
                                       <p>Pas de guess</p>
                                     )}
                                   </TableCell>
                                   <TableCell align="right">
-                                    {result.points}
+                                    {roundResult.points}
                                   </TableCell>
                                 </TableRow>
                               ))}
@@ -206,7 +185,8 @@ const ResultsComponent = ({
                         </TableContainer>
                       </AccordionDetails>
                     </Accordion>
-                  ))}
+                  ),
+                )}
           </div>
 
           <div className="flex flex-col justify-center items-center w-full gap-3">
