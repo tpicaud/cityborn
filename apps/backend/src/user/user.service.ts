@@ -116,7 +116,7 @@ export class UserService {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await this.emailVerificationTokenRepository.deleteVerificationTokens(
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       userId,
     );
     await this.emailVerificationTokenRepository.createVerificationToken({
@@ -180,7 +180,7 @@ export class UserService {
   @Transactional()
   private async completeEmailVerification(userId: UserId): Promise<User> {
     const user = await this.userRepository.markEmailVerified(userId);
-    await this.emailVerificationTokenRepository.deleteVerificationTokens(
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       userId,
     );
     return user;

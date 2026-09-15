@@ -60,7 +60,7 @@ export class PrismaEmailVerificationTokenRepository
     await this.txHost.tx.emailVerificationToken.delete({ where: { id } });
   }
 
-  async deleteVerificationTokens(userId: UserId): Promise<void> {
+  async deleteVerificationTokensByUserId(userId: UserId): Promise<void> {
     await this.txHost.tx.emailVerificationToken.deleteMany({
       where: { userId },
     });
