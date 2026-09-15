@@ -9,32 +9,20 @@ import type {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import type { Prisma } from '@prisma/client';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { CategoryMapper } from '../mappers/category.mapper';
 import type { CategoryFilter, CategoryRepository } from './category.repository';
 
-const categoryTreeInclude = {
-  children: {
-    include: {
-      children: {
-        include: {
-          children: {
-            include: {
-              children: {
-                include: {
-                  children: {
-                    include: { children: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-} satisfies Prisma.CategoryInclude;
+const TREE_DEPTH = 6;
+
+type CategoryChildrenInclude = {
+  children: true | { include: CategoryChildrenInclude };
+};
+
+function buildChildrenInclude(depth: number): CategoryChildrenInclude {
+  if (depth <= 1) return { children: true };
+  return { children: { include: buildChildrenInclude(depth - 1) } };
+}
 
 @Injectable()
 export class PrismaCategoryRepository implements CategoryRepository {
@@ -52,7 +40,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
           isPublished: filter.isPublished,
         }),
       },
-      include: categoryTreeInclude,
+      include: buildChildrenInclude(TREE_DEPTH),
     });
     return CategoryMapper.toCategoryTrees(roots);
   }
