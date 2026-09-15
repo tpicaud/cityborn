@@ -8,7 +8,6 @@ import {
   type UpdateCategory,
 } from '@cityborn/api';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
 
 @Injectable()
@@ -17,12 +16,12 @@ export class AdminCategoryService {
 
   async findAll(): Promise<Category[]> {
     const categories = await this.categoryService.findAll();
-    return CategoryMapper.toCategories(categories);
+    return categories;
   }
 
   async findBy(filter: { ids?: CategoryId[] }): Promise<Category[]> {
     const categories = await this.categoryService.findBy(filter);
-    return CategoryMapper.toCategories(categories);
+    return categories;
   }
 
   async findFullBy(id: CategoryId): Promise<FullCategory> {
@@ -33,17 +32,17 @@ export class AdminCategoryService {
         message: `Category with id ${id} not found`,
       });
     }
-    return CategoryMapper.toFullCategory(category);
+    return category;
   }
 
   async create(data: CreateCategory): Promise<Category> {
     const category = await this.categoryService.create(data);
-    return CategoryMapper.toCategory(category);
+    return category;
   }
 
   async update(id: CategoryId, data: UpdateCategory): Promise<Category> {
     const updated_category = await this.categoryService.update(id, data);
-    return CategoryMapper.toCategory(updated_category);
+    return updated_category;
   }
 
   async delete(id: CategoryId): Promise<void> {
@@ -52,6 +51,6 @@ export class AdminCategoryService {
 
   async getTrees(): Promise<CategoryTree[]> {
     const roots = await this.categoryService.findTree({});
-    return CategoryMapper.toCategoryTrees(roots);
+    return roots;
   }
 }

@@ -1,70 +1,78 @@
 import { randomBytes } from 'node:crypto';
 import {
-  AccountType,
   type CreateGameRecord,
   ErrorCode,
   type GameRecord,
   SessionMode,
+  type User,
   type UserId,
   type Username,
 } from '@cityborn/api';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma, type User as PrismaUser } from '@prisma/client';
-import { GameMapper } from '../game/game.mapper';
-import { PrismaService } from '../prisma/prisma.service';
+import { Transactional } from '@nestjs-cls/transactional';
+import { GameRecordService } from '../game-record/game-record.service';
+import {
+  EMAIL_VERIFICATION_TOKEN_REPOSITORY,
+  type EmailVerificationTokenRepository,
+} from './repositories/email-verification-token.repository';
+import {
+  type CreateUserData,
+  USER_REPOSITORY,
+  type UserCredentials,
+  type UserRepository,
+} from './repositories/user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepository,
+    @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
+    private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
+    private readonly gameRecordService: GameRecordService,
+  ) {}
 
-  async createUser(data: {
-    email: string;
-    username: Username;
-    type: AccountType;
-    isVerified?: boolean;
-    password?: string;
-    appleId?: string;
-  }): Promise<PrismaUser> {
-    return await this.prisma.user.create({ data });
+  async createUser(data: CreateUserData): Promise<User> {
+    return this.userRepository.create(data);
   }
 
   async deleteUser(user_id: UserId): Promise<void> {
-    await this.prisma.user.delete({
-      where: { id: user_id },
-    });
+    await this.userRepository.delete(user_id);
   }
 
-  async findByIdentifier(identifier: string): Promise<PrismaUser | null> {
-    return await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email: identifier }, { username: identifier }],
-      },
-    });
+  async findByIdentifier(identifier: string): Promise<User | null> {
+    return this.userRepository.findByIdentifier(identifier);
   }
 
-  async findById(id: UserId): Promise<PrismaUser | null> {
-    return await this.prisma.user.findUnique({ where: { id } });
+  async findCredentialsByIdentifier(
+    identifier: string,
+  ): Promise<UserCredentials | null> {
+    return this.userRepository.findCredentialsByIdentifier(identifier);
   }
 
-  async findByAppleId(appleUserId: string): Promise<PrismaUser | null> {
-    return await this.prisma.user.findFirst({
-      where: {
-        appleId: appleUserId,
-      },
-    });
+  async existsByUsername(username: string): Promise<boolean> {
+    return this.userRepository.existsByUsername(username);
+  }
+
+  async findById(id: UserId): Promise<User | null> {
+    return this.userRepository.findById(id);
+  }
+
+  async findByAppleId(appleUserId: string): Promise<User | null> {
+    return this.userRepository.findByAppleId(appleUserId);
   }
 
   async validateIdentifiers(username: Username, email: string): Promise<void> {
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email }],
-      },
-    });
+    const existingUser = await this.userRepository.findByIdentifiers(
+      username,
+      email,
+    );
 
     if (!existingUser) return;
 
@@ -83,15 +91,16 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async createEmailVerificationToken(
     userId: UserId,
     cooldownMs?: number,
   ): Promise<string> {
     if (cooldownMs) {
-      const existingToken = await this.prisma.emailVerificationToken.findFirst({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-      });
+      const existingToken =
+        await this.emailVerificationTokenRepository.findLatestVerificationToken(
+          userId,
+        );
 
       if (
         existingToken &&
@@ -107,34 +116,29 @@ export class UserService {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await this.prisma.$transaction([
-      this.prisma.emailVerificationToken.deleteMany({
-        where: { userId },
-      }),
-      this.prisma.emailVerificationToken.create({
-        data: {
-          token,
-          expiresAt,
-          user: {
-            connect: { id: userId },
-          },
-        },
-      }),
-    ]);
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      userId,
+    );
+    await this.emailVerificationTokenRepository.createVerificationToken({
+      userId,
+      token,
+      expiresAt,
+    });
 
     return token;
   }
 
-  async verifyEmail(verificationToken: string): Promise<PrismaUser> {
-    const token = await this.prisma.emailVerificationToken.findUnique({
-      where: { token: verificationToken },
-    });
+  async verifyEmail(verificationToken: string): Promise<User> {
+    const token =
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
 
     if (!token || token.expiresAt < new Date()) {
       if (token) {
-        await this.prisma.emailVerificationToken.delete({
-          where: { id: token.id },
-        });
+        await this.emailVerificationTokenRepository.deleteVerificationToken(
+          token.id,
+        );
       }
 
       throw new UnauthorizedException({
@@ -143,39 +147,20 @@ export class UserService {
       });
     }
 
-    const [user] = await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: token.userId },
-        data: { isVerified: true },
-      }),
-      this.prisma.emailVerificationToken.deleteMany({
-        where: { userId: token.userId },
-      }),
-    ]);
-
-    return user;
+    return this.completeEmailVerification(token.userId);
   }
 
-  ///////////////
-  // Relations //
-  ///////////////
   async getGameRecords(user_id: UserId): Promise<GameRecord[]> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: user_id },
-      include: {
-        gameRecords: {
-          take: 5,
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
-    if (!user)
+    const gameRecords =
+      await this.gameRecordService.findRecentByUserId(user_id);
+
+    if (!gameRecords)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
 
-    return GameMapper.toGameRecord(user.gameRecords);
+    return gameRecords;
   }
 
   async saveSoloGameRecord(
@@ -189,18 +174,15 @@ export class UserService {
       });
     }
 
-    await this.prisma.gameRecord.create({
-      data: {
-        mode: createGameRecord.mode,
-        gameConfig:
-          createGameRecord.gameConfig as unknown as Prisma.InputJsonValue,
-        players: createGameRecord.players as unknown as Prisma.InputJsonValue,
-        guessObjectsIds: createGameRecord.guessObjectsIds,
-        results: createGameRecord.results as unknown as Prisma.InputJsonValue,
-        users: {
-          connect: { id: user_id },
-        },
-      },
-    });
+    await this.gameRecordService.create(createGameRecord, [{ id: user_id }]);
+  }
+
+  @Transactional()
+  private async completeEmailVerification(userId: UserId): Promise<User> {
+    const user = await this.userRepository.markEmailVerified(userId);
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      userId,
+    );
+    return user;
   }
 }

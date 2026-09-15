@@ -1,26 +1,29 @@
-import { ErrorCode, ScoreType } from '@cityborn/api';
+import { ErrorCode, ScoreType, SentenceSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import type { EndGameSentence as PrismaEndGameSentence } from '@prisma/client';
-import type { PrismaService } from '../prisma/prisma.service';
+import type { SentenceRepository } from './repositories/sentence.repository';
 import { SentenceService } from './sentence.service';
 
-const prismaEndGameSentence = {
+const firstSentence = SentenceSchema.parse({
   id: '00000000-0000-4000-8000-000000000030',
   message: 'Excellent score!',
   score_type: ScoreType.GOOD,
-} satisfies PrismaEndGameSentence;
+});
+
+function buildSentenceService() {
+  const sentenceRepository = createMock<SentenceRepository>();
+  const sentenceService = new SentenceService(sentenceRepository);
+  return { sentenceRepository, sentenceService };
+}
 
 describe('SentenceService.findRandomOne', () => {
-  it('returns the randomly selected mapped sentence', async () => {
-    const prismaService = createMock<PrismaService>();
-    const sentenceService = new SentenceService(prismaService);
-    const firstSentence = prismaEndGameSentence;
-    const secondSentence = {
-      ...prismaEndGameSentence,
+  it('returns the randomly selected sentence', async () => {
+    const { sentenceRepository, sentenceService } = buildSentenceService();
+    const secondSentence = SentenceSchema.parse({
+      ...firstSentence,
       id: 'sentence-2',
       message: 'Perfect!',
-    };
-    prismaService.endGameSentence.findMany.mockResolvedValue([
+    });
+    sentenceRepository.findByScoreType.mockResolvedValue([
       firstSentence,
       secondSentence,
     ]);
@@ -28,16 +31,15 @@ describe('SentenceService.findRandomOne', () => {
 
     const sentence = await sentenceService.findRandomOne(ScoreType.GOOD);
 
-    expect(prismaService.endGameSentence.findMany).toHaveBeenCalledWith({
-      where: { score_type: ScoreType.GOOD },
-    });
-    expect(sentence.id).toBe('sentence-2');
+    expect(sentenceRepository.findByScoreType).toHaveBeenCalledWith(
+      ScoreType.GOOD,
+    );
+    expect(sentence.id).toBe(secondSentence.id);
   });
 
   it('rejects when no sentence matches the score', async () => {
-    const prismaService = createMock<PrismaService>();
-    const sentenceService = new SentenceService(prismaService);
-    prismaService.endGameSentence.findMany.mockResolvedValue([]);
+    const { sentenceRepository, sentenceService } = buildSentenceService();
+    sentenceRepository.findByScoreType.mockResolvedValue([]);
 
     await expect(
       sentenceService.findRandomOne(ScoreType.BAD),

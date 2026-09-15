@@ -1,6 +1,6 @@
 import { GameRecordSchema, SessionMode } from '@cityborn/api';
 import { GameMode, type GameRecord as PrismaGameRecord } from '@prisma/client';
-import { GameMapper } from './game.mapper';
+import { GameMapper } from '../game-record/mappers/game.mapper';
 
 const prismaGameRecord = {
   id: '00000000-0000-4000-8000-000000000040',

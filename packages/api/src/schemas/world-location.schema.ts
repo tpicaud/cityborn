@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { WorldLocationIdSchema } from './common.schema';
 
+const WorldLocationSourceSchema = z.object({
+  provider: z.string(),
+  external_id: z.coerce.string(),
+});
 export const WorldLocationSchema = z.object({
   id: WorldLocationIdSchema,
   osm_type: z.string(),
@@ -8,10 +12,7 @@ export const WorldLocationSchema = z.object({
   display_name: z.string(),
   addresstype: z.string().optional(),
   centroid: z.tuple([z.number(), z.number()]),
-  source: z.object({
-    provider: z.string(),
-    external_id: z.coerce.string(),
-  }),
+  source: WorldLocationSourceSchema,
   geometry: z.object({
     type: z.enum(['Point', 'Polygon', 'MultiPolygon']),
     coordinates: z.array(z.unknown()),
@@ -37,6 +38,7 @@ export const CreateWorldLocationSchema = WorldLocationSchema.omit({
   id: true,
 });
 
+export type WorldLocationSource = z.infer<typeof WorldLocationSourceSchema>;
 export type WorldLocation = z.infer<typeof WorldLocationSchema>;
 export type WorldLocationSearchResult = z.infer<
   typeof WorldLocationSearchResultSchema

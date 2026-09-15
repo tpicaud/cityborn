@@ -2,7 +2,7 @@ import {
   type AuthResponse,
   type CreateUser,
   ErrorCode,
-  PublicUser,
+  type PublicUser,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
@@ -27,7 +27,6 @@ import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
-import { UserMapper } from '../user/user.mapper';
 import { UserService } from '../user/user.service';
 import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
@@ -118,32 +117,32 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user,
     };
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
     const { identifier, password } = dto;
 
-    const user = await this.userService.findByIdentifier(identifier);
-    if (!user)
+    const credentials =
+      await this.userService.findCredentialsByIdentifier(identifier);
+    if (!credentials?.passwordHash)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
 
-    if (!user.password)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: `Invalid credentials`,
-      });
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      credentials.passwordHash,
+    );
     if (!isPasswordValid)
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
+
+    const { user } = credentials;
 
     const access_token = await this.generateToken(
       'access',
@@ -173,7 +172,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user,
     };
   }
 
@@ -238,7 +237,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user,
     };
   }
 
@@ -322,7 +321,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user,
     };
   }
 
@@ -350,7 +349,7 @@ export class AuthService {
     return {
       access_token,
       refresh_token,
-      user: UserMapper.toUser(user),
+      user,
     };
   }
 
@@ -362,7 +361,7 @@ export class AuthService {
         message: `User not found`,
       });
 
-    return UserMapper.toUser(user);
+    return user;
   }
 
   async deleteUser(user?: User): Promise<void> {
@@ -384,7 +383,7 @@ export class AuthService {
       verifyEmailData.verification_token,
     );
 
-    return UserMapper.toPublicUser(user);
+    return { id: user.id, username: user.username };
   }
 
   private async sendVerificationEmail(
@@ -479,7 +478,7 @@ export class AuthService {
       const suffix = Math.floor(1000 + Math.random() * 9000);
       username = `${sanitized}${suffix}`;
 
-      exists = !!(await this.userService.findByIdentifier(username));
+      exists = await this.userService.existsByUsername(username);
     }
 
     return UsernameSchema.parse(username);

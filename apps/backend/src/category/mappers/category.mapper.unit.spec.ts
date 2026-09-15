@@ -3,8 +3,7 @@ import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
-import type { PrismaCategoryNode } from '../services/category.service';
-import { CategoryMapper } from './category.mapper';
+import { CategoryMapper, type PrismaCategoryNode } from './category.mapper';
 
 const prismaCategory = {
   id: '00000000-0000-4000-8000-000000000010',
