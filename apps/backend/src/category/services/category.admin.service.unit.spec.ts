@@ -1,23 +1,17 @@
 import {
+  buildCategory,
   buildCreateCategory,
   buildUpdateCategory,
   CategoryIdSchema,
   ErrorCode,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import type { Category as PrismaCategory } from '@prisma/client';
 import { AdminCategoryService } from './category.admin.service';
-import type { CategoryService, PrismaCategoryNode } from './category.service';
+import type { CategoryService } from './category.service';
 
 const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
-const prismaCategory = {
-  id: '00000000-0000-4000-8000-000000000010',
-  name: 'Monuments',
-  isPublished: true,
-  description: null,
-  parentId: null,
-} satisfies PrismaCategory;
+const category = buildCategory();
 
 function buildAdminCategoryService() {
   const categoryService = createMock<CategoryService>();
@@ -31,8 +25,8 @@ describe('AdminCategoryService.findAll', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     categoryService.findAll.mockResolvedValue([
-      prismaCategory,
-      { ...prismaCategory, id: 'category-2' },
+      category,
+      buildCategory({ id: 'category-2' }),
     ]);
 
     const categories = await adminCategoryService.findAll();
@@ -48,7 +42,7 @@ describe('AdminCategoryService.findBy', () => {
   it('forwards the filter and returns mapped categories', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    categoryService.findBy.mockResolvedValue([prismaCategory]);
+    categoryService.findBy.mockResolvedValue([category]);
 
     const categories = await adminCategoryService.findBy({
       ids: [categoryId('category-1')],
@@ -66,14 +60,14 @@ describe('AdminCategoryService.findFullBy', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     categoryService.findFullBy.mockResolvedValue([
-      { ...prismaCategory, guessObjects: [] },
+      { ...category, guessObjects: [] },
     ]);
 
-    const category = await adminCategoryService.findFullBy(
+    const result = await adminCategoryService.findFullBy(
       categoryId('category-1'),
     );
 
-    expect(category.guessObjects).toEqual([]);
+    expect(result.guessObjects).toEqual([]);
   });
 
   it('rejects when the category does not exist', async () => {
@@ -93,13 +87,13 @@ describe('AdminCategoryService.create', () => {
   it('creates and maps a category', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    categoryService.create.mockResolvedValue(prismaCategory);
+    categoryService.create.mockResolvedValue(category);
     const payload = buildCreateCategory();
 
-    const category = await adminCategoryService.create(payload);
+    const result = await adminCategoryService.create(payload);
 
     expect(categoryService.create).toHaveBeenCalledWith(payload);
-    expect(category.name).toBe('Monuments');
+    expect(result.name).toBe('Monuments');
   });
 });
 
@@ -108,13 +102,12 @@ describe('AdminCategoryService.update', () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
     categoryService.update.mockResolvedValue({
-      ...prismaCategory,
+      ...category,
       name: 'Landmarks',
-      guessObjects: [],
     });
     const payload = buildUpdateCategory({ name: 'Landmarks' });
 
-    const category = await adminCategoryService.update(
+    const result = await adminCategoryService.update(
       categoryId('category-1'),
       payload,
     );
@@ -123,7 +116,7 @@ describe('AdminCategoryService.update', () => {
       categoryId('category-1'),
       payload,
     );
-    expect(category.name).toBe('Landmarks');
+    expect(result.name).toBe('Landmarks');
   });
 });
 
@@ -145,8 +138,8 @@ describe('AdminCategoryService.getTrees', () => {
   it('returns mapped root trees', async () => {
     const { adminCategoryService, categoryService } =
       buildAdminCategoryService();
-    const root: PrismaCategoryNode = {
-      ...prismaCategory,
+    const root = {
+      ...category,
       children: [],
     };
     categoryService.findTree.mockResolvedValue([root]);

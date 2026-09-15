@@ -1,4 +1,9 @@
-import type { User, UserId, Username } from '@cityborn/api';
+import {
+  type User,
+  type UserId,
+  type Username,
+  UsernameSchema,
+} from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
@@ -45,7 +50,7 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toUserCredentials(user) : null;
   }
 
-  async existsByUsername(username: Username): Promise<boolean> {
+  async existsByUsername(username: string): Promise<boolean> {
     const user = await this.txHost.tx.user.findUnique({
       where: { username },
       select: { id: true },
@@ -68,7 +73,10 @@ export class PrismaUserRepository implements UserRepository {
       where: { OR: [{ username }, { email }] },
     });
     return existingUser
-      ? { username: existingUser.username, email: existingUser.email }
+      ? {
+          username: UsernameSchema.parse(existingUser.username),
+          email: existingUser.email,
+        }
       : null;
   }
 

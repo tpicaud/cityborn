@@ -1,18 +1,11 @@
-import { CategoryIdSchema } from '@cityborn/api';
+import { buildCategory, CategoryIdSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import type { Category as PrismaCategory } from '@prisma/client';
 import { PublicCategoryService } from './category.public.service';
-import type { CategoryService, PrismaCategoryNode } from './category.service';
+import type { CategoryService } from './category.service';
 
 const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
-const prismaCategory = {
-  id: '00000000-0000-4000-8000-000000000010',
-  name: 'Monuments',
-  isPublished: true,
-  description: null,
-  parentId: null,
-} satisfies PrismaCategory;
+const category = buildCategory();
 
 function buildPublicCategoryService() {
   const categoryService = createMock<CategoryService>();
@@ -25,7 +18,7 @@ describe('PublicCategoryService.findAll', () => {
   it('loads only published categories', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
-    categoryService.findBy.mockResolvedValue([prismaCategory]);
+    categoryService.findBy.mockResolvedValue([category]);
 
     const categories = await publicCategoryService.findAll();
 
@@ -38,7 +31,7 @@ describe('PublicCategoryService.findBy', () => {
   it('enforces the published filter', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
-    categoryService.findBy.mockResolvedValue([prismaCategory]);
+    categoryService.findBy.mockResolvedValue([category]);
 
     const categories = await publicCategoryService.findBy({
       ids: [categoryId('category-1')],
@@ -56,8 +49,8 @@ describe('PublicCategoryService.getTrees', () => {
   it('loads only published root trees', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
-    const root: PrismaCategoryNode = {
-      ...prismaCategory,
+    const root = {
+      ...category,
       children: [],
     };
     categoryService.findTree.mockResolvedValue([root]);

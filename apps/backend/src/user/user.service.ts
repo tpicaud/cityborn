@@ -56,7 +56,7 @@ export class UserService {
     return this.userRepository.findCredentialsByIdentifier(identifier);
   }
 
-  async existsByUsername(username: Username): Promise<boolean> {
+  async existsByUsername(username: string): Promise<boolean> {
     return this.userRepository.existsByUsername(username);
   }
 

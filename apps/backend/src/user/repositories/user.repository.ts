@@ -21,7 +21,7 @@ export interface UserRepository {
   findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null>;
-  existsByUsername(username: Username): Promise<boolean>;
+  existsByUsername(username: string): Promise<boolean>;
   findByAppleId(appleUserId: string): Promise<User | null>;
   findByIdentifiers(
     username: Username,
