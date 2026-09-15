@@ -37,6 +37,16 @@ archive_directory="$(cd "$(dirname "$archive_path")" && pwd)"
 archive_name="$(basename "$archive_path")"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 compose_file="$repository_root/apps/backend/docker-compose.resources.yml"
+database_exec=(docker compose -f "$compose_file" exec -T postgis)
+if [[ -n "${CITYBORN_RESTORE_CONTAINER:-}" ]]; then
+  if [[ ! "${CITYBORN_RESTORE_SESSION:-}" =~ ^restore-[a-zA-Z0-9]{6}$ ]] || \
+    [[ "$CITYBORN_RESTORE_CONTAINER" != "cityborn-$CITYBORN_RESTORE_SESSION" ]] || \
+    [[ "$(docker inspect --format '{{ index .Config.Labels "com.cityborn.restore.session" }}' "$CITYBORN_RESTORE_CONTAINER")" != "$CITYBORN_RESTORE_SESSION" ]]; then
+    echo "Restore container is not owned by this session" >&2
+    exit 1
+  fi
+  database_exec=(docker exec -i "$CITYBORN_RESTORE_CONTAINER")
+fi
 restore_directory="$(mktemp -d /tmp/cityborn-database-restore.XXXXXX)"
 trap 'rm -r -- "$restore_directory"' EXIT
 
@@ -62,11 +72,16 @@ if [[ "$actual_entries" != "$expected_entries" ]]; then
   exit 1
 fi
 
+if tar -tvzf "$archive_path" | awk 'substr($0, 1, 1) != "-" { invalid = 1 } END { exit invalid ? 0 : 1 }'; then
+  echo "Backup archive contains non-regular files" >&2
+  exit 1
+fi
+
 tar -xzf "$archive_path" -C "$restore_directory"
 chmod 600 "$restore_directory/roles.sql" "$restore_directory/schema.sql" "$restore_directory/data.sql"
 
 if ! awk '
-  /^COPY "(auth|storage)"\./ {
+  /^COPY ("(auth|storage)"|(auth|storage))\./ {
     platform_copy = 1
     next
   }
@@ -86,7 +101,7 @@ if ! awk '
 fi
 
 awk '
-  /^COPY "(auth|storage)"\./ {
+  /^COPY ("(auth|storage)"|(auth|storage))\./ {
     platform_copy = 1
     next
   }
@@ -97,7 +112,7 @@ awk '
   platform_copy {
     next
   }
-  /^SELECT pg_catalog\.setval/ && /"(auth|storage)"\./ {
+  /^SELECT pg_catalog\.setval/ && /("(auth|storage)"|(auth|storage))\./ {
     next
   }
   {
@@ -111,6 +126,7 @@ sed 's/^SET transaction_timeout/-- &/' \
   > "$restore_directory/data.restore.sql"
 
 sed \
+  -e 's/^SET transaction_timeout/-- &/' \
   -e 's/^CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";/-- &/' \
   -e 's/^ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";/-- &/' \
   "$restore_directory/schema.sql" \
@@ -121,7 +137,7 @@ chmod 600 \
   "$restore_directory/data.application.sql" \
   "$restore_directory/data.restore.sql"
 
-if docker compose -f "$compose_file" exec -T postgis \
+if "${database_exec[@]}" \
   psql -X -U postgres -d postgres -Atqc \
   "SELECT 1 FROM pg_catalog.pg_database WHERE datname = '$target_database';" \
   | grep -q '^1$'; then
@@ -129,7 +145,7 @@ if docker compose -f "$compose_file" exec -T postgis \
   exit 1
 fi
 
-docker compose -f "$compose_file" exec -T postgis \
+"${database_exec[@]}" \
   psql \
     -X \
     --set ON_ERROR_STOP=1 \
@@ -155,10 +171,10 @@ BEGIN
 END
 $do$;'
 
-docker compose -f "$compose_file" exec -T postgis \
+"${database_exec[@]}" \
   createdb -U postgres "$target_database"
 
-docker compose -f "$compose_file" exec -T postgis \
+"${database_exec[@]}" \
   psql \
     -X \
     --set ON_ERROR_STOP=1 \
@@ -173,7 +189,7 @@ docker compose -f "$compose_file" exec -T postgis \
   cat "$restore_directory/schema.restore.sql"
   echo 'SET session_replication_role = replica;'
   cat "$restore_directory/data.restore.sql"
-} | docker compose -f "$compose_file" exec -T postgis \
+} | "${database_exec[@]}" \
   psql \
     -X \
     --single-transaction \
@@ -182,7 +198,7 @@ docker compose -f "$compose_file" exec -T postgis \
     -d "$target_database"
 
 application_table_count="$(
-  docker compose -f "$compose_file" exec -T postgis \
+  "${database_exec[@]}" \
     psql -X -U postgres -d "$target_database" -Atqc \
     "SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename <> 'spatial_ref_sys';"
 )"

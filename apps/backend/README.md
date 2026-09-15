@@ -25,6 +25,12 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Sauvegardes et restauration
+
+Voir la [procédure de backup et de rollback Supabase](../../docs/database-backup.md)
+pour les commandes `pnpm db:restore:list`, `pnpm db:restore` et
+`pnpm db:restore:cleanup`, les essais staging et la restauration en production.
+
 ## Project setup
 
 ```bash
