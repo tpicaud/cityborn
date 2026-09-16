@@ -1,121 +1,77 @@
 import {
   buildCreateGameRecord,
+  buildUser,
   ErrorCode,
   SessionMode,
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import type {
-  EmailVerificationToken,
-  GameRecord as PrismaGameRecord,
-  User as PrismaUser,
-} from '@prisma/client';
-import type { PrismaService } from '../prisma/prisma.service';
+import type { GameRecordService } from '../game-record/game-record.service';
+import type { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
+import type { UserRepository } from './repositories/user.repository';
 import { UserService } from './user.service';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyKey: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
 
 const userId = (value: string) => UserIdSchema.parse(value);
 const username = (value: string) => UsernameSchema.parse(value);
 
-const prismaUser = {
-  id: '00000000-0000-4000-8000-000000000001',
-  email: 'host@cityborn.test',
-  username: 'host',
-  type: 'email',
-  password: 'hashed-password',
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2026-01-02T00:00:00.000Z'),
-  isVerified: true,
-  appleId: null,
-} satisfies PrismaUser;
-
-const prismaGameRecord = {
-  id: '00000000-0000-4000-8000-000000000040',
-  mode: 'solo',
-  gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
-  players: [],
-  guessObjectsIds: [],
-  results: {},
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-} satisfies PrismaGameRecord;
-
-type PrismaUserWithGameRecords = PrismaUser & {
-  gameRecords: PrismaGameRecord[];
-};
-
-const prismaUserWithGameRecords = {
-  ...prismaUser,
-  gameRecords: [prismaGameRecord],
-} satisfies PrismaUserWithGameRecords;
-
-const verificationToken = {
-  id: 'token-id',
-  token: 'verification-token',
-  userId: '00000000-0000-4000-8000-000000000001',
-  expiresAt: new Date(Date.now() + 60_000),
-  createdAt: new Date(),
-} satisfies EmailVerificationToken;
-
 function buildUserService() {
-  const prismaService = createMock<PrismaService>();
-  const userService = new UserService(prismaService);
+  const userRepository = createMock<UserRepository>();
+  const emailVerificationTokenRepository =
+    createMock<EmailVerificationTokenRepository>();
+  const gameRecordService = createMock<GameRecordService>();
+  const userService = new UserService(
+    userRepository,
+    emailVerificationTokenRepository,
+    gameRecordService,
+  );
 
-  return { prismaService, userService };
+  return {
+    emailVerificationTokenRepository,
+    gameRecordService,
+    userRepository,
+    userService,
+  };
 }
 
 describe('UserService persistence', () => {
-  it('creates a user', async () => {
-    const { prismaService, userService } = buildUserService();
-    const persistedUser = prismaUser;
-    prismaService.user.create.mockResolvedValue(persistedUser);
+  it('delegates creation, lookup and deletion', async () => {
+    const { userRepository, userService } = buildUserService();
+    const user = buildUser();
+    userRepository.create.mockResolvedValue(user);
+    userRepository.findByIdentifier.mockResolvedValue(user);
 
-    const user = await userService.createUser({
-      email: persistedUser.email,
-      username: UsernameSchema.parse(persistedUser.username),
-      type: 'email',
-    });
+    await expect(
+      userService.createUser({
+        email: user.email,
+        username: user.username,
+        type: user.type,
+      }),
+    ).resolves.toEqual(user);
+    await expect(userService.findByIdentifier(user.email)).resolves.toEqual(
+      user,
+    );
+    await userService.deleteUser(user.id);
 
-    expect(user).toBe(persistedUser);
-  });
-
-  it('deletes a user by id', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.delete.mockResolvedValue(prismaUser);
-
-    await userService.deleteUser(userId('user-1'));
-
-    expect(prismaService.user.delete).toHaveBeenCalledWith({
-      where: { id: userId('user-1') },
-    });
-  });
-
-  it('finds a user by email or username', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findFirst.mockResolvedValue(prismaUser);
-
-    await userService.findByIdentifier('host');
-
-    expect(prismaService.user.findFirst).toHaveBeenCalledWith({
-      where: { OR: [{ email: 'host' }, { username: 'host' }] },
-    });
-  });
-
-  it('finds a user by Apple id', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findFirst.mockResolvedValue(prismaUser);
-
-    await userService.findByAppleId('apple-1');
-
-    expect(prismaService.user.findFirst).toHaveBeenCalledWith({
-      where: { appleId: 'apple-1' },
-    });
+    expect(userRepository.delete).toHaveBeenCalledWith(user.id);
   });
 });
 
 describe('UserService.validateIdentifiers', () => {
   it('accepts unused identifiers', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findFirst.mockResolvedValue(null);
+    const { userRepository, userService } = buildUserService();
+    userRepository.findByIdentifiers.mockResolvedValue(null);
 
     await expect(
       userService.validateIdentifiers(username('alice'), 'alice@cityborn.test'),
@@ -123,24 +79,23 @@ describe('UserService.validateIdentifiers', () => {
   });
 
   it('rejects an existing username', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findFirst.mockResolvedValue({
-      ...prismaUser,
+    const { userRepository, userService } = buildUserService();
+    userRepository.findByIdentifiers.mockResolvedValue({
       username: username('alice'),
+      email: 'other@cityborn.test',
     });
 
     await expect(
-      userService.validateIdentifiers(username('alice'), 'other@cityborn.test'),
+      userService.validateIdentifiers(username('alice'), 'new@cityborn.test'),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_USERNAME_ALREADY_EXISTS },
     });
   });
 
   it('rejects an existing email', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findFirst.mockResolvedValue({
-      ...prismaUser,
-      username: 'other',
+    const { userRepository, userService } = buildUserService();
+    userRepository.findByIdentifiers.mockResolvedValue({
+      username: username('other'),
       email: 'alice@cityborn.test',
     });
 
@@ -152,27 +107,34 @@ describe('UserService.validateIdentifiers', () => {
   });
 });
 
-describe('UserService.createEmailVerificationToken', () => {
+describe('UserService verification tokens', () => {
+  const verificationToken = {
+    id: 'token-id',
+    userId: userId('user-1'),
+    expiresAt: new Date(Date.now() + 60_000),
+    createdAt: new Date(),
+  };
+
   it('rejects a request during the cooldown', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.emailVerificationToken.findFirst.mockResolvedValue({
-      ...verificationToken,
-      createdAt: new Date(),
-    });
+    const { emailVerificationTokenRepository, userService } =
+      buildUserService();
+    emailVerificationTokenRepository.findLatestVerificationToken.mockResolvedValue(
+      verificationToken,
+    );
 
     await expect(
       userService.createEmailVerificationToken(userId('user-1'), 60_000),
     ).rejects.toMatchObject({
-      response: {
-        code: ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON,
-      },
+      response: { code: ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON },
     });
   });
 
   it('replaces previous tokens and returns a fresh token', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.emailVerificationToken.findFirst.mockResolvedValue(null);
-    prismaService.$transaction.mockResolvedValue([]);
+    const { emailVerificationTokenRepository, userService } =
+      buildUserService();
+    emailVerificationTokenRepository.findLatestVerificationToken.mockResolvedValue(
+      null,
+    );
 
     const token = await userService.createEmailVerificationToken(
       userId('user-1'),
@@ -180,59 +142,52 @@ describe('UserService.createEmailVerificationToken', () => {
     );
 
     expect(token).toMatch(/^[a-f0-9]{64}$/);
-    expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('UserService.verifyEmail', () => {
-  it('rejects a missing token', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.emailVerificationToken.findUnique.mockResolvedValue(null);
-
-    await expect(userService.verifyEmail('missing')).rejects.toMatchObject({
-      response: {
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-      },
-    });
+    expect(
+      emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+    ).toHaveBeenCalledWith(userId('user-1'));
+    expect(
+      emailVerificationTokenRepository.createVerificationToken,
+    ).toHaveBeenCalled();
   });
 
   it('deletes and rejects an expired token', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.emailVerificationToken.findUnique.mockResolvedValue({
+    const { emailVerificationTokenRepository, userService } =
+      buildUserService();
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue({
       ...verificationToken,
       expiresAt: new Date(Date.now() - 1),
     });
-    prismaService.emailVerificationToken.delete.mockResolvedValue(
-      verificationToken,
-    );
 
     await expect(userService.verifyEmail('expired')).rejects.toMatchObject({
-      response: {
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-      },
+      response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
     });
-    expect(prismaService.emailVerificationToken.delete).toHaveBeenCalledWith({
-      where: { id: 'token-id' },
-    });
+    expect(
+      emailVerificationTokenRepository.deleteVerificationToken,
+    ).toHaveBeenCalledWith('token-id');
   });
 
   it('verifies the user and removes its tokens', async () => {
-    const { prismaService, userService } = buildUserService();
-    const token = verificationToken;
-    const persistedUser = prismaUser;
-    prismaService.emailVerificationToken.findUnique.mockResolvedValue(token);
-    prismaService.$transaction.mockResolvedValue([persistedUser]);
+    const { emailVerificationTokenRepository, userRepository, userService } =
+      buildUserService();
+    const user = buildUser();
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+      verificationToken,
+    );
+    userRepository.markEmailVerified.mockResolvedValue(user);
 
-    const user = await userService.verifyEmail(token.token);
-
-    expect(user).toBe(persistedUser);
+    await expect(
+      userService.verifyEmail('verification-token'),
+    ).resolves.toEqual(user);
+    expect(
+      emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+    ).toHaveBeenCalledWith(verificationToken.userId);
   });
 });
 
-describe('UserService.getGameRecords', () => {
+describe('UserService game records', () => {
   it('rejects an unknown user', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findUnique.mockResolvedValue(null);
+    const { gameRecordService, userService } = buildUserService();
+    gameRecordService.findRecentByUserId.mockResolvedValue(null);
 
     await expect(
       userService.getGameRecords(userId('missing')),
@@ -241,23 +196,17 @@ describe('UserService.getGameRecords', () => {
     });
   });
 
-  it('maps the five most recent records', async () => {
-    const { prismaService, userService } = buildUserService();
-    prismaService.user.findUnique.mockResolvedValue(prismaUserWithGameRecords);
+  it('persists a solo record for the user', async () => {
+    const { gameRecordService, userService } = buildUserService();
+    const record = buildCreateGameRecord();
 
-    const records = await userService.getGameRecords(userId('user-1'));
+    await userService.saveSoloGameRecord(userId('user-1'), record);
 
-    expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-      where: { id: userId('user-1') },
-      include: {
-        gameRecords: { take: 5, orderBy: { createdAt: 'desc' } },
-      },
-    });
-    expect(records).toHaveLength(1);
+    expect(gameRecordService.create).toHaveBeenCalledWith(record, [
+      { id: userId('user-1') },
+    ]);
   });
-});
 
-describe('UserService.saveSoloGameRecord', () => {
   it('rejects a multiplayer record', async () => {
     const { userService } = buildUserService();
 
@@ -266,27 +215,6 @@ describe('UserService.saveSoloGameRecord', () => {
         userId('user-1'),
         buildCreateGameRecord({ mode: SessionMode.MULTI }),
       ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.BAD_REQUEST },
-    });
-  });
-
-  it('persists a solo record for the user', async () => {
-    const { prismaService, userService } = buildUserService();
-    const record = buildCreateGameRecord();
-    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
-
-    await userService.saveSoloGameRecord(userId('user-1'), record);
-
-    expect(prismaService.gameRecord.create).toHaveBeenCalledWith({
-      data: {
-        mode: SessionMode.SOLO,
-        gameConfig: record.gameConfig,
-        players: record.players,
-        guessObjectsIds: record.guessObjectsIds,
-        results: record.results,
-        users: { connect: { id: userId('user-1') } },
-      },
-    });
+    ).rejects.toMatchObject({ response: { code: ErrorCode.BAD_REQUEST } });
   });
 });

@@ -17,12 +17,11 @@ import {
   toLightGame,
 } from '@cityborn/core';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
+import { GameRecordService } from '../game-record/game-record.service';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
-import { PrismaService } from '../prisma/prisma.service';
 
 export type CreateGameParams = {
   gameConfig: GameConfig;
@@ -35,7 +34,7 @@ export type CreateGameParams = {
 export class GameService {
   constructor(
     private readonly guessObjectService: GuessObjectService,
-    private readonly prisma: PrismaService,
+    private readonly gameRecordService: GameRecordService,
     private readonly eventService: EventService,
     private readonly idService: IdService,
   ) {}
@@ -95,20 +94,18 @@ export class GameService {
     mode: SessionMode,
     visitorId?: string,
   ): Promise<void> {
-    const game_record = await this.prisma.gameRecord.create({
-      data: {
+    const gameRecord = await this.gameRecordService.create(
+      {
         mode,
-        gameConfig: game.config as unknown as Prisma.InputJsonValue,
-        players: players as unknown as Prisma.InputJsonValue,
+        gameConfig: game.config,
+        players,
         guessObjectsIds: game.state.guessObjectsIds,
-        results: game.state.results as unknown as Prisma.InputJsonValue,
-        users: {
-          connect: players
-            .filter((player) => !player.isGuest)
-            .map((player) => ({ id: player.id })),
-        },
+        results: game.state.results,
       },
-    });
+      players.flatMap((player) =>
+        !player.isGuest && player.id ? [{ id: player.id }] : [],
+      ),
+    );
 
     if (visitorId) {
       const roundResults = Object.values(game.state.results).flatMap(
@@ -125,7 +122,7 @@ export class GameService {
           name: 'game_finished',
           visitorId,
           properties: {
-            gameId: game_record.id.toString(),
+            gameId: gameRecord.id.toString(),
             mode,
             numberOfPlayers: Object.keys(game.state.results).length,
             average_score: averageScore,

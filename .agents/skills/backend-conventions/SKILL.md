@@ -11,6 +11,13 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier la 
 - Controllers = handlers ts-rest (`@TsRestHandler(contract.x)` + `tsRestHandler`), **fins** : aucune logique métier, tout dans les services.
 - Séparer `*.public.*` / `*.admin.*` (controller + service) quand l'auth ou les règles diffèrent.
 
+## Accès aux données — Repository
+
+- Référence : le module `world-location`. Chaque domaine expose `repositories/<domaine>.repository.ts` (interface + token `Symbol`) et `repositories/prisma-<domaine>.repository.ts` (implémentation `@Injectable()`). Les interfaces utilisent les types API ou des types métier internes, jamais des types Prisma.
+- Les modules importent `PrismaClsModule` et associent le token à l'implémentation avec `useClass`. Les repositories utilisent `TransactionHost` (`PrismaTransactionHost`) et `txHost.tx` ; les mappers convertissent les lignes Prisma en types API avant leur retour.
+- Les services conservent les règles métier et les accès Redis. Ils ne connaissent ni Prisma ni ses types. Lors d'une extraction, préserver les requêtes, les conversions et les noms existants (paramètres, variables, propriétés) sans ajouter de nouvelles validations métier ou JSON. Limiter les nouveaux noms à ce que la séparation en repositories nécessite.
+- Placer `@Transactional()` sur les opérations de service dont plusieurs écritures DB doivent réussir ou échouer ensemble. Les appels imbriqués partagent la transaction. Ne pas englober Redis, les emails ou les appels externes ; conserver le nettoyage d'un token expiré hors de la transaction qui peut échouer.
+
 ## Gestion des erreurs
 
 - Lever une exception Nest **typée** depuis les services : `throw new NotFoundException({ code: ErrorCode.X, message })` (idem `ConflictException`, `BadRequestException`, `UnauthorizedException`). `code` = un `ErrorCode` de `@cityborn/api`, jamais une string libre.

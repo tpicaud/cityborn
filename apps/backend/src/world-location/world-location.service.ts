@@ -2,85 +2,58 @@ import {
   type CreateWorldLocation,
   type WorldLocation,
   type WorldLocationId,
-  WorldLocationIdSchema,
 } from '@cityborn/api';
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { WorldLocationMapper } from './mapper/world-location.mapper';
+import { Inject, Injectable } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
+import {
+  WORLD_LOCATION_REPOSITORY,
+  type WorldLocationRepository,
+} from './repositories/world-location.repository';
 
 @Injectable()
 export class WorldLocationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(WORLD_LOCATION_REPOSITORY)
+    private readonly worldLocationRepository: WorldLocationRepository,
+  ) {}
 
   async get(id: WorldLocationId): Promise<{ id: WorldLocationId } | null> {
-    const row = await this.prisma.worldLocation.findUnique({ where: { id } });
-    if (!row) return null;
-    return { id: WorldLocationIdSchema.parse(row.id) };
+    const exists = await this.worldLocationRepository.existsById(id);
+    if (!exists) return null;
+    return { id };
   }
 
   async getWithGeometry(id: WorldLocationId): Promise<WorldLocation | null> {
-    const row = await this.prisma.worldLocation.findUnique({
-      where: { id },
-      include: { geometry: true },
-    });
-    if (!row) return null;
-    return WorldLocationMapper.toWorldLocation(row);
+    return this.worldLocationRepository.findById(id, { geometry: true });
   }
 
   async findByExternalIdentifier(
     osmType: string,
     externalId: string,
   ): Promise<WorldLocation | null> {
-    const row = await this.prisma.worldLocation.findUnique({
-      where: {
-        osm_type_external_id: {
-          osm_type: osmType,
-          external_id: externalId,
-        },
-      },
-      include: { geometry: true },
-    });
-    if (!row) return null;
-    return WorldLocationMapper.toWorldLocation(row);
+    return this.worldLocationRepository.findBySource(
+      { provider: osmType, external_id: externalId },
+      { geometry: true },
+    );
   }
 
+  @Transactional()
   async findOrCreate(
     createWorldLocation: CreateWorldLocation,
   ): Promise<WorldLocation> {
-    const existing = await this.prisma.worldLocation.findUnique({
-      where: {
-        osm_type_external_id: {
-          osm_type: createWorldLocation.osm_type,
-          external_id: createWorldLocation.source.external_id,
-        },
-      },
-      include: { geometry: true },
-    });
-    if (existing) return WorldLocationMapper.toWorldLocation(existing);
-
-    const row = await this.prisma.worldLocation.create({
-      data: {
-        osm_type: createWorldLocation.osm_type,
+    const existing = await this.worldLocationRepository.findBySource(
+      {
+        provider: createWorldLocation.osm_type,
         external_id: createWorldLocation.source.external_id,
-        name: createWorldLocation.name,
-        geometry: {
-          create: {
-            data: createWorldLocation.geometry as unknown as Prisma.InputJsonValue,
-          },
-        },
-        display_name: createWorldLocation.display_name,
-        addresstype: createWorldLocation.addresstype,
-        centroid: createWorldLocation.centroid,
-        source: createWorldLocation.source as unknown as Prisma.InputJsonValue,
       },
-      include: { geometry: true },
-    });
+      { geometry: true },
+    );
+    if (existing) return existing;
 
-    return WorldLocationMapper.toWorldLocation(row);
+    return this.worldLocationRepository.create(createWorldLocation);
   }
 
   async delete(id: WorldLocationId): Promise<void> {
-    await this.prisma.worldLocation.delete({ where: { id } });
+    await this.worldLocationRepository.delete(id);
   }
 }

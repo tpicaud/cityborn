@@ -3,35 +3,25 @@ import {
   buildGame,
   buildGameConfig,
   buildPlayer,
+  GameRecordIdSchema,
   GameStatus,
   SessionMode,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
-import type { GameRecord as PrismaGameRecord } from '@prisma/client';
 import type { EventService } from '../event/event.service';
+import type { GameRecordService } from '../game-record/game-record.service';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type { IdService } from '../id/id.service';
-import type { PrismaService } from '../prisma/prisma.service';
 import { GameService } from './game.service';
-
-const prismaGameRecord = {
-  id: '00000000-0000-4000-8000-000000000040',
-  mode: 'solo',
-  gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
-  players: [],
-  guessObjectsIds: [],
-  results: {},
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-} satisfies PrismaGameRecord;
 
 function buildGameService() {
   const guessObjectService = createMock<GuessObjectService>();
-  const prismaService = createMock<PrismaService>();
+  const gameRecordService = createMock<GameRecordService>();
   const eventService = createMock<EventService>();
   const idService = createMock<IdService>();
   const gameService = new GameService(
     guessObjectService,
-    prismaService,
+    gameRecordService,
     eventService,
     idService,
   );
@@ -39,7 +29,7 @@ function buildGameService() {
   return {
     gameService,
     guessObjectService,
-    prismaService,
+    gameRecordService,
     eventService,
     idService,
   };
@@ -102,7 +92,7 @@ describe('GameService.createGame', () => {
 
 describe('GameService.endGame', () => {
   it('persists only registered users and tracks the average score', async () => {
-    const { gameService, prismaService, eventService } = buildGameService();
+    const { gameService, gameRecordService, eventService } = buildGameService();
     const game = buildGame({
       state: {
         guessObjectsIds: ['guess-1'],
@@ -120,16 +110,15 @@ describe('GameService.endGame', () => {
       buildPlayer('host', true, { id: 'user-1' }),
       buildPlayer('guest', true, { isGuest: true }),
     ];
-    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
+    gameRecordService.create.mockResolvedValue({
+      id: GameRecordIdSchema.parse('game-record-1'),
+    });
 
     await gameService.endGame(game, players, SessionMode.MULTI, 'visitor-1');
 
-    expect(prismaService.gameRecord.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          users: { connect: [{ id: 'user-1' }] },
-        }),
-      }),
+    expect(gameRecordService.create).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: SessionMode.MULTI }),
+      [{ id: 'user-1' }],
     );
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -139,14 +128,16 @@ describe('GameService.endGame', () => {
   });
 
   it('tracks a zero average when no round result exists', async () => {
-    const { gameService, prismaService, eventService } = buildGameService();
+    const { gameService, gameRecordService, eventService } = buildGameService();
     const game = buildGame({
       state: {
         guessObjectsIds: [],
         results: { host: { results: [] } },
       },
     });
-    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
+    gameRecordService.create.mockResolvedValue({
+      id: GameRecordIdSchema.parse('game-record-1'),
+    });
 
     await gameService.endGame(
       game,
@@ -163,8 +154,10 @@ describe('GameService.endGame', () => {
   });
 
   it('does not track an anonymous finished game', async () => {
-    const { gameService, prismaService, eventService } = buildGameService();
-    prismaService.gameRecord.create.mockResolvedValue(prismaGameRecord);
+    const { gameService, gameRecordService, eventService } = buildGameService();
+    gameRecordService.create.mockResolvedValue({
+      id: GameRecordIdSchema.parse('game-record-1'),
+    });
 
     await gameService.endGame(buildGame(), [buildPlayer()], SessionMode.SOLO);
 

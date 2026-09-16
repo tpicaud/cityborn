@@ -1,192 +1,124 @@
-import {
-  type CreateGuessObject,
-  ErrorCode,
-  type FullGuessObject,
-  type GameConfig,
-  type GuessObject,
-  type GuessObjectDraft,
-  type GuessObjectId,
-  GuessObjectIdSchema,
-  type PatchGuessObject,
-  WorldLocationIdSchema,
+import type {
+  CreateGuessObject,
+  FullGuessObject,
+  GameConfig,
+  GuessObject,
+  GuessObjectDraft,
+  GuessObjectId,
+  PatchGuessObject,
 } from '@cityborn/api';
+import { ErrorCode } from '@cityborn/api';
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { Transactional } from '@nestjs-cls/transactional';
+import {
+  CATEGORY_REPOSITORY,
+  type CategoryRepository,
+} from '../category/repositories/category.repository';
 import { WorldLocationService } from '../world-location/world-location.service';
-import { GuessObjectMapper } from './mappers/guess-object.mapper';
+import {
+  GUESS_OBJECT_REPOSITORY,
+  type GuessObjectFilter,
+  type GuessObjectRepository,
+} from './repositories/guess-object.repository';
 
 @Injectable()
 export class GuessObjectService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(GUESS_OBJECT_REPOSITORY)
+    private readonly guessObjectRepository: GuessObjectRepository,
+    @Inject(CATEGORY_REPOSITORY)
+    private readonly categoryRepository: CategoryRepository,
     private readonly worldLocationService: WorldLocationService,
   ) {}
 
-  async findBy(filter: {
-    ids?: GuessObjectId[];
-    external_id?: string;
-  }): Promise<GuessObject[]> {
-    const rowsGuessObject = await this.prisma.guessObject.findMany({
-      where: {
-        ...(filter.ids && { id: { in: filter.ids } }),
-        ...(filter.external_id && {
-          source: { path: ['external_id'], equals: filter.external_id },
-        }),
-      },
-      include: {
-        world_location: true,
-      },
-    });
-    return rowsGuessObject.map((obj) => GuessObjectMapper.toGuessObject(obj));
+  async findBy(filter: GuessObjectFilter): Promise<GuessObject[]> {
+    return this.guessObjectRepository.findBy(filter);
   }
 
-  async findFullBy(filter: {
-    ids?: GuessObjectId[];
-    external_id?: string;
-  }): Promise<FullGuessObject[]> {
-    const rows = await this.prisma.guessObject.findMany({
-      where: {
-        ...(filter.ids && { id: { in: filter.ids } }),
-        ...(filter.external_id && {
-          source: { path: ['external_id'], equals: filter.external_id },
-        }),
-      },
-      include: { world_location: { include: { geometry: true } } },
-    });
-    return rows.map((obj) => GuessObjectMapper.toFullGuessObject(obj));
+  async findFullBy(filter: GuessObjectFilter): Promise<FullGuessObject[]> {
+    return this.guessObjectRepository.findFullBy(filter);
   }
 
   async findShuffledGuessObjectsByGameConfig(
     gameConfig: GameConfig,
   ): Promise<FullGuessObject[]> {
-    const where: Prisma.GuessObjectWhereInput = {};
-
-    if (gameConfig.categories && gameConfig.categories.length > 0) {
-      const categoryIds = gameConfig.categories.map((cat) => cat.id);
-      where.categories = {
-        some: {
-          id: { in: categoryIds },
-        },
-      };
-    }
-
-    const allObjects = await this.prisma.guessObject.findMany({
-      where,
-      include: { world_location: { include: { geometry: true } } },
+    const allObjects = await this.guessObjectRepository.findFullBy({
+      categoryIds: gameConfig.categories?.map((cat) => cat.id),
     });
-
     const shuffled = allObjects.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, gameConfig.nbOfObjects);
-
-    return selected.map((obj) => GuessObjectMapper.toFullGuessObject(obj));
+    return selected;
   }
 
+  @Transactional()
   async create(createGuessObject: CreateGuessObject): Promise<GuessObjectId> {
-    const world_location = await this.worldLocationService.get(
+    const worldLocation = await this.worldLocationService.get(
       createGuessObject.world_location_id,
     );
-    if (!world_location) {
+    if (!worldLocation) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: `World location ${createGuessObject.world_location_id} not found`,
       });
     }
 
-    const existingGuessObject = await this.prisma.guessObject.findUnique({
-      where: { name: createGuessObject.name },
-    });
-
+    const existingGuessObject =
+      await this.guessObjectRepository.findByNameAndWorldLocation(
+        createGuessObject.name,
+        createGuessObject.world_location_id,
+      );
     if (existingGuessObject) {
-      return GuessObjectIdSchema.parse(existingGuessObject.id);
+      return existingGuessObject.id;
     }
 
-    const prisma_guess_object = await this.prisma.guessObject.create({
-      data: {
-        name: createGuessObject.name,
-        image: createGuessObject.image,
-        description: createGuessObject.description,
-        short_description: createGuessObject.short_description,
-        source: createGuessObject.source,
-        world_location_id: world_location.id,
-      },
-    });
-
-    return GuessObjectIdSchema.parse(prisma_guess_object.id);
+    return this.guessObjectRepository.create(createGuessObject);
   }
 
   async update(
     id: GuessObjectId,
     updatedFields: PatchGuessObject,
   ): Promise<GuessObjectId> {
-    const data = {
-      name: updatedFields.name,
-      image: updatedFields.image,
-      description: updatedFields.description,
-      short_description: updatedFields.short_description,
-      ...(updatedFields.world_location_id && {
-        world_location_id: updatedFields.world_location_id,
-      }),
-    };
-
-    const updated_object = await this.prisma.guessObject.update({
-      where: { id },
-      data,
-    });
-
-    return GuessObjectIdSchema.parse(updated_object.id);
+    return this.guessObjectRepository.update(id, updatedFields);
   }
 
+  @Transactional()
   async delete(id: GuessObjectId): Promise<void> {
-    const guess_object = await this.prisma.guessObject.findUnique({
-      where: { id },
-      include: { categories: true },
+    const [guessObject] = await this.guessObjectRepository.findBy({
+      ids: [id],
     });
-
-    if (!guess_object) {
+    if (!guessObject) {
       throw new NotFoundException({
         code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
         message: `Guess object not found`,
       });
     }
 
-    if (guess_object.categories.length > 0) {
+    const categoriesCount =
+      await this.categoryRepository.countByGuessObjectId(id);
+    if (categoriesCount > 0) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
         message: `Cannot delete guess object because it belongs to one or more categories`,
       });
     }
 
-    await this.prisma.guessObject.delete({
-      where: { id },
-    });
-
-    const count = await this.prisma.guessObject.count({
-      where: { world_location_id: guess_object.world_location_id },
-    });
-
+    await this.guessObjectRepository.delete(id);
+    const count = await this.guessObjectRepository.countByWorldLocationId(
+      guessObject.world_location_preview.id,
+    );
     if (count === 0) {
       await this.worldLocationService.delete(
-        WorldLocationIdSchema.parse(guess_object.world_location_id),
+        guessObject.world_location_preview.id,
       );
     }
   }
 
   async searchDraftByName(name: string): Promise<GuessObjectDraft[]> {
-    const prisma_guess_objects = await this.prisma.guessObject.findMany({
-      where: {
-        name: {
-          contains: name,
-          mode: 'insensitive',
-        },
-      },
-    });
-    return prisma_guess_objects.map((obj) =>
-      GuessObjectMapper.toGuessObjectDraftFromPrisma(obj),
-    );
+    return this.guessObjectRepository.searchDraftByName(name);
   }
 }

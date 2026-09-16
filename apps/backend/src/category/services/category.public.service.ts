@@ -4,7 +4,6 @@ import {
   type CategoryTree,
 } from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
-import { CategoryMapper } from '../mappers/category.mapper';
 import { CategoryService } from './category.service';
 
 @Injectable()
@@ -13,7 +12,7 @@ export class PublicCategoryService {
 
   async findAll(): Promise<Category[]> {
     const categories = await this.categoryService.findBy({ isPublished: true });
-    return CategoryMapper.toCategories(categories);
+    return categories;
   }
 
   async findBy(filter: { ids?: CategoryId[] }): Promise<Category[]> {
@@ -21,11 +20,11 @@ export class PublicCategoryService {
       ...filter,
       isPublished: true,
     });
-    return CategoryMapper.toCategories(categories);
+    return categories;
   }
 
   async getTrees(): Promise<CategoryTree[]> {
     const roots = await this.categoryService.findTree({ isPublished: true });
-    return CategoryMapper.toCategoryTrees(roots);
+    return roots;
   }
 }

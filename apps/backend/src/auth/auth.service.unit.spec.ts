@@ -2,24 +2,13 @@ import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
-import type { User as PrismaUser } from '@prisma/client';
 import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserService } from '../user/user.service';
 import { AuthService, type GoogleIdentityClient } from './auth.service';
 
-const prismaUser = {
-  id: '00000000-0000-4000-8000-000000000001',
-  email: 'host@cityborn.test',
-  username: 'host',
-  type: 'email',
-  password: 'hashed-password',
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2026-01-02T00:00:00.000Z'),
-  isVerified: true,
-  appleId: null,
-} satisfies PrismaUser;
+const persistedUser = buildUser();
 
 let mockPasswordMatches = true;
 let mockAppleTokenValid = true;
@@ -88,10 +77,10 @@ function buildAuthService() {
 
 describe('AuthService.signUp', () => {
   it('creates an account, sends verification and returns tokens', async () => {
-    const persistedUser = { ...prismaUser, isVerified: false };
+    const unverifiedUser = buildUser({ isVerified: false });
     const { authService, userService, jwtService, eventService, mailService } =
       buildAuthService();
-    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
@@ -99,20 +88,20 @@ describe('AuthService.signUp', () => {
 
     const result = await authService.signUp(
       {
-        email: persistedUser.email,
-        username: UsernameSchema.parse(persistedUser.username),
+        email: unverifiedUser.email,
+        username: UsernameSchema.parse(unverifiedUser.username),
         password: 'plain-password',
       },
       'visitor-1',
     );
 
     expect(userService.validateIdentifiers).toHaveBeenCalledWith(
-      persistedUser.username,
-      persistedUser.email,
+      unverifiedUser.username,
+      unverifiedUser.email,
     );
     expect(userService.createUser).toHaveBeenCalledWith({
-      email: persistedUser.email,
-      username: persistedUser.username,
+      email: unverifiedUser.email,
+      username: unverifiedUser.username,
       type: 'email',
       password: 'hashed-password',
     });
@@ -121,7 +110,7 @@ describe('AuthService.signUp', () => {
     expect(result).toMatchObject({
       access_token: 'access-token',
       refresh_token: 'refresh-token',
-      user: { username: persistedUser.username },
+      user: { username: unverifiedUser.username },
     });
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,9 +121,9 @@ describe('AuthService.signUp', () => {
   });
 
   it('returns tokens without waiting for the verification email', async () => {
-    const persistedUser = { ...prismaUser, isVerified: false };
+    const unverifiedUser = buildUser({ isVerified: false });
     const { authService, userService, mailService } = buildAuthService();
-    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
@@ -142,8 +131,8 @@ describe('AuthService.signUp', () => {
 
     const signUpOutcome = await Promise.race([
       authService.signUp({
-        email: persistedUser.email,
-        username: UsernameSchema.parse(persistedUser.username),
+        email: unverifiedUser.email,
+        username: UsernameSchema.parse(unverifiedUser.username),
         password: 'plain-password',
       }),
       new Promise<undefined>((resolve) =>
@@ -158,11 +147,11 @@ describe('AuthService.signUp', () => {
   });
 
   it('logs a verification email failure without rejecting', async () => {
-    const persistedUser = { ...prismaUser, isVerified: false };
+    const unverifiedUser = buildUser({ isVerified: false });
     const mailError = new Error('Mailer unavailable');
     const { authService, userService, mailService, wideEventService } =
       buildAuthService();
-    userService.createUser.mockResolvedValue(persistedUser);
+    userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
@@ -170,8 +159,8 @@ describe('AuthService.signUp', () => {
 
     await expect(
       authService.signUp({
-        email: persistedUser.email,
-        username: UsernameSchema.parse(persistedUser.username),
+        email: unverifiedUser.email,
+        username: UsernameSchema.parse(unverifiedUser.username),
         password: 'plain-password',
       }),
     ).resolves.toMatchObject({
@@ -183,7 +172,7 @@ describe('AuthService.signUp', () => {
       {
         domain: 'auth',
         operation: 'send_verification_email',
-        userId: persistedUser.id,
+        userId: unverifiedUser.id,
       },
     );
   });
@@ -191,9 +180,11 @@ describe('AuthService.signUp', () => {
 
 describe('AuthService.signIn', () => {
   it('returns tokens for valid credentials', async () => {
-    const persistedUser = prismaUser;
     const { authService, userService, eventService } = buildAuthService();
-    userService.findByIdentifier.mockResolvedValue(persistedUser);
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      user: persistedUser,
+      passwordHash: 'hashed-password',
+    });
 
     const result = await authService.signIn(
       {
@@ -215,10 +206,10 @@ describe('AuthService.signIn', () => {
 
   it.each([
     ['an unknown identifier', null],
-    ['an OAuth account', { ...prismaUser, password: null }],
-  ])('rejects %s', async (_label, persistedUser) => {
+    ['an OAuth account', { user: persistedUser, passwordHash: null }],
+  ])('rejects %s', async (_label, credentials) => {
     const { authService, userService } = buildAuthService();
-    userService.findByIdentifier.mockResolvedValue(persistedUser);
+    userService.findCredentialsByIdentifier.mockResolvedValue(credentials);
 
     await expect(
       authService.signIn({
@@ -232,7 +223,10 @@ describe('AuthService.signIn', () => {
 
   it('rejects an invalid password', async () => {
     const { authService, userService } = buildAuthService();
-    userService.findByIdentifier.mockResolvedValue(prismaUser);
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      user: persistedUser,
+      passwordHash: 'hashed-password',
+    });
     mockPasswordMatches = false;
 
     await expect(
@@ -248,7 +242,6 @@ describe('AuthService.signIn', () => {
 
 describe('AuthService account operations', () => {
   it('refreshes both tokens for an existing user', async () => {
-    const persistedUser = prismaUser;
     const { authService, userService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
@@ -270,7 +263,6 @@ describe('AuthService account operations', () => {
   });
 
   it('returns the authenticated profile', async () => {
-    const persistedUser = prismaUser;
     const { authService, userService } = buildAuthService();
     userService.findByIdentifier.mockResolvedValue(persistedUser);
 
@@ -331,17 +323,17 @@ describe('AuthService account operations', () => {
   });
 
   it('verifies an email and returns the public user', async () => {
-    const persistedUser = { ...prismaUser, isVerified: false };
+    const unverifiedUser = buildUser({ isVerified: false });
     const { authService, userService } = buildAuthService();
-    userService.verifyEmail.mockResolvedValue(persistedUser);
+    userService.verifyEmail.mockResolvedValue(unverifiedUser);
 
     const result = await authService.verifyEmail({
       verification_token: 'verification-token',
     });
 
     expect(result).toEqual({
-      id: persistedUser.id,
-      username: persistedUser.username,
+      id: unverifiedUser.id,
+      username: unverifiedUser.username,
     });
   });
 });
@@ -355,7 +347,7 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('signs in an existing Google user', async () => {
-    const persistedUser = { ...prismaUser, type: 'google', password: null };
+    const googleUser = buildUser({ type: 'google' });
     const { authService, userService, googleClient, eventService } =
       buildAuthService();
     const ticket = createMock<GoogleIdentityTicket>();
@@ -365,14 +357,14 @@ describe('AuthService.signInWithGoogle', () => {
       name: 'Alice Doe',
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier.mockResolvedValue(persistedUser);
+    userService.findByIdentifier.mockResolvedValue(googleUser);
 
     const result = await authService.signInWithGoogle(
       { idToken: 'google-token' },
       'visitor-1',
     );
 
-    expect(result.user.username).toBe(persistedUser.username);
+    expect(result.user.username).toBe(googleUser.username);
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'user_signed_in',
@@ -382,12 +374,10 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('creates a Google user with an available generated username', async () => {
-    const persistedUser = {
-      ...prismaUser,
+    const googleUser = buildUser({
       username: 'alicedoe1000',
       type: 'google',
-      password: null,
-    };
+    });
     const { authService, userService, googleClient, eventService } =
       buildAuthService();
     const ticket = createMock<GoogleIdentityTicket>();
@@ -397,10 +387,9 @@ describe('AuthService.signInWithGoogle', () => {
       name: 'Alice Doe',
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
-    userService.findByIdentifier
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(null);
-    userService.createUser.mockResolvedValue(persistedUser);
+    userService.findByIdentifier.mockResolvedValueOnce(null);
+    userService.existsByUsername.mockResolvedValue(false);
+    userService.createUser.mockResolvedValue(googleUser);
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
     const result = await authService.signInWithGoogle(
@@ -481,19 +470,15 @@ describe('AuthService.signInWithApple', () => {
   });
 
   it('creates a user during the first Apple connection', async () => {
-    const persistedUser = {
-      ...prismaUser,
+    const appleUser = buildUser({
       username: 'aliceapple1000',
       type: 'apple',
-      password: null,
-      appleId: 'apple-user-1',
-    };
+    });
     const { authService, userService, eventService } = buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
-    userService.findByIdentifier
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(null);
-    userService.createUser.mockResolvedValue(persistedUser);
+    userService.findByIdentifier.mockResolvedValueOnce(null);
+    userService.existsByUsername.mockResolvedValue(false);
+    userService.createUser.mockResolvedValue(appleUser);
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
     const result = await authService.signInWithApple(

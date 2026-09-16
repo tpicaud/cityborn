@@ -1,6 +1,5 @@
 import { type GameRecord, GameRecordSchema } from '@cityborn/api';
 import type { GameRecord as PrismaGameRecord } from '@prisma/client';
-
 export const GameMapper = {
   toGameRecord(gameRecords: PrismaGameRecord[]): GameRecord[] {
     return gameRecords.map((record) =>

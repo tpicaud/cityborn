@@ -1,7 +1,6 @@
 import { type User, type UserId, UserIdSchema } from '@cityborn/api';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
-import { UserMapper } from '../../user/user.mapper';
 import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
@@ -32,7 +31,7 @@ export async function resolveFullUser(
   userService: UserService,
 ): Promise<User | null> {
   const fullUser = await userService.findById(userId);
-  return fullUser ? UserMapper.toUser(fullUser) : null;
+  return fullUser;
 }
 
 export async function validateRefreshToken(
