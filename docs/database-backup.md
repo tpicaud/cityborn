@@ -1,403 +1,186 @@
-# Restaurer une sauvegarde de la base Cityborn
+# Restaurer la base Cityborn
 
-**La restauration remplace les données applicatives par leur état au moment de la
-sauvegarde. Les modifications postérieures à cette sauvegarde seront perdues.**
-L'URL utilisée par l'application reste identique ; aucun second projet Supabase
-n'est nécessaire.
+Cette procédure s'adresse à l'opérateur chargé d'un retour à une sauvegarde. Les archives sont produites par le workflow GitHub `database-backup.yml` et conservées dans Backblaze B2.
 
-Toutes les commandes sont à lancer depuis la **racine du dépôt Cityborn**.
+## Périmètre
 
-- Première utilisation : [préparer le poste et les accès](#1-préparer-le-poste-et-les-accès).
-- Poste déjà configuré : [restaurer la production](#2-restaurer-la-production).
-- Exercice ou validation d'une modification : [tester sur staging](#3-tester-sur-staging).
-- Commande en échec : [diagnostiquer le problème](#4-en-cas-déchec).
+Le script remplace les tables, séquences et enums applicatifs de `public`, leur schéma, leurs données et leurs droits issus du backup, y compris `_prisma_migrations`. Il conserve le schéma `public` et ses droits, les objets d'extension et les autres schémas Supabase. Les droits par défaut de la cible restent inchangés ; ils ne doivent pas élargir les droits des tables restaurées.
 
-## Périmètre de la restauration
+Il ne restaure pas Supabase Auth, Storage, les fichiers stockés, la configuration du projet ni les rôles globaux. Une archive contenant des données Auth/Storage non vides est refusée. Les rôles utilisés dans les droits doivent déjà exister sur la cible ; les objets applicatifs doivent appartenir à `postgres`. Les vues, fonctions, partitions et types complexes applicatifs de `public` nécessitent une adaptation du script. Une dépendance extérieure empêchant la suppression d'une table provoque l'annulation de la transaction.
 
-La commande restaure les objets applicatifs du schéma `public` : tables, données,
-séquences, enums, index, contraintes, droits et politiques de sécurité RLS,
-y compris l'historique Prisma `_prisma_migrations`.
-
-Les objets restaurés appartiennent au rôle `postgres`. Leurs droits sont repris de
-la sauvegarde ; les droits du schéma et ses droits par défaut restent ceux de la cible.
-
-Les schémas Supabase Auth et Storage, les fichiers stockés, les extensions, les rôles
-et les réglages du projet sont conservés. Une archive contenant des données
-Auth ou Storage non vides est refusée par cette procédure.
-
-Certaines structures nécessitent une adaptation : vues, fonctions applicatives,
-partitions, droits par colonne, publications portant sur `public` ou déclencheurs
-d'événements non reconnus. Le script les signale avant le remplacement. Les
-dépendances externes sont protégées par `DROP ... RESTRICT` ; aucun
-`DROP SCHEMA ... CASCADE` n'est exécuté.
+**Les données postérieures au backup seront perdues.** Préparer une version du backend compatible avec le schéma sauvegardé : son démarrage en production exécute `prisma migrate deploy`. Une version inadaptée pourrait immédiatement réappliquer la migration à annuler.
 
 ## 1. Préparer le poste et les accès
 
-Effectuer cette préparation sur chaque poste susceptible de servir à une restauration,
-idéalement avant un incident.
+- Disposer du dépôt, de Node.js 24, de la version de pnpm indiquée dans `package.json`, de `tar` et de Docker Desktop démarré.
+- Disposer d'une clé d'application Backblaze autorisant la lecture des fichiers et le listing des buckets (`readFiles`, `listBuckets`), limitée au bucket `cityborn-backups` et au préfixe `cityborn/`. Un accès au site web seul ne suffit pas pour les commandes de téléchargement.
+- Pour une restauration distante : obtenir l'URL PostgreSQL, la référence du projet et le certificat CA Supabase de l'environnement concerné auprès du responsable des accès.
 
-### Prérequis
+Les images `postgis/postgis:16-3.4` (validation locale) et `public.ecr.aws/supabase/postgres:17.6.1.158` (client distant) sont téléchargées par Docker au premier usage. Ce parcours couvre les sauvegardes Cityborn compatibles PostgreSQL 16 et une cible PostgreSQL 16 ou 17.
 
-- Disposer du dépôt et de ses dépendances : `pnpm install --frozen-lockfile`.
-- Utiliser **Node 24**, **pnpm**, **Docker démarré**, **bash** et **tar**.
-- Pouvoir accéder à Backblaze, à Supabase et aux registres des images Docker.
-- Prévoir de l'espace disque pour les images, une base locale de validation et
-  plusieurs copies de la sauvegarde.
-- Disposer des accès pour arrêter et reprendre les services, notamment le backend
-  hébergé sur Railway et les éventuels workers.
+### macOS
 
-Les clients PostgreSQL et AWS CLI sont exécutés dans Docker ; leur installation
-sur le poste n'est pas nécessaire.
+Ouvrir Terminal et installer l'outil officiel Backblaze avec [Homebrew](https://www.backblaze.com/docs/cloud-storage-command-line-tools) :
 
-### Configurer les accès
+```bash
+brew install b2-tools
+```
 
-Copier le [modèle de configuration](../apps/backend/.env.restore.example) :
+Utiliser ce terminal pour toute la suite de la procédure.
+
+### Windows — Ubuntu sous WSL2
+
+Le parcours Windows utilise **WSL2**, qui fournit un terminal Linux Ubuntu sur le PC, et Docker Desktop en mode conteneurs Linux.
+
+1. Si Ubuntu n'est pas installé, ouvrir **PowerShell en administrateur**, exécuter la commande suivante, redémarrer si demandé, puis ouvrir Ubuntu et terminer la création de son utilisateur :
+
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+
+2. Vérifier avec `wsl --list --verbose` dans PowerShell qu'Ubuntu utilise la version **2**. Au besoin, exécuter `wsl --set-version Ubuntu 2`. Voir le [guide Microsoft WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+3. Dans Docker Desktop, activer **Use WSL 2 based engine**, puis **Settings → Resources → WSL Integration → Ubuntu → Apply**. Utiliser les conteneurs Linux. Voir le [guide Docker Desktop](https://docs.docker.com/desktop/features/wsl/).
+4. Dans le **terminal Ubuntu**, disposer de Node.js 24 et de pnpm installés côté Linux, puis cloner le dépôt dans le dossier personnel Linux, par exemple `~/cityborn`. Installer l'outil Backblaze dans ce même terminal :
+
+   ```bash
+   sudo apt update
+   sudo apt install pipx
+   pipx install b2
+   pipx ensurepath
+   ```
+
+Fermer puis rouvrir le terminal Ubuntu pour prendre en compte le chemin de l'outil. Toutes les commandes suivantes sont à exécuter **dans Ubuntu**, y compris `b2` et `pnpm`. La commande `pipx` installe l'outil Python dans un environnement isolé ([documentation Ubuntu](https://manpages.ubuntu.com/manpages/noble/man1/pipx.1.html)).
+
+### Vérifier les outils et configurer la cible
+
+Depuis le terminal choisi, se placer à la racine du dépôt et vérifier les outils :
+
+```bash
+node --version
+pnpm --version
+b2 --version
+tar --version
+docker info
+```
+
+Attendre Node.js **24.x** et un serveur Docker joignable. Pour configurer la production, copier le modèle **si le fichier local n'existe pas déjà** :
 
 ```bash
 cp -n apps/backend/.env.restore.example apps/backend/.env.restore
-chmod 600 apps/backend/.env.restore
 ```
 
-L'option `-n` conserve le fichier s'il existe déjà. Renseigner ensuite
-`apps/backend/.env.restore` avec les valeurs disponibles dans le coffre de l'équipe.
-Ce fichier est ignoré par Git.
+Renseigner les trois variables dans `apps/backend/.env.restore` :
 
-| Variable | Valeur à renseigner |
-| --- | --- |
-| `RESTORE_B2_BUCKET` | Nom du bucket contenant les sauvegardes |
-| `RESTORE_B2_ENDPOINT` | Endpoint S3 B2 : `https://s3.<region>.backblazeb2.com`, sans slash final |
-| `RESTORE_B2_PREFIX` | Préfixe dans le bucket, généralement `cityborn`, sans slash final |
-| `RESTORE_B2_KEY_ID` | Identifiant d'une clé B2 autorisée à lire et lister les sauvegardes |
-| `RESTORE_B2_APPLICATION_KEY` | Valeur secrète de cette clé B2 |
-| `RESTORE_PRODUCTION_PROJECT_REF` | Référence technique du projet Supabase de production |
-| `RESTORE_PRODUCTION_DB_URL` | URL PostgreSQL complète de la base de production |
-| `RESTORE_PRODUCTION_SSL_ROOT_CERT` | Chemin absolu du certificat CA Supabase sur le poste |
+```dotenv
+RESTORE_PRODUCTION_PROJECT_REF=reference_du_projet_production
+RESTORE_PRODUCTION_DB_URL="postgresql://postgres.reference_du_projet_production:MOT_DE_PASSE_ENCODE@aws-REGION.pooler.supabase.com:5432/postgres"
+RESTORE_PRODUCTION_SSL_ROOT_CERT=/chemin/absolu/prod-ca-2021.crt
+```
 
-Pour staging, renseigner les variables équivalentes `RESTORE_STAGING_PROJECT_REF`,
-`RESTORE_STAGING_DB_URL` et `RESTORE_STAGING_SSL_ROOT_CERT`. Les accès des deux
-environnements peuvent coexister ; `--target` choisit la connexion utilisée.
+Copier l'URL réelle depuis Supabase : connexion directe ou pooler **Session, port 5432**. Encoder les caractères spéciaux du mot de passe dans l'URL et ne pas ajouter de paramètres SSL : le script impose `verify-full` et le certificat indiqué. Télécharger le certificat depuis les paramètres SSL de la base.
 
-**La cible ne choisit pas la provenance du backup.** Le bucket et le préfixe restent
-ceux des variables `RESTORE_B2_*`. Vérifier qu'ils contiennent les sauvegardes de
-la base à restaurer.
+Le chemin du certificat doit être absolu et accessible depuis le terminal utilisé : `/Users/nom/certificats/prod-ca-2021.crt` sur macOS ou `/home/nom/certificats/prod-ca-2021.crt` sous Ubuntu. Depuis WSL, un fichier Windows situé dans `C:\Users\nom\Downloads` est accessible sous `/mnt/c/Users/nom/Downloads` ; on peut le copier dans le dossier personnel Linux. Renseigner le chemin complet dans `.env.restore`, sans `~` ni `$HOME`.
 
-Mettre les valeurs sensibles entre guillemets. Les variables déjà définies dans le
-terminal ont priorité sur ce fichier. Le `.env` habituel du backend n'est pas chargé.
-Une valeur requise manquante est demandée au lancement ; l'URL PostgreSQL et la clé
-secrète B2 sont masquées lors de leur saisie.
+Le fichier `.env.restore` est ignoré par Git. Les anciens paramètres `RESTORE_B2_*` ne sont plus utilisés par le script ; l'outil `b2` possède sa propre authentification. Pour un contrôle à blanc uniquement, les accès Supabase ne sont pas nécessaires.
 
-### Retrouver les informations nécessaires
+## 2. Télécharger et contrôler la sauvegarde
 
-**Backblaze**
+### Choisir l'archive
 
-1. Dans **B2 Cloud Storage → Buckets**, relever le nom du bucket et son **S3 Endpoint**.
-   Ajouter `https://` devant l'endpoint dans la configuration.
-2. Dans **App Keys**, utiliser une clé avec les droits **Read Only**, incluant la
-   lecture et la liste des fichiers du bucket/préfixe concerné.
-3. Reporter le `keyID` et l'`applicationKey` dans les variables correspondantes.
-   L'`applicationKey` n'est affichée qu'à sa création : si aucune clé de lecture
-   n'est disponible dans le coffre de l'équipe, en créer une depuis le compte
-   Backblaze autorisé et l'y enregistrer. La clé d'envoi des backups peut rester distincte.
+Dans **Browse Files → cityborn-backups**, choisir la date voulue sous `cityborn/daily/`, `cityborn/weekly/` ou `cityborn/pre-migration/`. Pour prendre le dernier backup, comparer les horodatages des noms d'archives dans ces catégories ; le suffixe `Z` indique une heure UTC. Relever le chemin complet de l'archive dans le bucket, par exemple `cityborn/daily/2026/09/16/cityborn-postgres-20260916T065536Z.tar.gz`, et vérifier la présence du fichier `.tar.gz.sha256` associé.
 
-**Supabase**
+**Télécharger avec l'outil `b2`.** Lors du test Cityborn, le bouton web refusait les fichiers chiffrés SSE-B2, même un par un, avec le message « les fichiers chiffrés ne sont pas téléchargés via l'interface utilisateur sur le web ». L'outil accède à ces fichiers avec la clé d'application autorisée ; Backblaze gère leur déchiffrement. Le bucket reste privé et chiffré ([documentation Backblaze](https://www.backblaze.com/docs/cloud-storage-server-side-encryption)).
 
-1. Depuis le projet cible, récupérer l'URL PostgreSQL du **Session Pooler**, sur le
-   **port 5432**. Le pooler transactionnel sur le port 6543 est refusé.
-2. Relever la référence du projet dans l'identifiant `postgres.<project_ref>` de
-   l'URL et renseigner la même valeur dans `PROJECT_REF`.
-3. Télécharger le certificat public dans **Database Settings → SSL Configuration →
-   Download Certificate**. Le conserver sur le poste et renseigner son chemin absolu,
-   par exemple `/chemin/absolu/certificats/supabase-ca.crt`.
+### S'authentifier et télécharger les deux fichiers
 
-La commande exige la base `postgres`, le rôle effectif `postgres`, PostgreSQL 16 ou
-17 et une connexion TLS avec vérification du certificat et du nom du serveur
-(`verify-full`). L'accès au tableau de bord n'est pas nécessaire à l'exécution si
-l'URL, la référence et le certificat ont déjà été fournis.
-
-Dans le mot de passe de l'URL, encoder les caractères réservés : `@` en `%40`,
-`:` en `%3A`, `/` en `%2F`. Le `@` séparant les identifiants de l'hôte reste un
-séparateur ; ne pas ajouter de barre oblique inverse devant lui.
-
-## 2. Restaurer la production
-
-### Étape 1 — Choisir et vérifier la sauvegarde
-
-Identifier une sauvegarde de production antérieure à l'incident et une version du
-code compatible avec son schéma. Puis lancer :
+Les commandes sont identiques dans Terminal sur macOS et dans Ubuntu sous Windows. Depuis la racine du dépôt :
 
 ```bash
-pnpm db:restore --target production --check-only
+b2 account authorize
 ```
 
-Le terminal affiche un menu numéroté de toutes les sauvegardes disponibles dans B2,
-des plus récentes aux plus anciennes, toutes catégories confondues (`daily`,
-`weekly`, `pre-migration`). Saisir le numéro choisi, ou `q` pour annuler.
-Les dates contenues dans les noms de fichiers sont en UTC.
+Saisir successivement **Application Key ID** et **Application Key**, uniquement leurs valeurs. Utiliser la clé de lecture obtenue auprès du responsable des accès. Les anciennes valeurs `RESTORE_B2_KEY_ID` et `RESTORE_B2_APPLICATION_KEY`, si elles sont encore présentes et valides dans le fichier local, peuvent servir à cette saisie. La sortie de l'outil peut afficher la clé et le jeton : ne pas la partager ni la joindre à une PR ([authentification B2](https://b2-command-line-tool.readthedocs.io/en/stable/subcommands/account_authorize.html)).
 
-Le script télécharge l'archive et son fichier SHA-256, vérifie leur intégrité,
-restaure le backup dans un PostgreSQL local isolé, puis contrôle la connexion et
-les objets pris en charge sur la cible. **Avec `--check-only`, aucune donnée distante
-n'est modifiée.**
-
-Attendre une fin sans erreur et le message commençant par :
-
-```text
-Contrôle uniquement : connexion et objets pris en charge vérifiés, aucune écriture distante.
-```
-
-Conserver le chemin complet affiché après `Backup :`, le SHA-256 et l'identifiant
-de session. Le chemin du fichier est appelé « clé B2 » dans le script ; il est
-distinct des identifiants d'accès Backblaze.
-
-Dans le même terminal, remplacer le texte entre guillemets ci-dessous par ce chemin :
+Dans le bloc suivant, **remplacer la valeur de `backup_key` par le chemin exact retenu**, puis exécuter les commandes une par une. Le dossier `backups/` est ignoré par Git :
 
 ```bash
-RESTORE_BACKUP_KEY='COLLER_ICI_LE_CHEMIN_COMPLET_AFFICHE_APRES_BACKUP'
+backup_key='cityborn/daily/YYYY/MM/DD/cityborn-postgres-YYYYMMDDTHHMMSSZ.tar.gz'
+archive="./backups/$(basename "$backup_key")"
+mkdir -p backups
+b2 file download "b2://cityborn-backups/$backup_key" "$archive"
+b2 file download "b2://cityborn-backups/$backup_key.sha256" "$archive.sha256"
 ```
 
-Cette valeur fixe le backup à utiliser pour le remplacement, même si une nouvelle
-sauvegarde est publiée entre les commandes. Les dépendances externes seront
-également contrôlées lors de la transaction de restauration.
+Attendre la réussite de **chaque** téléchargement avant de continuer. Conserver les noms et les deux fichiers dans le même dossier, sans décompresser l'archive. Utiliser uniquement les sauvegardes issues du workflow Cityborn : une archive SQL contient du code exécuté lors de sa restauration. Voir la [commande de téléchargement B2](https://b2-command-line-tool.readthedocs.io/en/stable/subcommands/file_download.html).
 
-### Étape 2 — Mettre les services en maintenance
+### Contrôler localement
 
-1. Arrêter les écritures du backend et des éventuels workers ou autres clients de
-   la base. Une fermeture du frontend seule ne suffit pas.
-2. Suspendre les déploiements et migrations automatiques pendant l'intervention.
-3. Préparer la version de l'application à utiliser après restauration.
-
-Ces actions sont effectuées par la personne responsable de l'intervention.
-Le script demande une confirmation de maintenance, mais n'arrête pas les services.
-
-### Étape 3 — Lancer le remplacement
-
-Utiliser le chemin conservé à l'étape 1 :
+Dans le même terminal, lancer le contrôle à blanc, sans cible :
 
 ```bash
-pnpm db:restore "$RESTORE_BACKUP_KEY" --target production
+pnpm db:restore "$archive"
 ```
 
-Le script répète les vérifications du backup. Contrôler la ligne `Cible vérifiée` :
-elle doit indiquer `production` et la référence du projet attendu.
+La variable `archive` sera réutilisée pour la restauration distante. Si le terminal a été fermé, la redéfinir avec le chemin du fichier téléchargé, par exemple `archive='./backups/cityborn-postgres-20260916T065536Z.tar.gz'`, depuis la racine du dépôt.
 
-Deux confirmations sont demandées. **Recopier exactement les phrases affichées par
-le terminal** ; les valeurs entre chevrons ci-dessous décrivent leur format.
+Le script contrôle le SHA-256 et le contenu de l'archive, crée un PostgreSQL jetable isolé, restaure les fichiers, vérifie les migrations et les clés étrangères, puis affiche le nombre de lignes de chaque table. La réussite se termine par **« Contrôle à blanc réussi. Aucune connexion distante. »**. Le conteneur et les fichiers temporaires sont supprimés.
 
-**Première confirmation — services en maintenance :**
+Comparer la date et les comptages au point de restauration attendu. Un contrôle réussi confirme la restauration locale ; il ne valide pas encore les droits, extensions et dépendances spécifiques de la cible distante.
 
-```text
-MAINTENANCE production <project_ref>
-```
+## 3. Mettre la production en maintenance
 
-Le script sauvegarde l'état actuel de `public` dans
-`.restore-safety/<session>/before.dump`, vérifie que cette archive est lisible et
-enregistre son SHA-256, une version SQL et l'identité de la cible. Un échec bloque
-le remplacement. Cette copie de secours reste sur le poste de l'intervention ;
-elle n'est pas envoyée automatiquement dans B2.
+Le responsable de l'environnement arrête les accès en écriture : backend, workers, tâches planifiées, migrations et déploiements automatiques. Aucun de ces services ne doit écrire entre la sauvegarde de sécurité et la fin des vérifications. Préparer le code compatible avant de continuer.
 
-**Seconde confirmation — remplacement par le backup sélectionné :**
-
-```text
-RESTORE production <project_ref> <nom_du_backup.tar.gz>
-```
-
-Le remplacement et les contrôles des relations, de l'historique Prisma et des
-nombres de lignes sont effectués dans une seule transaction. Une erreur SQL annule
-les modifications de cette transaction.
-
-### Étape 4 — Vérifier le résultat et reprendre le service
-
-Attendre le message :
-
-```text
-Restauration distante validée techniquement.
-```
-
-En cas d'erreur ou de coupure réseau, suivre la section [En cas d'échec](#4-en-cas-déchec)
-avant toute nouvelle tentative.
-
-**Avant de redémarrer le backend, vérifier la version du code :** les commandes
-`start` et `start:prod` exécutent automatiquement les migrations Prisma. Une version
-incompatible pourrait réappliquer la migration à l'origine de l'incident.
-
-Effectuer les vérifications fonctionnelles avec cette version compatible et un
-accès de test contrôlé :
-
-- Confirmer que le backend utilisé est relié au projet Supabase restauré.
-- Se connecter avec un compte présent dans la sauvegarde.
-- Vérifier le profil et les données attendues.
-- Effectuer une partie de test, puis vérifier sa présence dans l'historique après
-  actualisation de la page.
-
-Le endpoint de santé actuel ne consulte pas la base ; utiliser les parcours
-applicatifs pour valider le fonctionnement. Après validation, reprendre le trafic
-et les workers, puis les déploiements et migrations compatibles.
-
-Consigner dans le compte rendu d'intervention la date, la cible, la version du code,
-le chemin du backup, le SHA-256, la session et le résultat des vérifications,
-sans y inclure les secrets.
-
-### Étape 5 — Nettoyer les fichiers temporaires
-
-Reprendre l'identifiant de session affiché par la commande :
+## 4. Remplacer la base
 
 ```bash
-pnpm db:restore:cleanup restore-XXXXXX
+pnpm db:restore "$archive" --target production
 ```
 
-Remplacer `restore-XXXXXX` par cet identifiant, puis saisir la confirmation affichée :
+La commande refait la validation locale, vérifie que l'URL correspond à la référence de projet configurée, puis affiche le projet, l'hôte, la base et le rôle réellement connectés. Elle sauvegarde l'état courant de `public` dans `.restore-safety/<date-identifiant>/before.dump`, accompagné d'un checksum et d'un fichier d'identité.
 
-```text
-DELETE restore-XXXXXX
-```
+Vérifier la cible et la date du backup, puis saisir **exactement la phrase affichée** pour autoriser le remplacement. Toute autre réponse annule l'opération. La sauvegarde de sécurité est conservée, même en cas d'annulation.
 
-Le nettoyage supprime le conteneur PostgreSQL local, son volume et les fichiers de
-cette session. La base distante et les fichiers de `.restore-safety/` sont conservés.
-Chaque commande crée sa propre session : nettoyer séparément celles du précontrôle,
-de la restauration et des diagnostics lorsqu'elles ne sont plus utiles.
+Les suppressions, la restauration, les droits et les vérifications de comptage s'exécutent dans une seule transaction. Une erreur SQL avant le commit annule ces modifications. Attendre **« Restauration validée et transaction commitée »** avant de passer aux vérifications applicatives.
 
-Conserver la sauvegarde de secours jusqu'à résolution de l'incident. Les archives
-et logs locaux sont confidentiels ; ils ne doivent pas être joints à une PR.
+En cas d'erreur, consulter le chemin local `error.log` affiché. Il peut contenir des informations confidentielles : ne pas le publier. Si la connexion est perdue au moment du commit, faire vérifier l'état effectif de la base avant de relancer. Garder les services arrêtés et conserver `before.dump` ; ce fichier est un dump PostgreSQL de secours, pas une archive acceptée par `db:restore`. Son utilisation exige une intervention du responsable de la base, après analyse de l'incident.
 
-## 3. Tester sur staging
+## 5. Vérifier et reprendre
 
-Suivre les mêmes étapes avec les variables `RESTORE_STAGING_*` et la cible `staging`.
-L'exercice remplace les données applicatives de cette base : prévoir sa maintenance
-et utiliser une version de l'application compatible avec le backup choisi.
+Redémarrer la version compatible du backend pour les vérifications, en gardant l'accès des utilisateurs et les workers suspendus. Vérifier la connexion avec un compte existant, le chargement des catégories et lieux, puis le déroulement et l'enregistrement d'une partie de test. Contrôler les logs du backend.
 
-Commencer par le choix et le contrôle :
+Si les vérifications réussissent, rouvrir les accès et reprendre les workers. Consigner la date, la cible, le nom et le SHA-256 du backup, le résultat des contrôles et l'emplacement de la sauvegarde de sécurité. Conserver cette dernière selon la politique de rétention de l'équipe ; le script ne la supprime jamais.
+
+## Exercice sur staging
+
+Renseigner `RESTORE_STAGING_PROJECT_REF`, `RESTORE_STAGING_DB_URL` et `RESTORE_STAGING_SSL_ROOT_CERT` dans le même fichier `.env.restore`, avec les accès propres au projet staging. Suivre les mêmes étapes de téléchargement, de contrôle local et d'arrêt des écritures, puis lancer :
 
 ```bash
-pnpm db:restore --target staging --check-only
+pnpm db:restore "$archive" --target staging
 ```
 
-Conserver le chemin du backup dans `RESTORE_BACKUP_KEY`, comme à l'étape 1, puis
-appliquer les étapes de maintenance et de restauration :
+Vérifier que l'identité et la phrase de confirmation affichent `staging` et la référence du projet attendu. Cette commande remplace les données applicatives de staging et conserve sa sauvegarde de sécurité. Effectuer les vérifications applicatives avant de reprendre les écritures.
+
+## Tests du script
 
 ```bash
-pnpm db:restore "$RESTORE_BACKUP_KEY" --target staging
-```
-
-Les confirmations affichent alors `staging` et la référence de ce projet.
-Effectuer les contrôles applicatifs, consigner leur résultat et nettoyer les sessions
-selon la même procédure. Cet exercice permet de vérifier les accès et la prise en
-main sur le poste d'un nouvel intervenant.
-
-## 4. En cas d'échec
-
-La commande affiche le chemin d'un log local dans `.restore-sessions/<session>/`.
-Le consulter pour identifier l'erreur exacte, en conservant la confidentialité de
-son contenu.
-
-| Situation | Action |
-| --- | --- |
-| B2 `AccessDenied` ou `NoSuchKey` | Vérifier les droits de lecture/liste, le bucket, le préfixe et la présence du fichier avec `pnpm db:restore:list` |
-| Bucket ou endpoint invalide | Vérifier le nom du bucket et le format `https://s3.<region>.backblazeb2.com`, sans slash final |
-| Archive incomplète ou checksum incorrect | Contrôler le workflow de sauvegarde et choisir une archive complète et fiable |
-| Connexion ou certificat refusé | Vérifier le projet, le port 5432, le mot de passe encodé et le chemin du certificat correspondant à la cible ; conserver la vérification TLS |
-| Objet ou déclencheur non pris en charge | Utiliser le diagnostic ci-dessous ; faire adapter la procédure aux objets identifiés avant de relancer |
-| Migration inachevée ou références incohérentes | Choisir un backup cohérent ou résoudre l'incohérence avant de reprendre la restauration |
-| Sauvegarde de secours impossible | Corriger l'erreur de connexion, de permissions ou d'espace disque indiquée dans le log ; le remplacement n'a pas commencé |
-| Erreur SQL pendant le remplacement | Les modifications de la transaction sont annulées ; conserver la maintenance, analyser le log et la sauvegarde de secours |
-| Coupure réseau ou interruption pendant le remplacement | Maintenir la maintenance et vérifier l'état de la cible avant de relancer : la transaction peut avoir été validée sans que le terminal ait reçu la réponse |
-
-### Diagnostiquer les publications et déclencheurs
-
-```bash
-pnpm db:restore:diagnose --target production
-```
-
-Utiliser `--target staging` pour un incident sur staging. La commande consulte
-uniquement les métadonnées PostgreSQL en lecture seule : publications, tables
-concernées, déclencheurs, fonctions et propriétaires. Elle ne télécharge aucun backup.
-Le résultat est affiché et conservé dans `diagnostic.json` dans le dossier de session.
-
-Les déclencheurs système Supabase reconnus par le script sont conservés, notamment
-`issue_pg_graphql_access` sur `CREATE FUNCTION` et les watchers PostgREST. Une
-publication `supabase_realtime` vide est également acceptée. Toute adaptation doit
-préserver les contrôles sur les autres objets ; voir le
-[précontrôle SQL](../scripts/database-backup/restore-public.sql).
-
-### Utiliser la sauvegarde de secours
-
-`before.dump` représente l'état de `public` juste avant le remplacement. Sa remise
-en place n'est pas automatisée par `db:restore`, qui attend une archive B2 au format
-Cityborn. Préparer une procédure adaptée à l'état constaté avec la personne
-responsable de la base. Ne pas exécuter directement `before.sql` ou
-`pg_restore --clean` sur la base existante.
-
-## 5. Autres commandes utiles
-
-| Besoin | Commande |
-| --- | --- |
-| Afficher l'aide | `pnpm db:restore --help` |
-| Lister toutes les sauvegardes | `pnpm db:restore:list` |
-| Lister les sauvegardes hebdomadaires | `pnpm db:restore:list --kind weekly` |
-| Choisir et restaurer uniquement en local | `pnpm db:restore` |
-| Contrôler le dernier backup quotidien sur staging | `pnpm db:restore latest --target staging --check-only` |
-| Limiter le menu aux backups avant migration | `pnpm db:restore --kind pre-migration --target staging --check-only` |
-
-Sans `--target`, la restauration reste locale. Le menu propose tous les backups
-disponibles, sans nombre maximal prédéfini. Un backup sans fichier SHA-256 ne peut
-pas être sélectionné, et une saisie vide ne choisit pas de backup.
-
-Un nom de fichier seul et `latest` utilisent la catégorie `daily` par défaut ;
-`--kind` permet de choisir une autre catégorie. Un chemin B2 complet désigne sa
-propre catégorie. Si le dernier backup est incomplet, `latest` s'arrête : il ne
-sélectionne pas automatiquement un fichier plus ancien.
-
-## 6. Maintenance des sauvegardes et des scripts
-
-### Production des backups
-
-Le workflow [Database backup](../.github/workflows/database-backup.yml) appelle
-[create.sh](../scripts/database-backup/create.sh) pour exporter les rôles, le schéma
-et les données SQL. Il envoie une archive `.tar.gz` et son fichier `.sha256` dans B2.
-
-- Les exécutions sont programmées à **03 h 53 et 15 h 53, Europe/Paris**. GitHub peut
-  retarder leur démarrage.
-- Le second lancement programmé du dimanche produit aussi une copie `weekly`.
-- Pour déclencher un backup : **GitHub → Actions → Database backup → Run workflow**,
-  sélectionner `main`, puis `daily` ou `pre-migration`. Vérifier le succès du workflow.
-
-La source est définie par `SUPABASE_PROD_DB_URL` dans l'environnement GitHub
-`database-backup-production`. La destination utilise les variables `B2_PROD_BUCKET_NAME`,
-`B2_PROD_ENDPOINT`, `B2_PROD_REGION`, `B2_PROD_PREFIX` et les secrets
-`B2_PROD_UPLOAD_KEY_ID`, `B2_PROD_UPLOAD_APPLICATION_KEY`.
-Lors de la configuration ou d'un changement de projet, vérifier que la source
-correspond bien à la production. Ces accès d'envoi ne sont pas récupérés automatiquement
-par les commandes de restauration.
-
-La rétention se configure dans **Backblaze → Bucket → Lifecycle Settings**.
-La politique prévue masque `daily` après 7 jours et `weekly` après 28 jours,
-puis supprime les fichiers un jour plus tard. Vérifier les règles effectives dans B2 :
-elles ne sont pas gérées par le dépôt. Définir séparément la rétention des sauvegardes
-`pre-migration` selon les besoins de l'équipe.
-
-### Vérifier une modification des scripts
-
-```bash
+pnpm db:test:start
 pnpm db:restore:test
-pnpm db:restore:test:int
 ```
 
-La première commande vérifie les types et exécute les tests unitaires. La seconde
-exécute aussi les tests de restauration dans un Docker jetable, sans réseau ni
-connexion aux bases staging et production.
+La suite `apps/backend/test/integration/database-restore.integration.spec.ts` utilise Jest et le harnais d'intégration du backend, dont PostgreSQL et Redis doivent être démarrés avec `db:test:start`. `db:restore:test` sélectionne cette suite ; `pnpm test:int` exécute l'ensemble des tests d'intégration.
 
-Les tests couvrent notamment le remplacement transactionnel, l'annulation après
-erreur SQL, les dépendances externes, les droits/RLS, les migrations, les séquences,
-les déclencheurs Supabase, la conservation d'Auth et PostGIS et un import supérieur
-à 64 Mio. Après une modification du parcours de restauration, effectuer également
-un essai sur staging et consigner le résultat dans la PR.
+Les opérations destructives utilisent un PostgreSQL Docker jetable supplémentaire, sans port exposé, distinct de la base partagée du harnais. La suite couvre le remplacement, la conservation des objets d'extension et des droits, le rollback sur erreur SQL ou de comptage, le refus d'une dépendance externe, le rôle sans privilèges superutilisateur, le contrôle local d'une archive et le rejet d'un checksum incorrect. Le conteneur supplémentaire est supprimé après les tests ; `pnpm db:test:stop` arrête les services du harnais quand ils ne sont plus nécessaires.
 
-### Références
+Avant de livrer une évolution de ce script, suivre l'étape 2 avec une véritable sauvegarde de production et consigner son nom, son SHA-256 et les comptages obtenus. Un ancien test de restauration effectué avec un autre script ne valide pas cette version.
 
-- [Connexion PostgreSQL et certificat Supabase](https://supabase.com/docs/guides/database/psql)
-- [Export et restauration Supabase](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
-- [Archives PostgreSQL et pg_restore](https://www.postgresql.org/docs/16/app-pgrestore.html)
-- [Clés d'application Backblaze](https://www.backblaze.com/docs/en/cloud-storage-application-keys)
+### Validation manuelle du 16 septembre 2026
 
-La procédure de remplacement de `public` décrite ici est propre aux scripts Cityborn.
-La procédure Supabase citée en référence décrit notamment la restauration dans un
-nouveau projet.
+- Poste : macOS ; cible : Supabase staging, PostgreSQL 17.4.
+- Archive : `cityborn/daily/2026/09/16/cityborn-postgres-20260916T065536Z.tar.gz`.
+- SHA-256 : `327b911cce16c8abdb1d160b776cde22c4e041c0b94cf75a3a43cfcd01907ac8`.
+- Téléchargement par `b2`, contrôle à blanc, sauvegarde de sécurité et remplacement distant : réussis. Comptages de référence : 83 utilisateurs, 590 parties, 33 migrations.
+- Tests fonctionnels de l'application staging : réussite confirmée par l'opérateur après restauration.
+- Parcours Windows/WSL2 documenté, à valider sur un poste Windows avant de le considérer comme testé.
+
+Références : [pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html), [vérification TLS PostgreSQL](https://www.postgresql.org/docs/17/libpq-ssl.html).

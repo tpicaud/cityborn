@@ -11,3 +11,4 @@ redis-data
 !/apps/backend/.env.restore.example
 /.restore-sessions/
 /.restore-safety/
+/backups/

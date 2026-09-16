@@ -27,9 +27,7 @@
 
 ## Sauvegardes et restauration
 
-Voir la [procédure de backup et de rollback Supabase](../../docs/database-backup.md)
-pour les commandes `pnpm db:restore:list`, `pnpm db:restore` et
-`pnpm db:restore:cleanup`, les essais staging et la restauration en production.
+La [procédure opérateur](../../docs/database-backup.md) décrit le téléchargement du backup, le contrôle à blanc et la restauration en production avec `pnpm db:restore`.
 
 ## Project setup
 
