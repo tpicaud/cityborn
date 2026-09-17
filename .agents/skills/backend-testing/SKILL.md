@@ -29,4 +29,6 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 
 ## Intégration et e2e
 
+En intégration, créer un fichier par repository ou adaptateur testé. Tester séparément, par service, les transactions qui coordonnent plusieurs repositories ; les autres services restent couverts au tier unitaire pour leurs branches métier.
+
 Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md).
