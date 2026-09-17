@@ -8,3 +8,7 @@ redis-data
 .env*
 !.env.example
 !.env.sample
+!/apps/backend/.env.restore.example
+/.restore-sessions/
+/.restore-safety/
+/backups/

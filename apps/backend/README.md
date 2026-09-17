@@ -25,6 +25,10 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Sauvegardes et restauration
+
+La [procédure opérateur](../../docs/database-backup.md) décrit le téléchargement du backup, le contrôle à blanc et la restauration en production avec `pnpm db:restore`.
+
 ## Project setup
 
 ```bash
