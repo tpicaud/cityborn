@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { commonErrorResponses } from '../schemas/api-error.schema';
 import { GuessObjectSearchResultsSchema } from '../schemas/guess-object.schema';
 import { WorldLocationSearchResultsSchema } from '../schemas/world-location.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -34,5 +35,5 @@ export const searchAdminContract = c.router(
       },
     },
   },
-  { pathPrefix: '/search' },
+  { pathPrefix: '/search' satisfies `/${ApiDomain}` },
 );

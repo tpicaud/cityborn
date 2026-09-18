@@ -14,6 +14,7 @@ import {
   UserSchema,
   VerifyEmailDataSchema,
 } from '../schemas/user.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -73,5 +74,5 @@ export const authContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/auth' },
+  { pathPrefix: '/auth' satisfies `/${ApiDomain}` },
 );

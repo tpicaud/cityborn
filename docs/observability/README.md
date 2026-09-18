@@ -41,6 +41,8 @@ Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-ev
 - **Rate limit** — `rateLimitBucket`, `rateLimitStatus`, `rateLimitRemaining`
 - **Pino** — `_time` (horodatage natif Axiom, issu de `time`), `level`, `msg`, `pid`, `hostname`
 
+`domain` vient de `API_DOMAINS` (`@cityborn/api`), le vocabulaire qui contraint les `pathPrefix` des contrats ts-rest : une route ou un event WS y est rattaché par son premier segment, `infrastructure` couvre le hors-contrat écrit à la main et `other` le reste. Ajouter un domaine passe donc par `API_DOMAINS`, jamais par le backend seul.
+
 Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide events sont toujours `info`, `warn` ou `error`.
 
 ## Requêtes et alertes
