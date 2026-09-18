@@ -67,6 +67,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 | `pnpm --dir packages/api test` | tests de compatibilité OpenAPI |
 | `pnpm db:start` / `db:migrate` / `db:reset` | DB locale (Docker + Prisma) ; lance aussi Redis (`localhost:6379`) + RedisInsight (`localhost:5540`) |
 | `./scripts/setup-worktree.sh [chemin] [--skip-install]` | prépare un worktree : copie les `.env` du checkout principal puis `pnpm install` (commande `/setup-worktree`) |
+| `./scripts/cleanup-worktree.sh [chemin] [--force]` | supprime un worktree terminé, purge les entrées de worktrees disparus et remet le checkout principal sur `main` (commande `/cleanup-worktree`) |
 
 ### Stratégie de vérification
 
