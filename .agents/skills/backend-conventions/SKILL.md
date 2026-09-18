@@ -29,4 +29,4 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier la 
 
 ## Observabilité
 
-Pour modifier les logs HTTP/WS, le contexte CLS, le filtre d'erreurs, le lifecycle WS ou les wide events, lire [la référence d'observabilité](references/observability.md).
+Pour enrichir un wide event, remonter une erreur, instrumenter une gateway, ajouter un domaine ou toucher au contexte CLS, au filtre d'erreurs ou au lifecycle WS, lire [la référence d'observabilité](references/observability.md).

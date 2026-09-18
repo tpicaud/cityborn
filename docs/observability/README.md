@@ -1,61 +1,48 @@
 # Observabilité — drain Axiom
 
-Le backend émet un wide event par requête HTTP, message WS, connexion et
-déconnexion (voir la référence d'observabilité du skill `backend-conventions`).
-Ces événements partent sur stdout — donc dans les logs Railway — et, quand la
-configuration Axiom est présente, sont drainés en parallèle vers Axiom pour la
-rétention longue et l'agrégation.
+Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours sur stdout — donc dans Railway, qui reste le filet — et vers Axiom quand il est configuré. Construction des events : [référence d'observabilité](../../.agents/skills/backend-conventions/references/observability.md).
 
 ## Configuration
 
-| Variable | Rôle |
+| Variable | Valeur |
 |---|---|
-| `AXIOM_TOKEN` | token d'API Axiom avec le droit d'ingestion sur le dataset |
-| `AXIOM_DATASET` | dataset cible (`cityborn-backend-staging`, `cityborn-backend-prod`) |
+| `AXIOM_TOKEN` | token d'API, permission `ingest`, restreint au dataset |
+| `AXIOM_DATASET` | `cityborn-backend-staging`, `-prod`, `-dev` |
 
-Les deux variables sont requises : [`logger.params.ts`](../../apps/backend/src/common/logger/logger.params.ts)
-n'ajoute la cible Axiom que si elles sont toutes les deux définies. En
-développement local et dans les tests, aucune des deux n'est renseignée et le
-comportement des logs reste inchangé.
+Sans les deux, [`logger.params.ts`](../../apps/backend/src/common/logger/logger.params.ts) n'ajoute pas la cible Axiom et rien d'autre ne change. En local elles vont dans `apps/backend/.env` : `main.ts` précharge `dotenv/config` avant `AppModule`, sans quoi `logger.params` lirait l'environnement trop tôt.
 
-L'ingestion est épinglée sur le domaine edge EU `eu-central-1.aws.edge.axiom.co`,
-via l'option `edge` du transport comme le prescrit la [doc Axiom](https://axiom.co/docs/guides/pino) :
-les wide events portent des données personnelles (`ip`, `userAgent`, `userId`),
-le compte et les datasets doivent donc être provisionnés sur la région EU.
+## Provisionnement
 
-La `redact` de pino s'applique dans le thread principal, avant la sérialisation
-vers les transports : les champs masqués ne quittent jamais le process en clair.
+- S'inscrire sur **`app.eu.axiom.co`**, pas `app.axiom.co` : pas de migration entre régions, et les events portent `ip`, `userAgent`, `userId`.
+- Un dataset et un token par environnement.
+- Ingestion sur `eu-central-1.aws.edge.axiom.co` via l'option `edge` ([doc Axiom](https://axiom.co/docs/guides/pino)) ; `url` ne sert qu'aux opérations hors ingestion, que le transport ne fait jamais.
 
-## Cibles de transport
+## Cibles
 
-- **stdout** — toujours active. En production, écriture directe sans transport
-  tant qu'Axiom n'est pas configuré ; sinon cible `pino/file` sur le descripteur
-  1. En dehors de la production, `pino-pretty`. Les logs Railway restent le
-  filet en cas d'indisponibilité du drain.
-- **Axiom** — cible additionnelle `@axiomhq/pino`. Le transport tourne dans un
-  worker thread : une panne d'ingestion n'interrompt ni la requête ni stdout.
+| `NODE_ENV` | Axiom | stdout | drain |
+|---|---|---|---|
+| `production` | non | écriture directe, sans worker | — |
+| `production` | oui | `pino/file` sur le fd 1 | `@axiomhq/pino` |
+| autre | non | `pino-pretty` | — |
+| autre | oui | `pino-pretty` | `@axiomhq/pino` |
 
-## Champs des wide events
+Le drain tourne dans un worker : une panne d'ingestion n'interrompt ni la requête ni stdout. La `redact` s'applique dans le thread principal, avant tout envoi.
 
-Le contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts)
-et toute requête, où qu'elle vive. Renommer un champ ici oblige à reprendre les
-requêtes sauvegardées, les dashboards et les monitors côté Axiom, qu'aucun
-`grep` n'atteint.
+## Champs
 
-Communs : `event` (`http_request` | `ws_message` | `ws_connection` |
-`ws_disconnection`), `transport`, `requestId`, `domain`, `operation`,
-`outcome`, `statusCode`, `durationMs`, `level`, `ip`, `userAgent`, `visitorId`,
-`client`, `clientVersion`.
+Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom, qu'aucun `grep` n'atteint : renommer ici oblige à reprendre dashboards et monitors.
 
-HTTP : `method`, `route`, `apiVersion`.
-WS : `kind`, `eventName`, `socketId`.
-Auth : `isAuthenticated`, `userId`.
-Métier : `sessionId`, `playerId`, `gameId`.
-Erreur : `errorCode`, `errorMessage`, `errorStack`, `errorCauses`.
-Rate limit : `rateLimitBucket`, `rateLimitStatus`, `rateLimitRemaining`.
+- **Communs** — `event` (`http_request` | `ws_message` | `ws_connection` | `ws_disconnection` | `operation_error`), `transport`, `requestId`, `domain`, `operation`, `outcome`, `statusCode`, `durationMs`, `ip`, `userAgent`, `visitorId`, `client`, `clientVersion`
+- **HTTP** — `method`, `route`, `apiVersion`
+- **WS** — `kind`, `eventName`, `socketId`
+- **Auth** — `isAuthenticated`, `userId`
+- **Métier** — `sessionId`, `playerId`, `gameId`
+- **Erreur** — `errorCode`, `errorMessage`, `errorStack`, `errorCauses`
+- **Rate limit** — `rateLimitBucket`, `rateLimitStatus`, `rateLimitRemaining`
+- **Pino** — `_time` (horodatage natif Axiom, issu de `time`), `level`, `msg`, `pid`, `hostname`
+
+Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide events sont toujours `info`, `warn` ou `error`.
 
 ## Requêtes et alertes
 
-Elles vivent dans Axiom — requêtes sauvegardées, dashboards et monitors. Le
-repo ne garde pas de copie du texte APL : Axiom en est propriétaire, une copie
-ici dériverait sans que rien ne le signale.
+Dans Axiom — requêtes sauvegardées, dashboards, monitors. Pas de copie du texte APL ici : elle dériverait en silence.
