@@ -2,6 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { commonErrorResponses } from '../schemas/api-error.schema';
 import { WorldLocationUuidIdSchema } from '../schemas/common.schema';
 import { CreateWorldLocationSchema } from '../schemas/world-location.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -14,5 +15,5 @@ export const worldLocationAdminContract = c.router(
       responses: { 201: WorldLocationUuidIdSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/world-location' },
+  { pathPrefix: '/world-location' satisfies `/${ApiDomain}` },
 );

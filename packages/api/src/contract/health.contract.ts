@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { commonErrorResponses } from '../schemas/api-error.schema';
 import { emptyResponseSchema } from '../schemas/common.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -12,5 +13,5 @@ export const healthContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/health' },
+  { pathPrefix: '/health' satisfies `/${ApiDomain}` },
 );

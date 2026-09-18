@@ -16,6 +16,7 @@ import {
   GuessObjectsSchema,
   PatchGuessObjectSchema,
 } from '../schemas/guess-object.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -67,5 +68,5 @@ export const guessObjectAdminContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/guess-object' },
+  { pathPrefix: '/guess-object' satisfies `/${ApiDomain}` },
 );

@@ -9,6 +9,7 @@ import {
   CategoryIdParamSchema,
   IncludeQuerySchema,
 } from '../schemas/common.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -33,5 +34,5 @@ export const categoryContract = c.router(
       responses: { 200: CategoriesSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/category' },
+  { pathPrefix: '/category' satisfies `/${ApiDomain}` },
 );

@@ -6,6 +6,7 @@ import {
 } from '../schemas/common.schema';
 import { GameSchema, GameStateSchema } from '../schemas/game.schema';
 import { CreateSessionSchema, SessionSchema } from '../schemas/session.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -54,5 +55,5 @@ export const sessionContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/session' },
+  { pathPrefix: '/session' satisfies `/${ApiDomain}` },
 );

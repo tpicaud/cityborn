@@ -8,6 +8,7 @@ export * from './src/builders/player.builder';
 export * from './src/builders/session.builder';
 export * from './src/builders/user.builder';
 export * from './src/builders/world-location.builder';
+export * from './src/contract/api-domain';
 export * from './src/contract/contract';
 export * from './src/errors/error-codes';
 export * from './src/errors/error-handler';

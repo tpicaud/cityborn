@@ -5,6 +5,7 @@ import {
   CreateGameRecordSchema,
   GameRecordsSchema,
 } from '../schemas/game.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -22,5 +23,5 @@ export const userContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/user' },
+  { pathPrefix: '/user' satisfies `/${ApiDomain}` },
 );

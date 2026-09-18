@@ -14,6 +14,7 @@ import {
   emptyResponseSchema,
   IncludeQuerySchema,
 } from '../schemas/common.schema';
+import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
@@ -63,5 +64,5 @@ export const categoryAdminContract = c.router(
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
-  { pathPrefix: '/category' },
+  { pathPrefix: '/category' satisfies `/${ApiDomain}` },
 );

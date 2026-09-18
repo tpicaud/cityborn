@@ -1,4 +1,9 @@
-import { type ErrorCode, getApiVersionInfo } from '@cityborn/api';
+import {
+  API_DOMAINS,
+  type ApiDomain,
+  type ErrorCode,
+  getApiVersionInfo,
+} from '@cityborn/api';
 import type { Request } from 'express';
 import { nanoid } from 'nanoid';
 import type { ErrorDiagnostic } from '../errors/exception-to-api-error';
@@ -114,21 +119,7 @@ export type WideEventBusinessContext = AtLeastOne<WideEventBusinessFields>;
 
 export type WideEventLevel = 'info' | 'warn' | 'error';
 
-export const WIDE_EVENT_DOMAINS = [
-  'auth',
-  'category',
-  'game',
-  'guess-object',
-  'health',
-  'infrastructure',
-  'search',
-  'sentence',
-  'session',
-  'user',
-  'world-location',
-] as const;
-
-export type WideEventDomain = (typeof WIDE_EVENT_DOMAINS)[number] | 'other';
+export type WideEventDomain = ApiDomain | 'infrastructure' | 'other';
 
 export type WideEventOutcome =
   | 'success'
@@ -192,7 +183,7 @@ function resolveRequestId(req: Request): string {
 }
 
 function domainFromSegment(segment: string | undefined): WideEventDomain {
-  return WIDE_EVENT_DOMAINS.find((domain) => domain === segment) ?? 'other';
+  return API_DOMAINS.find((domain) => domain === segment) ?? 'other';
 }
 
 export function deriveHttpDomain(route: string): WideEventDomain {
