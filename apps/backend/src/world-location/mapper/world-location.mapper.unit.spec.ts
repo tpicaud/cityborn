@@ -8,31 +8,33 @@ import type {
 } from '@prisma/client';
 import { WorldLocationMapper } from './world-location.mapper';
 
-const prismaWorldLocation = {
-  id: 'location-1',
-  osm_type: 'relation',
-  external_id: '7444',
-  name: 'Paris',
-  display_name: 'Paris, France',
-  addresstype: 'city',
-  centroid: [48.8566, 2.3522],
-  source: { provider: 'nominatim', external_id: '7444' },
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-} satisfies PrismaWorldLocation;
-
-const prismaWorldLocationGeometry = {
-  id: 'geometry-1',
-  data: { type: 'Point', coordinates: [2.3522, 48.8566] },
-  world_location_id: 'location-1',
-} satisfies PrismaWorldLocationGeometry;
-
 describe('WorldLocationMapper.toWorldLocation', () => {
   it('maps a persisted location with geometry', () => {
-    const location = WorldLocationMapper.toWorldLocation({
+    const prismaWorldLocation = {
+      id: 'location-1',
+      osm_type: 'relation',
+      external_id: '7444',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      centroid: [48.8566, 2.3522],
+      source: { provider: 'nominatim', external_id: '7444' },
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    } satisfies PrismaWorldLocation;
+
+    const prismaWorldLocationGeometry = {
+      id: 'geometry-1',
+      data: { type: 'Point', coordinates: [2.3522, 48.8566] },
+      world_location_id: 'location-1',
+    } satisfies PrismaWorldLocationGeometry;
+
+    const input = {
       ...prismaWorldLocation,
       geometry: prismaWorldLocationGeometry,
-    });
+    } satisfies Parameters<typeof WorldLocationMapper.toWorldLocation>[0];
+
+    const location = WorldLocationMapper.toWorldLocation(input);
 
     expect(() => WorldLocationSchema.parse(location)).not.toThrow();
     expect(location).toMatchObject({
@@ -45,7 +47,7 @@ describe('WorldLocationMapper.toWorldLocation', () => {
 
 describe('WorldLocationMapper.toWorldLocationFromNominatimItem', () => {
   it('maps strings, geometry and source identifiers', () => {
-    const location = WorldLocationMapper.toWorldLocationFromNominatimItem({
+    const input = {
       place_id: '1',
       osm_type: 'relation',
       osm_id: '7444',
@@ -55,7 +57,12 @@ describe('WorldLocationMapper.toWorldLocationFromNominatimItem', () => {
       display_name: 'Paris, France',
       addresstype: 'city',
       geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
-    });
+    } satisfies Parameters<
+      typeof WorldLocationMapper.toWorldLocationFromNominatimItem
+    >[0];
+
+    const location =
+      WorldLocationMapper.toWorldLocationFromNominatimItem(input);
 
     expect(() => WorldLocationSearchResultSchema.parse(location)).not.toThrow();
     expect(location).toMatchObject({
@@ -66,7 +73,7 @@ describe('WorldLocationMapper.toWorldLocationFromNominatimItem', () => {
   });
 
   it('omits an absent address type', () => {
-    const location = WorldLocationMapper.toWorldLocationFromNominatimItem({
+    const input = {
       place_id: '1',
       osm_type: 'relation',
       osm_id: '7444',
@@ -75,7 +82,12 @@ describe('WorldLocationMapper.toWorldLocationFromNominatimItem', () => {
       name: 'Paris',
       display_name: 'Paris, France',
       geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
-    });
+    } satisfies Parameters<
+      typeof WorldLocationMapper.toWorldLocationFromNominatimItem
+    >[0];
+
+    const location =
+      WorldLocationMapper.toWorldLocationFromNominatimItem(input);
 
     expect(location.addresstype).toBeUndefined();
   });

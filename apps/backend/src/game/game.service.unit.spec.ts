@@ -41,17 +41,19 @@ describe('GameService.createGame', () => {
       buildGameService();
     const guessObject = buildFullGuessObject();
     const players = [buildPlayer('host'), buildPlayer('bob', false)];
+    const gameConfig = buildGameConfig();
+    const createGameData = {
+      gameConfig,
+      players,
+      mode: SessionMode.MULTI,
+      visitorId: 'visitor-1',
+    };
     guessObjectService.findShuffledGuessObjectsByGameConfig.mockResolvedValue([
       guessObject,
     ]);
     idService.generateUniqueNamesId.mockReturnValue('game-readable-id');
 
-    const game = await gameService.createGame({
-      gameConfig: buildGameConfig(),
-      players,
-      mode: SessionMode.MULTI,
-      visitorId: 'visitor-1',
-    });
+    const game = await gameService.createGame(createGameData);
 
     expect(game).toMatchObject({
       id: 'game-readable-id',
@@ -79,12 +81,15 @@ describe('GameService.createGame', () => {
       [],
     );
     idService.generateUniqueNamesId.mockReturnValue('game-id');
-
-    await gameService.createGame({
-      gameConfig: buildGameConfig(),
-      players: [buildPlayer()],
+    const gameConfig = buildGameConfig();
+    const player = buildPlayer();
+    const createGameData = {
+      gameConfig,
+      players: [player],
       mode: SessionMode.SOLO,
-    });
+    };
+
+    await gameService.createGame(createGameData);
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
   });
@@ -135,16 +140,13 @@ describe('GameService.endGame', () => {
         results: { host: { results: [] } },
       },
     });
+    const player = buildPlayer();
+    const players = [player];
     gameRecordService.create.mockResolvedValue({
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(
-      game,
-      [buildPlayer()],
-      SessionMode.SOLO,
-      'visitor-1',
-    );
+    await gameService.endGame(game, players, SessionMode.SOLO, 'visitor-1');
 
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -155,32 +157,53 @@ describe('GameService.endGame', () => {
 
   it('does not track an anonymous finished game', async () => {
     const { gameService, gameRecordService, eventService } = buildGameService();
+    const game = buildGame();
+    const player = buildPlayer();
+    const players = [player];
     gameRecordService.create.mockResolvedValue({
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(buildGame(), [buildPlayer()], SessionMode.SOLO);
+    await gameService.endGame(game, players, SessionMode.SOLO);
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
   });
 });
 
 describe('GameService core transitions', () => {
-  it('begins and lightens a game through core rules', () => {
-    const { gameService } = buildGameService();
-    const game = buildGame({
-      status: GameStatus.STARTING,
-      state: {
-        guessObjectsIds: [],
-        results: {},
-        guessObjects: [],
-      },
+  describe('beginGame', () => {
+    it('begins a game through core rules', () => {
+      const { gameService } = buildGameService();
+      const game = buildGame({
+        status: GameStatus.STARTING,
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [],
+        },
+      });
+
+      const started = gameService.beginGame(game);
+
+      expect(started.status).toBe(GameStatus.IN_GAME);
     });
+  });
 
-    const started = gameService.beginGame(game);
-    const light = gameService.toLightGame(started);
+  describe('toLightGame', () => {
+    it('lightens a game through core rules', () => {
+      const { gameService } = buildGameService();
+      const game = buildGame({
+        status: GameStatus.IN_GAME,
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [],
+        },
+      });
 
-    expect(started.status).toBe(GameStatus.IN_GAME);
-    expect(light.state.guessObjects).toBeUndefined();
+      const light = gameService.toLightGame(game);
+
+      expect(light.state.guessObjects).toBeUndefined();
+    });
   });
 });

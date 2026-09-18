@@ -6,7 +6,10 @@ import {
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
-import type { NominatimService } from '../nominatim/nominatim.service';
+import type {
+  NominatimItemResponse,
+  NominatimService,
+} from '../nominatim/nominatim.service';
 import type { WikidataService } from '../wikidata/wikidata.service';
 import type { WorldLocationService } from '../world-location/world-location.service';
 import { SearchService } from './search.service';
@@ -32,18 +35,6 @@ function buildSearchService() {
   };
 }
 
-const nominatimItem = {
-  place_id: '1',
-  osm_type: 'relation' as const,
-  osm_id: '7444',
-  lat: '48.8566',
-  lon: '2.3522',
-  name: 'Paris',
-  display_name: 'Paris, France',
-  addresstype: 'city',
-  geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
-};
-
 describe('SearchService.searchGuessObjectByExternalId', () => {
   it('returns the persisted object when available', async () => {
     const { searchService, guessObjectService, wikidataService } =
@@ -65,6 +56,17 @@ describe('SearchService.searchGuessObjectByExternalId', () => {
       worldLocationService,
       nominatimService,
     } = buildSearchService();
+    const nominatimItem: NominatimItemResponse = {
+      place_id: '1',
+      osm_type: 'relation',
+      osm_id: '7444',
+      lat: '48.8566',
+      lon: '2.3522',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
+    };
     guessObjectService.findFullBy.mockResolvedValue([]);
     wikidataService.findById.mockResolvedValue({
       id: 'Q243',
@@ -94,6 +96,11 @@ describe('SearchService.searchGuessObjectByName', () => {
   it('merges database-only drafts and replaces external duplicates', async () => {
     const { searchService, guessObjectService, wikidataService } =
       buildSearchService();
+    const persistedDraft = buildGuessObjectDraft({ name: 'Persisted tower' });
+    const localDraft = buildGuessObjectDraft({
+      name: 'Local only',
+      source: { provider: 'manual', external_id: 'local-1' },
+    });
     wikidataService.searchByName.mockResolvedValue({
       results: [
         { id: 'Q243', label: 'Remote tower' },
@@ -101,11 +108,8 @@ describe('SearchService.searchGuessObjectByName', () => {
       ],
     });
     guessObjectService.searchDraftByName.mockResolvedValue([
-      buildGuessObjectDraft({ name: 'Persisted tower' }),
-      buildGuessObjectDraft({
-        name: 'Local only',
-        source: { provider: 'manual', external_id: 'local-1' },
-      }),
+      persistedDraft,
+      localDraft,
     ]);
 
     const drafts = await searchService.searchGuessObjectByName('tower');
@@ -122,8 +126,9 @@ describe('SearchService.searchWorldLocationById', () => {
   it('returns a persisted location without calling Nominatim', async () => {
     const { searchService, worldLocationService, nominatimService } =
       buildSearchService();
+    const worldLocation = buildWorldLocation();
     worldLocationService.findByExternalIdentifier.mockResolvedValue(
-      buildWorldLocation(),
+      worldLocation,
     );
 
     const location = await searchService.searchWorldLocationById(
@@ -155,6 +160,17 @@ describe('SearchService.searchWorldLocationById', () => {
   it('maps a Nominatim location', async () => {
     const { searchService, worldLocationService, nominatimService } =
       buildSearchService();
+    const nominatimItem: NominatimItemResponse = {
+      place_id: '1',
+      osm_type: 'relation',
+      osm_id: '7444',
+      lat: '48.8566',
+      lon: '2.3522',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
+    };
     worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(nominatimItem);
 
@@ -170,6 +186,17 @@ describe('SearchService.searchWorldLocationById', () => {
 describe('SearchService.searchWorldLocationByName', () => {
   it('maps every Nominatim result', async () => {
     const { searchService, nominatimService } = buildSearchService();
+    const nominatimItem: NominatimItemResponse = {
+      place_id: '1',
+      osm_type: 'relation',
+      osm_id: '7444',
+      lat: '48.8566',
+      lon: '2.3522',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      geojson: { type: 'Point', coordinates: [2.3522, 48.8566] },
+    };
     nominatimService.searchByName.mockResolvedValue({
       results: [nominatimItem],
     });

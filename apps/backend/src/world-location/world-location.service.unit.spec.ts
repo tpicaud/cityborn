@@ -48,34 +48,38 @@ describe('WorldLocationService.get', () => {
 });
 
 describe('WorldLocationService queries', () => {
-  it('loads a persisted location with its geometry', async () => {
-    const { worldLocationRepository, worldLocationService } =
-      buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
-    worldLocationRepository.findById.mockResolvedValue(worldLocation);
+  describe('getWithGeometry', () => {
+    it('loads a persisted location with its geometry', async () => {
+      const { worldLocationRepository, worldLocationService } =
+        buildWorldLocationService();
+      const worldLocation = buildWorldLocation();
+      worldLocationRepository.findById.mockResolvedValue(worldLocation);
 
-    await expect(
-      worldLocationService.getWithGeometry(worldLocation.id),
-    ).resolves.toEqual(worldLocation);
-    expect(worldLocationRepository.findById).toHaveBeenCalledWith(
-      worldLocation.id,
-      { geometry: true },
-    );
+      await expect(
+        worldLocationService.getWithGeometry(worldLocation.id),
+      ).resolves.toEqual(worldLocation);
+      expect(worldLocationRepository.findById).toHaveBeenCalledWith(
+        worldLocation.id,
+        { geometry: true },
+      );
+    });
   });
 
-  it('queries an external identifier without branding it as a persisted ID', async () => {
-    const { worldLocationRepository, worldLocationService } =
-      buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
-    worldLocationRepository.findBySource.mockResolvedValue(worldLocation);
+  describe('findByExternalIdentifier', () => {
+    it('queries an external identifier without branding it as a persisted ID', async () => {
+      const { worldLocationRepository, worldLocationService } =
+        buildWorldLocationService();
+      const worldLocation = buildWorldLocation();
+      worldLocationRepository.findBySource.mockResolvedValue(worldLocation);
 
-    await expect(
-      worldLocationService.findByExternalIdentifier('relation', '7444'),
-    ).resolves.toEqual(worldLocation);
-    expect(worldLocationRepository.findBySource).toHaveBeenCalledWith(
-      { provider: 'relation', external_id: '7444' },
-      { geometry: true },
-    );
+      await expect(
+        worldLocationService.findByExternalIdentifier('relation', '7444'),
+      ).resolves.toEqual(worldLocation);
+      expect(worldLocationRepository.findBySource).toHaveBeenCalledWith(
+        { provider: 'relation', external_id: '7444' },
+        { geometry: true },
+      );
+    });
   });
 });
 

@@ -5,8 +5,6 @@ import type { CategoryService } from './category.service';
 
 const categoryId = (value: string) => CategoryIdSchema.parse(value);
 
-const category = buildCategory();
-
 function buildPublicCategoryService() {
   const categoryService = createMock<CategoryService>();
   const publicCategoryService = new PublicCategoryService(categoryService);
@@ -18,6 +16,7 @@ describe('PublicCategoryService.findAll', () => {
   it('loads only published categories', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
+    const category = buildCategory();
     categoryService.findBy.mockResolvedValue([category]);
 
     const categories = await publicCategoryService.findAll();
@@ -31,11 +30,11 @@ describe('PublicCategoryService.findBy', () => {
   it('enforces the published filter', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
+    const category = buildCategory();
+    const filter = { ids: [categoryId('category-1')] };
     categoryService.findBy.mockResolvedValue([category]);
 
-    const categories = await publicCategoryService.findBy({
-      ids: [categoryId('category-1')],
-    });
+    const categories = await publicCategoryService.findBy(filter);
 
     expect(categoryService.findBy).toHaveBeenCalledWith({
       ids: ['category-1'],
@@ -49,6 +48,7 @@ describe('PublicCategoryService.getTrees', () => {
   it('loads only published root trees', async () => {
     const { publicCategoryService, categoryService } =
       buildPublicCategoryService();
+    const category = buildCategory();
     const root = {
       ...category,
       children: [],

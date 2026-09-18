@@ -38,37 +38,53 @@ function buildCategoryService() {
 }
 
 describe('CategoryService queries', () => {
-  it('delegates tree filters', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
-    categoryRepository.findTree.mockResolvedValue([]);
+  describe('findTree', () => {
+    it('delegates tree filters', async () => {
+      const { categoryRepository, categoryService } = buildCategoryService();
+      const filter = { isPublished: false };
+      categoryRepository.findTree.mockResolvedValue([]);
 
-    await categoryService.findTree({ isPublished: false });
+      await categoryService.findTree(filter);
 
-    expect(categoryRepository.findTree).toHaveBeenCalledWith({
-      isPublished: false,
+      expect(categoryRepository.findTree).toHaveBeenCalledWith({
+        isPublished: false,
+      });
     });
   });
 
-  it('loads every category', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
-    const category = buildCategory();
-    categoryRepository.findBy.mockResolvedValue([category]);
+  describe('findAll', () => {
+    it('loads every category', async () => {
+      const { categoryRepository, categoryService } = buildCategoryService();
+      const category = buildCategory();
+      categoryRepository.findBy.mockResolvedValue([category]);
 
-    await expect(categoryService.findAll()).resolves.toEqual([category]);
-    expect(categoryRepository.findBy).toHaveBeenCalledWith({});
+      await expect(categoryService.findAll()).resolves.toEqual([category]);
+      expect(categoryRepository.findBy).toHaveBeenCalledWith({});
+    });
   });
 
-  it('delegates filtered and full queries', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
-    const filter = { ids: [categoryId('category-1')], isPublished: true };
-    categoryRepository.findBy.mockResolvedValue([]);
-    categoryRepository.findFullBy.mockResolvedValue([]);
+  describe('findBy', () => {
+    it('delegates filtered queries', async () => {
+      const { categoryRepository, categoryService } = buildCategoryService();
+      const filter = { ids: [categoryId('category-1')], isPublished: true };
+      categoryRepository.findBy.mockResolvedValue([]);
 
-    await categoryService.findBy(filter);
-    await categoryService.findFullBy(filter);
+      await categoryService.findBy(filter);
 
-    expect(categoryRepository.findBy).toHaveBeenCalledWith(filter);
-    expect(categoryRepository.findFullBy).toHaveBeenCalledWith(filter);
+      expect(categoryRepository.findBy).toHaveBeenCalledWith(filter);
+    });
+  });
+
+  describe('findFullBy', () => {
+    it('delegates full queries', async () => {
+      const { categoryRepository, categoryService } = buildCategoryService();
+      const filter = { ids: [categoryId('category-1')], isPublished: true };
+      categoryRepository.findFullBy.mockResolvedValue([]);
+
+      await categoryService.findFullBy(filter);
+
+      expect(categoryRepository.findFullBy).toHaveBeenCalledWith(filter);
+    });
   });
 });
 
@@ -89,7 +105,8 @@ describe('CategoryService.update', () => {
     const { categoryRepository, categoryService, guessObjectService } =
       buildCategoryService();
     const payload = buildUpdateCategory({ name: 'Landmarks' });
-    categoryRepository.update.mockResolvedValue(buildCategory(payload));
+    const updatedCategory = buildCategory(payload);
+    categoryRepository.update.mockResolvedValue(updatedCategory);
 
     await categoryService.update(categoryId('category-1'), payload);
 
@@ -109,7 +126,8 @@ describe('CategoryService.update', () => {
     const payload = buildUpdateCategory({
       disconnectIds: [orphanId, sharedId],
     });
-    categoryRepository.update.mockResolvedValue(buildCategory());
+    const updatedCategory = buildCategory();
+    categoryRepository.update.mockResolvedValue(updatedCategory);
     categoryRepository.countByGuessObjectId
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(1);
@@ -135,8 +153,9 @@ describe('CategoryService.delete', () => {
 
   it('rejects when the category has children', async () => {
     const { categoryRepository, categoryService } = buildCategoryService();
+    const category = buildCategory();
     categoryRepository.findFullBy.mockResolvedValue([
-      { ...buildCategory(), guessObjects: [] },
+      { ...category, guessObjects: [] },
     ]);
     categoryRepository.countChildren.mockResolvedValue(1);
 
@@ -153,8 +172,9 @@ describe('CategoryService.delete', () => {
       buildCategoryService();
     const orphan = buildGuessObject({ id: 'guess-orphan' });
     const shared = buildGuessObject({ id: 'guess-shared' });
+    const category = buildCategory();
     categoryRepository.findFullBy.mockResolvedValue([
-      { ...buildCategory(), guessObjects: [orphan, shared] },
+      { ...category, guessObjects: [orphan, shared] },
     ]);
     categoryRepository.countChildren.mockResolvedValue(0);
     categoryRepository.countByGuessObjectId

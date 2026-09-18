@@ -27,65 +27,72 @@ function buildSessionGateway() {
 }
 
 describe('SessionGateway client payload validation', () => {
-  it('rejects an invalid game configuration as a bad request', async () => {
-    const { sessionGateway, sessionService, connectionRegistryService } =
-      buildSessionGateway();
-    const socket = createMock<Socket>({ id: 'socket-1' });
+  describe('updateGameConfig', () => {
+    it('rejects an invalid game configuration as a bad request', async () => {
+      const { sessionGateway, sessionService, connectionRegistryService } =
+        buildSessionGateway();
+      const socket = createMock<Socket>({ id: 'socket-1' });
+      const invalidConfig = { timer: 'fast' };
 
-    await expect(
-      sessionGateway.updateGameConfig(socket, { timer: 'fast' }),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.BAD_REQUEST },
+      await expect(
+        sessionGateway.updateGameConfig(socket, invalidConfig),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.BAD_REQUEST },
+      });
+      expect(connectionRegistryService.getConnection).not.toHaveBeenCalled();
+      expect(sessionService.updateGameConfig).not.toHaveBeenCalled();
     });
-    expect(connectionRegistryService.getConnection).not.toHaveBeenCalled();
-    expect(sessionService.updateGameConfig).not.toHaveBeenCalled();
-  });
 
-  it('normalizes a valid game configuration before the service call', async () => {
-    const { sessionGateway, sessionService, connectionRegistryService } =
-      buildSessionGateway();
-    const socket = createMock<Socket>({ id: 'socket-1' });
-    const playerID = PlayerIdSchema.parse('alice');
-    const sessionID = SessionIdSchema.parse('session-1');
-    const serviceError = new Error('stop after service call');
-    connectionRegistryService.getConnection.mockResolvedValue({
-      playerID,
-      sessionID,
-      isGuest: false,
-    });
-    sessionService.updateGameConfig.mockRejectedValue(serviceError);
-
-    await expect(
-      sessionGateway.updateGameConfig(socket, {
+    it('normalizes a valid game configuration before the service call', async () => {
+      const { sessionGateway, sessionService, connectionRegistryService } =
+        buildSessionGateway();
+      const socket = createMock<Socket>({ id: 'socket-1' });
+      const config = {
         categories: [],
         timer: 30,
         nbOfObjects: 5,
         ignored: true,
-      }),
-    ).rejects.toBe(serviceError);
-    expect(sessionService.updateGameConfig).toHaveBeenCalledWith(
-      playerID,
-      sessionID,
-      { categories: [], timer: 30, nbOfObjects: 5 },
-    );
+      };
+      const playerID = PlayerIdSchema.parse('alice');
+      const sessionID = SessionIdSchema.parse('session-1');
+      const serviceError = new Error('stop after service call');
+      connectionRegistryService.getConnection.mockResolvedValue({
+        playerID,
+        sessionID,
+        isGuest: false,
+      });
+      sessionService.updateGameConfig.mockRejectedValue(serviceError);
+
+      await expect(
+        sessionGateway.updateGameConfig(socket, config),
+      ).rejects.toBe(serviceError);
+      expect(sessionService.updateGameConfig).toHaveBeenCalledWith(
+        playerID,
+        sessionID,
+        { categories: [], timer: 30, nbOfObjects: 5 },
+      );
+    });
   });
 
-  it('rejects an invalid guess before resolving the connection', async () => {
-    const { sessionGateway, sessionService, connectionRegistryService } =
-      buildSessionGateway();
-    const socket = createMock<Socket>({ id: 'socket-1' });
-
-    await expect(
-      sessionGateway.handleGuess(socket, {
+  describe('handleGuess', () => {
+    it('rejects an invalid guess before resolving the connection', async () => {
+      const { sessionGateway, sessionService, connectionRegistryService } =
+        buildSessionGateway();
+      const socket = createMock<Socket>({ id: 'socket-1' });
+      const invalidGuess = {
         coordinates: { lat: 'north', lng: 2 },
         distance: 10,
         points: 100,
         win: false,
-      }),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.BAD_REQUEST },
+      };
+
+      await expect(
+        sessionGateway.handleGuess(socket, invalidGuess),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.BAD_REQUEST },
+      });
+      expect(connectionRegistryService.getConnection).not.toHaveBeenCalled();
+      expect(sessionService.handleGuess).not.toHaveBeenCalled();
     });
-    expect(connectionRegistryService.getConnection).not.toHaveBeenCalled();
-    expect(sessionService.handleGuess).not.toHaveBeenCalled();
   });
 });

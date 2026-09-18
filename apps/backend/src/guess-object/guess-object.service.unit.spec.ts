@@ -47,40 +47,46 @@ function buildGuessObjectService() {
 }
 
 describe('GuessObjectService queries', () => {
-  it('delegates filtered queries', async () => {
-    const { guessObjectService, guessObjectRepository } =
-      buildGuessObjectService();
-    const guessObject = buildGuessObject();
-    guessObjectRepository.findBy.mockResolvedValue([guessObject]);
+  describe('findBy', () => {
+    it('delegates filtered queries', async () => {
+      const { guessObjectService, guessObjectRepository } =
+        buildGuessObjectService();
+      const guessObject = buildGuessObject();
+      const filter = { ids: [guessObject.id], external_id: 'Q243' };
+      guessObjectRepository.findBy.mockResolvedValue([guessObject]);
 
-    await expect(
-      guessObjectService.findBy({
-        ids: [guessObject.id],
-        external_id: 'Q243',
-      }),
-    ).resolves.toEqual([guessObject]);
+      await expect(guessObjectService.findBy(filter)).resolves.toEqual([
+        guessObject,
+      ]);
+    });
   });
 
-  it('filters configured categories and limits shuffled results', async () => {
-    const { guessObjectService, guessObjectRepository } =
-      buildGuessObjectService();
-    const objects = [
-      buildFullGuessObject(),
-      buildFullGuessObject({ id: 'guess-2' }),
-    ];
-    guessObjectRepository.findFullBy.mockResolvedValue(objects);
-    jest.spyOn(Math, 'random').mockReturnValue(0.5);
-    const category = buildCategory();
+  describe('findShuffledGuessObjectsByGameConfig', () => {
+    it('filters configured categories and limits shuffled results', async () => {
+      const { guessObjectService, guessObjectRepository } =
+        buildGuessObjectService();
+      const objects = [
+        buildFullGuessObject(),
+        buildFullGuessObject({ id: 'guess-2' }),
+      ];
+      guessObjectRepository.findFullBy.mockResolvedValue(objects);
+      jest.spyOn(Math, 'random').mockReturnValue(0.5);
+      const category = buildCategory();
+      const gameConfig = buildGameConfig({
+        categories: [category],
+        nbOfObjects: 1,
+      });
 
-    const result =
-      await guessObjectService.findShuffledGuessObjectsByGameConfig(
-        buildGameConfig({ categories: [category], nbOfObjects: 1 }),
-      );
+      const result =
+        await guessObjectService.findShuffledGuessObjectsByGameConfig(
+          gameConfig,
+        );
 
-    expect(guessObjectRepository.findFullBy).toHaveBeenCalledWith({
-      categoryIds: [category.id],
+      expect(guessObjectRepository.findFullBy).toHaveBeenCalledWith({
+        categoryIds: [category.id],
+      });
+      expect(result).toHaveLength(1);
     });
-    expect(result).toHaveLength(1);
   });
 });
 
@@ -88,31 +94,31 @@ describe('GuessObjectService.create', () => {
   it('rejects an unknown world location', async () => {
     const { guessObjectService, worldLocationService } =
       buildGuessObjectService();
+    const createData = {
+      name: 'Eiffel Tower',
+      world_location_id: worldLocationId('missing'),
+    };
     worldLocationService.get.mockResolvedValue(null);
 
-    await expect(
-      guessObjectService.create({
-        name: 'Eiffel Tower',
-        world_location_id: worldLocationId('missing'),
-      }),
-    ).rejects.toMatchObject({ response: { code: ErrorCode.BAD_REQUEST } });
+    await expect(guessObjectService.create(createData)).rejects.toMatchObject({
+      response: { code: ErrorCode.BAD_REQUEST },
+    });
   });
 
   it('returns an existing object identifier', async () => {
     const { guessObjectService, guessObjectRepository, worldLocationService } =
       buildGuessObjectService();
     const id = guessObjectId('guess-1');
+    const createData = {
+      name: 'Eiffel Tower',
+      world_location_id: worldLocationId('location-1'),
+    };
     worldLocationService.get.mockResolvedValue({
       id: worldLocationId('location-1'),
     });
     guessObjectRepository.findByNameAndWorldLocation.mockResolvedValue({ id });
 
-    await expect(
-      guessObjectService.create({
-        name: 'Eiffel Tower',
-        world_location_id: worldLocationId('location-1'),
-      }),
-    ).resolves.toBe(id);
+    await expect(guessObjectService.create(createData)).resolves.toBe(id);
     expect(guessObjectRepository.create).not.toHaveBeenCalled();
   });
 
@@ -152,7 +158,8 @@ describe('GuessObjectService.delete', () => {
   it('rejects an object assigned to a category', async () => {
     const { guessObjectService, guessObjectRepository, categoryRepository } =
       buildGuessObjectService();
-    guessObjectRepository.findBy.mockResolvedValue([buildGuessObject()]);
+    const guessObject = buildGuessObject();
+    guessObjectRepository.findBy.mockResolvedValue([guessObject]);
     categoryRepository.countByGuessObjectId.mockResolvedValue(1);
 
     await expect(
