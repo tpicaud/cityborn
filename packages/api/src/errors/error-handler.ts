@@ -90,6 +90,12 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.RESOURCE_NOT_FOUND]:
     "Cette ressource n'existe pas ou a déjà été supprimée.",
 
+  // Websocket transport
+  [ErrorCode.WS_NOT_CONNECTED]:
+    'La connexion temps réel est fermée. Veuillez réessayer.',
+  [ErrorCode.WS_ACK_TIMEOUT]:
+    "Le serveur n'a pas répondu à temps. Veuillez réessayer.",
+
   // Classic
   [ErrorCode.BAD_REQUEST]: 'Requête invalide.',
   [ErrorCode.TOKEN_EXPIRED]: 'Session expirée. Veuillez vous reconnecter.',

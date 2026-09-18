@@ -25,3 +25,8 @@ export * from './src/schemas/session.schema';
 export * from './src/schemas/user.schema';
 export * from './src/schemas/world-location.schema';
 export * from './src/types/http';
+export * from './src/ws/session.ws-contract';
+export * from './src/ws/ws-ack.schema';
+export * from './src/ws/ws-channel';
+export * from './src/ws/ws-contract';
+export * from './src/ws/ws-events';

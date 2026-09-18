@@ -7,7 +7,11 @@ import type {
   Session,
   SessionId,
 } from '@cityborn/api';
-import { SessionStatus } from '@cityborn/api';
+import {
+  SessionStatus,
+  sessionWsEvent,
+  sessionWsServerEvent,
+} from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import type { SocketFactory } from '../../platform/socket';
@@ -15,7 +19,6 @@ import { useError } from '../../shared/errorContext';
 import type { SessionApi } from './sessionApi';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
-import { emitWithAck } from './socketRequest';
 import { useSocket } from './useSocket';
 
 export interface MultiSessionOptions {
@@ -72,8 +75,8 @@ export function useMultiSession({
       setSession((previous) => mergeSessionUpdate(previous, incoming));
     };
 
-    on('session:update', handleSessionUpdate);
-    return () => off('session:update', handleSessionUpdate);
+    on(sessionWsServerEvent.update, handleSessionUpdate);
+    return () => off(sessionWsServerEvent.update, handleSessionUpdate);
   }, [on, off]);
 
   const join = useCallback(
@@ -84,10 +87,7 @@ export function useMultiSession({
         );
 
       hasJoined.current = true;
-      await emitWithAck(emit, 'session:join', {
-        sessionID: session.id,
-        playerID,
-      });
+      await emit(sessionWsEvent.join, { sessionID: session.id, playerID });
       setConnected(true);
     },
     [session, emit],
@@ -97,7 +97,7 @@ export function useMultiSession({
     if (!session || !localPlayerID)
       throw new Error('Reconnection failed: player or session not initialized');
 
-    await emitWithAck(emit, 'session:reconnect', {
+    await emit(sessionWsEvent.reconnect, {
       sessionID: session.id,
       playerID: localPlayerID,
     });
@@ -144,33 +144,33 @@ export function useMultiSession({
 
   const updateHost = async (newHostID: PlayerId) => {
     requireSession('Updating host');
-    await emitWithAck(emit, 'session:updateHost', { newHostID });
+    await emit(sessionWsEvent.updateHost, { newHostID });
   };
 
   const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
     const current = requireSession('Updating game config');
     const gameConfig = { ...current.gameConfig, ...partialGameConfig };
-    await emitWithAck(emit, 'session:updateGameConfig', { gameConfig });
+    await emit(sessionWsEvent.updateGameConfig, { gameConfig });
   };
 
   const kickPlayer = async (playerToKick: PlayerId) => {
     requireSession('Kicking player');
-    await emitWithAck(emit, 'session:kickPlayer', { playerToKick });
+    await emit(sessionWsEvent.kickPlayer, { playerToKick });
   };
 
   const startGame = async () => {
     requireSession('Starting game');
-    await emitWithAck(emit, 'session:startGame');
+    await emit(sessionWsEvent.startGame);
   };
 
   const guess = async (playerGuess: Guess) => {
     requireGame('Guess');
-    await emitWithAck(emit, 'session:guess', { guess: playerGuess });
+    await emit(sessionWsEvent.guess, { guess: playerGuess });
   };
 
   const nextRound = async () => {
     requireGame('Next round');
-    await emitWithAck(emit, 'session:nextRound');
+    await emit(sessionWsEvent.nextRound);
   };
 
   const endGame = async () => {
@@ -181,7 +181,7 @@ export function useMultiSession({
   const playAgain = async () => {
     const current = requireGame('Playing again');
     if (!isHostOf(current, localPlayerID)) return;
-    await emitWithAck(emit, 'session:playAgain');
+    await emit(sessionWsEvent.playAgain);
   };
 
   const exitGame = async () => {

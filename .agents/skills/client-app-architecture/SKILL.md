@@ -42,9 +42,10 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
-| `@cityborn/client/api` | `src/api/` | Transport : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
+| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
+| `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`, `socketRequest`) et les transitions (`sessionState`) restent privés au domaine. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
 | `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil et hook `useProfile`. |
