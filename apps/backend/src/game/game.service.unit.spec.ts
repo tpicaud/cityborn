@@ -1,3 +1,9 @@
+import type {
+  FullGuessObject,
+  Game,
+  GameConfig,
+  OnlinePlayer,
+} from '@cityborn/api';
 import {
   buildFullGuessObject,
   buildGame,
@@ -7,19 +13,23 @@ import {
   GameStatus,
   SessionMode,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { EventService } from '../event/event.service';
 import type { GameRecordService } from '../game-record/game-record.service';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type { IdService } from '../id/id.service';
+import type { CreateGameParams } from './game.service';
 import { GameService } from './game.service';
 
 function buildGameService() {
-  const guessObjectService = createMock<GuessObjectService>();
-  const gameRecordService = createMock<GameRecordService>();
-  const eventService = createMock<EventService>();
-  const idService = createMock<IdService>();
-  const gameService = new GameService(
+  const guessObjectService: DeepMocked<GuessObjectService> =
+    createMock<GuessObjectService>();
+  const gameRecordService: DeepMocked<GameRecordService> =
+    createMock<GameRecordService>();
+  const eventService: DeepMocked<EventService> = createMock<EventService>();
+  const idService: DeepMocked<IdService> = createMock<IdService>();
+  const gameService: GameService = new GameService(
     guessObjectService,
     gameRecordService,
     eventService,
@@ -37,21 +47,30 @@ function buildGameService() {
 
 describe('GameService.createGame', () => {
   it('creates a game and tracks connected multiplayer participants', async () => {
-    const { gameService, guessObjectService, eventService, idService } =
-      buildGameService();
-    const guessObject = buildFullGuessObject();
-    const players = [buildPlayer('host'), buildPlayer('bob', false)];
+    const {
+      gameService,
+      guessObjectService,
+      eventService,
+      idService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    const guessObject: FullGuessObject = buildFullGuessObject();
+    const players: OnlinePlayer[] = [
+      buildPlayer('host'),
+      buildPlayer('bob', false),
+    ];
+    const gameConfig: GameConfig = buildGameConfig();
+    const createGameData: CreateGameParams = {
+      gameConfig,
+      players,
+      mode: SessionMode.MULTI,
+      visitorId: 'visitor-1',
+    };
     guessObjectService.findShuffledGuessObjectsByGameConfig.mockResolvedValue([
       guessObject,
     ]);
     idService.generateUniqueNamesId.mockReturnValue('game-readable-id');
 
-    const game = await gameService.createGame({
-      gameConfig: buildGameConfig(),
-      players,
-      mode: SessionMode.MULTI,
-      visitorId: 'visitor-1',
-    });
+    const game: Game = await gameService.createGame(createGameData);
 
     expect(game).toMatchObject({
       id: 'game-readable-id',
@@ -73,18 +92,25 @@ describe('GameService.createGame', () => {
   });
 
   it('does not track an anonymous game', async () => {
-    const { gameService, guessObjectService, eventService, idService } =
-      buildGameService();
+    const {
+      gameService,
+      guessObjectService,
+      eventService,
+      idService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
     guessObjectService.findShuffledGuessObjectsByGameConfig.mockResolvedValue(
       [],
     );
     idService.generateUniqueNamesId.mockReturnValue('game-id');
-
-    await gameService.createGame({
-      gameConfig: buildGameConfig(),
-      players: [buildPlayer()],
+    const gameConfig: GameConfig = buildGameConfig();
+    const player: OnlinePlayer = buildPlayer();
+    const createGameData: CreateGameParams = {
+      gameConfig,
+      players: [player],
       mode: SessionMode.SOLO,
-    });
+    };
+
+    await gameService.createGame(createGameData);
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
   });
@@ -92,8 +118,12 @@ describe('GameService.createGame', () => {
 
 describe('GameService.endGame', () => {
   it('persists only registered users and tracks the average score', async () => {
-    const { gameService, gameRecordService, eventService } = buildGameService();
-    const game = buildGame({
+    const {
+      gameService,
+      gameRecordService,
+      eventService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    const game: Game = buildGame({
       state: {
         guessObjectsIds: ['guess-1'],
         results: {
@@ -106,7 +136,7 @@ describe('GameService.endGame', () => {
         },
       },
     });
-    const players = [
+    const players: OnlinePlayer[] = [
       buildPlayer('host', true, { id: 'user-1' }),
       buildPlayer('guest', true, { isGuest: true }),
     ];
@@ -128,23 +158,24 @@ describe('GameService.endGame', () => {
   });
 
   it('tracks a zero average when no round result exists', async () => {
-    const { gameService, gameRecordService, eventService } = buildGameService();
-    const game = buildGame({
+    const {
+      gameService,
+      gameRecordService,
+      eventService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    const game: Game = buildGame({
       state: {
         guessObjectsIds: [],
         results: { host: { results: [] } },
       },
     });
+    const player: OnlinePlayer = buildPlayer();
+    const players: OnlinePlayer[] = [player];
     gameRecordService.create.mockResolvedValue({
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(
-      game,
-      [buildPlayer()],
-      SessionMode.SOLO,
-      'visitor-1',
-    );
+    await gameService.endGame(game, players, SessionMode.SOLO, 'visitor-1');
 
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -154,33 +185,60 @@ describe('GameService.endGame', () => {
   });
 
   it('does not track an anonymous finished game', async () => {
-    const { gameService, gameRecordService, eventService } = buildGameService();
+    const {
+      gameService,
+      gameRecordService,
+      eventService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    const game: Game = buildGame();
+    const player: OnlinePlayer = buildPlayer();
+    const players: OnlinePlayer[] = [player];
     gameRecordService.create.mockResolvedValue({
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(buildGame(), [buildPlayer()], SessionMode.SOLO);
+    await gameService.endGame(game, players, SessionMode.SOLO);
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
   });
 });
 
 describe('GameService core transitions', () => {
-  it('begins and lightens a game through core rules', () => {
-    const { gameService } = buildGameService();
-    const game = buildGame({
-      status: GameStatus.STARTING,
-      state: {
-        guessObjectsIds: [],
-        results: {},
-        guessObjects: [],
-      },
+  describe('beginGame', () => {
+    it('begins a game through core rules', () => {
+      const { gameService }: ReturnType<typeof buildGameService> =
+        buildGameService();
+      const game: Game = buildGame({
+        status: GameStatus.STARTING,
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [],
+        },
+      });
+
+      const started: Game = gameService.beginGame(game);
+
+      expect(started.status).toBe(GameStatus.IN_GAME);
     });
+  });
 
-    const started = gameService.beginGame(game);
-    const light = gameService.toLightGame(started);
+  describe('toLightGame', () => {
+    it('lightens a game through core rules', () => {
+      const { gameService }: ReturnType<typeof buildGameService> =
+        buildGameService();
+      const game: Game = buildGame({
+        status: GameStatus.IN_GAME,
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [],
+        },
+      });
 
-    expect(started.status).toBe(GameStatus.IN_GAME);
-    expect(light.state.guessObjects).toBeUndefined();
+      const light: Game = gameService.toLightGame(game);
+
+      expect(light.state.guessObjects).toBeUndefined();
+    });
   });
 });

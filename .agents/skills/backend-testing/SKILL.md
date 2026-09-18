@@ -17,7 +17,7 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 
 ## Nommer et structurer
 
-- En unitaire, un `describe` cible une méthode ou fonction : `describe('SessionService.kickPlayer', ...)`. En intégration et e2e, il nomme la frontière observée.
+- Pour une méthode testée, prévoir un `describe` par méthode couverte, même avec un seul `it`. Quand un `describe` parent nomme déjà la classe, le repository ou l'adaptateur, nommer l'enfant par la méthode seule (`describe('delete', ...)`) ; sans parent, utiliser `Classe.méthode` (`describe('SessionService.kickPlayer', ...)`). En e2e, le `describe` nomme le parcours ou la frontière observée.
 - Un `it` décrit en anglais un comportement au présent (`rejects when the requester is not the host`), jamais avec `should`.
 - Un `it` couvre un seul comportement. Plusieurs assertions sont permises lorsqu'elles caractérisent ensemble ce même résultat.
 - Séparer Arrange, Act et Assert par une ligne vide, sans commentaires `Arrange` / `Act` / `Assert`.
@@ -25,8 +25,13 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 - Pour chaque type métier principal défini dans un package partagé, placer son builder dans ce même package, dans un fichier dédié, puis l'exporter et le réutiliser dans les tests consommateurs. Ne pas redéfinir ce builder dans une app.
 - Ne pas créer de builder pour un DTO secondaire, un type d'infrastructure ou une forme locale ponctuelle. Les retours de mocks Prisma sont de simples données d'Arrange : les écrire explicitement près du scénario qui les utilise.
 - Réserver les builders à l'Arrange. Dans un Assert, écrire directement la valeur attendue afin que le contrat vérifié soit visible sans suivre l'implémentation d'un builder.
+- Dans l'Arrange, déclarer explicitement les objets du scénario avec leurs builders quand ils existent. Garder leurs données visibles dans le test plutôt que les construire dans un helper de scénario ou directement dans l'appel testé.
 - Tous les builders acceptent des overrides typés et retournent des données indépendantes à chaque appel. Les tests importent chaque builder directement depuis son package propriétaire : ne créer ni fichier de réexport ni barrel de fixtures. `test/support/fixtures/` ne contient que les fixtures propres au backend.
 
 ## Intégration et e2e
+
+En intégration, créer un fichier par repository ou adaptateur testé. Regrouper dans `prisma-transaction.integration.spec.ts` les tests de rollback des transactions Prisma qui coordonnent plusieurs repositories, avec un `describe` par service puis par méthode. Les autres services restent couverts au tier unitaire pour leurs branches métier.
+
+Pour Prisma, rendre les insertions explicites dans chaque test d'intégration. Un helper Prisma éventuel ne fait qu'une insertion et reçoit l'objet à insérer en argument ; il ne construit ni ne choisit les données à la place du test.
 
 Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md).

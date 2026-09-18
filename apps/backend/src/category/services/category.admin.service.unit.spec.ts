@@ -1,3 +1,11 @@
+import type {
+  Category,
+  CategoryId,
+  CategoryTree,
+  CreateCategory,
+  FullCategory,
+  UpdateCategory,
+} from '@cityborn/api';
 import {
   buildCategory,
   buildCreateCategory,
@@ -5,31 +13,37 @@ import {
   CategoryIdSchema,
   ErrorCode,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import type { CategoryFilter } from '../repositories/category.repository';
 import { AdminCategoryService } from './category.admin.service';
 import type { CategoryService } from './category.service';
 
-const categoryId = (value: string) => CategoryIdSchema.parse(value);
-
-const category = buildCategory();
+const categoryId: (value: string) => CategoryId = (value: string) =>
+  CategoryIdSchema.parse(value);
 
 function buildAdminCategoryService() {
-  const categoryService = createMock<CategoryService>();
-  const adminCategoryService = new AdminCategoryService(categoryService);
+  const categoryService: DeepMocked<CategoryService> =
+    createMock<CategoryService>();
+  const adminCategoryService: AdminCategoryService = new AdminCategoryService(
+    categoryService,
+  );
 
   return { adminCategoryService, categoryService };
 }
 
 describe('AdminCategoryService.findAll', () => {
   it('returns every mapped category', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
-    categoryService.findAll.mockResolvedValue([
-      category,
-      buildCategory({ id: 'category-2' }),
-    ]);
+    const category: Category = buildCategory();
+    const otherCategory: Category = buildCategory({ id: 'category-2' });
+    categoryService.findAll.mockResolvedValue([category, otherCategory]);
 
-    const categories = await adminCategoryService.findAll();
+    const categories: Category[] = await adminCategoryService.findAll();
 
     expect(categories.map(({ id }) => id)).toEqual([
       '00000000-0000-4000-8000-000000000010',
@@ -40,13 +54,16 @@ describe('AdminCategoryService.findAll', () => {
 
 describe('AdminCategoryService.findBy', () => {
   it('forwards the filter and returns mapped categories', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
+    const category: Category = buildCategory();
+    const filter: CategoryFilter = { ids: [categoryId('category-1')] };
     categoryService.findBy.mockResolvedValue([category]);
 
-    const categories = await adminCategoryService.findBy({
-      ids: [categoryId('category-1')],
-    });
+    const categories: Category[] = await adminCategoryService.findBy(filter);
 
     expect(categoryService.findBy).toHaveBeenCalledWith({
       ids: [categoryId('category-1')],
@@ -57,13 +74,17 @@ describe('AdminCategoryService.findBy', () => {
 
 describe('AdminCategoryService.findFullBy', () => {
   it('returns the mapped full category', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
+    const category: Category = buildCategory();
     categoryService.findFullBy.mockResolvedValue([
       { ...category, guessObjects: [] },
     ]);
 
-    const result = await adminCategoryService.findFullBy(
+    const result: FullCategory = await adminCategoryService.findFullBy(
       categoryId('category-1'),
     );
 
@@ -71,7 +92,10 @@ describe('AdminCategoryService.findFullBy', () => {
   });
 
   it('rejects when the category does not exist', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
     categoryService.findFullBy.mockResolvedValue([]);
 
@@ -85,12 +109,16 @@ describe('AdminCategoryService.findFullBy', () => {
 
 describe('AdminCategoryService.create', () => {
   it('creates and maps a category', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
+    const category: Category = buildCategory();
     categoryService.create.mockResolvedValue(category);
-    const payload = buildCreateCategory();
+    const payload: CreateCategory = buildCreateCategory();
 
-    const result = await adminCategoryService.create(payload);
+    const result: Category = await adminCategoryService.create(payload);
 
     expect(categoryService.create).toHaveBeenCalledWith(payload);
     expect(result.name).toBe('Monuments');
@@ -99,15 +127,19 @@ describe('AdminCategoryService.create', () => {
 
 describe('AdminCategoryService.update', () => {
   it('updates and maps a category', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
+    const category: Category = buildCategory();
     categoryService.update.mockResolvedValue({
       ...category,
       name: 'Landmarks',
     });
-    const payload = buildUpdateCategory({ name: 'Landmarks' });
+    const payload: UpdateCategory = buildUpdateCategory({ name: 'Landmarks' });
 
-    const result = await adminCategoryService.update(
+    const result: Category = await adminCategoryService.update(
       categoryId('category-1'),
       payload,
     );
@@ -122,7 +154,10 @@ describe('AdminCategoryService.update', () => {
 
 describe('AdminCategoryService.delete', () => {
   it('delegates deletion', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
     categoryService.delete.mockResolvedValue(undefined);
 
@@ -136,15 +171,19 @@ describe('AdminCategoryService.delete', () => {
 
 describe('AdminCategoryService.getTrees', () => {
   it('returns mapped root trees', async () => {
-    const { adminCategoryService, categoryService } =
+    const {
+      adminCategoryService,
+      categoryService,
+    }: ReturnType<typeof buildAdminCategoryService> =
       buildAdminCategoryService();
-    const root = {
+    const category: Category = buildCategory();
+    const root: CategoryTree = {
       ...category,
       children: [],
     };
     categoryService.findTree.mockResolvedValue([root]);
 
-    const trees = await adminCategoryService.getTrees();
+    const trees: CategoryTree[] = await adminCategoryService.getTrees();
 
     expect(categoryService.findTree).toHaveBeenCalledWith({});
     expect(trees.map(({ id }) => id)).toEqual([root.id]);

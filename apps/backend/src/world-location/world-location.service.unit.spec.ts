@@ -1,4 +1,6 @@
+import type { WorldLocation, WorldLocationId } from '@cityborn/api';
 import { buildWorldLocation, WorldLocationIdSchema } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { WorldLocationRepository } from './repositories/world-location.repository';
 import { WorldLocationService } from './world-location.service';
@@ -14,11 +16,13 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-const worldLocationId = (value: string) => WorldLocationIdSchema.parse(value);
+const worldLocationId: (value: string) => WorldLocationId = (value: string) =>
+  WorldLocationIdSchema.parse(value);
 
 function buildWorldLocationService() {
-  const worldLocationRepository = createMock<WorldLocationRepository>();
-  const worldLocationService = new WorldLocationService(
+  const worldLocationRepository: DeepMocked<WorldLocationRepository> =
+    createMock<WorldLocationRepository>();
+  const worldLocationService: WorldLocationService = new WorldLocationService(
     worldLocationRepository,
   );
 
@@ -27,7 +31,10 @@ function buildWorldLocationService() {
 
 describe('WorldLocationService.get', () => {
   it('returns null when the location does not exist', async () => {
-    const { worldLocationRepository, worldLocationService } =
+    const {
+      worldLocationRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildWorldLocationService> =
       buildWorldLocationService();
     worldLocationRepository.existsById.mockResolvedValue(false);
 
@@ -37,7 +44,10 @@ describe('WorldLocationService.get', () => {
   });
 
   it('returns only the identifier', async () => {
-    const { worldLocationRepository, worldLocationService } =
+    const {
+      worldLocationRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildWorldLocationService> =
       buildWorldLocationService();
     worldLocationRepository.existsById.mockResolvedValue(true);
 
@@ -48,42 +58,55 @@ describe('WorldLocationService.get', () => {
 });
 
 describe('WorldLocationService queries', () => {
-  it('loads a persisted location with its geometry', async () => {
-    const { worldLocationRepository, worldLocationService } =
-      buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
-    worldLocationRepository.findById.mockResolvedValue(worldLocation);
+  describe('getWithGeometry', () => {
+    it('loads a persisted location with its geometry', async () => {
+      const {
+        worldLocationRepository,
+        worldLocationService,
+      }: ReturnType<typeof buildWorldLocationService> =
+        buildWorldLocationService();
+      const worldLocation: WorldLocation = buildWorldLocation();
+      worldLocationRepository.findById.mockResolvedValue(worldLocation);
 
-    await expect(
-      worldLocationService.getWithGeometry(worldLocation.id),
-    ).resolves.toEqual(worldLocation);
-    expect(worldLocationRepository.findById).toHaveBeenCalledWith(
-      worldLocation.id,
-      { geometry: true },
-    );
+      await expect(
+        worldLocationService.getWithGeometry(worldLocation.id),
+      ).resolves.toEqual(worldLocation);
+      expect(worldLocationRepository.findById).toHaveBeenCalledWith(
+        worldLocation.id,
+        { geometry: true },
+      );
+    });
   });
 
-  it('queries an external identifier without branding it as a persisted ID', async () => {
-    const { worldLocationRepository, worldLocationService } =
-      buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
-    worldLocationRepository.findBySource.mockResolvedValue(worldLocation);
+  describe('findByExternalIdentifier', () => {
+    it('queries an external identifier without branding it as a persisted ID', async () => {
+      const {
+        worldLocationRepository,
+        worldLocationService,
+      }: ReturnType<typeof buildWorldLocationService> =
+        buildWorldLocationService();
+      const worldLocation: WorldLocation = buildWorldLocation();
+      worldLocationRepository.findBySource.mockResolvedValue(worldLocation);
 
-    await expect(
-      worldLocationService.findByExternalIdentifier('relation', '7444'),
-    ).resolves.toEqual(worldLocation);
-    expect(worldLocationRepository.findBySource).toHaveBeenCalledWith(
-      { provider: 'relation', external_id: '7444' },
-      { geometry: true },
-    );
+      await expect(
+        worldLocationService.findByExternalIdentifier('relation', '7444'),
+      ).resolves.toEqual(worldLocation);
+      expect(worldLocationRepository.findBySource).toHaveBeenCalledWith(
+        { provider: 'relation', external_id: '7444' },
+        { geometry: true },
+      );
+    });
   });
 });
 
 describe('WorldLocationService.findOrCreate', () => {
   it('returns an existing location without creating a duplicate', async () => {
-    const { worldLocationRepository, worldLocationService } =
+    const {
+      worldLocationRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildWorldLocationService> =
       buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
+    const worldLocation: WorldLocation = buildWorldLocation();
     worldLocationRepository.findBySource.mockResolvedValue(worldLocation);
 
     await expect(
@@ -93,9 +116,12 @@ describe('WorldLocationService.findOrCreate', () => {
   });
 
   it('creates a missing location', async () => {
-    const { worldLocationRepository, worldLocationService } =
+    const {
+      worldLocationRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildWorldLocationService> =
       buildWorldLocationService();
-    const worldLocation = buildWorldLocation();
+    const worldLocation: WorldLocation = buildWorldLocation();
     worldLocationRepository.findBySource.mockResolvedValue(null);
     worldLocationRepository.create.mockResolvedValue(worldLocation);
 
@@ -108,7 +134,10 @@ describe('WorldLocationService.findOrCreate', () => {
 
 describe('WorldLocationService.delete', () => {
   it('delegates deletion', async () => {
-    const { worldLocationRepository, worldLocationService } =
+    const {
+      worldLocationRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildWorldLocationService> =
       buildWorldLocationService();
 
     await worldLocationService.delete(worldLocationId('location-1'));

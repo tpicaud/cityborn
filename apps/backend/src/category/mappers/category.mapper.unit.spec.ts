@@ -1,3 +1,4 @@
+import type { Category, CategoryTree, FullCategory } from '@cityborn/api';
 import type {
   Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
@@ -5,40 +6,17 @@ import type {
 } from '@prisma/client';
 import { CategoryMapper, type PrismaCategoryNode } from './category.mapper';
 
-const prismaCategory = {
-  id: '00000000-0000-4000-8000-000000000010',
-  name: 'Monuments',
-  isPublished: true,
-  description: null,
-  parentId: null,
-} satisfies PrismaCategory;
-
-const prismaWorldLocation = {
-  id: 'location-1',
-  osm_type: 'relation',
-  external_id: '7444',
-  name: 'Paris',
-  display_name: 'Paris, France',
-  addresstype: 'city',
-  centroid: [48.8566, 2.3522],
-  source: { provider: 'nominatim', external_id: '7444' },
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-} satisfies PrismaWorldLocation;
-
-const prismaGuessObject = {
-  id: '00000000-0000-4000-8000-000000000020',
-  name: 'Eiffel Tower',
-  image: 'https://example.com/eiffel.jpg',
-  description: 'A wrought-iron tower',
-  short_description: 'Paris landmark',
-  source: { provider: 'wikidata', external_id: 'Q243' },
-  world_location_id: 'location-1',
-} satisfies PrismaGuessObject;
-
 describe('CategoryMapper.toCategory', () => {
   it('maps nullable values to optional contract fields', () => {
-    const category = CategoryMapper.toCategory(prismaCategory);
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
+    const category: Category = CategoryMapper.toCategory(prismaCategory);
 
     expect(category).toEqual({
       id: '00000000-0000-4000-8000-000000000010',
@@ -52,10 +30,20 @@ describe('CategoryMapper.toCategory', () => {
 
 describe('CategoryMapper.toCategories', () => {
   it('maps every category', () => {
-    const categories = CategoryMapper.toCategories([
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
+    const input: PrismaCategory[] = [
       prismaCategory,
       { ...prismaCategory, id: 'category-2', name: 'Museums' },
-    ]);
+    ];
+
+    const categories: Category[] = CategoryMapper.toCategories(input);
 
     expect(categories.map(({ id, name }) => ({ id, name }))).toEqual([
       {
@@ -69,14 +57,47 @@ describe('CategoryMapper.toCategories', () => {
 
 describe('CategoryMapper.toFullCategory', () => {
   it('maps loaded guess objects', () => {
-    const category = CategoryMapper.toFullCategory({
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
+    const prismaWorldLocation: PrismaWorldLocation = {
+      id: 'location-1',
+      osm_type: 'relation',
+      external_id: '7444',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      centroid: [48.8566, 2.3522],
+      source: { provider: 'nominatim', external_id: '7444' },
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    };
+
+    const prismaGuessObject: PrismaGuessObject = {
+      id: '00000000-0000-4000-8000-000000000020',
+      name: 'Eiffel Tower',
+      image: 'https://example.com/eiffel.jpg',
+      description: 'A wrought-iron tower',
+      short_description: 'Paris landmark',
+      source: { provider: 'wikidata', external_id: 'Q243' },
+      world_location_id: 'location-1',
+    };
+
+    const input: Parameters<typeof CategoryMapper.toFullCategory>[0] = {
       ...prismaCategory,
       description: 'Places to visit',
       parentId: '00000000-0000-4000-8000-000000000011',
       guessObjects: [
         { ...prismaGuessObject, world_location: prismaWorldLocation },
       ],
-    });
+    };
+
+    const category: FullCategory = CategoryMapper.toFullCategory(input);
 
     expect(category).toMatchObject({
       description: 'Places to visit',
@@ -91,7 +112,16 @@ describe('CategoryMapper.toFullCategory', () => {
   });
 
   it('returns an empty list when relations are not loaded', () => {
-    const category = CategoryMapper.toFullCategory(prismaCategory);
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
+    const category: FullCategory =
+      CategoryMapper.toFullCategory(prismaCategory);
 
     expect(category.guessObjects).toEqual([]);
   });
@@ -99,7 +129,38 @@ describe('CategoryMapper.toFullCategory', () => {
 
 describe('CategoryMapper.toFullCategories', () => {
   it('maps every full category', () => {
-    const categories = CategoryMapper.toFullCategories([
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
+    const prismaWorldLocation: PrismaWorldLocation = {
+      id: 'location-1',
+      osm_type: 'relation',
+      external_id: '7444',
+      name: 'Paris',
+      display_name: 'Paris, France',
+      addresstype: 'city',
+      centroid: [48.8566, 2.3522],
+      source: { provider: 'nominatim', external_id: '7444' },
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    };
+
+    const prismaGuessObject: PrismaGuessObject = {
+      id: '00000000-0000-4000-8000-000000000020',
+      name: 'Eiffel Tower',
+      image: 'https://example.com/eiffel.jpg',
+      description: 'A wrought-iron tower',
+      short_description: 'Paris landmark',
+      source: { provider: 'wikidata', external_id: 'Q243' },
+      world_location_id: 'location-1',
+    };
+
+    const input: Parameters<typeof CategoryMapper.toFullCategories>[0] = [
       { ...prismaCategory, guessObjects: [] },
       {
         ...prismaCategory,
@@ -108,7 +169,9 @@ describe('CategoryMapper.toFullCategories', () => {
           { ...prismaGuessObject, world_location: prismaWorldLocation },
         ],
       },
-    ]);
+    ];
+
+    const categories: FullCategory[] = CategoryMapper.toFullCategories(input);
 
     expect(
       categories.map(({ id, guessObjects }) => [id, guessObjects.length]),
@@ -121,6 +184,14 @@ describe('CategoryMapper.toFullCategories', () => {
 
 describe('CategoryMapper.toCategoryTree', () => {
   it('maps nested children recursively', () => {
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
     const child: PrismaCategoryNode = {
       ...prismaCategory,
       id: 'category-child',
@@ -133,7 +204,7 @@ describe('CategoryMapper.toCategoryTree', () => {
       children: [child],
     };
 
-    const tree = CategoryMapper.toCategoryTree(root);
+    const tree: CategoryTree = CategoryMapper.toCategoryTree(root);
 
     expect(tree.children).toEqual([
       {
@@ -150,12 +221,20 @@ describe('CategoryMapper.toCategoryTree', () => {
 
 describe('CategoryMapper.toCategoryTrees', () => {
   it('maps every root tree', () => {
+    const prismaCategory: PrismaCategory = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      parentId: null,
+    };
+
     const roots: PrismaCategoryNode[] = [
       { ...prismaCategory, children: [] },
       { ...prismaCategory, id: 'category-2', children: [] },
     ];
 
-    const trees = CategoryMapper.toCategoryTrees(roots);
+    const trees: CategoryTree[] = CategoryMapper.toCategoryTrees(roots);
 
     expect(trees.map(({ id }) => id)).toEqual([
       '00000000-0000-4000-8000-000000000010',
