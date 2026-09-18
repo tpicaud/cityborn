@@ -29,7 +29,7 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 
 ## Intégration et e2e
 
-En intégration, créer un fichier par repository ou adaptateur testé. Tester séparément, par service, les transactions qui coordonnent plusieurs repositories ; les autres services restent couverts au tier unitaire pour leurs branches métier.
+En intégration, créer un fichier par repository ou adaptateur testé. Regrouper dans `prisma-transaction.integration.spec.ts` les tests de rollback des transactions Prisma qui coordonnent plusieurs repositories, avec un `describe` par service puis par méthode. Les autres services restent couverts au tier unitaire pour leurs branches métier.
 
 Dans l'Arrange de chaque test d'intégration, déclarer les objets (avec leurs builders quand ils existent) et rendre les insertions explicites. Un helper Prisma éventuel ne fait qu'une insertion et reçoit l'objet à insérer en argument ; il ne construit ni ne choisit les données à la place du test.
 
