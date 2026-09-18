@@ -17,7 +17,7 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 
 ## Nommer et structurer
 
-- En unitaire, un `describe` cible une méthode ou fonction : `describe('SessionService.kickPlayer', ...)`. En intégration et e2e, il nomme la frontière observée.
+- En unitaire, un `describe` cible une méthode ou fonction : `describe('SessionService.kickPlayer', ...)`. En intégration, garder un `describe` externe pour le repository, service ou adaptateur observé ; pour les repositories, imbriquer un `describe` par méthode couverte, même avec un seul `it`. En e2e, le `describe` nomme la frontière observée.
 - Un `it` décrit en anglais un comportement au présent (`rejects when the requester is not the host`), jamais avec `should`.
 - Un `it` couvre un seul comportement. Plusieurs assertions sont permises lorsqu'elles caractérisent ensemble ce même résultat.
 - Séparer Arrange, Act et Assert par une ligne vide, sans commentaires `Arrange` / `Act` / `Assert`.
@@ -30,5 +30,7 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 ## Intégration et e2e
 
 En intégration, créer un fichier par repository ou adaptateur testé. Tester séparément, par service, les transactions qui coordonnent plusieurs repositories ; les autres services restent couverts au tier unitaire pour leurs branches métier.
+
+Dans l'Arrange de chaque test d'intégration, déclarer les objets (avec leurs builders quand ils existent) et rendre les insertions explicites. Un helper Prisma éventuel ne fait qu'une insertion et reçoit l'objet à insérer en argument ; il ne construit ni ne choisit les données à la place du test.
 
 Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md).
