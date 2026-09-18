@@ -34,6 +34,7 @@
     "db:test:stop": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test stop postgis-test redis-test"
   },
   "dependencies": {
+    "@axiomhq/pino": "^2.0.0",
     "@cityborn/api": "workspace:*",
     "@cityborn/core": "workspace:*",
     "@nestjs-cls/transactional": "^3.2.1",
