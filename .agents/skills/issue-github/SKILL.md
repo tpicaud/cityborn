@@ -12,7 +12,7 @@ description: Issues GitHub Cityborn. À utiliser pour préparer ou publier une i
 ## Règles de style
 - Toujours en français.
 - Ajouter les labels appropriés parmi la liste disponible sur GitHub. Demander uniquement si plusieurs labels possibles changent le routage ou la responsabilité du ticket.
-- Être concis : 30 lignes maximum.
+- Être concis : 60 lignes maximum.
 - Utiliser le Markdown seulement quand il rend le ticket plus clair.
 
 ## Autorisations
