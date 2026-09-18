@@ -57,80 +57,96 @@ describe('CategoryService transaction', () => {
     await infrastructure.close();
   });
 
-  async function seedCategoryWithGuessObject() {
-    const location = await worldLocationRepository.create(
-      CreateWorldLocationSchema.parse(buildWorldLocation()),
-    );
-    const guessObject = buildGuessObject();
-    const guessObjectId = await guessObjectRepository.create({
-      name: guessObject.name,
-      image: guessObject.image,
-      description: guessObject.description,
-      short_description: guessObject.short_description,
-      source: guessObject.source,
-      world_location_id: location.id,
-    });
-    const category = await categoryRepository.create(
-      buildCreateCategory({ guessObjectsIds: [guessObjectId] }),
-    );
-    return { category, guessObjectId, location };
-  }
+  describe('CategoryService.update', () => {
+    it('commits relation and orphan cleanup together', async () => {
+      const locationData = CreateWorldLocationSchema.parse(
+        buildWorldLocation(),
+      );
+      const location = await worldLocationRepository.create(locationData);
+      const guessObject = buildGuessObject();
+      const guessObjectId = await guessObjectRepository.create({
+        name: guessObject.name,
+        image: guessObject.image,
+        description: guessObject.description,
+        short_description: guessObject.short_description,
+        source: guessObject.source,
+        world_location_id: location.id,
+      });
+      const categoryData = buildCreateCategory({
+        guessObjectsIds: [guessObjectId],
+      });
+      const category = await categoryRepository.create(categoryData);
 
-  it('commits relation and orphan cleanup together', async () => {
-    const { category, guessObjectId, location } =
-      await seedCategoryWithGuessObject();
-
-    await categoryService.update(
-      category.id,
-      buildUpdateCategory({ id: category.id, disconnectIds: [guessObjectId] }),
-    );
-
-    expect(
-      await prisma.category.findUnique({
-        where: { id: category.id },
-        include: { guessObjects: true },
-      }),
-    ).toMatchObject({ guessObjects: [] });
-    expect(
-      await prisma.guessObject.count({ where: { id: guessObjectId } }),
-    ).toBe(0);
-    expect(
-      await prisma.worldLocation.count({ where: { id: location.id } }),
-    ).toBe(0);
-  });
-
-  it('rolls back relation and object deletion when location cleanup fails', async () => {
-    const { category, guessObjectId, location } =
-      await seedCategoryWithGuessObject();
-    jest
-      .spyOn(worldLocationRepository, 'delete')
-      .mockRejectedValueOnce(new Error('location cleanup failed'));
-
-    await expect(
-      categoryService.update(
+      await categoryService.update(
         category.id,
         buildUpdateCategory({
           id: category.id,
-          name: 'Changed',
           disconnectIds: [guessObjectId],
         }),
-      ),
-    ).rejects.toThrow('location cleanup failed');
+      );
 
-    expect(
-      await prisma.category.findUnique({
-        where: { id: category.id },
-        include: { guessObjects: true },
-      }),
-    ).toMatchObject({
-      name: 'Monuments',
-      guessObjects: [{ id: guessObjectId }],
+      expect(
+        await prisma.category.findUnique({
+          where: { id: category.id },
+          include: { guessObjects: true },
+        }),
+      ).toMatchObject({ guessObjects: [] });
+      expect(
+        await prisma.guessObject.count({ where: { id: guessObjectId } }),
+      ).toBe(0);
+      expect(
+        await prisma.worldLocation.count({ where: { id: location.id } }),
+      ).toBe(0);
     });
-    expect(
-      await prisma.guessObject.count({ where: { id: guessObjectId } }),
-    ).toBe(1);
-    expect(
-      await prisma.worldLocation.count({ where: { id: location.id } }),
-    ).toBe(1);
+
+    it('rolls back relation and object deletion when location cleanup fails', async () => {
+      const locationData = CreateWorldLocationSchema.parse(
+        buildWorldLocation(),
+      );
+      const location = await worldLocationRepository.create(locationData);
+      const guessObject = buildGuessObject();
+      const guessObjectId = await guessObjectRepository.create({
+        name: guessObject.name,
+        image: guessObject.image,
+        description: guessObject.description,
+        short_description: guessObject.short_description,
+        source: guessObject.source,
+        world_location_id: location.id,
+      });
+      const categoryData = buildCreateCategory({
+        guessObjectsIds: [guessObjectId],
+      });
+      const category = await categoryRepository.create(categoryData);
+      jest
+        .spyOn(worldLocationRepository, 'delete')
+        .mockRejectedValueOnce(new Error('location cleanup failed'));
+
+      await expect(
+        categoryService.update(
+          category.id,
+          buildUpdateCategory({
+            id: category.id,
+            name: 'Changed',
+            disconnectIds: [guessObjectId],
+          }),
+        ),
+      ).rejects.toThrow('location cleanup failed');
+
+      expect(
+        await prisma.category.findUnique({
+          where: { id: category.id },
+          include: { guessObjects: true },
+        }),
+      ).toMatchObject({
+        name: 'Monuments',
+        guessObjects: [{ id: guessObjectId }],
+      });
+      expect(
+        await prisma.guessObject.count({ where: { id: guessObjectId } }),
+      ).toBe(1);
+      expect(
+        await prisma.worldLocation.count({ where: { id: location.id } }),
+      ).toBe(1);
+    });
   });
 });

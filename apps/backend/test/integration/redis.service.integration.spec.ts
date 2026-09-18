@@ -12,40 +12,48 @@ describe('RedisService with Redis', () => {
     await infrastructure.close();
   });
 
-  it('serializes JSON and applies a TTL', async () => {
-    const payload = { player: 'host', score: 12 };
+  describe('RedisService.setJSON', () => {
+    it('serializes JSON and applies a TTL', async () => {
+      const payload = { player: 'host', score: 12 };
 
-    await redisService.setJSON('integration:payload', payload, 10);
+      await redisService.setJSON('integration:payload', payload, 10);
 
-    expect(
-      await redisService.getJSON<typeof payload>('integration:payload'),
-    ).toEqual({ player: 'host', score: 12 });
-    expect(await redis.ttl('integration:payload')).toBeGreaterThan(0);
-    expect(await redis.ttl('integration:payload')).toBeLessThanOrEqual(10);
+      expect(
+        await redisService.getJSON<typeof payload>('integration:payload'),
+      ).toEqual({ player: 'host', score: 12 });
+      expect(await redis.ttl('integration:payload')).toBeGreaterThan(0);
+      expect(await redis.ttl('integration:payload')).toBeLessThanOrEqual(10);
+    });
   });
 
-  it('expires a key after its TTL', async () => {
-    await redisService.set('integration:ttl', 'value', 1);
+  describe('RedisService.set', () => {
+    it('expires a key after its TTL', async () => {
+      await redisService.set('integration:ttl', 'value', 1);
 
-    await new Promise((resolve) => setTimeout(resolve, 1_100));
+      await new Promise((resolve) => setTimeout(resolve, 1_100));
 
-    expect(await redisService.get('integration:ttl')).toBeNull();
+      expect(await redisService.get('integration:ttl')).toBeNull();
+    });
   });
 
-  it('expires a key immediately when requested', async () => {
-    await redisService.setJSON('integration:expiring', { value: true });
+  describe('RedisService.expire', () => {
+    it('expires a key immediately when requested', async () => {
+      await redisService.setJSON('integration:expiring', { value: true });
 
-    await redisService.expire('integration:expiring', 0);
+      await redisService.expire('integration:expiring', 0);
 
-    expect(await redisService.getJSON('integration:expiring')).toBeNull();
+      expect(await redisService.getJSON('integration:expiring')).toBeNull();
+    });
   });
 
-  it('deletes a stored value', async () => {
-    await redisService.set('integration:deleting', 'value');
+  describe('RedisService.del', () => {
+    it('deletes a stored value', async () => {
+      await redisService.set('integration:deleting', 'value');
 
-    const deleted = await redisService.del('integration:deleting');
+      const deleted = await redisService.del('integration:deleting');
 
-    expect(deleted).toBe(1);
-    expect(await redisService.get('integration:deleting')).toBeNull();
+      expect(deleted).toBe(1);
+      expect(await redisService.get('integration:deleting')).toBeNull();
+    });
   });
 });

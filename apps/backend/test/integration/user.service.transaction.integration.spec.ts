@@ -45,50 +45,62 @@ describe('UserService transaction', () => {
     await infrastructure.close();
   });
 
-  async function seedUnverifiedUser() {
-    const userData = buildUser({ isVerified: false });
-    const user = await userRepository.create({
-      email: userData.email,
-      username: userData.username,
-      type: userData.type,
-      isVerified: userData.isVerified,
+  describe('UserService.verifyEmail', () => {
+    it('commits email verification and token cleanup together', async () => {
+      const userData = buildUser({ isVerified: false });
+      const user = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        isVerified: userData.isVerified,
+      });
+      await tokenRepository.createVerificationToken({
+        userId: user.id,
+        token: 'verification-token',
+        expiresAt: new Date('2099-01-01'),
+      });
+
+      await userService.verifyEmail('verification-token');
+
+      expect(
+        await prisma.user.findUnique({ where: { id: user.id } }),
+      ).toMatchObject({ isVerified: true });
+      expect(
+        await prisma.emailVerificationToken.count({
+          where: { userId: user.id },
+        }),
+      ).toBe(0);
     });
-    await tokenRepository.createVerificationToken({
-      userId: user.id,
-      token: 'verification-token',
-      expiresAt: new Date('2099-01-01'),
+
+    it('keeps a user unverified and retains the token when token cleanup fails', async () => {
+      const userData = buildUser({ isVerified: false });
+      const user = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        isVerified: userData.isVerified,
+      });
+      await tokenRepository.createVerificationToken({
+        userId: user.id,
+        token: 'verification-token',
+        expiresAt: new Date('2099-01-01'),
+      });
+      jest
+        .spyOn(tokenRepository, 'deleteVerificationTokensByUserId')
+        .mockRejectedValueOnce(new Error('token cleanup failed'));
+
+      await expect(
+        userService.verifyEmail('verification-token'),
+      ).rejects.toThrow('token cleanup failed');
+
+      expect(
+        await prisma.user.findUnique({ where: { id: user.id } }),
+      ).toMatchObject({ isVerified: false });
+      expect(
+        await prisma.emailVerificationToken.count({
+          where: { userId: user.id },
+        }),
+      ).toBe(1);
     });
-    return user;
-  }
-
-  it('commits email verification and token cleanup together', async () => {
-    const user = await seedUnverifiedUser();
-
-    await userService.verifyEmail('verification-token');
-
-    expect(
-      await prisma.user.findUnique({ where: { id: user.id } }),
-    ).toMatchObject({ isVerified: true });
-    expect(
-      await prisma.emailVerificationToken.count({ where: { userId: user.id } }),
-    ).toBe(0);
-  });
-
-  it('keeps a user unverified and retains the token when token cleanup fails', async () => {
-    const user = await seedUnverifiedUser();
-    jest
-      .spyOn(tokenRepository, 'deleteVerificationTokensByUserId')
-      .mockRejectedValueOnce(new Error('token cleanup failed'));
-
-    await expect(userService.verifyEmail('verification-token')).rejects.toThrow(
-      'token cleanup failed',
-    );
-
-    expect(
-      await prisma.user.findUnique({ where: { id: user.id } }),
-    ).toMatchObject({ isVerified: false });
-    expect(
-      await prisma.emailVerificationToken.count({ where: { userId: user.id } }),
-    ).toBe(1);
   });
 });
