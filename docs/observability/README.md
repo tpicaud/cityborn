@@ -18,9 +18,10 @@ n'ajoute la cible Axiom que si elles sont toutes les deux définies. En
 développement local et dans les tests, aucune des deux n'est renseignée et le
 comportement des logs reste inchangé.
 
-L'ingestion est épinglée sur `https://api.eu.axiom.co` : les wide events
-portent des données personnelles (`ip`, `userAgent`, `userId`), le compte et les
-datasets doivent donc être provisionnés sur la région EU.
+L'ingestion est épinglée sur le domaine edge EU `eu-central-1.aws.edge.axiom.co`,
+via l'option `edge` du transport comme le prescrit la [doc Axiom](https://axiom.co/docs/guides/pino) :
+les wide events portent des données personnelles (`ip`, `userAgent`, `userId`),
+le compte et les datasets doivent donc être provisionnés sur la région EU.
 
 La `redact` de pino s'applique dans le thread principal, avant la sérialisation
 vers les transports : les champs masqués ne quittent jamais le process en clair.

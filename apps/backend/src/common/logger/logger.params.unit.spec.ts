@@ -38,7 +38,7 @@ describe('buildLoggerTransport', () => {
           options: {
             token: 'token',
             dataset: 'cityborn-backend-prod',
-            url: 'https://api.eu.axiom.co',
+            edge: 'eu-central-1.aws.edge.axiom.co',
           },
         },
       ],

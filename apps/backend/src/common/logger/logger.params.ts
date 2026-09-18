@@ -10,7 +10,7 @@ import type { WideEventClsStore } from '../wide-event/wide-event.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const AXIOM_EU_API_URL = 'https://api.eu.axiom.co';
+const AXIOM_EU_EDGE_DOMAIN = 'eu-central-1.aws.edge.axiom.co';
 
 export interface LoggerTransportEnvironment {
   isProduction: boolean;
@@ -42,7 +42,7 @@ function axiomTarget(
     options: {
       token: axiomToken,
       dataset: axiomDataset,
-      url: AXIOM_EU_API_URL,
+      edge: AXIOM_EU_EDGE_DOMAIN,
     },
   };
 }
