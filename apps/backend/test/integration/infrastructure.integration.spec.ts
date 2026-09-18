@@ -18,14 +18,14 @@ describe('Test infrastructure', () => {
       const spatialReferencesBefore = await prisma.$queryRaw`
         SELECT count(*) FROM spatial_ref_sys
       `;
-      const { id, email, username, type, isVerified } = buildUser();
+      const userData = buildUser();
       const user = await prisma.user.create({
         data: {
-          id,
-          email,
-          username,
-          type,
-          isVerified,
+          id: userData.id,
+          email: userData.email,
+          username: userData.username,
+          type: userData.type,
+          isVerified: userData.isVerified,
           tokens: {
             create: {
               token: 'infrastructure-token',

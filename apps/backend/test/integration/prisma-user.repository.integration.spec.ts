@@ -64,6 +64,7 @@ describe('PrismaUserRepository', () => {
   describe('findByIdentifiers', () => {
     it('finds an existing user by either username or email', async () => {
       const userData = buildUser();
+      const unusedUser = buildUser({ username: 'unused' });
       await userRepository.create({
         email: userData.email,
         username: userData.username,
@@ -75,7 +76,7 @@ describe('PrismaUserRepository', () => {
         'unused@cityborn.test',
       );
       const byEmail = await userRepository.findByIdentifiers(
-        buildUser({ username: 'unused' }).username,
+        unusedUser.username,
         'host@cityborn.test',
       );
 

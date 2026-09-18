@@ -54,10 +54,10 @@ describe('PrismaGameRecordRepository', () => {
       });
       const recordIds: GameRecordId[] = [];
       for (let index = 0; index < 6; index++) {
-        const record = await gameRecordRepository.create(
-          buildCreateGameRecord(),
-          [{ id: user.id }],
-        );
+        const recordData = buildCreateGameRecord();
+        const record = await gameRecordRepository.create(recordData, [
+          { id: user.id },
+        ]);
         recordIds.push(record.id);
         await prisma.gameRecord.update({
           where: { id: record.id },

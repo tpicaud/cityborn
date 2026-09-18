@@ -26,9 +26,10 @@ describe('PrismaWorldLocationRepository', () => {
 
   describe('create', () => {
     it('persists location geometry', async () => {
-      const data = CreateWorldLocationSchema.parse(buildWorldLocation());
+      const locationData = buildWorldLocation();
+      const createData = CreateWorldLocationSchema.parse(locationData);
 
-      const location = await worldLocationRepository.create(data);
+      const location = await worldLocationRepository.create(createData);
 
       expect(location).toMatchObject({
         name: 'Paris',
@@ -43,19 +44,22 @@ describe('PrismaWorldLocationRepository', () => {
     });
 
     it('rejects duplicate OSM identifiers', async () => {
-      const data = CreateWorldLocationSchema.parse(buildWorldLocation());
-      await worldLocationRepository.create(data);
+      const locationData = buildWorldLocation();
+      const createData = CreateWorldLocationSchema.parse(locationData);
+      const duplicateData = { ...createData, name: 'Another city' };
+      await worldLocationRepository.create(createData);
 
       await expect(
-        worldLocationRepository.create({ ...data, name: 'Another city' }),
+        worldLocationRepository.create(duplicateData),
       ).rejects.toMatchObject({ code: 'P2002' });
     });
   });
 
   describe('findBySource', () => {
     it('finds a location by OSM identifier with geometry', async () => {
-      const data = CreateWorldLocationSchema.parse(buildWorldLocation());
-      const location = await worldLocationRepository.create(data);
+      const locationData = buildWorldLocation();
+      const createData = CreateWorldLocationSchema.parse(locationData);
+      const location = await worldLocationRepository.create(createData);
 
       const found = await worldLocationRepository.findBySource(
         { provider: 'relation', external_id: '7444' },
@@ -73,9 +77,9 @@ describe('PrismaWorldLocationRepository', () => {
 
   describe('delete', () => {
     it('cascades geometry deletion when its location is removed', async () => {
-      const location = await worldLocationRepository.create(
-        CreateWorldLocationSchema.parse(buildWorldLocation()),
-      );
+      const locationData = buildWorldLocation();
+      const createData = CreateWorldLocationSchema.parse(locationData);
+      const location = await worldLocationRepository.create(createData);
 
       await worldLocationRepository.delete(location.id);
 

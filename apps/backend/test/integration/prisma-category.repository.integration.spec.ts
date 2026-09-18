@@ -2,6 +2,7 @@ import {
   buildCreateCategory,
   buildGuessObject,
   buildUpdateCategory,
+  buildWorldLocation,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
@@ -30,24 +31,27 @@ describe('PrismaCategoryRepository', () => {
 
   describe('create', () => {
     it('connects a guess object when creating a category', async () => {
+      const location = buildWorldLocation();
       const guessObject = buildGuessObject();
+      const categoryData = buildCreateCategory({
+        guessObjectsIds: [guessObject.id],
+      });
       await prisma.worldLocation.create({
         data: {
-          osm_type: 'relation',
-          external_id: '7444',
-          name: 'Paris',
-          display_name: 'Paris, France',
-          centroid: [48.8566, 2.3522],
-          source: { provider: 'nominatim', external_id: '7444' },
+          id: location.id,
+          osm_type: location.osm_type,
+          external_id: location.source.external_id,
+          name: location.name,
+          display_name: location.display_name,
+          centroid: location.centroid,
+          source: location.source,
           guessObjects: {
             create: { id: guessObject.id, name: guessObject.name },
           },
         },
       });
 
-      const category = await categoryRepository.create(
-        buildCreateCategory({ guessObjectsIds: [guessObject.id] }),
-      );
+      const category = await categoryRepository.create(categoryData);
       const categories = await categoryRepository.findFullBy({
         ids: [category.id],
       });
@@ -63,31 +67,32 @@ describe('PrismaCategoryRepository', () => {
 
   describe('update', () => {
     it('disconnects a guess object when updating a category', async () => {
+      const location = buildWorldLocation();
       const guessObject = buildGuessObject();
+      const categoryData = buildCreateCategory({
+        guessObjectsIds: [guessObject.id],
+      });
       await prisma.worldLocation.create({
         data: {
-          osm_type: 'relation',
-          external_id: '7444',
-          name: 'Paris',
-          display_name: 'Paris, France',
-          centroid: [48.8566, 2.3522],
-          source: { provider: 'nominatim', external_id: '7444' },
+          id: location.id,
+          osm_type: location.osm_type,
+          external_id: location.source.external_id,
+          name: location.name,
+          display_name: location.display_name,
+          centroid: location.centroid,
+          source: location.source,
           guessObjects: {
             create: { id: guessObject.id, name: guessObject.name },
           },
         },
       });
-      const category = await categoryRepository.create(
-        buildCreateCategory({ guessObjectsIds: [guessObject.id] }),
-      );
+      const category = await categoryRepository.create(categoryData);
+      const updateData = buildUpdateCategory({
+        id: category.id,
+        disconnectIds: [guessObject.id],
+      });
 
-      await categoryRepository.update(
-        category.id,
-        buildUpdateCategory({
-          id: category.id,
-          disconnectIds: [guessObject.id],
-        }),
-      );
+      await categoryRepository.update(category.id, updateData);
 
       expect(
         await categoryRepository.countByGuessObjectId(guessObject.id),
@@ -101,15 +106,21 @@ describe('PrismaCategoryRepository', () => {
 
   describe('findTree', () => {
     it('loads nested categories beneath published roots', async () => {
-      const root = await categoryRepository.create(
-        buildCreateCategory({ name: 'Countries', isPublished: true }),
-      );
-      const child = await categoryRepository.create(
-        buildCreateCategory({ name: 'France', parentId: root.id }),
-      );
-      await categoryRepository.create(
-        buildCreateCategory({ name: 'Hidden', isPublished: false }),
-      );
+      const rootData = buildCreateCategory({
+        name: 'Countries',
+        isPublished: true,
+      });
+      const root = await categoryRepository.create(rootData);
+      const childData = buildCreateCategory({
+        name: 'France',
+        parentId: root.id,
+      });
+      const child = await categoryRepository.create(childData);
+      const hiddenData = buildCreateCategory({
+        name: 'Hidden',
+        isPublished: false,
+      });
+      await categoryRepository.create(hiddenData);
 
       const tree = await categoryRepository.findTree({ isPublished: true });
 

@@ -84,10 +84,11 @@ describe('Prisma transactions', () => {
   describe('CategoryService', () => {
     describe('update', () => {
       it('rolls back relation and object deletion when location cleanup fails', async () => {
-        const locationData = CreateWorldLocationSchema.parse(
-          buildWorldLocation(),
-        );
-        const location = await worldLocationRepository.create(locationData);
+        const locationData = buildWorldLocation();
+        const createLocationData =
+          CreateWorldLocationSchema.parse(locationData);
+        const location =
+          await worldLocationRepository.create(createLocationData);
         const guessObject = buildGuessObject();
         const guessObjectId = await guessObjectRepository.create({
           name: guessObject.name,
@@ -101,19 +102,17 @@ describe('Prisma transactions', () => {
           guessObjectsIds: [guessObjectId],
         });
         const category = await categoryRepository.create(categoryData);
+        const updateData = buildUpdateCategory({
+          id: category.id,
+          name: 'Changed',
+          disconnectIds: [guessObjectId],
+        });
         jest
           .spyOn(worldLocationRepository, 'delete')
           .mockRejectedValueOnce(new Error('location cleanup failed'));
 
         await expect(
-          categoryService.update(
-            category.id,
-            buildUpdateCategory({
-              id: category.id,
-              name: 'Changed',
-              disconnectIds: [guessObjectId],
-            }),
-          ),
+          categoryService.update(category.id, updateData),
         ).rejects.toThrow('location cleanup failed');
 
         expect(
