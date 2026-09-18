@@ -1,4 +1,8 @@
-import type { CreateWorldLocation, WorldLocation } from '@cityborn/api';
+import type {
+  CreateWorldLocation,
+  WorldLocation,
+  WorldLocationSource,
+} from '@cityborn/api';
 import { buildWorldLocation, CreateWorldLocationSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -24,6 +28,58 @@ describe('PrismaWorldLocationRepository', () => {
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  describe('existsById', () => {
+    it('distinguishes a persisted location from an absent one', async () => {
+      const locationData: WorldLocation = buildWorldLocation();
+      const absentLocation: WorldLocation = buildWorldLocation({
+        id: 'location-missing',
+      });
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const location: WorldLocation =
+        await worldLocationRepository.create(createData);
+
+      const exists: boolean = await worldLocationRepository.existsById(
+        location.id,
+      );
+      const absent: boolean = await worldLocationRepository.existsById(
+        absentLocation.id,
+      );
+
+      expect(exists).toBe(true);
+      expect(absent).toBe(false);
+    });
+  });
+
+  describe('findById', () => {
+    it('loads a persisted location with geometry', async () => {
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const location: WorldLocation =
+        await worldLocationRepository.create(createData);
+
+      const withGeometry: WorldLocation | null =
+        await worldLocationRepository.findById(location.id, { geometry: true });
+
+      expect(withGeometry?.geometry).toEqual({
+        type: 'Point',
+        coordinates: [2.3522, 48.8566],
+      });
+    });
+
+    it('returns null for an unknown identifier', async () => {
+      const absentLocation: WorldLocation = buildWorldLocation();
+
+      const found: WorldLocation | null =
+        await worldLocationRepository.findById(absentLocation.id, {
+          geometry: true,
+        });
+
+      expect(found).toBeNull();
+    });
   });
 
   describe('create', () => {
@@ -83,6 +139,22 @@ describe('PrismaWorldLocationRepository', () => {
         centroid: [48.8566, 2.3522],
         geometry: { type: 'Point', coordinates: [2.3522, 48.8566] },
       });
+    });
+
+    it('requires both the OSM type and external identifier to match', async () => {
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const source: WorldLocationSource = {
+        provider: 'node',
+        external_id: locationData.source.external_id,
+      };
+      await worldLocationRepository.create(createData);
+
+      const found: WorldLocation | null =
+        await worldLocationRepository.findBySource(source, { geometry: true });
+
+      expect(found).toBeNull();
     });
   });
 

@@ -3,7 +3,10 @@ import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
-import type { UserCredentials } from '../../src/user/repositories/user.repository';
+import type {
+  CreateUserData,
+  UserCredentials,
+} from '../../src/user/repositories/user.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaUserRepository', () => {
@@ -26,6 +29,72 @@ describe('PrismaUserRepository', () => {
     await infrastructure.close();
   });
 
+  describe('create', () => {
+    it('enforces the unique email constraint', async () => {
+      const firstUser: User = buildUser();
+      const duplicateUser: User = buildUser({
+        id: '00000000-0000-4000-8000-000000000002',
+        username: 'guest',
+      });
+      const firstData: CreateUserData = {
+        email: firstUser.email,
+        username: firstUser.username,
+        type: firstUser.type,
+      };
+      const duplicateData: CreateUserData = {
+        email: duplicateUser.email,
+        username: duplicateUser.username,
+        type: duplicateUser.type,
+      };
+      await userRepository.create(firstData);
+
+      await expect(userRepository.create(duplicateData)).rejects.toMatchObject({
+        code: 'P2002',
+      });
+    });
+  });
+
+  describe('delete', () => {
+    it('removes the requested user', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      await userRepository.delete(user.id);
+
+      expect(await userRepository.findById(user.id)).toBeNull();
+    });
+  });
+
+  describe('findById', () => {
+    it('returns a persisted user by identifier', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const found: User | null = await userRepository.findById(user.id);
+
+      expect(found).toMatchObject({
+        id: user.id,
+        email: userData.email,
+      });
+    });
+
+    it('returns null for an unknown identifier', async () => {
+      const absentUser: User = buildUser();
+
+      const found: User | null = await userRepository.findById(absentUser.id);
+
+      expect(found).toBeNull();
+    });
+  });
+
   describe('findCredentialsByIdentifier', () => {
     it('finds persisted credentials by email', async () => {
       const userData: User = buildUser({ isVerified: false });
@@ -41,6 +110,24 @@ describe('PrismaUserRepository', () => {
         await userRepository.findCredentialsByIdentifier('host@cityborn.test');
       expect(credentials).toMatchObject({
         user: { id: user.id, username: 'host', isVerified: false },
+        passwordHash: 'hashed-password',
+      });
+    });
+
+    it('finds persisted credentials by username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        password: 'hashed-password',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByIdentifier(user.username);
+
+      expect(credentials).toMatchObject({
+        user: { id: user.id },
         passwordHash: 'hashed-password',
       });
     });
@@ -94,6 +181,25 @@ describe('PrismaUserRepository', () => {
         username: 'host',
         email: 'host@cityborn.test',
       });
+    });
+  });
+
+  describe('existsByUsername', () => {
+    it('distinguishes an existing username from an unused one', async () => {
+      const userData: User = buildUser();
+      await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const exists: boolean = await userRepository.existsByUsername(
+        userData.username,
+      );
+      const absent: boolean = await userRepository.existsByUsername('unused');
+
+      expect(exists).toBe(true);
+      expect(absent).toBe(false);
     });
   });
 

@@ -5,6 +5,7 @@ import {
   type GameRecordId,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
+import type { Prisma } from '@prisma/client';
 import { PrismaGameRecordRepository } from '../../src/game-record/repositories/prisma-game-record.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
@@ -28,6 +29,55 @@ describe('PrismaGameRecordRepository', () => {
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  describe('create', () => {
+    it('persists a game record linked to its users', async () => {
+      const firstUser: User = buildUser();
+      const secondUser: User = buildUser({
+        id: '00000000-0000-4000-8000-000000000002',
+        email: 'guest@cityborn.test',
+        username: 'guest',
+      });
+      const recordData: CreateGameRecord = buildCreateGameRecord();
+      await prisma.user.createMany({
+        data: [
+          {
+            id: firstUser.id,
+            email: firstUser.email,
+            username: firstUser.username,
+            type: firstUser.type,
+          },
+          {
+            id: secondUser.id,
+            email: secondUser.email,
+            username: secondUser.username,
+            type: secondUser.type,
+          },
+        ],
+      });
+
+      const record: Pick<GameRecord, 'id'> = await gameRecordRepository.create(
+        recordData,
+        [{ id: firstUser.id }, { id: secondUser.id }],
+      );
+
+      const persisted: Prisma.GameRecordGetPayload<{
+        include: { users: true };
+      }> | null = await prisma.gameRecord.findUnique({
+        where: { id: record.id },
+        include: { users: true },
+      });
+
+      expect(persisted).toMatchObject({
+        mode: 'solo',
+        gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
+      });
+      expect(persisted?.users.map(({ id }) => id).sort()).toEqual([
+        '00000000-0000-4000-8000-000000000001',
+        '00000000-0000-4000-8000-000000000002',
+      ]);
+    });
   });
 
   describe('findRecentByUserId', () => {
