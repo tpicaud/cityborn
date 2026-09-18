@@ -7,3 +7,13 @@
 # since before this change; no existing client can have signed up with a password that
 # violates it, so this is not breaking in practice.
 POST /auth/sign-up added the pattern `^(?=.*[A-Z])(?=.*\d).+$` to the request property `password`
+
+# 2026-09-18 — GET /guess-object/ and /guess-object/{id} unreachable full routes removed (issue #276).
+# getFullGuessObject(s) declared the same paths as getGuessObject(s) and were never routed to:
+# Express matches in registration order, so the earlier declaration always won. The OpenAPI
+# generator indexes by paths[path][method], so the later declaration overwrote the earlier one
+# and v1 to v4 documented `world_location` while the runtime has always served
+# `world_location_preview`. Removing them realigns the spec on a runtime that never changed;
+# no client can have consumed a response these routes never produced.
+GET /guess-object/ removed the required property `items/world_location` from the response with the `200` status
+GET /guess-object/{id} removed the required property `world_location` from the response with the `200` status

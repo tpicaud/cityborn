@@ -6,8 +6,6 @@ import {
   IncludeQuerySchema,
 } from '../schemas/common.schema';
 import {
-  FullGuessObjectSchema,
-  FullGuessObjectsSchema,
   GuessObjectSchema,
   GuessObjectsSchema,
 } from '../schemas/guess-object.schema';
@@ -28,19 +26,6 @@ export const guessObjectContract = c.router(
       pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
       responses: { 200: GuessObjectSchema, ...commonErrorResponses },
-    },
-    getFullGuessObject: {
-      method: 'GET',
-      path: '/:id',
-      pathParams: GuessObjectIdParamSchema,
-      query: IncludeQuerySchema,
-      responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
-    },
-    getFullGuessObjects: {
-      method: 'GET',
-      path: '/',
-      query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
     },
   },
   { pathPrefix: '/guess-object' },
