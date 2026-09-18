@@ -11,8 +11,8 @@ Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les c
 | `apps/backend` | NestJS + Prisma. API exposée via contrats ts-rest. |
 | `apps/frontend`, `apps/back-office` | Next.js (App Router). |
 | `apps/mobile` | Expo / React Native. |
-| `packages/api` | **Source de vérité des contrats** : ts-rest + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
-| `packages/client` | Code partagé **front + mobile** qui **ne transite pas** par l'API, rangé par domaine et exposé en sous-chemins (`./api`, `./auth`, `./session`, `./game`, `./platform`). Agnostique de Next, Expo et du rendu. |
+| `packages/api` | **Source de vérité des contrats** : ts-rest et WebSocket + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
+| `packages/client` | Code partagé **front + mobile** qui **ne transite pas** par l'API, rangé par domaine et exposé en sous-chemins (`./api`, `./ws`, `./auth`, `./session`, `./game`, `./platform`). Agnostique de Next, Expo et du rendu. |
 | `packages/core` | Code partagé **backend + client** (front/mobile). Aujourd'hui la logique de jeu (`src/game`) ; a vocation à s'étoffer. Dépend de `@cityborn/api`. |
 | `packages/design-system` | Composants UI partagés. |
 
@@ -51,7 +51,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 ## Frontières du monorepo
 
 - `packages/api` est la **source de vérité des contrats**. Toute évolution d'un contrat existant doit rester **rétrocompatible** (`check:api-compat` en CI). Un breaking change = bump de version d'API, jamais une modif silencieuse.
-- Modifier un contrat `@cityborn/api` (route, schéma zod, type, enum) → skill **`api-contract-change`**.
+- Modifier un contrat `@cityborn/api` (route, event WS, schéma zod, type, enum) → skill **`api-contract-change`**.
 - Déprécier / nettoyer un élément déprécié → skills **`deprecate`** / **`check-and-remove-deprecated`**.
 
 ## Commandes
