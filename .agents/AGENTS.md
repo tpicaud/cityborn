@@ -42,6 +42,8 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
   const rateLimitService = new RateLimitService(redisService); // ✅
   ```
 - **Éviter `as`** : un cast casse l'inférence et masque des erreurs.
+- **Objets typés** : quand un type nommé décrit l'objet créé, préférer `const objet: Type = { ... }`. Réserver `satisfies Type` aux cas où conserver le type inféré de l'expression est utile ; éviter `satisfies Parameters<typeof méthode>[0]` si un type nommé existe.
+- **Variables locales** : laisser l'inférence agir quand le type découle clairement de l'initialiseur, notamment du retour d'une méthode. Annoter explicitement quand l'inférence est ambiguë ou trop large, ou quand la variable doit exprimer un contrat indépendant de son initialiseur, notamment pour les données de test.
 - **Éviter `else`** : early return ; ternaire seulement si vraiment nécessaire.
 - **`import type { … }`** obligatoire pour les types (forcé par Biome `useImportType`).
 - **Nouveaux fichiers** : inspecter les fichiers voisins et suivre le précédent dominant. Préférer étendre un fichier existant quand sa responsabilité reste cohérente. Demander uniquement si plusieurs emplacements correspondent à des responsabilités différentes et que le choix affecte l'architecture publique.
