@@ -21,6 +21,18 @@ const c = initContract();
 
 export const guessObjectAdminContract = c.router(
   {
+    getFullGuessObjects: {
+      method: 'GET',
+      path: '/full',
+      query: z.object({ guessObjectsIds: z.string() }),
+      responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
+    },
+    getFullGuessObject: {
+      method: 'GET',
+      path: '/:id/full',
+      pathParams: GuessObjectIdParamSchema,
+      responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
+    },
     getGuessObject: {
       method: 'GET',
       path: '/:id',
@@ -33,18 +45,6 @@ export const guessObjectAdminContract = c.router(
       path: '/',
       query: z.object({ guessObjectsIds: z.string() }),
       responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
-    },
-    getFullGuessObject: {
-      method: 'GET',
-      path: '/:id/full',
-      pathParams: GuessObjectIdParamSchema,
-      responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
-    },
-    getFullGuessObjects: {
-      method: 'GET',
-      path: '/full',
-      query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
     },
     createGuessObject: {
       method: 'POST',
