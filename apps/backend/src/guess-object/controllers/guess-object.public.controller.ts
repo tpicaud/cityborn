@@ -32,29 +32,6 @@ export class PublicGuessObjectController {
           body: await this.guessObjectsService.findBy({ ids: idsArray }),
         };
       },
-
-      getFullGuessObject: async ({ params }) => {
-        const [guessObject] = await this.guessObjectsService.findFullBy({
-          ids: [params.id],
-        });
-        if (!guessObject) {
-          throw new NotFoundException({
-            code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
-            message: 'GuessObject not found',
-          });
-        }
-        return { status: 200 as const, body: guessObject };
-      },
-
-      getFullGuessObjects: async ({ query }) => {
-        const idsArray = query.guessObjectsIds
-          .split(',')
-          .map((id) => GuessObjectIdSchema.parse(id));
-        return {
-          status: 200 as const,
-          body: await this.guessObjectsService.findFullBy({ ids: idsArray }),
-        };
-      },
     });
   }
 }
