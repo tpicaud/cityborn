@@ -16771,13 +16771,10 @@
                           "external_id"
                         ]
                       },
-                      "world_location": {
+                      "world_location_preview": {
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string"
-                          },
-                          "osm_type": {
                             "type": "string"
                           },
                           "name": {
@@ -16785,65 +16782,19 @@
                           },
                           "display_name": {
                             "type": "string"
-                          },
-                          "addresstype": {
-                            "type": "string"
-                          },
-                          "centroid": {},
-                          "source": {
-                            "type": "object",
-                            "properties": {
-                              "provider": {
-                                "type": "string"
-                              },
-                              "external_id": {
-                                "type": "string",
-                                "nullable": true
-                              }
-                            },
-                            "required": [
-                              "provider"
-                            ]
-                          },
-                          "geometry": {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "Point",
-                                  "Polygon",
-                                  "MultiPolygon"
-                                ]
-                              },
-                              "coordinates": {
-                                "type": "array",
-                                "items": {
-                                  "nullable": true
-                                }
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "coordinates"
-                            ]
                           }
                         },
                         "required": [
                           "id",
-                          "osm_type",
                           "name",
-                          "display_name",
-                          "centroid",
-                          "source",
-                          "geometry"
+                          "display_name"
                         ]
                       }
                     },
                     "required": [
                       "id",
                       "name",
-                      "world_location"
+                      "world_location_preview"
                     ]
                   }
                 }
@@ -17543,13 +17494,10 @@
                         "external_id"
                       ]
                     },
-                    "world_location": {
+                    "world_location_preview": {
                       "type": "object",
                       "properties": {
                         "id": {
-                          "type": "string"
-                        },
-                        "osm_type": {
                           "type": "string"
                         },
                         "name": {
@@ -17557,65 +17505,19 @@
                         },
                         "display_name": {
                           "type": "string"
-                        },
-                        "addresstype": {
-                          "type": "string"
-                        },
-                        "centroid": {},
-                        "source": {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string"
-                            },
-                            "external_id": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          },
-                          "required": [
-                            "provider"
-                          ]
-                        },
-                        "geometry": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "Point",
-                                "Polygon",
-                                "MultiPolygon"
-                              ]
-                            },
-                            "coordinates": {
-                              "type": "array",
-                              "items": {
-                                "nullable": true
-                              }
-                            }
-                          },
-                          "required": [
-                            "type",
-                            "coordinates"
-                          ]
                         }
                       },
                       "required": [
                         "id",
-                        "osm_type",
                         "name",
-                        "display_name",
-                        "centroid",
-                        "source",
-                        "geometry"
+                        "display_name"
                       ]
                     }
                   },
                   "required": [
                     "id",
                     "name",
-                    "world_location"
+                    "world_location_preview"
                   ]
                 }
               }
@@ -23808,6 +23710,1537 @@
         }
       }
     },
+    "/admin/guess-object/full": {
+      "get": {
+        "tags": [
+          "Admin - GuessObjects"
+        ],
+        "parameters": [
+          {
+            "name": "guessObjectsIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "short_description": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "provider": {
+                            "type": "string"
+                          },
+                          "external_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "provider",
+                          "external_id"
+                        ]
+                      },
+                      "world_location": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "osm_type": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "addresstype": {
+                            "type": "string"
+                          },
+                          "centroid": {},
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "provider": {
+                                "type": "string"
+                              },
+                              "external_id": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "provider"
+                            ]
+                          },
+                          "geometry": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Point",
+                                  "Polygon",
+                                  "MultiPolygon"
+                                ]
+                              },
+                              "coordinates": {
+                                "type": "array",
+                                "items": {
+                                  "nullable": true
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "coordinates"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "osm_type",
+                          "name",
+                          "display_name",
+                          "centroid",
+                          "source",
+                          "geometry"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "world_location"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "429",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/guess-object/{id}/full": {
+      "get": {
+        "tags": [
+          "Admin - GuessObjects"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "short_description": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string"
+                        },
+                        "external_id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "external_id"
+                      ]
+                    },
+                    "world_location": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "osm_type": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string"
+                        },
+                        "addresstype": {
+                          "type": "string"
+                        },
+                        "centroid": {},
+                        "source": {
+                          "type": "object",
+                          "properties": {
+                            "provider": {
+                              "type": "string"
+                            },
+                            "external_id": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "provider"
+                          ]
+                        },
+                        "geometry": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "Point",
+                                "Polygon",
+                                "MultiPolygon"
+                              ]
+                            },
+                            "coordinates": {
+                              "type": "array",
+                              "items": {
+                                "nullable": true
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "coordinates"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "osm_type",
+                        "name",
+                        "display_name",
+                        "centroid",
+                        "source",
+                        "geometry"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "world_location"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "429",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_NOT_VERIFIED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "CATEGORY_NOT_FOUND",
+                        "CATEGORY_HAS_CHILDREN",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/guess-object/{id}": {
       "get": {
         "tags": [
@@ -26675,1537 +28108,6 @@
                 "schema": {
                   "type": "string",
                   "format": "uuid"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "404",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "409",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "429",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "500",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/guess-object/{id}/full": {
-      "get": {
-        "tags": [
-          "Admin - GuessObjects"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "200",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "image": {
-                      "type": "string"
-                    },
-                    "description": {
-                      "type": "string"
-                    },
-                    "short_description": {
-                      "type": "string"
-                    },
-                    "source": {
-                      "type": "object",
-                      "properties": {
-                        "provider": {
-                          "type": "string"
-                        },
-                        "external_id": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "provider",
-                        "external_id"
-                      ]
-                    },
-                    "world_location": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "osm_type": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "display_name": {
-                          "type": "string"
-                        },
-                        "addresstype": {
-                          "type": "string"
-                        },
-                        "centroid": {},
-                        "source": {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string"
-                            },
-                            "external_id": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          },
-                          "required": [
-                            "provider"
-                          ]
-                        },
-                        "geometry": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "Point",
-                                "Polygon",
-                                "MultiPolygon"
-                              ]
-                            },
-                            "coordinates": {
-                              "type": "array",
-                              "items": {
-                                "nullable": true
-                              }
-                            }
-                          },
-                          "required": [
-                            "type",
-                            "coordinates"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "osm_type",
-                        "name",
-                        "display_name",
-                        "centroid",
-                        "source",
-                        "geometry"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "name",
-                    "world_location"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "404",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "409",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "429",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "500",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "USER_NOT_FOUND",
-                        "USER_INVALID_CREDENTIALS",
-                        "USER_USERNAME_ALREADY_EXISTS",
-                        "USER_EMAIL_ALREADY_TAKEN",
-                        "USER_NOT_VANILLA_ACCOUNT",
-                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
-                        "USER_REFRESH_FAILED",
-                        "USER_NOT_VERIFIED",
-                        "USER_TOKEN_MISSING",
-                        "USER_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
-                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
-                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
-                        "PLAYER_NOT_FOUND",
-                        "CONNECTION_NOT_FOUND",
-                        "SESSION_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_FOUND",
-                        "SESSION_PLAYER_NOT_CONNECTED",
-                        "SESSION_PLAYER_ALREADY_EXISTS",
-                        "SESSION_CREATION_FAILED",
-                        "SESSION_FORBIDDEN_HOST",
-                        "SESSION_NO_CURRENT_GAME",
-                        "SESSION_ALREADY_IN_GAME",
-                        "GAME_END_SENTENCE_NOT_FOUND",
-                        "GAME_NO_ACTIVE_ROUND",
-                        "GAME_CREATION_FAILED",
-                        "GUESS_OBJECTS_NOT_FOUND",
-                        "GUESS_OBJECTS_GET_FAILED",
-                        "GUESS_OBJECTS_SEARCH_FAILED",
-                        "WORLD_LOCATION_SEARCH_FAILED",
-                        "WORLD_LOCATION_NOT_FOUND",
-                        "CATEGORY_NOT_FOUND",
-                        "CATEGORY_HAS_CHILDREN",
-                        "RATE_LIMIT_EXCEEDED",
-                        "REDIS_GET_FAILED",
-                        "REDIS_SET_FAILED",
-                        "REDIS_DELETE_FAILED",
-                        "REDIS_EXPIRE_FAILED",
-                        "EMAIL_SEND_FAILED",
-                        "RESOURCE_ALREADY_EXISTS",
-                        "RESOURCE_NOT_FOUND",
-                        "BAD_REQUEST",
-                        "TOKEN_EXPIRED",
-                        "UNKNOWN_ERROR"
-                      ]
-                    },
-                    "statusCode": {
-                      "type": "integer"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "fieldErrors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": {
-                            "type": "string"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "path",
-                          "message"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "statusCode",
-                    "message"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/guess-object/full": {
-      "get": {
-        "tags": [
-          "Admin - GuessObjects"
-        ],
-        "parameters": [
-          {
-            "name": "guessObjectsIds",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "200",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "image": {
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "short_description": {
-                        "type": "string"
-                      },
-                      "source": {
-                        "type": "object",
-                        "properties": {
-                          "provider": {
-                            "type": "string"
-                          },
-                          "external_id": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "provider",
-                          "external_id"
-                        ]
-                      },
-                      "world_location": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "osm_type": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "display_name": {
-                            "type": "string"
-                          },
-                          "addresstype": {
-                            "type": "string"
-                          },
-                          "centroid": {},
-                          "source": {
-                            "type": "object",
-                            "properties": {
-                              "provider": {
-                                "type": "string"
-                              },
-                              "external_id": {
-                                "type": "string",
-                                "nullable": true
-                              }
-                            },
-                            "required": [
-                              "provider"
-                            ]
-                          },
-                          "geometry": {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "Point",
-                                  "Polygon",
-                                  "MultiPolygon"
-                                ]
-                              },
-                              "coordinates": {
-                                "type": "array",
-                                "items": {
-                                  "nullable": true
-                                }
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "coordinates"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "osm_type",
-                          "name",
-                          "display_name",
-                          "centroid",
-                          "source",
-                          "geometry"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "name",
-                      "world_location"
-                    ]
-                  }
                 }
               }
             }
