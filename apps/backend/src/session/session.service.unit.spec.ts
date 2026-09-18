@@ -1,3 +1,11 @@
+import type {
+  CreateSession,
+  Game,
+  GameConfig,
+  PlayerId,
+  SessionId,
+  User,
+} from '@cityborn/api';
 import {
   buildGame,
   buildGameConfig,
@@ -14,6 +22,7 @@ import {
   SessionMode,
   SessionStatus,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
 import type { EventService } from '../event/event.service';
@@ -23,22 +32,24 @@ import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { SessionService } from './session.service';
 
-const playerId = (value: string) => PlayerIdSchema.parse(value);
-const sessionId = (value: string) => SessionIdSchema.parse(value);
+const playerId: (value: string) => PlayerId = (value: string) =>
+  PlayerIdSchema.parse(value);
+const sessionId: (value: string) => SessionId = (value: string) =>
+  SessionIdSchema.parse(value);
 
 function buildSessionService(session: Session | null) {
-  const redisService = createMock<RedisService>();
+  const redisService: DeepMocked<RedisService> = createMock<RedisService>();
   redisService.getJSON.mockResolvedValue(session);
   redisService.setJSON.mockResolvedValue(undefined);
-  const lockService = createMock<LockService>({
+  const lockService: DeepMocked<LockService> = createMock<LockService>({
     withLock: async (_resource, _ttl, callback) => callback(),
   });
 
-  const idService = createMock<IdService>();
-  const gameService = createMock<GameService>();
-  const eventService = createMock<EventService>();
+  const idService: DeepMocked<IdService> = createMock<IdService>();
+  const gameService: DeepMocked<GameService> = createMock<GameService>();
+  const eventService: DeepMocked<EventService> = createMock<EventService>();
 
-  const sessionService = new SessionService(
+  const sessionService: SessionService = new SessionService(
     redisService,
     lockService,
     idService,
@@ -51,10 +62,13 @@ function buildSessionService(session: Session | null) {
 
 describe('SessionService.kickPlayer', () => {
   it('removes the kicked player and persists the session', async () => {
-    const session = buildSession();
-    const { sessionService, redisService } = buildSessionService(session);
+    const session: Session = buildSession();
+    const {
+      sessionService,
+      redisService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-    const result = await sessionService.kickPlayer(
+    const result: Session = await sessionService.kickPlayer(
       playerId('host'),
       sessionId('s1'),
       playerId('bob'),
@@ -65,7 +79,8 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('rejects when the requester is not the host', async () => {
-    const { sessionService } = buildSessionService(buildSession());
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(buildSession());
 
     await expect(
       sessionService.kickPlayer(
@@ -79,7 +94,8 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('rejects when the session has no such player', async () => {
-    const { sessionService } = buildSessionService(buildSession());
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(buildSession());
 
     await expect(
       sessionService.kickPlayer(
@@ -93,8 +109,9 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('rejects once a game is in progress', async () => {
-    const session = buildSession({ currentGame: buildGame() });
-    const { sessionService } = buildSessionService(session);
+    const session: Session = buildSession({ currentGame: buildGame() });
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(session);
 
     await expect(
       sessionService.kickPlayer(
@@ -108,7 +125,8 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('rejects when the session does not exist', async () => {
-    const { sessionService } = buildSessionService(null);
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(null);
 
     await expect(
       sessionService.kickPlayer(
@@ -120,16 +138,17 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('reassigns the host to another connected player when the host kicks itself', async () => {
-    const session = buildSession({
+    const session: Session = buildSession({
       players: [
         buildPlayer(playerId('host')),
         buildPlayer(playerId('bob')),
         buildPlayer(playerId('carol'), false),
       ],
     });
-    const { sessionService } = buildSessionService(session);
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(session);
 
-    const result = await sessionService.kickPlayer(
+    const result: Session = await sessionService.kickPlayer(
       playerId('host'),
       sessionId('s1'),
       playerId('host'),
@@ -139,15 +158,16 @@ describe('SessionService.kickPlayer', () => {
   });
 
   it('clears the host when no connected player remains after the kick', async () => {
-    const session = buildSession({
+    const session: Session = buildSession({
       players: [
         buildPlayer(playerId('host')),
         buildPlayer(playerId('bob'), false),
       ],
     });
-    const { sessionService } = buildSessionService(session);
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(session);
 
-    const result = await sessionService.kickPlayer(
+    const result: Session = await sessionService.kickPlayer(
       playerId('host'),
       sessionId('s1'),
       playerId('host'),
@@ -158,13 +178,21 @@ describe('SessionService.kickPlayer', () => {
 });
 describe('SessionService.create', () => {
   it('creates and persists a multiplayer session', async () => {
-    const { sessionService, redisService, idService, eventService } =
-      buildSessionService(null);
-    const user = buildUser();
-    const createData = { mode: SessionMode.MULTI };
+    const {
+      sessionService,
+      redisService,
+      idService,
+      eventService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+    const user: User = buildUser();
+    const createData: CreateSession = { mode: SessionMode.MULTI };
     idService.generateNanoId.mockReturnValue('new-session');
 
-    const result = await sessionService.create(createData, user, 'visitor-1');
+    const result: Session = await sessionService.create(
+      createData,
+      user,
+      'visitor-1',
+    );
 
     expect(result).toMatchObject({
       id: 'new-session',
@@ -187,12 +215,15 @@ describe('SessionService.create', () => {
   });
 
   it('creates a guest solo session without persisting it', async () => {
-    const { sessionService, redisService, idService } =
-      buildSessionService(null);
-    const createData = { mode: SessionMode.SOLO };
+    const {
+      sessionService,
+      redisService,
+      idService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+    const createData: CreateSession = { mode: SessionMode.SOLO };
     idService.generateNanoId.mockReturnValue('solo-session');
 
-    const result = await sessionService.create(createData);
+    const result: Session = await sessionService.create(createData);
 
     expect(result.hostID).toBe('guest');
     expect(result.players).toEqual([
@@ -202,8 +233,13 @@ describe('SessionService.create', () => {
   });
 
   it('fails after three session identifier collisions', async () => {
-    const { sessionService, idService } = buildSessionService(buildSession());
-    const createData = { mode: SessionMode.MULTI };
+    const {
+      sessionService,
+      idService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(
+      buildSession(),
+    );
+    const createData: CreateSession = { mode: SessionMode.MULTI };
     idService.generateNanoId.mockReturnValue('duplicate');
 
     await expect(sessionService.create(createData)).rejects.toMatchObject({
@@ -216,8 +252,9 @@ describe('SessionService.create', () => {
 describe('SessionService lobby operations', () => {
   describe('getById', () => {
     it('returns an existing session', async () => {
-      const session = buildSession();
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(sessionService.getById(session.id)).resolves.toStrictEqual(
         session,
@@ -225,7 +262,8 @@ describe('SessionService lobby operations', () => {
     });
 
     it('rejects a missing session', async () => {
-      const { sessionService } = buildSessionService(null);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(null);
 
       await expect(
         sessionService.getById(sessionId('missing')),
@@ -237,11 +275,14 @@ describe('SessionService lobby operations', () => {
 
   describe('join', () => {
     it('adds the first player as host', async () => {
-      const session = buildSession({ hostID: '', players: [] });
-      const user = buildUser({ username: playerId('alice') });
-      const { sessionService, redisService } = buildSessionService(session);
+      const session: Session = buildSession({ hostID: '', players: [] });
+      const user: User = buildUser({ username: playerId('alice') });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const result = await sessionService.join(
+      const result: Session = await sessionService.join(
         session.id,
         playerId('alice'),
         user,
@@ -260,8 +301,9 @@ describe('SessionService lobby operations', () => {
     });
 
     it('rejects a duplicate player', async () => {
-      const session = buildSession();
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.join(session.id, playerId('host')),
@@ -273,10 +315,11 @@ describe('SessionService lobby operations', () => {
 
   describe('updateHost', () => {
     it('transfers the host role to a connected player', async () => {
-      const session = buildSession();
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
-      const result = await sessionService.updateHost(
+      const result: Session = await sessionService.updateHost(
         playerId('host'),
         session.id,
         playerId('bob'),
@@ -286,13 +329,14 @@ describe('SessionService lobby operations', () => {
     });
 
     it('rejects transferring the host role to a disconnected player', async () => {
-      const session = buildSession({
+      const session: Session = buildSession({
         players: [
           buildPlayer(playerId('host')),
           buildPlayer(playerId('bob'), false),
         ],
       });
-      const { sessionService } = buildSessionService(session);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.updateHost(
@@ -308,11 +352,12 @@ describe('SessionService lobby operations', () => {
 
   describe('updateGameConfig', () => {
     it('updates the game configuration for the host', async () => {
-      const session = buildSession();
-      const gameConfig = buildGameConfig({ timer: 45 });
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const gameConfig: GameConfig = buildGameConfig({ timer: 45 });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
-      const result = await sessionService.updateGameConfig(
+      const result: Session = await sessionService.updateGameConfig(
         playerId('host'),
         session.id,
         gameConfig,
@@ -322,9 +367,10 @@ describe('SessionService lobby operations', () => {
     });
 
     it('rejects a game configuration update from another player', async () => {
-      const session = buildSession();
-      const gameConfig = buildGameConfig();
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const gameConfig: GameConfig = buildGameConfig();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.updateGameConfig(
@@ -342,17 +388,20 @@ describe('SessionService lobby operations', () => {
 describe('SessionService game operations', () => {
   describe('startGame', () => {
     it('starts a game and persists its light representation', async () => {
-      const session = buildSession();
-      const game = buildGame();
-      const startedGame = buildGame({ id: game.id });
-      const lightGame = buildGame({ id: game.id });
-      const { sessionService, redisService, gameService } =
-        buildSessionService(session);
+      const session: Session = buildSession();
+      const game: Game = buildGame();
+      const startedGame: Game = buildGame({ id: game.id });
+      const lightGame: Game = buildGame({ id: game.id });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.createGame.mockResolvedValue(game);
       gameService.beginGame.mockReturnValue(startedGame);
       gameService.toLightGame.mockReturnValue(lightGame);
 
-      const result = await sessionService.startGame(
+      const result: Session = await sessionService.startGame(
         playerId('host'),
         session.id,
         'visitor-1',
@@ -368,8 +417,9 @@ describe('SessionService game operations', () => {
     });
 
     it('rejects starting a second game', async () => {
-      const session = buildSession({ currentGame: buildGame() });
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession({ currentGame: buildGame() });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.startGame(playerId('host'), session.id),
@@ -381,19 +431,22 @@ describe('SessionService game operations', () => {
 
   describe('handleGuess', () => {
     it('applies a guess from a connected player', async () => {
-      const game = buildGame({
+      const game: Game = buildGame({
         state: buildGameState({ currentRound: buildRound() }),
       });
-      const updatedGame = buildGame({ id: game.id });
-      const session = buildSession({
+      const updatedGame: Game = buildGame({ id: game.id });
+      const session: Session = buildSession({
         status: SessionStatus.IN_GAME,
         currentGame: game,
       });
-      const { sessionService, redisService, gameService } =
-        buildSessionService(session);
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.applyGuess.mockReturnValue(updatedGame);
 
-      const result = await sessionService.handleGuess(
+      const result: Session = await sessionService.handleGuess(
         playerId('host'),
         session.id,
         defaultGuess,
@@ -410,12 +463,15 @@ describe('SessionService game operations', () => {
     });
 
     it('does not persist when a duplicate guess leaves the game unchanged', async () => {
-      const game = buildGame({
+      const game: Game = buildGame({
         state: buildGameState({ currentRound: buildRound() }),
       });
-      const session = buildSession({ currentGame: game });
-      const { sessionService, redisService, gameService } =
-        buildSessionService(session);
+      const session: Session = buildSession({ currentGame: game });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.applyGuess.mockImplementation((currentGame) => currentGame);
 
       await sessionService.handleGuess(
@@ -428,14 +484,15 @@ describe('SessionService game operations', () => {
     });
 
     it('rejects a guess from a disconnected player', async () => {
-      const game = buildGame({
+      const game: Game = buildGame({
         state: buildGameState({ currentRound: buildRound() }),
       });
-      const session = buildSession({
+      const session: Session = buildSession({
         currentGame: game,
         players: [buildPlayer(playerId('host'), false)],
       });
-      const { sessionService } = buildSessionService(session);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.handleGuess(playerId('host'), session.id, defaultGuess),
@@ -447,21 +504,24 @@ describe('SessionService game operations', () => {
 
   describe('handleNextRound', () => {
     it('returns to the lobby after the last round', async () => {
-      const game = buildGame();
-      const completedGame = buildGame({ id: game.id });
-      const session = buildSession({
+      const game: Game = buildGame();
+      const completedGame: Game = buildGame({ id: game.id });
+      const session: Session = buildSession({
         status: SessionStatus.IN_GAME,
         currentGame: game,
       });
-      const { sessionService, redisService, gameService } =
-        buildSessionService(session);
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.resolveNextRound.mockReturnValue({
         game: completedGame,
         isGameOver: true,
       });
       gameService.endGame.mockResolvedValue(undefined);
 
-      const result = await sessionService.handleNextRound(
+      const result: Session = await sessionService.handleNextRound(
         playerId('host'),
         session.id,
         'visitor-1',
@@ -489,14 +549,15 @@ describe('SessionService game operations', () => {
 describe('SessionService connection operations', () => {
   describe('reconnectPlayer', () => {
     it('reconnects a player and restores the vacant host role', async () => {
-      const user = buildUser({ username: playerId('host') });
-      const session = buildSession({
+      const user: User = buildUser({ username: playerId('host') });
+      const session: Session = buildSession({
         hostID: '',
         players: [buildPlayer(playerId('host'), false)],
       });
-      const { sessionService } = buildSessionService(session);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
-      const result = await sessionService.reconnectPlayer(
+      const result: Session = await sessionService.reconnectPlayer(
         session.id,
         playerId('host'),
         user,
@@ -509,10 +570,11 @@ describe('SessionService connection operations', () => {
     });
 
     it('rejects reconnecting a registered player without credentials', async () => {
-      const session = buildSession({
+      const session: Session = buildSession({
         players: [buildPlayer(playerId('host'), false, { isGuest: false })],
       });
-      const { sessionService } = buildSessionService(session);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
       await expect(
         sessionService.reconnectPlayer(session.id, playerId('host')),
@@ -524,10 +586,11 @@ describe('SessionService connection operations', () => {
 
   describe('disconnectPlayer', () => {
     it('disconnects a player and reassigns the host', async () => {
-      const session = buildSession();
-      const { sessionService } = buildSessionService(session);
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
-      const result = await sessionService.disconnectPlayer(
+      const result: Session = await sessionService.disconnectPlayer(
         playerId('host'),
         session.id,
       );

@@ -1,14 +1,21 @@
+import type {
+  FullGuessObject,
+  GuessObject,
+  GuessObjectDraft,
+} from '@cityborn/api';
 import { GuessObjectDraftSchema, GuessObjectSchema } from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   WorldLocation as PrismaWorldLocation,
   WorldLocationGeometry as PrismaWorldLocationGeometry,
 } from '@prisma/client';
+import type { WikidataItemResponse } from '../../wikidata/wikidata.service';
+import type { PrismaGuessObjectWithFullLocation } from './guess-object.mapper';
 import { GuessObjectMapper } from './guess-object.mapper';
 
 describe('GuessObjectMapper.toGuessObject', () => {
   it('maps the object and its location preview', () => {
-    const prismaWorldLocation = {
+    const prismaWorldLocation: PrismaWorldLocation = {
       id: 'location-1',
       osm_type: 'relation',
       external_id: '7444',
@@ -19,9 +26,9 @@ describe('GuessObjectMapper.toGuessObject', () => {
       source: { provider: 'nominatim', external_id: '7444' },
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    } satisfies PrismaWorldLocation;
+    };
 
-    const prismaGuessObject = {
+    const prismaGuessObject: PrismaGuessObject = {
       id: '00000000-0000-4000-8000-000000000020',
       name: 'Eiffel Tower',
       image: 'https://example.com/eiffel.jpg',
@@ -29,14 +36,14 @@ describe('GuessObjectMapper.toGuessObject', () => {
       short_description: 'Paris landmark',
       source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: 'location-1',
-    } satisfies PrismaGuessObject;
+    };
 
-    const input = {
+    const input: Parameters<typeof GuessObjectMapper.toGuessObject>[0] = {
       ...prismaGuessObject,
       world_location: prismaWorldLocation,
-    } satisfies Parameters<typeof GuessObjectMapper.toGuessObject>[0];
+    };
 
-    const guessObject = GuessObjectMapper.toGuessObject(input);
+    const guessObject: GuessObject = GuessObjectMapper.toGuessObject(input);
 
     expect(() => GuessObjectSchema.parse(guessObject)).not.toThrow();
     expect(guessObject.world_location_preview).toEqual({
@@ -47,7 +54,7 @@ describe('GuessObjectMapper.toGuessObject', () => {
   });
 
   it('omits nullable optional values', () => {
-    const prismaWorldLocation = {
+    const prismaWorldLocation: PrismaWorldLocation = {
       id: 'location-1',
       osm_type: 'relation',
       external_id: '7444',
@@ -58,9 +65,9 @@ describe('GuessObjectMapper.toGuessObject', () => {
       source: { provider: 'nominatim', external_id: '7444' },
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    } satisfies PrismaWorldLocation;
+    };
 
-    const prismaGuessObject = {
+    const prismaGuessObject: PrismaGuessObject = {
       id: '00000000-0000-4000-8000-000000000020',
       name: 'Eiffel Tower',
       image: 'https://example.com/eiffel.jpg',
@@ -68,18 +75,18 @@ describe('GuessObjectMapper.toGuessObject', () => {
       short_description: 'Paris landmark',
       source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: 'location-1',
-    } satisfies PrismaGuessObject;
+    };
 
-    const input = {
+    const input: Parameters<typeof GuessObjectMapper.toGuessObject>[0] = {
       ...prismaGuessObject,
       image: null,
       description: null,
       short_description: null,
       source: null,
       world_location: prismaWorldLocation,
-    } satisfies Parameters<typeof GuessObjectMapper.toGuessObject>[0];
+    };
 
-    const guessObject = GuessObjectMapper.toGuessObject(input);
+    const guessObject: GuessObject = GuessObjectMapper.toGuessObject(input);
 
     expect(guessObject).toMatchObject({
       image: undefined,
@@ -92,7 +99,7 @@ describe('GuessObjectMapper.toGuessObject', () => {
 
 describe('GuessObjectMapper.toFullGuessObject', () => {
   it('maps a full world location', () => {
-    const prismaWorldLocation = {
+    const prismaWorldLocation: PrismaWorldLocation = {
       id: 'location-1',
       osm_type: 'relation',
       external_id: '7444',
@@ -103,15 +110,15 @@ describe('GuessObjectMapper.toFullGuessObject', () => {
       source: { provider: 'nominatim', external_id: '7444' },
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    } satisfies PrismaWorldLocation;
+    };
 
-    const prismaWorldLocationGeometry = {
+    const prismaWorldLocationGeometry: PrismaWorldLocationGeometry = {
       id: 'geometry-1',
       data: { type: 'Point', coordinates: [2.3522, 48.8566] },
       world_location_id: 'location-1',
-    } satisfies PrismaWorldLocationGeometry;
+    };
 
-    const prismaGuessObject = {
+    const prismaGuessObject: PrismaGuessObject = {
       id: '00000000-0000-4000-8000-000000000020',
       name: 'Eiffel Tower',
       image: 'https://example.com/eiffel.jpg',
@@ -119,17 +126,18 @@ describe('GuessObjectMapper.toFullGuessObject', () => {
       short_description: 'Paris landmark',
       source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: 'location-1',
-    } satisfies PrismaGuessObject;
+    };
 
-    const input = {
+    const input: PrismaGuessObjectWithFullLocation = {
       ...prismaGuessObject,
       world_location: {
         ...prismaWorldLocation,
         geometry: prismaWorldLocationGeometry,
       },
-    } satisfies Parameters<typeof GuessObjectMapper.toFullGuessObject>[0];
+    };
 
-    const guessObject = GuessObjectMapper.toFullGuessObject(input);
+    const guessObject: FullGuessObject =
+      GuessObjectMapper.toFullGuessObject(input);
 
     expect(guessObject.world_location).toEqual({
       id: 'location-1',
@@ -146,25 +154,25 @@ describe('GuessObjectMapper.toFullGuessObject', () => {
 
 describe('GuessObjectMapper.toGuessObjectDraft', () => {
   it('maps a Wikidata response', () => {
-    const input = {
+    const input: WikidataItemResponse = {
       id: 'Q243',
       label: 'Eiffel Tower',
       description: 'A wrought-iron tower',
-    } satisfies Parameters<typeof GuessObjectMapper.toGuessObjectDraft>[0];
+    };
 
-    const draft = GuessObjectMapper.toGuessObjectDraft(input);
+    const draft: GuessObjectDraft = GuessObjectMapper.toGuessObjectDraft(input);
 
     expect(() => GuessObjectDraftSchema.parse(draft)).not.toThrow();
     expect(draft.source?.external_id).toBe('Q243');
   });
 
   it('omits absent optional values', () => {
-    const input = {
+    const input: WikidataItemResponse = {
       id: 'Q243',
       label: 'Eiffel Tower',
-    } satisfies Parameters<typeof GuessObjectMapper.toGuessObjectDraft>[0];
+    };
 
-    const draft = GuessObjectMapper.toGuessObjectDraft(input);
+    const draft: GuessObjectDraft = GuessObjectMapper.toGuessObjectDraft(input);
 
     expect(draft.description).toBeUndefined();
     expect(draft.image).toBeUndefined();
@@ -173,7 +181,7 @@ describe('GuessObjectMapper.toGuessObjectDraft', () => {
 
 describe('GuessObjectMapper.toGuessObjectDraftFromPrisma', () => {
   it('maps persisted data', () => {
-    const prismaGuessObject = {
+    const prismaGuessObject: PrismaGuessObject = {
       id: '00000000-0000-4000-8000-000000000020',
       name: 'Eiffel Tower',
       image: 'https://example.com/eiffel.jpg',
@@ -181,9 +189,9 @@ describe('GuessObjectMapper.toGuessObjectDraftFromPrisma', () => {
       short_description: 'Paris landmark',
       source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: 'location-1',
-    } satisfies PrismaGuessObject;
+    };
 
-    const draft =
+    const draft: GuessObjectDraft =
       GuessObjectMapper.toGuessObjectDraftFromPrisma(prismaGuessObject);
 
     expect(draft).toMatchObject({
@@ -196,16 +204,17 @@ describe('GuessObjectMapper.toGuessObjectDraftFromPrisma', () => {
 
 describe('GuessObjectMapper.toGuessObjectsSearchResponse', () => {
   it('maps every Wikidata result', () => {
-    const input = {
+    const input: Parameters<
+      typeof GuessObjectMapper.toGuessObjectsSearchResponse
+    >[0] = {
       results: [
         { id: 'Q243', label: 'Eiffel Tower' },
         { id: 'Q90', label: 'Paris' },
       ],
-    } satisfies Parameters<
-      typeof GuessObjectMapper.toGuessObjectsSearchResponse
-    >[0];
+    };
 
-    const drafts = GuessObjectMapper.toGuessObjectsSearchResponse(input);
+    const drafts: GuessObjectDraft[] =
+      GuessObjectMapper.toGuessObjectsSearchResponse(input);
 
     expect(drafts.map(({ source }) => source?.external_id)).toEqual([
       'Q243',

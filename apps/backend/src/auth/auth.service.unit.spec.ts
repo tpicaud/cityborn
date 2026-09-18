@@ -1,15 +1,27 @@
+import type {
+  AuthResponse,
+  CreateUser,
+  PublicUser,
+  SignIn,
+  SignInWithApple,
+  SignInWithGoogle,
+  User,
+  VerifyEmailData,
+} from '@cityborn/api';
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { WideEventService } from '../common/wide-event/wide-event.service';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
+import type { UserCredentials } from '../user/repositories/user.repository';
 import type { UserService } from '../user/user.service';
 import { AuthService, type GoogleIdentityClient } from './auth.service';
 
-let mockPasswordMatches = true;
-let mockAppleTokenValid = true;
+let mockPasswordMatches: boolean = true;
+let mockAppleTokenValid: boolean = true;
 
 function mockHash(): Promise<string> {
   return Promise.resolve('hashed-password');
@@ -35,14 +47,16 @@ beforeEach(() => {
 });
 
 function buildAuthService() {
-  const userService = createMock<UserService>();
-  const jwtService = createMock<JwtService>();
-  const configService = createMock<ConfigService>();
-  const eventService = createMock<EventService>();
-  const mailService = createMock<MailService>();
-  const wideEventService = createMock<WideEventService>();
-  const googleClient = createMock<GoogleIdentityClient>();
-  const authService = new AuthService(
+  const userService: DeepMocked<UserService> = createMock<UserService>();
+  const jwtService: DeepMocked<JwtService> = createMock<JwtService>();
+  const configService: DeepMocked<ConfigService> = createMock<ConfigService>();
+  const eventService: DeepMocked<EventService> = createMock<EventService>();
+  const mailService: DeepMocked<MailService> = createMock<MailService>();
+  const wideEventService: DeepMocked<WideEventService> =
+    createMock<WideEventService>();
+  const googleClient: DeepMocked<GoogleIdentityClient> =
+    createMock<GoogleIdentityClient>();
+  const authService: AuthService = new AuthService(
     userService,
     jwtService,
     configService,
@@ -75,21 +89,29 @@ function buildAuthService() {
 
 describe('AuthService.signUp', () => {
   it('creates an account, sends verification and returns tokens', async () => {
-    const unverifiedUser = buildUser({ isVerified: false });
-    const signUpData = {
+    const unverifiedUser: User = buildUser({ isVerified: false });
+    const signUpData: CreateUser = {
       email: unverifiedUser.email,
       username: UsernameSchema.parse(unverifiedUser.username),
       password: 'plain-password',
     };
-    const { authService, userService, jwtService, eventService, mailService } =
-      buildAuthService();
+    const {
+      authService,
+      userService,
+      jwtService,
+      eventService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
     mailService.sendMail.mockResolvedValue(undefined);
 
-    const result = await authService.signUp(signUpData, 'visitor-1');
+    const result: AuthResponse = await authService.signUp(
+      signUpData,
+      'visitor-1',
+    );
 
     expect(userService.validateIdentifiers).toHaveBeenCalledWith(
       unverifiedUser.username,
@@ -117,20 +139,24 @@ describe('AuthService.signUp', () => {
   });
 
   it('returns tokens without waiting for the verification email', async () => {
-    const unverifiedUser = buildUser({ isVerified: false });
-    const signUpData = {
+    const unverifiedUser: User = buildUser({ isVerified: false });
+    const signUpData: CreateUser = {
       email: unverifiedUser.email,
       username: UsernameSchema.parse(unverifiedUser.username),
       password: 'plain-password',
     };
-    const { authService, userService, mailService } = buildAuthService();
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
     mailService.sendMail.mockReturnValue(new Promise<void>(() => undefined));
 
-    const signUpOutcome = await Promise.race([
+    const signUpOutcome: AuthResponse | undefined = await Promise.race([
       authService.signUp(signUpData),
       new Promise<undefined>((resolve) =>
         setImmediate(() => resolve(undefined)),
@@ -144,15 +170,19 @@ describe('AuthService.signUp', () => {
   });
 
   it('logs a verification email failure without rejecting', async () => {
-    const unverifiedUser = buildUser({ isVerified: false });
-    const signUpData = {
+    const unverifiedUser: User = buildUser({ isVerified: false });
+    const signUpData: CreateUser = {
       email: unverifiedUser.email,
       username: UsernameSchema.parse(unverifiedUser.username),
       password: 'plain-password',
     };
-    const mailError = new Error('Mailer unavailable');
-    const { authService, userService, mailService, wideEventService } =
-      buildAuthService();
+    const mailError: Error = new Error('Mailer unavailable');
+    const {
+      authService,
+      userService,
+      mailService,
+      wideEventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.createUser.mockResolvedValue(unverifiedUser);
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
@@ -176,9 +206,13 @@ describe('AuthService.signUp', () => {
 
 describe('AuthService.signIn', () => {
   it('returns tokens for valid credentials', async () => {
-    const { authService, userService, eventService } = buildAuthService();
-    const persistedUser = buildUser();
-    const credentials = {
+    const {
+      authService,
+      userService,
+      eventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    const credentials: SignIn = {
       identifier: persistedUser.email,
       password: 'plain-password',
     };
@@ -187,7 +221,10 @@ describe('AuthService.signIn', () => {
       passwordHash: 'hashed-password',
     });
 
-    const result = await authService.signIn(credentials, 'visitor-1');
+    const result: AuthResponse = await authService.signIn(
+      credentials,
+      'visitor-1',
+    );
 
     expect(result.access_token).toBe('access-token');
     expect(result.refresh_token).toBe('refresh-token');
@@ -203,12 +240,13 @@ describe('AuthService.signIn', () => {
     ['an unknown identifier', false],
     ['an OAuth account', true],
   ])('rejects %s', async (_label, isOAuthAccount) => {
-    const { authService, userService } = buildAuthService();
-    const persistedUser = buildUser();
-    const credentials = isOAuthAccount
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const persistedUser: User = buildUser();
+    const credentials: UserCredentials | null = isOAuthAccount
       ? { user: persistedUser, passwordHash: null }
       : null;
-    const signInData = {
+    const signInData: SignIn = {
       identifier: 'alice',
       password: 'plain-password',
     };
@@ -220,9 +258,10 @@ describe('AuthService.signIn', () => {
   });
 
   it('rejects an invalid password', async () => {
-    const { authService, userService } = buildAuthService();
-    const persistedUser = buildUser();
-    const signInData = {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const persistedUser: User = buildUser();
+    const signInData: SignIn = {
       identifier: 'host',
       password: 'wrong-password',
     };
@@ -241,11 +280,14 @@ describe('AuthService.signIn', () => {
 describe('AuthService account operations', () => {
   describe('refresh', () => {
     it('refreshes both tokens for an existing user', async () => {
-      const { authService, userService } = buildAuthService();
-      const persistedUser = buildUser();
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const persistedUser: User = buildUser();
       userService.findByIdentifier.mockResolvedValue(persistedUser);
 
-      const result = await authService.refresh(persistedUser.email);
+      const result: AuthResponse = await authService.refresh(
+        persistedUser.email,
+      );
 
       expect(result).toMatchObject({
         access_token: 'access-token',
@@ -254,7 +296,8 @@ describe('AuthService account operations', () => {
     });
 
     it('rejects refreshing an unknown user', async () => {
-      const { authService, userService } = buildAuthService();
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
       userService.findByIdentifier.mockResolvedValue(null);
 
       await expect(authService.refresh('missing')).rejects.toMatchObject({
@@ -265,8 +308,9 @@ describe('AuthService account operations', () => {
 
   describe('getProfile', () => {
     it('returns the authenticated profile', async () => {
-      const { authService, userService } = buildAuthService();
-      const persistedUser = buildUser();
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const persistedUser: User = buildUser();
       userService.findByIdentifier.mockResolvedValue(persistedUser);
 
       await expect(authService.getProfile(persistedUser.id)).resolves.toEqual(
@@ -275,7 +319,8 @@ describe('AuthService account operations', () => {
     });
 
     it('rejects a missing profile', async () => {
-      const { authService, userService } = buildAuthService();
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
       userService.findByIdentifier.mockResolvedValue(null);
 
       await expect(authService.getProfile('missing')).rejects.toMatchObject({
@@ -286,8 +331,9 @@ describe('AuthService account operations', () => {
 
   describe('deleteUser', () => {
     it('deletes the authenticated user', async () => {
-      const user = buildUser();
-      const { authService, userService } = buildAuthService();
+      const user: User = buildUser();
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
 
       await authService.deleteUser(user);
 
@@ -295,7 +341,8 @@ describe('AuthService account operations', () => {
     });
 
     it('rejects deleting without an authenticated user', async () => {
-      const { authService } = buildAuthService();
+      const { authService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
 
       await expect(authService.deleteUser()).rejects.toMatchObject({
         response: { code: ErrorCode.USER_NOT_FOUND },
@@ -305,8 +352,12 @@ describe('AuthService account operations', () => {
 
   describe('resendVerificationEmail', () => {
     it('does not resend verification to a verified user', async () => {
-      const { authService, userService, mailService } = buildAuthService();
-      const verifiedUser = buildUser({ isVerified: true });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      const verifiedUser: User = buildUser({ isVerified: true });
 
       await authService.resendVerificationEmail(verifiedUser);
 
@@ -315,8 +366,12 @@ describe('AuthService account operations', () => {
     });
 
     it('resends verification to an unverified user', async () => {
-      const { authService, userService, mailService } = buildAuthService();
-      const unverifiedUser = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      const unverifiedUser: User = buildUser({ isVerified: false });
       userService.createEmailVerificationToken.mockResolvedValue(
         'verification-token',
       );
@@ -334,14 +389,16 @@ describe('AuthService account operations', () => {
 
   describe('verifyEmail', () => {
     it('verifies an email and returns the public user', async () => {
-      const unverifiedUser = buildUser({ isVerified: false });
-      const { authService, userService } = buildAuthService();
-      const verificationData = {
+      const unverifiedUser: User = buildUser({ isVerified: false });
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const verificationData: VerifyEmailData = {
         verification_token: 'verification-token',
       };
       userService.verifyEmail.mockResolvedValue(unverifiedUser);
 
-      const result = await authService.verifyEmail(verificationData);
+      const result: PublicUser =
+        await authService.verifyEmail(verificationData);
 
       expect(result).toEqual({
         id: unverifiedUser.id,
@@ -360,11 +417,16 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('signs in an existing Google user', async () => {
-    const googleUser = buildUser({ type: 'google' });
-    const signInData = { idToken: 'google-token' };
-    const { authService, userService, googleClient, eventService } =
-      buildAuthService();
-    const ticket = createMock<GoogleIdentityTicket>();
+    const googleUser: User = buildUser({ type: 'google' });
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const {
+      authService,
+      userService,
+      googleClient,
+      eventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
     ticket.getPayload.mockReturnValue({
       email_verified: true,
       email: 'alice@cityborn.test',
@@ -373,7 +435,10 @@ describe('AuthService.signInWithGoogle', () => {
     googleClient.verifyIdToken.mockResolvedValue(ticket);
     userService.findByIdentifier.mockResolvedValue(googleUser);
 
-    const result = await authService.signInWithGoogle(signInData, 'visitor-1');
+    const result: AuthResponse = await authService.signInWithGoogle(
+      signInData,
+      'visitor-1',
+    );
 
     expect(result.user.username).toBe(googleUser.username);
     expect(eventService.trackEvent).toHaveBeenCalledWith(
@@ -385,14 +450,19 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('creates a Google user with an available generated username', async () => {
-    const googleUser = buildUser({
+    const googleUser: User = buildUser({
       username: 'alicedoe1000',
       type: 'google',
     });
-    const signInData = { idToken: 'google-token' };
-    const { authService, userService, googleClient, eventService } =
-      buildAuthService();
-    const ticket = createMock<GoogleIdentityTicket>();
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const {
+      authService,
+      userService,
+      googleClient,
+      eventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
     ticket.getPayload.mockReturnValue({
       email_verified: true,
       email: 'alice@cityborn.test',
@@ -404,7 +474,10 @@ describe('AuthService.signInWithGoogle', () => {
     userService.createUser.mockResolvedValue(googleUser);
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
-    const result = await authService.signInWithGoogle(signInData, 'visitor-1');
+    const result: AuthResponse = await authService.signInWithGoogle(
+      signInData,
+      'visitor-1',
+    );
 
     expect(userService.createUser).toHaveBeenCalledWith({
       email: 'alice@cityborn.test',
@@ -419,9 +492,11 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('rejects a Google token without payload', async () => {
-    const { authService, googleClient } = buildAuthService();
-    const signInData = { idToken: 'google-token' };
-    const ticket = createMock<GoogleIdentityTicket>();
+    const { authService, googleClient }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
     ticket.getPayload.mockReturnValue(undefined);
     googleClient.verifyIdToken.mockResolvedValue(ticket);
 
@@ -433,9 +508,11 @@ describe('AuthService.signInWithGoogle', () => {
   });
 
   it('rejects an unverified Google email', async () => {
-    const { authService, googleClient } = buildAuthService();
-    const signInData = { idToken: 'google-token' };
-    const ticket = createMock<GoogleIdentityTicket>();
+    const { authService, googleClient }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
     ticket.getPayload.mockReturnValue({
       email_verified: false,
       email: 'alice@cityborn.test',
@@ -453,8 +530,9 @@ describe('AuthService.signInWithGoogle', () => {
 
 describe('AuthService.signInWithApple', () => {
   it('rejects an invalid Apple identity token', async () => {
-    const { authService } = buildAuthService();
-    const signInData = {
+    const { authService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const signInData: SignInWithApple = {
       identity_token: 'invalid-token',
       apple_user_id: 'apple-user-1',
     };
@@ -468,8 +546,9 @@ describe('AuthService.signInWithApple', () => {
   });
 
   it('requires account details for a first Apple connection', async () => {
-    const { authService, userService } = buildAuthService();
-    const signInData = {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const signInData: SignInWithApple = {
       identity_token: 'apple-token',
       apple_user_id: 'apple-user-1',
     };
@@ -483,11 +562,11 @@ describe('AuthService.signInWithApple', () => {
   });
 
   it('creates a user during the first Apple connection', async () => {
-    const appleUser = buildUser({
+    const appleUser: User = buildUser({
       username: 'aliceapple1000',
       type: 'apple',
     });
-    const signInData = {
+    const signInData: SignInWithApple = {
       identity_token: 'apple-token',
       apple_user_id: 'apple-user-1',
       details: {
@@ -496,14 +575,21 @@ describe('AuthService.signInWithApple', () => {
         family_name: 'Apple',
       },
     };
-    const { authService, userService, eventService } = buildAuthService();
+    const {
+      authService,
+      userService,
+      eventService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.findByAppleId.mockResolvedValue(null);
     userService.findByIdentifier.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(appleUser);
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
-    const result = await authService.signInWithApple(signInData, 'visitor-1');
+    const result: AuthResponse = await authService.signInWithApple(
+      signInData,
+      'visitor-1',
+    );
 
     expect(userService.createUser).toHaveBeenCalledWith({
       email: 'alice@cityborn.test',

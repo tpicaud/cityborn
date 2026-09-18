@@ -1,3 +1,11 @@
+import type {
+  Category,
+  CategoryId,
+  CreateCategory,
+  GuessObject,
+  GuessObjectId,
+  UpdateCategory,
+} from '@cityborn/api';
 import {
   buildCategory,
   buildCreateCategory,
@@ -7,9 +15,13 @@ import {
   ErrorCode,
   GuessObjectIdSchema,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { GuessObjectService } from '../../guess-object/guess-object.service';
-import type { CategoryRepository } from '../repositories/category.repository';
+import type {
+  CategoryFilter,
+  CategoryRepository,
+} from '../repositories/category.repository';
 import { CategoryService } from './category.service';
 
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -23,13 +35,17 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-const categoryId = (value: string) => CategoryIdSchema.parse(value);
-const guessObjectId = (value: string) => GuessObjectIdSchema.parse(value);
+const categoryId: (value: string) => CategoryId = (value: string) =>
+  CategoryIdSchema.parse(value);
+const guessObjectId: (value: string) => GuessObjectId = (value: string) =>
+  GuessObjectIdSchema.parse(value);
 
 function buildCategoryService() {
-  const categoryRepository = createMock<CategoryRepository>();
-  const guessObjectService = createMock<GuessObjectService>();
-  const categoryService = new CategoryService(
+  const categoryRepository: DeepMocked<CategoryRepository> =
+    createMock<CategoryRepository>();
+  const guessObjectService: DeepMocked<GuessObjectService> =
+    createMock<GuessObjectService>();
+  const categoryService: CategoryService = new CategoryService(
     categoryRepository,
     guessObjectService,
   );
@@ -40,8 +56,11 @@ function buildCategoryService() {
 describe('CategoryService queries', () => {
   describe('findTree', () => {
     it('delegates tree filters', async () => {
-      const { categoryRepository, categoryService } = buildCategoryService();
-      const filter = { isPublished: false };
+      const {
+        categoryRepository,
+        categoryService,
+      }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+      const filter: CategoryFilter = { isPublished: false };
       categoryRepository.findTree.mockResolvedValue([]);
 
       await categoryService.findTree(filter);
@@ -54,8 +73,11 @@ describe('CategoryService queries', () => {
 
   describe('findAll', () => {
     it('loads every category', async () => {
-      const { categoryRepository, categoryService } = buildCategoryService();
-      const category = buildCategory();
+      const {
+        categoryRepository,
+        categoryService,
+      }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+      const category: Category = buildCategory();
       categoryRepository.findBy.mockResolvedValue([category]);
 
       await expect(categoryService.findAll()).resolves.toEqual([category]);
@@ -65,8 +87,14 @@ describe('CategoryService queries', () => {
 
   describe('findBy', () => {
     it('delegates filtered queries', async () => {
-      const { categoryRepository, categoryService } = buildCategoryService();
-      const filter = { ids: [categoryId('category-1')], isPublished: true };
+      const {
+        categoryRepository,
+        categoryService,
+      }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+      const filter: CategoryFilter = {
+        ids: [categoryId('category-1')],
+        isPublished: true,
+      };
       categoryRepository.findBy.mockResolvedValue([]);
 
       await categoryService.findBy(filter);
@@ -77,8 +105,14 @@ describe('CategoryService queries', () => {
 
   describe('findFullBy', () => {
     it('delegates full queries', async () => {
-      const { categoryRepository, categoryService } = buildCategoryService();
-      const filter = { ids: [categoryId('category-1')], isPublished: true };
+      const {
+        categoryRepository,
+        categoryService,
+      }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+      const filter: CategoryFilter = {
+        ids: [categoryId('category-1')],
+        isPublished: true,
+      };
       categoryRepository.findFullBy.mockResolvedValue([]);
 
       await categoryService.findFullBy(filter);
@@ -90,9 +124,12 @@ describe('CategoryService queries', () => {
 
 describe('CategoryService.create', () => {
   it('delegates creation', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
-    const payload = buildCreateCategory();
-    const category = buildCategory();
+    const {
+      categoryRepository,
+      categoryService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+    const payload: CreateCategory = buildCreateCategory();
+    const category: Category = buildCategory();
     categoryRepository.create.mockResolvedValue(category);
 
     await expect(categoryService.create(payload)).resolves.toEqual(category);
@@ -102,10 +139,13 @@ describe('CategoryService.create', () => {
 
 describe('CategoryService.update', () => {
   it('updates fields without scanning for orphans', async () => {
-    const { categoryRepository, categoryService, guessObjectService } =
-      buildCategoryService();
-    const payload = buildUpdateCategory({ name: 'Landmarks' });
-    const updatedCategory = buildCategory(payload);
+    const {
+      categoryRepository,
+      categoryService,
+      guessObjectService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+    const payload: UpdateCategory = buildUpdateCategory({ name: 'Landmarks' });
+    const updatedCategory: Category = buildCategory(payload);
     categoryRepository.update.mockResolvedValue(updatedCategory);
 
     await categoryService.update(categoryId('category-1'), payload);
@@ -119,14 +159,17 @@ describe('CategoryService.update', () => {
   });
 
   it('deletes only newly orphaned guess objects', async () => {
-    const { categoryRepository, categoryService, guessObjectService } =
-      buildCategoryService();
-    const orphanId = guessObjectId('guess-orphan');
-    const sharedId = guessObjectId('guess-shared');
-    const payload = buildUpdateCategory({
+    const {
+      categoryRepository,
+      categoryService,
+      guessObjectService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+    const orphanId: GuessObjectId = guessObjectId('guess-orphan');
+    const sharedId: GuessObjectId = guessObjectId('guess-shared');
+    const payload: UpdateCategory = buildUpdateCategory({
       disconnectIds: [orphanId, sharedId],
     });
-    const updatedCategory = buildCategory();
+    const updatedCategory: Category = buildCategory();
     categoryRepository.update.mockResolvedValue(updatedCategory);
     categoryRepository.countByGuessObjectId
       .mockResolvedValueOnce(0)
@@ -141,7 +184,10 @@ describe('CategoryService.update', () => {
 
 describe('CategoryService.delete', () => {
   it('rejects when the category does not exist', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
+    const {
+      categoryRepository,
+      categoryService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
     categoryRepository.findFullBy.mockResolvedValue([]);
 
     await expect(
@@ -152,8 +198,11 @@ describe('CategoryService.delete', () => {
   });
 
   it('rejects when the category has children', async () => {
-    const { categoryRepository, categoryService } = buildCategoryService();
-    const category = buildCategory();
+    const {
+      categoryRepository,
+      categoryService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+    const category: Category = buildCategory();
     categoryRepository.findFullBy.mockResolvedValue([
       { ...category, guessObjects: [] },
     ]);
@@ -168,11 +217,14 @@ describe('CategoryService.delete', () => {
   });
 
   it('deletes the category and only its orphaned guess objects', async () => {
-    const { categoryRepository, categoryService, guessObjectService } =
-      buildCategoryService();
-    const orphan = buildGuessObject({ id: 'guess-orphan' });
-    const shared = buildGuessObject({ id: 'guess-shared' });
-    const category = buildCategory();
+    const {
+      categoryRepository,
+      categoryService,
+      guessObjectService,
+    }: ReturnType<typeof buildCategoryService> = buildCategoryService();
+    const orphan: GuessObject = buildGuessObject({ id: 'guess-orphan' });
+    const shared: GuessObject = buildGuessObject({ id: 'guess-shared' });
+    const category: Category = buildCategory();
     categoryRepository.findFullBy.mockResolvedValue([
       { ...category, guessObjects: [orphan, shared] },
     ]);

@@ -1,4 +1,9 @@
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import type {
+  WikidataItemResponse,
+  WikidataSearchResponse,
+} from './wikidata.service';
 import { WikidataService } from './wikidata.service';
 
 describe('WikidataService', () => {
@@ -8,18 +13,24 @@ describe('WikidataService', () => {
 
   describe('searchByName', () => {
     it('filters unnamed search results and maps descriptions', async () => {
-      const responseData = {
+      const responseData: {
+        search: { id: string; label: string; description: string }[];
+      } = {
         search: [
           { id: 'Q243', label: 'Tour Eiffel', description: 'monument' },
           { id: 'Q1', label: '   ', description: 'ignored' },
         ],
       };
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue(responseData);
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const wikidataService = new WikidataService();
+      const wikidataService: WikidataService = new WikidataService();
 
-      const result = await wikidataService.searchByName('Tour Eiffel');
+      const result: WikidataSearchResponse =
+        await wikidataService.searchByName('Tour Eiffel');
 
       expect(result.results).toEqual([
         {
@@ -31,12 +42,12 @@ describe('WikidataService', () => {
     });
 
     it('throws when Wikidata rejects a search', async () => {
-      const response = createMock<Response>({
+      const response: DeepMocked<Response> = createMock<Response>({
         ok: false,
         statusText: 'Unavailable',
       });
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const wikidataService = new WikidataService();
+      const wikidataService: WikidataService = new WikidataService();
 
       await expect(wikidataService.searchByName('Paris')).rejects.toThrow(
         'Erreur Wikidata: Unavailable',
@@ -46,7 +57,16 @@ describe('WikidataService', () => {
 
   describe('findById', () => {
     it('maps an entity without optional image or birthplace', async () => {
-      const responseData = {
+      const responseData: {
+        entities: {
+          Q243: {
+            id: string;
+            labels: { fr: { value: string } };
+            descriptions: { fr: { value: string } };
+            claims: Record<string, never>;
+          };
+        };
+      } = {
         entities: {
           Q243: {
             id: 'Q243',
@@ -56,12 +76,16 @@ describe('WikidataService', () => {
           },
         },
       };
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue(responseData);
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const wikidataService = new WikidataService();
+      const wikidataService: WikidataService = new WikidataService();
 
-      const result = await wikidataService.findById('Q243');
+      const result: WikidataItemResponse =
+        await wikidataService.findById('Q243');
 
       expect(result).toEqual({
         id: 'Q243',
@@ -74,7 +98,16 @@ describe('WikidataService', () => {
     });
 
     it('uses another available label when French and English are absent', async () => {
-      const responseData = {
+      const responseData: {
+        entities: {
+          Q243: {
+            id: string;
+            labels: { de: { value: string } };
+            descriptions: Record<string, never>;
+            claims: Record<string, never>;
+          };
+        };
+      } = {
         entities: {
           Q243: {
             id: 'Q243',
@@ -84,18 +117,34 @@ describe('WikidataService', () => {
           },
         },
       };
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue(responseData);
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const wikidataService = new WikidataService();
+      const wikidataService: WikidataService = new WikidataService();
 
-      const result = await wikidataService.findById('Q243');
+      const result: WikidataItemResponse =
+        await wikidataService.findById('Q243');
 
       expect(result.label).toBe('Eiffelturm');
     });
 
     it('resolves the image and OpenStreetMap relation of an entity', async () => {
-      const entityData = {
+      const entityData: {
+        entities: {
+          Q1: {
+            id: string;
+            labels: { en: { value: string } };
+            descriptions: Record<string, never>;
+            claims: {
+              P18: { mainsnak: { datavalue: { value: string } } }[];
+              P19: { mainsnak: { datavalue: { value: { id: string } } } }[];
+            };
+          };
+        };
+      } = {
         entities: {
           Q1: {
             id: 'Q1',
@@ -108,14 +157,22 @@ describe('WikidataService', () => {
           },
         },
       };
-      const imageData = {
+      const imageData: {
+        query: { pages: { 1: { imageinfo: { url: string }[] } } };
+      } = {
         query: {
           pages: {
             1: { imageinfo: [{ url: 'https://images.test/portrait.jpg' }] },
           },
         },
       };
-      const locationData = {
+      const locationData: {
+        entities: {
+          Q90: {
+            claims: { P402: { mainsnak: { datavalue: { value: number } } }[] };
+          };
+        };
+      } = {
         entities: {
           Q90: {
             claims: {
@@ -124,15 +181,15 @@ describe('WikidataService', () => {
           },
         },
       };
-      const entityResponse = createMock<Response>({
+      const entityResponse: DeepMocked<Response> = createMock<Response>({
         ok: true,
         statusText: 'OK',
       });
-      const imageResponse = createMock<Response>({
+      const imageResponse: DeepMocked<Response> = createMock<Response>({
         ok: true,
         statusText: 'OK',
       });
-      const locationResponse = createMock<Response>({
+      const locationResponse: DeepMocked<Response> = createMock<Response>({
         ok: true,
         statusText: 'OK',
       });
@@ -144,9 +201,9 @@ describe('WikidataService', () => {
         .mockResolvedValueOnce(entityResponse)
         .mockResolvedValueOnce(imageResponse)
         .mockResolvedValueOnce(locationResponse);
-      const wikidataService = new WikidataService();
+      const wikidataService: WikidataService = new WikidataService();
 
-      const result = await wikidataService.findById('Q1');
+      const result: WikidataItemResponse = await wikidataService.findById('Q1');
 
       expect(result).toMatchObject({
         image: 'https://images.test/portrait.jpg',

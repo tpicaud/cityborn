@@ -1,3 +1,4 @@
+import type { CreateGameRecord, User, UserId, Username } from '@cityborn/api';
 import {
   buildCreateGameRecord,
   buildUser,
@@ -6,10 +7,17 @@ import {
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { GameRecordService } from '../game-record/game-record.service';
-import type { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
-import type { UserRepository } from './repositories/user.repository';
+import type {
+  EmailVerificationToken,
+  EmailVerificationTokenRepository,
+} from './repositories/email-verification-token.repository';
+import type {
+  CreateUserData,
+  UserRepository,
+} from './repositories/user.repository';
 import { UserService } from './user.service';
 
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -23,15 +31,19 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-const userId = (value: string) => UserIdSchema.parse(value);
-const username = (value: string) => UsernameSchema.parse(value);
+const userId: (value: string) => UserId = (value: string) =>
+  UserIdSchema.parse(value);
+const username: (value: string) => Username = (value: string) =>
+  UsernameSchema.parse(value);
 
 function buildUserService() {
-  const userRepository = createMock<UserRepository>();
-  const emailVerificationTokenRepository =
+  const userRepository: DeepMocked<UserRepository> =
+    createMock<UserRepository>();
+  const emailVerificationTokenRepository: DeepMocked<EmailVerificationTokenRepository> =
     createMock<EmailVerificationTokenRepository>();
-  const gameRecordService = createMock<GameRecordService>();
-  const userService = new UserService(
+  const gameRecordService: DeepMocked<GameRecordService> =
+    createMock<GameRecordService>();
+  const userService: UserService = new UserService(
     userRepository,
     emailVerificationTokenRepository,
     gameRecordService,
@@ -48,9 +60,12 @@ function buildUserService() {
 describe('UserService persistence', () => {
   describe('createUser', () => {
     it('delegates creation', async () => {
-      const { userRepository, userService } = buildUserService();
-      const user = buildUser();
-      const createData = {
+      const {
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser();
+      const createData: CreateUserData = {
         email: user.email,
         username: user.username,
         type: user.type,
@@ -68,8 +83,11 @@ describe('UserService persistence', () => {
 
   describe('findByIdentifier', () => {
     it('delegates lookup', async () => {
-      const { userRepository, userService } = buildUserService();
-      const user = buildUser();
+      const {
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser();
       userRepository.findByIdentifier.mockResolvedValue(user);
 
       await expect(userService.findByIdentifier(user.email)).resolves.toEqual(
@@ -80,8 +98,11 @@ describe('UserService persistence', () => {
 
   describe('deleteUser', () => {
     it('delegates deletion', async () => {
-      const { userRepository, userService } = buildUserService();
-      const user = buildUser();
+      const {
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser();
 
       await userService.deleteUser(user.id);
 
@@ -92,7 +113,8 @@ describe('UserService persistence', () => {
 
 describe('UserService.validateIdentifiers', () => {
   it('accepts unused identifiers', async () => {
-    const { userRepository, userService } = buildUserService();
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
     userRepository.findByIdentifiers.mockResolvedValue(null);
 
     await expect(
@@ -101,7 +123,8 @@ describe('UserService.validateIdentifiers', () => {
   });
 
   it('rejects an existing username', async () => {
-    const { userRepository, userService } = buildUserService();
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
     userRepository.findByIdentifiers.mockResolvedValue({
       username: username('alice'),
       email: 'other@cityborn.test',
@@ -115,7 +138,8 @@ describe('UserService.validateIdentifiers', () => {
   });
 
   it('rejects an existing email', async () => {
-    const { userRepository, userService } = buildUserService();
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
     userRepository.findByIdentifiers.mockResolvedValue({
       username: username('other'),
       email: 'alice@cityborn.test',
@@ -132,9 +156,11 @@ describe('UserService.validateIdentifiers', () => {
 describe('UserService verification tokens', () => {
   describe('createEmailVerificationToken', () => {
     it('rejects a request during the cooldown', async () => {
-      const { emailVerificationTokenRepository, userService } =
-        buildUserService();
-      const verificationToken = {
+      const {
+        emailVerificationTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const verificationToken: EmailVerificationToken = {
         id: 'token-id',
         userId: userId('user-1'),
         expiresAt: new Date(Date.now() + 60_000),
@@ -152,13 +178,15 @@ describe('UserService verification tokens', () => {
     });
 
     it('replaces previous tokens and returns a fresh token', async () => {
-      const { emailVerificationTokenRepository, userService } =
-        buildUserService();
+      const {
+        emailVerificationTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
       emailVerificationTokenRepository.findLatestVerificationToken.mockResolvedValue(
         null,
       );
 
-      const token = await userService.createEmailVerificationToken(
+      const token: string = await userService.createEmailVerificationToken(
         userId('user-1'),
         60_000,
       );
@@ -175,9 +203,11 @@ describe('UserService verification tokens', () => {
 
   describe('verifyEmail', () => {
     it('deletes and rejects an expired token', async () => {
-      const { emailVerificationTokenRepository, userService } =
-        buildUserService();
-      const expiredToken = {
+      const {
+        emailVerificationTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const expiredToken: EmailVerificationToken = {
         id: 'token-id',
         userId: userId('user-1'),
         expiresAt: new Date(Date.now() - 1),
@@ -196,10 +226,13 @@ describe('UserService verification tokens', () => {
     });
 
     it('verifies the user and removes its tokens', async () => {
-      const { emailVerificationTokenRepository, userRepository, userService } =
-        buildUserService();
-      const user = buildUser();
-      const verificationToken = {
+      const {
+        emailVerificationTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser();
+      const verificationToken: EmailVerificationToken = {
         id: 'token-id',
         userId: userId('user-1'),
         expiresAt: new Date(Date.now() + 60_000),
@@ -223,7 +256,10 @@ describe('UserService verification tokens', () => {
 describe('UserService game records', () => {
   describe('getGameRecords', () => {
     it('rejects an unknown user', async () => {
-      const { gameRecordService, userService } = buildUserService();
+      const {
+        gameRecordService,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
       gameRecordService.findRecentByUserId.mockResolvedValue(null);
 
       await expect(
@@ -236,8 +272,11 @@ describe('UserService game records', () => {
 
   describe('saveSoloGameRecord', () => {
     it('persists a solo record for the user', async () => {
-      const { gameRecordService, userService } = buildUserService();
-      const record = buildCreateGameRecord();
+      const {
+        gameRecordService,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const record: CreateGameRecord = buildCreateGameRecord();
 
       await userService.saveSoloGameRecord(userId('user-1'), record);
 
@@ -247,8 +286,11 @@ describe('UserService game records', () => {
     });
 
     it('rejects a multiplayer record', async () => {
-      const { userService } = buildUserService();
-      const record = buildCreateGameRecord({ mode: SessionMode.MULTI });
+      const { userService }: ReturnType<typeof buildUserService> =
+        buildUserService();
+      const record: CreateGameRecord = buildCreateGameRecord({
+        mode: SessionMode.MULTI,
+      });
 
       await expect(
         userService.saveSoloGameRecord(userId('user-1'), record),

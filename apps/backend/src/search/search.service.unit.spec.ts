@@ -1,9 +1,17 @@
+import type {
+  FullGuessObject,
+  GuessObjectDraft,
+  GuessObjectSearchResult,
+  WorldLocation,
+  WorldLocationSearchResult,
+} from '@cityborn/api';
 import {
   buildFullGuessObject,
   buildGuessObjectDraft,
   buildWorldLocation,
   ErrorCode,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
 import type {
@@ -15,11 +23,15 @@ import type { WorldLocationService } from '../world-location/world-location.serv
 import { SearchService } from './search.service';
 
 function buildSearchService() {
-  const guessObjectService = createMock<GuessObjectService>();
-  const wikidataService = createMock<WikidataService>();
-  const worldLocationService = createMock<WorldLocationService>();
-  const nominatimService = createMock<NominatimService>();
-  const searchService = new SearchService(
+  const guessObjectService: DeepMocked<GuessObjectService> =
+    createMock<GuessObjectService>();
+  const wikidataService: DeepMocked<WikidataService> =
+    createMock<WikidataService>();
+  const worldLocationService: DeepMocked<WorldLocationService> =
+    createMock<WorldLocationService>();
+  const nominatimService: DeepMocked<NominatimService> =
+    createMock<NominatimService>();
+  const searchService: SearchService = new SearchService(
     guessObjectService,
     wikidataService,
     worldLocationService,
@@ -37,12 +49,16 @@ function buildSearchService() {
 
 describe('SearchService.searchGuessObjectByExternalId', () => {
   it('returns the persisted object when available', async () => {
-    const { searchService, guessObjectService, wikidataService } =
-      buildSearchService();
-    const persisted = buildFullGuessObject();
+    const {
+      searchService,
+      guessObjectService,
+      wikidataService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
+    const persisted: FullGuessObject = buildFullGuessObject();
     guessObjectService.findFullBy.mockResolvedValue([persisted]);
 
-    const result = await searchService.searchGuessObjectByExternalId('Q243');
+    const result: GuessObjectSearchResult =
+      await searchService.searchGuessObjectByExternalId('Q243');
 
     expect(result).toBe(persisted);
     expect(wikidataService.findById).not.toHaveBeenCalled();
@@ -55,7 +71,7 @@ describe('SearchService.searchGuessObjectByExternalId', () => {
       wikidataService,
       worldLocationService,
       nominatimService,
-    } = buildSearchService();
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
     const nominatimItem: NominatimItemResponse = {
       place_id: '1',
       osm_type: 'relation',
@@ -77,7 +93,8 @@ describe('SearchService.searchGuessObjectByExternalId', () => {
     worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(nominatimItem);
 
-    const result = await searchService.searchGuessObjectByExternalId('Q243');
+    const result: GuessObjectSearchResult =
+      await searchService.searchGuessObjectByExternalId('Q243');
 
     expect(result.world_location).toEqual({
       id: '7444',
@@ -94,10 +111,15 @@ describe('SearchService.searchGuessObjectByExternalId', () => {
 
 describe('SearchService.searchGuessObjectByName', () => {
   it('merges database-only drafts and replaces external duplicates', async () => {
-    const { searchService, guessObjectService, wikidataService } =
-      buildSearchService();
-    const persistedDraft = buildGuessObjectDraft({ name: 'Persisted tower' });
-    const localDraft = buildGuessObjectDraft({
+    const {
+      searchService,
+      guessObjectService,
+      wikidataService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
+    const persistedDraft: GuessObjectDraft = buildGuessObjectDraft({
+      name: 'Persisted tower',
+    });
+    const localDraft: GuessObjectDraft = buildGuessObjectDraft({
       name: 'Local only',
       source: { provider: 'manual', external_id: 'local-1' },
     });
@@ -112,7 +134,8 @@ describe('SearchService.searchGuessObjectByName', () => {
       localDraft,
     ]);
 
-    const drafts = await searchService.searchGuessObjectByName('tower');
+    const drafts: GuessObjectSearchResult[] =
+      await searchService.searchGuessObjectByName('tower');
 
     expect(drafts.map(({ name }) => name)).toEqual([
       'Persisted tower',
@@ -124,17 +147,18 @@ describe('SearchService.searchGuessObjectByName', () => {
 
 describe('SearchService.searchWorldLocationById', () => {
   it('returns a persisted location without calling Nominatim', async () => {
-    const { searchService, worldLocationService, nominatimService } =
-      buildSearchService();
-    const worldLocation = buildWorldLocation();
+    const {
+      searchService,
+      worldLocationService,
+      nominatimService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
+    const worldLocation: WorldLocation = buildWorldLocation();
     worldLocationService.findByExternalIdentifier.mockResolvedValue(
       worldLocation,
     );
 
-    const location = await searchService.searchWorldLocationById(
-      '7444',
-      'relation',
-    );
+    const location: WorldLocationSearchResult =
+      await searchService.searchWorldLocationById('7444', 'relation');
 
     expect(location.id).toBe('location-1');
     expect(worldLocationService.findByExternalIdentifier).toHaveBeenCalledWith(
@@ -145,8 +169,11 @@ describe('SearchService.searchWorldLocationById', () => {
   });
 
   it('rejects when neither source has the location', async () => {
-    const { searchService, worldLocationService, nominatimService } =
-      buildSearchService();
+    const {
+      searchService,
+      worldLocationService,
+      nominatimService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
     worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(null);
 
@@ -158,8 +185,11 @@ describe('SearchService.searchWorldLocationById', () => {
   });
 
   it('maps a Nominatim location', async () => {
-    const { searchService, worldLocationService, nominatimService } =
-      buildSearchService();
+    const {
+      searchService,
+      worldLocationService,
+      nominatimService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
     const nominatimItem: NominatimItemResponse = {
       place_id: '1',
       osm_type: 'relation',
@@ -174,10 +204,8 @@ describe('SearchService.searchWorldLocationById', () => {
     worldLocationService.findByExternalIdentifier.mockResolvedValue(null);
     nominatimService.findByOsmId.mockResolvedValue(nominatimItem);
 
-    const location = await searchService.searchWorldLocationById(
-      '7444',
-      'relation',
-    );
+    const location: WorldLocationSearchResult =
+      await searchService.searchWorldLocationById('7444', 'relation');
 
     expect(location.source.external_id).toBe('7444');
   });
@@ -185,7 +213,10 @@ describe('SearchService.searchWorldLocationById', () => {
 
 describe('SearchService.searchWorldLocationByName', () => {
   it('maps every Nominatim result', async () => {
-    const { searchService, nominatimService } = buildSearchService();
+    const {
+      searchService,
+      nominatimService,
+    }: ReturnType<typeof buildSearchService> = buildSearchService();
     const nominatimItem: NominatimItemResponse = {
       place_id: '1',
       osm_type: 'relation',
@@ -201,7 +232,8 @@ describe('SearchService.searchWorldLocationByName', () => {
       results: [nominatimItem],
     });
 
-    const locations = await searchService.searchWorldLocationByName('Paris');
+    const locations: WorldLocationSearchResult[] =
+      await searchService.searchWorldLocationByName('Paris');
 
     expect(locations).toHaveLength(1);
   });

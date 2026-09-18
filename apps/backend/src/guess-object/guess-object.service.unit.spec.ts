@@ -1,3 +1,13 @@
+import type {
+  Category,
+  CreateGuessObject,
+  FullGuessObject,
+  GameConfig,
+  GuessObject,
+  GuessObjectDraft,
+  GuessObjectId,
+  WorldLocationId,
+} from '@cityborn/api';
 import {
   buildCategory,
   buildFullGuessObject,
@@ -8,11 +18,15 @@ import {
   GuessObjectIdSchema,
   WorldLocationIdSchema,
 } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { CategoryRepository } from '../category/repositories/category.repository';
 import type { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectService } from './guess-object.service';
-import type { GuessObjectRepository } from './repositories/guess-object.repository';
+import type {
+  GuessObjectFilter,
+  GuessObjectRepository,
+} from './repositories/guess-object.repository';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -25,14 +39,19 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-const guessObjectId = (value: string) => GuessObjectIdSchema.parse(value);
-const worldLocationId = (value: string) => WorldLocationIdSchema.parse(value);
+const guessObjectId: (value: string) => GuessObjectId = (value: string) =>
+  GuessObjectIdSchema.parse(value);
+const worldLocationId: (value: string) => WorldLocationId = (value: string) =>
+  WorldLocationIdSchema.parse(value);
 
 function buildGuessObjectService() {
-  const guessObjectRepository = createMock<GuessObjectRepository>();
-  const categoryRepository = createMock<CategoryRepository>();
-  const worldLocationService = createMock<WorldLocationService>();
-  const guessObjectService = new GuessObjectService(
+  const guessObjectRepository: DeepMocked<GuessObjectRepository> =
+    createMock<GuessObjectRepository>();
+  const categoryRepository: DeepMocked<CategoryRepository> =
+    createMock<CategoryRepository>();
+  const worldLocationService: DeepMocked<WorldLocationService> =
+    createMock<WorldLocationService>();
+  const guessObjectService: GuessObjectService = new GuessObjectService(
     guessObjectRepository,
     categoryRepository,
     worldLocationService,
@@ -49,10 +68,15 @@ function buildGuessObjectService() {
 describe('GuessObjectService queries', () => {
   describe('findBy', () => {
     it('delegates filtered queries', async () => {
-      const { guessObjectService, guessObjectRepository } =
-        buildGuessObjectService();
-      const guessObject = buildGuessObject();
-      const filter = { ids: [guessObject.id], external_id: 'Q243' };
+      const {
+        guessObjectService,
+        guessObjectRepository,
+      }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+      const guessObject: GuessObject = buildGuessObject();
+      const filter: GuessObjectFilter = {
+        ids: [guessObject.id],
+        external_id: 'Q243',
+      };
       guessObjectRepository.findBy.mockResolvedValue([guessObject]);
 
       await expect(guessObjectService.findBy(filter)).resolves.toEqual([
@@ -63,21 +87,23 @@ describe('GuessObjectService queries', () => {
 
   describe('findShuffledGuessObjectsByGameConfig', () => {
     it('filters configured categories and limits shuffled results', async () => {
-      const { guessObjectService, guessObjectRepository } =
-        buildGuessObjectService();
-      const objects = [
+      const {
+        guessObjectService,
+        guessObjectRepository,
+      }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+      const objects: FullGuessObject[] = [
         buildFullGuessObject(),
         buildFullGuessObject({ id: 'guess-2' }),
       ];
       guessObjectRepository.findFullBy.mockResolvedValue(objects);
       jest.spyOn(Math, 'random').mockReturnValue(0.5);
-      const category = buildCategory();
-      const gameConfig = buildGameConfig({
+      const category: Category = buildCategory();
+      const gameConfig: GameConfig = buildGameConfig({
         categories: [category],
         nbOfObjects: 1,
       });
 
-      const result =
+      const result: FullGuessObject[] =
         await guessObjectService.findShuffledGuessObjectsByGameConfig(
           gameConfig,
         );
@@ -92,9 +118,11 @@ describe('GuessObjectService queries', () => {
 
 describe('GuessObjectService.create', () => {
   it('rejects an unknown world location', async () => {
-    const { guessObjectService, worldLocationService } =
-      buildGuessObjectService();
-    const createData = {
+    const {
+      guessObjectService,
+      worldLocationService,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const createData: CreateGuessObject = {
       name: 'Eiffel Tower',
       world_location_id: worldLocationId('missing'),
     };
@@ -106,10 +134,13 @@ describe('GuessObjectService.create', () => {
   });
 
   it('returns an existing object identifier', async () => {
-    const { guessObjectService, guessObjectRepository, worldLocationService } =
-      buildGuessObjectService();
-    const id = guessObjectId('guess-1');
-    const createData = {
+    const {
+      guessObjectService,
+      guessObjectRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const id: GuessObjectId = guessObjectId('guess-1');
+    const createData: CreateGuessObject = {
       name: 'Eiffel Tower',
       world_location_id: worldLocationId('location-1'),
     };
@@ -123,9 +154,12 @@ describe('GuessObjectService.create', () => {
   });
 
   it('creates a missing object with its source', async () => {
-    const { guessObjectService, guessObjectRepository, worldLocationService } =
-      buildGuessObjectService();
-    const payload = {
+    const {
+      guessObjectService,
+      guessObjectRepository,
+      worldLocationService,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const payload: CreateGuessObject = {
       name: 'Eiffel Tower',
       source: { provider: 'wikidata', external_id: 'Q243' },
       world_location_id: worldLocationId('location-1'),
@@ -144,8 +178,10 @@ describe('GuessObjectService.create', () => {
 
 describe('GuessObjectService.delete', () => {
   it('rejects a missing object', async () => {
-    const { guessObjectService, guessObjectRepository } =
-      buildGuessObjectService();
+    const {
+      guessObjectService,
+      guessObjectRepository,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
     guessObjectRepository.findBy.mockResolvedValue([]);
 
     await expect(
@@ -156,9 +192,12 @@ describe('GuessObjectService.delete', () => {
   });
 
   it('rejects an object assigned to a category', async () => {
-    const { guessObjectService, guessObjectRepository, categoryRepository } =
-      buildGuessObjectService();
-    const guessObject = buildGuessObject();
+    const {
+      guessObjectService,
+      guessObjectRepository,
+      categoryRepository,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const guessObject: GuessObject = buildGuessObject();
     guessObjectRepository.findBy.mockResolvedValue([guessObject]);
     categoryRepository.countByGuessObjectId.mockResolvedValue(1);
 
@@ -173,8 +212,8 @@ describe('GuessObjectService.delete', () => {
       guessObjectRepository,
       categoryRepository,
       worldLocationService,
-    } = buildGuessObjectService();
-    const guessObject = buildGuessObject();
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const guessObject: GuessObject = buildGuessObject();
     guessObjectRepository.findBy.mockResolvedValue([guessObject]);
     categoryRepository.countByGuessObjectId.mockResolvedValue(0);
     guessObjectRepository.countByWorldLocationId.mockResolvedValue(0);
@@ -189,9 +228,11 @@ describe('GuessObjectService.delete', () => {
 
 describe('GuessObjectService.searchDraftByName', () => {
   it('delegates the search', async () => {
-    const { guessObjectService, guessObjectRepository } =
-      buildGuessObjectService();
-    const draft = buildGuessObjectDraft();
+    const {
+      guessObjectService,
+      guessObjectRepository,
+    }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
+    const draft: GuessObjectDraft = buildGuessObjectDraft();
     guessObjectRepository.searchDraftByName.mockResolvedValue([draft]);
 
     await expect(

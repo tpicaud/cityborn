@@ -1,4 +1,6 @@
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import type { NominatimSearchResponse } from './nominatim.service';
 import { NominatimService } from './nominatim.service';
 
 describe('NominatimService', () => {
@@ -8,7 +10,16 @@ describe('NominatimService', () => {
 
   describe('searchByName', () => {
     it('keeps the highest-ranked result for each display name', async () => {
-      const rawResults = [
+      const rawResults: {
+        place_id: number;
+        osm_type: string;
+        osm_id: number;
+        lat: string;
+        lon: string;
+        display_name: string;
+        namedetails: { 'name:fr': string };
+        place_rank: number;
+      }[] = [
         {
           place_id: 1,
           osm_type: 'relation',
@@ -30,12 +41,16 @@ describe('NominatimService', () => {
           place_rank: 20,
         },
       ];
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue(rawResults);
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const nominatimService = new NominatimService();
+      const nominatimService: NominatimService = new NominatimService();
 
-      const result = await nominatimService.searchByName('Paris');
+      const result: NominatimSearchResponse =
+        await nominatimService.searchByName('Paris');
 
       expect(result.results).toHaveLength(1);
       expect(result.results[0]).toMatchObject({
@@ -46,7 +61,13 @@ describe('NominatimService', () => {
     });
 
     it('builds a GeoJSON point with longitude before latitude', async () => {
-      const rawResults = [
+      const rawResults: {
+        osm_type: string;
+        lat: string;
+        lon: string;
+        display_name: string;
+        place_rank: number;
+      }[] = [
         {
           osm_type: 'node',
           lat: '48.8',
@@ -55,12 +76,16 @@ describe('NominatimService', () => {
           place_rank: 20,
         },
       ];
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue(rawResults);
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const nominatimService = new NominatimService();
+      const nominatimService: NominatimService = new NominatimService();
 
-      const result = await nominatimService.searchByName('Paris');
+      const result: NominatimSearchResponse =
+        await nominatimService.searchByName('Paris');
 
       expect(result.results[0].geojson).toEqual({
         type: 'Point',
@@ -69,12 +94,12 @@ describe('NominatimService', () => {
     });
 
     it('throws when the search endpoint rejects the request', async () => {
-      const response = createMock<Response>({
+      const response: DeepMocked<Response> = createMock<Response>({
         ok: false,
         statusText: 'Too Many Requests',
       });
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const nominatimService = new NominatimService();
+      const nominatimService: NominatimService = new NominatimService();
 
       await expect(nominatimService.searchByName('Paris')).rejects.toThrow(
         'Nominatim search failed: Too Many Requests',
@@ -84,10 +109,15 @@ describe('NominatimService', () => {
 
   describe('findByOsmId', () => {
     it('returns null when an OpenStreetMap identifier is unknown', async () => {
-      const response = createMock<Response>({ ok: true, statusText: 'OK' });
+      const response: DeepMocked<Response> = createMock<Response>({
+        ok: true,
+        statusText: 'OK',
+      });
       response.json.mockResolvedValue([]);
-      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const nominatimService = new NominatimService();
+      const fetchSpy: jest.SpiedFunction<typeof global.fetch> = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(response);
+      const nominatimService: NominatimService = new NominatimService();
 
       await expect(
         nominatimService.findByOsmId('7444', 'relation'),

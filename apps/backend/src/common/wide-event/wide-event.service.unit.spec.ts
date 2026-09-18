@@ -1,19 +1,26 @@
+import type { ApiError } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/api';
+import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { BadRequestException } from '@nestjs/common';
 import type { ClsService } from 'nestjs-cls';
 import type {
   HttpWideEventInit,
   WideEventAuthContext,
+  WideEventFinalization,
   WideEventLogger,
   WideEventOperationContext,
 } from './wide-event';
 import { type WideEventClsStore, WideEventService } from './wide-event.service';
 
 function buildWideEventService() {
-  const clsService = createMock<ClsService<WideEventClsStore>>();
-  const logger = createMock<WideEventLogger>();
-  const wideEventService = new WideEventService(clsService, logger);
+  const clsService: DeepMocked<ClsService<WideEventClsStore>> =
+    createMock<ClsService<WideEventClsStore>>();
+  const logger: DeepMocked<WideEventLogger> = createMock<WideEventLogger>();
+  const wideEventService: WideEventService = new WideEventService(
+    clsService,
+    logger,
+  );
 
   return { clsService, logger, wideEventService };
 }
@@ -21,8 +28,11 @@ function buildWideEventService() {
 describe('WideEventService', () => {
   describe('run', () => {
     it('runs the callback inside an initialized context', () => {
-      const { clsService, wideEventService } = buildWideEventService();
-      const init = {
+      const {
+        clsService,
+        wideEventService,
+      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
+      const init: HttpWideEventInit = {
         transport: 'http',
         requestId: 'request-1',
         domain: 'other',
@@ -36,10 +46,10 @@ describe('WideEventService', () => {
         clientVersion: undefined,
         apiVersion: 1,
         isAuthenticated: false,
-      } satisfies HttpWideEventInit;
+      };
       clsService.runWith.mockImplementation((_store, callback) => callback());
 
-      const result = wideEventService.run(init, () => 'result');
+      const result: string = wideEventService.run(init, () => 'result');
 
       expect(result).toBe('result');
       expect(clsService.runWith).toHaveBeenCalledWith(
@@ -55,12 +65,15 @@ describe('WideEventService', () => {
 
   describe('enrichAuth', () => {
     it('enriches the active event with authentication data', () => {
-      const { clsService, wideEventService } = buildWideEventService();
-      const authData = {
+      const {
+        clsService,
+        wideEventService,
+      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
+      const authData: WideEventAuthContext = {
         isAuthenticated: true,
         userId: 'user-1',
-      } satisfies WideEventAuthContext;
-      const init = {
+      };
+      const init: HttpWideEventInit = {
         transport: 'http',
         requestId: 'request-1',
         domain: 'other',
@@ -74,7 +87,7 @@ describe('WideEventService', () => {
         clientVersion: undefined,
         apiVersion: 1,
         isAuthenticated: false,
-      } satisfies HttpWideEventInit;
+      };
       clsService.get.mockReturnValueOnce(init).mockReturnValueOnce(false);
 
       wideEventService.enrichAuth(authData);
@@ -89,9 +102,16 @@ describe('WideEventService', () => {
 
   describe('finish', () => {
     it('finalizes an HTTP event once with its resolved route', () => {
-      const { clsService, logger, wideEventService } = buildWideEventService();
-      const outcome = { route: '/v1/session/:id', statusCode: 201 };
-      const init = {
+      const {
+        clsService,
+        logger,
+        wideEventService,
+      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
+      const outcome: WideEventFinalization = {
+        route: '/v1/session/:id',
+        statusCode: 201,
+      };
+      const init: HttpWideEventInit = {
         transport: 'http',
         requestId: 'request-1',
         domain: 'other',
@@ -105,7 +125,7 @@ describe('WideEventService', () => {
         clientVersion: undefined,
         apiVersion: 1,
         isAuthenticated: false,
-      } satisfies HttpWideEventInit;
+      };
       clsService.get
         .mockReturnValueOnce(init)
         .mockReturnValueOnce(false)
@@ -133,10 +153,14 @@ describe('WideEventService', () => {
 
   describe('recordError', () => {
     it('logs an error immediately when no context is active', () => {
-      const { clsService, logger, wideEventService } = buildWideEventService();
+      const {
+        clsService,
+        logger,
+        wideEventService,
+      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
       clsService.get.mockReturnValue(undefined);
 
-      const apiError = wideEventService.recordError(
+      const apiError: ApiError = wideEventService.recordError(
         new BadRequestException({
           code: ErrorCode.BAD_REQUEST,
           message: 'Invalid request',
@@ -164,13 +188,17 @@ describe('WideEventService', () => {
 
   describe('recordOperationError', () => {
     it('logs an operation error without enriching the active event', () => {
-      const { clsService, logger, wideEventService } = buildWideEventService();
-      const operation = {
+      const {
+        clsService,
+        logger,
+        wideEventService,
+      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
+      const operation: WideEventOperationContext = {
         domain: 'auth',
         operation: 'send_verification_email',
         userId: 'user-1',
-      } satisfies WideEventOperationContext;
-      const init = {
+      };
+      const init: HttpWideEventInit = {
         transport: 'http',
         requestId: 'request-1',
         domain: 'other',
@@ -184,7 +212,7 @@ describe('WideEventService', () => {
         clientVersion: undefined,
         apiVersion: 1,
         isAuthenticated: false,
-      } satisfies HttpWideEventInit;
+      };
       clsService.get.mockReturnValue(init);
 
       wideEventService.recordOperationError(
