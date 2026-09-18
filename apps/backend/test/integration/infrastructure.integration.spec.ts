@@ -85,7 +85,7 @@ describe('Test infrastructure', () => {
     });
   });
 
-  describe('TestInfrastructure.reset', () => {
+  describe('reset', () => {
     it('connects to Redis and clears test keys', async () => {
       await redis.set('infrastructure:probe', 'test');
       expect(await redis.get('infrastructure:probe')).toBe('test');

@@ -24,7 +24,7 @@ describe('PrismaWorldLocationRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaWorldLocationRepository.create', () => {
+  describe('create', () => {
     it('persists location geometry', async () => {
       const data = CreateWorldLocationSchema.parse(buildWorldLocation());
 
@@ -52,7 +52,7 @@ describe('PrismaWorldLocationRepository', () => {
     });
   });
 
-  describe('PrismaWorldLocationRepository.findBySource', () => {
+  describe('findBySource', () => {
     it('finds a location by OSM identifier with geometry', async () => {
       const data = CreateWorldLocationSchema.parse(buildWorldLocation());
       const location = await worldLocationRepository.create(data);
@@ -71,7 +71,7 @@ describe('PrismaWorldLocationRepository', () => {
     });
   });
 
-  describe('PrismaWorldLocationRepository.delete', () => {
+  describe('delete', () => {
     it('cascades geometry deletion when its location is removed', async () => {
       const location = await worldLocationRepository.create(
         CreateWorldLocationSchema.parse(buildWorldLocation()),

@@ -28,7 +28,7 @@ describe('PrismaGuessObjectRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaGuessObjectRepository.findFullBy', () => {
+  describe('findFullBy', () => {
     it('filters full guess objects by category and includes location geometry', async () => {
       const location = buildWorldLocation();
       await prisma.worldLocation.create({
@@ -79,7 +79,7 @@ describe('PrismaGuessObjectRepository', () => {
     });
   });
 
-  describe('PrismaGuessObjectRepository.findBy', () => {
+  describe('findBy', () => {
     it('filters guess objects by source external identifier', async () => {
       const location = buildWorldLocation();
       await prisma.worldLocation.create({
@@ -121,7 +121,7 @@ describe('PrismaGuessObjectRepository', () => {
     });
   });
 
-  describe('PrismaGuessObjectRepository.searchDraftByName', () => {
+  describe('searchDraftByName', () => {
     it('searches drafts by name without case sensitivity', async () => {
       const location = buildWorldLocation();
       await prisma.worldLocation.create({

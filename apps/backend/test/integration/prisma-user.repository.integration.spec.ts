@@ -23,7 +23,7 @@ describe('PrismaUserRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaUserRepository.findCredentialsByIdentifier', () => {
+  describe('findCredentialsByIdentifier', () => {
     it('finds persisted credentials by email', async () => {
       const userData = buildUser({ isVerified: false });
       const user = await userRepository.create({
@@ -43,7 +43,7 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('PrismaUserRepository.findByIdentifier', () => {
+  describe('findByIdentifier', () => {
     it('finds a user by username', async () => {
       const userData = buildUser();
       const user = await userRepository.create({
@@ -61,7 +61,7 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('PrismaUserRepository.findByIdentifiers', () => {
+  describe('findByIdentifiers', () => {
     it('finds an existing user by either username or email', async () => {
       const userData = buildUser();
       await userRepository.create({
@@ -90,7 +90,7 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('PrismaUserRepository.findByAppleId', () => {
+  describe('findByAppleId', () => {
     it('finds an account by Apple identifier', async () => {
       const userData = buildUser();
       const user = await userRepository.create({
@@ -106,7 +106,7 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('PrismaUserRepository.markEmailVerified', () => {
+  describe('markEmailVerified', () => {
     it('persists email verification', async () => {
       const userData = buildUser({ isVerified: false });
       const user = await userRepository.create({

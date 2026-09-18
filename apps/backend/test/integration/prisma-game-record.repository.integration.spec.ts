@@ -28,7 +28,7 @@ describe('PrismaGameRecordRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaGameRecordRepository.findRecentByUserId', () => {
+  describe('findRecentByUserId', () => {
     it('returns only the five newest game records of the requested user', async () => {
       const user = buildUser();
       const otherUser = buildUser({

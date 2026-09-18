@@ -28,7 +28,7 @@ describe('PrismaCategoryRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaCategoryRepository.create', () => {
+  describe('create', () => {
     it('connects a guess object when creating a category', async () => {
       const guessObject = buildGuessObject();
       await prisma.worldLocation.create({
@@ -61,7 +61,7 @@ describe('PrismaCategoryRepository', () => {
     });
   });
 
-  describe('PrismaCategoryRepository.update', () => {
+  describe('update', () => {
     it('disconnects a guess object when updating a category', async () => {
       const guessObject = buildGuessObject();
       await prisma.worldLocation.create({
@@ -99,7 +99,7 @@ describe('PrismaCategoryRepository', () => {
     });
   });
 
-  describe('PrismaCategoryRepository.findTree', () => {
+  describe('findTree', () => {
     it('loads nested categories beneath published roots', async () => {
       const root = await categoryRepository.create(
         buildCreateCategory({ name: 'Countries', isPublished: true }),

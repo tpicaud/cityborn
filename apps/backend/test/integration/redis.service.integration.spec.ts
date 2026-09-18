@@ -12,7 +12,7 @@ describe('RedisService with Redis', () => {
     await infrastructure.close();
   });
 
-  describe('RedisService.setJSON', () => {
+  describe('setJSON', () => {
     it('serializes JSON and applies a TTL', async () => {
       const payload = { player: 'host', score: 12 };
 
@@ -26,7 +26,7 @@ describe('RedisService with Redis', () => {
     });
   });
 
-  describe('RedisService.set', () => {
+  describe('set', () => {
     it('expires a key after its TTL', async () => {
       await redisService.set('integration:ttl', 'value', 1);
 
@@ -36,7 +36,7 @@ describe('RedisService with Redis', () => {
     });
   });
 
-  describe('RedisService.expire', () => {
+  describe('expire', () => {
     it('expires a key immediately when requested', async () => {
       await redisService.setJSON('integration:expiring', { value: true });
 
@@ -46,7 +46,7 @@ describe('RedisService with Redis', () => {
     });
   });
 
-  describe('RedisService.del', () => {
+  describe('del', () => {
     it('deletes a stored value', async () => {
       await redisService.set('integration:deleting', 'value');
 

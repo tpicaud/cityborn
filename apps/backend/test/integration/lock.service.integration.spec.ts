@@ -12,7 +12,7 @@ describe('LockService with Redis', () => {
     await infrastructure.close();
   });
 
-  describe('LockService.withLock', () => {
+  describe('withLock', () => {
     it('rejects concurrent acquisition of the same resource', async () => {
       let markEntered = () => {};
       let releaseFirst = () => {};

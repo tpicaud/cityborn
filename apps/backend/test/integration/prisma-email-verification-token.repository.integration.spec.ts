@@ -24,7 +24,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
     await infrastructure.close();
   });
 
-  describe('PrismaEmailVerificationTokenRepository.findLatestVerificationToken', () => {
+  describe('findLatestVerificationToken', () => {
     it('returns the newest verification token for a user', async () => {
       const user = buildUser();
       await prisma.user.create({
@@ -56,7 +56,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
     });
   });
 
-  describe('PrismaEmailVerificationTokenRepository.findVerificationToken', () => {
+  describe('findVerificationToken', () => {
     it('finds a verification token by its unique value', async () => {
       const user = buildUser();
       await prisma.user.create({
@@ -80,7 +80,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
     });
   });
 
-  describe('PrismaEmailVerificationTokenRepository.deleteVerificationTokensByUserId', () => {
+  describe('deleteVerificationTokensByUserId', () => {
     it('deletes only the requested user’s tokens', async () => {
       const firstUser = buildUser();
       const otherUser = buildUser({
