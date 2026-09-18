@@ -4,9 +4,13 @@ import { RedisService } from '../../src/redis/redis.service';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('RedisService with Redis', () => {
-  const infrastructure = createTestInfrastructure();
-  const { redis } = infrastructure;
-  const redisService = new RedisService(redis, createMock<WideEventService>());
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { redis }: typeof infrastructure = infrastructure;
+  const redisService: RedisService = new RedisService(
+    redis,
+    createMock<WideEventService>(),
+  );
 
   afterAll(async () => {
     await infrastructure.close();
@@ -14,7 +18,10 @@ describe('RedisService with Redis', () => {
 
   describe('setJSON', () => {
     it('serializes JSON and applies a TTL', async () => {
-      const payload = { player: 'host', score: 12 };
+      const payload: { player: string; score: number } = {
+        player: 'host',
+        score: 12,
+      };
 
       await redisService.setJSON('integration:payload', payload, 10);
 
@@ -50,7 +57,7 @@ describe('RedisService with Redis', () => {
     it('deletes a stored value', async () => {
       await redisService.set('integration:deleting', 'value');
 
-      const deleted = await redisService.del('integration:deleting');
+      const deleted: number = await redisService.del('integration:deleting');
 
       expect(deleted).toBe(1);
       expect(await redisService.get('integration:deleting')).toBeNull();

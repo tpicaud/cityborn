@@ -1,10 +1,13 @@
+import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
+import type { Prisma } from '@prisma/client';
 import { createTestInfrastructure } from '../support/infrastructure';
 import { resetDb } from '../support/resetDb';
 
 describe('Test infrastructure', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma, redis } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma, redis }: typeof infrastructure = infrastructure;
 
   afterAll(async () => {
     await infrastructure.close();
@@ -12,14 +15,18 @@ describe('Test infrastructure', () => {
 
   describe('resetDb', () => {
     it('clears related records and preserves migrations and PostGIS metadata', async () => {
-      const migrationsBefore = await prisma.$queryRaw`
+      const migrationsBefore: { migration_name: string }[] =
+        await prisma.$queryRaw<{ migration_name: string }[]>`
         SELECT migration_name FROM "_prisma_migrations" ORDER BY migration_name
       `;
-      const spatialReferencesBefore = await prisma.$queryRaw`
+      const spatialReferencesBefore: { count: bigint }[] =
+        await prisma.$queryRaw<{ count: bigint }[]>`
         SELECT count(*) FROM spatial_ref_sys
       `;
-      const userData = buildUser();
-      const user = await prisma.user.create({
+      const userData: User = buildUser();
+      const user: Prisma.UserGetPayload<{
+        include: { tokens: true; gameRecords: true };
+      }> = await prisma.user.create({
         data: {
           id: userData.id,
           email: userData.email,
@@ -67,10 +74,11 @@ describe('Test infrastructure', () => {
     });
 
     it('refuses to truncate a connection to another database', async () => {
-      const query = jest
+      const query: jest.SpiedFunction<typeof prisma.$queryRaw> = jest
         .spyOn(prisma, '$queryRaw')
         .mockResolvedValueOnce([{ database: 'postgres', user: 'postgres' }]);
-      const execute = jest.spyOn(prisma, '$executeRawUnsafe');
+      const execute: jest.SpiedFunction<typeof prisma.$executeRawUnsafe> =
+        jest.spyOn(prisma, '$executeRawUnsafe');
 
       try {
         await expect(resetDb(prisma)).rejects.toThrow(

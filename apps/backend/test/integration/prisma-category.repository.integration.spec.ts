@@ -1,3 +1,12 @@
+import type {
+  Category,
+  CategoryTree,
+  CreateCategory,
+  FullCategory,
+  GuessObject,
+  UpdateCategory,
+  WorldLocation,
+} from '@cityborn/api';
 import {
   buildCreateCategory,
   buildGuessObject,
@@ -10,8 +19,9 @@ import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaCategoryRepository', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let categoryRepository: PrismaCategoryRepository;
 
@@ -31,9 +41,9 @@ describe('PrismaCategoryRepository', () => {
 
   describe('create', () => {
     it('connects a guess object when creating a category', async () => {
-      const location = buildWorldLocation();
-      const guessObject = buildGuessObject();
-      const categoryData = buildCreateCategory({
+      const location: WorldLocation = buildWorldLocation();
+      const guessObject: GuessObject = buildGuessObject();
+      const categoryData: CreateCategory = buildCreateCategory({
         guessObjectsIds: [guessObject.id],
       });
       await prisma.worldLocation.create({
@@ -51,8 +61,8 @@ describe('PrismaCategoryRepository', () => {
         },
       });
 
-      const category = await categoryRepository.create(categoryData);
-      const categories = await categoryRepository.findFullBy({
+      const category: Category = await categoryRepository.create(categoryData);
+      const categories: FullCategory[] = await categoryRepository.findFullBy({
         ids: [category.id],
       });
 
@@ -67,9 +77,9 @@ describe('PrismaCategoryRepository', () => {
 
   describe('update', () => {
     it('disconnects a guess object when updating a category', async () => {
-      const location = buildWorldLocation();
-      const guessObject = buildGuessObject();
-      const categoryData = buildCreateCategory({
+      const location: WorldLocation = buildWorldLocation();
+      const guessObject: GuessObject = buildGuessObject();
+      const categoryData: CreateCategory = buildCreateCategory({
         guessObjectsIds: [guessObject.id],
       });
       await prisma.worldLocation.create({
@@ -86,8 +96,8 @@ describe('PrismaCategoryRepository', () => {
           },
         },
       });
-      const category = await categoryRepository.create(categoryData);
-      const updateData = buildUpdateCategory({
+      const category: Category = await categoryRepository.create(categoryData);
+      const updateData: UpdateCategory = buildUpdateCategory({
         id: category.id,
         disconnectIds: [guessObject.id],
       });
@@ -106,23 +116,25 @@ describe('PrismaCategoryRepository', () => {
 
   describe('findTree', () => {
     it('loads nested categories beneath published roots', async () => {
-      const rootData = buildCreateCategory({
+      const rootData: CreateCategory = buildCreateCategory({
         name: 'Countries',
         isPublished: true,
       });
-      const root = await categoryRepository.create(rootData);
-      const childData = buildCreateCategory({
+      const root: Category = await categoryRepository.create(rootData);
+      const childData: CreateCategory = buildCreateCategory({
         name: 'France',
         parentId: root.id,
       });
-      const child = await categoryRepository.create(childData);
-      const hiddenData = buildCreateCategory({
+      const child: Category = await categoryRepository.create(childData);
+      const hiddenData: CreateCategory = buildCreateCategory({
         name: 'Hidden',
         isPublished: false,
       });
       await categoryRepository.create(hiddenData);
 
-      const tree = await categoryRepository.findTree({ isPublished: true });
+      const tree: CategoryTree[] = await categoryRepository.findTree({
+        isPublished: true,
+      });
 
       expect(tree).toMatchObject([
         { id: root.id, name: 'Countries', children: [{ id: child.id }] },

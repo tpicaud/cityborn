@@ -1,3 +1,4 @@
+import type { CreateWorldLocation, WorldLocation } from '@cityborn/api';
 import { buildWorldLocation, CreateWorldLocationSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -5,8 +6,9 @@ import { PrismaWorldLocationRepository } from '../../src/world-location/reposito
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaWorldLocationRepository', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let worldLocationRepository: PrismaWorldLocationRepository;
 
@@ -26,10 +28,12 @@ describe('PrismaWorldLocationRepository', () => {
 
   describe('create', () => {
     it('persists location geometry', async () => {
-      const locationData = buildWorldLocation();
-      const createData = CreateWorldLocationSchema.parse(locationData);
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
 
-      const location = await worldLocationRepository.create(createData);
+      const location: WorldLocation =
+        await worldLocationRepository.create(createData);
 
       expect(location).toMatchObject({
         name: 'Paris',
@@ -44,9 +48,13 @@ describe('PrismaWorldLocationRepository', () => {
     });
 
     it('rejects duplicate OSM identifiers', async () => {
-      const locationData = buildWorldLocation();
-      const createData = CreateWorldLocationSchema.parse(locationData);
-      const duplicateData = { ...createData, name: 'Another city' };
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const duplicateData: CreateWorldLocation = {
+        ...createData,
+        name: 'Another city',
+      };
       await worldLocationRepository.create(createData);
 
       await expect(
@@ -57,14 +65,17 @@ describe('PrismaWorldLocationRepository', () => {
 
   describe('findBySource', () => {
     it('finds a location by OSM identifier with geometry', async () => {
-      const locationData = buildWorldLocation();
-      const createData = CreateWorldLocationSchema.parse(locationData);
-      const location = await worldLocationRepository.create(createData);
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const location: WorldLocation =
+        await worldLocationRepository.create(createData);
 
-      const found = await worldLocationRepository.findBySource(
-        { provider: 'relation', external_id: '7444' },
-        { geometry: true },
-      );
+      const found: WorldLocation | null =
+        await worldLocationRepository.findBySource(
+          { provider: 'relation', external_id: '7444' },
+          { geometry: true },
+        );
 
       expect(found).toMatchObject({
         id: location.id,
@@ -77,9 +88,11 @@ describe('PrismaWorldLocationRepository', () => {
 
   describe('delete', () => {
     it('cascades geometry deletion when its location is removed', async () => {
-      const locationData = buildWorldLocation();
-      const createData = CreateWorldLocationSchema.parse(locationData);
-      const location = await worldLocationRepository.create(createData);
+      const locationData: WorldLocation = buildWorldLocation();
+      const createData: CreateWorldLocation =
+        CreateWorldLocationSchema.parse(locationData);
+      const location: WorldLocation =
+        await worldLocationRepository.create(createData);
 
       await worldLocationRepository.delete(location.id);
 

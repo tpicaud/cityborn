@@ -1,3 +1,11 @@
+import type {
+  Category,
+  FullGuessObject,
+  GuessObject,
+  GuessObjectDraft,
+  GuessObjectId,
+  WorldLocation,
+} from '@cityborn/api';
 import {
   buildCategory,
   buildGuessObject,
@@ -9,8 +17,9 @@ import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaGuessObjectRepository', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let guessObjectRepository: PrismaGuessObjectRepository;
 
@@ -30,7 +39,7 @@ describe('PrismaGuessObjectRepository', () => {
 
   describe('findFullBy', () => {
     it('filters full guess objects by category and includes location geometry', async () => {
-      const location = buildWorldLocation();
+      const location: WorldLocation = buildWorldLocation();
       await prisma.worldLocation.create({
         data: {
           id: location.id,
@@ -47,8 +56,8 @@ describe('PrismaGuessObjectRepository', () => {
           },
         },
       });
-      const guessObject = buildGuessObject();
-      const linkedId = await guessObjectRepository.create({
+      const guessObject: GuessObject = buildGuessObject();
+      const linkedId: GuessObjectId = await guessObjectRepository.create({
         name: guessObject.name,
         source: guessObject.source,
         world_location_id: location.id,
@@ -57,7 +66,7 @@ describe('PrismaGuessObjectRepository', () => {
         name: 'Louvre Museum',
         world_location_id: location.id,
       });
-      const category = buildCategory();
+      const category: Category = buildCategory();
       await prisma.category.create({
         data: {
           id: category.id,
@@ -67,7 +76,7 @@ describe('PrismaGuessObjectRepository', () => {
         },
       });
 
-      const found = await guessObjectRepository.findFullBy({
+      const found: FullGuessObject[] = await guessObjectRepository.findFullBy({
         categoryIds: [category.id],
       });
 
@@ -81,7 +90,7 @@ describe('PrismaGuessObjectRepository', () => {
 
   describe('findBy', () => {
     it('filters guess objects by source external identifier', async () => {
-      const location = buildWorldLocation();
+      const location: WorldLocation = buildWorldLocation();
       await prisma.worldLocation.create({
         data: {
           id: location.id,
@@ -98,8 +107,8 @@ describe('PrismaGuessObjectRepository', () => {
           },
         },
       });
-      const guessObject = buildGuessObject();
-      const matchingId = await guessObjectRepository.create({
+      const guessObject: GuessObject = buildGuessObject();
+      const matchingId: GuessObjectId = await guessObjectRepository.create({
         name: guessObject.name,
         source: guessObject.source,
         world_location_id: location.id,
@@ -110,7 +119,9 @@ describe('PrismaGuessObjectRepository', () => {
         world_location_id: location.id,
       });
 
-      const found = await guessObjectRepository.findBy({ external_id: 'Q243' });
+      const found: GuessObject[] = await guessObjectRepository.findBy({
+        external_id: 'Q243',
+      });
 
       expect(found.map(({ id }) => id)).toEqual([matchingId]);
       expect(found[0]?.world_location_preview).toEqual({
@@ -123,7 +134,7 @@ describe('PrismaGuessObjectRepository', () => {
 
   describe('searchDraftByName', () => {
     it('searches drafts by name without case sensitivity', async () => {
-      const location = buildWorldLocation();
+      const location: WorldLocation = buildWorldLocation();
       await prisma.worldLocation.create({
         data: {
           id: location.id,
@@ -149,7 +160,8 @@ describe('PrismaGuessObjectRepository', () => {
         world_location_id: location.id,
       });
 
-      const found = await guessObjectRepository.searchDraftByName('eIfFeL');
+      const found: GuessObjectDraft[] =
+        await guessObjectRepository.searchDraftByName('eIfFeL');
 
       expect(found.map(({ name }) => name)).toEqual(['Eiffel Tower']);
     });

@@ -1,12 +1,15 @@
+import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import type { EmailVerificationToken } from '../../src/user/repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaEmailVerificationTokenRepository', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let tokenRepository: PrismaEmailVerificationTokenRepository;
 
@@ -26,7 +29,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
 
   describe('findLatestVerificationToken', () => {
     it('returns the newest verification token for a user', async () => {
-      const user = buildUser();
+      const user: User = buildUser();
       await prisma.user.create({
         data: {
           id: user.id,
@@ -43,14 +46,15 @@ describe('PrismaEmailVerificationTokenRepository', () => {
           createdAt: new Date('2026-01-01'),
         },
       });
-      const expiresAt = new Date('2099-01-01');
+      const expiresAt: Date = new Date('2099-01-01');
       await tokenRepository.createVerificationToken({
         userId: user.id,
         token: 'newer-token',
         expiresAt,
       });
 
-      const latest = await tokenRepository.findLatestVerificationToken(user.id);
+      const latest: EmailVerificationToken | null =
+        await tokenRepository.findLatestVerificationToken(user.id);
 
       expect(latest).toMatchObject({ userId: user.id, expiresAt });
     });
@@ -58,7 +62,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
 
   describe('findVerificationToken', () => {
     it('finds a verification token by its unique value', async () => {
-      const user = buildUser();
+      const user: User = buildUser();
       await prisma.user.create({
         data: {
           id: user.id,
@@ -73,7 +77,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
         expiresAt: new Date('2099-01-01'),
       });
 
-      const found =
+      const found: EmailVerificationToken | null =
         await tokenRepository.findVerificationToken('verification-token');
 
       expect(found).toMatchObject({ userId: user.id });
@@ -82,8 +86,8 @@ describe('PrismaEmailVerificationTokenRepository', () => {
 
   describe('deleteVerificationTokensByUserId', () => {
     it('deletes only the requested user’s tokens', async () => {
-      const firstUser = buildUser();
-      const otherUser = buildUser({
+      const firstUser: User = buildUser();
+      const otherUser: User = buildUser({
         id: '00000000-0000-4000-8000-000000000002',
         email: 'guest@cityborn.test',
         username: 'guest',

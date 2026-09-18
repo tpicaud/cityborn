@@ -1,3 +1,4 @@
+import type { CreateGameRecord, GameRecord, User } from '@cityborn/api';
 import {
   buildCreateGameRecord,
   buildUser,
@@ -9,8 +10,9 @@ import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('PrismaGameRecordRepository', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let gameRecordRepository: PrismaGameRecordRepository;
 
@@ -30,8 +32,8 @@ describe('PrismaGameRecordRepository', () => {
 
   describe('findRecentByUserId', () => {
     it('returns only the five newest game records of the requested user', async () => {
-      const user = buildUser();
-      const otherUser = buildUser({
+      const user: User = buildUser();
+      const otherUser: User = buildUser({
         id: '00000000-0000-4000-8000-000000000002',
         email: 'guest@cityborn.test',
         username: 'guest',
@@ -53,11 +55,10 @@ describe('PrismaGameRecordRepository', () => {
         ],
       });
       const recordIds: GameRecordId[] = [];
-      for (let index = 0; index < 6; index++) {
-        const recordData = buildCreateGameRecord();
-        const record = await gameRecordRepository.create(recordData, [
-          { id: user.id },
-        ]);
+      for (let index: number = 0; index < 6; index++) {
+        const recordData: CreateGameRecord = buildCreateGameRecord();
+        const record: Pick<GameRecord, 'id'> =
+          await gameRecordRepository.create(recordData, [{ id: user.id }]);
         recordIds.push(record.id);
         await prisma.gameRecord.update({
           where: { id: record.id },
@@ -65,10 +66,10 @@ describe('PrismaGameRecordRepository', () => {
         });
       }
 
-      const records = await gameRecordRepository.findRecentByUserId(user.id);
-      const others = await gameRecordRepository.findRecentByUserId(
-        otherUser.id,
-      );
+      const records: GameRecord[] | null =
+        await gameRecordRepository.findRecentByUserId(user.id);
+      const others: GameRecord[] | null =
+        await gameRecordRepository.findRecentByUserId(otherUser.id);
 
       expect(records?.map(({ id }) => id)).toEqual(
         recordIds.slice(1).reverse(),
@@ -78,11 +79,10 @@ describe('PrismaGameRecordRepository', () => {
     });
 
     it('returns null when the requested user does not exist', async () => {
-      const absentUser = buildUser();
+      const absentUser: User = buildUser();
 
-      const records = await gameRecordRepository.findRecentByUserId(
-        absentUser.id,
-      );
+      const records: GameRecord[] | null =
+        await gameRecordRepository.findRecentByUserId(absentUser.id);
 
       expect(records).toBeNull();
     });

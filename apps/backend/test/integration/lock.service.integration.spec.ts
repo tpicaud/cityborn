@@ -4,9 +4,13 @@ import { LockService } from '../../src/lock/lock.service';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('LockService with Redis', () => {
-  const infrastructure = createTestInfrastructure();
-  const { redis } = infrastructure;
-  const lockService = new LockService(redis, createMock<WideEventService>());
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { redis }: typeof infrastructure = infrastructure;
+  const lockService: LockService = new LockService(
+    redis,
+    createMock<WideEventService>(),
+  );
 
   afterAll(async () => {
     await infrastructure.close();
@@ -14,15 +18,15 @@ describe('LockService with Redis', () => {
 
   describe('withLock', () => {
     it('rejects concurrent acquisition of the same resource', async () => {
-      let markEntered = () => {};
-      let releaseFirst = () => {};
-      const entered = new Promise<void>((resolve) => {
+      let markEntered: () => void = () => {};
+      let releaseFirst: () => void = () => {};
+      const entered: Promise<void> = new Promise<void>((resolve) => {
         markEntered = resolve;
       });
-      const release = new Promise<void>((resolve) => {
+      const release: Promise<void> = new Promise<void>((resolve) => {
         releaseFirst = resolve;
       });
-      const first = lockService.withLock(
+      const first: Promise<void> = lockService.withLock(
         'integration:contended',
         5_000,
         async () => {
@@ -43,13 +47,13 @@ describe('LockService with Redis', () => {
     });
 
     it('releases a lock after success and permits reacquisition', async () => {
-      const first = await lockService.withLock(
+      const first: string = await lockService.withLock(
         'integration:completed',
         5_000,
         async () => 'first',
       );
 
-      const second = await lockService.withLock(
+      const second: string = await lockService.withLock(
         'integration:completed',
         5_000,
         async () => 'second',

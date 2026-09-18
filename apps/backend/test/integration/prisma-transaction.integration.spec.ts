@@ -1,3 +1,13 @@
+import type {
+  Category,
+  CreateCategory,
+  CreateWorldLocation,
+  GuessObject,
+  GuessObjectId,
+  UpdateCategory,
+  User,
+  WorldLocation,
+} from '@cityborn/api';
 import {
   buildCreateCategory,
   buildGuessObject,
@@ -27,8 +37,9 @@ import { WorldLocationService } from '../../src/world-location/world-location.se
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('Prisma transactions', () => {
-  const infrastructure = createTestInfrastructure();
-  const { prisma } = infrastructure;
+  const infrastructure: ReturnType<typeof createTestInfrastructure> =
+    createTestInfrastructure();
+  const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let categoryRepository: PrismaCategoryRepository;
   let categoryService: CategoryService;
@@ -84,25 +95,28 @@ describe('Prisma transactions', () => {
   describe('CategoryService', () => {
     describe('update', () => {
       it('rolls back relation and object deletion when location cleanup fails', async () => {
-        const locationData = buildWorldLocation();
-        const createLocationData =
+        const locationData: WorldLocation = buildWorldLocation();
+        const createLocationData: CreateWorldLocation =
           CreateWorldLocationSchema.parse(locationData);
-        const location =
+        const location: WorldLocation =
           await worldLocationRepository.create(createLocationData);
-        const guessObject = buildGuessObject();
-        const guessObjectId = await guessObjectRepository.create({
-          name: guessObject.name,
-          image: guessObject.image,
-          description: guessObject.description,
-          short_description: guessObject.short_description,
-          source: guessObject.source,
-          world_location_id: location.id,
-        });
-        const categoryData = buildCreateCategory({
+        const guessObject: GuessObject = buildGuessObject();
+        const guessObjectId: GuessObjectId = await guessObjectRepository.create(
+          {
+            name: guessObject.name,
+            image: guessObject.image,
+            description: guessObject.description,
+            short_description: guessObject.short_description,
+            source: guessObject.source,
+            world_location_id: location.id,
+          },
+        );
+        const categoryData: CreateCategory = buildCreateCategory({
           guessObjectsIds: [guessObjectId],
         });
-        const category = await categoryRepository.create(categoryData);
-        const updateData = buildUpdateCategory({
+        const category: Category =
+          await categoryRepository.create(categoryData);
+        const updateData: UpdateCategory = buildUpdateCategory({
           id: category.id,
           name: 'Changed',
           disconnectIds: [guessObjectId],
@@ -137,8 +151,8 @@ describe('Prisma transactions', () => {
   describe('UserService', () => {
     describe('verifyEmail', () => {
       it('keeps a user unverified and retains the token when token cleanup fails', async () => {
-        const userData = buildUser({ isVerified: false });
-        const user = await userRepository.create({
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
           email: userData.email,
           username: userData.username,
           type: userData.type,
