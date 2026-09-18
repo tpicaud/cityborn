@@ -33,6 +33,24 @@ describe('RedisService with Redis', () => {
     });
   });
 
+  describe('getJSON', () => {
+    it('returns null for an absent key', async () => {
+      const payload: { player: string } | null = await redisService.getJSON<{
+        player: string;
+      }>('integration:missing');
+
+      expect(payload).toBeNull();
+    });
+
+    it('rejects malformed JSON stored in Redis', async () => {
+      await redisService.set('integration:malformed', '{invalid');
+
+      await expect(
+        redisService.getJSON<{ player: string }>('integration:malformed'),
+      ).rejects.toThrow(SyntaxError);
+    });
+  });
+
   describe('set', () => {
     it('expires a key after its TTL', async () => {
       await redisService.set('integration:ttl', 'value', 1);

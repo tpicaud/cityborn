@@ -46,6 +46,41 @@ describe('LockService with Redis', () => {
       await first;
     });
 
+    it('allows a different resource while another lock is held', async () => {
+      let markEntered: () => void = () => {};
+      let releaseFirst: () => void = () => {};
+      const entered: Promise<void> = new Promise<void>((resolve) => {
+        markEntered = resolve;
+      });
+      const release: Promise<void> = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      const first: Promise<string> = lockService.withLock(
+        'integration:first-resource',
+        5_000,
+        async () => {
+          markEntered();
+          await release;
+          return 'first';
+        },
+      );
+      await entered;
+
+      try {
+        const second: string = await lockService.withLock(
+          'integration:second-resource',
+          5_000,
+          async () => 'second',
+        );
+
+        expect(second).toBe('second');
+        expect(await redis.exists('lock:integration:first-resource')).toBe(1);
+      } finally {
+        releaseFirst();
+      }
+      await first;
+    });
+
     it('releases a lock after success and permits reacquisition', async () => {
       const first: string = await lockService.withLock(
         'integration:completed',
