@@ -1,15 +1,37 @@
+import type {
+  WsClientEventName,
+  WsEmitArgs,
+  WsServerToClientEvents,
+} from '@cityborn/api';
+
+/** Events de cycle de vie socket.io, hors contrat et sans nom de domaine. */
+interface SocketLifecycleEvents {
+  connect: () => void;
+  disconnect: (reason: string) => void;
+  connect_error: (error: Error) => void;
+}
+
+export interface SocketListenEvents
+  extends WsServerToClientEvents,
+    SocketLifecycleEvents {}
+
+export type SocketListenEvent = keyof SocketListenEvents;
+
 export interface SocketConnection {
   readonly connected: boolean;
   connect(): void;
   disconnect(): void;
-  emit(event: string, ...args: unknown[]): void;
-  on<Args extends unknown[]>(
-    event: string,
-    listener: (...args: Args) => void,
+  emit<Name extends WsClientEventName>(
+    event: Name,
+    ...args: WsEmitArgs<Name>
   ): void;
-  off<Args extends unknown[]>(
-    event: string,
-    listener?: (...args: Args) => void,
+  on<Name extends SocketListenEvent>(
+    event: Name,
+    listener: SocketListenEvents[Name],
+  ): void;
+  off<Name extends SocketListenEvent>(
+    event: Name,
+    listener?: SocketListenEvents[Name],
   ): void;
 }
 

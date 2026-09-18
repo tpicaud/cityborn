@@ -1,21 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import type { SocketConnection, SocketFactory } from '../../platform/socket';
+import { WS_ERROR_EVENT } from '@cityborn/api';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  SocketConnection,
+  SocketFactory,
+  SocketListenEvent,
+  SocketListenEvents,
+} from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
-import type { SocketEmit } from './socketRequest';
+import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
 
 export interface SessionSocket {
   connected: boolean;
   hasDisconnected: boolean;
-  emit: SocketEmit;
-  on: <Args extends unknown[]>(
-    event: string,
-    listener: (...args: Args) => void,
+  emit: WsEmit;
+  on: <Name extends SocketListenEvent>(
+    event: Name,
+    listener: SocketListenEvents[Name],
   ) => void;
-  off: <Args extends unknown[]>(
-    event: string,
-    listener: (...args: Args) => void,
+  off: <Name extends SocketListenEvent>(
+    event: Name,
+    listener?: SocketListenEvents[Name],
   ) => void;
 }
 
@@ -42,12 +48,12 @@ export function useSocket(createSocket: SocketFactory): SessionSocket {
         setConnected(false);
       });
 
-      socket.on('connect_error', (error: unknown) => {
+      socket.on('connect_error', (error) => {
         setHasDisconnected(false);
         invokeError(error, 'La connexion au serveur a échoué');
       });
 
-      socket.on('error', (error: unknown) => {
+      socket.on(WS_ERROR_EVENT, (error) => {
         invokeError(error, 'Une erreur est survenue');
       });
 
@@ -65,7 +71,7 @@ export function useSocket(createSocket: SocketFactory): SessionSocket {
       openedSocket.off('connect');
       openedSocket.off('disconnect');
       openedSocket.off('connect_error');
-      openedSocket.off('error');
+      openedSocket.off(WS_ERROR_EVENT);
       openedSocket.disconnect();
 
       setSocket(null);
@@ -73,24 +79,12 @@ export function useSocket(createSocket: SocketFactory): SessionSocket {
     };
   }, [createSocket, invokeError]);
 
-  const emit = useCallback<SocketEmit>(
-    (event, ...args) => {
-      const lastArg = args[args.length - 1];
-
-      if (typeof lastArg === 'function') {
-        const callback = args.pop();
-        return socket?.emit(event, ...args, callback);
-      }
-
-      socket?.emit(event, ...args);
-    },
-    [socket],
-  );
+  const emit: WsEmit = useMemo(() => createWsEmit(socket), [socket]);
 
   const on = useCallback(
-    <Args extends unknown[]>(
-      event: string,
-      listener: (...args: Args) => void,
+    <Name extends SocketListenEvent>(
+      event: Name,
+      listener: SocketListenEvents[Name],
     ) => {
       socket?.on(event, listener);
     },
@@ -98,9 +92,9 @@ export function useSocket(createSocket: SocketFactory): SessionSocket {
   );
 
   const off = useCallback(
-    <Args extends unknown[]>(
-      event: string,
-      listener: (...args: Args) => void,
+    <Name extends SocketListenEvent>(
+      event: Name,
+      listener?: SocketListenEvents[Name],
     ) => {
       socket?.off(event, listener);
     },

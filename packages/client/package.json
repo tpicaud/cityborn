@@ -10,14 +10,15 @@
     "./game": "./src/features/game/index.ts",
     "./play": "./src/features/play/index.ts",
     "./profile": "./src/features/profile/index.ts",
-    "./platform": "./src/platform/index.ts"
+    "./platform": "./src/platform/index.ts",
+    "./ws": "./src/ws/index.ts"
   },
   "author": "Tom Picaud",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check .",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
