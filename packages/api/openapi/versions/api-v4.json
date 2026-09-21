@@ -248,6 +248,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -338,6 +340,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -428,6 +432,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -518,6 +524,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -608,6 +616,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -698,6 +708,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -788,6 +800,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1102,6 +1116,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1192,6 +1208,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1282,6 +1300,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1372,6 +1392,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1462,6 +1484,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1552,6 +1576,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1642,6 +1668,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -1973,6 +2001,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2063,6 +2093,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2153,6 +2185,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2243,6 +2277,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2333,6 +2369,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2423,6 +2461,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2513,6 +2553,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2840,6 +2882,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -2930,6 +2974,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3020,6 +3066,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3110,6 +3158,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3200,6 +3250,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3290,6 +3342,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3380,6 +3434,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3701,6 +3757,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3791,6 +3849,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3881,6 +3941,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -3971,6 +4033,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4061,6 +4125,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4151,6 +4217,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4241,6 +4309,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4586,6 +4656,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4676,6 +4748,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4766,6 +4840,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4856,6 +4932,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -4946,6 +5024,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5036,6 +5116,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5126,6 +5208,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5248,6 +5332,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5338,6 +5424,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5428,6 +5516,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5518,6 +5608,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5608,6 +5700,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5698,6 +5792,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5788,6 +5884,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -5928,6 +6026,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6018,6 +6118,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6108,6 +6210,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6198,6 +6302,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6288,6 +6394,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6378,6 +6486,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6468,6 +6578,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6590,6 +6702,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6680,6 +6794,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6770,6 +6886,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6860,6 +6978,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -6950,6 +7070,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7040,6 +7162,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7130,6 +7254,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7241,6 +7367,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7331,6 +7459,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7421,6 +7551,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7511,6 +7643,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7601,6 +7735,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7691,6 +7827,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -7781,6 +7919,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8024,6 +8164,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8114,6 +8256,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8204,6 +8348,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8294,6 +8440,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8384,6 +8532,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8474,6 +8624,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8564,6 +8716,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8805,6 +8959,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8895,6 +9051,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -8985,6 +9143,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9075,6 +9235,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9165,6 +9327,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9255,6 +9419,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9345,6 +9511,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9863,6 +10031,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -9953,6 +10123,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10043,6 +10215,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10133,6 +10307,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10223,6 +10399,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10313,6 +10491,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10403,6 +10583,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10908,6 +11090,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -10998,6 +11182,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -11088,6 +11274,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -11178,6 +11366,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -11268,6 +11458,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -11358,6 +11550,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -11448,6 +11642,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12236,6 +12432,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12326,6 +12524,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12416,6 +12616,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12506,6 +12708,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12596,6 +12800,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12686,6 +12892,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -12776,6 +12984,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13173,6 +13383,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13263,6 +13475,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13353,6 +13567,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13443,6 +13659,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13533,6 +13751,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13623,6 +13843,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -13713,6 +13935,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14110,6 +14334,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14200,6 +14426,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14290,6 +14518,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14380,6 +14610,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14470,6 +14702,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14560,6 +14794,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14650,6 +14886,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14761,6 +14999,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14851,6 +15091,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -14941,6 +15183,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15031,6 +15275,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15121,6 +15367,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15211,6 +15459,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15301,6 +15551,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15451,6 +15703,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15541,6 +15795,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15631,6 +15887,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15721,6 +15979,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15811,6 +16071,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15901,6 +16163,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -15991,6 +16255,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16136,6 +16402,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16226,6 +16494,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16316,6 +16586,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16406,6 +16678,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16496,6 +16770,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16586,6 +16862,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16676,6 +16954,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16854,6 +17134,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -16944,6 +17226,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17034,6 +17318,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17124,6 +17410,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17214,6 +17502,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17304,6 +17594,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17394,6 +17686,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17576,6 +17870,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17666,6 +17962,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17756,6 +18054,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17846,6 +18146,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -17936,6 +18238,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18026,6 +18330,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18116,6 +18422,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18261,6 +18569,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18351,6 +18661,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18441,6 +18753,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18531,6 +18845,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18621,6 +18937,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18711,6 +19029,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18801,6 +19121,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -18912,6 +19234,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19002,6 +19326,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19092,6 +19418,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19182,6 +19510,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19272,6 +19602,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19362,6 +19694,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19452,6 +19786,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19597,6 +19933,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19687,6 +20025,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19777,6 +20117,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19867,6 +20209,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -19957,6 +20301,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20047,6 +20393,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20137,6 +20485,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20305,6 +20655,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20395,6 +20747,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20485,6 +20839,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20575,6 +20931,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20665,6 +21023,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20755,6 +21115,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20845,6 +21207,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -20988,6 +21352,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21078,6 +21444,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21168,6 +21536,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21258,6 +21628,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21348,6 +21720,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21438,6 +21812,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21528,6 +21904,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21715,6 +22093,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21805,6 +22185,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21895,6 +22277,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -21985,6 +22369,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22075,6 +22461,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22165,6 +22553,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22255,6 +22645,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22384,6 +22776,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22474,6 +22868,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22564,6 +22960,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22654,6 +23052,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22744,6 +23144,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22834,6 +23236,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -22924,6 +23328,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23130,6 +23536,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23220,6 +23628,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23310,6 +23720,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23400,6 +23812,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23490,6 +23904,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23580,6 +23996,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23670,6 +24088,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23897,6 +24317,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -23987,6 +24409,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24077,6 +24501,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24167,6 +24593,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24257,6 +24685,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24347,6 +24777,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24437,6 +24869,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24661,6 +25095,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24751,6 +25187,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24841,6 +25279,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -24931,6 +25371,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25021,6 +25463,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25111,6 +25555,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25201,6 +25647,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25383,6 +25831,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25473,6 +25923,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25563,6 +26015,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25653,6 +26107,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25743,6 +26199,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25833,6 +26291,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -25923,6 +26383,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26083,6 +26545,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26173,6 +26637,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26263,6 +26729,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26353,6 +26821,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26443,6 +26913,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26533,6 +27005,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26623,6 +27097,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26752,6 +27228,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26842,6 +27320,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -26932,6 +27412,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27022,6 +27504,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27112,6 +27596,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27202,6 +27688,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27292,6 +27780,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27470,6 +27960,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27560,6 +28052,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27650,6 +28144,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27740,6 +28236,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27830,6 +28328,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -27920,6 +28420,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28010,6 +28512,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28165,6 +28669,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28255,6 +28761,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28345,6 +28853,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28435,6 +28945,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28525,6 +29037,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28615,6 +29129,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28705,6 +29221,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -28936,6 +29454,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29026,6 +29546,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29116,6 +29638,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29206,6 +29730,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29296,6 +29822,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29386,6 +29914,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29476,6 +30006,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29676,6 +30208,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29766,6 +30300,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29856,6 +30392,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -29946,6 +30484,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30036,6 +30576,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30126,6 +30668,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30216,6 +30760,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30398,6 +30944,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30488,6 +31036,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30578,6 +31128,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30668,6 +31220,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30758,6 +31312,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30848,6 +31404,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
@@ -30938,6 +31496,8 @@
                         "RESOURCE_NOT_FOUND",
                         "BAD_REQUEST",
                         "TOKEN_EXPIRED",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
                         "UNKNOWN_ERROR"
                       ]
                     },
