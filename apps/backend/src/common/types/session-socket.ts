@@ -1,5 +1,9 @@
-import type { User } from '@cityborn/api';
-import type { DefaultEventsMap, Socket } from 'socket.io';
+import type {
+  User,
+  WsClientToServerEvents,
+  WsServerToClientEvents,
+} from '@cityborn/api';
+import type { DefaultEventsMap, Server, Socket } from 'socket.io';
 
 export interface SessionSocketData {
   user?: User | null;
@@ -7,8 +11,15 @@ export interface SessionSocketData {
 }
 
 export type SessionSocket = Socket<
+  WsClientToServerEvents,
+  WsServerToClientEvents,
   DefaultEventsMap,
-  DefaultEventsMap,
+  SessionSocketData
+>;
+
+export type SessionServer = Server<
+  WsClientToServerEvents,
+  WsServerToClientEvents,
   DefaultEventsMap,
   SessionSocketData
 >;

@@ -1,18 +1,13 @@
 import {
-  type ApiError,
   ErrorCode,
-  GameConfigSchema,
-  GuessSchema,
-  PlayerIdSchema,
   type Session,
-  SessionIdSchema,
+  sessionWsChannel,
+  sessionWsServerEvent,
   type User,
+  WS_ERROR_EVENT,
+  type WsPayload,
 } from '@cityborn/api';
-import {
-  BadRequestException,
-  NotFoundException,
-  UseFilters,
-} from '@nestjs/common';
+import { NotFoundException, UseFilters } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -20,18 +15,19 @@ import {
   MessageBody,
   type OnGatewayConnection,
   type OnGatewayDisconnect,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import type { output, ZodTypeAny } from 'zod';
 import { getJwtConstants } from '../auth/constants';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
-import type { SessionSocket } from '../common/types/session-socket';
+import type {
+  SessionServer,
+  SessionSocket,
+} from '../common/types/session-socket';
 import {
   createWsWideEvent,
   firstHeaderValue,
@@ -46,11 +42,6 @@ import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { CurrentUser } from '../user/user.decorator';
 import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
-
-interface WSResponse {
-  success: boolean;
-  error?: ApiError;
-}
 
 @WebSocketGateway({
   cors: {
@@ -73,7 +64,7 @@ export class SessionGateway
   ) {}
 
   @WebSocketServer()
-  io!: Server;
+  io!: SessionServer;
 
   private async resolveConnection(socketID: string): Promise<ConnectionInfo> {
     const connection =
@@ -92,20 +83,8 @@ export class SessionGateway
     return connection;
   }
 
-  private parseClientPayload<Schema extends ZodTypeAny>(
-    schema: Schema,
-    payload: unknown,
-    fieldName: string,
-  ): output<Schema> {
-    const result = schema.safeParse(payload);
-    if (!result.success) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: `${fieldName} invalid.`,
-      });
-    }
-
-    return result.data;
+  private broadcastSession(session: Session): void {
+    this.io.to(session.id).emit(sessionWsServerEvent.update, session);
   }
 
   private enrichGame(session: Session): void {
@@ -138,7 +117,7 @@ export class SessionGateway
         error,
         'ws.connection',
       );
-      client.emit('error', apiError);
+      client.emit(WS_ERROR_EVENT, apiError);
       client.disconnect(true);
       return;
     }
@@ -177,31 +156,15 @@ export class SessionGateway
   // Session event //
   ///////////////////
 
-  @SubscribeMessage('session:join')
+  @WsMessage(sessionWsChannel, 'join')
   async handleJoin(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: SessionSocket,
     @CurrentUser() user: User | undefined,
-    @MessageBody('sessionID') rawSessionID: unknown,
-    @MessageBody('playerID') rawPlayerID: unknown,
-  ): Promise<WSResponse> {
-    if (!rawSessionID || !rawPlayerID) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'sessionID et playerID required.',
-      });
-    }
-
-    const sessionID = this.parseClientPayload(
-      SessionIdSchema,
-      rawSessionID,
-      'sessionID',
-    );
-    const playerID = this.parseClientPayload(
-      PlayerIdSchema,
-      rawPlayerID,
-      'playerID',
-    );
-
+    @MessageBody() {
+      sessionID,
+      playerID,
+    }: WsPayload<typeof sessionWsChannel, 'join'>,
+  ): Promise<void> {
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
       playerId: playerID,
@@ -216,87 +179,48 @@ export class SessionGateway
     );
 
     await socket.join(session.id);
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:updateHost')
+  @WsMessage(sessionWsChannel, 'updateHost')
   async updateHost(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody('newHostID') rawNewHostID: unknown,
-  ): Promise<WSResponse> {
-    if (!rawNewHostID) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'newHostID required.',
-      });
-    }
-
-    const newHostID = this.parseClientPayload(
-      PlayerIdSchema,
-      rawNewHostID,
-      'newHostID',
-    );
-
+    @ConnectedSocket() socket: SessionSocket,
+    @MessageBody() {
+      newHostID,
+    }: WsPayload<typeof sessionWsChannel, 'updateHost'>,
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.updateHost(
       playerID,
       sessionID,
       newHostID,
     );
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:updateGameConfig')
+  @WsMessage(sessionWsChannel, 'updateGameConfig')
   async updateGameConfig(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody('gameConfig') rawGameConfig: unknown,
-  ): Promise<WSResponse> {
-    if (!rawGameConfig) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'gameConfig required.',
-      });
-    }
-
-    const gameConfig = this.parseClientPayload(
-      GameConfigSchema,
-      rawGameConfig,
-      'gameConfig',
-    );
-
+    @ConnectedSocket() socket: SessionSocket,
+    @MessageBody() {
+      gameConfig,
+    }: WsPayload<typeof sessionWsChannel, 'updateGameConfig'>,
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.updateGameConfig(
       playerID,
       sessionID,
       gameConfig,
     );
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:kickPlayer')
+  @WsMessage(sessionWsChannel, 'kickPlayer')
   async kickPlayer(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody('playerToKick') rawPlayerToKick: unknown,
-  ): Promise<WSResponse> {
-    if (!rawPlayerToKick) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'playerToKick required.',
-      });
-    }
-
-    const playerToKick = this.parseClientPayload(
-      PlayerIdSchema,
-      rawPlayerToKick,
-      'playerToKick',
-    );
-
+    @ConnectedSocket() socket: SessionSocket,
+    @MessageBody() {
+      playerToKick,
+    }: WsPayload<typeof sessionWsChannel, 'kickPlayer'>,
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.kickPlayer(
       playerID,
@@ -310,26 +234,23 @@ export class SessionGateway
         remoteSocket.id,
       );
       if (connection?.playerID === playerToKick) {
-        remoteSocket.emit('session:kicked');
         remoteSocket.leave(sessionID);
         await this.connectionRegistryService.unregister(remoteSocket.id);
       }
     }
 
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
   ////////////////////////
   // Current game event //
   ////////////////////////
 
-  @SubscribeMessage('session:startGame')
+  @WsMessage(sessionWsChannel, 'startGame')
   async startGame(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: SessionSocket,
     @VisitorId() visitorId?: string,
-  ): Promise<WSResponse> {
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.startGame(
       playerID,
@@ -337,26 +258,14 @@ export class SessionGateway
       visitorId,
     );
     this.enrichGame(session);
-
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:guess')
+  @WsMessage(sessionWsChannel, 'guess')
   async handleGuess(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody('guess') rawGuess: unknown,
-  ): Promise<WSResponse> {
-    if (!rawGuess) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'guess required.',
-      });
-    }
-
-    const guess = this.parseClientPayload(GuessSchema, rawGuess, 'guess');
-
+    @ConnectedSocket() socket: SessionSocket,
+    @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'guess'>,
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.handleGuess(
       playerID,
@@ -364,16 +273,14 @@ export class SessionGateway
       guess,
     );
     this.enrichGame(session);
-
-    this.io.to(session.id).emit('session:update', session);
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:nextRound')
+  @WsMessage(sessionWsChannel, 'nextRound')
   async handleNextRound(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: SessionSocket,
     @VisitorId() visitorId?: string,
-  ): Promise<WSResponse> {
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.handleNextRound(
       playerID,
@@ -381,16 +288,14 @@ export class SessionGateway
       visitorId,
     );
     this.enrichGame(session);
-
-    this.io.to(session.id).emit('session:update', session);
-    return { success: true };
+    this.broadcastSession(session);
   }
 
-  @SubscribeMessage('session:playAgain')
+  @WsMessage(sessionWsChannel, 'playAgain')
   async playAgain(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: SessionSocket,
     @VisitorId() visitorId?: string,
-  ): Promise<WSResponse> {
+  ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.startGame(
       playerID,
@@ -398,41 +303,22 @@ export class SessionGateway
       visitorId,
     );
     this.enrichGame(session);
-
-    this.io.to(session.id).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
   //////////////////////
   // Connection event //
   //////////////////////
 
-  @SubscribeMessage('session:reconnect')
+  @WsMessage(sessionWsChannel, 'reconnect')
   async reconnect(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: SessionSocket,
     @CurrentUser() user: User | undefined,
-    @MessageBody('sessionID') rawSessionID: unknown,
-    @MessageBody('playerID') rawPlayerID: unknown,
-  ): Promise<WSResponse & { isInGame?: boolean }> {
-    if (!rawSessionID || !rawPlayerID) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'sessionID and playerID required.',
-      });
-    }
-
-    const sessionID = this.parseClientPayload(
-      SessionIdSchema,
-      rawSessionID,
-      'sessionID',
-    );
-    const playerID = this.parseClientPayload(
-      PlayerIdSchema,
-      rawPlayerID,
-      'playerID',
-    );
-
+    @MessageBody() {
+      sessionID,
+      playerID,
+    }: WsPayload<typeof sessionWsChannel, 'reconnect'>,
+  ): Promise<void> {
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
       playerId: playerID,
@@ -452,9 +338,7 @@ export class SessionGateway
     );
 
     await socket.join(sessionID);
-    this.io.to(sessionID).emit('session:update', session);
-
-    return { success: true };
+    this.broadcastSession(session);
   }
 
   private async disconnect(socket: SessionSocket): Promise<void> {
@@ -476,7 +360,7 @@ export class SessionGateway
       await this.connectionRegistryService.unregister(socket.id);
 
       await socket.leave(session.id);
-      this.io.to(session.id).emit('session:update', session);
+      this.broadcastSession(session);
       this.enrichGame(session);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.disconnect');

@@ -1,17 +1,19 @@
 import { readFileSync } from 'node:fs';
-import { assertOasdiffAvailable, diffBreaking } from './oasdiff-runner';
 import {
   deprecationFloor,
   isDeprecated,
   selectVersionsToCheck,
-} from './select-versions';
+} from '../../src/protocol/select-versions';
 import type {
   CompatPolicy,
-  CompatReport,
   Manifest,
-  VersionCheckResult,
-} from './types';
-import { CompatPolicySchema, ManifestSchema } from './types';
+} from '../../src/protocol/version-manifest.schema';
+import {
+  CompatPolicySchema,
+  ManifestSchema,
+} from '../../src/protocol/version-manifest.schema';
+import { assertOasdiffAvailable, diffBreaking } from './oasdiff-runner';
+import type { CompatReport, VersionCheckResult } from './types';
 
 export function loadPolicy(policyFile: string): CompatPolicy {
   const raw = JSON.parse(readFileSync(policyFile, 'utf-8'));

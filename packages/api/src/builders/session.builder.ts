@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { SessionMode, SessionStatus } from '../schemas/enums';
+import { SessionMode, SessionStatus } from '../schemas/enums.schema';
 import { type Session, SessionSchema } from '../schemas/session.schema';
 import { buildGameConfig } from './game.builder';
 import { buildPlayer } from './player.builder';

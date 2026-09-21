@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import {
   findDeprecatedItems,
   resolveDeprecationStatus,
-} from '../openapi/compat/find-deprecations';
-import { loadManifest, loadPolicy } from '../openapi/compat/run-compat-check';
+} from './compat/find-deprecations';
+import { loadManifest, loadPolicy } from './compat/run-compat-check';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');

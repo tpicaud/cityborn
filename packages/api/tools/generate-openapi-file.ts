@@ -6,8 +6,11 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Manifest, ManifestEntry } from '../openapi/compat/types';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
+import type {
+  Manifest,
+  ManifestEntry,
+} from '../src/protocol/version-manifest.schema';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '../openapi/versions');

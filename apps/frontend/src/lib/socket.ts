@@ -1,6 +1,7 @@
 import type {
   SocketConnection,
   SocketFactory,
+  SocketListenEvent,
 } from '@cityborn/client/platform';
 import { io, type Socket } from 'socket.io-client';
 import { getOrCreateVisitorId } from './visitorId';
@@ -29,6 +30,10 @@ export const getSocket = (): Socket => {
   return socket;
 };
 
+function toUntypedEventName(event: SocketListenEvent): string {
+  return event;
+}
+
 function toSocketConnection(socket: Socket): SocketConnection {
   return {
     get connected() {
@@ -44,10 +49,10 @@ function toSocketConnection(socket: Socket): SocketConnection {
       socket.emit(event, ...args);
     },
     on: (event, listener) => {
-      socket.on(event, listener);
+      socket.on(toUntypedEventName(event), listener);
     },
     off: (event, listener) => {
-      socket.off(event, listener);
+      socket.off(toUntypedEventName(event), listener);
     },
   };
 }

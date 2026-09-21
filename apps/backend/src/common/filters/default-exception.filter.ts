@@ -1,3 +1,4 @@
+import { WS_ERROR_EVENT } from '@cityborn/api';
 import {
   type ArgumentsHost,
   Catch,
@@ -27,7 +28,10 @@ export class DefaultExceptionFilter implements ExceptionFilter {
         acknowledgement({ success: false, error: payload });
         return;
       }
-      host.switchToWs().getClient<SessionSocket>().emit('error', payload);
+      host
+        .switchToWs()
+        .getClient<SessionSocket>()
+        .emit(WS_ERROR_EVENT, payload);
     }
   }
 }

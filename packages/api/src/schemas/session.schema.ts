@@ -4,7 +4,7 @@ import {
   PlayerIdSchema,
   SessionIdSchema,
 } from './common.schema';
-import { SessionModeSchema, SessionStatusSchema } from './enums';
+import { SessionModeSchema, SessionStatusSchema } from './enums.schema';
 import { GameConfigSchema, GameSchema } from './game.schema';
 import { SessionPlayerSchema } from './player.schema';
 

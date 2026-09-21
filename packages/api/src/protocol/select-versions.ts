@@ -1,4 +1,4 @@
-import type { CompatPolicy, ManifestEntry } from './types';
+import type { CompatPolicy, ManifestEntry } from './version-manifest.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

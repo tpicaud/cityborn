@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { GameStatus, RoundStatus, SessionMode } from '../schemas/enums';
+import { GameStatus, RoundStatus, SessionMode } from '../schemas/enums.schema';
 import {
   type CreateGameRecord,
   CreateGameRecordSchema,

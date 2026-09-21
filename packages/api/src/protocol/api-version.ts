@@ -1,12 +1,12 @@
-import { selectVersionsToCheck } from '../openapi/compat/select-versions';
+import compatPolicyJson from '../../openapi/compat-policy.json';
+import manifestJson from '../../openapi/versions/versions-manifest.json';
+import { selectVersionsToCheck } from './select-versions';
 import {
   type CompatPolicy,
   CompatPolicySchema,
   type Manifest,
   ManifestSchema,
-} from '../openapi/compat/types';
-import compatPolicyJson from '../openapi/compat-policy.json';
-import manifestJson from '../openapi/versions/versions-manifest.json';
+} from './version-manifest.schema';
 
 export const API_MIN_SUPPORTED_VERSION_HEADER_NAME =
   'X-Api-Min-Supported-Version';

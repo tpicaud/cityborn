@@ -1,5 +1,5 @@
-import { type ApiError, parseApiError } from './schemas/api-error.schema';
-import type { HttpSuccessStatus } from './types/http';
+import { type ApiError, parseApiError } from '../schemas/api-error.schema';
+import type { HttpSuccessStatus } from './http-status';
 
 export type ApiResult<T> =
   | { ok: true; data: T }
