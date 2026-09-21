@@ -28,7 +28,7 @@
   },
   "overrides": [
     {
-      "includes": ["packages/api/scripts/**", "apps/mobile/scripts/**"],
+      "includes": ["packages/api/tools/**", "apps/mobile/scripts/**"],
       "linter": {
         "rules": {
           "suspicious": {

@@ -87,7 +87,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 - Ajout d'une dépendance npm.
 - Breaking change sur un contrat OpenAPI de `packages/api`.
-- Ajout d'une ligne dans `packages/api/openapi/compat/err-ignore.txt` (bypass de `check:api-compat`).
+- Ajout d'une ligne dans `packages/api/tools/compat/err-ignore.txt` (bypass de `check:api-compat`).
 
 ## Garde-fous
 

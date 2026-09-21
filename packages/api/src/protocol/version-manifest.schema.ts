@@ -33,24 +33,3 @@ export const ManifestSchema = z.object({
 });
 
 export type Manifest = z.infer<typeof ManifestSchema>;
-
-export interface OasdiffChange {
-  id: string;
-  text: string;
-  level: number;
-  operation?: string;
-  path?: string;
-  source?: string;
-}
-
-export interface VersionCheckResult {
-  entry: ManifestEntry;
-  breaking: boolean;
-  changes: OasdiffChange[];
-}
-
-export interface CompatReport {
-  checked: VersionCheckResult[];
-  brokenAt?: VersionCheckResult;
-  skippedDeprecated: ManifestEntry[];
-}

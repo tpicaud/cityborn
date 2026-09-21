@@ -1,4 +1,4 @@
-import { ApiResponseError } from '../api-response';
+import { ApiResponseError } from '../protocol/api-response';
 import { type ApiError, isApiError } from '../schemas/api-error.schema';
 import { ErrorCode } from './error-codes';
 

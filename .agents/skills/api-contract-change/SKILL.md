@@ -16,7 +16,7 @@ Deux contrats y cohabitent : les routes ts-rest (`src/contract/`) et les channel
 
 ## Contrat WebSocket
 
-Un channel est déclaré dans `src/ws/<domaine>.ws-contract.ts`, rattaché à `wsChannels` sous une clé `ApiDomain`. Les noms de fil sont dérivés du domaine et de la clé de l'event : ne jamais écrire `session:guess` ailleurs que dans `sessionWsEvent` / `sessionWsServerEvent`.
+Un channel est déclaré dans `src/ws/<domaine>.channel.ts`, rattaché au registre `wsChannels` (`src/ws/registry.ts`) sous une clé `ApiDomain`. Les noms de fil sont dérivés du domaine et de la clé de l'event : ne jamais écrire `session:guess` ailleurs que dans `sessionWsEvent` / `sessionWsServerEvent`.
 
 Un event ajouté se propage dans le même lot :
 
@@ -43,4 +43,4 @@ Un vrai breaking change = **bump de version d'API**, jamais une modif silencieus
 
 ## Bypass ponctuel de `check:api-compat`
 
-Une ligne `<METHOD> <path> <texte exact>` dans `packages/api/openapi/compat/err-ignore.txt`. **Demander à l'utilisateur avant d'ajouter cette ligne** (garde-fou `AGENTS.md`).
+Une ligne `<METHOD> <path> <texte exact>` dans `packages/api/tools/compat/err-ignore.txt`. **Demander à l'utilisateur avant d'ajouter cette ligne** (garde-fou `AGENTS.md`).

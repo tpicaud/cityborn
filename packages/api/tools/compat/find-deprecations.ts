@@ -1,7 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { selectVersionsToCheck } from './select-versions';
-import type { CompatPolicy, Manifest, ManifestEntry } from './types';
+import { selectVersionsToCheck } from '../../src/protocol/select-versions';
+import type {
+  CompatPolicy,
+  Manifest,
+  ManifestEntry,
+} from '../../src/protocol/version-manifest.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

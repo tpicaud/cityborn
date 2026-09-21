@@ -2,10 +2,10 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OasdiffNotFoundError } from '../openapi/compat/oasdiff-runner';
-import { formatHumanSummary, toJsonReport } from '../openapi/compat/report';
-import { runCompatCheck } from '../openapi/compat/run-compat-check';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
+import { OasdiffNotFoundError } from './compat/oasdiff-runner';
+import { formatHumanSummary, toJsonReport } from './compat/report';
+import { runCompatCheck } from './compat/run-compat-check';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const openapiDir = join(__dirname, '../openapi');
@@ -24,7 +24,7 @@ function writeCurrentSpecToTempFile(): string {
 
 function main() {
   const currentSpecFile = writeCurrentSpecToTempFile();
-  const errIgnoreFile = join(openapiDir, 'compat/err-ignore.txt');
+  const errIgnoreFile = join(__dirname, 'compat/err-ignore.txt');
 
   const report = runCompatCheck({
     policyFile: join(openapiDir, 'compat-policy.json'),

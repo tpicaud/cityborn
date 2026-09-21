@@ -1,7 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { commonErrorResponses } from '../schemas/api-error.schema';
-import { ScoreTypeSchema } from '../schemas/enums';
+import { ScoreTypeSchema } from '../schemas/enums.schema';
 import { SentenceSchema } from '../schemas/sentence.schema';
 import type { ApiDomain } from './api-domain';
 

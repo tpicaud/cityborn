@@ -9,11 +9,11 @@
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check .",
-    "generate:openapi:draft": "tsx scripts/generate-openapi-file.ts --mode=draft",
-    "generate:openapi:release": "tsx scripts/generate-openapi-file.ts --mode=release",
-    "check:compat": "tsx scripts/check-api-compat.ts",
-    "check:deprecations": "tsx scripts/check-deprecations.ts",
-    "test": "tsx --test 'openapi/compat/**/*.test.ts' 'src/**/*.test.ts'"
+    "generate:openapi:draft": "tsx tools/generate-openapi-file.ts --mode=draft",
+    "generate:openapi:release": "tsx tools/generate-openapi-file.ts --mode=release",
+    "check:compat": "tsx tools/check-api-compat.ts",
+    "check:deprecations": "tsx tools/check-deprecations.ts",
+    "test": "tsx --test 'tools/compat/**/*.test.ts' 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@ts-rest/core": "^3.52.1",

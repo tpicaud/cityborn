@@ -10,7 +10,7 @@ import {
   GameStatusSchema,
   RoundStatusSchema,
   SessionModeSchema,
-} from './enums';
+} from './enums.schema';
 import { FullGuessObjectSchema } from './guess-object.schema';
 import { PlayerResultsSchema, PlayerSchema } from './player.schema';
 

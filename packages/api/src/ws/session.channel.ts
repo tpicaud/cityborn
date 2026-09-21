@@ -6,8 +6,8 @@ import type {
   WsChannel,
   WsClientEventNames,
   WsServerEventNames,
-} from './ws-channel';
-import { wsEventName } from './ws-channel';
+} from './channel';
+import { wsEventName } from './channel';
 
 const SessionMembershipSchema = z.object({
   sessionID: SessionIdSchema,
