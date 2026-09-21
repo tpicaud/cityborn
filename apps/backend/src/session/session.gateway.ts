@@ -234,7 +234,6 @@ export class SessionGateway
         remoteSocket.id,
       );
       if (connection?.playerID === playerToKick) {
-        remoteSocket.emit(sessionWsServerEvent.kicked);
         remoteSocket.leave(sessionID);
         await this.connectionRegistryService.unregister(remoteSocket.id);
       }

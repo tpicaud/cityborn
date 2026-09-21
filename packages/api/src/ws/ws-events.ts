@@ -97,13 +97,11 @@ export type WsServerToClientEvents = {
   ) => void;
 };
 
-/** Corps attendu par un handler backend pour un event du contrat. */
 export type WsPayload<
   Channel extends WsChannel,
   Event extends WsChannelClientEvent<Channel>,
 > = PayloadArgs<Channel['clientToServer'][Event]>[0];
 
-/** Assemble les arguments socket.io d'une émission : corps puis accusé. */
 export function wsEmitArgs<Name extends WsClientEventName>(
   payload: WsPayloadArgs<Name>,
   ack: WsAckCallback<Name>,
@@ -134,7 +132,6 @@ function collectServerEventDefinitions(): Record<string, WsServerEvent> {
   ]);
 }
 
-/** Définitions indexées par nom de fil, pour la validation au runtime. */
 export const wsClientEventDefinitions: Readonly<Record<string, WsClientEvent>> =
   collectClientEventDefinitions();
 

@@ -29,7 +29,6 @@ export const sessionWsChannel = {
   },
   serverToClient: {
     update: { payload: SessionSchema },
-    kicked: {},
   },
 } as const satisfies WsChannel<'session'>;
 
@@ -47,5 +46,4 @@ export const sessionWsEvent = {
 
 export const sessionWsServerEvent = {
   update: wsEventName(sessionWsChannel, 'update'),
-  kicked: wsEventName(sessionWsChannel, 'kicked'),
 } satisfies WsServerEventNames<typeof sessionWsChannel>;

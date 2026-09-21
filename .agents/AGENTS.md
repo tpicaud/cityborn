@@ -35,7 +35,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 ## Style de code
 
-- **Aucun commentaire dans le code.** Le naming, les types et le découpage portent l'intention. Seules exceptions : JSDoc sur un élément public exporté d'un package, et marqueurs de dépréciation. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
+- **Aucun commentaire dans le code, JSDoc compris.** Le naming, les types et le découpage portent l'intention. Seule tolérance : le bloc `@deprecated` / `@deprecatedSince` posé par le skill `deprecate`. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
 - **Naming précis** : le nom reflète exactement la chose.
   ```typescript
   const service = new RateLimitService(redisService);          // ❌ trop générique

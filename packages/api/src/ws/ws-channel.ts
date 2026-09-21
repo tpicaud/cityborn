@@ -1,21 +1,15 @@
 import type { AnyZodObject } from 'zod';
 import type { ApiDomain } from '../contract/api-domain';
 
-/** Event client → serveur : corps émis et données portées par l'ack de succès. */
 export interface WsClientEvent {
   readonly payload?: AnyZodObject;
   readonly ack?: AnyZodObject;
 }
 
-/** Event serveur → client : corps diffusé aux sockets. */
 export interface WsServerEvent {
   readonly payload?: AnyZodObject;
 }
 
-/**
- * Regroupe les events d'un domaine métier. Le nom de fil d'un event est dérivé
- * du domaine et de sa clé : `session` + `guess` donne `session:guess`.
- */
 export interface WsChannel<Domain extends ApiDomain = ApiDomain> {
   readonly domain: Domain;
   readonly clientToServer: Readonly<Record<string, WsClientEvent>>;
@@ -47,7 +41,6 @@ export type WsServerEventNames<Channel extends WsChannel> = {
   >;
 };
 
-/** Nom de fil d'un event, seule source des chaînes échangées sur la socket. */
 export function wsEventName<
   Channel extends WsChannel,
   Event extends WsChannelClientEvent<Channel> | WsChannelServerEvent<Channel>,

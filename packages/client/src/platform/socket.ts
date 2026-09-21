@@ -4,7 +4,6 @@ import type {
   WsServerToClientEvents,
 } from '@cityborn/api';
 
-/** Events de cycle de vie socket.io, hors contrat et sans nom de domaine. */
 interface SocketLifecycleEvents {
   connect: () => void;
   disconnect: (reason: string) => void;

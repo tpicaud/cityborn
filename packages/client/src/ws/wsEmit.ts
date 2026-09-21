@@ -21,7 +21,6 @@ const WS_TRANSPORT_STATUS = 503;
 const WS_TIMEOUT_STATUS = 504;
 const WS_UNEXPECTED_ACK_STATUS = 500;
 
-/** Émet un event du contrat et résout sur l'accusé de réception du serveur. */
 export type WsEmit = <Name extends WsClientEventName>(
   event: Name,
   ...payload: WsPayloadArgs<Name>
@@ -43,11 +42,6 @@ function invalidPayloadError(event: string, reason: string): ApiError {
   };
 }
 
-/**
- * Construit l'émetteur WS d'une connexion : le corps sortant et l'enveloppe
- * d'ack sont validés par le contrat, et une absence de réponse est rejetée
- * plutôt que laissée en suspens.
- */
 export function createWsEmit(
   connection: SocketConnection | null,
   ackTimeoutMs: number = WS_ACK_TIMEOUT_MS,
