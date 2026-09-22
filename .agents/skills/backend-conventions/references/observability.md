@@ -22,8 +22,8 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 - `run` ouvre le contexte CLS ; `finish` calcule `durationMs`, `outcome` et le niveau, puis émet. Le drapeau `finalized` rend `finish` idempotent.
 - Un enrichissement après `finish` est ignoré en silence : enrichir tant que l'opération est en cours.
 - `domain` et `outcome` sont bornés. `WideEventDomain` dérive d'`ApiDomain` : nouveau domaine → `API_DOMAINS` dans `@cityborn/api`, `infrastructure` et `other` restent propres au backend. Nouveau `kind` WS → `WsWideEventKind` **et** `wideEventLogShapes`.
-- `operation` vaut `method + route` en HTTP, `eventName` en WS ; une route non résolue devient `<unmatched>`.
-- `finish({ route })` recalcule `domain` et `operation` : la route n'est connue qu'après le routing.
+- `operation` vaut `method + route` en HTTP, `eventName` en WS ; une route non résolue devient `<unmatched>`. `action` dérive du contrat et reste absente pour une route hors contrat.
+- `finish({ route })` recalcule `domain`, `operation` et `action` : la route n'est connue qu'après le routing.
 - `autoLogging` reste à `false`, le wide event est la seule ligne par opération. Le `requestId` du CLS alimente `pino-http` par le `mixin`.
 
 ## Franchir une frontière async

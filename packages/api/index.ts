@@ -1,4 +1,5 @@
 export * from './openapi/generate-openapi';
+export * from './src/actions';
 export * from './src/builders/category.builder';
 export * from './src/builders/game.builder';
 export * from './src/builders/guess-object.builder';

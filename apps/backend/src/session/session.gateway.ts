@@ -5,7 +5,9 @@ import {
   sessionWsServerEvent,
   type User,
   WS_ERROR_EVENT,
+  type WsLifecycleEventName,
   type WsPayload,
+  wsLifecycleEventName,
 } from '@cityborn/api';
 import { NotFoundException, UseFilters } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -99,7 +101,7 @@ export class SessionGateway
     await this.runConnectionWideEvent(
       client,
       'connection',
-      'session:connect',
+      wsLifecycleEventName(sessionWsChannel, 'connect'),
       () => this.connect(client),
     );
   }
@@ -373,7 +375,7 @@ export class SessionGateway
     await this.runConnectionWideEvent(
       socket,
       'disconnection',
-      'session:disconnect',
+      wsLifecycleEventName(sessionWsChannel, 'disconnect'),
       () => this.disconnect(socket),
     );
   }
@@ -381,7 +383,7 @@ export class SessionGateway
   private async runConnectionWideEvent(
     socket: SessionSocket,
     kind: 'connection' | 'disconnection',
-    eventName: string,
+    eventName: WsLifecycleEventName,
     handler: () => Promise<void>,
   ): Promise<void> {
     const headers = socket.handshake.headers;

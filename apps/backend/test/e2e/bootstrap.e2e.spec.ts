@@ -8,7 +8,10 @@ import {
   SessionSchema,
 } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { PinoLogger } from 'nestjs-pino';
+import { RateLimiterRes } from 'rate-limiter-flexible';
 import request from 'supertest';
+import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
 import { createTestApp } from '../support/createTestApp';
 
@@ -62,6 +65,57 @@ describe('Production bootstrap', () => {
       code: ErrorCode.BAD_REQUEST,
       fieldErrors: [{ path: 'mode', message: expect.any(String) }],
     });
+  });
+
+  it('logs the contract action when an authentication guard rejects a route', async () => {
+    const warn = jest
+      .spyOn(PinoLogger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+
+    try {
+      await request(app.getHttpServer()).get(contract.auth.me.path).expect(401);
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'http_request',
+          route: '/auth/me',
+          action: 'auth.me',
+          statusCode: 401,
+        }),
+        'request',
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('logs the contract action when the rate limit guard rejects a route', async () => {
+    const rateLimitService: RateLimitService = app.get(RateLimitService);
+    const consumeHttp = jest
+      .spyOn(rateLimitService, 'consumeHttp')
+      .mockRejectedValueOnce(new RateLimiterRes(0, 1000, 101, false));
+    const warn = jest
+      .spyOn(PinoLogger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+
+    try {
+      await request(app.getHttpServer())
+        .get(contract.health.check.path)
+        .expect(429);
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'http_request',
+          route: '/health',
+          action: 'health.check',
+          statusCode: 429,
+        }),
+        'request',
+      );
+    } finally {
+      consumeHttp.mockRestore();
+      warn.mockRestore();
+    }
   });
 
   it('serializes service exceptions with the global exception filter', async () => {
