@@ -32,7 +32,7 @@ Le drain tourne dans un worker : une panne d'ingestion n'interrompt ni la requê
 
 Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom, qu'aucun `grep` n'atteint : renommer ici oblige à reprendre dashboards et monitors.
 
-- **Communs** — `event` (`http_request` | `ws_message` | `ws_connection` | `ws_disconnection` | `operation_error`), `transport`, `requestId`, `domain`, `operation`, `outcome`, `statusCode`, `durationMs`, `ip`, `userAgent`, `visitorId`, `client`, `clientVersion`
+- **Communs** — `event` (`http_request` | `ws_message` | `ws_connection` | `ws_disconnection` | `operation_error`), `transport`, `requestId`, `domain`, `action` (opérations du contrat), `operation`, `outcome`, `statusCode`, `durationMs`, `ip`, `userAgent`, `visitorId`, `client`, `clientVersion`
 - **HTTP** — `method`, `route`, `apiVersion`
 - **WS** — `kind`, `eventName`, `socketId`
 - **Auth** — `isAuthenticated`, `userId`
@@ -42,6 +42,8 @@ Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-ev
 - **Pino** — `_time` (horodatage natif Axiom, issu de `time`), `level`, `msg`, `pid`, `hostname`
 
 `domain` vient de `API_DOMAINS` (`@cityborn/api`), le vocabulaire qui contraint les `pathPrefix` des contrats ts-rest : une route ou un event WS y est rattaché par son premier segment, `infrastructure` couvre le hors-contrat écrit à la main et `other` le reste. Ajouter un domaine passe donc par `API_DOMAINS`, jamais par le backend seul.
+
+`action` identifie l'opération demandée, dérivée de la clé de route ts-rest ou d'event `clientToServer` : `session.createSession`, `session.guess`, `admin.category.getCategoryTrees`. Les connexions et déconnexions WS portent `session.connect` et `session.disconnect`, dérivés du domaine du channel. Une route hors contrat ou non reconnue n'a pas d'`action` ; `route` distingue alors `/` de `<unmatched>`. `operation` conserve sa valeur technique actuelle pour les requêtes Axiom existantes et les opérations hors contrat ; utiliser `action` pour regrouper les opérations du contrat.
 
 Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide events sont toujours `info`, `warn` ou `error`.
 

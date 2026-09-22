@@ -1,8 +1,14 @@
 import {
   API_DOMAINS,
   type ApiDomain,
+  type ContractAction,
   type ErrorCode,
   getApiVersionInfo,
+  isWsWideEventName,
+  resolveHttpAction,
+  resolveWsAction,
+  type WsClientEventName,
+  type WsLifecycleEventName,
 } from '@cityborn/api';
 import type { Request } from 'express';
 import { nanoid } from 'nanoid';
@@ -12,6 +18,7 @@ interface WideEventInitBase {
   requestId: string;
   domain: WideEventDomain;
   operation: string;
+  action?: ContractAction;
   ip: string | undefined;
   userAgent: string | undefined;
   visitorId: string | undefined;
@@ -30,7 +37,7 @@ export interface HttpWideEventInit extends WideEventInitBase {
 export interface WsWideEventInit extends WideEventInitBase {
   transport: 'ws';
   kind: WsWideEventKind;
-  eventName: string;
+  eventName: WsClientEventName | WsLifecycleEventName;
   socketId: string;
 }
 
@@ -235,6 +242,7 @@ export function createHttpWideEvent(req: Request): HttpWideEventInit {
     requestId: resolveRequestId(req),
     domain: deriveHttpDomain(route),
     operation: `${req.method} ${route}`,
+    action: resolveHttpAction(req.method, route),
     method: req.method,
     route,
     ip: req.ip,
@@ -257,12 +265,16 @@ export function createWsWideEvent(params: {
   client: string | undefined;
   clientVersion: string | undefined;
 }): WsWideEventInit {
+  if (!isWsWideEventName(params.eventName)) {
+    throw new Error(`Unregistered WebSocket event: ${params.eventName}`);
+  }
   return {
     transport: 'ws',
     kind: params.kind,
     requestId: nanoid(),
     domain: deriveWsDomain(params.eventName),
     operation: params.eventName,
+    action: resolveWsAction(params.eventName),
     eventName: params.eventName,
     socketId: params.socketId,
     ip: params.ip,

@@ -1,4 +1,4 @@
-import { type ApiError, ErrorCode } from '@cityborn/api';
+import { type ApiError, ErrorCode, resolveHttpAction } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClsService, type ClsStore } from 'nestjs-cls';
 import { PinoLogger } from 'nestjs-pino';
@@ -105,6 +105,7 @@ export class WideEventService {
             route,
             domain: deriveHttpDomain(route),
             operation: `${current.method} ${route}`,
+            action: resolveHttpAction(current.method, route),
           }
         : {}),
       statusCode,

@@ -101,54 +101,58 @@ describe('WideEventService', () => {
   });
 
   describe('finish', () => {
-    it('finalizes an HTTP event once with its resolved route', () => {
-      const {
-        clsService,
-        logger,
-        wideEventService,
-      }: ReturnType<typeof buildWideEventService> = buildWideEventService();
-      const outcome: WideEventFinalization = {
-        route: '/v1/session/:id',
-        statusCode: 201,
-      };
-      const init: HttpWideEventInit = {
-        transport: 'http',
-        requestId: 'request-1',
-        domain: 'other',
-        operation: 'GET /pending',
-        method: 'GET',
-        route: '/pending',
-        ip: '127.0.0.1',
-        userAgent: undefined,
-        visitorId: undefined,
-        client: undefined,
-        clientVersion: undefined,
-        apiVersion: 1,
-        isAuthenticated: false,
-      };
-      clsService.get
-        .mockReturnValueOnce(init)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(0n);
+    it.each([401, 429])(
+      'keeps the HTTP action when a guard rejects with %i',
+      (statusCode: number) => {
+        const {
+          clsService,
+          logger,
+          wideEventService,
+        }: ReturnType<typeof buildWideEventService> = buildWideEventService();
+        const outcome: WideEventFinalization = {
+          route: '/session/:id',
+          statusCode,
+        };
+        const init: HttpWideEventInit = {
+          transport: 'http',
+          requestId: 'request-1',
+          domain: 'other',
+          operation: 'GET /pending',
+          method: 'GET',
+          route: '/pending',
+          ip: '127.0.0.1',
+          userAgent: undefined,
+          visitorId: undefined,
+          client: undefined,
+          clientVersion: undefined,
+          apiVersion: 1,
+          isAuthenticated: false,
+        };
+        clsService.get
+          .mockReturnValueOnce(init)
+          .mockReturnValueOnce(false)
+          .mockReturnValueOnce(0n);
 
-      wideEventService.finish(outcome);
+        wideEventService.finish(outcome);
 
-      expect(clsService.set).toHaveBeenCalledWith('finalized', true);
-      expect(clsService.set).toHaveBeenCalledWith(
-        'wideEvent',
-        expect.objectContaining({
-          route: '/v1/session/:id',
-          domain: 'session',
-          operation: 'GET /v1/session/:id',
-          statusCode: 201,
-          outcome: 'success',
-        }),
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.objectContaining({ event: 'http_request', statusCode: 201 }),
-        'request',
-      );
-    });
+        expect(clsService.set).toHaveBeenCalledWith('finalized', true);
+        expect(clsService.set).toHaveBeenCalledWith(
+          'wideEvent',
+          expect.objectContaining({
+            route: '/session/:id',
+            domain: 'session',
+            operation: 'GET /session/:id',
+            action: 'session.getSession',
+            statusCode,
+            outcome: 'client_error',
+          }),
+        );
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.objectContaining({ event: 'http_request', statusCode }),
+          'request',
+        );
+      },
+    );
   });
 
   describe('recordError', () => {

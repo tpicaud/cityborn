@@ -1,8 +1,13 @@
-import { contract } from '@cityborn/api';
+import {
+  contract,
+  sessionWsChannel,
+  sessionWsEvent,
+  wsLifecycleEventName,
+} from '@cityborn/api';
 import type { AppRoute, AppRouter } from '@ts-rest/core';
 import { isAppRoute } from '@ts-rest/core';
 import type { WideEventDomain } from './wide-event';
-import { deriveHttpDomain } from './wide-event';
+import { createWsWideEvent, deriveHttpDomain } from './wide-event';
 
 function collectContractPaths(router: AppRouter): string[] {
   return Object.values(router).flatMap((entry: AppRoute | AppRouter) =>
@@ -26,5 +31,48 @@ describe('deriveHttpDomain', () => {
     const domain: WideEventDomain = deriveHttpDomain('/v1/sessions/:id');
 
     expect(domain).toBe('other');
+  });
+});
+
+describe('createWsWideEvent', () => {
+  it('uses the contract action for a message and a channel lifecycle event', () => {
+    const message = createWsWideEvent({
+      kind: 'message',
+      eventName: sessionWsEvent.guess,
+      socketId: 'socket-1',
+      ip: undefined,
+      userAgent: undefined,
+      visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
+    });
+    const connection = createWsWideEvent({
+      kind: 'connection',
+      eventName: wsLifecycleEventName(sessionWsChannel, 'connect'),
+      socketId: 'socket-1',
+      ip: undefined,
+      userAgent: undefined,
+      visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
+    });
+
+    expect(message.action).toBe('session.guess');
+    expect(connection.action).toBe('session.connect');
+  });
+
+  it('rejects a message that is missing from the channel registry', () => {
+    expect(() =>
+      createWsWideEvent({
+        kind: 'message',
+        eventName: 'session:unknown',
+        socketId: 'socket-1',
+        ip: undefined,
+        userAgent: undefined,
+        visitorId: undefined,
+        client: undefined,
+        clientVersion: undefined,
+      }),
+    ).toThrow('Unregistered WebSocket event: session:unknown');
   });
 });
