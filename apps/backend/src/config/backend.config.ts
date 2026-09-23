@@ -29,10 +29,6 @@ const backendEnvironmentSchema = z
     ADMIN_DASHBOARD_TOKEN: z.string().trim().min(1),
     DATABASE_URL: z.string().url(),
     REDIS_URL: z.string().url(),
-    UPSTASH_REDIS_REST_URL: optionalNonEmptyStringSchema.pipe(
-      z.string().url().optional(),
-    ),
-    UPSTASH_REDIS_REST_TOKEN: optionalNonEmptyStringSchema,
     BREVO_API_KEY: z.string().trim().min(1),
     BREVO_SENDER_EMAIL: z.string().email(),
     BREVO_SENDER_NAME: z.string().trim().min(1).default('Cityborn'),
@@ -48,19 +44,6 @@ const backendEnvironmentSchema = z
         code: z.ZodIssueCode.custom,
         message: 'AXIOM_TOKEN and AXIOM_DATASET must be configured together',
         path: ['AXIOM_TOKEN'],
-      });
-    }
-
-    const hasRedisRestUrl: boolean =
-      environment.UPSTASH_REDIS_REST_URL !== undefined;
-    const hasRedisRestToken: boolean =
-      environment.UPSTASH_REDIS_REST_TOKEN !== undefined;
-    if (hasRedisRestUrl !== hasRedisRestToken) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured together',
-        path: ['UPSTASH_REDIS_REST_URL'],
       });
     }
   });
@@ -89,8 +72,6 @@ export interface BackendConfig {
   };
   redis: {
     url: string;
-    restUrl: string | undefined;
-    restToken: string | undefined;
   };
   mail: {
     apiKey: string;
@@ -130,8 +111,6 @@ export function parseBackendConfig(
     },
     redis: {
       url: parsedEnvironment.REDIS_URL,
-      restUrl: parsedEnvironment.UPSTASH_REDIS_REST_URL,
-      restToken: parsedEnvironment.UPSTASH_REDIS_REST_TOKEN,
     },
     mail: {
       apiKey: parsedEnvironment.BREVO_API_KEY,
