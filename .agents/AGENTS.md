@@ -54,6 +54,13 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - Modifier un contrat `@cityborn/api` (route, event WS, schéma zod, type, enum) → skill **`api-contract-change`**.
 - Déprécier / nettoyer un élément déprécié → skills **`deprecate`** / **`check-and-remove-deprecated`**.
 
+## Configuration d'environnement
+
+- Chaque application possède ses schémas Zod et expose une configuration typée en camelCase. Le code applicatif consomme cette configuration ; réserver les accès directs à `process.env` aux modules de configuration et aux points d'entrée techniques des frameworks.
+- Valider les variables requises au plus tôt permis par le runtime : au démarrage pour NestJS et Prisma, au build pour les variables publiques Next.js puis au démarrage du serveur pour ses variables privées, et avant les commandes Expo de développement, de prébuild et de build.
+- Conserver des accès littéraux aux variables publiques Next.js et Expo afin que leurs bundlers puissent les injecter.
+- Tout ajout, suppression ou renommage met à jour dans le même lot le schéma, ses consommateurs, le `.env.example` de l'application et la configuration Turbo concernée.
+
 ## Commandes
 
 | Commande | Usage |
