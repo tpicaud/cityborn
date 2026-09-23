@@ -2,10 +2,10 @@
 
 import type { CreateGuessObject, CreateWorldLocation } from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
-import { adminClient } from '@/lib/adminApiClient';
+import { getAdminClient } from '@/lib/adminApiClient';
 
 export async function getGuessObject(id: string, includes?: string[]) {
-  const result = await adminClient.guessObjects.getGuessObject({
+  const result = await getAdminClient().guessObjects.getGuessObject({
     params: { id },
     query: { include: includes?.join(',') },
   });
@@ -14,7 +14,7 @@ export async function getGuessObject(id: string, includes?: string[]) {
 }
 
 export async function getFullGuessObject(id: string) {
-  const result = await adminClient.guessObjects.getFullGuessObject({
+  const result = await getAdminClient().guessObjects.getFullGuessObject({
     params: { id },
   });
   if (result.status === 404) return null;
@@ -22,7 +22,7 @@ export async function getFullGuessObject(id: string) {
 }
 
 export async function saveGuessObject(createGuessObject: CreateGuessObject) {
-  const result = await adminClient.guessObjects.createGuessObject({
+  const result = await getAdminClient().guessObjects.createGuessObject({
     body: createGuessObject,
   });
   return toApiResult(result);
@@ -31,10 +31,10 @@ export async function saveGuessObject(createGuessObject: CreateGuessObject) {
 export async function patchGuessObject(
   id: string,
   updatedFields: Parameters<
-    typeof adminClient.guessObjects.updateGuessObject
+    ReturnType<typeof getAdminClient>['guessObjects']['updateGuessObject']
   >[0]['body'],
 ) {
-  const result = await adminClient.guessObjects.updateGuessObject({
+  const result = await getAdminClient().guessObjects.updateGuessObject({
     params: { id },
     body: updatedFields,
   });
@@ -42,14 +42,14 @@ export async function patchGuessObject(
 }
 
 export async function searchGuessObjectByName(query: string) {
-  const result = await adminClient.search.searchGuessObject({
+  const result = await getAdminClient().search.searchGuessObject({
     query: { q: query },
   });
   return toApiResult(result);
 }
 
 export async function searchGuessObjectByExternalId(external_id: string) {
-  const result = await adminClient.search.searchGuessObject({
+  const result = await getAdminClient().search.searchGuessObject({
     query: { external_id },
   });
   const apiResult = toApiResult(result);
@@ -58,14 +58,14 @@ export async function searchGuessObjectByExternalId(external_id: string) {
 }
 
 export async function searchWorldLocationByName(query: string) {
-  const result = await adminClient.search.searchWorldLocation({
+  const result = await getAdminClient().search.searchWorldLocation({
     query: { q: query },
   });
   return toApiResult(result);
 }
 
 export async function searchWorldLocationById(id: string, osm_type: string) {
-  const result = await adminClient.search.searchWorldLocation({
+  const result = await getAdminClient().search.searchWorldLocation({
     query: { id, osm_type },
   });
   const apiResult = toApiResult(result);
@@ -74,7 +74,7 @@ export async function searchWorldLocationById(id: string, osm_type: string) {
 }
 
 export async function createWorldLocation(worldLocation: CreateWorldLocation) {
-  const result = await adminClient.worldLocation.createWorldLocation({
+  const result = await getAdminClient().worldLocation.createWorldLocation({
     body: worldLocation,
   });
   return toApiResult(result);

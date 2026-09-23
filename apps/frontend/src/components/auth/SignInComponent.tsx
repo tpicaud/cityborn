@@ -4,6 +4,7 @@ import { useError } from '@cityborn/client';
 import { useSignInForm } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { frontendClientConfig } from '@/config/client';
 import { signIn, signInWithGoogle } from '@/server/use-server/auth';
 import Button from '../ui/buttons/Button';
 
@@ -33,7 +34,7 @@ export const SignInComponent = () => {
 
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: frontendClientConfig.googleClientId,
         callback: handleCredentialResponse,
       });
       window.google.accounts.id.renderButton(

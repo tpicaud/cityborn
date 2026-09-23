@@ -11,9 +11,9 @@ import type {
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { WideEventService } from '../common/wide-event/wide-event.service';
+import type { AuthConfig, HttpConfig } from '../config/config.module';
 import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserCredentials } from '../user/repositories/user.repository';
@@ -43,13 +43,22 @@ jest.mock('./utils', () => ({
 beforeEach(() => {
   mockPasswordMatches = true;
   mockAppleTokenValid = true;
-  process.env.APP_ID = 'cityborn-app';
 });
 
 function buildAuthService() {
   const userService: DeepMocked<UserService> = createMock<UserService>();
   const jwtService: DeepMocked<JwtService> = createMock<JwtService>();
-  const configService: DeepMocked<ConfigService> = createMock<ConfigService>();
+  const authConfig: AuthConfig = {
+    jwtAccessSecret: 'access-secret',
+    jwtRefreshSecret: 'refresh-secret',
+    googleClientId: 'google-client',
+    appleAppId: 'cityborn-app',
+    adminDashboardToken: 'admin-token',
+  };
+  const httpConfig: HttpConfig = {
+    corsOrigins: ['https://cityborn.test'],
+    frontendUrl: 'https://cityborn.test',
+  };
   const eventService: DeepMocked<EventService> = createMock<EventService>();
   const mailService: DeepMocked<MailService> = createMock<MailService>();
   const wideEventService: DeepMocked<WideEventService> =
@@ -59,19 +68,14 @@ function buildAuthService() {
   const authService: AuthService = new AuthService(
     userService,
     jwtService,
-    configService,
+    authConfig,
+    httpConfig,
     eventService,
     mailService,
     wideEventService,
     googleClient,
   );
 
-  configService.get.mockImplementation((key: string) => {
-    if (key === 'JWT_ACCESS_SECRET') return 'access-secret';
-    if (key === 'JWT_REFRESH_SECRET') return 'refresh-secret';
-    if (key === 'FRONTEND_URL') return 'https://cityborn.test';
-    return undefined;
-  });
   jwtService.signAsync
     .mockResolvedValueOnce('access-token')
     .mockResolvedValueOnce('refresh-token');

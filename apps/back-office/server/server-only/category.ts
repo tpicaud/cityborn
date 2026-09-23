@@ -3,10 +3,10 @@ import {
   type FullCategory,
   unwrapApiResponse,
 } from '@cityborn/api';
-import { adminClient } from '@/lib/adminApiClient';
+import { getAdminClient } from '@/lib/adminApiClient';
 
 export async function getCategories(): Promise<Category[]> {
-  const result = await adminClient.category.getAllCategories({
+  const result = await getAdminClient().category.getAllCategories({
     query: { include: 'guessObjects' },
   });
   return unwrapApiResponse(result);
@@ -15,7 +15,7 @@ export async function getCategories(): Promise<Category[]> {
 export async function getFullCategory(
   id: string,
 ): Promise<FullCategory | null> {
-  const result = await adminClient.category.getFullCategory({
+  const result = await getAdminClient().category.getFullCategory({
     params: { id },
   });
   if (result.status === 404) return null;

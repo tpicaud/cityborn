@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { getBackOfficeServerConfig } from '@/config/server';
 
 interface LoginAttempt {
   count: number;
@@ -51,6 +52,7 @@ export async function checkRateLimit(): Promise<{
 }
 
 export async function recordFailedAttempt(): Promise<void> {
+  const backOfficeServerConfig = getBackOfficeServerConfig();
   const cookieStore = await cookies();
   const attemptsData = cookieStore.get('login_attempts')?.value;
 
@@ -79,7 +81,7 @@ export async function recordFailedAttempt(): Promise<void> {
 
   cookieStore.set('login_attempts', JSON.stringify(attempts), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: backOfficeServerConfig.nodeEnvironment === 'production',
     sameSite: 'lax',
     maxAge: 24 * 60 * 60,
   });

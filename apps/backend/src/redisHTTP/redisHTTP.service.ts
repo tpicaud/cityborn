@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from '@upstash/redis';
+import { REDIS_CONFIG, type RedisConfig } from '../config/config.module';
 
 @Injectable()
 export class RedisHTTPService {
   private readonly redisHTTPClient: Redis;
 
-  constructor() {
+  constructor(@Inject(REDIS_CONFIG) redisConfig: RedisConfig) {
+    const { restUrl, restToken } = redisConfig;
+    if (!restUrl || !restToken) {
+      throw new Error('Upstash REST configuration is required');
+    }
     this.redisHTTPClient = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: restUrl,
+      token: restToken,
     });
   }
 

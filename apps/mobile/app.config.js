@@ -1,15 +1,9 @@
 require('dotenv').config();
+const { mobileBuildConfig } = require('./config/build');
 
-if (
-  !process.env.APP_VARIANT ||
-  !process.env.GOOGLE_MAPS_ANDROID_API_KEY ||
-  !process.env.GOOGLE_MAPS_IOS_API_KEY
-) {
-  throw new Error('Environment not loaded');
-}
-const IS_DEVELOPMENT = process.env.APP_VARIANT === 'development';
-const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
-const IS_STAGING = process.env.APP_VARIANT === 'staging';
+const IS_DEVELOPMENT = mobileBuildConfig.appVariant === 'development';
+const IS_PREVIEW = mobileBuildConfig.appVariant === 'preview';
+const IS_STAGING = mobileBuildConfig.appVariant === 'staging';
 
 const getUniqueIdentifier = () => {
   if (IS_DEVELOPMENT) return 'com.app.cityborn.dev';
@@ -42,7 +36,7 @@ export default {
       userInterfaceStyle: 'light',
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
+          apiKey: mobileBuildConfig.googleMapsAndroidApiKey,
         },
       },
     },
@@ -128,8 +122,8 @@ export default {
       [
         'react-native-maps',
         {
-          iosGoogleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY,
-          androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
+          iosGoogleMapsApiKey: mobileBuildConfig.googleMapsIosApiKey,
+          androidGoogleMapsApiKey: mobileBuildConfig.googleMapsAndroidApiKey,
         },
       ],
       '@react-native-community/datetimepicker',

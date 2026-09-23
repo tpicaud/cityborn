@@ -7,12 +7,12 @@ import type {
   UpdateCategory,
 } from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
-import { adminClient } from '@/lib/adminApiClient';
+import { getAdminClient } from '@/lib/adminApiClient';
 
 export async function createCategory(
   data: CreateCategory,
 ): Promise<ApiResult<Category>> {
-  const result = await adminClient.category.createCategory({ body: data });
+  const result = await getAdminClient().category.createCategory({ body: data });
   return toApiResult(result);
 }
 
@@ -20,7 +20,7 @@ export async function saveCategory(
   id: string,
   updatedCategory: UpdateCategory,
 ): Promise<ApiResult<Category>> {
-  const result = await adminClient.category.updateCategory({
+  const result = await getAdminClient().category.updateCategory({
     params: { id },
     body: updatedCategory,
   });
@@ -28,7 +28,7 @@ export async function saveCategory(
 }
 
 export async function deleteCategory(id: string): Promise<ApiResult<void>> {
-  const result = await adminClient.category.deleteCategory({
+  const result = await getAdminClient().category.deleteCategory({
     params: { id },
     body: {},
   });

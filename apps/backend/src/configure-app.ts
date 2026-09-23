@@ -7,6 +7,7 @@ import { Logger } from 'nestjs-pino';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-header.middleware';
 import { HttpWideEventMiddleware } from './common/middlewares/http-wide-event.middleware';
+import { backendConfig } from './config/backend.config';
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 export async function configureApp(app: NestExpressApplication): Promise<void> {
@@ -21,9 +22,8 @@ export async function configureApp(app: NestExpressApplication): Promise<void> {
 
   app.set('trust proxy', 1);
 
-  const cors = process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'];
   app.enableCors({
-    origin: cors,
+    origin: backendConfig.http.corsOrigins,
     credentials: true,
   });
 

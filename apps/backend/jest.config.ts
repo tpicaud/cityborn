@@ -19,6 +19,7 @@ const swcOptions = {
 
 const baseProject = {
   rootDir: '.',
+  setupFiles: ['<rootDir>/test/support/setupEnvironment.ts'],
   transform: {
     '^.+\\.ts$': [
       '@swc/jest',
@@ -47,7 +48,6 @@ const infrastructureProject = {
   ...baseProject,
   globalSetup: '<rootDir>/test/support/globalSetup.ts',
   globalTeardown: '<rootDir>/test/support/globalTeardown.ts',
-  setupFiles: ['<rootDir>/test/support/setupEnvironment.ts'],
   setupFilesAfterEnv: ['<rootDir>/test/support/setupAfterEnv.ts'],
 } satisfies Config;
 

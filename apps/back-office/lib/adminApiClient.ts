@@ -1,21 +1,24 @@
 import { createApiClient } from '@cityborn/client/api';
+import { getBackOfficeServerConfig } from '@/config/server';
 
-const adminToken = process.env.ADMIN_DASHBOARD_TOKEN ?? '';
+type AdminClient = ReturnType<typeof createApiClient>['admin'];
 
-const backendUrl = process.env.BACKEND_URL;
-if (!backendUrl) {
-  throw new Error('BACKEND_URL is not set');
+let adminClient: AdminClient | undefined;
+
+export function getAdminClient(): AdminClient {
+  if (adminClient) return adminClient;
+
+  const backOfficeServerConfig = getBackOfficeServerConfig();
+  const client = createApiClient(
+    backOfficeServerConfig.backendUrl,
+    {
+      getAccessToken: async () => backOfficeServerConfig.adminDashboardToken,
+      getRefreshToken: async () => null,
+      setTokens: async () => {},
+      clearTokens: async () => {},
+    },
+    { client: { name: 'back-office' } },
+  );
+  adminClient = client.admin;
+  return adminClient;
 }
-
-const client = createApiClient(
-  backendUrl,
-  {
-    getAccessToken: async () => adminToken,
-    getRefreshToken: async () => null,
-    setTokens: async () => {},
-    clearTokens: async () => {},
-  },
-  { client: { name: 'back-office' } },
-);
-
-export const adminClient = client.admin;

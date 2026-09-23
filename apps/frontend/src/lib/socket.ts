@@ -4,10 +4,8 @@ import type {
   SocketListenEvent,
 } from '@cityborn/client/platform';
 import { io, type Socket } from 'socket.io-client';
+import { frontendClientConfig } from '@/config/client';
 import { getOrCreateVisitorId } from './visitorId';
-
-const WEBSOCKET_URL =
-  process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL || 'ws://localhost:3001';
 
 let socket: Socket | null = null;
 
@@ -19,7 +17,7 @@ declare global {
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(WEBSOCKET_URL, {
+    socket = io(frontendClientConfig.websocketBackendUrl, {
       transports: ['websocket'],
       withCredentials: true,
       query: {

@@ -8,12 +8,19 @@ import type { Server, ServerOptions } from 'socket.io';
 import type { SessionSocket } from '../common/types/session-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
+import {
+  HTTP_CONFIG,
+  type HttpConfig,
+  REDIS_CONFIG,
+  type RedisConfig,
+} from '../config/config.module';
 
 export class RedisIoAdapter extends IoAdapter {
   private constructor(
     app: INestApplicationContext,
     private readonly adapterConstructor: ReturnType<typeof createAdapter>,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
+    private readonly corsOrigins: string[],
     private readonly closeRedisConnections: () => Promise<void>,
   ) {
     super(app);
@@ -21,7 +28,9 @@ export class RedisIoAdapter extends IoAdapter {
 
   static async create(app: INestApplicationContext): Promise<RedisIoAdapter> {
     const wideEventService = app.get(WideEventService);
-    const pubClient = createClient({ url: process.env.REDIS_URL });
+    const redisConfig: RedisConfig = app.get(REDIS_CONFIG);
+    const httpConfig: HttpConfig = app.get(HTTP_CONFIG);
+    const pubClient = createClient({ url: redisConfig.url });
     const subClient = pubClient.duplicate();
 
     pubClient.on('error', (err) => {
@@ -53,6 +62,7 @@ export class RedisIoAdapter extends IoAdapter {
       app,
       createAdapter(pubClient, subClient),
       app.get(WsWideEventLifecycle),
+      httpConfig.corsOrigins,
       async () => {
         await Promise.all([
           pubClient.isOpen ? pubClient.close() : undefined,
@@ -87,7 +97,7 @@ export class RedisIoAdapter extends IoAdapter {
     const server: Server = super.createIOServer(port, {
       ...options,
       cors: {
-        origin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
+        origin: this.corsOrigins,
         credentials: true,
       },
     });

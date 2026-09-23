@@ -19,16 +19,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { WideEventService } from '../common/wide-event/wide-event.service';
+import {
+  AUTH_CONFIG,
+  type AuthConfig,
+  HTTP_CONFIG,
+  type HttpConfig,
+} from '../config/config.module';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import { UserService } from '../user/user.service';
-import { getJwtConstants } from './constants';
 import { verifyAppleIdToken } from './utils';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
@@ -54,7 +58,8 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
+    @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     private readonly eventService: EventService,
     private readonly mailService: MailService,
     private readonly wideEventService: WideEventService,
@@ -247,8 +252,9 @@ export class AuthService {
   ): Promise<AuthResponse> {
     const { identity_token, apple_user_id, details } = dto;
 
-    const appId = process.env.APP_ID;
-    if (!appId || !(await verifyAppleIdToken(identity_token, appId))) {
+    if (
+      !(await verifyAppleIdToken(identity_token, this.authConfig.appleAppId))
+    ) {
       throw new UnauthorizedException({
         code: ErrorCode.BAD_REQUEST,
         message: 'Bad request',
@@ -402,9 +408,7 @@ export class AuthService {
     await this.mailService.sendMail(
       buildMailOptions('verification-email', {
         email: user.email,
-        frontendUrl:
-          this.configService.get<string>('FRONTEND_URL') ??
-          'http://localhost:3000',
+        frontendUrl: this.httpConfig.frontendUrl,
         verificationToken,
         username: user.username,
       }),
@@ -426,13 +430,13 @@ export class AuthService {
     switch (type) {
       case 'access':
         return await this.jwtService.signAsync(payload, {
-          secret: getJwtConstants(this.configService).jwt_access_secret,
+          secret: this.authConfig.jwtAccessSecret,
           expiresIn: '15m',
         });
 
       case 'refresh':
         return await this.jwtService.signAsync(payload, {
-          secret: getJwtConstants(this.configService).jwt_refresh_secret,
+          secret: this.authConfig.jwtRefreshSecret,
           expiresIn: '7d',
         });
     }
@@ -441,7 +445,7 @@ export class AuthService {
   private async verifyGoogleToken(idToken: string) {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.authConfig.googleClientId,
     });
     const payload = ticket.getPayload();
     if (!payload)
