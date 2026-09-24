@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm check-env && expo start",
     "start": "pnpm check-env && expo start",
-    "prebuild": "pnpm check-env && expo prebuild --clean",
+    "prebuild": "expo prebuild --clean",
     "build-android-development": "npx dotenv -e .env -- node config/check-env.js && npx dotenv -e .env -- eas build --profile development --platform android --local --clear-cache --output app-builds/cityborn-development-preview.apk",
     "build-android-staging-preview": "npx dotenv -e .env.staging -- node config/check-env.js && npx dotenv -e .env.staging -- eas build --profile preview --platform android --local --clear-cache --output app-builds/cityborn-staging-preview.apk",
     "build-android-production-preview": "npx dotenv -e .env.production -- node config/check-env.js && npx dotenv -e .env.production -- eas build --profile preview --platform android --local --clear-cache --output app-builds/cityborn-production-preview.apk",

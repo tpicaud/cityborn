@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "dotenv -v NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=typecheck-placeholder -- next typegen && tsc --noEmit",
     "dev": "dotenv -e .env -- next dev",
     "build": "next build --turbopack",
     "start": "dotenv -e .env -- next start",

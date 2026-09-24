@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "dotenv -e .env -- next dev",
     "build": "next build",
-    "typecheck": "next typegen && tsc -noEmit",
+    "typecheck": "dotenv -v NEXT_PUBLIC_GOOGLE_MAP_API_KEY=typecheck-placeholder -v NEXT_PUBLIC_GOOGLE_CLIENT_ID=typecheck-placeholder -- next typegen && tsc -noEmit",
     "start": "dotenv -e .env -- next start",
     "lint": "next lint",
     "format": "biome check --write .",
