@@ -57,7 +57,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 ## Configuration d'environnement
 
 - Chaque application possède ses schémas Zod et expose une configuration typée en camelCase. Le code applicatif consomme cette configuration ; réserver les accès directs à `process.env` aux modules de configuration et aux points d'entrée techniques des frameworks.
-- Valider les variables requises au plus tôt permis par le runtime : au démarrage pour NestJS et Prisma, au build pour les variables publiques Next.js puis au démarrage du serveur pour ses variables privées, et avant les commandes Expo de développement, de prébuild et de build.
+- Valider chaque contexte à sa phase d'utilisation : démarrage NestJS, commande Prisma, développement et build pour les variables publiques Next.js, démarrage du serveur pour ses variables privées, prébuild pour la configuration native Expo, puis Metro ou EAS pour sa configuration client. Le typecheck reste indépendant de la configuration applicative.
 - Conserver des accès littéraux aux variables publiques Next.js et Expo afin que leurs bundlers puissent les injecter.
 - Tout ajout, suppression ou renommage met à jour dans le même lot le schéma, ses consommateurs, le `.env.example` de l'application et la configuration Turbo concernée.
 

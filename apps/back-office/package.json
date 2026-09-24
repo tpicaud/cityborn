@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "typecheck": "dotenv -v NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=typecheck-placeholder -- next typegen && tsc --noEmit",
-    "dev": "dotenv -e .env -- next dev",
-    "build": "next build --turbopack",
-    "start": "dotenv -e .env -- next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "dev": "pnpm check-env:development && dotenv -c development -- next dev",
+    "build": "pnpm check-env:production && next build --turbopack",
+    "start": "dotenv -c production -- next start",
+    "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
+    "check-env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "check": "biome check .",
     "fullcheck": "pnpm typecheck && pnpm check"

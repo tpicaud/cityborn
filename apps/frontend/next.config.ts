@@ -1,5 +1,4 @@
 import type { NextConfig } from 'next';
-import './src/config/client';
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
