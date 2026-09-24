@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm check-env:development && dotenv -c development -- next dev",
+    "dev": "pnpm check-env:development && next dev",
     "build": "pnpm check-env:production && next build",
     "typecheck": "next typegen && tsc -noEmit",
-    "start": "dotenv -c production -- next start",
+    "start": "next start",
     "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "check-env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "lint": "next lint",
