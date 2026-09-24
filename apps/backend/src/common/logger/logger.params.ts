@@ -6,9 +6,8 @@ import type {
   TransportMultiOptions,
   TransportTargetOptions,
 } from 'pino';
+import { backendConfig } from '../../config/backend.config';
 import type { WideEventClsStore } from '../wide-event/wide-event.service';
-
-const isProduction = process.env.NODE_ENV === 'production';
 
 const AXIOM_EU_EDGE_DOMAIN = 'eu-central-1.aws.edge.axiom.co';
 
@@ -64,7 +63,7 @@ export function buildLoggerTransport(
 }
 
 export const loggerBaseOptions: LoggerOptions = {
-  level: process.env.LOG_LEVEL ?? 'info',
+  level: backendConfig.logger.level,
   mixin: () => {
     const requestId = currentRequestId();
     return requestId ? { requestId } : {};
@@ -77,9 +76,9 @@ export const loggerBaseOptions: LoggerOptions = {
     '*.refreshToken',
   ],
   transport: buildLoggerTransport({
-    isProduction,
-    axiomToken: process.env.AXIOM_TOKEN,
-    axiomDataset: process.env.AXIOM_DATASET,
+    isProduction: backendConfig.runtime.nodeEnvironment === 'production',
+    axiomToken: backendConfig.logger.axiomToken,
+    axiomDataset: backendConfig.logger.axiomDataset,
   }),
 };
 

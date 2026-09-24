@@ -81,6 +81,9 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Check environment variables
         if: inputs.profile != 'preview' && inputs.profile != 'development'
         working-directory: apps/mobile
@@ -101,9 +104,6 @@ jobs:
           expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Syncing app version code
         if: inputs.profile != 'preview' && inputs.profile != 'development'

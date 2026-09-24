@@ -28,32 +28,155 @@
     "start": {
       "dependsOn": ["build"],
       "cache": false
+    },
+    "cityborn-backend#dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "LOG_LEVEL",
+        "AXIOM_TOKEN",
+        "AXIOM_DATASET",
+        "PORT",
+        "FRONTEND_URL",
+        "JWT_ACCESS_SECRET",
+        "JWT_REFRESH_SECRET",
+        "BREVO_API_KEY",
+        "BREVO_SENDER_EMAIL",
+        "BREVO_SENDER_NAME",
+        "ADMIN_DASHBOARD_TOKEN",
+        "DATABASE_URL",
+        "CORS_ORIGIN",
+        "APP_ID",
+        "GOOGLE_CLIENT_ID",
+        "REDIS_URL"
+      ]
+    },
+    "cityborn-backend#start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "LOG_LEVEL",
+        "AXIOM_TOKEN",
+        "AXIOM_DATASET",
+        "PORT",
+        "FRONTEND_URL",
+        "JWT_ACCESS_SECRET",
+        "JWT_REFRESH_SECRET",
+        "BREVO_API_KEY",
+        "BREVO_SENDER_EMAIL",
+        "BREVO_SENDER_NAME",
+        "ADMIN_DASHBOARD_TOKEN",
+        "DIRECT_URL",
+        "DATABASE_URL",
+        "CORS_ORIGIN",
+        "APP_ID",
+        "GOOGLE_CLIENT_ID",
+        "REDIS_URL"
+      ]
+    },
+    "cityborn-frontend#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": [
+        "NEXT_PUBLIC_GOOGLE_MAP_API_KEY",
+        "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+        "NEXT_PUBLIC_WEBSOCKET_BACKEND_URL"
+      ]
+    },
+    "cityborn-frontend#dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "DOMAIN_NAME",
+        "REST_BACKEND_URL",
+        "NEXT_PUBLIC_GOOGLE_MAP_API_KEY",
+        "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+        "NEXT_PUBLIC_WEBSOCKET_BACKEND_URL"
+      ]
+    },
+    "cityborn-frontend#start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["NODE_ENV", "DOMAIN_NAME", "REST_BACKEND_URL"]
+    },
+    "cityborn-back-office#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"]
+    },
+    "cityborn-back-office#dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "PORT",
+        "AUTH_SECRET",
+        "ADMIN_PASSWORD",
+        "BACKEND_URL",
+        "ADMIN_DASHBOARD_TOKEN",
+        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
+      ]
+    },
+    "cityborn-back-office#start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "PORT",
+        "AUTH_SECRET",
+        "ADMIN_PASSWORD",
+        "BACKEND_URL",
+        "ADMIN_DASHBOARD_TOKEN"
+      ]
+    },
+    "cityborn-mobile#dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "APP_VARIANT",
+        "GOOGLE_MAPS_ANDROID_API_KEY",
+        "GOOGLE_MAPS_IOS_API_KEY",
+        "EXPO_PUBLIC_REST_BACKEND_URL",
+        "EXPO_PUBLIC_WEBSOCKET_BACKEND_URL",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
+      ]
+    },
+    "cityborn-mobile#start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": [
+        "APP_VARIANT",
+        "GOOGLE_MAPS_ANDROID_API_KEY",
+        "GOOGLE_MAPS_IOS_API_KEY",
+        "EXPO_PUBLIC_REST_BACKEND_URL",
+        "EXPO_PUBLIC_WEBSOCKET_BACKEND_URL",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
+      ]
+    },
+    "@cityborn/api#generate:openapi:draft": {
+      "cache": false,
+      "passThroughEnv": ["GITHUB_OUTPUT"]
+    },
+    "@cityborn/api#generate:openapi:release": {
+      "cache": false,
+      "passThroughEnv": ["GITHUB_OUTPUT"]
+    },
+    "//#db:restore": {
+      "cache": false,
+      "passThroughEnv": [
+        "RESTORE_STAGING_DB_URL",
+        "RESTORE_STAGING_SSL_ROOT_CERT",
+        "RESTORE_STAGING_PROJECT_REF",
+        "RESTORE_PRODUCTION_DB_URL",
+        "RESTORE_PRODUCTION_SSL_ROOT_CERT",
+        "RESTORE_PRODUCTION_PROJECT_REF"
+      ]
     }
   },
-  "globalEnv": [
-    "NODE_ENV",
-    "LOG_LEVEL",
-    "AXIOM_TOKEN",
-    "AXIOM_DATASET",
-    "PORT",
-    "AUTH_SECRET",
-    "ADMIN_PASSWORD",
-    "BACKEND_URL",
-    "ADMIN_DASHBOARD_TOKEN",
-    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
-    "DIRECT_URL",
-    "DATABASE_URL",
-    "CORS_ORIGIN",
-    "APP_ID",
-    "GOOGLE_CLIENT_ID",
-    "REDIS_URL",
-    "UPSTASH_REDIS_REST_URL",
-    "UPSTASH_REDIS_REST_TOKEN",
-    "APP_VARIANT",
-    "GOOGLE_MAPS_ANDROID_API_KEY",
-    "GOOGLE_MAPS_IOS_API_KEY",
-    "DOMAIN_NAME",
-    "REST_BACKEND_URL",
-    "GITHUB_OUTPUT"
-  ]
+  "globalPassThroughEnv": ["NEXT_RUNTIME"]
 }

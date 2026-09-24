@@ -7,12 +7,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
+import { mobileClientConfig } from '@/config/client';
 import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID,
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
+  webClientId: mobileClientConfig.googleOAuthWebClientId,
+  iosClientId: mobileClientConfig.googleOAuthIosClientId,
 });
 
 export const SignInWithGoogleButton = () => {

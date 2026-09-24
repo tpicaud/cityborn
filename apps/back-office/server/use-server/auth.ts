@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { getBackOfficeServerConfig } from '@/config/server';
 import { deleteSession, setSession } from '@/lib/auth';
 import {
   checkRateLimit,
@@ -9,6 +10,7 @@ import {
 } from '@/lib/rate-limit';
 
 export async function login(formData: FormData) {
+  const backOfficeServerConfig = getBackOfficeServerConfig();
   const rateLimit = await checkRateLimit();
 
   if (rateLimit.isBlocked) {
@@ -23,9 +25,7 @@ export async function login(formData: FormData) {
   }
 
   const password = formData.get('password') as string;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (password === adminPassword) {
+  if (password === backOfficeServerConfig.adminPassword) {
     await resetAttempts();
 
     await setSession({

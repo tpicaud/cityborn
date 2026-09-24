@@ -1,14 +1,14 @@
 import {
   type CanActivate,
   type ExecutionContext,
+  Inject,
   Injectable,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
+import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { getJwtConstants } from '../constants';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { resolveFullUser, validateAccessToken } from './utils';
 
@@ -16,7 +16,7 @@ import { resolveFullUser, validateAccessToken } from './utils';
 export class OptionalAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    private readonly configService: ConfigService,
+    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
     private readonly wideEventService: WideEventService,
   ) {}
@@ -33,7 +33,7 @@ export class OptionalAuthGuard implements CanActivate {
     const user = await validateAccessToken(
       token,
       this.jwtService,
-      getJwtConstants(this.configService).jwt_access_secret,
+      this.authConfig.jwtAccessSecret,
     );
 
     const fullUser =

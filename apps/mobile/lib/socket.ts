@@ -4,11 +4,9 @@ import type {
   SocketListenEvent,
 } from '@cityborn/client/platform';
 import { io, type Socket } from 'socket.io-client';
+import { mobileClientConfig } from '@/config/client';
 import { tokenStorage } from './tokenStorage';
 import { getOrCreateVisitorId } from './visitorId';
-
-const WEBSOCKET_URL =
-  process.env.EXPO_PUBLIC_WEBSOCKET_BACKEND_URL || 'ws://localhost:3001';
 
 let socket: Socket | null = null;
 
@@ -23,7 +21,7 @@ export async function initSocket(): Promise<Socket> {
     getOrCreateVisitorId(),
   ]);
 
-  socket = io(WEBSOCKET_URL, {
+  socket = io(mobileClientConfig.websocketBackendUrl, {
     transports: ['websocket'],
     auth: {
       access_token: access_token || null,

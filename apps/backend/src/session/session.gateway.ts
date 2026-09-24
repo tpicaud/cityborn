@@ -9,8 +9,7 @@ import {
   type WsPayload,
   wsLifecycleEventName,
 } from '@cityborn/api';
-import { NotFoundException, UseFilters } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, NotFoundException, UseFilters } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
@@ -20,7 +19,6 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { getJwtConstants } from '../auth/constants';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
@@ -35,6 +33,8 @@ import {
   firstHeaderValue,
 } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
+import { backendConfig } from '../config/backend.config';
+import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
 import {
   type ConnectionInfo,
   ConnectionRegistryService,
@@ -47,7 +47,7 @@ import { SessionService } from './session.service';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.CORS_ORIGIN,
+    origin: backendConfig.http.corsOrigins,
     credentials: true,
   },
 })
@@ -57,7 +57,7 @@ export class SessionGateway
 {
   constructor(
     private readonly sessionService: SessionService,
-    private readonly configService: ConfigService,
+    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly connectionRegistryService: ConnectionRegistryService,
@@ -138,7 +138,7 @@ export class SessionGateway
     const payload = await validateAccessToken(
       token,
       this.jwtService,
-      getJwtConstants(this.configService).jwt_access_secret,
+      this.authConfig.jwtAccessSecret,
     ).catch((error: unknown) => {
       this.wideEventService.recordError(error, 'ws.connection_token');
       return null;

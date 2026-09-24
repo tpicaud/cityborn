@@ -4,6 +4,7 @@ import type { PlayerId, Session } from '@cityborn/api';
 import { type GameComponentProps, useGameRound } from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
 import OverlayComponent from '@/components/guess/OverlayComponent';
+import { frontendClientConfig } from '@/config/client';
 import RoundCountdownComponent from './RoundCountdown';
 
 const GoogleMapComponent = dynamic(
@@ -28,16 +29,11 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
 }) => {
   const gameRound = useGameRound({ game, localPlayerID, handleGuess });
 
-  const googleMapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY;
-  if (!googleMapApiKey) {
-    throw new Error('NEXT_PUBLIC_GOOGLE_MAP_API_KEY is not set');
-  }
-
   return (
     <div>
       <div className="fixed w-full h-full z-0">
         <GoogleMapComponent
-          API_KEY={googleMapApiKey}
+          API_KEY={frontendClientConfig.googleMapsApiKey}
           mapProps={gameRound.mapProps}
         />
       </div>

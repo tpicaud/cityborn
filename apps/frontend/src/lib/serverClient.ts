@@ -1,18 +1,19 @@
 import { createApiClient } from '@cityborn/client/api';
 import { type AuthApi, createAuthApi } from '@cityborn/client/auth';
 import { cookies } from 'next/headers';
+import { getFrontendServerConfig } from '@/config/server';
 import { WebTokenStorage } from './tokenStorage';
 
 async function createServerContext() {
-  const restBackendUrl = process.env.REST_BACKEND_URL;
-  if (!restBackendUrl) {
-    throw new Error('REST_BACKEND_URL is not set');
-  }
-
+  const frontendServerConfig = getFrontendServerConfig();
   const tokenStorage = new WebTokenStorage(await cookies());
-  const client = createApiClient(restBackendUrl, tokenStorage, {
-    client: { name: 'web' },
-  });
+  const client = createApiClient(
+    frontendServerConfig.restBackendUrl,
+    tokenStorage,
+    {
+      client: { name: 'web' },
+    },
+  );
 
   return { client, tokenStorage };
 }

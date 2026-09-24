@@ -2,13 +2,13 @@ import { ErrorCode, User } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { getJwtConstants } from '../constants';
 import { extractTokenFromHTTPHeader } from '../utils';
 import { resolveFullUser, validateRefreshToken } from './utils';
 
@@ -16,7 +16,7 @@ import { resolveFullUser, validateRefreshToken } from './utils';
 export class RefreshGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
   ) {}
 
@@ -34,7 +34,7 @@ export class RefreshGuard implements CanActivate {
     const decoded = await validateRefreshToken(
       refreshToken,
       this.jwtService,
-      getJwtConstants(this.configService).jwt_refresh_secret,
+      this.authConfig.jwtRefreshSecret,
     );
 
     const fullUser = await resolveFullUser(decoded.id, this.userService);

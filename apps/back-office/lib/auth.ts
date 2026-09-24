@@ -1,11 +1,12 @@
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
+import { getBackOfficeServerConfig } from '@/config/server';
 import type { User } from '@/types';
 
-const secretKey =
-  process.env.AUTH_SECRET || 'your-secret-key-change-in-production';
-const key = new TextEncoder().encode(secretKey);
+function getKey(): Uint8Array {
+  return new TextEncoder().encode(getBackOfficeServerConfig().authSecret);
+}
 
 export async function encrypt(
   payload: Record<string, unknown>,
@@ -14,11 +15,11 @@ export async function encrypt(
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(key);
+    .sign(getKey());
 }
 
 export async function decrypt(input: string): Promise<Record<string, unknown>> {
-  const { payload } = await jwtVerify(input, key, {
+  const { payload } = await jwtVerify(input, getKey(), {
     algorithms: ['HS256'],
   });
   return payload;
@@ -38,6 +39,7 @@ export async function getSession(): Promise<User | null> {
 }
 
 export async function setSession(user: User): Promise<void> {
+  const backOfficeServerConfig = getBackOfficeServerConfig();
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await encrypt({ ...user, expires: expires.getTime() });
 
@@ -45,18 +47,19 @@ export async function setSession(user: User): Promise<void> {
   cookieStore.set('session', session, {
     expires,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: backOfficeServerConfig.nodeEnvironment === 'production',
     sameSite: 'lax',
     path: '/',
   });
 }
 
 export async function deleteSession(): Promise<void> {
+  const backOfficeServerConfig = getBackOfficeServerConfig();
   const cookieStore = await cookies();
   cookieStore.set('session', '', {
     expires: new Date(0),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: backOfficeServerConfig.nodeEnvironment === 'production',
     sameSite: 'lax',
     path: '/',
   });
@@ -65,6 +68,7 @@ export async function deleteSession(): Promise<void> {
 export async function updateSession(
   request: NextRequest,
 ): Promise<NextResponse | undefined> {
+  const backOfficeServerConfig = getBackOfficeServerConfig();
   const session = request.cookies.get('session')?.value;
   if (!session) return;
 
@@ -79,7 +83,7 @@ export async function updateSession(
       value: await encrypt(parsed),
       httpOnly: true,
       expires: newExpires,
-      secure: process.env.NODE_ENV === 'production',
+      secure: backOfficeServerConfig.nodeEnvironment === 'production',
       sameSite: 'lax',
       path: '/',
     });

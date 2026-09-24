@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
@@ -8,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
 import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
+import { BackendConfigModule } from './config/config.module';
 import { ConnectionRegistryModule } from './connection-registry/connection-registry.module';
 import { EventModule } from './event/event.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
@@ -28,10 +28,7 @@ import { WorldLocationModule } from './world-location/world-location.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+    BackendConfigModule,
     LoggerModule.forRoot(loggerModuleParams),
     WideEventModule,
     SentenceModule,

@@ -1,22 +1,17 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   reactStrictMode: false,
-
   transpilePackages: ['@cityborn/api', '@cityborn/core', '@cityborn/client'],
-
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
           {
             key: 'Access-Control-Allow-Methods',
             value: 'GET, POST, PUT, DELETE, OPTIONS',
