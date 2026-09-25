@@ -30,12 +30,26 @@ export function parseApiError(status: number, body: unknown): ApiError {
   };
 }
 
+const {
+  USER_PASSWORD_RESET_INVALID_TOKEN: passwordResetInvalidTokenCode,
+  ...commonErrorCodes
+} = ErrorCode;
+
+const CommonApiErrorSchema = ApiErrorSchema.extend({
+  code: z.nativeEnum(commonErrorCodes),
+});
+
+export const PasswordResetTokenErrorSchema = ApiErrorSchema.extend({
+  code: z.literal(passwordResetInvalidTokenCode),
+  statusCode: z.literal(401),
+});
+
 export const commonErrorResponses = {
-  400: ApiErrorSchema,
-  401: ApiErrorSchema,
-  403: ApiErrorSchema,
-  404: ApiErrorSchema,
-  409: ApiErrorSchema,
-  429: ApiErrorSchema,
-  500: ApiErrorSchema,
+  400: CommonApiErrorSchema,
+  401: CommonApiErrorSchema,
+  403: CommonApiErrorSchema,
+  404: CommonApiErrorSchema,
+  409: CommonApiErrorSchema,
+  429: CommonApiErrorSchema,
+  500: CommonApiErrorSchema,
 } as const;

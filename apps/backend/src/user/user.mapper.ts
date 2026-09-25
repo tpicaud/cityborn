@@ -51,6 +51,7 @@ export const UserMapper = {
     return {
       user: UserMapper.toUser(prismaUser),
       passwordHash: prismaUser.password,
+      sessionVersion: prismaUser.sessionVersion,
     };
   },
 };

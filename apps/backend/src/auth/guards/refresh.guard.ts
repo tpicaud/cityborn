@@ -37,13 +37,18 @@ export class RefreshGuard implements CanActivate {
       this.authConfig.jwtRefreshSecret,
     );
 
-    const fullUser = await resolveFullUser(decoded.id, this.userService);
+    const fullUser = await resolveFullUser(
+      decoded.id,
+      this.userService,
+      decoded.sessionVersion,
+    );
     if (!fullUser) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
+    request.sessionVersion = decoded.sessionVersion;
     request.user = fullUser satisfies User;
 
     return true;

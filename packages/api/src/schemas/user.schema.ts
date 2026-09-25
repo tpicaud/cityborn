@@ -75,3 +75,33 @@ export type SignInWithGoogle = z.infer<typeof SignInWithGoogleSchema>;
 export type SignInWithApple = z.infer<typeof SignInWithAppleSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 export type VerifyEmailData = z.infer<typeof VerifyEmailDataSchema>;
+
+export const RequestPasswordResetSchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const PasswordResetTokenSchema = z.object({
+  token: z.string().regex(/^[a-f0-9]{64}$/),
+});
+
+export const ResetPasswordSchema = PasswordResetTokenSchema.extend({
+  password: CreateUserSchema.shape.password,
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+});
+
+export const PASSWORD_RESET_REQUEST_MESSAGE: string =
+  'Si un compte éligible correspond à cette adresse, vous recevrez un e-mail de réinitialisation.';
+
+export const PasswordResetRequestResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type RequestPasswordReset = z.infer<typeof RequestPasswordResetSchema>;
+export type PasswordResetToken = z.infer<typeof PasswordResetTokenSchema>;
+export type ResetPassword = z.infer<typeof ResetPasswordSchema>;
+export type PasswordResetRequestResponse = z.infer<
+  typeof PasswordResetRequestResponseSchema
+>;

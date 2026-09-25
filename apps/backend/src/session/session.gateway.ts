@@ -9,17 +9,28 @@ import {
   type WsPayload,
   wsLifecycleEventName,
 } from '@cityborn/api';
-import { Inject, NotFoundException, UseFilters } from '@nestjs/common';
+import {
+  Inject,
+  NotFoundException,
+  UseFilters,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
   type OnGatewayConnection,
   type OnGatewayDisconnect,
+  type OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
+import { WsSessionGuard } from '../auth/guards/ws-session.guard';
+import {
+  SessionRevocationService,
+  userSessionRoom,
+} from '../auth/services/session-revocation.service';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
@@ -52,8 +63,9 @@ import { SessionService } from './session.service';
   },
 })
 @UseFilters(DefaultExceptionFilter)
+@UseGuards(WsSessionGuard)
 export class SessionGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   constructor(
     private readonly sessionService: SessionService,
@@ -63,7 +75,12 @@ export class SessionGateway
     private readonly connectionRegistryService: ConnectionRegistryService,
     private readonly rateLimitService: RateLimitService,
     private readonly wideEventService: WideEventService,
+    private readonly sessionRevocationService: SessionRevocationService,
   ) {}
+
+  afterInit(server: SessionServer): void {
+    this.sessionRevocationService.registerServer(server);
+  }
 
   @WebSocketServer()
   io!: SessionServer;
@@ -98,12 +115,24 @@ export class SessionGateway
   }
 
   async handleConnection(client: SessionSocket): Promise<void> {
-    await this.runConnectionWideEvent(
+    const authentication: Promise<void> = this.runConnectionWideEvent(
       client,
       'connection',
       wsLifecycleEventName(sessionWsChannel, 'connect'),
       () => this.connect(client),
     );
+    client.use((_packet, next) => {
+      void authentication
+        .then(() => {
+          if (!client.connected) {
+            next(new Error('Connection closed'));
+            return;
+          }
+          next();
+        })
+        .catch(() => next(new Error('Authentication failed')));
+    });
+    await authentication;
   }
 
   private async connect(client: SessionSocket): Promise<void> {
@@ -144,13 +173,24 @@ export class SessionGateway
       return null;
     });
 
-    if (!payload) return;
+    if (!payload) {
+      client.disconnect(true);
+      return;
+    }
 
     try {
-      client.data.user = await resolveFullUser(payload.id, this.userService);
+      client.data.sessionVersion = payload.sessionVersion;
+      await client.join(userSessionRoom(payload.id));
+      client.data.user = await resolveFullUser(
+        payload.id,
+        this.userService,
+        payload.sessionVersion,
+      );
+      if (!client.data.user) client.disconnect(true);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
       client.data.user = undefined;
+      client.disconnect(true);
     }
   }
 

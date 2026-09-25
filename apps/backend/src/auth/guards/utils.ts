@@ -1,13 +1,15 @@
-import { type User, type UserId, UserIdSchema } from '@cityborn/api';
+import { ErrorCode, type User, type UserId, UserIdSchema } from '@cityborn/api';
+import { UnauthorizedException } from '@nestjs/common';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
 import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
+  sessionVersion: z.number().int().nonnegative().default(0),
 });
 
-type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
+export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
 
 async function validateToken(
   token: string,
@@ -29,7 +31,16 @@ export async function validateAccessToken(
 export async function resolveFullUser(
   userId: UserId,
   userService: UserService,
+  sessionVersion: number = 0,
 ): Promise<User | null> {
+  const currentVersion: number | null =
+    await userService.findSessionVersion(userId);
+  if (currentVersion !== sessionVersion) {
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_INVALID_TOKEN,
+      message: 'Session revoked',
+    });
+  }
   const fullUser = await userService.findById(userId);
   return fullUser;
 }

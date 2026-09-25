@@ -1,5 +1,8 @@
 import { initContract } from '@ts-rest/core';
-import { commonErrorResponses } from '../schemas/api-error.schema';
+import {
+  commonErrorResponses,
+  PasswordResetTokenErrorSchema,
+} from '../schemas/api-error.schema';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -7,7 +10,11 @@ import {
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  PasswordResetRequestResponseSchema,
+  PasswordResetTokenSchema,
   PublicUserSchema,
+  RequestPasswordResetSchema,
+  ResetPasswordSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
@@ -20,6 +27,35 @@ const c = initContract();
 
 export const authContract = c.router(
   {
+    requestPasswordReset: {
+      method: 'POST',
+      path: '/request-password-reset',
+      body: RequestPasswordResetSchema,
+      responses: {
+        200: PasswordResetRequestResponseSchema,
+        ...commonErrorResponses,
+      },
+    },
+    validatePasswordResetToken: {
+      method: 'POST',
+      path: '/validate-password-reset-token',
+      body: PasswordResetTokenSchema,
+      responses: {
+        200: emptyResponseSchema,
+        ...commonErrorResponses,
+        401: PasswordResetTokenErrorSchema,
+      },
+    },
+    resetPassword: {
+      method: 'POST',
+      path: '/reset-password',
+      body: ResetPasswordSchema,
+      responses: {
+        200: emptyResponseSchema,
+        ...commonErrorResponses,
+        401: PasswordResetTokenErrorSchema,
+      },
+    },
     me: {
       method: 'GET',
       path: '/me',

@@ -38,6 +38,10 @@ export class UserService {
     private readonly gameRecordService: GameRecordService,
   ) {}
 
+  async findSessionVersion(id: UserId): Promise<number | null> {
+    return this.userRepository.findSessionVersion(id);
+  }
+
   async createUser(data: CreateUserData): Promise<User> {
     return this.userRepository.create(data);
   }

@@ -5,6 +5,7 @@ export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 export type UserCredentials = {
   user: User;
   passwordHash: string | null;
+  sessionVersion: number;
 };
 
 export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
@@ -14,6 +15,7 @@ export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
   };
 
 export interface UserRepository {
+  findSessionVersion(id: UserId): Promise<number | null>;
   create(data: CreateUserData): Promise<User>;
   delete(user_id: UserId): Promise<void>;
   findById(id: UserId): Promise<User | null>;

@@ -7,6 +7,7 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  type UserId,
   UserIdSchema,
   type Username,
   UsernameSchema,
@@ -94,17 +95,21 @@ export class AuthService {
       });
     });
 
+    const sessionVersion: number = 0;
+
     const access_token = await this.generateToken(
       'access',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
 
     if (visitorId) {
@@ -147,19 +152,21 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    const { user } = credentials;
+    const { user, sessionVersion } = credentials;
 
     const access_token = await this.generateToken(
       'access',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
 
     if (visitorId) {
@@ -226,17 +233,21 @@ export class AuthService {
       }
     }
 
+    const sessionVersion: number = await this.requireSessionVersion(user.id);
+
     const access_token = await this.generateToken(
       'access',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
 
     return {
@@ -311,17 +322,21 @@ export class AuthService {
       }
     }
 
+    const sessionVersion: number = await this.requireSessionVersion(user.id);
+
     const access_token = await this.generateToken(
       'access',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
 
     return {
@@ -331,7 +346,10 @@ export class AuthService {
     };
   }
 
-  async refresh(identifier: string): Promise<AuthResponse> {
+  async refresh(
+    identifier: string,
+    sessionVersion: number = 0,
+  ): Promise<AuthResponse> {
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new UnauthorizedException({
@@ -344,12 +362,14 @@ export class AuthService {
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
     const refresh_token = await this.generateToken(
       'refresh',
       user.id,
       user.username,
       user.email,
+      sessionVersion,
     );
 
     return {
@@ -415,16 +435,29 @@ export class AuthService {
     );
   }
 
+  private async requireSessionVersion(userId: UserId): Promise<number> {
+    const version: number | null =
+      await this.userService.findSessionVersion(userId);
+    if (version === null)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_TOKEN,
+        message: 'User not found',
+      });
+    return version;
+  }
+
   private async generateToken(
     type: 'access' | 'refresh',
     id: string,
     username: string,
     email: string,
+    sessionVersion: number,
   ): Promise<string> {
     const payload = {
       id: UserIdSchema.parse(id),
       username: UsernameSchema.parse(username),
       email,
+      sessionVersion,
     };
 
     switch (type) {
