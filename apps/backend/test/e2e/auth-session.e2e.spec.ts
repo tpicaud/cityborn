@@ -11,6 +11,10 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bcrypt from 'bcrypt';
 import request from 'supertest';
 import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../../src/auth/auth.constants';
+import {
   USER_REPOSITORY,
   type UserRepository,
 } from '../../src/user/repositories/user.repository';
@@ -47,7 +51,7 @@ describe('Authentication transports', () => {
     });
   }
 
-  it('runs the web sign-in, current user, refresh and sign-out flow with HttpOnly cookies', async () => {
+  it('runs the cookie sign-in, current user, refresh and sign-out flow with HttpOnly cookies', async () => {
     const password = 'Password1';
     const userData: User = buildUser();
     const user: User = await persistEmailUser(userData, password);
@@ -55,7 +59,7 @@ describe('Authentication transports', () => {
     const webAgent = request.agent(app.getHttpServer());
 
     const signInResponse = await webAgent
-      .post(contract.auth.webSignIn.path)
+      .post(contract.auth.cookieSignIn.path)
       .set('Origin', origin)
       .send({ identifier: user.email, password })
       .expect(200);
@@ -69,8 +73,8 @@ describe('Authentication transports', () => {
     expect(signInResponse.body).not.toHaveProperty('refresh_token');
     expect(signInCookies).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('access_token='),
-        expect.stringContaining('refresh_token='),
+        expect.stringContaining(`${ACCESS_TOKEN_COOKIE_NAME}=`),
+        expect.stringContaining(`${REFRESH_TOKEN_COOKIE_NAME}=`),
       ]),
     );
     expect(
@@ -81,13 +85,13 @@ describe('Authentication transports', () => {
     ).toBe(true);
 
     const currentUserResponse = await webAgent
-      .get(contract.auth.webMe.path)
+      .get(contract.auth.me.path)
       .expect(200);
     const currentUser: User = UserSchema.parse(currentUserResponse.body);
     expect(currentUser.id).toBe(user.id);
 
     const refreshResponse = await webAgent
-      .post(contract.auth.webRefresh.path)
+      .post(contract.auth.cookieRefresh.path)
       .set('Origin', origin)
       .send({})
       .expect(200);
@@ -99,7 +103,7 @@ describe('Authentication transports', () => {
     expect(refreshedCookies).toHaveLength(2);
 
     const signOutResponse = await webAgent
-      .post(contract.auth.webSignOut.path)
+      .post(contract.auth.signOut.path)
       .set('Origin', origin)
       .send({})
       .expect(200);
@@ -108,12 +112,12 @@ describe('Authentication transports', () => {
     );
     expect(clearedCookies).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('access_token=;'),
-        expect.stringContaining('refresh_token=;'),
+        expect.stringContaining(`${ACCESS_TOKEN_COOKIE_NAME}=;`),
+        expect.stringContaining(`${REFRESH_TOKEN_COOKIE_NAME}=;`),
       ]),
     );
 
-    await webAgent.get(contract.auth.webMe.path).expect(401);
+    await webAgent.get(contract.auth.me.path).expect(401);
   });
 
   it('rejects a cookie-authenticated mutation without an allowed origin', async () => {
@@ -123,17 +127,39 @@ describe('Authentication transports', () => {
     const webAgent = request.agent(app.getHttpServer());
 
     await webAgent
-      .post(contract.auth.webSignIn.path)
+      .post(contract.auth.cookieSignIn.path)
       .set('Origin', 'http://localhost:3000')
       .send({ identifier: user.email, password })
       .expect(200);
 
     const response = await webAgent
-      .post(contract.auth.webRefresh.path)
+      .post(contract.auth.cookieRefresh.path)
       .send({})
       .expect(403);
     const error = ApiErrorSchema.parse(response.body);
     expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
+  });
+
+  it('never exposes cookie tokens through the bearer refresh route', async () => {
+    const password = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const origin = 'http://localhost:3000';
+    const webAgent = request.agent(app.getHttpServer());
+
+    await webAgent
+      .post(contract.auth.cookieSignIn.path)
+      .set('Origin', origin)
+      .send({ identifier: user.email, password })
+      .expect(200);
+
+    const response = await webAgent
+      .post(contract.auth.refresh.path)
+      .set('Origin', origin)
+      .send({})
+      .expect(401);
+    expect(response.body).not.toHaveProperty('access_token');
+    expect(response.body).not.toHaveProperty('refresh_token');
   });
 
   it('keeps the legacy mobile bearer contract without setting cookies', async () => {

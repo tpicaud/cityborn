@@ -73,46 +73,41 @@ export const authContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
-    webMe: {
-      method: 'GET',
-      path: '/web/me',
-      responses: { 200: UserSchema, ...commonErrorResponses },
-    },
-    webRefresh: {
+    signOut: {
       method: 'POST',
-      path: '/web/refresh',
+      path: '/sign-out',
+      body: emptyRequestBodySchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
+    cookieRefresh: {
+      method: 'POST',
+      path: '/cookie/refresh',
       body: emptyRequestBodySchema,
       responses: { 200: UserSchema, ...commonErrorResponses },
     },
-    webSignUp: {
+    cookieSignUp: {
       method: 'POST',
-      path: '/web/sign-up',
+      path: '/cookie/sign-up',
       body: CreateUserSchema,
       responses: { 201: UserSchema, ...commonErrorResponses },
     },
-    webSignIn: {
+    cookieSignIn: {
       method: 'POST',
-      path: '/web/sign-in',
+      path: '/cookie/sign-in',
       body: SignInSchema,
       responses: { 200: UserSchema, ...commonErrorResponses },
     },
-    webSignInWithGoogle: {
+    cookieSignInWithGoogle: {
       method: 'POST',
-      path: '/web/sign-in-with-google',
+      path: '/cookie/sign-in-with-google',
       body: SignInWithGoogleSchema,
       responses: { 200: UserSchema, ...commonErrorResponses },
     },
-    webSignInWithApple: {
+    cookieSignInWithApple: {
       method: 'POST',
-      path: '/web/sign-in-with-apple',
+      path: '/cookie/sign-in-with-apple',
       body: SignInWithAppleSchema,
       responses: { 200: UserSchema, ...commonErrorResponses },
-    },
-    webSignOut: {
-      method: 'POST',
-      path: '/web/sign-out',
-      body: emptyRequestBodySchema,
-      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
   },
   { pathPrefix: '/auth' satisfies `/${ApiDomain}` },

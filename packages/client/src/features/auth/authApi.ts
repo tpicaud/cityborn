@@ -113,7 +113,7 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
   return {
     async getCurrentUser() {
       try {
-        const result = await client.auth.webMe();
+        const result = await client.auth.me();
         return result.status === 200 ? result.body : null;
       } catch {
         return null;
@@ -121,23 +121,27 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
     },
 
     async signIn(data) {
-      return toApiResult(await client.auth.webSignIn({ body: data }));
+      return toApiResult(await client.auth.cookieSignIn({ body: data }));
     },
 
     async signUp(data) {
-      return toApiResult(await client.auth.webSignUp({ body: data }));
+      return toApiResult(await client.auth.cookieSignUp({ body: data }));
     },
 
     async signInWithGoogle(data) {
-      return toApiResult(await client.auth.webSignInWithGoogle({ body: data }));
+      return toApiResult(
+        await client.auth.cookieSignInWithGoogle({ body: data }),
+      );
     },
 
     async signInWithApple(data) {
-      return toApiResult(await client.auth.webSignInWithApple({ body: data }));
+      return toApiResult(
+        await client.auth.cookieSignInWithApple({ body: data }),
+      );
     },
 
     async signOut() {
-      unwrapApiResponse(await client.auth.webSignOut({ body: {} }));
+      unwrapApiResponse(await client.auth.signOut({ body: {} }));
     },
 
     async deleteUser() {

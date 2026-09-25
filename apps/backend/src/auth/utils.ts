@@ -6,6 +6,7 @@ import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
+  LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from './auth.constants';
 
@@ -35,13 +36,10 @@ export function extractAccessTokenFromHttpRequest(
   );
 }
 
-export function extractRefreshTokenFromHttpRequest(
+export function extractRefreshTokenFromCookie(
   request: Request,
 ): string | undefined {
-  return (
-    extractTokenFromHTTPHeader(request) ??
-    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME)
-  );
+  return extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME);
 }
 
 export function hasAuthenticationCookie(request: Request): boolean {
@@ -56,19 +54,16 @@ export function hasAuthenticationCookie(request: Request): boolean {
 export function extractAccessTokenFromWsClient(
   client: Socket,
 ): string | undefined {
-  const cookies = client.handshake.headers.cookie;
-  const auth = client.handshake.auth;
+  const cookieHeader: string | undefined = client.handshake.headers.cookie;
+  const handshakeAccessToken: unknown = client.handshake.auth?.access_token;
 
-  if (cookies) {
-    const parsedCookies = cookie.parseCookie(cookies);
-    return parsedCookies[ACCESS_TOKEN_COOKIE_NAME];
-  }
-
-  if (auth) {
-    return auth.access_token;
-  }
-
-  return undefined;
+  return (
+    extractCookie(cookieHeader, ACCESS_TOKEN_COOKIE_NAME) ??
+    extractCookie(cookieHeader, LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME) ??
+    (typeof handshakeAccessToken === 'string'
+      ? handshakeAccessToken
+      : undefined)
+  );
 }
 
 const client = jwksRsa({

@@ -14,6 +14,10 @@ export interface ClientInfo {
   version?: string;
 }
 
+export type AuthTransport =
+  | { kind: 'bearer'; tokenStorage: TokenStorage }
+  | { kind: 'cookie' };
+
 export interface AuthFetchOptions {
   onResponseHeaders?: (headers: Headers) => void;
   client?: ClientInfo;
@@ -37,18 +41,18 @@ export class AuthFetch {
   private isRefreshing = false;
   private refreshQueue: ((refreshed: boolean) => void)[] = [];
   private readonly baseURL: string;
-  private readonly tokenStorage: TokenStorage | null;
+  private readonly authTransport: AuthTransport;
   private readonly onResponseHeaders?: (headers: Headers) => void;
   private readonly baseHeaders: Record<string, string>;
   private readonly getVisitorId?: () => string | null | Promise<string | null>;
 
   constructor(
     baseURL: string,
-    tokenStorage: TokenStorage | null,
+    authTransport: AuthTransport,
     options: AuthFetchOptions = {},
   ) {
     this.baseURL = baseURL.replace(/\/+$/, '');
-    this.tokenStorage = tokenStorage;
+    this.authTransport = authTransport;
     this.onResponseHeaders = options.onResponseHeaders;
     this.baseHeaders = buildClientHeaders(options.client);
     this.getVisitorId = options.getVisitorId;
@@ -69,16 +73,19 @@ export class AuthFetch {
     }
 
     const token: string | null =
-      auth.kind === 'bearer'
-        ? auth.token
-        : this.tokenStorage
-          ? await this.tokenStorage.getAccessToken()
-          : null;
+      auth.kind === 'bearer' ? auth.token : await this.getStoredAccessToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
     return headers;
+  }
+
+  private async getStoredAccessToken(): Promise<string | null> {
+    if (this.authTransport.kind === 'cookie') {
+      return null;
+    }
+    return await this.authTransport.tokenStorage.getAccessToken();
   }
 
   buildApiFunction() {
@@ -162,12 +169,11 @@ export class AuthFetch {
   }
 
   private async refreshAuthentication(): Promise<void> {
-    const tokenStorage: TokenStorage | null = this.tokenStorage;
-    if (tokenStorage) {
-      await this.refreshBearerSession(tokenStorage);
+    if (this.authTransport.kind === 'cookie') {
+      await this.refreshCookieSession();
       return;
     }
-    await this.refreshCookieSession();
+    await this.refreshBearerSession(this.authTransport.tokenStorage);
   }
 
   private async refreshBearerSession(
@@ -188,7 +194,6 @@ export class AuthFetch {
         { 'Content-Type': 'application/json' },
         { kind: 'bearer', token: refreshToken },
       ),
-      credentials: 'include',
     });
 
     if (this.onResponseHeaders) {
@@ -216,7 +221,7 @@ export class AuthFetch {
 
   private async refreshCookieSession(): Promise<void> {
     const response: Response = await this.timeoutFetch(
-      `${this.baseURL}/auth/web/refresh`,
+      `${this.baseURL}/auth/cookie/refresh`,
       {
         method: 'POST',
         headers: await this.buildHeaders(
@@ -240,13 +245,13 @@ export class AuthFetch {
   }
 
   private async clearAuthentication(): Promise<void> {
-    if (this.tokenStorage) {
-      await this.tokenStorage.clearTokens();
+    if (this.authTransport.kind === 'bearer') {
+      await this.authTransport.tokenStorage.clearTokens();
       return;
     }
 
     try {
-      await this.timeoutFetch(`${this.baseURL}/auth/web/sign-out`, {
+      await this.timeoutFetch(`${this.baseURL}/auth/sign-out`, {
         method: 'POST',
         headers: await this.buildHeaders(
           { 'Content-Type': 'application/json' },

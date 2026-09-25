@@ -4,14 +4,16 @@ import type { CookieOptions, Response } from 'express';
 import { RUNTIME_CONFIG, type RuntimeConfig } from '../../config/config.module';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
+  ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_TTL_SECONDS,
 } from '../auth.constants';
 
-const accessTokenMaxAgeMs = 15 * 60 * 1000;
-const refreshTokenMaxAgeMs = 7 * 24 * 60 * 60 * 1000;
+const accessTokenMaxAgeMs: number = ACCESS_TOKEN_TTL_SECONDS * 1000;
+const refreshTokenMaxAgeMs: number = REFRESH_TOKEN_TTL_SECONDS * 1000;
 
 @Injectable()
-export class WebSessionCookieService {
+export class AuthCookieService {
   private readonly cookieOptions: CookieOptions;
 
   constructor(

@@ -8,8 +8,8 @@ import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { CurrentUser } from '../user/user.decorator';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
-import { RefreshGuard } from './guards/refresh.guard';
-import { WebSessionCookieService } from './services/web-session-cookie.service';
+import { BearerRefreshGuard, CookieRefreshGuard } from './guards/refresh.guard';
+import { AuthCookieService } from './services/auth-cookie.service';
 
 const c = initContract();
 
@@ -35,7 +35,7 @@ const refreshRoutes = c.router({
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly webSessionCookieService: WebSessionCookieService,
+    private readonly authCookieService: AuthCookieService,
   ) {}
 
   @TsRestHandler(publicAuthRoutes)
@@ -84,7 +84,7 @@ export class AuthController {
   }
 
   @TsRestHandler(refreshRoutes)
-  @UseGuards(RefreshGuard)
+  @UseGuards(BearerRefreshGuard)
   async refreshHandler(@CurrentUser() user: User) {
     return tsRestHandler(refreshRoutes, {
       refresh: async () => ({
@@ -94,44 +94,44 @@ export class AuthController {
     });
   }
 
-  @TsRestHandler(contract.auth.webSignUp)
-  async webSignUpHandler(
+  @TsRestHandler(contract.auth.cookieSignUp)
+  async cookieSignUpHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
-    return tsRestHandler(contract.auth.webSignUp, async ({ body }) => ({
+    return tsRestHandler(contract.auth.cookieSignUp, async ({ body }) => ({
       status: 201 as const,
-      body: this.establishWebSession(
+      body: this.establishCookieSession(
         response,
         await this.authService.signUp(body, visitorId),
       ),
     }));
   }
 
-  @TsRestHandler(contract.auth.webSignIn)
-  async webSignInHandler(
+  @TsRestHandler(contract.auth.cookieSignIn)
+  async cookieSignInHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
-    return tsRestHandler(contract.auth.webSignIn, async ({ body }) => ({
+    return tsRestHandler(contract.auth.cookieSignIn, async ({ body }) => ({
       status: 200 as const,
-      body: this.establishWebSession(
+      body: this.establishCookieSession(
         response,
         await this.authService.signIn(body, visitorId),
       ),
     }));
   }
 
-  @TsRestHandler(contract.auth.webSignInWithGoogle)
-  async webSignInWithGoogleHandler(
+  @TsRestHandler(contract.auth.cookieSignInWithGoogle)
+  async cookieSignInWithGoogleHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
     return tsRestHandler(
-      contract.auth.webSignInWithGoogle,
+      contract.auth.cookieSignInWithGoogle,
       async ({ body }) => ({
         status: 200 as const,
-        body: this.establishWebSession(
+        body: this.establishCookieSession(
           response,
           await this.authService.signInWithGoogle(body, visitorId),
         ),
@@ -139,16 +139,16 @@ export class AuthController {
     );
   }
 
-  @TsRestHandler(contract.auth.webSignInWithApple)
-  async webSignInWithAppleHandler(
+  @TsRestHandler(contract.auth.cookieSignInWithApple)
+  async cookieSignInWithAppleHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
     return tsRestHandler(
-      contract.auth.webSignInWithApple,
+      contract.auth.cookieSignInWithApple,
       async ({ body }) => ({
         status: 200 as const,
-        body: this.establishWebSession(
+        body: this.establishCookieSession(
           response,
           await this.authService.signInWithApple(body, visitorId),
         ),
@@ -156,46 +156,34 @@ export class AuthController {
     );
   }
 
-  @TsRestHandler(contract.auth.webMe)
-  @UseGuards(AuthGuard)
-  async webMeHandler(@CurrentUser() user: User) {
-    return tsRestHandler(contract.auth.webMe, async () => ({
-      status: 200 as const,
-      body: await this.authService.getProfile(user.username || user.email),
-    }));
-  }
-
-  @TsRestHandler(contract.auth.webRefresh)
-  @UseGuards(RefreshGuard)
-  async webRefreshHandler(
+  @TsRestHandler(contract.auth.cookieRefresh)
+  @UseGuards(CookieRefreshGuard)
+  async cookieRefreshHandler(
     @CurrentUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return tsRestHandler(contract.auth.webRefresh, async () => ({
+    return tsRestHandler(contract.auth.cookieRefresh, async () => ({
       status: 200 as const,
-      body: this.establishWebSession(
+      body: this.establishCookieSession(
         response,
         await this.authService.refresh(user.username || user.email),
       ),
     }));
   }
 
-  @TsRestHandler(contract.auth.webSignOut)
-  async webSignOutHandler(@Res({ passthrough: true }) response: Response) {
-    return tsRestHandler(contract.auth.webSignOut, async () => {
-      this.webSessionCookieService.clearAuthenticationCookies(response);
+  @TsRestHandler(contract.auth.signOut)
+  async signOutHandler(@Res({ passthrough: true }) response: Response) {
+    return tsRestHandler(contract.auth.signOut, async () => {
+      this.authCookieService.clearAuthenticationCookies(response);
       return { status: 200 as const, body: {} };
     });
   }
 
-  private establishWebSession(
+  private establishCookieSession(
     response: Response,
     authentication: AuthResponse,
   ): User {
-    this.webSessionCookieService.setAuthenticationCookies(
-      response,
-      authentication,
-    );
+    this.authCookieService.setAuthenticationCookies(response, authentication);
     return authentication.user;
   }
 }

@@ -13,7 +13,7 @@ import { hasAuthenticationCookie } from '../utils';
 const safeMethods: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 @Injectable()
-export class WebCsrfGuard implements CanActivate {
+export class CookieCsrfGuard implements CanActivate {
   constructor(@Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig) {}
 
   canActivate(context: ExecutionContext): boolean {

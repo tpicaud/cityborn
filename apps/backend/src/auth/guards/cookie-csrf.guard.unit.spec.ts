@@ -4,7 +4,11 @@ import { createMock } from '@golevelup/ts-jest';
 import type { ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { HttpConfig } from '../../config/config.module';
-import { WebCsrfGuard } from './web-csrf.guard';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../auth.constants';
+import { CookieCsrfGuard } from './cookie-csrf.guard';
 
 const httpConfig: HttpConfig = {
   corsOrigins: ['https://cityborn.test', 'https://admin.cityborn.test'],
@@ -24,49 +28,49 @@ function buildContext(
   return context;
 }
 
-describe('WebCsrfGuard.canActivate', () => {
+describe('CookieCsrfGuard.canActivate', () => {
   it('allows safe requests authenticated by cookies', () => {
-    const webCsrfGuard: WebCsrfGuard = new WebCsrfGuard(httpConfig);
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
     const context: DeepMocked<ExecutionContext> = buildContext('GET', {
-      cookie: 'access_token=access-token',
+      cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
     });
 
-    expect(webCsrfGuard.canActivate(context)).toBe(true);
+    expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
 
   it('allows bearer mutations without cookies', () => {
-    const webCsrfGuard: WebCsrfGuard = new WebCsrfGuard(httpConfig);
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
     const context: DeepMocked<ExecutionContext> = buildContext('POST', {
       authorization: 'Bearer access-token',
     });
 
-    expect(webCsrfGuard.canActivate(context)).toBe(true);
+    expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
 
   it('allows cookie mutations from an authorized origin', () => {
-    const webCsrfGuard: WebCsrfGuard = new WebCsrfGuard(httpConfig);
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
     const context: DeepMocked<ExecutionContext> = buildContext('POST', {
-      cookie: 'access_token=access-token',
+      cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
       origin: 'https://cityborn.test',
     });
 
-    expect(webCsrfGuard.canActivate(context)).toBe(true);
+    expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
 
   it.each([
     ['a missing origin', undefined],
     ['an unauthorized origin', 'https://attacker.test'],
   ])('rejects cookie mutations from %s', (_label, origin) => {
-    const webCsrfGuard: WebCsrfGuard = new WebCsrfGuard(httpConfig);
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
     const headers: Request['headers'] = {
-      cookie: 'refresh_token=refresh-token',
+      cookie: `${REFRESH_TOKEN_COOKIE_NAME}=refresh-token`,
     };
     if (origin !== undefined) {
       headers.origin = origin;
     }
     const context: DeepMocked<ExecutionContext> = buildContext('POST', headers);
 
-    expect(() => webCsrfGuard.canActivate(context)).toThrow(
+    expect(() => cookieCsrfGuard.canActivate(context)).toThrow(
       expect.objectContaining({
         response: expect.objectContaining({
           code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,

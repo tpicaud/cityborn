@@ -57,13 +57,12 @@ function createFakeClient(
     auth: {
       me: unexpectedCall,
       refresh: unexpectedCall,
-      webMe: unexpectedCall,
-      webRefresh: unexpectedCall,
-      webSignUp: unexpectedCall,
-      webSignIn: unexpectedCall,
-      webSignInWithGoogle: unexpectedCall,
-      webSignInWithApple: unexpectedCall,
-      webSignOut: unexpectedCall,
+      signOut: unexpectedCall,
+      cookieRefresh: unexpectedCall,
+      cookieSignUp: unexpectedCall,
+      cookieSignIn: unexpectedCall,
+      cookieSignInWithGoogle: unexpectedCall,
+      cookieSignInWithApple: unexpectedCall,
       signUp: unexpectedCall,
       signIn: unexpectedCall,
       signInWithGoogle: unexpectedCall,
@@ -158,11 +157,11 @@ test('toCreateUser drops confirmPassword from the sign-up payload', () => {
   );
 });
 
-test('cookie signIn uses the web route without token storage', async () => {
+test('cookie signIn uses the cookie route without token storage', async () => {
   let called = false;
   const authApi = createCookieAuthApi(
     createFakeClient({
-      webSignIn: async () => {
+      cookieSignIn: async () => {
         called = true;
         return {
           status: 200,
@@ -182,11 +181,11 @@ test('cookie signIn uses the web route without token storage', async () => {
   assert.deepEqual(result, { ok: true, data: user });
 });
 
-test('cookie signOut clears the server session through the web route', async () => {
+test('cookie signOut clears the server session through the shared route', async () => {
   let called = false;
   const authApi = createCookieAuthApi(
     createFakeClient({
-      webSignOut: async () => {
+      signOut: async () => {
         called = true;
         return {
           status: 200,
