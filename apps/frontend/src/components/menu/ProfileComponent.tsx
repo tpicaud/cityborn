@@ -133,6 +133,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 <strong>Pseudo :</strong> {user.username}
               </Typography>
               <IconButton
+                type="button"
                 aria-label="Modifier le pseudo"
                 onClick={() => setIsEditingUsername(true)}
               >
