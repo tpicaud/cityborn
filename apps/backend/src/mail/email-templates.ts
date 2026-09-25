@@ -75,6 +75,13 @@ type VerificationEmailParams = {
 
 type MailTemplateParams = {
   'verification-email': VerificationEmailParams;
+  'password-reset': {
+    email: string;
+    username: string;
+    token: string;
+    frontendUrl: string;
+  };
+  'password-changed': { email: string; username: string };
 };
 
 type BuildMailOptionsArgs = {
@@ -88,6 +95,10 @@ export function buildMailOptions(
   ...args: BuildMailOptionsArgs
 ): SendMailOptions {
   switch (args[0]) {
+    case 'password-reset':
+      return buildPasswordResetEmail(args[1]);
+    case 'password-changed':
+      return buildPasswordChangedEmail(args[1]);
     case 'verification-email':
       return buildVerificationEmail(args[1]);
   }
@@ -192,4 +203,32 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function buildPasswordResetEmail(
+  params: MailTemplateParams['password-reset'],
+): SendMailOptions {
+  const url: URL = new URL('/reset-password', params.frontendUrl);
+  url.hash = new URLSearchParams({ token: params.token }).toString();
+  const subject: string = 'Réinitialisez votre mot de passe Cityborn';
+  return {
+    to: params.email,
+    subject,
+    text: `Bonjour ${params.username},\nRéinitialisez votre mot de passe : ${url.toString()}\nCe lien expire dans 30 minutes. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.`,
+    html: `<h1>${subject}</h1><p>Bonjour ${escapeHtml(params.username)},</p><p><a href="${escapeHtml(url.toString())}">Réinitialiser mon mot de passe</a></p><p>Ce lien expire dans 30 minutes. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.</p>`,
+  };
+}
+
+function buildPasswordChangedEmail(
+  params: MailTemplateParams['password-changed'],
+): SendMailOptions {
+  const subject: string = 'Votre mot de passe Cityborn a été modifié';
+  const message: string =
+    'Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées. Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.';
+  return {
+    to: params.email,
+    subject,
+    text: `Bonjour ${params.username},\n${message}`,
+    html: `<h1>${subject}</h1><p>Bonjour ${escapeHtml(params.username)},</p><p>${message}</p>`,
+  };
 }

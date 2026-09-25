@@ -11,6 +11,7 @@ import TextInput from '@/components/ui/TextInput';
 import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInComponent = () => {
   const router = useRouter();
@@ -93,6 +94,8 @@ export const SignInComponent = () => {
                 </Text>
               )}
             </View>
+
+            <RequestPasswordResetDialog />
 
             <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
               {errorMessage}

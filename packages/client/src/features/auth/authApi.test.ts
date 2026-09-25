@@ -67,6 +67,9 @@ function createFakeClient(
 ): Pick<ApiClient, 'auth'> {
   return {
     auth: {
+      requestPasswordReset: unexpectedCall,
+      resetPassword: unexpectedCall,
+      validatePasswordResetToken: unexpectedCall,
       me: unexpectedCall,
       refresh: unexpectedCall,
       signOut: unexpectedCall,
@@ -267,4 +270,27 @@ test('cookie signOut clears the server session through the shared route', async 
   await authApi.signOut();
 
   assert.equal(called, true);
+});
+
+test('resetPassword does not create an authenticated session', async () => {
+  const { state, tokenStorage } = createFakeTokenStorage();
+  const authApi = createAuthApi(
+    createFakeClient({
+      resetPassword: async () => ({
+        status: 200,
+        body: {},
+        headers: new Headers(),
+      }),
+    }),
+    tokenStorage,
+  );
+
+  const result = await authApi.resetPassword({
+    token: 'a'.repeat(64),
+    password: 'NewPass1',
+    confirmPassword: 'NewPass1',
+  });
+
+  assert.deepEqual(result, { ok: true, data: undefined });
+  assert.equal(state.tokens, null);
 });
