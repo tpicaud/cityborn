@@ -8,7 +8,7 @@ import {
 } from '@cityborn/api';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
-import { createAuthApi } from './authApi';
+import { createAuthApi, createCookieAuthApi } from './authApi';
 import { toCreateUser } from './authSchema';
 
 const username = UsernameSchema.parse('citizen');
@@ -57,6 +57,13 @@ function createFakeClient(
     auth: {
       me: unexpectedCall,
       refresh: unexpectedCall,
+      webMe: unexpectedCall,
+      webRefresh: unexpectedCall,
+      webSignUp: unexpectedCall,
+      webSignIn: unexpectedCall,
+      webSignInWithGoogle: unexpectedCall,
+      webSignInWithApple: unexpectedCall,
+      webSignOut: unexpectedCall,
       signUp: unexpectedCall,
       signIn: unexpectedCall,
       signInWithGoogle: unexpectedCall,
@@ -149,4 +156,48 @@ test('toCreateUser drops confirmPassword from the sign-up payload', () => {
       password: 'Password1',
     },
   );
+});
+
+test('cookie signIn uses the web route without token storage', async () => {
+  let called = false;
+  const authApi = createCookieAuthApi(
+    createFakeClient({
+      webSignIn: async () => {
+        called = true;
+        return {
+          status: 200,
+          body: user,
+          headers: new Headers(),
+        };
+      },
+    }),
+  );
+
+  const result = await authApi.signIn({
+    identifier: 'citizen',
+    password: 'Password1',
+  });
+
+  assert.equal(called, true);
+  assert.deepEqual(result, { ok: true, data: user });
+});
+
+test('cookie signOut clears the server session through the web route', async () => {
+  let called = false;
+  const authApi = createCookieAuthApi(
+    createFakeClient({
+      webSignOut: async () => {
+        called = true;
+        return {
+          status: 200,
+          body: {},
+          headers: new Headers(),
+        };
+      },
+    }),
+  );
+
+  await authApi.signOut();
+
+  assert.equal(called, true);
 });

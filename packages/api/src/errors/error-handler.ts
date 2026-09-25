@@ -99,6 +99,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // Classic
   [ErrorCode.BAD_REQUEST]: 'Requête invalide.',
   [ErrorCode.TOKEN_EXPIRED]: 'Session expirée. Veuillez vous reconnecter.',
+  [ErrorCode.CSRF_ORIGIN_FORBIDDEN]: 'Origine de la requête refusée.',
   [ErrorCode.UNKNOWN_ERROR]:
     'Une erreur inconnue est survenue, veuillez réessayer.',
 };

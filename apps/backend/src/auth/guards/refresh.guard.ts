@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { extractTokenFromHTTPHeader } from '../utils';
+import { extractRefreshTokenFromHttpRequest } from '../utils';
 import { resolveFullUser, validateRefreshToken } from './utils';
 
 @Injectable()
@@ -22,8 +22,8 @@ export class RefreshGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const refreshToken =
-      request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
+    const refreshToken: string | undefined =
+      extractRefreshTokenFromHttpRequest(request);
 
     if (!refreshToken)
       throw new UnauthorizedException({

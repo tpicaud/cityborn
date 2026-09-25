@@ -35,16 +35,16 @@ function buildClientHeaders(
 
 export class AuthFetch {
   private isRefreshing = false;
-  private refreshQueue: ((token: string | null) => void)[] = [];
+  private refreshQueue: ((refreshed: boolean) => void)[] = [];
   private readonly baseURL: string;
-  private readonly tokenStorage: TokenStorage;
+  private readonly tokenStorage: TokenStorage | null;
   private readonly onResponseHeaders?: (headers: Headers) => void;
   private readonly baseHeaders: Record<string, string>;
   private readonly getVisitorId?: () => string | null | Promise<string | null>;
 
   constructor(
     baseURL: string,
-    tokenStorage: TokenStorage,
+    tokenStorage: TokenStorage | null,
     options: AuthFetchOptions = {},
   ) {
     this.baseURL = baseURL.replace(/\/+$/, '');
@@ -68,10 +68,12 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    const token =
+    const token: string | null =
       auth.kind === 'bearer'
         ? auth.token
-        : await this.tokenStorage.getAccessToken();
+        : this.tokenStorage
+          ? await this.tokenStorage.getAccessToken()
+          : null;
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -90,9 +92,7 @@ export class AuthFetch {
 
     if (
       result.status === 401 &&
-      result.body !== null &&
-      typeof result.body === 'object' &&
-      (result.body as Record<string, unknown>).code === ErrorCode.TOKEN_EXPIRED
+      parseApiError(result.status, result.body).code === ErrorCode.TOKEN_EXPIRED
     ) {
       return this.handle401(args);
     }
@@ -127,8 +127,8 @@ export class AuthFetch {
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
-        this.refreshQueue.push(async (newToken) => {
-          if (!newToken) {
+        this.refreshQueue.push(async (refreshed) => {
+          if (!refreshed) {
             reject(
               new ApiResponseError({
                 code: ErrorCode.USER_REFRESH_FAILED,
@@ -149,20 +149,31 @@ export class AuthFetch {
 
     this.isRefreshing = true;
     try {
-      const newToken = await this.refreshToken();
-      this.processQueue(newToken);
+      await this.refreshAuthentication();
+      this.processQueue(true);
       return await this.fetchOnce(args);
     } catch (err) {
-      this.processQueue(null);
-      await this.tokenStorage.clearTokens();
+      this.processQueue(false);
+      await this.clearAuthentication();
       throw err;
     } finally {
       this.isRefreshing = false;
     }
   }
 
-  private async refreshToken(): Promise<string> {
-    const refreshToken = await this.tokenStorage.getRefreshToken();
+  private async refreshAuthentication(): Promise<void> {
+    const tokenStorage: TokenStorage | null = this.tokenStorage;
+    if (tokenStorage) {
+      await this.refreshBearerSession(tokenStorage);
+      return;
+    }
+    await this.refreshCookieSession();
+  }
+
+  private async refreshBearerSession(
+    tokenStorage: TokenStorage,
+  ): Promise<void> {
+    const refreshToken: string | null = await tokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new ApiResponseError({
         code: ErrorCode.USER_REFRESH_FAILED,
@@ -177,6 +188,7 @@ export class AuthFetch {
         { 'Content-Type': 'application/json' },
         { kind: 'bearer', token: refreshToken },
       ),
+      credentials: 'include',
     });
 
     if (this.onResponseHeaders) {
@@ -199,13 +211,56 @@ export class AuthFetch {
       });
     }
     const { access_token, refresh_token } = parsed.data;
-    await this.tokenStorage.setTokens(access_token, refresh_token);
-    return access_token;
+    await tokenStorage.setTokens(access_token, refresh_token);
   }
 
-  private processQueue(token: string | null) {
+  private async refreshCookieSession(): Promise<void> {
+    const response: Response = await this.timeoutFetch(
+      `${this.baseURL}/auth/web/refresh`,
+      {
+        method: 'POST',
+        headers: await this.buildHeaders(
+          { 'Content-Type': 'application/json' },
+          { kind: 'access' },
+        ),
+        body: '{}',
+        credentials: 'include',
+      },
+    );
+
+    if (this.onResponseHeaders) {
+      this.onResponseHeaders(response.headers);
+    }
+
+    if (!response.ok) {
+      throw new ApiResponseError(
+        parseApiError(response.status, await this.parseBody(response)),
+      );
+    }
+  }
+
+  private async clearAuthentication(): Promise<void> {
+    if (this.tokenStorage) {
+      await this.tokenStorage.clearTokens();
+      return;
+    }
+
+    try {
+      await this.timeoutFetch(`${this.baseURL}/auth/web/sign-out`, {
+        method: 'POST',
+        headers: await this.buildHeaders(
+          { 'Content-Type': 'application/json' },
+          { kind: 'access' },
+        ),
+        body: '{}',
+        credentials: 'include',
+      });
+    } catch {}
+  }
+
+  private processQueue(refreshed: boolean): void {
     this.refreshQueue.forEach((cb) => {
-      cb(token);
+      cb(refreshed);
     });
     this.refreshQueue = [];
   }
