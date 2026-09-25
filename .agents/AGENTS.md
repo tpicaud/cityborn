@@ -110,3 +110,5 @@ Les conventions propres à un domaine sont découvertes automatiquement depuis l
 ## Maintenir ce guide
 
 Tout changement qui modifie une convention ou une décision d'archi doit mettre à jour, **dans le même lot**, soit ce fichier (si transverse), soit le `SKILL.md` concerné (si propre à un domaine) — jamais les deux, jamais en double. Le guide reflète l'état réel du code.
+
+Tout changement qui affecte le démarrage local, ses prérequis, les variables d'environnement, les ports, les commandes `dev:web` / `dev:mobile` ou l'arborescence présentée dans le `README.md` racine doit mettre à jour ce README dans le même lot. Vérifier en fin de tâche qu'il reste cohérent avec les scripts, les `.env.example` et la structure du monorepo.
