@@ -12,7 +12,6 @@ import { useFocusEffect } from 'expo-router/react-navigation';
 import { useCallback, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
@@ -245,15 +244,13 @@ export default function Profile() {
         onClose={closePasswordModal}
         className="h-auto max-h-[80%]"
       >
-        <KeyboardAwareScrollView
+        <ScrollView
+          automaticallyAdjustKeyboardInsets
           contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: 'center',
             alignItems: 'center',
           }}
-          enableOnAndroid
-          extraScrollHeight={24}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
           style={{ alignSelf: 'stretch', flexGrow: 0, flexShrink: 1 }}
         >
           <View className="w-full items-center gap-5">
@@ -341,7 +338,7 @@ export default function Profile() {
               />
             </View>
           </View>
-        </KeyboardAwareScrollView>
+        </ScrollView>
       </Dialog>
 
       <Dialog
