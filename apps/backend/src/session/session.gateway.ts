@@ -4,65 +4,42 @@ import {
   sessionWsChannel,
   sessionWsServerEvent,
   type User,
-  WS_ERROR_EVENT,
-  type WsLifecycleEventName,
+  type VisitorId,
   type WsPayload,
   wsLifecycleEventName,
 } from '@cityborn/api';
-import { Inject, NotFoundException, UseFilters } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { NotFoundException, UseFilters } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
-  type OnGatewayConnection,
   type OnGatewayDisconnect,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
-import { extractAccessTokenFromWsClient } from '../auth/utils';
-import { VisitorId } from '../common/decorators/visitor-id.decorator';
+import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
 import type {
   SessionServer,
   SessionSocket,
 } from '../common/types/session-socket';
-import {
-  createWsWideEvent,
-  firstHeaderValue,
-} from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
-import { backendConfig } from '../config/backend.config';
-import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
+import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 import {
   type ConnectionInfo,
   ConnectionRegistryService,
 } from '../connection-registry/connection-registry.service';
-import { RateLimitService } from '../rate-limit/rate-limit.service';
-import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { CurrentUser } from '../user/user.decorator';
-import { UserService } from '../user/user.service';
 import { SessionService } from './session.service';
 
-@WebSocketGateway({
-  cors: {
-    origin: backendConfig.http.corsOrigins,
-    credentials: true,
-  },
-})
+@WebSocketGateway()
 @UseFilters(DefaultExceptionFilter)
-export class SessionGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class SessionGateway implements OnGatewayDisconnect {
   constructor(
     private readonly sessionService: SessionService,
-    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
-    private readonly jwtService: JwtService,
-    private readonly userService: UserService,
     private readonly connectionRegistryService: ConnectionRegistryService,
-    private readonly rateLimitService: RateLimitService,
     private readonly wideEventService: WideEventService,
+    private readonly wsWideEventLifecycle: WsWideEventLifecycle,
   ) {}
 
   @WebSocketServer()
@@ -94,65 +71,6 @@ export class SessionGateway
       this.wideEventService.enrichBusinessContext({
         gameId: session.currentGame.id,
       });
-    }
-  }
-
-  async handleConnection(client: SessionSocket): Promise<void> {
-    const connectionSettled: Promise<void> = this.runConnectionWideEvent(
-      client,
-      'connection',
-      wsLifecycleEventName(sessionWsChannel, 'connect'),
-      () => this.connect(client),
-    );
-    client.connectionSettled = connectionSettled;
-    await connectionSettled;
-  }
-
-  private async connect(client: SessionSocket): Promise<void> {
-    try {
-      await this.rateLimitService.consumeWsConnection(
-        resolveClientIpFromHeaders(
-          client.handshake.headers,
-          client.handshake.address,
-        ),
-      );
-    } catch (error) {
-      const apiError = this.wideEventService.recordError(
-        error,
-        'ws.connection',
-      );
-      client.emit(WS_ERROR_EVENT, apiError);
-      client.disconnect(true);
-      return;
-    }
-
-    const visitorId = client.handshake?.query?.['x-visitor-id'];
-    if (visitorId) {
-      client.data.visitorId = visitorId;
-    }
-
-    const token = extractAccessTokenFromWsClient(client);
-    if (!token) {
-      client.data.user = null;
-      return;
-    }
-
-    const payload = await validateAccessToken(
-      token,
-      this.jwtService,
-      this.authConfig.jwtAccessSecret,
-    ).catch((error: unknown) => {
-      this.wideEventService.recordError(error, 'ws.connection_token');
-      return null;
-    });
-
-    if (!payload) return;
-
-    try {
-      client.data.user = await resolveFullUser(payload.id, this.userService);
-    } catch (error) {
-      this.wideEventService.recordError(error, 'ws.connection_auth');
-      client.data.user = undefined;
     }
   }
 
@@ -253,7 +171,7 @@ export class SessionGateway
   @WsMessage(sessionWsChannel, 'startGame')
   async startGame(
     @ConnectedSocket() socket: SessionSocket,
-    @VisitorId() visitorId?: string,
+    @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.startGame(
@@ -283,7 +201,7 @@ export class SessionGateway
   @WsMessage(sessionWsChannel, 'nextRound')
   async handleNextRound(
     @ConnectedSocket() socket: SessionSocket,
-    @VisitorId() visitorId?: string,
+    @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.handleNextRound(
@@ -298,7 +216,7 @@ export class SessionGateway
   @WsMessage(sessionWsChannel, 'playAgain')
   async playAgain(
     @ConnectedSocket() socket: SessionSocket,
-    @VisitorId() visitorId?: string,
+    @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
     const session = await this.sessionService.startGame(
@@ -374,45 +292,11 @@ export class SessionGateway
   async handleDisconnect(
     @ConnectedSocket() socket: SessionSocket,
   ): Promise<void> {
-    await this.runConnectionWideEvent(
+    await this.wsWideEventLifecycle.runConnectionLifecycle(
       socket,
       'disconnection',
       wsLifecycleEventName(sessionWsChannel, 'disconnect'),
       () => this.disconnect(socket),
-    );
-  }
-
-  private async runConnectionWideEvent(
-    socket: SessionSocket,
-    kind: 'connection' | 'disconnection',
-    eventName: WsLifecycleEventName,
-    handler: () => Promise<void>,
-  ): Promise<void> {
-    const headers = socket.handshake.headers;
-    return this.wideEventService.run(
-      createWsWideEvent({
-        kind,
-        eventName,
-        socketId: socket.id,
-        ip: resolveClientIpFromHeaders(headers, socket.handshake.address),
-        userAgent: headers['user-agent'],
-        visitorId: firstHeaderValue(socket.handshake.query['x-visitor-id']),
-        client: firstHeaderValue(headers['x-client-name']),
-        clientVersion: firstHeaderValue(headers['x-client-version']),
-      }),
-      async () => {
-        try {
-          await handler();
-        } finally {
-          const user = socket.data.user;
-          this.wideEventService.enrichAuth(
-            user
-              ? { isAuthenticated: true, userId: user.id }
-              : { isAuthenticated: false },
-          );
-          this.wideEventService.finish();
-        }
-      },
     );
   }
 }

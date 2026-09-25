@@ -1,17 +1,14 @@
 import type {
   User,
+  VisitorId,
   WsClientToServerEvents,
   WsServerToClientEvents,
 } from '@cityborn/api';
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
 
 export interface SessionSocketData {
-  user?: User | null;
-  visitorId?: string | string[];
-}
-
-interface SessionSocketLifecycle {
-  connectionSettled?: Promise<void>;
+  user: User | null;
+  visitorId: VisitorId | undefined;
 }
 
 export type SessionSocket = Socket<
@@ -19,8 +16,7 @@ export type SessionSocket = Socket<
   WsServerToClientEvents,
   DefaultEventsMap,
   SessionSocketData
-> &
-  SessionSocketLifecycle;
+>;
 
 export type SessionServer = Server<
   WsClientToServerEvents,

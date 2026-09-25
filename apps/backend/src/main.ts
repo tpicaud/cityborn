@@ -10,6 +10,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
+  app.enableShutdownHooks();
   await configureApp(app);
   await app.listen(backendConfig.runtime.port, '0.0.0.0');
 }
