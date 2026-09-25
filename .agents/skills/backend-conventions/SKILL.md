@@ -30,3 +30,10 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier la 
 ## Observabilité
 
 Pour enrichir un wide event, remonter une erreur, instrumenter une gateway, ajouter un domaine ou toucher au contexte CLS, au filtre d'erreurs ou au lifecycle WS, lire [la référence d'observabilité](references/observability.md).
+
+## Authentification et révocation
+
+- Les JWT portent `sessionVersion`, capturée avec les identifiants authentifiés et réutilisée pour les deux jetons. Une authentification déjà engagée ne doit pas adopter la version d’une réinitialisation concurrente. Les JWT historiques sans version correspondent à zéro.
+- Les guards HTTP et WebSocket comparent cette version à `User.sessionVersion`. Le domaine `auth` expose `SessionRevocationService` pour déconnecter les anciennes sockets via l’adaptateur Redis ; ne pas mélanger cette responsabilité avec le rate limiting.
+- La consommation du jeton de réinitialisation, le changement de mot de passe et l’incrément de version appartiennent à la même transaction. Les e-mails et déconnexions restent hors transaction. Les jetons bruts ne doivent apparaître ni dans les URL HTTP ni dans les diagnostics du fournisseur d’e-mail.
+- Pour le fonctionnement, les limites et la recette, consulter `docs/password-reset.md`.

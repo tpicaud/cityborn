@@ -2,7 +2,11 @@ import type {
   ApiResult,
   AuthResponse,
   CreateUser,
+  PasswordResetRequestResponse,
+  PasswordResetToken,
   PublicUser,
+  RequestPasswordReset,
+  ResetPassword,
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
@@ -14,6 +18,13 @@ import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
 export interface AuthApi {
+  requestPasswordReset(
+    data: RequestPasswordReset,
+  ): Promise<ApiResult<PasswordResetRequestResponse>>;
+  resetPassword(data: ResetPassword): Promise<ApiResult<void>>;
+  validatePasswordResetToken(
+    data: PasswordResetToken,
+  ): Promise<ApiResult<void>>;
   getCurrentUser(): Promise<User | null>;
   signIn(data: SignIn): Promise<ApiResult<User>>;
   signUp(data: CreateUser): Promise<ApiResult<User>>;
@@ -44,6 +55,23 @@ export function createAuthApi(
   };
 
   return {
+    async requestPasswordReset(data) {
+      return toApiResult(
+        await client.auth.requestPasswordReset({ body: data }),
+      );
+    },
+    async resetPassword(data) {
+      return toVoidResult(
+        toApiResult(await client.auth.resetPassword({ body: data })),
+      );
+    },
+    async validatePasswordResetToken(data) {
+      return toVoidResult(
+        toApiResult(
+          await client.auth.validatePasswordResetToken({ body: data }),
+        ),
+      );
+    },
     async getCurrentUser() {
       try {
         const [accessToken, refreshToken] = await Promise.all([

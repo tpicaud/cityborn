@@ -20,6 +20,15 @@ export class PrismaUserRepository implements UserRepository {
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
 
+  async findSessionVersion(id: UserId): Promise<number | null> {
+    const user: { sessionVersion: number } | null =
+      await this.txHost.tx.user.findUnique({
+        where: { id },
+        select: { sessionVersion: true },
+      });
+    return user?.sessionVersion ?? null;
+  }
+
   async create(data: CreateUserData): Promise<User> {
     const user = await this.txHost.tx.user.create({ data });
     return UserMapper.toUser(user);

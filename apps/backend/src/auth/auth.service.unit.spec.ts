@@ -76,6 +76,8 @@ function buildAuthService() {
     googleClient,
   );
 
+  userService.findSessionVersion.mockResolvedValue(0);
+
   jwtService.signAsync
     .mockResolvedValueOnce('access-token')
     .mockResolvedValueOnce('refresh-token');
@@ -223,6 +225,7 @@ describe('AuthService.signIn', () => {
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
       passwordHash: 'hashed-password',
+      sessionVersion: 0,
     });
 
     const result: AuthResponse = await authService.signIn(
@@ -248,7 +251,7 @@ describe('AuthService.signIn', () => {
       buildAuthService();
     const persistedUser: User = buildUser();
     const credentials: UserCredentials | null = isOAuthAccount
-      ? { user: persistedUser, passwordHash: null }
+      ? { user: persistedUser, passwordHash: null, sessionVersion: 0 }
       : null;
     const signInData: SignIn = {
       identifier: 'alice',
@@ -272,6 +275,7 @@ describe('AuthService.signIn', () => {
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
       passwordHash: 'hashed-password',
+      sessionVersion: 0,
     });
     mockPasswordMatches = false;
 

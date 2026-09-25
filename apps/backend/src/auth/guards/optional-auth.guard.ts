@@ -37,7 +37,8 @@ export class OptionalAuthGuard implements CanActivate {
     );
 
     const fullUser =
-      (await resolveFullUser(user.id, this.userService)) ?? undefined;
+      (await resolveFullUser(user.id, this.userService, user.sessionVersion)) ??
+      undefined;
     request.user = fullUser;
     if (!fullUser) {
       this.wideEventService.enrichAuth({ isAuthenticated: false });

@@ -45,6 +45,8 @@ pnpm dev:mobile
 
 Arrêter les ressources locales avec `pnpm db:stop`.
 
+Pour tester la réinitialisation du mot de passe depuis le mobile, lancer également le frontend dans un autre terminal avec `pnpm frontend:dev`. Le `FRONTEND_URL` du backend doit pointer vers cette application web et être accessible depuis le téléphone. Les e-mails utilisent la configuration Brevo existante. Voir la [recette de réinitialisation du mot de passe](docs/password-reset.md).
+
 ## Architecture
 
 ```text

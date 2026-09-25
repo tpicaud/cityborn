@@ -3,6 +3,10 @@
 import type {
   ApiResult,
   CreateUser,
+  PasswordResetRequestResponse,
+  PasswordResetToken,
+  RequestPasswordReset,
+  ResetPassword,
   SignIn,
   SignInWithGoogle,
   User,
@@ -49,4 +53,25 @@ export async function verifyEmail(
 export async function signOut(): Promise<void> {
   const authApi = await getServerAuthApi();
   await authApi.signOut();
+}
+
+export async function requestPasswordReset(
+  data: RequestPasswordReset,
+): Promise<ApiResult<PasswordResetRequestResponse>> {
+  const authApi = await getServerAuthApi();
+  return authApi.requestPasswordReset(data);
+}
+
+export async function resetPassword(
+  data: ResetPassword,
+): Promise<ApiResult<void>> {
+  const authApi = await getServerAuthApi();
+  return authApi.resetPassword(data);
+}
+
+export async function validatePasswordResetToken(
+  data: PasswordResetToken,
+): Promise<ApiResult<void>> {
+  const authApi = await getServerAuthApi();
+  return authApi.validatePasswordResetToken(data);
 }

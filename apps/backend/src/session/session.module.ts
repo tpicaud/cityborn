@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { ConnectionRegistryModule } from '../connection-registry/connection-registry.module';
 import { EventModule } from '../event/event.module';
 import { GameService } from '../game/game.service';
@@ -14,6 +15,7 @@ import { SessionService } from './session.service';
 
 @Module({
   imports: [
+    AuthModule,
     RedisModule,
     LockModule,
     ConnectionRegistryModule,

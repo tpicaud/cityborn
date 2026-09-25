@@ -134,7 +134,10 @@ export type WideEventOutcome =
   | 'server_error'
   | 'aborted';
 
-export type WideEventRateLimitBucket = 'rl:http' | 'rl:ws:msg';
+export type WideEventRateLimitBucket =
+  | 'rl:http'
+  | 'rl:ws:msg'
+  | 'rl:password-reset:ip';
 
 export type WideEventRateLimitStatus =
   | 'pending'

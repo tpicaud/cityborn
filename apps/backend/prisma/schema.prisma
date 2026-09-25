@@ -22,11 +22,13 @@ model User {
   username   String    @unique
   type       String    @default("unknown")
   password   String?
+  sessionVersion Int @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
   isVerified Boolean   @default(false)
   appleId    String?
 
+  passwordResetToken PasswordResetToken?
   tokens      EmailVerificationToken[]
   gameRecords GameRecord[]             @relation("GameRecordUsers")
 }
@@ -40,6 +42,13 @@ model EmailVerificationToken {
 
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  userId String @id @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  expiresAt DateTime
 }
 
 enum GameMode {

@@ -37,7 +37,11 @@ export class AuthGuard implements CanActivate {
       this.authConfig.jwtAccessSecret,
     );
 
-    const fullUser = await resolveFullUser(user.id, this.userService);
+    const fullUser = await resolveFullUser(
+      user.id,
+      this.userService,
+      user.sessionVersion,
+    );
     if (!fullUser) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,

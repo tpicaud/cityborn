@@ -6,6 +6,7 @@ import type {
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
 
 export interface SessionSocketData {
+  sessionVersion?: number;
   user?: User | null;
   visitorId?: string | string[];
 }

@@ -4,6 +4,8 @@ import { ErrorCode } from './error-codes';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // User
+  [ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN]:
+    'Le lien de réinitialisation est absent, invalide, expiré ou déjà utilisé. Demandez un nouveau lien.',
   [ErrorCode.USER_NOT_FOUND]: "L'utilisateur n'existe pas.",
   [ErrorCode.USER_INVALID_CREDENTIALS]: 'Identifiant ou mot de passe incorrect',
   [ErrorCode.USER_USERNAME_ALREADY_EXISTS]:

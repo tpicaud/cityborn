@@ -18,14 +18,22 @@ import {
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { PASSWORD_RESET_REPOSITORY } from '../../src/auth/repositories/password-reset.repository';
+import { PrismaPasswordResetRepository } from '../../src/auth/repositories/prisma-password-reset.repository';
+import { PasswordResetService } from '../../src/auth/services/password-reset.service';
+import { SessionRevocationService } from '../../src/auth/services/session-revocation.service';
 import { CATEGORY_REPOSITORY } from '../../src/category/repositories/category.repository';
 import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
 import { CategoryService } from '../../src/category/services/category.service';
+import { WideEventService } from '../../src/common/wide-event/wide-event.service';
+import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GameRecordService } from '../../src/game-record/game-record.service';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
+import { MailService } from '../../src/mail/mail.service';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
@@ -48,11 +56,29 @@ describe('Prisma transactions', () => {
   let tokenRepository: PrismaEmailVerificationTokenRepository;
   let userRepository: PrismaUserRepository;
   let userService: UserService;
+  let passwordResetService: PasswordResetService;
+  let passwordResetRepository: PrismaPasswordResetRepository;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [PrismaClsModule],
       providers: [
+        PasswordResetService,
+        {
+          provide: PASSWORD_RESET_REPOSITORY,
+          useClass: PrismaPasswordResetRepository,
+        },
+        { provide: RateLimitService, useValue: createMock<RateLimitService>() },
+        { provide: MailService, useValue: createMock<MailService>() },
+        { provide: WideEventService, useValue: createMock<WideEventService>() },
+        {
+          provide: SessionRevocationService,
+          useValue: createMock<SessionRevocationService>(),
+        },
+        {
+          provide: HTTP_CONFIG,
+          useValue: { frontendUrl: 'https://cityborn.test', corsOrigins: [] },
+        },
         CategoryService,
         GuessObjectService,
         WorldLocationService,
@@ -85,6 +111,8 @@ describe('Prisma transactions', () => {
     tokenRepository = module.get(EMAIL_VERIFICATION_TOKEN_REPOSITORY);
     userRepository = module.get(USER_REPOSITORY);
     userService = module.get(UserService);
+    passwordResetService = module.get(PasswordResetService);
+    passwordResetRepository = module.get(PASSWORD_RESET_REPOSITORY);
   });
 
   afterAll(async () => {
@@ -179,6 +207,81 @@ describe('Prisma transactions', () => {
             where: { userId: user.id },
           }),
         ).toBe(1);
+      });
+    });
+  });
+  describe('PasswordResetService', () => {
+    describe('completeReset', () => {
+      it('rolls back token consumption when the password update fails', async () => {
+        const user: User = buildUser({ isVerified: false });
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: 'hash',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        jest
+          .spyOn(passwordResetRepository, 'updatePassword')
+          .mockRejectedValueOnce(new Error('write failed'));
+
+        await expect(
+          passwordResetService.completeReset('hash', 'new-hash'),
+        ).rejects.toThrow('write failed');
+
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({
+          password: 'old-hash',
+          sessionVersion: 0,
+          isVerified: false,
+        });
+        expect(await prisma.passwordResetToken.count()).toBe(1);
+      });
+
+      it('commits one password update and session revocation during concurrent resets', async () => {
+        const user: User = buildUser({ isVerified: false });
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: 'hash',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+
+        const results = await Promise.allSettled([
+          passwordResetService.completeReset('hash', 'new-hash'),
+          passwordResetService.completeReset('hash', 'other-hash'),
+        ]);
+
+        expect(
+          results.filter((result) => result.status === 'fulfilled'),
+        ).toHaveLength(1);
+        expect(
+          results.filter((result) => result.status === 'rejected'),
+        ).toHaveLength(1);
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({ sessionVersion: 1, isVerified: false });
+        expect(await prisma.passwordResetToken.count()).toBe(0);
       });
     });
   });
