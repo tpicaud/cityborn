@@ -10,7 +10,7 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 | Verdict du rate limiter | `enrichRateLimit` |
 | Un identifiant métier devient connu | `enrichBusinessContext` |
 | Erreur dans un service, un guard, un handler | laisser remonter au `DefaultExceptionFilter` |
-| Filtre, ou callback WS `handleConnection` / `handleDisconnect` | `recordError` |
+| Filtre, `WsHandshakeMiddleware` ou callback WS `handleDisconnect` | `recordError` |
 | Échec survenu hors de toute requête (Redis, lock, tâche de fond…) | `recordOperationError` |
 
 `enrichBusinessContext` accepte les identifiants déclarés par `WideEventBusinessContext` — `gameId` ou `playerId` par exemple. Ce type porte la liste : un nouvel identifiant métier s'y ajoute, et devient enrichissable partout sans toucher au reste.
@@ -37,6 +37,7 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 |---|---|---|
 | HTTP | `HttpWideEventMiddleware`, branché en tête de `configureApp()`, avant CORS, parsers, guards et routing | événement `finish` ou `close` de la réponse |
 | Message WS | `WsWideEventLifecycle`, branché dans `RedisIoAdapter` autour du pipeline Nest complet | `finalize` ; `aborted` quand le flux n'a pas complété |
-| Connexion WS | `runConnectionWideEvent` dans la gateway | `finish` dans un `finally`, après `enrichAuth` |
+| Connexion WS | `WsHandshakeMiddleware`, branché par `RedisIoAdapter` via `server.use()`, autour du rate-limit, du visitorId et de l'auth ; un handshake refusé reste couvert | `finish` dans un `finally`, après `enrichAuth` |
+| Déconnexion WS | `handleDisconnect` de la gateway | idem |
 
-Pour instrumenter une nouvelle gateway, suivre `SessionGateway.runConnectionWideEvent` : ouvrir avec `createWsWideEvent`, enrichir l'auth depuis `socket.data.user`, finaliser dans un `finally`.
+Le handshake est transverse à toutes les gateways : une nouvelle gateway ne gère ni rate-limit, ni auth, ni visitorId de connexion, et lit `socket.data` (`SessionSocketData`) tel quel. Pour instrumenter sa déconnexion, appeler `WsWideEventLifecycle.runConnectionLifecycle`, qui ouvre avec `createWsWideEvent`, enrichit l'auth depuis `socket.data.user` et finalise dans un `finally`.
