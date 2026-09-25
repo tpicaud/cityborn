@@ -12,6 +12,7 @@ import { useFocusEffect } from 'expo-router/react-navigation';
 import { useCallback, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
@@ -110,7 +111,7 @@ export default function Profile() {
           <View className="flex-1 gap-4">
             {isEditingUsername ? (
               <View className="flex-row items-center justify-center gap-2 py-10">
-                <View className="relative">
+                <View className="w-52 gap-1">
                   <Controller
                     control={usernameForm.control}
                     name="username"
@@ -127,7 +128,7 @@ export default function Profile() {
                     )}
                   />
                   {usernameForm.formState.errors.username && (
-                    <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                    <Text className="px-4 text-xs leading-4 text-destructive-500">
                       {usernameForm.formState.errors.username.message}
                     </Text>
                   )}
@@ -242,93 +243,105 @@ export default function Profile() {
       <Dialog
         visible={passwordModalOpen}
         onClose={closePasswordModal}
-        className="h-auto"
+        className="h-[80%]"
       >
-        <View className="w-full items-center gap-5">
-          <Text className="text-xl font-bold">Modifier mon mot de passe</Text>
-          <View className="gap-5">
-            <View className="relative">
-              <Controller
-                control={passwordForm.control}
-                name="currentPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Mot de passe actuel"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry
-                    error={!!passwordForm.formState.errors.currentPassword}
-                  />
+        <KeyboardAwareScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          enableOnAndroid
+          extraScrollHeight={24}
+          keyboardShouldPersistTaps="handled"
+          style={{ flex: 1, alignSelf: 'stretch' }}
+        >
+          <View className="w-full items-center gap-5">
+            <Text className="text-xl font-bold">Modifier mon mot de passe</Text>
+            <View className="gap-5">
+              <View className="w-70 gap-1">
+                <Controller
+                  control={passwordForm.control}
+                  name="currentPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Mot de passe actuel"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry
+                      error={!!passwordForm.formState.errors.currentPassword}
+                    />
+                  )}
+                />
+                {passwordForm.formState.errors.currentPassword && (
+                  <Text className="px-4 text-xs leading-4 text-destructive-500">
+                    {passwordForm.formState.errors.currentPassword.message}
+                  </Text>
                 )}
-              />
-              {passwordForm.formState.errors.currentPassword && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {passwordForm.formState.errors.currentPassword.message}
-                </Text>
-              )}
+              </View>
+              <View className="w-70 gap-1">
+                <Controller
+                  control={passwordForm.control}
+                  name="newPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Nouveau mot de passe"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry
+                      error={!!passwordForm.formState.errors.newPassword}
+                    />
+                  )}
+                />
+                {passwordForm.formState.errors.newPassword && (
+                  <Text className="px-4 text-xs leading-4 text-destructive-500">
+                    {passwordForm.formState.errors.newPassword.message}
+                  </Text>
+                )}
+              </View>
+              <View className="w-70 gap-1">
+                <Controller
+                  control={passwordForm.control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Confirmer le nouveau mot de passe"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry
+                      error={!!passwordForm.formState.errors.confirmPassword}
+                    />
+                  )}
+                />
+                {passwordForm.formState.errors.confirmPassword && (
+                  <Text className="px-4 text-xs leading-4 text-destructive-500">
+                    {passwordForm.formState.errors.confirmPassword.message}
+                  </Text>
+                )}
+              </View>
             </View>
-            <View className="relative">
-              <Controller
-                control={passwordForm.control}
-                name="newPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Nouveau mot de passe"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry
-                    error={!!passwordForm.formState.errors.newPassword}
-                  />
-                )}
+            {passwordUpdated && (
+              <Text className="text-primary-500">Mot de passe modifié.</Text>
+            )}
+            <View className="flex-row gap-2">
+              <Button
+                variant="outlined"
+                label="Annuler"
+                className="w-32"
+                onPress={closePasswordModal}
               />
-              {passwordForm.formState.errors.newPassword && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {passwordForm.formState.errors.newPassword.message}
-                </Text>
-              )}
-            </View>
-            <View className="relative">
-              <Controller
-                control={passwordForm.control}
-                name="confirmPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Confirmer le nouveau mot de passe"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry
-                    error={!!passwordForm.formState.errors.confirmPassword}
-                  />
-                )}
+              <Button
+                variant="filled"
+                label="Valider"
+                className="w-32"
+                onPress={submitPassword}
               />
-              {passwordForm.formState.errors.confirmPassword && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {passwordForm.formState.errors.confirmPassword.message}
-                </Text>
-              )}
             </View>
           </View>
-          {passwordUpdated && (
-            <Text className="text-primary-500">Mot de passe modifié.</Text>
-          )}
-          <View className="flex-row gap-2">
-            <Button
-              variant="outlined"
-              label="Annuler"
-              className="w-32"
-              onPress={closePasswordModal}
-            />
-            <Button
-              variant="filled"
-              label="Valider"
-              className="w-32"
-              onPress={submitPassword}
-            />
-          </View>
-        </View>
+        </KeyboardAwareScrollView>
       </Dialog>
 
       <Dialog
