@@ -1,4 +1,4 @@
-import { ErrorCode, User } from '@cityborn/api';
+import { ErrorCode, type User } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { resolveFullUser, validateRefreshToken } from './utils';
+import { validateRefreshToken } from './utils';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
@@ -37,14 +37,22 @@ export class RefreshGuard implements CanActivate {
       this.authConfig.jwtRefreshSecret,
     );
 
-    const fullUser = await resolveFullUser(decoded.id, this.userService);
-    if (!fullUser) {
+    const authenticationState =
+      await this.userService.findAuthenticationStateById(decoded.id);
+    if (!authenticationState) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
-    request.user = fullUser satisfies User;
+    if (authenticationState.authVersion !== decoded.authVersion) {
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_TOKEN,
+        message: 'Token has been revoked',
+      });
+    }
+    request.user = authenticationState.user satisfies User;
+    request.authVersion = decoded.authVersion;
 
     return true;
   }

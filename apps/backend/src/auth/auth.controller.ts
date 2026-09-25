@@ -1,9 +1,9 @@
-import { contract, User } from '@cityborn/api';
+import { contract, type User } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
-import { CurrentUser } from '../user/user.decorator';
+import { CurrentAuthVersion, CurrentUser } from '../user/user.decorator';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { RefreshGuard } from './guards/refresh.guard';
@@ -22,6 +22,8 @@ const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
   resendVerificationEmail: contract.auth.resendVerificationEmail,
+  updateUsername: contract.auth.updateUsername,
+  updatePassword: contract.auth.updatePassword,
 });
 
 const refreshRoutes = c.router({
@@ -74,16 +76,30 @@ export class AuthController {
         await this.authService.resendVerificationEmail(user);
         return { status: 200 as const, body: {} };
       },
+      updateUsername: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.authService.updateUsername(user, body),
+      }),
+      updatePassword: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.authService.updatePassword(user, body),
+      }),
     });
   }
 
   @TsRestHandler(refreshRoutes)
   @UseGuards(RefreshGuard)
-  async refreshHandler(@CurrentUser() user: User) {
+  async refreshHandler(
+    @CurrentUser() user: User,
+    @CurrentAuthVersion() authVersion: number,
+  ) {
     return tsRestHandler(refreshRoutes, {
       refresh: async () => ({
         status: 200 as const,
-        body: await this.authService.refresh(user.username || user.email),
+        body: await this.authService.refresh(
+          user.username || user.email,
+          authVersion,
+        ),
       }),
     });
   }

@@ -1,4 +1,4 @@
-import { ErrorCode, User } from '@cityborn/api';
+import { ErrorCode, type User } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -11,7 +11,7 @@ import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { resolveFullUser, validateAccessToken } from './utils';
+import { validateAccessToken } from './utils';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -37,16 +37,23 @@ export class AuthGuard implements CanActivate {
       this.authConfig.jwtAccessSecret,
     );
 
-    const fullUser = await resolveFullUser(user.id, this.userService);
-    if (!fullUser) {
+    const authenticationState =
+      await this.userService.findAuthenticationStateById(user.id);
+    if (!authenticationState) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
-    request.user = fullUser satisfies User;
+    if (authenticationState.authVersion !== user.authVersion) {
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_TOKEN,
+        message: 'Token has been revoked',
+      });
+    }
+    request.user = authenticationState.user satisfies User;
     this.wideEventService.enrichAuth({
-      userId: fullUser.id,
+      userId: authenticationState.user.id,
       isAuthenticated: true,
     });
 

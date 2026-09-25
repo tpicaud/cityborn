@@ -6,6 +6,8 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdatePassword,
+  type UpdateUsername,
   type User,
   UserIdSchema,
   type Username,
@@ -13,6 +15,7 @@ import {
   VerifyEmailData,
 } from '@cityborn/api';
 import {
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -94,19 +97,6 @@ export class AuthService {
       });
     });
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -119,11 +109,7 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.generateAuthResponse(user);
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -147,20 +133,7 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    const { user } = credentials;
-
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
+    const { user, authVersion } = credentials;
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -174,11 +147,7 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.generateAuthResponse(user, authVersion);
   }
 
   async signInWithGoogle(
@@ -226,24 +195,7 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.generateAuthResponse(user);
   }
 
   async signInWithApple(
@@ -311,27 +263,13 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.generateAuthResponse(user);
   }
 
-  async refresh(identifier: string): Promise<AuthResponse> {
+  async refresh(
+    identifier: string,
+    authVersion: number,
+  ): Promise<AuthResponse> {
     const user = await this.userService.findByIdentifier(identifier);
     if (!user)
       throw new UnauthorizedException({
@@ -339,24 +277,7 @@ export class AuthService {
         message: 'Invalid refresh token',
       });
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.generateAuthResponse(user, authVersion);
   }
 
   async getProfile(identifier: string): Promise<User> {
@@ -377,6 +298,52 @@ export class AuthService {
         message: `User not found`,
       });
     await this.userService.deleteUser(user.id);
+  }
+
+  async updateUsername(user: User, data: UpdateUsername): Promise<User> {
+    return this.userService.updateUsername(user, data.username);
+  }
+
+  async updatePassword(
+    user: User,
+    data: UpdatePassword,
+  ): Promise<AuthResponse> {
+    if (user.type !== 'email') {
+      throw new ForbiddenException({
+        code: ErrorCode.USER_NOT_VANILLA_ACCOUNT,
+        message: 'Password update is only available for email accounts',
+      });
+    }
+
+    const credentials = await this.userService.findCredentialsById(user.id);
+    if (!credentials?.passwordHash) {
+      throw new ForbiddenException({
+        code: ErrorCode.USER_NOT_VANILLA_ACCOUNT,
+        message: 'Password update is only available for email accounts',
+      });
+    }
+
+    const isCurrentPasswordValid: boolean = await bcrypt.compare(
+      data.currentPassword,
+      credentials.passwordHash,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT,
+        message: 'Current password is incorrect',
+      });
+    }
+
+    const passwordHash: string = await bcrypt.hash(data.newPassword, 10);
+    const authenticationState = await this.userService.updatePassword(
+      user.id,
+      passwordHash,
+    );
+
+    return this.generateAuthResponse(
+      authenticationState.user,
+      authenticationState.authVersion,
+    );
   }
 
   async resendVerificationEmail(user: User): Promise<void> {
@@ -415,16 +382,38 @@ export class AuthService {
     );
   }
 
+  private async generateAuthResponse(
+    user: User,
+    authVersion: number = 0,
+  ): Promise<AuthResponse> {
+    const accessToken: string = await this.generateToken(
+      'access',
+      user,
+      authVersion,
+    );
+    const refreshToken: string = await this.generateToken(
+      'refresh',
+      user,
+      authVersion,
+    );
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user,
+    };
+  }
+
   private async generateToken(
     type: 'access' | 'refresh',
-    id: string,
-    username: string,
-    email: string,
+    user: User,
+    authVersion: number,
   ): Promise<string> {
     const payload = {
-      id: UserIdSchema.parse(id),
-      username: UsernameSchema.parse(username),
-      email,
+      id: UserIdSchema.parse(user.id),
+      username: UsernameSchema.parse(user.username),
+      email: user.email,
+      authVersion,
     };
 
     switch (type) {

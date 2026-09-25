@@ -10,6 +10,7 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
+  UserAuthenticationState,
   UserCredentials,
   UserRepository,
 } from './user.repository';
@@ -32,6 +33,18 @@ export class PrismaUserRepository implements UserRepository {
   async findById(id: UserId): Promise<User | null> {
     const user = await this.txHost.tx.user.findUnique({ where: { id } });
     return user ? UserMapper.toUser(user) : null;
+  }
+
+  async findAuthenticationStateById(
+    id: UserId,
+  ): Promise<UserAuthenticationState | null> {
+    const user = await this.txHost.tx.user.findUnique({ where: { id } });
+    return user ? UserMapper.toAuthenticationState(user) : null;
+  }
+
+  async findCredentialsById(id: UserId): Promise<UserCredentials | null> {
+    const user = await this.txHost.tx.user.findUnique({ where: { id } });
+    return user ? UserMapper.toUserCredentials(user) : null;
   }
 
   async findByIdentifier(identifier: string): Promise<User | null> {
@@ -78,6 +91,25 @@ export class PrismaUserRepository implements UserRepository {
           email: existingUser.email,
         }
       : null;
+  }
+
+  async updateUsername(userId: UserId, username: Username): Promise<User> {
+    const user = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { username },
+    });
+    return UserMapper.toUser(user);
+  }
+
+  async updatePassword(
+    userId: UserId,
+    passwordHash: string,
+  ): Promise<UserAuthenticationState> {
+    const user = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { password: passwordHash, authVersion: { increment: 1 } },
+    });
+    return UserMapper.toAuthenticationState(user);
   }
 
   async markEmailVerified(userId: UserId): Promise<User> {
