@@ -10,12 +10,17 @@ export interface SessionSocketData {
   visitorId?: string | string[];
 }
 
+interface SessionSocketLifecycle {
+  connectionSettled?: Promise<void>;
+}
+
 export type SessionSocket = Socket<
   WsClientToServerEvents,
   WsServerToClientEvents,
   DefaultEventsMap,
   SessionSocketData
->;
+> &
+  SessionSocketLifecycle;
 
 export type SessionServer = Server<
   WsClientToServerEvents,
