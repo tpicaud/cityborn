@@ -135,7 +135,10 @@ export const ProfileComponent = ({ user }: { user: User }) => {
               <IconButton
                 type="button"
                 aria-label="Modifier le pseudo"
-                onClick={() => setIsEditingUsername(true)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setIsEditingUsername(true);
+                }}
               >
                 <EditIcon />
               </IconButton>
