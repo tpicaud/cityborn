@@ -11,7 +11,7 @@ import type { AppRequest } from '../../common/types/app-request';
 import type { AuthSession } from '../../common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { extractTokenFromHTTPHeader } from '../utils';
+import { extractRefreshTokenFromHttpRequest } from '../utils';
 import {
   type AuthTokenPayload,
   resolveAuthSession,
@@ -29,7 +29,7 @@ export class RefreshGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
     const refreshToken: string | undefined =
-      request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
+      extractRefreshTokenFromHttpRequest(request);
 
     if (!refreshToken)
       throw new UnauthorizedException({

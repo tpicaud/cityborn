@@ -6,6 +6,7 @@ import { WsHandshakeModule } from '../ws-handshake/ws-handshake.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GoogleClientProvider } from './providers/google-client.provider';
+import { WebSessionCookieService } from './services/web-session-cookie.service';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { GoogleClientProvider } from './providers/google-client.provider';
     JwtModule.register({ global: true }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleClientProvider],
+  providers: [AuthService, GoogleClientProvider, WebSessionCookieService],
 })
 export class AuthModule {}

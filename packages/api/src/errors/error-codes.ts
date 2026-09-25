@@ -80,6 +80,9 @@ export enum ErrorCode {
   // Token
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
 
+  // Browser security
+  CSRF_ORIGIN_FORBIDDEN = 'CSRF_ORIGIN_FORBIDDEN',
+
   // Websocket transport
   WS_NOT_CONNECTED = 'WS_NOT_CONNECTED',
   WS_ACK_TIMEOUT = 'WS_ACK_TIMEOUT',

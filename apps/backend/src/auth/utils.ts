@@ -4,6 +4,11 @@ import type { JwtHeader, JwtPayload, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from './auth.constants';
+
 export function extractTokenFromHTTPHeader(
   request: Request,
 ): string | undefined {
@@ -11,12 +16,49 @@ export function extractTokenFromHTTPHeader(
   return type === 'Bearer' ? token : undefined;
 }
 
+function extractCookie(
+  cookieHeader: string | undefined,
+  cookieName: string,
+): string | undefined {
+  if (cookieHeader === undefined) {
+    return undefined;
+  }
+  return cookie.parseCookie(cookieHeader)[cookieName];
+}
+
+export function extractAccessTokenFromHttpRequest(
+  request: Request,
+): string | undefined {
+  return (
+    extractTokenFromHTTPHeader(request) ??
+    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME)
+  );
+}
+
+export function extractRefreshTokenFromHttpRequest(
+  request: Request,
+): string | undefined {
+  return (
+    extractTokenFromHTTPHeader(request) ??
+    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME)
+  );
+}
+
+export function hasAuthenticationCookie(request: Request): boolean {
+  return (
+    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME) !==
+      undefined ||
+    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME) !==
+      undefined
+  );
+}
+
 export function extractAccessTokenFromWsClient(
   client: Socket,
 ): string | undefined {
   const cookies = client.handshake.headers.cookie;
   const cookieAccessToken: string | undefined = cookies
-    ? cookie.parseCookie(cookies).access_token
+    ? cookie.parseCookie(cookies)[ACCESS_TOKEN_COOKIE_NAME]
     : undefined;
   if (cookieAccessToken) return cookieAccessToken;
 

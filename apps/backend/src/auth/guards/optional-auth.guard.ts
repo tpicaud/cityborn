@@ -10,7 +10,7 @@ import type { AuthSession } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { extractTokenFromHTTPHeader } from '../utils';
+import { extractAccessTokenFromHttpRequest } from '../utils';
 import {
   type AuthTokenPayload,
   resolveAuthSession,
@@ -28,7 +28,8 @@ export class OptionalAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
-    const token: string | undefined = extractTokenFromHTTPHeader(request);
+    const token: string | undefined =
+      extractAccessTokenFromHttpRequest(request);
 
     if (!token) {
       this.wideEventService.enrichAuth({ isAuthenticated: false });
