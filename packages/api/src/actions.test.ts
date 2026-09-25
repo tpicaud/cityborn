@@ -22,7 +22,7 @@ function matchesRoute(pattern: string, path: string): boolean {
 
 describe('resolveHttpAction', () => {
   it('resolves every contract route after Nest slash normalization', () => {
-    assert.equal(httpActionRoutes.length, 49);
+    assert.equal(httpActionRoutes.length, 47);
     for (const route of httpActionRoutes) {
       assert.equal(resolveHttpAction(route.method, route.path), route.action);
     }
@@ -113,6 +113,11 @@ describe('contract actions', () => {
       'admin.search.searchGuessObject',
       'admin.search.searchWorldLocation',
       'admin.world-location.createWorldLocation',
+      'auth.cookieRefresh',
+      'auth.cookieSignIn',
+      'auth.cookieSignInWithApple',
+      'auth.cookieSignInWithGoogle',
+      'auth.cookieSignUp',
       'auth.deleteUser',
       'auth.me',
       'auth.refresh',
@@ -120,16 +125,10 @@ describe('contract actions', () => {
       'auth.signIn',
       'auth.signInWithApple',
       'auth.signInWithGoogle',
+      'auth.signOut',
       'auth.signUp',
       'auth.updatePassword',
       'auth.verifyEmail',
-      'auth.webMe',
-      'auth.webRefresh',
-      'auth.webSignIn',
-      'auth.webSignInWithApple',
-      'auth.webSignInWithGoogle',
-      'auth.webSignOut',
-      'auth.webSignUp',
       'category.getCategories',
       'category.getCategory',
       'category.getCategoryTrees',

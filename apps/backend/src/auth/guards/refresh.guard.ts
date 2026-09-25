@@ -11,7 +11,10 @@ import type { AppRequest } from '../../common/types/app-request';
 import type { AuthSession } from '../../common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { extractRefreshTokenFromHttpRequest } from '../utils';
+import {
+  extractRefreshTokenFromCookie,
+  extractTokenFromHTTPHeader,
+} from '../utils';
 import {
   type AuthTokenPayload,
   resolveAuthSession,
@@ -19,17 +22,20 @@ import {
 } from './utils';
 
 @Injectable()
-export class RefreshGuard implements CanActivate {
+abstract class RefreshTokenGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
   ) {}
 
+  protected abstract extractRefreshToken(
+    request: AppRequest,
+  ): string | undefined;
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
-    const refreshToken: string | undefined =
-      extractRefreshTokenFromHttpRequest(request);
+    const refreshToken: string | undefined = this.extractRefreshToken(request);
 
     if (!refreshToken)
       throw new UnauthorizedException({
@@ -56,5 +62,19 @@ export class RefreshGuard implements CanActivate {
     request.authSession = authSession;
 
     return true;
+  }
+}
+
+@Injectable()
+export class BearerRefreshGuard extends RefreshTokenGuard {
+  protected extractRefreshToken(request: AppRequest): string | undefined {
+    return extractTokenFromHTTPHeader(request);
+  }
+}
+
+@Injectable()
+export class CookieRefreshGuard extends RefreshTokenGuard {
+  protected extractRefreshToken(request: AppRequest): string | undefined {
+    return extractRefreshTokenFromCookie(request);
   }
 }

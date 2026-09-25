@@ -39,6 +39,10 @@ import { MailService } from '../mail/mail.service';
 import type { UserCredentials } from '../user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
+import {
+  ACCESS_TOKEN_TTL_SECONDS,
+  REFRESH_TOKEN_TTL_SECONDS,
+} from './auth.constants';
 import { verifyAppleIdToken } from './utils';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
@@ -397,13 +401,13 @@ export class AuthService {
       case 'access':
         return await this.jwtService.signAsync(payload, {
           secret: this.authConfig.jwtAccessSecret,
-          expiresIn: '15m',
+          expiresIn: ACCESS_TOKEN_TTL_SECONDS,
         });
 
       case 'refresh':
         return await this.jwtService.signAsync(payload, {
           secret: this.authConfig.jwtRefreshSecret,
-          expiresIn: '7d',
+          expiresIn: REFRESH_TOKEN_TTL_SECONDS,
         });
     }
   }

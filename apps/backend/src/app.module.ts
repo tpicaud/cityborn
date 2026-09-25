@@ -4,7 +4,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { WebCsrfGuard } from './auth/guards/web-csrf.guard';
+import { CookieCsrfGuard } from './auth/guards/cookie-csrf.guard';
 import { CategoryModule } from './category/category.module';
 import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
@@ -56,7 +56,7 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: WebCsrfGuard },
+    { provide: APP_GUARD, useClass: CookieCsrfGuard },
     { provide: APP_GUARD, useClass: RateLimitGuard },
   ],
 })

@@ -8,19 +8,19 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '../auth.constants';
-import { WebSessionCookieService } from './web-session-cookie.service';
+import { AuthCookieService } from './auth-cookie.service';
 
 function buildService(
   nodeEnvironment: RuntimeConfig['nodeEnvironment'],
-): WebSessionCookieService {
+): AuthCookieService {
   const runtimeConfig: RuntimeConfig = {
     nodeEnvironment,
     port: 4000,
   };
-  return new WebSessionCookieService(runtimeConfig);
+  return new AuthCookieService(runtimeConfig);
 }
 
-describe('WebSessionCookieService.setAuthenticationCookies', () => {
+describe('AuthCookieService.setAuthenticationCookies', () => {
   it('sets production authentication cookies as HttpOnly, Secure and SameSite', () => {
     const response: DeepMocked<Response> = createMock<Response>();
     const user: User = buildUser();
@@ -29,10 +29,9 @@ describe('WebSessionCookieService.setAuthenticationCookies', () => {
       refresh_token: 'refresh-token',
       user,
     };
-    const webSessionCookieService: WebSessionCookieService =
-      buildService('production');
+    const authCookieService: AuthCookieService = buildService('production');
 
-    webSessionCookieService.setAuthenticationCookies(response, authentication);
+    authCookieService.setAuthenticationCookies(response, authentication);
 
     expect(response.cookie).toHaveBeenCalledWith(
       ACCESS_TOKEN_COOKIE_NAME,
@@ -59,13 +58,12 @@ describe('WebSessionCookieService.setAuthenticationCookies', () => {
   });
 });
 
-describe('WebSessionCookieService.clearAuthenticationCookies', () => {
+describe('AuthCookieService.clearAuthenticationCookies', () => {
   it('clears both cookies with their original attributes', () => {
     const response: DeepMocked<Response> = createMock<Response>();
-    const webSessionCookieService: WebSessionCookieService =
-      buildService('production');
+    const authCookieService: AuthCookieService = buildService('production');
 
-    webSessionCookieService.clearAuthenticationCookies(response);
+    authCookieService.clearAuthenticationCookies(response);
 
     expect(response.clearCookie).toHaveBeenCalledWith(
       ACCESS_TOKEN_COOKIE_NAME,

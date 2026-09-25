@@ -16,7 +16,7 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-test('cookie transport refreshes through the web route without exposing an authorization header', async (context) => {
+test('cookie transport refreshes through the cookie route without exposing an authorization header', async (context) => {
   const user: User = buildUser();
   const calls: FetchCall[] = [];
   const originalFetch: typeof fetch = globalThis.fetch;
@@ -47,15 +47,15 @@ test('cookie transport refreshes through the web route without exposing an autho
     client: { name: 'web' },
   });
 
-  const result = await client.auth.webMe();
+  const result = await client.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(
     calls.map(({ url }: FetchCall): string => url),
     [
-      'https://api.cityborn.test/auth/web/me',
-      'https://api.cityborn.test/auth/web/refresh',
-      'https://api.cityborn.test/auth/web/me',
+      'https://api.cityborn.test/auth/me',
+      'https://api.cityborn.test/auth/cookie/refresh',
+      'https://api.cityborn.test/auth/me',
     ],
   );
   for (const call of calls) {
