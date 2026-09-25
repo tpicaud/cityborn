@@ -9,7 +9,7 @@ import type {
   User,
   VerifyEmailData,
 } from '@cityborn/api';
-import { toApiResult } from '@cityborn/api';
+import { toApiResult, unwrapApiResponse } from '@cityborn/api';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
@@ -84,6 +84,60 @@ export function createAuthApi(
 
     async signOut() {
       await tokenStorage.clearTokens();
+    },
+
+    async deleteUser() {
+      return toVoidResult(
+        toApiResult(await client.auth.deleteUser({ body: {} })),
+      );
+    },
+
+    async resendVerificationEmail() {
+      return toVoidResult(
+        toApiResult(await client.auth.resendVerificationEmail({ body: {} })),
+      );
+    },
+
+    async verifyEmail(data) {
+      return toApiResult(await client.auth.verifyEmail({ body: data }));
+    },
+  };
+}
+
+export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
+  const toVoidResult = <T>(result: ApiResult<T>): ApiResult<void> => {
+    if (!result.ok) return result;
+    return { ok: true, data: undefined };
+  };
+
+  return {
+    async getCurrentUser() {
+      try {
+        const result = await client.auth.webMe();
+        return result.status === 200 ? result.body : null;
+      } catch {
+        return null;
+      }
+    },
+
+    async signIn(data) {
+      return toApiResult(await client.auth.webSignIn({ body: data }));
+    },
+
+    async signUp(data) {
+      return toApiResult(await client.auth.webSignUp({ body: data }));
+    },
+
+    async signInWithGoogle(data) {
+      return toApiResult(await client.auth.webSignInWithGoogle({ body: data }));
+    },
+
+    async signInWithApple(data) {
+      return toApiResult(await client.auth.webSignInWithApple({ body: data }));
+    },
+
+    async signOut() {
+      unwrapApiResponse(await client.auth.webSignOut({ body: {} }));
     },
 
     async deleteUser() {

@@ -73,6 +73,47 @@ export const authContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
+    webMe: {
+      method: 'GET',
+      path: '/web/me',
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    webRefresh: {
+      method: 'POST',
+      path: '/web/refresh',
+      body: emptyRequestBodySchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    webSignUp: {
+      method: 'POST',
+      path: '/web/sign-up',
+      body: CreateUserSchema,
+      responses: { 201: UserSchema, ...commonErrorResponses },
+    },
+    webSignIn: {
+      method: 'POST',
+      path: '/web/sign-in',
+      body: SignInSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    webSignInWithGoogle: {
+      method: 'POST',
+      path: '/web/sign-in-with-google',
+      body: SignInWithGoogleSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    webSignInWithApple: {
+      method: 'POST',
+      path: '/web/sign-in-with-apple',
+      body: SignInWithAppleSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    webSignOut: {
+      method: 'POST',
+      path: '/web/sign-out',
+      body: emptyRequestBodySchema,
+      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
   },
   { pathPrefix: '/auth' satisfies `/${ApiDomain}` },
 );

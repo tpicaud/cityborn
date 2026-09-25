@@ -4,11 +4,53 @@ import type { JwtHeader, JwtPayload, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from './auth.constants';
+
 export function extractTokenFromHTTPHeader(
   request: Request,
 ): string | undefined {
   const [type, token] = request.headers.authorization?.split(' ') ?? [];
   return type === 'Bearer' ? token : undefined;
+}
+
+function extractCookie(
+  cookieHeader: string | undefined,
+  cookieName: string,
+): string | undefined {
+  if (cookieHeader === undefined) {
+    return undefined;
+  }
+  return cookie.parseCookie(cookieHeader)[cookieName];
+}
+
+export function extractAccessTokenFromHttpRequest(
+  request: Request,
+): string | undefined {
+  return (
+    extractTokenFromHTTPHeader(request) ??
+    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME)
+  );
+}
+
+export function extractRefreshTokenFromHttpRequest(
+  request: Request,
+): string | undefined {
+  return (
+    extractTokenFromHTTPHeader(request) ??
+    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME)
+  );
+}
+
+export function hasAuthenticationCookie(request: Request): boolean {
+  return (
+    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME) !==
+      undefined ||
+    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME) !==
+      undefined
+  );
 }
 
 export function extractAccessTokenFromWsClient(
@@ -19,7 +61,7 @@ export function extractAccessTokenFromWsClient(
 
   if (cookies) {
     const parsedCookies = cookie.parseCookie(cookies);
-    return parsedCookies.access_token;
+    return parsedCookies[ACCESS_TOKEN_COOKIE_NAME];
   }
 
   if (auth) {
