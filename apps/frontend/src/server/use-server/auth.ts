@@ -5,6 +5,8 @@ import type {
   CreateUser,
   SignIn,
   SignInWithGoogle,
+  UpdatePassword,
+  UpdateUsername,
   User,
   VerifyEmailData,
 } from '@cityborn/api';
@@ -30,6 +32,20 @@ export async function signInWithGoogle(
 ): Promise<ApiResult<User>> {
   const authApi = await getServerAuthApi();
   return authApi.signInWithGoogle(data);
+}
+
+export async function updateUsername(
+  data: UpdateUsername,
+): Promise<ApiResult<User>> {
+  const authApi = await getServerAuthApi();
+  return authApi.updateUsername(data);
+}
+
+export async function updatePassword(
+  data: UpdatePassword,
+): Promise<ApiResult<User>> {
+  const authApi = await getServerAuthApi();
+  return authApi.updatePassword(data);
 }
 
 export async function resendVerificationEmail(): Promise<ApiResult<void>> {

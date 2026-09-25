@@ -1,10 +1,10 @@
-import type { User } from '@cityborn/api';
-import { buildUser } from '@cityborn/api';
+import { buildUser, type User, UsernameSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import type {
   CreateUserData,
+  UserAuthenticationState,
   UserCredentials,
 } from '../../src/user/repositories/user.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
@@ -217,6 +217,50 @@ describe('PrismaUserRepository', () => {
         await userRepository.findByAppleId('apple-user-123');
 
       expect(found).toMatchObject({ id: user.id, email: 'host@cityborn.test' });
+    });
+  });
+
+  describe('updateUsername', () => {
+    it('persists the new username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const updated: User = await userRepository.updateUsername(
+        user.id,
+        UsernameSchema.parse('citizen'),
+      );
+
+      expect(updated.username).toBe('citizen');
+      expect(await userRepository.findById(user.id)).toMatchObject({
+        username: 'citizen',
+      });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('persists the hash and increments the authentication version', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        password: 'old-hash',
+      });
+
+      const authenticationState: UserAuthenticationState =
+        await userRepository.updatePassword(user.id, 'new-hash');
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsById(user.id);
+
+      expect(authenticationState.authVersion).toBe(1);
+      expect(credentials).toMatchObject({
+        authVersion: 1,
+        passwordHash: 'new-hash',
+      });
     });
   });
 

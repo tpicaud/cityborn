@@ -1,10 +1,10 @@
-import { type User, type UserId, UserIdSchema } from '@cityborn/api';
+import { UserIdSchema } from '@cityborn/api';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
-import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
+  authVersion: z.number().int().nonnegative().optional().default(0),
 });
 
 type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
@@ -24,14 +24,6 @@ export async function validateAccessToken(
   jwt_access_secret: string | undefined,
 ): Promise<AuthTokenPayload> {
   return await validateToken(token, jwtService, jwt_access_secret);
-}
-
-export async function resolveFullUser(
-  userId: UserId,
-  userService: UserService,
-): Promise<User | null> {
-  const fullUser = await userService.findById(userId);
-  return fullUser;
 }
 
 export async function validateRefreshToken(

@@ -64,6 +64,8 @@ function createFakeClient(
       resendVerificationEmail: unexpectedCall,
       verifyEmail: unexpectedCall,
       deleteUser: unexpectedCall,
+      updateUsername: unexpectedCall,
+      updatePassword: unexpectedCall,
       ...routes,
     },
   };
@@ -115,6 +117,32 @@ test('a rejected signIn stores no token', async () => {
 
   assert.equal(result.ok, false);
   assert.equal(state.tokens, null);
+});
+
+test('updatePassword stores the rotated tokens', async () => {
+  const { state, tokenStorage } = createFakeTokenStorage();
+  const authApi = createAuthApi(
+    createFakeClient({
+      updatePassword: async () => ({
+        status: 200,
+        body: {
+          access_token: 'new-access',
+          refresh_token: 'new-refresh',
+          user,
+        },
+        headers: new Headers(),
+      }),
+    }),
+    tokenStorage,
+  );
+
+  const result = await authApi.updatePassword({
+    currentPassword: 'Password1',
+    newPassword: 'Password2',
+  });
+
+  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(state.tokens, ['new-access', 'new-refresh']);
 });
 
 test('getCurrentUser resolves to null without calling the API when no token is stored', async () => {

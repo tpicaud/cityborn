@@ -22,6 +22,7 @@ model User {
   username   String    @unique
   type       String    @default("unknown")
   password   String?
+  authVersion Int       @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
   isVerified Boolean   @default(false)

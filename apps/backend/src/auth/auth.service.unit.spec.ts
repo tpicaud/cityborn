@@ -222,6 +222,7 @@ describe('AuthService.signIn', () => {
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
+      authVersion: 0,
       passwordHash: 'hashed-password',
     });
 
@@ -248,7 +249,7 @@ describe('AuthService.signIn', () => {
       buildAuthService();
     const persistedUser: User = buildUser();
     const credentials: UserCredentials | null = isOAuthAccount
-      ? { user: persistedUser, passwordHash: null }
+      ? { user: persistedUser, authVersion: 0, passwordHash: null }
       : null;
     const signInData: SignIn = {
       identifier: 'alice',
@@ -271,6 +272,7 @@ describe('AuthService.signIn', () => {
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
+      authVersion: 0,
       passwordHash: 'hashed-password',
     });
     mockPasswordMatches = false;
@@ -288,9 +290,9 @@ describe('AuthService account operations', () => {
         buildAuthService();
       const persistedUser: User = buildUser();
       userService.findByIdentifier.mockResolvedValue(persistedUser);
-
       const result: AuthResponse = await authService.refresh(
         persistedUser.email,
+        3,
       );
 
       expect(result).toMatchObject({
@@ -304,7 +306,7 @@ describe('AuthService account operations', () => {
         buildAuthService();
       userService.findByIdentifier.mockResolvedValue(null);
 
-      await expect(authService.refresh('missing')).rejects.toMatchObject({
+      await expect(authService.refresh('missing', 0)).rejects.toMatchObject({
         response: { code: ErrorCode.USER_REFRESH_FAILED },
       });
     });
@@ -351,6 +353,88 @@ describe('AuthService account operations', () => {
       await expect(authService.deleteUser()).rejects.toMatchObject({
         response: { code: ErrorCode.USER_NOT_FOUND },
       });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('rejects password creation for an OAuth account', async () => {
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const oauthUser: User = buildUser({ type: 'google' });
+
+      await expect(
+        authService.updatePassword(oauthUser, {
+          currentPassword: 'Password1',
+          newPassword: 'Password2',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_NOT_VANILLA_ACCOUNT },
+      });
+      expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('rejects an incorrect current password', async () => {
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const persistedUser: User = buildUser();
+      userService.findCredentialsById.mockResolvedValue({
+        user: persistedUser,
+        authVersion: 0,
+        passwordHash: 'hashed-password',
+      });
+      mockPasswordMatches = false;
+
+      await expect(
+        authService.updatePassword(persistedUser, {
+          currentPassword: 'WrongPassword1',
+          newPassword: 'Password2',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT },
+      });
+      expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('updates the hash and issues tokens with the incremented auth version', async () => {
+      const {
+        authService,
+        userService,
+        jwtService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      const persistedUser: User = buildUser();
+      userService.findCredentialsById.mockResolvedValue({
+        user: persistedUser,
+        authVersion: 0,
+        passwordHash: 'hashed-password',
+      });
+      userService.updatePassword.mockResolvedValue({
+        user: persistedUser,
+        authVersion: 1,
+      });
+
+      const result: AuthResponse = await authService.updatePassword(
+        persistedUser,
+        {
+          currentPassword: 'Password1',
+          newPassword: 'Password2',
+        },
+      );
+
+      expect(userService.updatePassword).toHaveBeenCalledWith(
+        persistedUser.id,
+        'hashed-password',
+      );
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ authVersion: 1 }),
+        expect.objectContaining({ secret: 'access-secret' }),
+      );
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ authVersion: 1 }),
+        expect.objectContaining({ secret: 'refresh-secret' }),
+      );
+      expect(result.user).toEqual(persistedUser);
     });
   });
 

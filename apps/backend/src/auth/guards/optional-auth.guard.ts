@@ -10,7 +10,7 @@ import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { resolveFullUser, validateAccessToken } from './utils';
+import { validateAccessToken } from './utils';
 
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
@@ -36,8 +36,12 @@ export class OptionalAuthGuard implements CanActivate {
       this.authConfig.jwtAccessSecret,
     );
 
+    const authenticationState =
+      await this.userService.findAuthenticationStateById(user.id);
     const fullUser =
-      (await resolveFullUser(user.id, this.userService)) ?? undefined;
+      authenticationState?.authVersion === user.authVersion
+        ? authenticationState.user
+        : undefined;
     request.user = fullUser;
     if (!fullUser) {
       this.wideEventService.enrichAuth({ isAuthenticated: false });

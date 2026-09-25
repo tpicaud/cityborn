@@ -19,7 +19,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
+import { validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
@@ -147,7 +147,12 @@ export class SessionGateway
     if (!payload) return;
 
     try {
-      client.data.user = await resolveFullUser(payload.id, this.userService);
+      const authenticationState =
+        await this.userService.findAuthenticationStateById(payload.id);
+      client.data.user =
+        authenticationState?.authVersion === payload.authVersion
+          ? authenticationState.user
+          : null;
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
       client.data.user = undefined;
