@@ -126,7 +126,8 @@ export class WideEventService {
     if (!current || this.cls.get('finalized')) {
       return false;
     }
-    this.cls.set('wideEvent', { ...current, ...fields });
+    Object.assign(current, fields);
+    this.cls.set('wideEvent', current);
     return true;
   }
 

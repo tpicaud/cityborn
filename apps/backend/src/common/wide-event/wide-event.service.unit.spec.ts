@@ -1,9 +1,10 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { ApiError } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { BadRequestException } from '@nestjs/common';
-import type { ClsService } from 'nestjs-cls';
+import { ClsService } from 'nestjs-cls';
 import type {
   HttpWideEventInit,
   WideEventAuthContext,
@@ -186,6 +187,54 @@ describe('WideEventService', () => {
           errorCode: ErrorCode.BAD_REQUEST,
         }),
         'operation error',
+      );
+    });
+
+    it('retains error details across a nested CLS context', () => {
+      const clsService: ClsService<WideEventClsStore> = new ClsService(
+        new AsyncLocalStorage<WideEventClsStore>(),
+      );
+      const logger: DeepMocked<WideEventLogger> = createMock<WideEventLogger>();
+      const wideEventService: WideEventService = new WideEventService(
+        clsService,
+        logger,
+      );
+      const init: HttpWideEventInit = {
+        transport: 'http',
+        requestId: 'request-1',
+        domain: 'auth',
+        operation: 'POST /auth/sign-up',
+        action: 'auth.signUp',
+        method: 'POST',
+        route: '/auth/sign-up',
+        ip: '127.0.0.1',
+        userAgent: undefined,
+        visitorId: undefined,
+        client: 'web',
+        clientVersion: undefined,
+        apiVersion: 4,
+        isAuthenticated: false,
+      };
+
+      wideEventService.run(init, () => {
+        clsService.run(() => {
+          wideEventService.recordError(new Error('Database column missing'));
+        });
+        wideEventService.finish({
+          route: '/auth/sign-up',
+          statusCode: 500,
+        });
+      });
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'http_request',
+          statusCode: 500,
+          errorCode: ErrorCode.UNKNOWN_ERROR,
+          errorMessage: 'Database column missing',
+          errorStack: expect.any(String),
+        }),
+        'request',
       );
     });
   });
