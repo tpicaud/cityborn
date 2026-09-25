@@ -20,6 +20,7 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 ## Invariants
 
 - `run` ouvre le contexte CLS ; `finish` calcule `durationMs`, `outcome` et le niveau, puis émet. Le drapeau `finalized` rend `finish` idempotent.
+- Le CLS porte un unique objet d'état (`wideEventState`) muté en place, jamais remplacé via `cls.set` : les contextes imbriqués (`ClsMiddleware` de `PrismaClsModule`, `@Transactional`) héritent d'une copie superficielle du store, seul un objet partagé par référence remonte leurs enrichissements jusqu'à `finish`.
 - Un enrichissement après `finish` est ignoré en silence : enrichir tant que l'opération est en cours.
 - `domain` et `outcome` sont bornés. `WideEventDomain` dérive d'`ApiDomain` : nouveau domaine → `API_DOMAINS` dans `@cityborn/api`, `infrastructure` et `other` restent propres au backend. Nouveau `kind` WS → `WsWideEventKind` **et** `wideEventLogShapes`.
 - `operation` vaut `method + route` en HTTP, `eventName` en WS ; une route non résolue devient `<unmatched>`. `action` dérive du contrat et reste absente pour une route hors contrat.
