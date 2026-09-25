@@ -98,12 +98,14 @@ export class SessionGateway
   }
 
   async handleConnection(client: SessionSocket): Promise<void> {
-    await this.runConnectionWideEvent(
+    const connectionSettled: Promise<void> = this.runConnectionWideEvent(
       client,
       'connection',
       wsLifecycleEventName(sessionWsChannel, 'connect'),
       () => this.connect(client),
     );
+    client.connectionSettled = connectionSettled;
+    await connectionSettled;
   }
 
   private async connect(client: SessionSocket): Promise<void> {

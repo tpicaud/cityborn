@@ -8,19 +8,19 @@ import {
   getApiVersionInfo,
   SessionSchema,
   type User,
+  UserSchema,
 } from '@cityborn/api';
-import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { PinoLogger } from 'nestjs-pino';
 import { RateLimiterRes } from 'rate-limiter-flexible';
 import request from 'supertest';
-import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
 import {
   USER_REPOSITORY,
   type UserRepository,
 } from '../../src/user/repositories/user.repository';
+import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
 
 describe('Production bootstrap', () => {
@@ -81,7 +81,14 @@ describe('Production bootstrap', () => {
       .mockImplementation(() => undefined);
 
     try {
-      await request(app.getHttpServer()).get(contract.auth.me.path).expect(401);
+      const response: request.Response = await request(app.getHttpServer())
+        .get(contract.auth.me.path)
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        statusCode: 401,
+        code: ErrorCode.USER_TOKEN_MISSING,
+      });
 
       expect(warn).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -99,25 +106,30 @@ describe('Production bootstrap', () => {
 
   it('logs the user resolved by the authentication guard', async () => {
     const userRepository: UserRepository = app.get(USER_REPOSITORY);
-    const authConfig: AuthConfig = app.get(AUTH_CONFIG);
     const userData: User = buildUser();
     const user: User = await userRepository.create({
       email: userData.email,
       username: userData.username,
       type: userData.type,
     });
-    const accessToken: string = await app
-      .get(JwtService)
-      .signAsync({ id: user.id }, { secret: authConfig.jwtAccessSecret });
+    const accessToken: string = await createAccessToken(app, user.id);
     const info = jest
       .spyOn(PinoLogger.prototype, 'info')
       .mockImplementation(() => undefined);
 
     try {
-      await request(app.getHttpServer())
+      const response: request.Response = await request(app.getHttpServer())
         .get(contract.auth.me.path)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
+
+      expect(UserSchema.parse(response.body)).toMatchObject({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        type: user.type,
+        isVerified: user.isVerified,
+      });
 
       expect(info).toHaveBeenCalledWith(
         expect.objectContaining({
