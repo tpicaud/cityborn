@@ -243,7 +243,7 @@ export default function Profile() {
       <Dialog
         visible={passwordModalOpen}
         onClose={closePasswordModal}
-        className="h-[80%]"
+        className="h-auto max-h-[80%]"
       >
         <KeyboardAwareScrollView
           contentContainerStyle={{
@@ -254,7 +254,7 @@ export default function Profile() {
           enableOnAndroid
           extraScrollHeight={24}
           keyboardShouldPersistTaps="handled"
-          style={{ flex: 1, alignSelf: 'stretch' }}
+          style={{ alignSelf: 'stretch', flexGrow: 0, flexShrink: 1 }}
         >
           <View className="w-full items-center gap-5">
             <Text className="text-xl font-bold">Modifier mon mot de passe</Text>
