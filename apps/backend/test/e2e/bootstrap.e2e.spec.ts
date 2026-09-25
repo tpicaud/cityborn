@@ -2,17 +2,25 @@ import {
   API_CURRENT_VERSION_HEADER_NAME,
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
   buildSession,
+  buildUser,
   contract,
   ErrorCode,
   getApiVersionInfo,
   SessionSchema,
+  type User,
 } from '@cityborn/api';
+import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { PinoLogger } from 'nestjs-pino';
 import { RateLimiterRes } from 'rate-limiter-flexible';
 import request from 'supertest';
+import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
+import {
+  USER_REPOSITORY,
+  type UserRepository,
+} from '../../src/user/repositories/user.repository';
 import { createTestApp } from '../support/createTestApp';
 
 describe('Production bootstrap', () => {
@@ -86,6 +94,43 @@ describe('Production bootstrap', () => {
       );
     } finally {
       warn.mockRestore();
+    }
+  });
+
+  it('logs the user resolved by the authentication guard', async () => {
+    const userRepository: UserRepository = app.get(USER_REPOSITORY);
+    const authConfig: AuthConfig = app.get(AUTH_CONFIG);
+    const userData: User = buildUser();
+    const user: User = await userRepository.create({
+      email: userData.email,
+      username: userData.username,
+      type: userData.type,
+    });
+    const accessToken: string = await app
+      .get(JwtService)
+      .signAsync({ id: user.id }, { secret: authConfig.jwtAccessSecret });
+    const info = jest
+      .spyOn(PinoLogger.prototype, 'info')
+      .mockImplementation(() => undefined);
+
+    try {
+      await request(app.getHttpServer())
+        .get(contract.auth.me.path)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'http_request',
+          action: 'auth.me',
+          statusCode: 200,
+          isAuthenticated: true,
+          userId: user.id,
+        }),
+        'request',
+      );
+    } finally {
+      info.mockRestore();
     }
   });
 

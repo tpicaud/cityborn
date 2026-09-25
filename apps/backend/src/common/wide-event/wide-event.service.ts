@@ -23,10 +23,14 @@ import {
   type WideEventRateLimitContext,
 } from './wide-event';
 
-export interface WideEventClsStore extends ClsStore {
+interface WideEventState {
   wideEvent: WideEvent;
   startedAt: bigint;
   finalized: boolean;
+}
+
+export interface WideEventClsStore extends ClsStore {
+  wideEventState: WideEventState;
 }
 
 @Injectable()
@@ -37,10 +41,12 @@ export class WideEventService {
   ) {}
 
   run<T>(init: WideEventInit, callback: () => T): T {
-    return this.cls.runWith(
-      { wideEvent: init, startedAt: process.hrtime.bigint(), finalized: false },
-      callback,
-    );
+    const wideEventState: WideEventState = {
+      wideEvent: init,
+      startedAt: process.hrtime.bigint(),
+      finalized: false,
+    };
+    return this.cls.runWith({ wideEventState }, callback);
   }
 
   enrichAuth(fields: WideEventAuthContext): void {
@@ -91,11 +97,12 @@ export class WideEventService {
   }
 
   finish(fields: WideEventFinalization = {}): void {
-    const current = this.get();
-    if (!current || this.cls.get('finalized')) {
+    const wideEventState: WideEventState | undefined = this.getActiveState();
+    if (!wideEventState) {
       return;
     }
-    this.cls.set('finalized', true);
+    wideEventState.finalized = true;
+    const current: WideEvent = wideEventState.wideEvent;
     const statusCode = fields.statusCode ?? current.statusCode ?? 200;
     const route = fields.route;
     const finalized = {
@@ -111,22 +118,31 @@ export class WideEventService {
       statusCode,
       outcome: deriveWideEventOutcome(statusCode, fields.aborted),
       durationMs:
-        Number(process.hrtime.bigint() - this.cls.get('startedAt')) / 1e6,
+        Number(process.hrtime.bigint() - wideEventState.startedAt) / 1e6,
     };
-    this.cls.set('wideEvent', finalized);
+    wideEventState.wideEvent = finalized;
     emitWideEventLine(this.logger, finalized);
   }
 
   private get(): WideEvent | undefined {
-    return this.cls.get('wideEvent');
+    return this.cls.get('wideEventState')?.wideEvent;
+  }
+
+  private getActiveState(): WideEventState | undefined {
+    const wideEventState: WideEventState | undefined =
+      this.cls.get('wideEventState');
+    if (!wideEventState || wideEventState.finalized) {
+      return undefined;
+    }
+    return wideEventState;
   }
 
   private merge(fields: Partial<WideEventEnrichment>): boolean {
-    const current = this.get();
-    if (!current || this.cls.get('finalized')) {
+    const wideEventState: WideEventState | undefined = this.getActiveState();
+    if (!wideEventState) {
       return false;
     }
-    this.cls.set('wideEvent', { ...current, ...fields });
+    wideEventState.wideEvent = { ...wideEventState.wideEvent, ...fields };
     return true;
   }
 

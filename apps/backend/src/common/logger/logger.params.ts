@@ -18,8 +18,9 @@ export interface LoggerTransportEnvironment {
 }
 
 function currentRequestId(): string | undefined {
-  return ClsServiceManager.getClsService<WideEventClsStore>().get('wideEvent')
-    ?.requestId;
+  return ClsServiceManager.getClsService<WideEventClsStore>().get(
+    'wideEventState',
+  )?.wideEvent.requestId;
 }
 
 function stdoutTarget(isProductionRuntime: boolean): TransportTargetOptions {
