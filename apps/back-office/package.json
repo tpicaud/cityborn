@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "typecheck": "next typegen && tsc --noEmit",
-    "dev": "pnpm check-env:development && next dev",
+    "dev": "pnpm check-env:development && next dev --port 3001",
     "build": "pnpm check-env:production && next build --turbopack",
     "start": "next start",
     "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",

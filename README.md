@@ -37,6 +37,9 @@ Lancer la stack web (frontend, back-office, backend et packages) :
 pnpm dev:web
 ```
 
+Le frontend est disponible sur `http://localhost:3000` et le back-office sur
+`http://localhost:3001`.
+
 Ou la stack mobile (Expo, back-office, backend et packages) :
 
 ```bash
