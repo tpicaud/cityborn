@@ -37,7 +37,7 @@ Lancer la stack web (frontend, back-office, backend et packages) :
 pnpm dev:web
 ```
 
-Ou la stack mobile (Expo, backend et packages) :
+Ou la stack mobile (Expo, back-office, backend et packages) :
 
 ```bash
 pnpm dev:mobile
