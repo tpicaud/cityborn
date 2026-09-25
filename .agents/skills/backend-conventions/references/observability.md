@@ -37,7 +37,7 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 |---|---|---|
 | HTTP | `HttpWideEventMiddleware`, branché en tête de `configureApp()`, avant CORS, parsers, guards et routing | événement `finish` ou `close` de la réponse |
 | Message WS | `WsWideEventLifecycle`, branché dans `RedisIoAdapter` autour du pipeline Nest complet | `finalize` ; `aborted` quand le flux n'a pas complété |
-| Connexion WS | `WsHandshakeMiddleware`, branché par `RedisIoAdapter` via `server.use()`, autour du rate-limit, du visitorId et de l'auth ; un handshake refusé reste couvert | `finish` dans un `finally`, après `enrichAuth` |
-| Déconnexion WS | `handleDisconnect` de la gateway | idem |
+| Connexion WS | `WsHandshakeMiddleware`, branché par `RedisIoAdapter` via `server.use()`, autour du rate-limit, du visitorId et de l'auth ; un handshake refusé reste couvert. Event de transport `connect`, domaine `infrastructure`, sans `action` | `finish` dans un `finally`, après `enrichAuth` |
+| Déconnexion WS | `handleDisconnect` de la gateway, event `<domaine>:disconnect` du channel | idem |
 
-Le handshake est transverse à toutes les gateways : une nouvelle gateway ne gère ni rate-limit, ni auth, ni visitorId de connexion, et lit `socket.data` (`SessionSocketData`) tel quel. Pour instrumenter sa déconnexion, appeler `WsWideEventLifecycle.runConnectionLifecycle`, qui ouvre avec `createWsWideEvent`, enrichit l'auth depuis `socket.data.user` et finalise dans un `finally`.
+Le handshake est transverse à toutes les gateways et ignore les channels : il n'importe rien d'un domaine métier. Une nouvelle gateway ne gère ni rate-limit, ni auth, ni visitorId de connexion, et lit `socket.data` (`AppSocketData`) tel quel. Pour instrumenter sa déconnexion, appeler `WsWideEventLifecycle.runDisconnection` avec l'event `<domaine>:disconnect` de son channel ; il ouvre avec `createWsWideEvent`, enrichit l'auth depuis `socket.data.user` et finalise dans un `finally`.
