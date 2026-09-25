@@ -8,6 +8,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInForm = () => {
   const router = useRouter();
@@ -79,6 +80,8 @@ export const SignInForm = () => {
                 </Text>
               )}
             </View>
+            <RequestPasswordResetDialog />
+
           </View>
           <Button
             variant="filled"

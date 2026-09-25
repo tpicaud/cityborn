@@ -1,8 +1,9 @@
 import type { User } from '@cityborn/api';
-import { contract } from '@cityborn/api';
-import { Controller, UseGuards } from '@nestjs/common';
+import { contract, PASSWORD_RESET_REQUEST_MESSAGE } from '@cityborn/api';
+import { Controller, Req, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
+import type { Request } from 'express';
 import { VisitorId } from '../../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../../common/types/auth-session';
 import {
@@ -12,10 +13,14 @@ import {
 import { AuthGuard, BearerAuthGuard } from '../guards/access-token.guard';
 import { BearerRefreshGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';
+import { PasswordResetService } from '../services/password-reset.service';
 
 const c = initContract();
 
 const publicAuthRoutes = c.router({
+  requestPasswordReset: contract.auth.requestPasswordReset,
+  resetPassword: contract.auth.resetPassword,
+  validatePasswordResetToken: contract.auth.validatePasswordResetToken,
   signUp: contract.auth.signUp,
   signIn: contract.auth.signIn,
   signInWithGoogle: contract.auth.signInWithGoogle,
@@ -35,11 +40,32 @@ const refreshRoutes = c.router({
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly passwordResetService: PasswordResetService,
+  ) {}
 
   @TsRestHandler(publicAuthRoutes)
-  async handler(@VisitorId() visitorId?: string) {
+  async handler(@Req() request: Request, @VisitorId() visitorId?: string) {
     return tsRestHandler(publicAuthRoutes, {
+      requestPasswordReset: async ({ body }) => {
+        await this.passwordResetService.request(
+          body.email,
+          request.ip ?? request.socket.remoteAddress ?? 'unknown',
+        );
+        return {
+          status: 200 as const,
+          body: { message: PASSWORD_RESET_REQUEST_MESSAGE },
+        };
+      },
+      resetPassword: async ({ body }) => {
+        await this.passwordResetService.reset(body);
+        return { status: 200 as const, body: {} };
+      },
+      validatePasswordResetToken: async ({ body }) => {
+        await this.passwordResetService.validateToken(body.token);
+        return { status: 200 as const, body: {} };
+      },
       signUp: async ({ body }) => ({
         status: 201 as const,
         body: await this.authService.signUp(body, visitorId),
