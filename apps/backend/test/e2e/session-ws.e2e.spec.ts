@@ -19,6 +19,7 @@ import {
 } from 'socket.io-client';
 import { ConnectionRegistryService } from '../../src/connection-registry/connection-registry.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
 import { SessionGateway } from '../../src/session/session.gateway';
 import { createAccessToken } from '../support/createAccessToken';
@@ -92,6 +93,27 @@ describe('Session gateway over a real socket', () => {
 
   afterAll(async () => {
     await app?.close();
+  });
+
+  it('rejects a rate limited handshake with a typed connect error', async () => {
+    const clientIp: string = '203.0.113.7';
+    const rateLimitService: RateLimitService = app.get(RateLimitService);
+    for (let attempt: number = 0; attempt < 20; attempt += 1) {
+      await rateLimitService.consumeWsConnection(clientIp);
+    }
+    const client: Socket = io(appUrl, {
+      transports: ['websocket'],
+      extraHeaders: { 'x-forwarded-for': clientIp },
+    });
+    clients.push(client);
+
+    const connectError: unknown = await nextEvent(client, 'connect_error');
+
+    expect(connectError).toMatchObject({
+      message: 'Too many requests',
+      data: { statusCode: 429, code: ErrorCode.RATE_LIMIT_EXCEEDED },
+    });
+    expect(client.connected).toBe(false);
   });
 
   it('acknowledges a contract violation with a bad request error', async () => {

@@ -15,18 +15,15 @@ export function extractAccessTokenFromWsClient(
   client: Socket,
 ): string | undefined {
   const cookies = client.handshake.headers.cookie;
-  const auth = client.handshake.auth;
+  const cookieAccessToken: string | undefined = cookies
+    ? cookie.parseCookie(cookies).access_token
+    : undefined;
+  if (cookieAccessToken) return cookieAccessToken;
 
-  if (cookies) {
-    const parsedCookies = cookie.parseCookie(cookies);
-    return parsedCookies.access_token;
-  }
-
-  if (auth) {
-    return auth.access_token;
-  }
-
-  return undefined;
+  const authAccessToken: unknown = client.handshake.auth.access_token;
+  return typeof authAccessToken === 'string' && authAccessToken.length > 0
+    ? authAccessToken
+    : undefined;
 }
 
 const client = jwksRsa({

@@ -3,23 +3,20 @@ import {
   createParamDecorator,
   type ExecutionContext,
 } from '@nestjs/common';
-import type { SessionSocket } from '../types/session-socket';
+import type { AppSocket } from '../types/app-socket';
 
 export const VisitorId = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     const ctxType: ContextType = ctx.getType();
-    let visitorId: string | null = null;
 
-    if (ctxType === 'http') {
-      const request = ctx.switchToHttp().getRequest();
-      visitorId = request.visitorId;
-    } else if (ctxType === 'ws') {
-      const client = ctx.switchToWs().getClient<SessionSocket>();
-      visitorId = Array.isArray(client.data.visitorId)
-        ? (client.data.visitorId[0] ?? null)
-        : (client.data.visitorId ?? null);
+    if (ctxType === 'ws') {
+      return ctx.switchToWs().getClient<AppSocket>().data.visitorId;
     }
 
-    return visitorId;
+    if (ctxType === 'http') {
+      return ctx.switchToHttp().getRequest().visitorId;
+    }
+
+    return undefined;
   },
 );

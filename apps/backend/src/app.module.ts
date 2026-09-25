@@ -25,6 +25,7 @@ import { SessionModule } from './session/session.module';
 import { UserModule } from './user/user.module';
 import { WikidataModule } from './wikidata/wikidata.module';
 import { WorldLocationModule } from './world-location/world-location.module';
+import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { WorldLocationModule } from './world-location/world-location.module';
     CategoryModule,
     SearchModule,
     RateLimitModule,
+    WsHandshakeModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: RateLimitGuard }],

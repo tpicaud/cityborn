@@ -5,7 +5,7 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import type { SessionSocket } from '../types/session-socket';
+import type { AppSocket } from '../types/app-socket';
 import { WideEventService } from '../wide-event/wide-event.service';
 
 @Catch()
@@ -28,10 +28,7 @@ export class DefaultExceptionFilter implements ExceptionFilter {
         acknowledgement({ success: false, error: payload });
         return;
       }
-      host
-        .switchToWs()
-        .getClient<SessionSocket>()
-        .emit(WS_ERROR_EVENT, payload);
+      host.switchToWs().getClient<AppSocket>().emit(WS_ERROR_EVENT, payload);
     }
   }
 }

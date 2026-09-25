@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import type { SessionSocket } from '../common/types/session-socket';
+import type { AppSocket } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import { RateLimitService } from './rate-limit.service';
@@ -47,7 +47,7 @@ export class RateLimitGuard implements CanActivate {
   }
 
   private async consumeWsMessage(context: ExecutionContext): Promise<void> {
-    const client = context.switchToWs().getClient<SessionSocket>();
+    const client = context.switchToWs().getClient<AppSocket>();
     const connection = await this.connectionRegistryService.getConnection(
       client.id,
     );
