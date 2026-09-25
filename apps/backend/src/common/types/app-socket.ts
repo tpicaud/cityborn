@@ -6,21 +6,21 @@ import type {
 } from '@cityborn/api';
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
 
-export interface SessionSocketData {
+export interface AppSocketData {
   user: User | null;
   visitorId: VisitorId | undefined;
 }
 
-export type SessionSocket = Socket<
+export type AppSocket = Socket<
   WsClientToServerEvents,
   WsServerToClientEvents,
   DefaultEventsMap,
-  SessionSocketData
+  AppSocketData
 >;
 
-export type SessionServer = Server<
+export type AppServer = Server<
   WsClientToServerEvents,
   WsServerToClientEvents,
   DefaultEventsMap,
-  SessionSocketData
+  AppSocketData
 >;

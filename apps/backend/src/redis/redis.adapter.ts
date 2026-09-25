@@ -5,10 +5,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { isObservable, type Observable } from 'rxjs';
 import type { ServerOptions } from 'socket.io';
-import type {
-  SessionServer,
-  SessionSocket,
-} from '../common/types/session-socket';
+import type { AppServer, AppSocket } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 import {
@@ -83,7 +80,7 @@ export class RedisIoAdapter extends IoAdapter {
   }
 
   bindMessageHandlers(
-    client: SessionSocket,
+    client: AppSocket,
     handlers: MessageMappingProperties[],
     transform: (data: unknown) => Observable<unknown>,
   ): void {
@@ -99,8 +96,8 @@ export class RedisIoAdapter extends IoAdapter {
     );
   }
 
-  createIOServer(port: number, options?: ServerOptions): SessionServer {
-    const server: SessionServer = super.createIOServer(port, {
+  createIOServer(port: number, options?: ServerOptions): AppServer {
+    const server: AppServer = super.createIOServer(port, {
       ...options,
       cors: {
         origin: this.corsOrigins,

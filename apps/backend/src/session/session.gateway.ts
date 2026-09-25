@@ -19,10 +19,7 @@ import {
 import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
-import type {
-  SessionServer,
-  SessionSocket,
-} from '../common/types/session-socket';
+import type { AppServer, AppSocket } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 import {
@@ -43,7 +40,7 @@ export class SessionGateway implements OnGatewayDisconnect {
   ) {}
 
   @WebSocketServer()
-  io!: SessionServer;
+  io!: AppServer;
 
   private async resolveConnection(socketID: string): Promise<ConnectionInfo> {
     const connection =
@@ -80,7 +77,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'join')
   async handleJoin(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @CurrentUser() user: User | undefined,
     @MessageBody() {
       sessionID,
@@ -106,7 +103,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'updateHost')
   async updateHost(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @MessageBody() {
       newHostID,
     }: WsPayload<typeof sessionWsChannel, 'updateHost'>,
@@ -122,7 +119,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'updateGameConfig')
   async updateGameConfig(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @MessageBody() {
       gameConfig,
     }: WsPayload<typeof sessionWsChannel, 'updateGameConfig'>,
@@ -138,7 +135,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'kickPlayer')
   async kickPlayer(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @MessageBody() {
       playerToKick,
     }: WsPayload<typeof sessionWsChannel, 'kickPlayer'>,
@@ -170,7 +167,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'startGame')
   async startGame(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
@@ -185,7 +182,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'guess')
   async handleGuess(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'guess'>,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
@@ -200,7 +197,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'nextRound')
   async handleNextRound(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
@@ -215,7 +212,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'playAgain')
   async playAgain(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID } = await this.resolveConnection(socket.id);
@@ -234,7 +231,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WsMessage(sessionWsChannel, 'reconnect')
   async reconnect(
-    @ConnectedSocket() socket: SessionSocket,
+    @ConnectedSocket() socket: AppSocket,
     @CurrentUser() user: User | undefined,
     @MessageBody() {
       sessionID,
@@ -263,7 +260,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     this.broadcastSession(session);
   }
 
-  private async disconnect(socket: SessionSocket): Promise<void> {
+  private async disconnect(socket: AppSocket): Promise<void> {
     try {
       const connection = await this.connectionRegistryService.getConnection(
         socket.id,
@@ -289,12 +286,9 @@ export class SessionGateway implements OnGatewayDisconnect {
     }
   }
 
-  async handleDisconnect(
-    @ConnectedSocket() socket: SessionSocket,
-  ): Promise<void> {
-    await this.wsWideEventLifecycle.runConnectionLifecycle(
+  async handleDisconnect(@ConnectedSocket() socket: AppSocket): Promise<void> {
+    await this.wsWideEventLifecycle.runDisconnection(
       socket,
-      'disconnection',
       wsLifecycleEventName(sessionWsChannel, 'disconnect'),
       () => this.disconnect(socket),
     );

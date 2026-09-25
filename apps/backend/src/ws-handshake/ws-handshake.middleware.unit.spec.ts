@@ -5,7 +5,7 @@ import type { JwtService } from '@nestjs/jwt';
 import { JsonWebTokenError } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
 import { RateLimiterRes } from 'rate-limiter-flexible';
-import type { SessionSocket } from '../common/types/session-socket';
+import type { AppSocket } from '../common/types/app-socket';
 import type { WideEventLogger } from '../common/wide-event/wide-event';
 import {
   type WideEventClsStore,
@@ -30,8 +30,8 @@ function buildSocket({
   query = {},
   cookie,
   auth = {},
-}: HandshakeInput = {}): SessionSocket {
-  return createMock<SessionSocket>({
+}: HandshakeInput = {}): AppSocket {
+  return createMock<AppSocket>({
     id: 'socket-1',
     handshake: {
       headers: cookie ? { cookie } : {},
@@ -77,7 +77,7 @@ function buildMiddleware() {
 
 function runHandshake(
   wsHandshakeMiddleware: WsHandshakeMiddleware,
-  socket: SessionSocket,
+  socket: AppSocket,
 ): Promise<WsHandshakeError | undefined> {
   return new Promise((resolve) =>
     wsHandshakeMiddleware.use(socket, (error) => resolve(error)),
@@ -96,7 +96,7 @@ describe('WsHandshakeMiddleware', () => {
       rateLimitService.consumeWsConnection.mockRejectedValue(
         new RateLimiterRes(),
       );
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         auth: { access_token: 'access-token' },
       });
 
@@ -118,6 +118,8 @@ describe('WsHandshakeMiddleware', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           event: 'ws_connection',
+          domain: 'infrastructure',
+          eventName: 'connect',
           socketId: 'socket-1',
           statusCode: 429,
           errorCode: ErrorCode.RATE_LIMIT_EXCEEDED,
@@ -132,7 +134,7 @@ describe('WsHandshakeMiddleware', () => {
         jwtService,
         wsHandshakeMiddleware,
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
-      const socket: SessionSocket = buildSocket();
+      const socket: AppSocket = buildSocket();
 
       const error: WsHandshakeError | undefined = await runHandshake(
         wsHandshakeMiddleware,
@@ -154,7 +156,7 @@ describe('WsHandshakeMiddleware', () => {
       const user: User = buildUser();
       jwtService.verifyAsync.mockResolvedValue({ id: user.id });
       userService.findById.mockResolvedValue(user);
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         cookie: 'theme=dark',
         auth: { access_token: 'access-token' },
       });
@@ -184,7 +186,7 @@ describe('WsHandshakeMiddleware', () => {
         jwtService,
         wsHandshakeMiddleware,
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         cookie: 'access_token=cookie-token',
         auth: { access_token: 'auth-token' },
       });
@@ -205,7 +207,7 @@ describe('WsHandshakeMiddleware', () => {
       jwtService.verifyAsync.mockRejectedValue(
         new JsonWebTokenError('invalid signature'),
       );
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         auth: { access_token: 'invalid-token' },
       });
 
@@ -232,7 +234,7 @@ describe('WsHandshakeMiddleware', () => {
         logger,
         wsHandshakeMiddleware,
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         query: { 'x-visitor-id': ['visitor-1', 'visitor-2'] },
       });
 
@@ -248,7 +250,7 @@ describe('WsHandshakeMiddleware', () => {
     it('ignores an empty visitor id', async () => {
       const { wsHandshakeMiddleware }: ReturnType<typeof buildMiddleware> =
         buildMiddleware();
-      const socket: SessionSocket = buildSocket({
+      const socket: AppSocket = buildSocket({
         query: { 'x-visitor-id': '' },
       });
 

@@ -37,9 +37,16 @@ export interface HttpWideEventInit extends WideEventInitBase {
 export interface WsWideEventInit extends WideEventInitBase {
   transport: 'ws';
   kind: WsWideEventKind;
-  eventName: WsClientEventName | WsLifecycleEventName;
+  eventName: WsWideEventName;
   socketId: string;
 }
+
+export const WS_CONNECT_EVENT_NAME = 'connect';
+
+export type WsWideEventName =
+  | WsClientEventName
+  | WsLifecycleEventName
+  | typeof WS_CONNECT_EVENT_NAME;
 
 export type WsWideEventKind = 'message' | 'connection' | 'disconnection';
 
@@ -255,7 +262,7 @@ export function createHttpWideEvent(req: Request): HttpWideEventInit {
   };
 }
 
-export function createWsWideEvent(params: {
+interface WsWideEventParams {
   kind: WsWideEventKind;
   eventName: string;
   socketId: string;
@@ -264,24 +271,42 @@ export function createWsWideEvent(params: {
   visitorId: string | undefined;
   client: string | undefined;
   clientVersion: string | undefined;
-}): WsWideEventInit {
-  if (!isWsWideEventName(params.eventName)) {
-    throw new Error(`Unregistered WebSocket event: ${params.eventName}`);
-  }
+}
+
+function wsWideEventContext(
+  params: WsWideEventParams,
+): Omit<WsWideEventInit, 'domain' | 'operation' | 'action' | 'eventName'> {
   return {
     transport: 'ws',
     kind: params.kind,
     requestId: nanoid(),
-    domain: deriveWsDomain(params.eventName),
-    operation: params.eventName,
-    action: resolveWsAction(params.eventName),
-    eventName: params.eventName,
     socketId: params.socketId,
     ip: params.ip,
     userAgent: params.userAgent,
     visitorId: params.visitorId,
     client: params.client,
     clientVersion: params.clientVersion,
+  };
+}
+
+export function createWsWideEvent(params: WsWideEventParams): WsWideEventInit {
+  if (params.eventName === WS_CONNECT_EVENT_NAME) {
+    return {
+      ...wsWideEventContext(params),
+      domain: 'infrastructure',
+      operation: WS_CONNECT_EVENT_NAME,
+      eventName: WS_CONNECT_EVENT_NAME,
+    };
+  }
+  if (!isWsWideEventName(params.eventName)) {
+    throw new Error(`Unregistered WebSocket event: ${params.eventName}`);
+  }
+  return {
+    ...wsWideEventContext(params),
+    domain: deriveWsDomain(params.eventName),
+    operation: params.eventName,
+    action: resolveWsAction(params.eventName),
+    eventName: params.eventName,
   };
 }
 

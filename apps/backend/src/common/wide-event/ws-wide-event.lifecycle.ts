@@ -3,12 +3,14 @@ import type { WsLifecycleEventName } from '@cityborn/api';
 import { Injectable } from '@nestjs/common';
 import { defer, finalize, Observable, tap } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
-import type { SessionSocket } from '../types/session-socket';
+import type { AppSocket } from '../types/app-socket';
 import {
   createWsWideEvent,
   firstHeaderValue,
+  WS_CONNECT_EVENT_NAME,
   type WsWideEventInit,
   type WsWideEventKind,
+  type WsWideEventName,
 } from './wide-event';
 import { WideEventService } from './wide-event.service';
 
@@ -17,7 +19,7 @@ export class WsWideEventLifecycle {
   constructor(private readonly wideEventService: WideEventService) {}
 
   run(
-    client: SessionSocket,
+    client: AppSocket,
     eventName: string,
     handler: () => Observable<unknown>,
   ): Observable<unknown> {
@@ -48,10 +50,30 @@ export class WsWideEventLifecycle {
     });
   }
 
-  runConnectionLifecycle<Result>(
-    client: SessionSocket,
-    kind: 'connection' | 'disconnection',
+  runConnection<Result>(
+    client: AppSocket,
+    handler: () => Promise<Result>,
+  ): Promise<Result> {
+    return this.runLifecycle(
+      client,
+      'connection',
+      WS_CONNECT_EVENT_NAME,
+      handler,
+    );
+  }
+
+  runDisconnection<Result>(
+    client: AppSocket,
     eventName: WsLifecycleEventName,
+    handler: () => Promise<Result>,
+  ): Promise<Result> {
+    return this.runLifecycle(client, 'disconnection', eventName, handler);
+  }
+
+  private runLifecycle<Result>(
+    client: AppSocket,
+    kind: 'connection' | 'disconnection',
+    eventName: WsWideEventName,
     handler: () => Promise<Result>,
   ): Promise<Result> {
     return this.wideEventService.run(
@@ -68,7 +90,7 @@ export class WsWideEventLifecycle {
   }
 
   private createSocketWideEvent(
-    client: SessionSocket,
+    client: AppSocket,
     kind: WsWideEventKind,
     eventName: string,
   ): WsWideEventInit {
@@ -85,7 +107,7 @@ export class WsWideEventLifecycle {
     });
   }
 
-  private enrichSocketAuth(client: SessionSocket): void {
+  private enrichSocketAuth(client: AppSocket): void {
     const user = client.data.user;
     this.wideEventService.enrichAuth(
       user

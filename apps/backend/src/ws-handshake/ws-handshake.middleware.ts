@@ -1,16 +1,14 @@
 import {
   type ApiError,
-  sessionWsChannel,
   type User,
   type VisitorId,
   VisitorIdSchema,
-  wsLifecycleEventName,
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
-import type { SessionSocket } from '../common/types/session-socket';
+import type { AppSocket } from '../common/types/app-socket';
 import { firstHeaderValue } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
@@ -45,19 +43,14 @@ export class WsHandshakeMiddleware {
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
   ) {}
 
-  use(socket: SessionSocket, next: WsHandshakeNext): void {
+  use(socket: AppSocket, next: WsHandshakeNext): void {
     socket.data = {
       user: null,
       visitorId: parseVisitorId(socket.handshake.query['x-visitor-id']),
     };
 
     this.wsWideEventLifecycle
-      .runConnectionLifecycle(
-        socket,
-        'connection',
-        wsLifecycleEventName(sessionWsChannel, 'connect'),
-        () => this.handshake(socket),
-      )
+      .runConnection(socket, () => this.handshake(socket))
       .then(
         (rejection: ApiError | null) =>
           next(rejection ? new WsHandshakeError(rejection) : undefined),
@@ -70,7 +63,7 @@ export class WsHandshakeMiddleware {
       );
   }
 
-  private async handshake(socket: SessionSocket): Promise<ApiError | null> {
+  private async handshake(socket: AppSocket): Promise<ApiError | null> {
     const rateLimitRejection: ApiError | null =
       await this.consumeConnectionRateLimit(socket);
     if (rateLimitRejection) return rateLimitRejection;
@@ -80,7 +73,7 @@ export class WsHandshakeMiddleware {
   }
 
   private async consumeConnectionRateLimit(
-    socket: SessionSocket,
+    socket: AppSocket,
   ): Promise<ApiError | null> {
     try {
       await this.rateLimitService.consumeWsConnection(
@@ -95,7 +88,7 @@ export class WsHandshakeMiddleware {
     }
   }
 
-  private async resolveUser(socket: SessionSocket): Promise<User | null> {
+  private async resolveUser(socket: AppSocket): Promise<User | null> {
     const token: string | undefined = extractAccessTokenFromWsClient(socket);
     if (!token) return null;
 

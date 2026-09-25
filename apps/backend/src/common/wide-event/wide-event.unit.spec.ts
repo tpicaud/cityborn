@@ -6,8 +6,12 @@ import {
 } from '@cityborn/api';
 import type { AppRoute, AppRouter } from '@ts-rest/core';
 import { isAppRoute } from '@ts-rest/core';
-import type { WideEventDomain } from './wide-event';
-import { createWsWideEvent, deriveHttpDomain } from './wide-event';
+import type { WideEventDomain, WsWideEventInit } from './wide-event';
+import {
+  createWsWideEvent,
+  deriveHttpDomain,
+  WS_CONNECT_EVENT_NAME,
+} from './wide-event';
 
 function collectContractPaths(router: AppRouter): string[] {
   return Object.values(router).flatMap((entry: AppRoute | AppRouter) =>
@@ -59,6 +63,26 @@ describe('createWsWideEvent', () => {
 
     expect(message.action).toBe('session.guess');
     expect(connection.action).toBe('session.connect');
+  });
+
+  it('classifies the transport connection outside any channel', () => {
+    const connection: WsWideEventInit = createWsWideEvent({
+      kind: 'connection',
+      eventName: WS_CONNECT_EVENT_NAME,
+      socketId: 'socket-1',
+      ip: undefined,
+      userAgent: undefined,
+      visitorId: undefined,
+      client: undefined,
+      clientVersion: undefined,
+    });
+
+    expect(connection).toMatchObject({
+      domain: 'infrastructure',
+      operation: 'connect',
+      eventName: 'connect',
+    });
+    expect(connection.action).toBeUndefined();
   });
 
   it('rejects a message that is missing from the channel registry', () => {
