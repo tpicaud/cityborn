@@ -1,5 +1,6 @@
 import type {
   ApiResult,
+  AppContract,
   AuthResponse,
   CreateUser,
   PublicUser,
@@ -11,6 +12,7 @@ import type {
   VerifyEmailData,
 } from '@cityborn/api';
 import { toApiResult, unwrapApiResponse } from '@cityborn/api';
+import type { ClientInferResponses } from '@ts-rest/core';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
@@ -121,7 +123,8 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
   return {
     async getCurrentUser() {
       try {
-        const result = await client.auth.me();
+        const result: ClientInferResponses<AppContract['auth']['me']> =
+          await client.auth.me();
         return result.status === 200 ? result.body : null;
       } catch {
         return null;
@@ -129,22 +132,22 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
     },
 
     async signIn(data) {
-      return toApiResult(await client.auth.cookieSignIn({ body: data }));
+      return toApiResult(await client.auth.cookie.signIn({ body: data }));
     },
 
     async signUp(data) {
-      return toApiResult(await client.auth.cookieSignUp({ body: data }));
+      return toApiResult(await client.auth.cookie.signUp({ body: data }));
     },
 
     async signInWithGoogle(data) {
       return toApiResult(
-        await client.auth.cookieSignInWithGoogle({ body: data }),
+        await client.auth.cookie.signInWithGoogle({ body: data }),
       );
     },
 
     async signInWithApple(data) {
       return toApiResult(
-        await client.auth.cookieSignInWithApple({ body: data }),
+        await client.auth.cookie.signInWithApple({ body: data }),
       );
     },
 

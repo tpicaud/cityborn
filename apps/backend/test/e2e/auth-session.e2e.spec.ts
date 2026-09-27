@@ -1,5 +1,7 @@
 import {
+  type ApiError,
   ApiErrorSchema,
+  type AuthResponse,
   AuthResponseSchema,
   buildUser,
   contract,
@@ -10,10 +12,11 @@ import {
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bcrypt from 'bcrypt';
 import request from 'supertest';
+import type TestAgent from 'supertest/lib/agent';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../../src/auth/auth.constants';
+} from '../../src/auth/auth-cookies';
 import {
   USER_REPOSITORY,
   type UserRepository,
@@ -52,14 +55,14 @@ describe('Authentication transports', () => {
   }
 
   it('runs the cookie sign-in, current user, refresh and sign-out flow with HttpOnly cookies', async () => {
-    const password = 'Password1';
+    const password: string = 'Password1';
     const userData: User = buildUser();
     const user: User = await persistEmailUser(userData, password);
-    const origin = 'http://localhost:3000';
-    const webAgent = request.agent(app.getHttpServer());
+    const origin: string = 'http://localhost:3000';
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
 
-    const signInResponse = await webAgent
-      .post(contract.auth.cookieSignIn.path)
+    const signInResponse: request.Response = await webAgent
+      .post(contract.auth.cookie.signIn.path)
       .set('Origin', origin)
       .send({ identifier: user.email, password })
       .expect(200);
@@ -84,14 +87,14 @@ describe('Authentication transports', () => {
       ),
     ).toBe(true);
 
-    const currentUserResponse = await webAgent
+    const currentUserResponse: request.Response = await webAgent
       .get(contract.auth.me.path)
       .expect(200);
     const currentUser: User = UserSchema.parse(currentUserResponse.body);
     expect(currentUser.id).toBe(user.id);
 
-    const refreshResponse = await webAgent
-      .post(contract.auth.cookieRefresh.path)
+    const refreshResponse: request.Response = await webAgent
+      .post(contract.auth.cookie.refresh.path)
       .set('Origin', origin)
       .send({})
       .expect(200);
@@ -102,7 +105,7 @@ describe('Authentication transports', () => {
     expect(refreshedUser.id).toBe(user.id);
     expect(refreshedCookies).toHaveLength(2);
 
-    const signOutResponse = await webAgent
+    const signOutResponse: request.Response = await webAgent
       .post(contract.auth.signOut.path)
       .set('Origin', origin)
       .send({})
@@ -121,39 +124,54 @@ describe('Authentication transports', () => {
   });
 
   it('rejects a cookie-authenticated mutation without an allowed origin', async () => {
-    const password = 'Password1';
+    const password: string = 'Password1';
     const userData: User = buildUser();
     const user: User = await persistEmailUser(userData, password);
-    const webAgent = request.agent(app.getHttpServer());
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
 
     await webAgent
-      .post(contract.auth.cookieSignIn.path)
+      .post(contract.auth.cookie.signIn.path)
       .set('Origin', 'http://localhost:3000')
       .send({ identifier: user.email, password })
       .expect(200);
 
-    const response = await webAgent
-      .post(contract.auth.cookieRefresh.path)
+    const response: request.Response = await webAgent
+      .post(contract.auth.cookie.refresh.path)
       .send({})
       .expect(403);
-    const error = ApiErrorSchema.parse(response.body);
+    const error: ApiError = ApiErrorSchema.parse(response.body);
     expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
   });
 
-  it('never exposes cookie tokens through the bearer refresh route', async () => {
-    const password = 'Password1';
+  it('rejects a cookie sign-in from an unauthorized origin', async () => {
+    const password: string = 'Password1';
     const userData: User = buildUser();
     const user: User = await persistEmailUser(userData, password);
-    const origin = 'http://localhost:3000';
-    const webAgent = request.agent(app.getHttpServer());
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.cookie.signIn.path)
+      .set('Origin', 'https://attacker.test')
+      .send({ identifier: user.email, password })
+      .expect(403);
+    const error: ApiError = ApiErrorSchema.parse(response.body);
+    expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('never exposes cookie tokens through the bearer refresh route', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const origin: string = 'http://localhost:3000';
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
 
     await webAgent
-      .post(contract.auth.cookieSignIn.path)
+      .post(contract.auth.cookie.signIn.path)
       .set('Origin', origin)
       .send({ identifier: user.email, password })
       .expect(200);
 
-    const response = await webAgent
+    const response: request.Response = await webAgent
       .post(contract.auth.refresh.path)
       .set('Origin', origin)
       .send({})
@@ -163,18 +181,22 @@ describe('Authentication transports', () => {
   });
 
   it('keeps the legacy mobile bearer contract without setting cookies', async () => {
-    const password = 'Password1';
+    const password: string = 'Password1';
     const userData: User = buildUser();
     const user: User = await persistEmailUser(userData, password);
 
-    const signInResponse = await request(app.getHttpServer())
+    const signInResponse: request.Response = await request(app.getHttpServer())
       .post(contract.auth.signIn.path)
       .send({ identifier: user.email, password })
       .expect(200);
-    const authentication = AuthResponseSchema.parse(signInResponse.body);
+    const authentication: AuthResponse = AuthResponseSchema.parse(
+      signInResponse.body,
+    );
     expect(signInResponse.headers['set-cookie']).toBeUndefined();
 
-    const currentUserResponse = await request(app.getHttpServer())
+    const currentUserResponse: request.Response = await request(
+      app.getHttpServer(),
+    )
       .get(contract.auth.me.path)
       .set('Authorization', `Bearer ${authentication.access_token}`)
       .expect(200);

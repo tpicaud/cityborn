@@ -1,8 +1,18 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildUser, ErrorCode, type User } from '@cityborn/api';
+import {
+  type AppContract,
+  buildUser,
+  ErrorCode,
+  type User,
+} from '@cityborn/api';
+import type { ClientInferResponses } from '@ts-rest/core';
 import type { TokenStorage } from '../platform/tokenStorage';
-import { createApiClient, createCookieApiClient } from './createApiClient';
+import {
+  type ApiClient,
+  createApiClient,
+  createCookieApiClient,
+} from './createApiClient';
 
 interface FetchCall {
   url: string;
@@ -43,11 +53,12 @@ test('cookie transport refreshes through the cookie route without exposing an au
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client = createCookieApiClient('https://api.cityborn.test', {
+  const client: ApiClient = createCookieApiClient('https://api.cityborn.test', {
     client: { name: 'web' },
   });
 
-  const result = await client.auth.me();
+  const result: ClientInferResponses<AppContract['auth']['me']> =
+    await client.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(
@@ -58,10 +69,10 @@ test('cookie transport refreshes through the cookie route without exposing an au
       'https://api.cityborn.test/auth/me',
     ],
   );
-  for (const call of calls) {
+  calls.forEach((call: FetchCall) => {
     assert.equal(new Headers(call.init?.headers).get('Authorization'), null);
     assert.equal(call.init?.credentials, 'include');
-  }
+  });
 });
 
 test('bearer transport keeps refreshing mobile tokens through the legacy route', async (context) => {
@@ -115,11 +126,16 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client = createApiClient('https://api.cityborn.test', tokenStorage, {
-    client: { name: 'mobile', version: '1.0.0' },
-  });
+  const client: ApiClient = createApiClient(
+    'https://api.cityborn.test',
+    tokenStorage,
+    {
+      client: { name: 'mobile', version: '1.0.0' },
+    },
+  );
 
-  const result = await client.auth.me();
+  const result: ClientInferResponses<AppContract['auth']['me']> =
+    await client.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(

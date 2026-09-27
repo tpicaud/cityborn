@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  type HttpAction,
   httpActionRoutes,
   resolveHttpAction,
   resolveWsAction,
@@ -35,6 +36,21 @@ describe('resolveHttpAction', () => {
       'admin.category.getCategoryTrees',
     );
     assert.equal(resolveHttpAction('GET', '/'), undefined);
+  });
+
+  it('prefixes nested router keys below the domain', () => {
+    const cookieSignInAction: HttpAction = 'auth.cookie.signIn';
+
+    assert.equal(
+      resolveHttpAction('POST', '/auth/cookie/sign-in'),
+      cookieSignInAction,
+    );
+  });
+
+  it('has unique actions', () => {
+    const actions: string[] = httpActionRoutes.map(({ action }) => action);
+
+    assert.equal(new Set(actions).size, actions.length);
   });
 
   it('has unique method and path pairs', () => {
@@ -113,11 +129,11 @@ describe('contract actions', () => {
       'admin.search.searchGuessObject',
       'admin.search.searchWorldLocation',
       'admin.world-location.createWorldLocation',
-      'auth.cookieRefresh',
-      'auth.cookieSignIn',
-      'auth.cookieSignInWithApple',
-      'auth.cookieSignInWithGoogle',
-      'auth.cookieSignUp',
+      'auth.cookie.refresh',
+      'auth.cookie.signIn',
+      'auth.cookie.signInWithApple',
+      'auth.cookie.signInWithGoogle',
+      'auth.cookie.signUp',
       'auth.deleteUser',
       'auth.me',
       'auth.refresh',

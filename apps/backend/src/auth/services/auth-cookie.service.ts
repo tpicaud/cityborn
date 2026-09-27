@@ -3,27 +3,39 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { CookieOptions, Response } from 'express';
 import { RUNTIME_CONFIG, type RuntimeConfig } from '../../config/config.module';
 import {
-  ACCESS_TOKEN_COOKIE_NAME,
   ACCESS_TOKEN_TTL_SECONDS,
-  REFRESH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_TTL_SECONDS,
 } from '../auth.constants';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  ACCESS_TOKEN_COOKIE_PATH,
+  REFRESH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_PATH,
+} from '../auth-cookies';
 
 const accessTokenMaxAgeMs: number = ACCESS_TOKEN_TTL_SECONDS * 1000;
 const refreshTokenMaxAgeMs: number = REFRESH_TOKEN_TTL_SECONDS * 1000;
 
 @Injectable()
 export class AuthCookieService {
-  private readonly cookieOptions: CookieOptions;
+  private readonly accessTokenCookieOptions: CookieOptions;
+  private readonly refreshTokenCookieOptions: CookieOptions;
 
   constructor(
     @Inject(RUNTIME_CONFIG) private readonly runtimeConfig: RuntimeConfig,
   ) {
-    this.cookieOptions = {
+    const cookieOptions: CookieOptions = {
       httpOnly: true,
       sameSite: 'lax',
       secure: this.runtimeConfig.nodeEnvironment === 'production',
-      path: '/',
+    };
+    this.accessTokenCookieOptions = {
+      ...cookieOptions,
+      path: ACCESS_TOKEN_COOKIE_PATH,
+    };
+    this.refreshTokenCookieOptions = {
+      ...cookieOptions,
+      path: REFRESH_TOKEN_COOKIE_PATH,
     };
   }
 
@@ -32,17 +44,23 @@ export class AuthCookieService {
     authentication: AuthResponse,
   ): void {
     response.cookie(ACCESS_TOKEN_COOKIE_NAME, authentication.access_token, {
-      ...this.cookieOptions,
+      ...this.accessTokenCookieOptions,
       maxAge: accessTokenMaxAgeMs,
     });
     response.cookie(REFRESH_TOKEN_COOKIE_NAME, authentication.refresh_token, {
-      ...this.cookieOptions,
+      ...this.refreshTokenCookieOptions,
       maxAge: refreshTokenMaxAgeMs,
     });
   }
 
   clearAuthenticationCookies(response: Response): void {
-    response.clearCookie(ACCESS_TOKEN_COOKIE_NAME, this.cookieOptions);
-    response.clearCookie(REFRESH_TOKEN_COOKIE_NAME, this.cookieOptions);
+    response.clearCookie(
+      ACCESS_TOKEN_COOKIE_NAME,
+      this.accessTokenCookieOptions,
+    );
+    response.clearCookie(
+      REFRESH_TOKEN_COOKIE_NAME,
+      this.refreshTokenCookieOptions,
+    );
   }
 }

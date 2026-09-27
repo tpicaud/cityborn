@@ -7,7 +7,7 @@ import type { HttpConfig } from '../../config/config.module';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../auth.constants';
+} from '../auth-cookies';
 import { CookieCsrfGuard } from './cookie-csrf.guard';
 
 const httpConfig: HttpConfig = {
@@ -17,10 +17,12 @@ const httpConfig: HttpConfig = {
 
 function buildContext(
   method: string,
+  path: string,
   headers: Request['headers'],
 ): DeepMocked<ExecutionContext> {
   const request: DeepMocked<Request> = createMock<Request>({
     method,
+    path,
     headers,
   });
   const context: DeepMocked<ExecutionContext> = createMock<ExecutionContext>();
@@ -31,28 +33,40 @@ function buildContext(
 describe('CookieCsrfGuard.canActivate', () => {
   it('allows safe requests authenticated by cookies', () => {
     const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
-    const context: DeepMocked<ExecutionContext> = buildContext('GET', {
-      cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
-    });
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'GET',
+      '/auth/me',
+      {
+        cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
+      },
+    );
 
     expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
 
   it('allows bearer mutations without cookies', () => {
     const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
-    const context: DeepMocked<ExecutionContext> = buildContext('POST', {
-      authorization: 'Bearer access-token',
-    });
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'POST',
+      '/session',
+      {
+        authorization: 'Bearer access-token',
+      },
+    );
 
     expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
 
   it('allows cookie mutations from an authorized origin', () => {
     const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
-    const context: DeepMocked<ExecutionContext> = buildContext('POST', {
-      cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
-      origin: 'https://cityborn.test',
-    });
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'POST',
+      '/session',
+      {
+        cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access-token`,
+        origin: 'https://cityborn.test',
+      },
+    );
 
     expect(cookieCsrfGuard.canActivate(context)).toBe(true);
   });
@@ -68,7 +82,39 @@ describe('CookieCsrfGuard.canActivate', () => {
     if (origin !== undefined) {
       headers.origin = origin;
     }
-    const context: DeepMocked<ExecutionContext> = buildContext('POST', headers);
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'POST',
+      '/auth/cookie/refresh',
+      headers,
+    );
+
+    expect(() => cookieCsrfGuard.canActivate(context)).toThrow(
+      expect.objectContaining({
+        response: expect.objectContaining({
+          code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
+        }),
+      }),
+    );
+  });
+
+  it('allows bearer sign-in without origin', () => {
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'POST',
+      '/auth/sign-in',
+      {},
+    );
+
+    expect(cookieCsrfGuard.canActivate(context)).toBe(true);
+  });
+
+  it('rejects cookie sign-in without cookies from an unauthorized origin', () => {
+    const cookieCsrfGuard: CookieCsrfGuard = new CookieCsrfGuard(httpConfig);
+    const context: DeepMocked<ExecutionContext> = buildContext(
+      'POST',
+      '/auth/cookie/sign-in',
+      { origin: 'https://attacker.test' },
+    );
 
     expect(() => cookieCsrfGuard.canActivate(context)).toThrow(
       expect.objectContaining({

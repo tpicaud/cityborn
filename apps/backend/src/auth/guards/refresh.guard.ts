@@ -11,10 +11,8 @@ import type { AppRequest } from '../../common/types/app-request';
 import type { AuthSession } from '../../common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import {
-  extractRefreshTokenFromCookie,
-  extractTokenFromHTTPHeader,
-} from '../utils';
+import { extractRefreshTokenFromCookieHeader } from '../auth-cookies';
+import { extractTokenFromHTTPHeader } from '../utils';
 import {
   type AuthTokenPayload,
   resolveAuthSession,
@@ -75,6 +73,6 @@ export class BearerRefreshGuard extends RefreshTokenGuard {
 @Injectable()
 export class CookieRefreshGuard extends RefreshTokenGuard {
   protected extractRefreshToken(request: AppRequest): string | undefined {
-    return extractRefreshTokenFromCookie(request);
+    return extractRefreshTokenFromCookieHeader(request.headers.cookie);
   }
 }

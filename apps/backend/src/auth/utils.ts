@@ -1,14 +1,12 @@
-import * as cookie from 'cookie';
 import type { Request } from 'express';
 import type { JwtHeader, JwtPayload, SigningKeyCallback } from 'jsonwebtoken';
 import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import type { Socket } from 'socket.io';
 import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from './auth.constants';
+  extractAccessTokenFromCookieHeader,
+  extractLegacyFrontendAccessTokenFromCookieHeader,
+} from './auth-cookies';
 
 export function extractTokenFromHTTPHeader(
   request: Request,
@@ -17,37 +15,12 @@ export function extractTokenFromHTTPHeader(
   return type === 'Bearer' ? token : undefined;
 }
 
-function extractCookie(
-  cookieHeader: string | undefined,
-  cookieName: string,
-): string | undefined {
-  if (cookieHeader === undefined) {
-    return undefined;
-  }
-  return cookie.parseCookie(cookieHeader)[cookieName];
-}
-
 export function extractAccessTokenFromHttpRequest(
   request: Request,
 ): string | undefined {
   return (
     extractTokenFromHTTPHeader(request) ??
-    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME)
-  );
-}
-
-export function extractRefreshTokenFromCookie(
-  request: Request,
-): string | undefined {
-  return extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME);
-}
-
-export function hasAuthenticationCookie(request: Request): boolean {
-  return (
-    extractCookie(request.headers.cookie, ACCESS_TOKEN_COOKIE_NAME) !==
-      undefined ||
-    extractCookie(request.headers.cookie, REFRESH_TOKEN_COOKIE_NAME) !==
-      undefined
+    extractAccessTokenFromCookieHeader(request.headers.cookie)
   );
 }
 
@@ -58,8 +31,8 @@ export function extractAccessTokenFromWsClient(
   const handshakeAccessToken: unknown = client.handshake.auth.access_token;
 
   return (
-    extractCookie(cookieHeader, ACCESS_TOKEN_COOKIE_NAME) ??
-    extractCookie(cookieHeader, LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME) ??
+    extractAccessTokenFromCookieHeader(cookieHeader) ??
+    extractLegacyFrontendAccessTokenFromCookieHeader(cookieHeader) ??
     (typeof handshakeAccessToken === 'string' && handshakeAccessToken.length > 0
       ? handshakeAccessToken
       : undefined)

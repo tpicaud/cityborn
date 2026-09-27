@@ -100,12 +100,12 @@ export class AuthController {
     });
   }
 
-  @TsRestHandler(contract.auth.cookieSignUp)
+  @TsRestHandler(contract.auth.cookie.signUp)
   async cookieSignUpHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
-    return tsRestHandler(contract.auth.cookieSignUp, async ({ body }) => ({
+    return tsRestHandler(contract.auth.cookie.signUp, async ({ body }) => ({
       status: 201 as const,
       body: this.establishCookieSession(
         response,
@@ -114,12 +114,12 @@ export class AuthController {
     }));
   }
 
-  @TsRestHandler(contract.auth.cookieSignIn)
+  @TsRestHandler(contract.auth.cookie.signIn)
   async cookieSignInHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
-    return tsRestHandler(contract.auth.cookieSignIn, async ({ body }) => ({
+    return tsRestHandler(contract.auth.cookie.signIn, async ({ body }) => ({
       status: 200 as const,
       body: this.establishCookieSession(
         response,
@@ -128,13 +128,13 @@ export class AuthController {
     }));
   }
 
-  @TsRestHandler(contract.auth.cookieSignInWithGoogle)
+  @TsRestHandler(contract.auth.cookie.signInWithGoogle)
   async cookieSignInWithGoogleHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
     return tsRestHandler(
-      contract.auth.cookieSignInWithGoogle,
+      contract.auth.cookie.signInWithGoogle,
       async ({ body }) => ({
         status: 200 as const,
         body: this.establishCookieSession(
@@ -145,13 +145,13 @@ export class AuthController {
     );
   }
 
-  @TsRestHandler(contract.auth.cookieSignInWithApple)
+  @TsRestHandler(contract.auth.cookie.signInWithApple)
   async cookieSignInWithAppleHandler(
     @Res({ passthrough: true }) response: Response,
     @VisitorId() visitorId?: string,
   ) {
     return tsRestHandler(
-      contract.auth.cookieSignInWithApple,
+      contract.auth.cookie.signInWithApple,
       async ({ body }) => ({
         status: 200 as const,
         body: this.establishCookieSession(
@@ -162,13 +162,13 @@ export class AuthController {
     );
   }
 
-  @TsRestHandler(contract.auth.cookieRefresh)
+  @TsRestHandler(contract.auth.cookie.refresh)
   @UseGuards(CookieRefreshGuard)
   async cookieRefreshHandler(
     @CurrentAuthSession() authSession: AuthSession,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return tsRestHandler(contract.auth.cookieRefresh, async () => ({
+    return tsRestHandler(contract.auth.cookie.refresh, async () => ({
       status: 200 as const,
       body: this.establishCookieSession(
         response,

@@ -7,7 +7,7 @@ import type { RuntimeConfig } from '../../config/config.module';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../auth.constants';
+} from '../auth-cookies';
 import { AuthCookieService } from './auth-cookie.service';
 
 function buildService(
@@ -51,7 +51,7 @@ describe('AuthCookieService.setAuthenticationCookies', () => {
         httpOnly: true,
         sameSite: 'lax',
         secure: true,
-        path: '/',
+        path: '/auth',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       },
     );
@@ -80,7 +80,7 @@ describe('AuthCookieService.clearAuthenticationCookies', () => {
         httpOnly: true,
         sameSite: 'lax',
         secure: true,
-        path: '/',
+        path: '/auth',
       },
     );
   });

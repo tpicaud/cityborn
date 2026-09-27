@@ -19,6 +19,42 @@ import type { ApiDomain } from './api-domain';
 
 const c = initContract();
 
+const cookieAuthContract = c.router(
+  {
+    refresh: {
+      method: 'POST',
+      path: '/refresh',
+      body: emptyRequestBodySchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    signUp: {
+      method: 'POST',
+      path: '/sign-up',
+      body: CreateUserSchema,
+      responses: { 201: UserSchema, ...commonErrorResponses },
+    },
+    signIn: {
+      method: 'POST',
+      path: '/sign-in',
+      body: SignInSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    signInWithGoogle: {
+      method: 'POST',
+      path: '/sign-in-with-google',
+      body: SignInWithGoogleSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+    signInWithApple: {
+      method: 'POST',
+      path: '/sign-in-with-apple',
+      body: SignInWithAppleSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
+  },
+  { pathPrefix: '/cookie' },
+);
+
 export const authContract = c.router(
   {
     me: {
@@ -86,36 +122,7 @@ export const authContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
     },
-    cookieRefresh: {
-      method: 'POST',
-      path: '/cookie/refresh',
-      body: emptyRequestBodySchema,
-      responses: { 200: UserSchema, ...commonErrorResponses },
-    },
-    cookieSignUp: {
-      method: 'POST',
-      path: '/cookie/sign-up',
-      body: CreateUserSchema,
-      responses: { 201: UserSchema, ...commonErrorResponses },
-    },
-    cookieSignIn: {
-      method: 'POST',
-      path: '/cookie/sign-in',
-      body: SignInSchema,
-      responses: { 200: UserSchema, ...commonErrorResponses },
-    },
-    cookieSignInWithGoogle: {
-      method: 'POST',
-      path: '/cookie/sign-in-with-google',
-      body: SignInWithGoogleSchema,
-      responses: { 200: UserSchema, ...commonErrorResponses },
-    },
-    cookieSignInWithApple: {
-      method: 'POST',
-      path: '/cookie/sign-in-with-apple',
-      body: SignInWithAppleSchema,
-      responses: { 200: UserSchema, ...commonErrorResponses },
-    },
+    cookie: cookieAuthContract,
   },
   { pathPrefix: '/auth' satisfies `/${ApiDomain}` },
 );
