@@ -90,6 +90,7 @@
       "persistent": true,
       "passThroughEnv": [
         "NODE_ENV",
+        "PORT",
         "DOMAIN_NAME",
         "REST_BACKEND_URL",
         "NEXT_PUBLIC_GOOGLE_MAP_API_KEY",
