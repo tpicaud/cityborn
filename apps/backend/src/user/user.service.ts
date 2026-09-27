@@ -55,6 +55,10 @@ export class UserService {
     return this.userRepository.incrementAuthVersion(userId);
   }
 
+  async findCredentialsById(userId: UserId): Promise<UserCredentials | null> {
+    return this.userRepository.findCredentialsById(userId);
+  }
+
   async findByIdentifier(identifier: string): Promise<User | null> {
     return this.userRepository.findByIdentifier(identifier);
   }
@@ -75,6 +79,29 @@ export class UserService {
 
   async findByAppleId(appleUserId: string): Promise<User | null> {
     return this.userRepository.findByAppleId(appleUserId);
+  }
+
+  async updateUsername(user: User, username: Username): Promise<User> {
+    if (user.username === username) return user;
+
+    const usernameExists: boolean =
+      await this.userRepository.existsByUsername(username);
+    if (usernameExists)
+      throw new ConflictException({
+        code: ErrorCode.USER_USERNAME_ALREADY_EXISTS,
+        message: 'Username already exists',
+      });
+
+    return this.userRepository.updateUsername(user.id, username);
+  }
+
+  @Transactional()
+  async updatePassword(
+    userId: UserId,
+    passwordHash: string,
+  ): Promise<AuthVersion> {
+    await this.userRepository.updatePassword(userId, passwordHash);
+    return this.userRepository.incrementAuthVersion(userId);
   }
 
   async validateIdentifiers(username: Username, email: string): Promise<void> {

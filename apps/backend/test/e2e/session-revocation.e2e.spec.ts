@@ -1,4 +1,6 @@
 import {
+  type AuthResponse,
+  AuthResponseSchema,
   buildUser,
   contract,
   ErrorCode,
@@ -7,6 +9,7 @@ import {
 } from '@cityborn/api';
 import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import * as bcrypt from 'bcrypt';
 import { io, type Socket } from 'socket.io-client';
 import request from 'supertest';
 import type { AuthVersion } from '../../src/common/types/auth-session';
@@ -208,5 +211,50 @@ describe('Authenticated session revocation', () => {
     expect(staleClient.connected).toBe(false);
     expect(guestClient.connected).toBe(true);
     expect(otherClient.connected).toBe(true);
+  });
+
+  it('keeps the session that changed the password and revokes the others', async () => {
+    const user: User = buildUser();
+    const prismaService: PrismaService = app.get(PrismaService);
+    await prismaService.user.create({
+      data: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        type: user.type,
+        isVerified: user.isVerified,
+        password: await bcrypt.hash('Password1', 10),
+      },
+    });
+    const accessToken: string = await createAccessToken(app, user.id);
+    const otherDeviceClient: Socket = await connectClient(accessToken);
+    const disconnected: Promise<unknown> = nextEvent(
+      otherDeviceClient,
+      'disconnect',
+    );
+
+    const response: request.Response = await request(app.getHttpServer())
+      .patch(contract.auth.updatePassword.path)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ currentPassword: 'Password1', newPassword: 'Password2' })
+      .expect(200);
+    const authResponse: AuthResponse = AuthResponseSchema.parse(response.body);
+
+    await expect(disconnected).resolves.toBe('io server disconnect');
+    await request(app.getHttpServer())
+      .get(contract.auth.me.path)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(401)
+      .expect(({ body }: request.Response) => {
+        expect(body).toMatchObject({ code: ErrorCode.USER_INVALID_TOKEN });
+      });
+    await request(app.getHttpServer())
+      .get(contract.auth.me.path)
+      .set('Authorization', `Bearer ${authResponse.access_token}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password: 'Password2' })
+      .expect(200);
   });
 });

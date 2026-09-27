@@ -50,6 +50,15 @@ const ICONS = {
   chevron_back_fill: {
     ionicons: 'chevron-back',
   },
+  edit_outline: {
+    ionicons: 'pencil-outline',
+  },
+  check_outline: {
+    ionicons: 'checkmark-outline',
+  },
+  close_outline: {
+    ionicons: 'close-outline',
+  },
 };
 
 type IconName = keyof typeof ICONS;

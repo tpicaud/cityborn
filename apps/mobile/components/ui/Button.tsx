@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, type RefObject, useRef, useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { cn } from '@/lib/utils';
 import LoaderIcon from './LoaderIcon';
@@ -24,22 +24,31 @@ export default function Button({
   className,
   onPress,
 }: Props) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const pressInFlightRef: RefObject<boolean> = useRef<boolean>(false);
 
-  const handlePress = async () => {
-    if (!onPress) return;
+  const handlePress = async (): Promise<void> => {
+    if (!onPress || disabled || pressInFlightRef.current) return;
 
+    pressInFlightRef.current = true;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await onPress();
     } finally {
+      pressInFlightRef.current = false;
       setIsLoading(false);
     }
   };
 
+  const isDisabled: boolean = disabled || isLoading;
+
   if (variant === 'default') {
     return (
-      <Pressable onPress={handlePress} className={className}>
+      <Pressable
+        onPress={handlePress}
+        disabled={isDisabled}
+        className={className}
+      >
         <Text className="font-medium text-zinc-900 underline">{label}</Text>
       </Pressable>
     );
@@ -81,8 +90,7 @@ export default function Button({
   return (
     <Pressable
       onPress={handlePress}
-      disabled={disabled}
-      key={Math.random()}
+      disabled={isDisabled}
       className={cn(
         'inline-flex items-center justify-center rounded-full font-medium transition-colors',
         size === 'small' && 'h-10 w-48 px-4 py-1',
@@ -90,7 +98,7 @@ export default function Button({
         size === 'large' && 'h-14 w-70 px-4 font-bold',
         variantStyles[variant],
         containerStyles[color][variant],
-        disabled ? 'opacity-50' : 'opacity-100',
+        isDisabled ? 'opacity-50' : 'opacity-100',
         className,
       )}
     >

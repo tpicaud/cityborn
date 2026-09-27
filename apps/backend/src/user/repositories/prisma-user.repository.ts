@@ -43,6 +43,13 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toUser(user) : null;
   }
 
+  async findCredentialsById(id: UserId): Promise<UserCredentials | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
+    return user ? UserMapper.toUserCredentials(user) : null;
+  }
+
   async findByIdentifier(identifier: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: { OR: [{ email: identifier }, { username: identifier }] },
@@ -95,6 +102,21 @@ export class PrismaUserRepository implements UserRepository {
       data: { isVerified: true },
     });
     return UserMapper.toUser(user);
+  }
+
+  async updateUsername(userId: UserId, username: Username): Promise<User> {
+    const user: PrismaUser = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { username },
+    });
+    return UserMapper.toUser(user);
+  }
+
+  async updatePassword(userId: UserId, passwordHash: string): Promise<void> {
+    await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { password: passwordHash },
+    });
   }
 
   async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {

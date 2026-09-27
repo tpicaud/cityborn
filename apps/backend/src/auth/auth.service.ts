@@ -6,6 +6,8 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdatePassword,
+  type UpdateUsername,
   type User,
   type UserId,
   UserIdSchema,
@@ -14,6 +16,7 @@ import {
   VerifyEmailData,
 } from '@cityborn/api';
 import {
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -22,7 +25,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { AuthSession } from '../common/types/auth-session';
+import type { AuthSession, AuthVersion } from '../common/types/auth-session';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   AUTH_CONFIG,
@@ -36,6 +39,7 @@ import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import type { UserCredentials } from '../user/repositories/user.repository';
 import { UserService } from '../user/user.service';
+import { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
 import { verifyAppleIdToken } from './utils';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
@@ -66,6 +70,7 @@ export class AuthService {
     private readonly eventService: EventService,
     private readonly mailService: MailService,
     private readonly wideEventService: WideEventService,
+    private readonly authenticatedSocketService: AuthenticatedSocketService,
     @Inject('GOOGLE_CLIENT')
     private readonly googleClient: GoogleIdentityClient,
   ) {}
@@ -289,6 +294,46 @@ export class AuthService {
         message: `User not found`,
       });
     await this.userService.deleteUser(user.id);
+  }
+
+  async updateUsername(user: User, data: UpdateUsername): Promise<User> {
+    return this.userService.updateUsername(user, data.username);
+  }
+
+  async updatePassword(
+    user: User,
+    data: UpdatePassword,
+  ): Promise<AuthResponse> {
+    const credentials: UserCredentials | null =
+      await this.userService.findCredentialsById(user.id);
+    if (!credentials?.passwordHash)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_NOT_VANILLA_ACCOUNT,
+        message: 'Password update is only available for email accounts',
+      });
+
+    const isCurrentPasswordValid: boolean = await bcrypt.compare(
+      data.currentPassword,
+      credentials.passwordHash,
+    );
+    if (!isCurrentPasswordValid)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT,
+        message: 'Current password is incorrect',
+      });
+
+    const passwordHash: string = await bcrypt.hash(data.newPassword, 10);
+    const authVersion: AuthVersion = await this.userService.updatePassword(
+      user.id,
+      passwordHash,
+    );
+    this.authenticatedSocketService.disconnectOlderSessions(
+      user.id,
+      authVersion,
+    );
+
+    const authSession: AuthSession = { user, authVersion };
+    return this.createAuthResponse(authSession);
   }
 
   async resendVerificationEmail(user: User): Promise<void> {

@@ -5,6 +5,7 @@ import type {
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
+  UpdatePassword,
   User,
   VerifyEmailData,
 } from '@cityborn/api';
@@ -18,6 +19,7 @@ import type { EventService } from '../event/event.service';
 import type { MailService } from '../mail/mail.service';
 import type { UserCredentials } from '../user/repositories/user.repository';
 import type { UserService } from '../user/user.service';
+import type { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
 import { AuthService, type GoogleIdentityClient } from './auth.service';
 
 let mockPasswordMatches: boolean = true;
@@ -63,6 +65,8 @@ function buildAuthService() {
   const mailService: DeepMocked<MailService> = createMock<MailService>();
   const wideEventService: DeepMocked<WideEventService> =
     createMock<WideEventService>();
+  const authenticatedSocketService: DeepMocked<AuthenticatedSocketService> =
+    createMock<AuthenticatedSocketService>();
   const googleClient: DeepMocked<GoogleIdentityClient> =
     createMock<GoogleIdentityClient>();
   const authService: AuthService = new AuthService(
@@ -73,6 +77,7 @@ function buildAuthService() {
     eventService,
     mailService,
     wideEventService,
+    authenticatedSocketService,
     googleClient,
   );
 
@@ -87,6 +92,7 @@ function buildAuthService() {
     eventService,
     mailService,
     wideEventService,
+    authenticatedSocketService,
     googleClient,
   };
 }
@@ -353,6 +359,87 @@ describe('AuthService account operations', () => {
       await expect(authService.deleteUser()).rejects.toMatchObject({
         response: { code: ErrorCode.USER_NOT_FOUND },
       });
+    });
+  });
+
+  describe('updatePassword', () => {
+    const updatePasswordData: UpdatePassword = {
+      currentPassword: 'Password1',
+      newPassword: 'Password2',
+    };
+
+    it('rejects an account without a local password', async () => {
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const oauthUser: User = buildUser({ type: 'google' });
+      userService.findCredentialsById.mockResolvedValue({
+        authSession: { user: oauthUser, authVersion: 0 },
+        passwordHash: null,
+      });
+
+      await expect(
+        authService.updatePassword(oauthUser, updatePasswordData),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_NOT_VANILLA_ACCOUNT },
+      });
+      expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('rejects an incorrect current password', async () => {
+      const { authService, userService }: ReturnType<typeof buildAuthService> =
+        buildAuthService();
+      const persistedUser: User = buildUser();
+      userService.findCredentialsById.mockResolvedValue({
+        authSession: { user: persistedUser, authVersion: 0 },
+        passwordHash: 'hashed-password',
+      });
+      mockPasswordMatches = false;
+
+      await expect(
+        authService.updatePassword(persistedUser, updatePasswordData),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT },
+      });
+      expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('revokes the other sessions and issues tokens for the new auth version', async () => {
+      const {
+        authService,
+        userService,
+        jwtService,
+        authenticatedSocketService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      const persistedUser: User = buildUser();
+      userService.findCredentialsById.mockResolvedValue({
+        authSession: { user: persistedUser, authVersion: 0 },
+        passwordHash: 'hashed-password',
+      });
+      userService.updatePassword.mockResolvedValue(1);
+
+      const result: AuthResponse = await authService.updatePassword(
+        persistedUser,
+        updatePasswordData,
+      );
+
+      expect(userService.updatePassword).toHaveBeenCalledWith(
+        persistedUser.id,
+        'hashed-password',
+      );
+      expect(
+        authenticatedSocketService.disconnectOlderSessions,
+      ).toHaveBeenCalledWith(persistedUser.id, 1);
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ authVersion: 1 }),
+        expect.objectContaining({ secret: 'access-secret' }),
+      );
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ authVersion: 1 }),
+        expect.objectContaining({ secret: 'refresh-secret' }),
+      );
+      expect(result.user).toEqual(persistedUser);
     });
   });
 
