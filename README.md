@@ -52,19 +52,18 @@ L'application utilise des modules natifs : elle ne tourne pas dans Expo Go et n�
 
 Les builds sont générés depuis GitHub Actions, en dispatch manuel (**Actions → workflow → Run workflow**) :
 
-| Plateforme | Workflow | Environnement / profil | Artefact |
-|---|---|---|---|
-| Android | `Build Android App` | `development` / `development` | `.apk` |
-| iOS | `Build iOS App` | `development` / `development` | `.ipa` |
+| Plateforme | Workflow | Environnement / profil |
+|---|---|---|
+| Android | `Build Android App` | `development` / `development` |
+| iOS | `Build iOS App` | `development` / `development` |
 
-L'artefact est téléchargeable en bas de la page du run (archive `.zip` à décompresser), il est conservé 14 jours.
+Le build tourne sur le runner GitHub puis est envoyé sur EAS (`eas upload`). Le lien d'installation s'affiche dans le résumé du run et le build apparaît dans l'onglet **Builds** du projet sur expo.dev. Le binaire reste aussi disponible en artefact du run pendant 14 jours.
 
 ### 3. Installer le dev build
 
-**Android**
+Ouvrir le lien d'installation sur le téléphone (ou scanner le QR code de la page du build) et suivre les instructions.
 
-1. Transférer l'`.apk` sur le téléphone : câble, Google Drive, ou lien [Diawi](https://www.diawi.com) ouvert depuis le téléphone.
-2. Ouvrir l'`.apk` et autoriser l'installation depuis des sources inconnues quand Android le demande.
+**Android** : autoriser l'installation depuis des sources inconnues quand Android le demande.
 
 Alternative sans GitHub Actions : `pnpm --dir apps/mobile build-android-development` génère l'`.apk` en local dans `apps/mobile/app-builds/` (SDK Android et JDK 17 requis).
 
@@ -72,8 +71,8 @@ Alternative sans GitHub Actions : `pnpm --dir apps/mobile build-android-developm
 
 Un dev build iOS ne s'installe que sur un appareil enregistré dans le profil de provisioning.
 
-1. **Première fois uniquement** : demander à un admin d'enregistrer l'iPhone (`eas device:create`) et de régénérer le profil de provisioning, puis relancer le workflow `Build iOS App`.
-2. Distribuer l'`.ipa`, par exemple via [Diawi](https://www.diawi.com) : téléverser le fichier, puis ouvrir le lien (ou scanner le QR code) **dans Safari** sur l'iPhone et installer.
+1. **Première fois uniquement** : demander à un admin d'enregistrer l'iPhone (`eas device:create`), puis relancer le workflow `Build iOS App` : il régénère le profil de provisioning avec les appareils enregistrés.
+2. Ouvrir le lien d'installation **dans Safari** sur l'iPhone et installer.
 3. Activer le mode développeur : **Réglages → Confidentialité et sécurité → Mode développeur**, puis redémarrer l'iPhone.
 
 ### 4. Lancer l'app
