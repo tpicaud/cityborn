@@ -1,14 +1,20 @@
 import {
   type ApiError,
-  type User,
+  ErrorCode,
   type VisitorId,
   VisitorIdSchema,
 } from '@cityborn/api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
+import {
+  type AuthTokenPayload,
+  resolveAuthenticationContext,
+  validateAccessToken,
+} from '../auth/guards/utils';
+import { userAuthenticationRoom } from '../auth/session-revocation.service';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { AppSocket } from '../common/types/app-socket';
+import type { AuthenticationContext } from '../common/types/authentication';
 import { firstHeaderValue } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
@@ -45,7 +51,7 @@ export class WsHandshakeMiddleware {
 
   use(socket: AppSocket, next: WsHandshakeNext): void {
     socket.data = {
-      user: null,
+      authentication: { status: 'anonymous' },
       visitorId: parseVisitorId(socket.handshake.query['x-visitor-id']),
     };
 
@@ -68,8 +74,7 @@ export class WsHandshakeMiddleware {
       await this.consumeConnectionRateLimit(socket);
     if (rateLimitRejection) return rateLimitRejection;
 
-    socket.data.user = await this.resolveUser(socket);
-    return null;
+    return this.authenticate(socket);
   }
 
   private async consumeConnectionRateLimit(
@@ -88,20 +93,46 @@ export class WsHandshakeMiddleware {
     }
   }
 
-  private async resolveUser(socket: AppSocket): Promise<User | null> {
+  private async authenticate(socket: AppSocket): Promise<ApiError | null> {
     const token: string | undefined = extractAccessTokenFromWsClient(socket);
     if (!token) return null;
 
+    let payload: AuthTokenPayload;
     try {
-      const { id } = await validateAccessToken(
+      payload = await validateAccessToken(
         token,
         this.jwtService,
         this.authConfig.jwtAccessSecret,
       );
-      return await resolveFullUser(id, this.userService);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
       return null;
+    }
+
+    socket.data.authentication = {
+      status: 'pending',
+      userId: payload.id,
+      sessionVersion: payload.sessionVersion,
+    };
+    await socket.join(userAuthenticationRoom(payload.id));
+
+    try {
+      const authentication: AuthenticationContext | null =
+        await resolveAuthenticationContext(payload, this.userService);
+      if (!authentication) {
+        throw new UnauthorizedException({
+          code: ErrorCode.USER_NOT_FOUND,
+          message: 'User not found',
+        });
+      }
+
+      socket.data.authentication = {
+        status: 'authenticated',
+        ...authentication,
+      };
+      return null;
+    } catch (error) {
+      return this.wideEventService.recordError(error, 'ws.connection_auth');
     }
   }
 }

@@ -142,7 +142,10 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data).toEqual({ user: null, visitorId: undefined });
+      expect(socket.data).toEqual({
+        authentication: { status: 'anonymous' },
+        visitorId: undefined,
+      });
       expect(jwtService.verifyAsync).not.toHaveBeenCalled();
     });
 
@@ -155,7 +158,10 @@ describe('WsHandshakeMiddleware', () => {
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
       const user: User = buildUser();
       jwtService.verifyAsync.mockResolvedValue({ id: user.id });
-      userService.findById.mockResolvedValue(user);
+      userService.findAuthenticationContextById.mockResolvedValue({
+        user,
+        sessionVersion: 0,
+      });
       const socket: AppSocket = buildSocket({
         cookie: 'theme=dark',
         auth: { access_token: 'access-token' },
@@ -167,7 +173,12 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data.user).toEqual(user);
+      expect(socket.data.authentication).toEqual({
+        status: 'authenticated',
+        user,
+        sessionVersion: 0,
+      });
+      expect(socket.join).toHaveBeenCalledWith(`auth:user:${user.id}`);
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('access-token', {
         secret: 'access-secret',
       });
@@ -217,7 +228,7 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data.user).toBeNull();
+      expect(socket.data.authentication).toEqual({ status: 'anonymous' });
       expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           event: 'ws_connection',
@@ -226,6 +237,42 @@ describe('WsHandshakeMiddleware', () => {
           isAuthenticated: false,
         }),
         'connection',
+      );
+    });
+
+    it('rejects a stale session after joining its private room', async () => {
+      const {
+        jwtService,
+        userService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      const user: User = buildUser();
+      jwtService.verifyAsync.mockResolvedValue({
+        id: user.id,
+        sessionVersion: 1,
+      });
+      userService.findAuthenticationContextById.mockResolvedValue({
+        user,
+        sessionVersion: 2,
+      });
+      const socket: AppSocket = buildSocket({
+        auth: { access_token: 'stale-token' },
+      });
+      const join = jest.spyOn(socket, 'join').mockResolvedValue(undefined);
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error?.data).toMatchObject({
+        statusCode: 401,
+        code: ErrorCode.USER_INVALID_TOKEN,
+      });
+      expect(join).toHaveBeenCalledWith(`auth:user:${user.id}`);
+      expect(join.mock.invocationCallOrder[0]).toBeLessThan(
+        userService.findAuthenticationContextById.mock.invocationCallOrder[0] ??
+          0,
       );
     });
 

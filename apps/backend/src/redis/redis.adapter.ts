@@ -5,6 +5,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { isObservable, type Observable } from 'rxjs';
 import type { ServerOptions } from 'socket.io';
+import { SessionRevocationService } from '../auth/session-revocation.service';
 import type { AppServer, AppSocket } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
@@ -22,6 +23,7 @@ export class RedisIoAdapter extends IoAdapter {
     private readonly adapterConstructor: ReturnType<typeof createAdapter>,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
     private readonly wsHandshakeMiddleware: WsHandshakeMiddleware,
+    private readonly sessionRevocationService: SessionRevocationService,
     private readonly corsOrigins: string[],
     private readonly closeRedisConnections: () => Promise<void>,
   ) {
@@ -65,6 +67,7 @@ export class RedisIoAdapter extends IoAdapter {
       createAdapter(pubClient, subClient),
       app.get(WsWideEventLifecycle),
       app.get(WsHandshakeMiddleware),
+      app.get(SessionRevocationService),
       httpConfig.corsOrigins,
       async () => {
         await Promise.all([
@@ -105,6 +108,7 @@ export class RedisIoAdapter extends IoAdapter {
       },
     });
     server.adapter(this.adapterConstructor);
+    this.sessionRevocationService.registerServer(server);
     server.use((socket, next) => this.wsHandshakeMiddleware.use(socket, next));
     return server;
   }

@@ -1,13 +1,17 @@
-import { type User, type UserId, UserIdSchema } from '@cityborn/api';
+import { ErrorCode, UserIdSchema } from '@cityborn/api';
+import { UnauthorizedException } from '@nestjs/common';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
+import type { AuthenticationContext } from '../../common/types/authentication';
+import { SessionVersionSchema } from '../../common/types/authentication';
 import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
+  sessionVersion: SessionVersionSchema.optional().default(0),
 });
 
-type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
+export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
 
 async function validateToken(
   token: string,
@@ -26,12 +30,21 @@ export async function validateAccessToken(
   return await validateToken(token, jwtService, jwt_access_secret);
 }
 
-export async function resolveFullUser(
-  userId: UserId,
+export async function resolveAuthenticationContext(
+  payload: AuthTokenPayload,
   userService: UserService,
-): Promise<User | null> {
-  const fullUser = await userService.findById(userId);
-  return fullUser;
+): Promise<AuthenticationContext | null> {
+  const authentication: AuthenticationContext | null =
+    await userService.findAuthenticationContextById(payload.id);
+  if (!authentication) return null;
+  if (authentication.sessionVersion === payload.sessionVersion) {
+    return authentication;
+  }
+
+  throw new UnauthorizedException({
+    code: ErrorCode.USER_INVALID_TOKEN,
+    message: 'Session revoked',
+  });
 }
 
 export async function validateRefreshToken(

@@ -1,13 +1,13 @@
 import type {
-  User,
   VisitorId,
   WsClientToServerEvents,
   WsServerToClientEvents,
 } from '@cityborn/api';
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
+import type { SocketAuthentication } from './authentication';
 
 export interface AppSocketData {
-  user: User | null;
+  authentication: SocketAuthentication;
   visitorId: VisitorId | undefined;
 }
 

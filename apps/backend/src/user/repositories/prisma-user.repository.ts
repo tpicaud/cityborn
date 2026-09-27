@@ -6,6 +6,10 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import type {
+  AuthenticationContext,
+  SessionVersion,
+} from '../../common/types/authentication';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
@@ -27,6 +31,13 @@ export class PrismaUserRepository implements UserRepository {
 
   async delete(user_id: UserId): Promise<void> {
     await this.txHost.tx.user.delete({ where: { id: user_id } });
+  }
+
+  async findAuthenticationContextById(
+    id: UserId,
+  ): Promise<AuthenticationContext | null> {
+    const user = await this.txHost.tx.user.findUnique({ where: { id } });
+    return user ? UserMapper.toAuthenticationContext(user) : null;
   }
 
   async findById(id: UserId): Promise<User | null> {
@@ -86,5 +97,14 @@ export class PrismaUserRepository implements UserRepository {
       data: { isVerified: true },
     });
     return UserMapper.toUser(user);
+  }
+
+  async incrementSessionVersion(userId: UserId): Promise<SessionVersion> {
+    const user: { sessionVersion: number } = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { sessionVersion: { increment: 1 } },
+      select: { sessionVersion: true },
+    });
+    return user.sessionVersion;
   }
 }

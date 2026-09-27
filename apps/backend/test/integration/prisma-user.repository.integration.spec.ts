@@ -1,6 +1,7 @@
 import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
+import type { AuthenticationContext } from '../../src/common/types/authentication';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import type {
@@ -95,6 +96,22 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findAuthenticationContextById', () => {
+    it('loads a newly persisted user with session version zero', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const authentication: AuthenticationContext | null =
+        await userRepository.findAuthenticationContextById(user.id);
+
+      expect(authentication).toEqual({ user, sessionVersion: 0 });
+    });
+  });
+
   describe('findCredentialsByIdentifier', () => {
     it('finds persisted credentials by email', async () => {
       const userData: User = buildUser({ isVerified: false });
@@ -111,6 +128,7 @@ describe('PrismaUserRepository', () => {
       expect(credentials).toMatchObject({
         user: { id: user.id, username: 'host', isVerified: false },
         passwordHash: 'hashed-password',
+        sessionVersion: 0,
       });
     });
 
@@ -236,6 +254,29 @@ describe('PrismaUserRepository', () => {
       expect(await userRepository.findById(user.id)).toMatchObject({
         isVerified: true,
       });
+    });
+  });
+
+  describe('incrementSessionVersion', () => {
+    it('increments and returns the persisted session version', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const firstVersion: number = await userRepository.incrementSessionVersion(
+        user.id,
+      );
+      const secondVersion: number =
+        await userRepository.incrementSessionVersion(user.id);
+      const authentication: AuthenticationContext | null =
+        await userRepository.findAuthenticationContextById(user.id);
+
+      expect(firstVersion).toBe(1);
+      expect(secondVersion).toBe(2);
+      expect(authentication?.sessionVersion).toBe(2);
     });
   });
 });

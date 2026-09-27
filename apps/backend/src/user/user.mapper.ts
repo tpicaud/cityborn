@@ -9,6 +9,7 @@ import type {
   GameRecord as PrismaGameRecord,
   User as PrismaUser,
 } from '@prisma/client';
+import type { AuthenticationContext } from '../common/types/authentication';
 import type { UserCredentials } from './repositories/user.repository';
 
 type PrismaUserWithRelations = PrismaUser & {
@@ -51,6 +52,14 @@ export const UserMapper = {
     return {
       user: UserMapper.toUser(prismaUser),
       passwordHash: prismaUser.password,
+      sessionVersion: prismaUser.sessionVersion,
+    };
+  },
+
+  toAuthenticationContext(prismaUser: PrismaUser): AuthenticationContext {
+    return {
+      user: UserMapper.toUser(prismaUser),
+      sessionVersion: prismaUser.sessionVersion,
     };
   },
 };

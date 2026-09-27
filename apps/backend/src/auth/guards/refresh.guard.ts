@@ -1,4 +1,4 @@
-import { ErrorCode, User } from '@cityborn/api';
+import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -7,10 +7,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { Request } from 'express';
+import type { AuthenticationContext } from '../../common/types/authentication';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { resolveFullUser, validateRefreshToken } from './utils';
+import {
+  type AuthTokenPayload,
+  resolveAuthenticationContext,
+  validateRefreshToken,
+} from './utils';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
@@ -21,8 +27,8 @@ export class RefreshGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const refreshToken =
+    const request = context.switchToHttp().getRequest<Request>();
+    const refreshToken: string | undefined =
       request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
 
     if (!refreshToken)
@@ -31,20 +37,21 @@ export class RefreshGuard implements CanActivate {
         message: 'No refresh token provided',
       });
 
-    const decoded = await validateRefreshToken(
+    const payload: AuthTokenPayload = await validateRefreshToken(
       refreshToken,
       this.jwtService,
       this.authConfig.jwtRefreshSecret,
     );
 
-    const fullUser = await resolveFullUser(decoded.id, this.userService);
-    if (!fullUser) {
+    const authentication: AuthenticationContext | null =
+      await resolveAuthenticationContext(payload, this.userService);
+    if (!authentication) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
-    request.user = fullUser satisfies User;
+    request.authentication = authentication;
 
     return true;
   }

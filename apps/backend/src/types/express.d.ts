@@ -1,9 +1,9 @@
-import type { User } from '@cityborn/api';
+import type { AuthenticationContext } from '../common/types/authentication';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
+      authentication?: AuthenticationContext;
     }
   }
 }

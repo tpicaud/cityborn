@@ -213,6 +213,7 @@ describe('AuthService.signIn', () => {
     const {
       authService,
       userService,
+      jwtService,
       eventService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     const persistedUser: User = buildUser();
@@ -223,6 +224,7 @@ describe('AuthService.signIn', () => {
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
       passwordHash: 'hashed-password',
+      sessionVersion: 4,
     });
 
     const result: AuthResponse = await authService.signIn(
@@ -232,6 +234,10 @@ describe('AuthService.signIn', () => {
 
     expect(result.access_token).toBe('access-token');
     expect(result.refresh_token).toBe('refresh-token');
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionVersion: 4 }),
+      expect.any(Object),
+    );
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'user_signed_in',
@@ -248,7 +254,7 @@ describe('AuthService.signIn', () => {
       buildAuthService();
     const persistedUser: User = buildUser();
     const credentials: UserCredentials | null = isOAuthAccount
-      ? { user: persistedUser, passwordHash: null }
+      ? { user: persistedUser, passwordHash: null, sessionVersion: 0 }
       : null;
     const signInData: SignIn = {
       identifier: 'alice',
@@ -272,6 +278,7 @@ describe('AuthService.signIn', () => {
     userService.findCredentialsByIdentifier.mockResolvedValue({
       user: persistedUser,
       passwordHash: 'hashed-password',
+      sessionVersion: 0,
     });
     mockPasswordMatches = false;
 
@@ -283,30 +290,24 @@ describe('AuthService.signIn', () => {
 
 describe('AuthService account operations', () => {
   describe('refresh', () => {
-    it('refreshes both tokens for an existing user', async () => {
-      const { authService, userService }: ReturnType<typeof buildAuthService> =
+    it('refreshes both tokens with the validated session version', async () => {
+      const { authService, jwtService }: ReturnType<typeof buildAuthService> =
         buildAuthService();
       const persistedUser: User = buildUser();
-      userService.findByIdentifier.mockResolvedValue(persistedUser);
 
-      const result: AuthResponse = await authService.refresh(
-        persistedUser.email,
-      );
+      const result: AuthResponse = await authService.refresh({
+        user: persistedUser,
+        sessionVersion: 3,
+      });
 
       expect(result).toMatchObject({
         access_token: 'access-token',
         refresh_token: 'refresh-token',
       });
-    });
-
-    it('rejects refreshing an unknown user', async () => {
-      const { authService, userService }: ReturnType<typeof buildAuthService> =
-        buildAuthService();
-      userService.findByIdentifier.mockResolvedValue(null);
-
-      await expect(authService.refresh('missing')).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_REFRESH_FAILED },
-      });
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ sessionVersion: 3 }),
+        expect.any(Object),
+      );
     });
   });
 
@@ -438,6 +439,10 @@ describe('AuthService.signInWithGoogle', () => {
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
     userService.findByIdentifier.mockResolvedValue(googleUser);
+    userService.findAuthenticationContextById.mockResolvedValue({
+      user: googleUser,
+      sessionVersion: 2,
+    });
 
     const result: AuthResponse = await authService.signInWithGoogle(
       signInData,
@@ -476,6 +481,10 @@ describe('AuthService.signInWithGoogle', () => {
     userService.findByIdentifier.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(googleUser);
+    userService.findAuthenticationContextById.mockResolvedValue({
+      user: googleUser,
+      sessionVersion: 0,
+    });
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
     const result: AuthResponse = await authService.signInWithGoogle(
@@ -588,6 +597,10 @@ describe('AuthService.signInWithApple', () => {
     userService.findByIdentifier.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(appleUser);
+    userService.findAuthenticationContextById.mockResolvedValue({
+      user: appleUser,
+      sessionVersion: 0,
+    });
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
     const result: AuthResponse = await authService.signInWithApple(

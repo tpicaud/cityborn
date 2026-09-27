@@ -1,9 +1,12 @@
 import type { User, UserId, Username } from '@cityborn/api';
+import type {
+  AuthenticationContext,
+  SessionVersion,
+} from '../../common/types/authentication';
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
-export type UserCredentials = {
-  user: User;
+export type UserCredentials = AuthenticationContext & {
   passwordHash: string | null;
 };
 
@@ -16,6 +19,9 @@ export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
 export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
   delete(user_id: UserId): Promise<void>;
+  findAuthenticationContextById(
+    id: UserId,
+  ): Promise<AuthenticationContext | null>;
   findById(id: UserId): Promise<User | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
   findCredentialsByIdentifier(
@@ -28,4 +34,5 @@ export interface UserRepository {
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
+  incrementSessionVersion(userId: UserId): Promise<SessionVersion>;
 }

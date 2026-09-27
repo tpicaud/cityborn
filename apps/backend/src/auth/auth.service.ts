@@ -21,6 +21,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import type { AuthenticationContext } from '../common/types/authentication';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   AUTH_CONFIG,
@@ -94,19 +95,6 @@ export class AuthService {
       });
     });
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -119,11 +107,7 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.createAuthResponse({ user, sessionVersion: 0 });
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -147,21 +131,6 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    const { user } = credentials;
-
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -174,11 +143,7 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.createAuthResponse(credentials);
   }
 
   async signInWithGoogle(
@@ -226,24 +191,9 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    const authentication: AuthenticationContext =
+      await this.requireAuthenticationContext(user.id);
+    return this.createAuthResponse(authentication);
   }
 
   async signInWithApple(
@@ -311,52 +261,13 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    const authentication: AuthenticationContext =
+      await this.requireAuthenticationContext(user.id);
+    return this.createAuthResponse(authentication);
   }
 
-  async refresh(identifier: string): Promise<AuthResponse> {
-    const user = await this.userService.findByIdentifier(identifier);
-    if (!user)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_REFRESH_FAILED,
-        message: 'Invalid refresh token',
-      });
-
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+  async refresh(authentication: AuthenticationContext): Promise<AuthResponse> {
+    return this.createAuthResponse(authentication);
   }
 
   async getProfile(identifier: string): Promise<User> {
@@ -392,6 +303,25 @@ export class AuthService {
     return { id: user.id, username: user.username };
   }
 
+  async createAuthResponse(
+    authentication: AuthenticationContext,
+  ): Promise<AuthResponse> {
+    const accessToken: string = await this.generateToken(
+      'access',
+      authentication,
+    );
+    const refreshToken: string = await this.generateToken(
+      'refresh',
+      authentication,
+    );
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: authentication.user,
+    };
+  }
+
   private async sendVerificationEmail(
     user: {
       id: string;
@@ -417,14 +347,14 @@ export class AuthService {
 
   private async generateToken(
     type: 'access' | 'refresh',
-    id: string,
-    username: string,
-    email: string,
+    authentication: AuthenticationContext,
   ): Promise<string> {
+    const { user, sessionVersion } = authentication;
     const payload = {
-      id: UserIdSchema.parse(id),
-      username: UsernameSchema.parse(username),
-      email,
+      id: UserIdSchema.parse(user.id),
+      username: UsernameSchema.parse(user.username),
+      email: user.email,
+      sessionVersion,
     };
 
     switch (type) {
@@ -440,6 +370,19 @@ export class AuthService {
           expiresIn: '7d',
         });
     }
+  }
+
+  private async requireAuthenticationContext(
+    userId: AuthenticationContext['user']['id'],
+  ): Promise<AuthenticationContext> {
+    const authentication: AuthenticationContext | null =
+      await this.userService.findAuthenticationContextById(userId);
+    if (authentication) return authentication;
+
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_NOT_FOUND,
+      message: 'User not found',
+    });
   }
 
   private async verifyGoogleToken(idToken: string) {
