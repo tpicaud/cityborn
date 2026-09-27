@@ -30,6 +30,8 @@ on:
     outputs:
       ipa_artifact_name:
         value: ${{ jobs.build.outputs.ipa_artifact_name }}
+      install_url:
+        value: ${{ jobs.build.outputs.install_url }}
     secrets:
       EXPO_TOKEN:
         required: true
@@ -54,6 +56,7 @@ jobs:
       EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID }}
     outputs:
       ipa_artifact_name: ${{ steps.ipa.outputs.ipa_name }}
+      install_url: ${{ steps.eas_upload.outputs.install_url }}
 
     steps:
       - name: Setup repo
@@ -111,7 +114,24 @@ jobs:
 
       - name: Build iOS app
         working-directory: apps/mobile
-        run: eas build --platform ios --profile ${{ inputs.profile }} --local --non-interactive --output ${{ steps.ipa.outputs.ipa_path }}
+        run: |
+          REFRESH_AD_HOC_FLAG=""
+          if [ "${{ inputs.profile }}" != "production" ]; then
+            REFRESH_AD_HOC_FLAG="--refresh-ad-hoc-provisioning-profile"
+          fi
+
+          eas build --platform ios --profile ${{ inputs.profile }} --local --non-interactive $REFRESH_AD_HOC_FLAG --output ${{ steps.ipa.outputs.ipa_path }}
+
+      - name: Upload build to EAS
+        id: eas_upload
+        if: inputs.profile != 'production'
+        working-directory: apps/mobile
+        run: |
+          UPLOAD_JSON=$(eas upload --platform ios --build-path ${{ steps.ipa.outputs.ipa_path }} --non-interactive --json)
+          INSTALL_URL=$(echo "$UPLOAD_JSON" | jq -er '.url')
+
+          echo "install_url=$INSTALL_URL" >> $GITHUB_OUTPUT
+          echo "### 📲 [Installer ${{ steps.ipa.outputs.ipa_name }}]($INSTALL_URL)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
