@@ -9,6 +9,7 @@ import {
   type User,
   UserSchema,
 } from '@cityborn/api';
+import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bcrypt from 'bcrypt';
 import request from 'supertest';
@@ -17,6 +18,7 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '../../src/auth/auth-cookies';
+import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import {
   USER_REPOSITORY,
   type UserRepository,
@@ -33,10 +35,14 @@ function responseCookies(header: string | string[] | undefined): string[] {
 describe('Authentication transports', () => {
   let app: NestExpressApplication;
   let userRepository: UserRepository;
+  let jwtService: JwtService;
+  let authConfig: AuthConfig;
 
   beforeAll(async () => {
     app = await createTestApp();
     userRepository = app.get(USER_REPOSITORY);
+    jwtService = app.get(JwtService);
+    authConfig = app.get<AuthConfig>(AUTH_CONFIG);
   });
 
   afterAll(async () => {
@@ -156,6 +162,50 @@ describe('Authentication transports', () => {
     const error: ApiError = ApiErrorSchema.parse(response.body);
     expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
     expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('rejects a cookie sign-in without origin whatever its request path spelling', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(`${contract.auth.cookie.signIn.path}/`)
+      .type('form')
+      .send({ identifier: user.email, password })
+      .expect(403);
+    const error: ApiError = ApiErrorSchema.parse(response.body);
+    expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('rejects a sign-out from an unauthorized origin without clearing cookies', async () => {
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.signOut.path)
+      .set('Origin', 'https://attacker.test')
+      .type('form')
+      .send({})
+      .expect(403);
+    const error: ApiError = ApiErrorSchema.parse(response.body);
+    expect(error.code).toBe(ErrorCode.CSRF_ORIGIN_FORBIDDEN);
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('reports an expired cookie access token as expired so the browser can refresh', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const expiredAccessToken: string = await jwtService.signAsync(
+      { id: user.id, authVersion: 0 },
+      { secret: authConfig.jwtAccessSecret, expiresIn: -60 },
+    );
+
+    const response: request.Response = await request(app.getHttpServer())
+      .get(contract.auth.me.path)
+      .set('Cookie', `${ACCESS_TOKEN_COOKIE_NAME}=${expiredAccessToken}`)
+      .expect(401);
+    const error: ApiError = ApiErrorSchema.parse(response.body);
+    expect(error.code).toBe(ErrorCode.TOKEN_EXPIRED);
   });
 
   it('never exposes cookie tokens through the bearer refresh route', async () => {

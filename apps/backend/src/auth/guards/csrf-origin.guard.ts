@@ -6,34 +6,36 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import type { AppRoute } from '@ts-rest/core';
+import { Reflector } from '@nestjs/core';
+import { TsRestAppRouteMetadataKey } from '@ts-rest/nest';
 import type { Request } from 'express';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
 import { hasAuthenticationCookie } from '../auth-cookies';
 
 const safeMethods: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-const cookieAuthPaths: ReadonlySet<string> = new Set(
-  Object.values(contract.auth.cookie).map(
-    (route: AppRoute): string => route.path,
-  ),
+const cookieAuthRoutes: ReadonlySet<unknown> = new Set<unknown>(
+  Object.values(contract.auth.cookie),
 );
 
 @Injectable()
-export class CookieCsrfGuard implements CanActivate {
-  constructor(@Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig) {}
+export class CsrfOriginGuard implements CanActivate {
+  constructor(
+    @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
+    private readonly reflector: Reflector,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request: Request = context.switchToHttp().getRequest<Request>();
     if (safeMethods.has(request.method)) {
       return true;
     }
-    if (!this.usesCookieTransport(request)) {
-      return true;
-    }
 
     const origin: string | undefined = request.headers.origin;
     if (origin !== undefined && this.httpConfig.corsOrigins.includes(origin)) {
+      return true;
+    }
+    if (origin === undefined && !this.usesCookieTransport(context, request)) {
       return true;
     }
 
@@ -43,10 +45,26 @@ export class CookieCsrfGuard implements CanActivate {
     });
   }
 
-  private usesCookieTransport(request: Request): boolean {
+  private usesCookieTransport(
+    context: ExecutionContext,
+    request: Request,
+  ): boolean {
     return (
-      cookieAuthPaths.has(request.path) ||
+      this.isCookieAuthRoute(context) ||
       hasAuthenticationCookie(request.headers.cookie)
+    );
+  }
+
+  private isCookieAuthRoute(context: ExecutionContext): boolean {
+    const tsRestRouteMetadata: unknown = this.reflector.get<unknown>(
+      TsRestAppRouteMetadataKey,
+      context.getHandler(),
+    );
+    return (
+      typeof tsRestRouteMetadata === 'object' &&
+      tsRestRouteMetadata !== null &&
+      'appRoute' in tsRestRouteMetadata &&
+      cookieAuthRoutes.has(tsRestRouteMetadata.appRoute)
     );
   }
 }
