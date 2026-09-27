@@ -9,7 +9,7 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier la 
 
 - `feature/feature.module.ts` + `controllers/` + `services/` + `mappers/` (entité DB → DTO du contrat).
 - Controllers = handlers ts-rest (`@TsRestHandler(contract.x)` + `tsRestHandler`), **fins** : aucune logique métier, tout dans les services.
-- Séparer `*.public.*` / `*.admin.*` (controller + service) quand l'auth ou les règles diffèrent.
+- Séparer les controllers `*.public.*` / `*.admin.*` quand l'auth diffère. Le service du domaine reste unique ; un service `*.public.*` / `*.admin.*` se justifie seulement quand ses règles propres forment une raison de changer distincte.
 
 ## Accès aux données — Repository
 

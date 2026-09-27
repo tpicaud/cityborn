@@ -33,6 +33,13 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - Les instructions explicites de l'utilisateur priment sur les préférences de workflow de ce guide et des skills, sans lever les garde-fous de sécurité ni élargir le périmètre demandé.
 - Avancer de façon autonome pour les actions réversibles et dans le périmètre demandé. Poser une question uniquement si une information manquante change matériellement le résultat ou si une autorisation listée ci-dessous est nécessaire.
 
+### Découpage
+
+- Concevoir des **modules profonds** : un service, un hook ou un domaine couvre une capacité métier entière derrière une surface publique courte et garde ses étapes internes privées (ex. `AuthService`, `SessionService`, `@cityborn/client/session`).
+- Tracer une nouvelle frontière selon la **raison de changer** : un acteur aux règles distinctes, une dépendance d'infrastructure ou de plateforme à isoler (repository, provider, port), un cycle de vie propre (middleware de handshake, registre de connexions) ou plusieurs consommateurs réels. Une étape d'un même flux reste une méthode ou une fonction de son module.
+- **Cohésion** : ce qui change ensemble vit ensemble. Factoriser du code dupliqué au troisième usage réel.
+- Entre deux services d'un même domaine, chaque méthode exposée porte une règle ; un simple relais revient à son consommateur. Les couches prévues par les conventions (controller, repository, provider, port, server action) relaient légitimement.
+
 ## Style de code
 
 - **Aucun commentaire dans le code, JSDoc compris.** Le naming, les types et le découpage portent l'intention. Seule tolérance : le bloc `@deprecated` / `@deprecatedSince` posé par le skill `deprecate`. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
