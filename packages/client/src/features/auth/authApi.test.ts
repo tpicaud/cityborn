@@ -76,6 +76,7 @@ function createFakeClient(
         signIn: unexpectedCall,
         signInWithGoogle: unexpectedCall,
         signInWithApple: unexpectedCall,
+        updatePassword: unexpectedCall,
         ...cookieRoutes,
       },
       signUp: unexpectedCall,
@@ -223,6 +224,28 @@ test('cookie signIn uses the cookie route without token storage', async () => {
   });
 
   assert.equal(called, true);
+  assert.deepEqual(result, { ok: true, data: user });
+});
+
+test('cookie updatePassword uses the cookie route without exposing tokens', async () => {
+  const authApi: AuthApi = createCookieAuthApi(
+    createFakeClient(
+      {},
+      {
+        updatePassword: async () => ({
+          status: 200,
+          body: user,
+          headers: new Headers(),
+        }),
+      },
+    ),
+  );
+
+  const result: ApiResult<User> = await authApi.updatePassword({
+    currentPassword: 'Password1',
+    newPassword: 'Password2',
+  });
+
   assert.deepEqual(result, { ok: true, data: user });
 });
 

@@ -12,7 +12,10 @@ import type { AuthSession } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
-import { extractAccessTokenFromHttpRequest } from '../utils';
+import {
+  extractAccessTokenFromHttpRequest,
+  extractTokenFromHTTPHeader,
+} from '../utils';
 import {
   type AuthTokenPayload,
   resolveAuthSession,
@@ -20,18 +23,21 @@ import {
 } from './utils';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+abstract class AccessTokenGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly userService: UserService,
     private readonly wideEventService: WideEventService,
   ) {}
 
+  protected abstract extractAccessToken(
+    request: AppRequest,
+  ): string | undefined;
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
-    const token: string | undefined =
-      extractAccessTokenFromHttpRequest(request);
+    const token: string | undefined = this.extractAccessToken(request);
     if (!token)
       throw new UnauthorizedException({
         code: ErrorCode.USER_TOKEN_MISSING,
@@ -61,5 +67,19 @@ export class AuthGuard implements CanActivate {
     });
 
     return true;
+  }
+}
+
+@Injectable()
+export class AuthGuard extends AccessTokenGuard {
+  protected extractAccessToken(request: AppRequest): string | undefined {
+    return extractAccessTokenFromHttpRequest(request);
+  }
+}
+
+@Injectable()
+export class BearerAuthGuard extends AccessTokenGuard {
+  protected extractAccessToken(request: AppRequest): string | undefined {
+    return extractTokenFromHTTPHeader(request);
   }
 }

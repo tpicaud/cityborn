@@ -51,6 +51,12 @@ const cookieAuthContract = c.router(
       body: SignInWithAppleSchema,
       responses: { 200: UserSchema, ...commonErrorResponses },
     },
+    updatePassword: {
+      method: 'PATCH',
+      path: '/password',
+      body: UpdatePasswordSchema,
+      responses: { 200: UserSchema, ...commonErrorResponses },
+    },
   },
   { pathPrefix: '/cookie' },
 );

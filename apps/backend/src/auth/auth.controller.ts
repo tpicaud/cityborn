@@ -8,7 +8,7 @@ import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../common/types/auth-session';
 import { CurrentAuthSession, CurrentUser } from '../user/user.decorator';
 import { AuthService } from './auth.service';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthGuard, BearerAuthGuard } from './guards/auth.guard';
 import { BearerRefreshGuard, CookieRefreshGuard } from './guards/refresh.guard';
 import { AuthCookieService } from './services/auth-cookie.service';
 
@@ -26,7 +26,6 @@ const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
   resendVerificationEmail: contract.auth.resendVerificationEmail,
-  updatePassword: contract.auth.updatePassword,
 });
 
 const refreshRoutes = c.router({
@@ -82,11 +81,16 @@ export class AuthController {
         await this.authService.resendVerificationEmail(user);
         return { status: 200 as const, body: {} };
       },
-      updatePassword: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.authService.updatePassword(user, body),
-      }),
     });
+  }
+
+  @TsRestHandler(contract.auth.updatePassword)
+  @UseGuards(BearerAuthGuard)
+  async updatePasswordHandler(@CurrentUser() user: User) {
+    return tsRestHandler(contract.auth.updatePassword, async ({ body }) => ({
+      status: 200 as const,
+      body: await this.authService.updatePassword(user, body),
+    }));
   }
 
   @TsRestHandler(refreshRoutes)
@@ -175,6 +179,24 @@ export class AuthController {
         await this.authService.refresh(authSession),
       ),
     }));
+  }
+
+  @TsRestHandler(contract.auth.cookie.updatePassword)
+  @UseGuards(AuthGuard)
+  async cookieUpdatePasswordHandler(
+    @CurrentUser() user: User,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return tsRestHandler(
+      contract.auth.cookie.updatePassword,
+      async ({ body }) => ({
+        status: 200 as const,
+        body: this.establishCookieSession(
+          response,
+          await this.authService.updatePassword(user, body),
+        ),
+      }),
+    );
   }
 
   @TsRestHandler(contract.auth.signOut)

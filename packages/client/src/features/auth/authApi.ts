@@ -161,6 +161,12 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
       );
     },
 
+    async updatePassword(data) {
+      return toApiResult(
+        await client.auth.cookie.updatePassword({ body: data }),
+      );
+    },
+
     async resendVerificationEmail() {
       return toVoidResult(
         toApiResult(await client.auth.resendVerificationEmail({ body: {} })),

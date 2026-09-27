@@ -180,6 +180,68 @@ describe('Authentication transports', () => {
     expect(response.body).not.toHaveProperty('refresh_token');
   });
 
+  it('rotates cookies on a cookie password update and keeps the browser session', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const origin: string = 'http://localhost:3000';
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
+
+    await webAgent
+      .post(contract.auth.cookie.signIn.path)
+      .set('Origin', origin)
+      .send({ identifier: user.email, password })
+      .expect(200);
+
+    const updatePasswordResponse: request.Response = await webAgent
+      .patch(contract.auth.cookie.updatePassword.path)
+      .set('Origin', origin)
+      .send({ currentPassword: password, newPassword: 'Password2' })
+      .expect(200);
+    const updatedUser: User = UserSchema.parse(updatePasswordResponse.body);
+    const rotatedCookies: string[] = responseCookies(
+      updatePasswordResponse.headers['set-cookie'],
+    );
+    expect(updatedUser.id).toBe(user.id);
+    expect(updatePasswordResponse.body).not.toHaveProperty('access_token');
+    expect(updatePasswordResponse.body).not.toHaveProperty('refresh_token');
+    expect(rotatedCookies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(`${ACCESS_TOKEN_COOKIE_NAME}=`),
+        expect.stringContaining(`${REFRESH_TOKEN_COOKIE_NAME}=`),
+      ]),
+    );
+
+    await webAgent.get(contract.auth.me.path).expect(200);
+    await webAgent
+      .post(contract.auth.cookie.refresh.path)
+      .set('Origin', origin)
+      .send({})
+      .expect(200);
+  });
+
+  it('never exposes cookie tokens through the bearer password route', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const origin: string = 'http://localhost:3000';
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
+
+    await webAgent
+      .post(contract.auth.cookie.signIn.path)
+      .set('Origin', origin)
+      .send({ identifier: user.email, password })
+      .expect(200);
+
+    const response: request.Response = await webAgent
+      .patch(contract.auth.updatePassword.path)
+      .set('Origin', origin)
+      .send({ currentPassword: password, newPassword: 'Password2' })
+      .expect(401);
+    expect(response.body).not.toHaveProperty('access_token');
+    expect(response.body).not.toHaveProperty('refresh_token');
+  });
+
   it('keeps the legacy mobile bearer contract without setting cookies', async () => {
     const password: string = 'Password1';
     const userData: User = buildUser();
