@@ -22,17 +22,34 @@ export const UserSchema = PublicUserSchema.extend({
     .optional(),
 });
 
+export const UsernameInputSchema = z
+  .string()
+  .min(3)
+  .max(20)
+  .pipe(UsernameSchema);
+
+export const PasswordSchema = z
+  .string()
+  .min(6)
+  .max(32)
+  .regex(
+    /^(?=.*[A-Z])(?=.*\d).+$/,
+    'Le mot de passe doit contenir au moins une majuscule et un chiffre',
+  );
+
 export const CreateUserSchema = z.object({
-  username: z.string().min(3).max(20).pipe(UsernameSchema),
+  username: UsernameInputSchema,
   email: z.string().email(),
-  password: z
-    .string()
-    .min(6)
-    .max(32)
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d).+$/,
-      'Le mot de passe doit contenir au moins une majuscule et un chiffre',
-    ),
+  password: PasswordSchema,
+});
+
+export const UpdateUsernameSchema = z.object({
+  username: UsernameInputSchema,
+});
+
+export const UpdatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: PasswordSchema,
 });
 
 export const SignInSchema = z.object({
@@ -70,6 +87,8 @@ export type AccountType = z.infer<typeof AccountTypeSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
+export type UpdateUsername = z.infer<typeof UpdateUsernameSchema>;
+export type UpdatePassword = z.infer<typeof UpdatePasswordSchema>;
 export type SignIn = z.infer<typeof SignInSchema>;
 export type SignInWithGoogle = z.infer<typeof SignInWithGoogleSchema>;
 export type SignInWithApple = z.infer<typeof SignInWithAppleSchema>;

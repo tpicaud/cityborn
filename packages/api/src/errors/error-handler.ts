@@ -6,6 +6,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // User
   [ErrorCode.USER_NOT_FOUND]: "L'utilisateur n'existe pas.",
   [ErrorCode.USER_INVALID_CREDENTIALS]: 'Identifiant ou mot de passe incorrect',
+  [ErrorCode.USER_CURRENT_PASSWORD_INCORRECT]:
+    'Le mot de passe actuel est incorrect.',
   [ErrorCode.USER_USERNAME_ALREADY_EXISTS]:
     "Le nom d'utilisateur est déjà pris.",
   [ErrorCode.USER_EMAIL_ALREADY_TAKEN]:

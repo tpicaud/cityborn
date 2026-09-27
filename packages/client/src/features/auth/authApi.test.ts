@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  type ApiResult,
   ErrorCode,
   type User,
   UserIdSchema,
@@ -8,10 +9,20 @@ import {
 } from '@cityborn/api';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
-import { createAuthApi } from './authApi';
+import { type AuthApi, createAuthApi } from './authApi';
 import { toCreateUser } from './authSchema';
 
 const username = UsernameSchema.parse('citizen');
+
+interface FakeTokenStorageState {
+  tokens: [string, string] | null;
+  cleared: boolean;
+}
+
+interface FakeTokenStorage {
+  state: FakeTokenStorageState;
+  tokenStorage: TokenStorage;
+}
 
 const user: User = {
   id: UserIdSchema.parse('user-1'),
@@ -21,8 +32,8 @@ const user: User = {
   isVerified: true,
 };
 
-function createFakeTokenStorage() {
-  const state: { tokens: [string, string] | null; cleared: boolean } = {
+function createFakeTokenStorage(): FakeTokenStorage {
+  const state: FakeTokenStorageState = {
     tokens: null,
     cleared: false,
   };
@@ -64,6 +75,7 @@ function createFakeClient(
       resendVerificationEmail: unexpectedCall,
       verifyEmail: unexpectedCall,
       deleteUser: unexpectedCall,
+      updatePassword: unexpectedCall,
       ...routes,
     },
   };
@@ -115,6 +127,32 @@ test('a rejected signIn stores no token', async () => {
 
   assert.equal(result.ok, false);
   assert.equal(state.tokens, null);
+});
+
+test('updatePassword stores the rotated tokens', async () => {
+  const { state, tokenStorage } = createFakeTokenStorage();
+  const authApi: AuthApi = createAuthApi(
+    createFakeClient({
+      updatePassword: async () => ({
+        status: 200,
+        body: {
+          access_token: 'new-access',
+          refresh_token: 'new-refresh',
+          user,
+        },
+        headers: new Headers(),
+      }),
+    }),
+    tokenStorage,
+  );
+
+  const result: ApiResult<User> = await authApi.updatePassword({
+    currentPassword: 'Password1',
+    newPassword: 'Password2',
+  });
+
+  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(state.tokens, ['new-access', 'new-refresh']);
 });
 
 test('getCurrentUser resolves to null without calling the API when no token is stored', async () => {

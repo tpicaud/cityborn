@@ -111,6 +111,69 @@ describe('UserService persistence', () => {
   });
 });
 
+describe('UserService.updateUsername', () => {
+  it('keeps the user when the username is unchanged', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser();
+
+    await expect(
+      userService.updateUsername(user, user.username),
+    ).resolves.toEqual(user);
+    expect(userRepository.existsByUsername).not.toHaveBeenCalled();
+    expect(userRepository.updateUsername).not.toHaveBeenCalled();
+  });
+
+  it('rejects an existing username', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser();
+    userRepository.existsByUsername.mockResolvedValue(true);
+
+    await expect(
+      userService.updateUsername(user, username('citizen')),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_USERNAME_ALREADY_EXISTS },
+    });
+    expect(userRepository.updateUsername).not.toHaveBeenCalled();
+  });
+
+  it('persists an available username', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser();
+    const updatedUser: User = buildUser({ username: 'citizen' });
+    userRepository.existsByUsername.mockResolvedValue(false);
+    userRepository.updateUsername.mockResolvedValue(updatedUser);
+
+    await expect(
+      userService.updateUsername(user, updatedUser.username),
+    ).resolves.toEqual(updatedUser);
+    expect(userRepository.updateUsername).toHaveBeenCalledWith(
+      user.id,
+      updatedUser.username,
+    );
+  });
+});
+
+describe('UserService.updatePassword', () => {
+  it('persists the hash and returns the incremented auth version', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser();
+    userRepository.incrementAuthVersion.mockResolvedValue(1);
+
+    await expect(userService.updatePassword(user.id, 'new-hash')).resolves.toBe(
+      1,
+    );
+    expect(userRepository.updatePassword).toHaveBeenCalledWith(
+      user.id,
+      'new-hash',
+    );
+    expect(userRepository.incrementAuthVersion).toHaveBeenCalledWith(user.id);
+  });
+});
+
 describe('UserService.validateIdentifiers', () => {
   it('accepts unused identifiers', async () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =

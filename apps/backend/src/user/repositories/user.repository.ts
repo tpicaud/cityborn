@@ -19,6 +19,7 @@ export interface UserRepository {
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
   findById(id: UserId): Promise<User | null>;
+  findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
   findCredentialsByIdentifier(
     identifier: string,
@@ -30,5 +31,7 @@ export interface UserRepository {
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
+  updateUsername(userId: UserId, username: Username): Promise<User>;
+  updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
 }

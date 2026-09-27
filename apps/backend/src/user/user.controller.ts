@@ -20,6 +20,10 @@ export class UserController {
         await this.userService.saveSoloGameRecord(user.id, body);
         return { status: 200 as const, body: {} };
       },
+      updateUsername: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.userService.updateUsername(user, body.username),
+      }),
     });
   }
 }

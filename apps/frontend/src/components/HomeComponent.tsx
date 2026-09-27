@@ -55,12 +55,13 @@ export default function HomeComponent() {
     'menu' | 'sign-in' | 'sign-up' | 'profile'
   >('menu');
   const [openProfile, setOpenProfile] = useState(false);
+  const isAuthenticated: boolean = user !== null;
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       setState('menu');
     }
-  }, [user]);
+  }, [isAuthenticated]);
 
   let content: ReactNode;
 

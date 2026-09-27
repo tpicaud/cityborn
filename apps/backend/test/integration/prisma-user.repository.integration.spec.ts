@@ -1,5 +1,5 @@
 import type { User } from '@cityborn/api';
-import { buildUser } from '@cityborn/api';
+import { buildUser, UsernameSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { AuthSession } from '../../src/common/types/auth-session';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -237,6 +237,48 @@ describe('PrismaUserRepository', () => {
         await userRepository.findByAppleId('apple-user-123');
 
       expect(found).toMatchObject({ id: user.id, email: 'host@cityborn.test' });
+    });
+  });
+
+  describe('updateUsername', () => {
+    it('persists the new username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const updated: User = await userRepository.updateUsername(
+        user.id,
+        UsernameSchema.parse('citizen'),
+      );
+
+      expect(updated.username).toBe('citizen');
+      expect(await userRepository.findById(user.id)).toMatchObject({
+        username: 'citizen',
+      });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('persists the new password hash', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        password: 'old-hash',
+      });
+
+      await userRepository.updatePassword(user.id, 'new-hash');
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsById(user.id);
+
+      expect(credentials).toMatchObject({
+        authSession: { user: { id: user.id }, authVersion: 0 },
+        passwordHash: 'new-hash',
+      });
     });
   });
 

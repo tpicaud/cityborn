@@ -11,6 +11,7 @@ import {
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UpdatePasswordSchema,
   UserSchema,
   VerifyEmailDataSchema,
 } from '../schemas/user.schema';
@@ -72,6 +73,12 @@ export const authContract = c.router(
       path: '/delete-user',
       body: emptyRequestBodySchema,
       responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+    },
+    updatePassword: {
+      method: 'PATCH',
+      path: '/password',
+      body: UpdatePasswordSchema,
+      responses: { 200: AuthResponseSchema, ...commonErrorResponses },
     },
   },
   { pathPrefix: '/auth' satisfies `/${ApiDomain}` },
