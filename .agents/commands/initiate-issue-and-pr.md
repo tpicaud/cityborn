@@ -135,6 +135,11 @@ git rev-list --count main..HEAD
      gh issue develop <numéro-issue> --checkout
      ```
 
+     Si le checkout courant est un worktree (`git rev-parse --git-dir`
+     différent de `git rev-parse --git-common-dir`), lancer
+     `./scripts/setup-worktree.sh` maintenant qu'il est sur la branche liée,
+     avant de commencer le travail.
+
   2. Ne pas créer de PR tout de suite : il n'y a rien à proposer. Prévenir
      l'utilisateur qu'il faudra relancer une création de PR draft (même
      commande que ci-dessus) une fois qu'il y aura des commits.

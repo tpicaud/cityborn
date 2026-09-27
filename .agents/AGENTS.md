@@ -1,6 +1,6 @@
 # Cityborn — guide pour agents
 
-Monorepo pnpm/turbo, TypeScript partout. Deux règles au-dessus de tout : **type-safe** (jamais `any`, jamais affaiblir un type pour le compilateur) et **bonnes pratiques d'architecture**.
+Monorepo pnpm/turbo, TypeScript partout. Trois règles au-dessus de tout : **type-safe** (jamais `any`, jamais affaiblir un type pour le compilateur), **naming exact** (voir [Style de code](#style-de-code)) et **bonnes pratiques d'architecture**.
 
 Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les conventions propres à un domaine vivent dans des skills chargés à la demande — voir [Skills](#skills).
 
@@ -43,7 +43,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 ## Style de code
 
 - **Aucun commentaire dans le code, JSDoc compris.** Le naming, les types et le découpage portent l'intention. Seule tolérance : le bloc `@deprecated` / `@deprecatedSince` posé par le skill `deprecate`. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
-- **Naming précis** : le nom reflète exactement la chose.
+- **Naming exact** : chaque nom (variable, fonction, type, fichier, colonne, champ de contrat, clé, room) dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Renommer un nom générique, redondant ou qui entre en collision avec un autre domaine (ex. « session » désigne la partie de jeu).
   ```typescript
   const service = new RateLimitService(redisService);          // ❌ trop générique
   const rateLimitService = new RateLimitService(redisService); // ✅
@@ -52,6 +52,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 - **Objets typés** : quand un type nommé décrit l'objet créé, préférer `const objet: Type = { ... }`. Réserver `satisfies Type` aux cas où conserver le type inféré de l'expression est utile ; éviter `satisfies Parameters<typeof méthode>[0]` si un type nommé existe.
 - **Variables locales** : annoter explicitement chaque `const` et `let` dès qu'un type approprié peut être nommé, y compris pour le résultat d'une méthode et les données de test. Ne laisser le type implicite que lorsqu'aucune annotation explicite pertinente n'est possible.
 - **Éviter `else`** : early return ; ternaire seulement si vraiment nécessaire.
+- **Itérer avec les méthodes de tableau** (`map`, `filter`, `reduce`, `find`, `some`, `every`, `forEach`) et `Promise.all` pour l'asynchrone ; un traitement asynchrone séquentiel passe par une fonction récursive. Les boucles `for`, `for…of` et `for…in` sont proscrites, tests compris.
 - **`import type { … }`** obligatoire pour les types (forcé par Biome `useImportType`).
 - **Nouveaux fichiers** : inspecter les fichiers voisins et suivre le précédent dominant. Préférer étendre un fichier existant quand sa responsabilité reste cohérente. Demander uniquement si plusieurs emplacements correspondent à des responsabilités différentes et que le choix affecte l'architecture publique.
 
