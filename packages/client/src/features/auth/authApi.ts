@@ -7,7 +7,6 @@ import type {
   SignInWithApple,
   SignInWithGoogle,
   UpdatePassword,
-  UpdateUsername,
   User,
   VerifyEmailData,
 } from '@cityborn/api';
@@ -23,7 +22,6 @@ export interface AuthApi {
   signInWithApple(data: SignInWithApple): Promise<ApiResult<User>>;
   signOut(): Promise<void>;
   deleteUser(): Promise<ApiResult<void>>;
-  updateUsername(data: UpdateUsername): Promise<ApiResult<User>>;
   updatePassword(data: UpdatePassword): Promise<ApiResult<User>>;
   resendVerificationEmail(): Promise<ApiResult<void>>;
   verifyEmail(data: VerifyEmailData): Promise<ApiResult<PublicUser>>;
@@ -94,10 +92,6 @@ export function createAuthApi(
       return toVoidResult(
         toApiResult(await client.auth.deleteUser({ body: {} })),
       );
-    },
-
-    async updateUsername(data) {
-      return toApiResult(await client.auth.updateUsername({ body: data }));
     },
 
     async updatePassword(data) {

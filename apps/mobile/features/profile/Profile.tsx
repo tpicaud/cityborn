@@ -50,7 +50,7 @@ export default function Profile() {
 
   const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
-      const result: ApiResult<User> = await authApi.updateUsername(data);
+      const result: ApiResult<User> = await profileApi.updateUsername(data);
       if (!result.ok) return invokeError(result.error);
 
       setUser(result.data);

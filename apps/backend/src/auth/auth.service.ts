@@ -7,7 +7,6 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type UpdatePassword,
-  type UpdateUsername,
   type User,
   type UserId,
   UserIdSchema,
@@ -294,10 +293,6 @@ export class AuthService {
         message: `User not found`,
       });
     await this.userService.deleteUser(user.id);
-  }
-
-  async updateUsername(user: User, data: UpdateUsername): Promise<User> {
-    return this.userService.updateUsername(user, data.username);
   }
 
   async updatePassword(

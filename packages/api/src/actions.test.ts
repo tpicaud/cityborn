@@ -122,7 +122,6 @@ describe('contract actions', () => {
       'auth.signInWithGoogle',
       'auth.signUp',
       'auth.updatePassword',
-      'auth.updateUsername',
       'auth.verifyEmail',
       'category.getCategories',
       'category.getCategory',
@@ -149,6 +148,7 @@ describe('contract actions', () => {
       'session.updateHost',
       'user.getGameRecords',
       'user.saveSoloGameRecord',
+      'user.updateUsername',
     ]);
   });
 });

@@ -35,7 +35,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { profileApi } from '@/lib/profileApi';
-import { updatePassword, updateUsername } from '@/server/use-server/auth';
+import { updatePassword } from '@/server/use-server/auth';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { setUser } = useAuth();
@@ -57,7 +57,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
 
   const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
-      const result: ApiResult<User> = await updateUsername(data);
+      const result: ApiResult<User> = await profileApi.updateUsername(data);
       if (!result.ok) return invokeError(result.error);
 
       setUser(result.data);

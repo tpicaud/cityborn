@@ -75,7 +75,6 @@ function createFakeClient(
       resendVerificationEmail: unexpectedCall,
       verifyEmail: unexpectedCall,
       deleteUser: unexpectedCall,
-      updateUsername: unexpectedCall,
       updatePassword: unexpectedCall,
       ...routes,
     },
