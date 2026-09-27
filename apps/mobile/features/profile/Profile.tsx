@@ -255,7 +255,6 @@ export default function Profile() {
         className="h-auto max-h-[80%]"
       >
         <ScrollView
-          automaticallyAdjustKeyboardInsets
           contentContainerStyle={{
             alignItems: 'center',
           }}
