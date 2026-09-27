@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm check-env:development && next dev",
+    "dev": "pnpm check-env:development && next dev --port 3000",
     "build": "pnpm check-env:production && next build",
     "typecheck": "next typegen && tsc -noEmit",
     "start": "next start",

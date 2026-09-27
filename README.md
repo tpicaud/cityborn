@@ -37,6 +37,9 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
    pnpm dev:web
    ```
 
+   Le frontend est disponible sur `http://localhost:3000` et le back-office sur
+   `http://localhost:3001`.
+
 3. Arrêter les ressources locales avec `pnpm db:stop`.
 
 ## Mobile
