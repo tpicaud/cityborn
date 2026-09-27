@@ -3,12 +3,12 @@ import { UnauthorizedException } from '@nestjs/common';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
 import type { AuthSession } from '../../common/types/auth-session';
-import { SessionVersionSchema } from '../../common/types/auth-session';
+import { AuthVersionSchema } from '../../common/types/auth-session';
 import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
   id: UserIdSchema,
-  sessionVersion: SessionVersionSchema.optional().default(0),
+  authVersion: AuthVersionSchema.optional().default(0),
 });
 
 export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
@@ -38,7 +38,7 @@ export async function resolveAuthSession(
     payload.id,
   );
   if (!authSession) return null;
-  if (authSession.sessionVersion === payload.sessionVersion) {
+  if (authSession.authVersion === payload.authVersion) {
     return authSession;
   }
 

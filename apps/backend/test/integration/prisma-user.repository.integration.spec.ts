@@ -97,7 +97,7 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findAuthSessionById', () => {
-    it('loads a newly persisted user with session version zero', async () => {
+    it('loads a newly persisted user with auth version zero', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
         email: userData.email,
@@ -108,7 +108,7 @@ describe('PrismaUserRepository', () => {
       const authSession: AuthSession | null =
         await userRepository.findAuthSessionById(user.id);
 
-      expect(authSession).toEqual({ user, sessionVersion: 0 });
+      expect(authSession).toEqual({ user, authVersion: 0 });
     });
   });
 
@@ -128,7 +128,7 @@ describe('PrismaUserRepository', () => {
       expect(credentials).toMatchObject({
         authSession: {
           user: { id: user.id, username: 'host', isVerified: false },
-          sessionVersion: 0,
+          authVersion: 0,
         },
         passwordHash: 'hashed-password',
       });
@@ -259,8 +259,8 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('incrementSessionVersion', () => {
-    it('increments and returns the persisted session version', async () => {
+  describe('incrementAuthVersion', () => {
+    it('increments and returns the persisted auth version', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
         email: userData.email,
@@ -268,17 +268,18 @@ describe('PrismaUserRepository', () => {
         type: userData.type,
       });
 
-      const firstVersion: number = await userRepository.incrementSessionVersion(
+      const firstVersion: number = await userRepository.incrementAuthVersion(
         user.id,
       );
-      const secondVersion: number =
-        await userRepository.incrementSessionVersion(user.id);
+      const secondVersion: number = await userRepository.incrementAuthVersion(
+        user.id,
+      );
       const authSession: AuthSession | null =
         await userRepository.findAuthSessionById(user.id);
 
       expect(firstVersion).toBe(1);
       expect(secondVersion).toBe(2);
-      expect(authSession?.sessionVersion).toBe(2);
+      expect(authSession?.authVersion).toBe(2);
     });
   });
 });

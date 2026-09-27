@@ -162,7 +162,7 @@ describe('WsHandshakeMiddleware', () => {
       jwtService.verifyAsync.mockResolvedValue({ id: user.id });
       userService.findAuthSessionById.mockResolvedValue({
         user,
-        sessionVersion: 0,
+        authVersion: 0,
       });
       const socket: AppSocket = buildSocket({
         cookie: 'theme=dark',
@@ -175,7 +175,7 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data.authSession).toEqual({ user, sessionVersion: 0 });
+      expect(socket.data.authSession).toEqual({ user, authVersion: 0 });
       expect(socket.join).toHaveBeenCalledWith([
         `auth:user:${user.id}`,
         `auth:user:${user.id}:version:0`,
@@ -250,11 +250,11 @@ describe('WsHandshakeMiddleware', () => {
       const user: User = buildUser();
       jwtService.verifyAsync.mockResolvedValue({
         id: user.id,
-        sessionVersion: 1,
+        authVersion: 1,
       });
       userService.findAuthSessionById.mockResolvedValue({
         user,
-        sessionVersion: 2,
+        authVersion: 2,
       });
       const socket: AppSocket = buildSocket({
         auth: { access_token: 'stale-token' },

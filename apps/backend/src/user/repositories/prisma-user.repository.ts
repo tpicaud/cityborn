@@ -6,10 +6,7 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import type {
-  AuthSession,
-  SessionVersion,
-} from '../../common/types/auth-session';
+import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
@@ -97,12 +94,12 @@ export class PrismaUserRepository implements UserRepository {
     return UserMapper.toUser(user);
   }
 
-  async incrementSessionVersion(userId: UserId): Promise<SessionVersion> {
-    const user: { sessionVersion: number } = await this.txHost.tx.user.update({
+  async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {
+    const user: { authVersion: number } = await this.txHost.tx.user.update({
       where: { id: userId },
-      data: { sessionVersion: { increment: 1 } },
-      select: { sessionVersion: true },
+      data: { authVersion: { increment: 1 } },
+      select: { authVersion: true },
     });
-    return user.sessionVersion;
+    return user.authVersion;
   }
 }

@@ -1,17 +1,14 @@
 import { ErrorCode, type UserId } from '@cityborn/api';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { AppServer, AppSocket } from '../common/types/app-socket';
-import type { AuthSession, SessionVersion } from '../common/types/auth-session';
+import type { AuthSession, AuthVersion } from '../common/types/auth-session';
 
 function userSessionsRoom(userId: UserId): string {
   return `auth:user:${userId}`;
 }
 
-function userSessionVersionRoom(
-  userId: UserId,
-  sessionVersion: SessionVersion,
-): string {
-  return `${userSessionsRoom(userId)}:version:${sessionVersion}`;
+function userAuthVersionRoom(userId: UserId, authVersion: AuthVersion): string {
+  return `${userSessionsRoom(userId)}:version:${authVersion}`;
 }
 
 @Injectable()
@@ -29,17 +26,17 @@ export class AuthenticatedSocketService {
     const userId: UserId = authSession.user.id;
     await socket.join([
       userSessionsRoom(userId),
-      userSessionVersionRoom(userId, authSession.sessionVersion),
+      userAuthVersionRoom(userId, authSession.authVersion),
     ]);
   }
 
   disconnectOlderSessions(
     userId: UserId,
-    currentSessionVersion: SessionVersion,
+    currentAuthVersion: AuthVersion,
   ): void {
     this.requireServer()
       .in(userSessionsRoom(userId))
-      .except(userSessionVersionRoom(userId, currentSessionVersion))
+      .except(userAuthVersionRoom(userId, currentAuthVersion))
       .disconnectSockets(true);
   }
 

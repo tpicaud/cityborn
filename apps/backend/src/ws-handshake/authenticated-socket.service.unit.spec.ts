@@ -22,7 +22,7 @@ function buildAuthenticatedSocketService() {
 
 describe('AuthenticatedSocketService', () => {
   describe('joinSessionRooms', () => {
-    it('joins the user room and the room of its session version', async () => {
+    it('joins the user room and the room of its auth version', async () => {
       const user: User = buildUser();
       const socket: DeepMocked<AppSocket> = createMock<AppSocket>();
       const authenticatedSocketService: AuthenticatedSocketService =
@@ -30,7 +30,7 @@ describe('AuthenticatedSocketService', () => {
 
       await authenticatedSocketService.joinSessionRooms(socket, {
         user,
-        sessionVersion: 3,
+        authVersion: 3,
       });
 
       expect(socket.join).toHaveBeenCalledWith([
@@ -41,7 +41,7 @@ describe('AuthenticatedSocketService', () => {
   });
 
   describe('disconnectOlderSessions', () => {
-    it('disconnects the user sockets outside the current session version', () => {
+    it('disconnects the user sockets outside the current auth version', () => {
       const user: User = buildUser();
       const {
         server,

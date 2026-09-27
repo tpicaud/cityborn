@@ -1,8 +1,5 @@
 import type { User, UserId, Username } from '@cityborn/api';
-import type {
-  AuthSession,
-  SessionVersion,
-} from '../../common/types/auth-session';
+import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
@@ -33,5 +30,5 @@ export interface UserRepository {
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
-  incrementSessionVersion(userId: UserId): Promise<SessionVersion>;
+  incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
 }

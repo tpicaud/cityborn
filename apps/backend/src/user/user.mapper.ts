@@ -58,7 +58,7 @@ export const UserMapper = {
   toAuthSession(prismaUser: PrismaUser): AuthSession {
     return {
       user: UserMapper.toUser(prismaUser),
-      sessionVersion: prismaUser.sessionVersion,
+      authVersion: prismaUser.authVersion,
     };
   },
 };

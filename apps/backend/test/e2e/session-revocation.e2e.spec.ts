@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { io, type Socket } from 'socket.io-client';
 import request from 'supertest';
-import type { SessionVersion } from '../../src/common/types/auth-session';
+import type { AuthVersion } from '../../src/common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { SessionGateway } from '../../src/session/session.gateway';
@@ -83,7 +83,7 @@ describe('Authenticated session revocation', () => {
     await app?.close();
   });
 
-  it('accepts historical access and refresh tokens as session version zero', async () => {
+  it('accepts historical access and refresh tokens as auth version zero', async () => {
     const user: User = buildUser();
     const prismaService: PrismaService = app.get(PrismaService);
     await prismaService.user.create({
@@ -159,11 +159,12 @@ describe('Authenticated session revocation', () => {
       AuthenticatedSocketService,
     );
 
-    const sessionVersion: SessionVersion =
-      await userService.incrementSessionVersion(user.id);
-    authenticatedSocketService.disconnectOlderSessions(user.id, sessionVersion);
+    const authVersion: AuthVersion = await userService.incrementAuthVersion(
+      user.id,
+    );
+    authenticatedSocketService.disconnectOlderSessions(user.id, authVersion);
 
-    expect(sessionVersion).toBe(1);
+    expect(authVersion).toBe(1);
     await expect(disconnected).resolves.toBe('io server disconnect');
     expect(guestClient.connected).toBe(true);
     expect(otherClient.connected).toBe(true);

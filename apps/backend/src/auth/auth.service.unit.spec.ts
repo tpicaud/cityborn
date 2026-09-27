@@ -222,7 +222,7 @@ describe('AuthService.signIn', () => {
       password: 'plain-password',
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
-      authSession: { user: persistedUser, sessionVersion: 4 },
+      authSession: { user: persistedUser, authVersion: 4 },
       passwordHash: 'hashed-password',
     });
 
@@ -234,7 +234,7 @@ describe('AuthService.signIn', () => {
     expect(result.access_token).toBe('access-token');
     expect(result.refresh_token).toBe('refresh-token');
     expect(jwtService.signAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ sessionVersion: 4 }),
+      expect.objectContaining({ authVersion: 4 }),
       expect.any(Object),
     );
     expect(eventService.trackEvent).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe('AuthService.signIn', () => {
     const persistedUser: User = buildUser();
     const credentials: UserCredentials | null = isOAuthAccount
       ? {
-          authSession: { user: persistedUser, sessionVersion: 0 },
+          authSession: { user: persistedUser, authVersion: 0 },
           passwordHash: null,
         }
       : null;
@@ -278,7 +278,7 @@ describe('AuthService.signIn', () => {
       password: 'wrong-password',
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
-      authSession: { user: persistedUser, sessionVersion: 0 },
+      authSession: { user: persistedUser, authVersion: 0 },
       passwordHash: 'hashed-password',
     });
     mockPasswordMatches = false;
@@ -291,14 +291,14 @@ describe('AuthService.signIn', () => {
 
 describe('AuthService account operations', () => {
   describe('refresh', () => {
-    it('refreshes both tokens with the validated session version', async () => {
+    it('refreshes both tokens with the validated auth version', async () => {
       const { authService, jwtService }: ReturnType<typeof buildAuthService> =
         buildAuthService();
       const persistedUser: User = buildUser();
 
       const result: AuthResponse = await authService.refresh({
         user: persistedUser,
-        sessionVersion: 3,
+        authVersion: 3,
       });
 
       expect(result).toMatchObject({
@@ -306,7 +306,7 @@ describe('AuthService account operations', () => {
         refresh_token: 'refresh-token',
       });
       expect(jwtService.signAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ sessionVersion: 3 }),
+        expect.objectContaining({ authVersion: 3 }),
         expect.any(Object),
       );
     });
@@ -442,7 +442,7 @@ describe('AuthService.signInWithGoogle', () => {
     userService.findByIdentifier.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
-      sessionVersion: 2,
+      authVersion: 2,
     });
 
     const result: AuthResponse = await authService.signInWithGoogle(
@@ -484,7 +484,7 @@ describe('AuthService.signInWithGoogle', () => {
     userService.createUser.mockResolvedValue(googleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
-      sessionVersion: 0,
+      authVersion: 0,
     });
     jest.spyOn(Math, 'random').mockReturnValue(0);
 
@@ -600,7 +600,7 @@ describe('AuthService.signInWithApple', () => {
     userService.createUser.mockResolvedValue(appleUser);
     userService.findAuthSessionById.mockResolvedValue({
       user: appleUser,
-      sessionVersion: 0,
+      authVersion: 0,
     });
     jest.spyOn(Math, 'random').mockReturnValue(0);
 

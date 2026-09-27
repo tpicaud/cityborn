@@ -21,7 +21,7 @@ describe('Authentication guard utilities', () => {
         'access-secret',
       );
 
-      expect(payload).toEqual({ id: user.id, sessionVersion: 0 });
+      expect(payload).toEqual({ id: user.id, authVersion: 0 });
     });
   });
 
@@ -31,11 +31,11 @@ describe('Authentication guard utilities', () => {
       const userService: DeepMocked<UserService> = createMock<UserService>();
       userService.findAuthSessionById.mockResolvedValue({
         user,
-        sessionVersion: 2,
+        authVersion: 2,
       });
 
       await expect(
-        resolveAuthSession({ id: user.id, sessionVersion: 1 }, userService),
+        resolveAuthSession({ id: user.id, authVersion: 1 }, userService),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_TOKEN },
       });

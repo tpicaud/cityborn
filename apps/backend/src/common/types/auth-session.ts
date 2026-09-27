@@ -1,11 +1,11 @@
 import type { User } from '@cityborn/api';
 import { z } from 'zod';
 
-export const SessionVersionSchema = z.number().int().nonnegative();
+export const AuthVersionSchema = z.number().int().nonnegative();
 
-export type SessionVersion = z.infer<typeof SessionVersionSchema>;
+export type AuthVersion = z.infer<typeof AuthVersionSchema>;
 
 export interface AuthSession {
   user: User;
-  sessionVersion: SessionVersion;
+  authVersion: AuthVersion;
 }

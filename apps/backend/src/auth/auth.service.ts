@@ -109,7 +109,7 @@ export class AuthService {
       );
     }
 
-    const authSession: AuthSession = { user, sessionVersion: 0 };
+    const authSession: AuthSession = { user, authVersion: 0 };
     return this.createAuthResponse(authSession);
   }
 
@@ -345,12 +345,12 @@ export class AuthService {
     type: 'access' | 'refresh',
     authSession: AuthSession,
   ): Promise<string> {
-    const { user, sessionVersion } = authSession;
+    const { user, authVersion } = authSession;
     const payload = {
       id: UserIdSchema.parse(user.id),
       username: UsernameSchema.parse(user.username),
       email: user.email,
-      sessionVersion,
+      authVersion,
     };
 
     switch (type) {
