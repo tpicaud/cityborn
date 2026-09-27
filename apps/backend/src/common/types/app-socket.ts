@@ -1,23 +1,13 @@
 import type {
-  UserId,
   VisitorId,
   WsClientToServerEvents,
   WsServerToClientEvents,
 } from '@cityborn/api';
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
-import type { AuthenticationContext, SessionVersion } from './authentication';
-
-export type SocketAuthentication =
-  | { status: 'anonymous' }
-  | {
-      status: 'pending';
-      userId: UserId;
-      sessionVersion: SessionVersion;
-    }
-  | ({ status: 'authenticated' } & AuthenticationContext);
+import type { AuthSession } from './auth-session';
 
 export interface AppSocketData {
-  authentication: SocketAuthentication;
+  authSession: AuthSession | null;
   visitorId: VisitorId | undefined;
 }
 

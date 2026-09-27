@@ -1,37 +1,34 @@
 import type { User } from '@cityborn/api';
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
-import type { Request } from 'express';
+import type { AppRequest } from '../common/types/app-request';
 import type { AppSocket } from '../common/types/app-socket';
-import type { AuthenticationContext } from '../common/types/authentication';
+import type { AuthSession } from '../common/types/auth-session';
 
-function resolveAuthenticationContext(
+function resolveCurrentAuthSession(
   ctx: ExecutionContext,
-): AuthenticationContext | undefined {
+): AuthSession | undefined {
   const type = ctx.getType<'http' | 'ws'>();
 
   if (type === 'http') {
-    const request = ctx.switchToHttp().getRequest<Request>();
-    return request.authentication;
+    const request = ctx.switchToHttp().getRequest<AppRequest>();
+    return request.authSession;
   }
 
   if (type === 'ws') {
     const client = ctx.switchToWs().getClient<AppSocket>();
-    const authentication = client.data.authentication;
-    return authentication.status === 'authenticated'
-      ? authentication
-      : undefined;
+    return client.data.authSession ?? undefined;
   }
 
   return undefined;
 }
 
-export const CurrentAuthentication = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): AuthenticationContext | undefined =>
-    resolveAuthenticationContext(ctx),
+export const CurrentAuthSession = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): AuthSession | undefined =>
+    resolveCurrentAuthSession(ctx),
 );
 
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): User | undefined => {
-    return resolveAuthenticationContext(ctx)?.user;
+    return resolveCurrentAuthSession(ctx)?.user;
   },
 );

@@ -7,6 +7,7 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  type UserId,
   UserIdSchema,
   type Username,
   UsernameSchema,
@@ -21,7 +22,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { AuthenticationContext } from '../common/types/authentication';
+import type { AuthSession } from '../common/types/auth-session';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   AUTH_CONFIG,
@@ -33,6 +34,7 @@ import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
+import type { UserCredentials } from '../user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { verifyAppleIdToken } from './utils';
 
@@ -107,13 +109,14 @@ export class AuthService {
       );
     }
 
-    return this.createAuthResponse({ user, sessionVersion: 0 });
+    const authSession: AuthSession = { user, sessionVersion: 0 };
+    return this.createAuthResponse(authSession);
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
     const { identifier, password } = dto;
 
-    const credentials =
+    const credentials: UserCredentials | null =
       await this.userService.findCredentialsByIdentifier(identifier);
     if (!credentials?.passwordHash)
       throw new UnauthorizedException({
@@ -143,7 +146,7 @@ export class AuthService {
       );
     }
 
-    return this.createAuthResponse(credentials);
+    return this.createAuthResponse(credentials.authSession);
   }
 
   async signInWithGoogle(
@@ -191,9 +194,8 @@ export class AuthService {
       }
     }
 
-    const authentication: AuthenticationContext =
-      await this.requireAuthenticationContext(user.id);
-    return this.createAuthResponse(authentication);
+    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    return this.createAuthResponse(authSession);
   }
 
   async signInWithApple(
@@ -261,13 +263,12 @@ export class AuthService {
       }
     }
 
-    const authentication: AuthenticationContext =
-      await this.requireAuthenticationContext(user.id);
-    return this.createAuthResponse(authentication);
+    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    return this.createAuthResponse(authSession);
   }
 
-  async refresh(authentication: AuthenticationContext): Promise<AuthResponse> {
-    return this.createAuthResponse(authentication);
+  async refresh(authSession: AuthSession): Promise<AuthResponse> {
+    return this.createAuthResponse(authSession);
   }
 
   async getProfile(identifier: string): Promise<User> {
@@ -303,22 +304,17 @@ export class AuthService {
     return { id: user.id, username: user.username };
   }
 
-  async createAuthResponse(
-    authentication: AuthenticationContext,
-  ): Promise<AuthResponse> {
-    const accessToken: string = await this.generateToken(
-      'access',
-      authentication,
-    );
+  async createAuthResponse(authSession: AuthSession): Promise<AuthResponse> {
+    const accessToken: string = await this.generateToken('access', authSession);
     const refreshToken: string = await this.generateToken(
       'refresh',
-      authentication,
+      authSession,
     );
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      user: authentication.user,
+      user: authSession.user,
     };
   }
 
@@ -347,9 +343,9 @@ export class AuthService {
 
   private async generateToken(
     type: 'access' | 'refresh',
-    authentication: AuthenticationContext,
+    authSession: AuthSession,
   ): Promise<string> {
-    const { user, sessionVersion } = authentication;
+    const { user, sessionVersion } = authSession;
     const payload = {
       id: UserIdSchema.parse(user.id),
       username: UsernameSchema.parse(user.username),
@@ -372,12 +368,10 @@ export class AuthService {
     }
   }
 
-  private async requireAuthenticationContext(
-    userId: AuthenticationContext['user']['id'],
-  ): Promise<AuthenticationContext> {
-    const authentication: AuthenticationContext | null =
-      await this.userService.findAuthenticationContextById(userId);
-    if (authentication) return authentication;
+  private async requireAuthSession(userId: UserId): Promise<AuthSession> {
+    const authSession: AuthSession | null =
+      await this.userService.findAuthSessionById(userId);
+    if (authSession) return authSession;
 
     throw new UnauthorizedException({
       code: ErrorCode.USER_NOT_FOUND,

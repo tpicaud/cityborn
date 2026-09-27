@@ -5,7 +5,7 @@ export const SessionVersionSchema = z.number().int().nonnegative();
 
 export type SessionVersion = z.infer<typeof SessionVersionSchema>;
 
-export interface AuthenticationContext {
+export interface AuthSession {
   user: User;
   sessionVersion: SessionVersion;
 }

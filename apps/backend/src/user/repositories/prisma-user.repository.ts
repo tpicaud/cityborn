@@ -7,9 +7,9 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type {
-  AuthenticationContext,
+  AuthSession,
   SessionVersion,
-} from '../../common/types/authentication';
+} from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
@@ -33,11 +33,9 @@ export class PrismaUserRepository implements UserRepository {
     await this.txHost.tx.user.delete({ where: { id: user_id } });
   }
 
-  async findAuthenticationContextById(
-    id: UserId,
-  ): Promise<AuthenticationContext | null> {
+  async findAuthSessionById(id: UserId): Promise<AuthSession | null> {
     const user = await this.txHost.tx.user.findUnique({ where: { id } });
-    return user ? UserMapper.toAuthenticationContext(user) : null;
+    return user ? UserMapper.toAuthSession(user) : null;
   }
 
   async findById(id: UserId): Promise<User | null> {

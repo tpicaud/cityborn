@@ -108,10 +108,10 @@ export class WsWideEventLifecycle {
   }
 
   private enrichSocketAuth(client: AppSocket): void {
-    const authentication = client.data.authentication;
+    const authSession = client.data.authSession;
     this.wideEventService.enrichAuth(
-      authentication.status === 'authenticated'
-        ? { isAuthenticated: true, userId: authentication.user.id }
+      authSession
+        ? { isAuthenticated: true, userId: authSession.user.id }
         : { isAuthenticated: false },
     );
   }

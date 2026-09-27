@@ -1,27 +1,17 @@
-import {
-  ErrorCode,
-  type UserId,
-  type WsServerToClientEvents,
-} from '@cityborn/api';
+import { ErrorCode, type UserId } from '@cityborn/api';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import type { RemoteSocket } from 'socket.io';
-import type {
-  AppServer,
-  AppSocket,
-  AppSocketData,
-  SocketAuthentication,
-} from '../common/types/app-socket';
-import type { SessionVersion } from '../common/types/authentication';
+import type { AppServer, AppSocket } from '../common/types/app-socket';
+import type { AuthSession, SessionVersion } from '../common/types/auth-session';
 
-function userAuthenticationRoom(userId: UserId): string {
+function userSessionsRoom(userId: UserId): string {
   return `auth:user:${userId}`;
 }
 
-function getSocketSessionVersion(
-  authentication: SocketAuthentication,
-): SessionVersion | null {
-  if (authentication.status === 'anonymous') return null;
-  return authentication.sessionVersion;
+function userSessionVersionRoom(
+  userId: UserId,
+  sessionVersion: SessionVersion,
+): string {
+  return `${userSessionsRoom(userId)}:version:${sessionVersion}`;
 }
 
 @Injectable()
@@ -32,28 +22,25 @@ export class AuthenticatedSocketService {
     this.server = server;
   }
 
-  async joinUserRoom(socket: AppSocket, userId: UserId): Promise<void> {
-    await socket.join(userAuthenticationRoom(userId));
+  async joinSessionRooms(
+    socket: AppSocket,
+    authSession: AuthSession,
+  ): Promise<void> {
+    const userId: UserId = authSession.user.id;
+    await socket.join([
+      userSessionsRoom(userId),
+      userSessionVersionRoom(userId, authSession.sessionVersion),
+    ]);
   }
 
-  async disconnectOlderSessions(
+  disconnectOlderSessions(
     userId: UserId,
     currentSessionVersion: SessionVersion,
-  ): Promise<void> {
-    const server: AppServer = this.requireServer();
-    const sockets: RemoteSocket<WsServerToClientEvents, AppSocketData>[] =
-      await server.in(userAuthenticationRoom(userId)).fetchSockets();
-
-    for (const socket of sockets) {
-      const socketSessionVersion: SessionVersion | null =
-        getSocketSessionVersion(socket.data.authentication);
-      if (
-        socketSessionVersion !== null &&
-        socketSessionVersion < currentSessionVersion
-      ) {
-        socket.disconnect(true);
-      }
-    }
+  ): void {
+    this.requireServer()
+      .in(userSessionsRoom(userId))
+      .except(userSessionVersionRoom(userId, currentSessionVersion))
+      .disconnectSockets(true);
   }
 
   private requireServer(): AppServer {

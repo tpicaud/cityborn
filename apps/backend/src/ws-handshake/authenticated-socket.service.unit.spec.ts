@@ -1,108 +1,77 @@
-import {
-  buildUser,
-  ErrorCode,
-  type User,
-  type WsServerToClientEvents,
-} from '@cityborn/api';
+import { buildUser, ErrorCode, type User } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
-import type { RemoteSocket } from 'socket.io';
-import type {
-  AppServer,
-  AppSocket,
-  AppSocketData,
-} from '../common/types/app-socket';
+import type { AppServer, AppSocket } from '../common/types/app-socket';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
 
 type AppBroadcastOperator = ReturnType<AppServer['in']>;
-type AppRemoteSocket = RemoteSocket<WsServerToClientEvents, AppSocketData>;
-
-function buildRemoteSocket(
-  authentication: AppSocketData['authentication'],
-): DeepMocked<AppRemoteSocket> {
-  return createMock<AppRemoteSocket>({
-    data: { authentication, visitorId: undefined },
-  });
-}
 
 function buildAuthenticatedSocketService() {
   const server: DeepMocked<AppServer> = createMock<AppServer>();
-  const room: DeepMocked<AppBroadcastOperator> =
+  const userSessions: DeepMocked<AppBroadcastOperator> =
     createMock<AppBroadcastOperator>();
-  server.in.mockReturnValue(room);
+  const olderSessions: DeepMocked<AppBroadcastOperator> =
+    createMock<AppBroadcastOperator>();
+  server.in.mockReturnValue(userSessions);
+  userSessions.except.mockReturnValue(olderSessions);
   const authenticatedSocketService: AuthenticatedSocketService =
     new AuthenticatedSocketService();
   authenticatedSocketService.registerServer(server);
 
-  return { server, room, authenticatedSocketService };
+  return { server, userSessions, olderSessions, authenticatedSocketService };
 }
 
 describe('AuthenticatedSocketService', () => {
-  describe('joinUserRoom', () => {
-    it('joins the private authentication room', async () => {
+  describe('joinSessionRooms', () => {
+    it('joins the user room and the room of its session version', async () => {
       const user: User = buildUser();
       const socket: DeepMocked<AppSocket> = createMock<AppSocket>();
       const authenticatedSocketService: AuthenticatedSocketService =
         new AuthenticatedSocketService();
 
-      await authenticatedSocketService.joinUserRoom(socket, user.id);
+      await authenticatedSocketService.joinSessionRooms(socket, {
+        user,
+        sessionVersion: 3,
+      });
 
-      expect(socket.join).toHaveBeenCalledWith(`auth:user:${user.id}`);
+      expect(socket.join).toHaveBeenCalledWith([
+        `auth:user:${user.id}`,
+        `auth:user:${user.id}:version:3`,
+      ]);
     });
   });
 
   describe('disconnectOlderSessions', () => {
-    it('disconnects only older authenticated and pending sockets', async () => {
+    it('disconnects the user sockets outside the current session version', () => {
       const user: User = buildUser();
-      const oldSocket: DeepMocked<AppRemoteSocket> = buildRemoteSocket({
-        status: 'authenticated',
-        user,
-        sessionVersion: 1,
-      });
-      const pendingSocket: DeepMocked<AppRemoteSocket> = buildRemoteSocket({
-        status: 'pending',
-        userId: user.id,
-        sessionVersion: 1,
-      });
-      const currentSocket: DeepMocked<AppRemoteSocket> = buildRemoteSocket({
-        status: 'authenticated',
-        user,
-        sessionVersion: 2,
-      });
-      const guestSocket: DeepMocked<AppRemoteSocket> = buildRemoteSocket({
-        status: 'anonymous',
-      });
       const {
         server,
-        room,
+        userSessions,
+        olderSessions,
         authenticatedSocketService,
       }: ReturnType<typeof buildAuthenticatedSocketService> =
         buildAuthenticatedSocketService();
-      room.fetchSockets.mockResolvedValue([
-        oldSocket,
-        pendingSocket,
-        currentSocket,
-        guestSocket,
-      ]);
 
-      await authenticatedSocketService.disconnectOlderSessions(user.id, 2);
+      authenticatedSocketService.disconnectOlderSessions(user.id, 2);
 
       expect(server.in).toHaveBeenCalledWith(`auth:user:${user.id}`);
-      expect(oldSocket.disconnect).toHaveBeenCalledWith(true);
-      expect(pendingSocket.disconnect).toHaveBeenCalledWith(true);
-      expect(currentSocket.disconnect).not.toHaveBeenCalled();
-      expect(guestSocket.disconnect).not.toHaveBeenCalled();
+      expect(userSessions.except).toHaveBeenCalledWith(
+        `auth:user:${user.id}:version:2`,
+      );
+      expect(olderSessions.disconnectSockets).toHaveBeenCalledWith(true);
     });
 
-    it('fails explicitly when the Socket.IO server is not initialized', async () => {
+    it('fails explicitly when the Socket.IO server is not initialized', () => {
       const user: User = buildUser();
       const authenticatedSocketService: AuthenticatedSocketService =
         new AuthenticatedSocketService();
 
-      await expect(
+      expect(() =>
         authenticatedSocketService.disconnectOlderSessions(user.id, 1),
-      ).rejects.toMatchObject({
-        response: { code: ErrorCode.UNKNOWN_ERROR },
-      });
+      ).toThrow(
+        expect.objectContaining({
+          response: expect.objectContaining({ code: ErrorCode.UNKNOWN_ERROR }),
+        }),
+      );
     });
   });
 });

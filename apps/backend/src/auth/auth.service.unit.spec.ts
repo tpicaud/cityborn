@@ -222,9 +222,8 @@ describe('AuthService.signIn', () => {
       password: 'plain-password',
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
-      user: persistedUser,
+      authSession: { user: persistedUser, sessionVersion: 4 },
       passwordHash: 'hashed-password',
-      sessionVersion: 4,
     });
 
     const result: AuthResponse = await authService.signIn(
@@ -254,7 +253,10 @@ describe('AuthService.signIn', () => {
       buildAuthService();
     const persistedUser: User = buildUser();
     const credentials: UserCredentials | null = isOAuthAccount
-      ? { user: persistedUser, passwordHash: null, sessionVersion: 0 }
+      ? {
+          authSession: { user: persistedUser, sessionVersion: 0 },
+          passwordHash: null,
+        }
       : null;
     const signInData: SignIn = {
       identifier: 'alice',
@@ -276,9 +278,8 @@ describe('AuthService.signIn', () => {
       password: 'wrong-password',
     };
     userService.findCredentialsByIdentifier.mockResolvedValue({
-      user: persistedUser,
+      authSession: { user: persistedUser, sessionVersion: 0 },
       passwordHash: 'hashed-password',
-      sessionVersion: 0,
     });
     mockPasswordMatches = false;
 
@@ -439,7 +440,7 @@ describe('AuthService.signInWithGoogle', () => {
     });
     googleClient.verifyIdToken.mockResolvedValue(ticket);
     userService.findByIdentifier.mockResolvedValue(googleUser);
-    userService.findAuthenticationContextById.mockResolvedValue({
+    userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
       sessionVersion: 2,
     });
@@ -481,7 +482,7 @@ describe('AuthService.signInWithGoogle', () => {
     userService.findByIdentifier.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(googleUser);
-    userService.findAuthenticationContextById.mockResolvedValue({
+    userService.findAuthSessionById.mockResolvedValue({
       user: googleUser,
       sessionVersion: 0,
     });
@@ -597,7 +598,7 @@ describe('AuthService.signInWithApple', () => {
     userService.findByIdentifier.mockResolvedValueOnce(null);
     userService.existsByUsername.mockResolvedValue(false);
     userService.createUser.mockResolvedValue(appleUser);
-    userService.findAuthenticationContextById.mockResolvedValue({
+    userService.findAuthSessionById.mockResolvedValue({
       user: appleUser,
       sessionVersion: 0,
     });

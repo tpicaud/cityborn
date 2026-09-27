@@ -3,8 +3,8 @@ import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
-import type { AuthenticationContext } from '../common/types/authentication';
-import { CurrentAuthentication, CurrentUser } from '../user/user.decorator';
+import type { AuthSession } from '../common/types/auth-session';
+import { CurrentAuthSession, CurrentUser } from '../user/user.decorator';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { RefreshGuard } from './guards/refresh.guard';
@@ -80,13 +80,11 @@ export class AuthController {
 
   @TsRestHandler(refreshRoutes)
   @UseGuards(RefreshGuard)
-  async refreshHandler(
-    @CurrentAuthentication() authentication: AuthenticationContext,
-  ) {
+  async refreshHandler(@CurrentAuthSession() authSession: AuthSession) {
     return tsRestHandler(refreshRoutes, {
       refresh: async () => ({
         status: 200 as const,
-        body: await this.authService.refresh(authentication),
+        body: await this.authService.refresh(authSession),
       }),
     });
   }

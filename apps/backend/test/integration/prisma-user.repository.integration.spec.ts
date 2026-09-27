@@ -1,7 +1,7 @@
 import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import type { AuthenticationContext } from '../../src/common/types/authentication';
+import type { AuthSession } from '../../src/common/types/auth-session';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import type {
@@ -96,7 +96,7 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('findAuthenticationContextById', () => {
+  describe('findAuthSessionById', () => {
     it('loads a newly persisted user with session version zero', async () => {
       const userData: User = buildUser();
       const user: User = await userRepository.create({
@@ -105,10 +105,10 @@ describe('PrismaUserRepository', () => {
         type: userData.type,
       });
 
-      const authentication: AuthenticationContext | null =
-        await userRepository.findAuthenticationContextById(user.id);
+      const authSession: AuthSession | null =
+        await userRepository.findAuthSessionById(user.id);
 
-      expect(authentication).toEqual({ user, sessionVersion: 0 });
+      expect(authSession).toEqual({ user, sessionVersion: 0 });
     });
   });
 
@@ -126,9 +126,11 @@ describe('PrismaUserRepository', () => {
       const credentials: UserCredentials | null =
         await userRepository.findCredentialsByIdentifier('host@cityborn.test');
       expect(credentials).toMatchObject({
-        user: { id: user.id, username: 'host', isVerified: false },
+        authSession: {
+          user: { id: user.id, username: 'host', isVerified: false },
+          sessionVersion: 0,
+        },
         passwordHash: 'hashed-password',
-        sessionVersion: 0,
       });
     });
 
@@ -145,7 +147,7 @@ describe('PrismaUserRepository', () => {
         await userRepository.findCredentialsByIdentifier(user.username);
 
       expect(credentials).toMatchObject({
-        user: { id: user.id },
+        authSession: { user: { id: user.id } },
         passwordHash: 'hashed-password',
       });
     });
@@ -271,12 +273,12 @@ describe('PrismaUserRepository', () => {
       );
       const secondVersion: number =
         await userRepository.incrementSessionVersion(user.id);
-      const authentication: AuthenticationContext | null =
-        await userRepository.findAuthenticationContextById(user.id);
+      const authSession: AuthSession | null =
+        await userRepository.findAuthSessionById(user.id);
 
       expect(firstVersion).toBe(1);
       expect(secondVersion).toBe(2);
-      expect(authentication?.sessionVersion).toBe(2);
+      expect(authSession?.sessionVersion).toBe(2);
     });
   });
 });

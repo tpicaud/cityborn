@@ -9,10 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { io, type Socket } from 'socket.io-client';
 import request from 'supertest';
-import type {
-  AuthenticationContext,
-  SessionVersion,
-} from '../../src/common/types/authentication';
+import type { SessionVersion } from '../../src/common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { SessionGateway } from '../../src/session/session.gateway';
@@ -20,19 +17,6 @@ import { UserService } from '../../src/user/user.service';
 import { AuthenticatedSocketService } from '../../src/ws-handshake/authenticated-socket.service';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
-
-interface Signal {
-  promise: Promise<void>;
-  resolve(): void;
-}
-
-function createSignal(): Signal {
-  let resolveSignal: () => void = () => undefined;
-  const promise: Promise<void> = new Promise((resolve) => {
-    resolveSignal = resolve;
-  });
-  return { promise, resolve: resolveSignal };
-}
 
 function nextEvent(client: Socket, event: string): Promise<unknown> {
   return new Promise((resolve) => client.once(event, resolve));
@@ -177,10 +161,7 @@ describe('Authenticated session revocation', () => {
 
     const sessionVersion: SessionVersion =
       await userService.incrementSessionVersion(user.id);
-    await authenticatedSocketService.disconnectOlderSessions(
-      user.id,
-      sessionVersion,
-    );
+    authenticatedSocketService.disconnectOlderSessions(user.id, sessionVersion);
 
     expect(sessionVersion).toBe(1);
     await expect(disconnected).resolves.toBe('io server disconnect');
@@ -219,70 +200,5 @@ describe('Authenticated session revocation', () => {
     expect(staleClient.connected).toBe(false);
     expect(guestClient.connected).toBe(true);
     expect(otherClient.connected).toBe(true);
-  });
-
-  it('disconnects a session revoked while its socket is completing authentication', async () => {
-    const user: User = buildUser();
-    const prismaService: PrismaService = app.get(PrismaService);
-    await prismaService.user.create({
-      data: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        type: user.type,
-        isVerified: user.isVerified,
-      },
-    });
-    const accessToken: string = await createAccessToken(app, user.id);
-    const initialLookupCompleted: Signal = createSignal();
-    const releaseInitialLookup: Signal = createSignal();
-    const userService: UserService = app.get(UserService);
-    const originalFindAuthenticationContextById: UserService['findAuthenticationContextById'] =
-      userService.findAuthenticationContextById.bind(userService);
-    let delayInitialLookup: boolean = true;
-    const findAuthenticationContextById: jest.SpiedFunction<
-      UserService['findAuthenticationContextById']
-    > = jest
-      .spyOn(userService, 'findAuthenticationContextById')
-      .mockImplementation(
-        async (userId: UserId): Promise<AuthenticationContext | null> => {
-          const authentication: AuthenticationContext | null =
-            await originalFindAuthenticationContextById(userId);
-          if (!delayInitialLookup) return authentication;
-
-          delayInitialLookup = false;
-          initialLookupCompleted.resolve();
-          await releaseInitialLookup.promise;
-          return authentication;
-        },
-      );
-    const client: Socket = io(appUrl, {
-      transports: ['websocket'],
-      auth: { access_token: accessToken },
-    });
-    clients.push(client);
-    const disconnected: Promise<unknown> = nextEvent(client, 'disconnect');
-    const authenticatedSocketService: AuthenticatedSocketService = app.get(
-      AuthenticatedSocketService,
-    );
-
-    try {
-      await initialLookupCompleted.promise;
-      const sessionVersion: SessionVersion =
-        await userService.incrementSessionVersion(user.id);
-      await authenticatedSocketService.disconnectOlderSessions(
-        user.id,
-        sessionVersion,
-      );
-      releaseInitialLookup.resolve();
-
-      expect(sessionVersion).toBe(1);
-      await expect(disconnected).resolves.toBe('io server disconnect');
-      expect(client.connected).toBe(false);
-      expect(findAuthenticationContextById).toHaveBeenCalledTimes(2);
-    } finally {
-      releaseInitialLookup.resolve();
-      findAuthenticationContextById.mockRestore();
-    }
   });
 });

@@ -16,10 +16,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import type {
-  AuthenticationContext,
-  SessionVersion,
-} from '../common/types/authentication';
+import type { AuthSession, SessionVersion } from '../common/types/auth-session';
 import { GameRecordService } from '../game-record/game-record.service';
 import {
   EMAIL_VERIFICATION_TOKEN_REPOSITORY,
@@ -50,10 +47,8 @@ export class UserService {
     await this.userRepository.delete(user_id);
   }
 
-  async findAuthenticationContextById(
-    userId: UserId,
-  ): Promise<AuthenticationContext | null> {
-    return this.userRepository.findAuthenticationContextById(userId);
+  async findAuthSessionById(userId: UserId): Promise<AuthSession | null> {
+    return this.userRepository.findAuthSessionById(userId);
   }
 
   async incrementSessionVersion(userId: UserId): Promise<SessionVersion> {

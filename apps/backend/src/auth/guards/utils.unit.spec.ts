@@ -4,7 +4,7 @@ import type { JwtService } from '@nestjs/jwt';
 import type { UserService } from '../../user/user.service';
 import {
   type AuthTokenPayload,
-  resolveAuthenticationContext,
+  resolveAuthSession,
   validateAccessToken,
 } from './utils';
 
@@ -25,20 +25,17 @@ describe('Authentication guard utilities', () => {
     });
   });
 
-  describe('resolveAuthenticationContext', () => {
+  describe('resolveAuthSession', () => {
     it('rejects a token whose version differs from persisted state', async () => {
       const user: User = buildUser();
       const userService: DeepMocked<UserService> = createMock<UserService>();
-      userService.findAuthenticationContextById.mockResolvedValue({
+      userService.findAuthSessionById.mockResolvedValue({
         user,
         sessionVersion: 2,
       });
 
       await expect(
-        resolveAuthenticationContext(
-          { id: user.id, sessionVersion: 1 },
-          userService,
-        ),
+        resolveAuthSession({ id: user.id, sessionVersion: 1 }, userService),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_TOKEN },
       });

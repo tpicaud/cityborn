@@ -7,14 +7,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { Request } from 'express';
-import type { AuthenticationContext } from '../../common/types/authentication';
+import type { AppRequest } from '../../common/types/app-request';
+import type { AuthSession } from '../../common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
 import {
   type AuthTokenPayload,
-  resolveAuthenticationContext,
+  resolveAuthSession,
   validateRefreshToken,
 } from './utils';
 
@@ -27,7 +27,7 @@ export class RefreshGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<AppRequest>();
     const refreshToken: string | undefined =
       request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
 
@@ -43,15 +43,17 @@ export class RefreshGuard implements CanActivate {
       this.authConfig.jwtRefreshSecret,
     );
 
-    const authentication: AuthenticationContext | null =
-      await resolveAuthenticationContext(payload, this.userService);
-    if (!authentication) {
+    const authSession: AuthSession | null = await resolveAuthSession(
+      payload,
+      this.userService,
+    );
+    if (!authSession) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
-    request.authentication = authentication;
+    request.authSession = authSession;
 
     return true;
   }

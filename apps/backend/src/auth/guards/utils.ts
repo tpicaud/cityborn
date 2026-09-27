@@ -2,8 +2,8 @@ import { ErrorCode, UserIdSchema } from '@cityborn/api';
 import { UnauthorizedException } from '@nestjs/common';
 import { type JwtService } from '@nestjs/jwt';
 import { z } from 'zod';
-import type { AuthenticationContext } from '../../common/types/authentication';
-import { SessionVersionSchema } from '../../common/types/authentication';
+import type { AuthSession } from '../../common/types/auth-session';
+import { SessionVersionSchema } from '../../common/types/auth-session';
 import type { UserService } from '../../user/user.service';
 
 const AuthTokenPayloadSchema = z.object({
@@ -30,15 +30,16 @@ export async function validateAccessToken(
   return await validateToken(token, jwtService, jwt_access_secret);
 }
 
-export async function resolveAuthenticationContext(
+export async function resolveAuthSession(
   payload: AuthTokenPayload,
   userService: UserService,
-): Promise<AuthenticationContext | null> {
-  const authentication: AuthenticationContext | null =
-    await userService.findAuthenticationContextById(payload.id);
-  if (!authentication) return null;
-  if (authentication.sessionVersion === payload.sessionVersion) {
-    return authentication;
+): Promise<AuthSession | null> {
+  const authSession: AuthSession | null = await userService.findAuthSessionById(
+    payload.id,
+  );
+  if (!authSession) return null;
+  if (authSession.sessionVersion === payload.sessionVersion) {
+    return authSession;
   }
 
   throw new UnauthorizedException({
