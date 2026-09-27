@@ -57,15 +57,22 @@ describe('Authenticated session revocation', () => {
     client.disconnect();
     if (!socketId) return;
 
+    await waitForServerDisconnection(socketId, 100);
+  }
+
+  async function waitForServerDisconnection(
+    socketId: string,
+    remainingAttempts: number,
+  ): Promise<void> {
     const sessionGateway: SessionGateway = app.get(SessionGateway);
-    for (let attempt: number = 0; attempt < 100; attempt += 1) {
-      const connected: boolean =
-        sessionGateway.io.sockets.sockets.has(socketId);
-      if (!connected) return;
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    const connected: boolean = sessionGateway.io.sockets.sockets.has(socketId);
+    if (!connected) return;
+    if (remainingAttempts === 0) {
+      throw new Error(`Socket ${socketId} did not disconnect cleanly`);
     }
 
-    throw new Error(`Socket ${socketId} did not disconnect cleanly`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await waitForServerDisconnection(socketId, remainingAttempts - 1);
   }
 
   beforeAll(async () => {
@@ -75,7 +82,7 @@ describe('Authenticated session revocation', () => {
   });
 
   afterEach(async () => {
-    for (const client of clients) await disconnectClient(client);
+    await Promise.all(clients.map(disconnectClient));
     clients.length = 0;
   });
 

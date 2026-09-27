@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { defer, finalize, Observable, tap } from 'rxjs';
 import { resolveClientIpFromHeaders } from '../../rate-limit/resolve-client-ip';
 import type { AppSocket } from '../types/app-socket';
+import type { AuthSession } from '../types/auth-session';
 import {
   createWsWideEvent,
   firstHeaderValue,
@@ -108,7 +109,7 @@ export class WsWideEventLifecycle {
   }
 
   private enrichSocketAuth(client: AppSocket): void {
-    const authSession = client.data.authSession;
+    const authSession: AuthSession | null = client.data.authSession;
     this.wideEventService.enrichAuth(
       authSession
         ? { isAuthenticated: true, userId: authSession.user.id }

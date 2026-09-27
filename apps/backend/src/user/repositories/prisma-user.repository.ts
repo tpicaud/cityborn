@@ -6,6 +6,7 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import type { User as PrismaUser } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
@@ -31,7 +32,9 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findAuthSessionById(id: UserId): Promise<AuthSession | null> {
-    const user = await this.txHost.tx.user.findUnique({ where: { id } });
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
     return user ? UserMapper.toAuthSession(user) : null;
   }
 

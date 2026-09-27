@@ -27,7 +27,7 @@ export class RefreshGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<AppRequest>();
+    const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
     const refreshToken: string | undefined =
       request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
 

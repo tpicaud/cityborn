@@ -7,15 +7,15 @@ import type { AuthSession } from '../common/types/auth-session';
 function resolveCurrentAuthSession(
   ctx: ExecutionContext,
 ): AuthSession | undefined {
-  const type = ctx.getType<'http' | 'ws'>();
+  const contextType: 'http' | 'ws' = ctx.getType<'http' | 'ws'>();
 
-  if (type === 'http') {
-    const request = ctx.switchToHttp().getRequest<AppRequest>();
+  if (contextType === 'http') {
+    const request: AppRequest = ctx.switchToHttp().getRequest<AppRequest>();
     return request.authSession;
   }
 
-  if (type === 'ws') {
-    const client = ctx.switchToWs().getClient<AppSocket>();
+  if (contextType === 'ws') {
+    const client: AppSocket = ctx.switchToWs().getClient<AppSocket>();
     return client.data.authSession ?? undefined;
   }
 
