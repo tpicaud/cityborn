@@ -2,10 +2,7 @@ import type { AuthResponse } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import type { CookieOptions, Response } from 'express';
 import { RUNTIME_CONFIG, type RuntimeConfig } from '../../config/config.module';
-import {
-  ACCESS_TOKEN_TTL_SECONDS,
-  REFRESH_TOKEN_TTL_SECONDS,
-} from '../auth.constants';
+import { REFRESH_TOKEN_TTL_SECONDS } from '../auth.constants';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   ACCESS_TOKEN_COOKIE_PATH,
@@ -13,8 +10,7 @@ import {
   REFRESH_TOKEN_COOKIE_PATH,
 } from '../auth-cookies';
 
-const accessTokenMaxAgeMs: number = ACCESS_TOKEN_TTL_SECONDS * 1000;
-const refreshTokenMaxAgeMs: number = REFRESH_TOKEN_TTL_SECONDS * 1000;
+const authenticationCookieMaxAgeMs: number = REFRESH_TOKEN_TTL_SECONDS * 1000;
 
 @Injectable()
 export class AuthCookieService {
@@ -45,11 +41,11 @@ export class AuthCookieService {
   ): void {
     response.cookie(ACCESS_TOKEN_COOKIE_NAME, authentication.access_token, {
       ...this.accessTokenCookieOptions,
-      maxAge: accessTokenMaxAgeMs,
+      maxAge: authenticationCookieMaxAgeMs,
     });
     response.cookie(REFRESH_TOKEN_COOKIE_NAME, authentication.refresh_token, {
       ...this.refreshTokenCookieOptions,
-      maxAge: refreshTokenMaxAgeMs,
+      maxAge: authenticationCookieMaxAgeMs,
     });
   }
 
