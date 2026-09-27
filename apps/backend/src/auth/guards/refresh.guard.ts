@@ -1,4 +1,4 @@
-import { ErrorCode, User } from '@cityborn/api';
+import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -7,10 +7,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { AppRequest } from '../../common/types/app-request';
+import type { AuthSession } from '../../common/types/auth-session';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 import { UserService } from '../../user/user.service';
 import { extractTokenFromHTTPHeader } from '../utils';
-import { resolveFullUser, validateRefreshToken } from './utils';
+import {
+  type AuthTokenPayload,
+  resolveAuthSession,
+  validateRefreshToken,
+} from './utils';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
@@ -21,8 +27,8 @@ export class RefreshGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const refreshToken =
+    const request: AppRequest = context.switchToHttp().getRequest<AppRequest>();
+    const refreshToken: string | undefined =
       request.cookies?.refresh_token ?? extractTokenFromHTTPHeader(request);
 
     if (!refreshToken)
@@ -31,20 +37,23 @@ export class RefreshGuard implements CanActivate {
         message: 'No refresh token provided',
       });
 
-    const decoded = await validateRefreshToken(
+    const payload: AuthTokenPayload = await validateRefreshToken(
       refreshToken,
       this.jwtService,
       this.authConfig.jwtRefreshSecret,
     );
 
-    const fullUser = await resolveFullUser(decoded.id, this.userService);
-    if (!fullUser) {
+    const authSession: AuthSession | null = await resolveAuthSession(
+      payload,
+      this.userService,
+    );
+    if (!authSession) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_NOT_FOUND,
         message: 'User not found',
       });
     }
-    request.user = fullUser satisfies User;
+    request.authSession = authSession;
 
     return true;
   }

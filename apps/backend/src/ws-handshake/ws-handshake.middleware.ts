@@ -1,14 +1,14 @@
-import {
-  type ApiError,
-  type User,
-  type VisitorId,
-  VisitorIdSchema,
-} from '@cityborn/api';
+import { type ApiError, type VisitorId, VisitorIdSchema } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { resolveFullUser, validateAccessToken } from '../auth/guards/utils';
+import {
+  type AuthTokenPayload,
+  resolveAuthSession,
+  validateAccessToken,
+} from '../auth/guards/utils';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { AppSocket } from '../common/types/app-socket';
+import type { AuthSession } from '../common/types/auth-session';
 import { firstHeaderValue } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
@@ -16,6 +16,7 @@ import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
 import { RateLimitService } from '../rate-limit/rate-limit.service';
 import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { UserService } from '../user/user.service';
+import { AuthenticatedSocketService } from './authenticated-socket.service';
 
 export class WsHandshakeError extends Error {
   constructor(readonly data: ApiError) {
@@ -38,6 +39,7 @@ export class WsHandshakeMiddleware {
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly rateLimitService: RateLimitService,
     private readonly wideEventService: WideEventService,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
@@ -45,7 +47,7 @@ export class WsHandshakeMiddleware {
 
   use(socket: AppSocket, next: WsHandshakeNext): void {
     socket.data = {
-      user: null,
+      authSession: null,
       visitorId: parseVisitorId(socket.handshake.query['x-visitor-id']),
     };
 
@@ -68,7 +70,11 @@ export class WsHandshakeMiddleware {
       await this.consumeConnectionRateLimit(socket);
     if (rateLimitRejection) return rateLimitRejection;
 
-    socket.data.user = await this.resolveUser(socket);
+    const authSession: AuthSession | null = await this.authenticate(socket);
+    if (!authSession) return null;
+
+    socket.data.authSession = authSession;
+    await this.authenticatedSocketService.joinSessionRooms(socket, authSession);
     return null;
   }
 
@@ -88,17 +94,26 @@ export class WsHandshakeMiddleware {
     }
   }
 
-  private async resolveUser(socket: AppSocket): Promise<User | null> {
+  private async authenticate(socket: AppSocket): Promise<AuthSession | null> {
     const token: string | undefined = extractAccessTokenFromWsClient(socket);
     if (!token) return null;
 
+    const payload: AuthTokenPayload | null =
+      await this.validateHandshakeToken(token);
+    if (!payload) return null;
+
+    return resolveAuthSession(payload, this.userService);
+  }
+
+  private async validateHandshakeToken(
+    token: string,
+  ): Promise<AuthTokenPayload | null> {
     try {
-      const { id } = await validateAccessToken(
+      return await validateAccessToken(
         token,
         this.jwtService,
         this.authConfig.jwtAccessSecret,
       );
-      return await resolveFullUser(id, this.userService);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
       return null;

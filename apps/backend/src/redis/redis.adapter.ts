@@ -14,6 +14,7 @@ import {
   REDIS_CONFIG,
   type RedisConfig,
 } from '../config/config.module';
+import { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
 import { WsHandshakeMiddleware } from '../ws-handshake/ws-handshake.middleware';
 
 export class RedisIoAdapter extends IoAdapter {
@@ -22,6 +23,7 @@ export class RedisIoAdapter extends IoAdapter {
     private readonly adapterConstructor: ReturnType<typeof createAdapter>,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
     private readonly wsHandshakeMiddleware: WsHandshakeMiddleware,
+    private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly corsOrigins: string[],
     private readonly closeRedisConnections: () => Promise<void>,
   ) {
@@ -65,6 +67,7 @@ export class RedisIoAdapter extends IoAdapter {
       createAdapter(pubClient, subClient),
       app.get(WsWideEventLifecycle),
       app.get(WsHandshakeMiddleware),
+      app.get(AuthenticatedSocketService),
       httpConfig.corsOrigins,
       async () => {
         await Promise.all([
@@ -105,6 +108,7 @@ export class RedisIoAdapter extends IoAdapter {
       },
     });
     server.adapter(this.adapterConstructor);
+    this.authenticatedSocketService.registerServer(server);
     server.use((socket, next) => this.wsHandshakeMiddleware.use(socket, next));
     return server;
   }

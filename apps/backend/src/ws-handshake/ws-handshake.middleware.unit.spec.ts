@@ -15,6 +15,7 @@ import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecyc
 import type { AuthConfig } from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
+import { AuthenticatedSocketService } from './authenticated-socket.service';
 import {
   WsHandshakeError,
   WsHandshakeMiddleware,
@@ -61,6 +62,7 @@ function buildMiddleware() {
       authConfig,
       jwtService,
       userService,
+      new AuthenticatedSocketService(),
       rateLimitService,
       wideEventService,
       new WsWideEventLifecycle(wideEventService),
@@ -142,7 +144,10 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data).toEqual({ user: null, visitorId: undefined });
+      expect(socket.data).toEqual({
+        authSession: null,
+        visitorId: undefined,
+      });
       expect(jwtService.verifyAsync).not.toHaveBeenCalled();
     });
 
@@ -155,7 +160,10 @@ describe('WsHandshakeMiddleware', () => {
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
       const user: User = buildUser();
       jwtService.verifyAsync.mockResolvedValue({ id: user.id });
-      userService.findById.mockResolvedValue(user);
+      userService.findAuthSessionById.mockResolvedValue({
+        user,
+        authVersion: 0,
+      });
       const socket: AppSocket = buildSocket({
         cookie: 'theme=dark',
         auth: { access_token: 'access-token' },
@@ -167,7 +175,11 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data.user).toEqual(user);
+      expect(socket.data.authSession).toEqual({ user, authVersion: 0 });
+      expect(socket.join).toHaveBeenCalledWith([
+        `auth:user:${user.id}`,
+        `auth:user:${user.id}:version:0`,
+      ]);
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('access-token', {
         secret: 'access-secret',
       });
@@ -217,7 +229,7 @@ describe('WsHandshakeMiddleware', () => {
       );
 
       expect(error).toBeUndefined();
-      expect(socket.data.user).toBeNull();
+      expect(socket.data.authSession).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           event: 'ws_connection',
@@ -227,6 +239,38 @@ describe('WsHandshakeMiddleware', () => {
         }),
         'connection',
       );
+    });
+
+    it('rejects a stale session without joining its rooms', async () => {
+      const {
+        jwtService,
+        userService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      const user: User = buildUser();
+      jwtService.verifyAsync.mockResolvedValue({
+        id: user.id,
+        authVersion: 1,
+      });
+      userService.findAuthSessionById.mockResolvedValue({
+        user,
+        authVersion: 2,
+      });
+      const socket: AppSocket = buildSocket({
+        auth: { access_token: 'stale-token' },
+      });
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error?.data).toMatchObject({
+        statusCode: 401,
+        code: ErrorCode.USER_INVALID_TOKEN,
+      });
+      expect(socket.data.authSession).toBeNull();
+      expect(socket.join).not.toHaveBeenCalled();
     });
 
     it('keeps the first visitor id of the handshake query', async () => {

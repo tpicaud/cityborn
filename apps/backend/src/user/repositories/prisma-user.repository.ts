@@ -6,6 +6,8 @@ import {
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import type { User as PrismaUser } from '@prisma/client';
+import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
@@ -27,6 +29,13 @@ export class PrismaUserRepository implements UserRepository {
 
   async delete(user_id: UserId): Promise<void> {
     await this.txHost.tx.user.delete({ where: { id: user_id } });
+  }
+
+  async findAuthSessionById(id: UserId): Promise<AuthSession | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { id },
+    });
+    return user ? UserMapper.toAuthSession(user) : null;
   }
 
   async findById(id: UserId): Promise<User | null> {
@@ -86,5 +95,14 @@ export class PrismaUserRepository implements UserRepository {
       data: { isVerified: true },
     });
     return UserMapper.toUser(user);
+  }
+
+  async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {
+    const user: { authVersion: number } = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { authVersion: { increment: 1 } },
+      select: { authVersion: true },
+    });
+    return user.authVersion;
   }
 }

@@ -1,6 +1,7 @@
 import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
+import type { AuthSession } from '../../src/common/types/auth-session';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import type {
@@ -95,6 +96,22 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findAuthSessionById', () => {
+    it('loads a newly persisted user with auth version zero', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const authSession: AuthSession | null =
+        await userRepository.findAuthSessionById(user.id);
+
+      expect(authSession).toEqual({ user, authVersion: 0 });
+    });
+  });
+
   describe('findCredentialsByIdentifier', () => {
     it('finds persisted credentials by email', async () => {
       const userData: User = buildUser({ isVerified: false });
@@ -109,7 +126,10 @@ describe('PrismaUserRepository', () => {
       const credentials: UserCredentials | null =
         await userRepository.findCredentialsByIdentifier('host@cityborn.test');
       expect(credentials).toMatchObject({
-        user: { id: user.id, username: 'host', isVerified: false },
+        authSession: {
+          user: { id: user.id, username: 'host', isVerified: false },
+          authVersion: 0,
+        },
         passwordHash: 'hashed-password',
       });
     });
@@ -127,7 +147,7 @@ describe('PrismaUserRepository', () => {
         await userRepository.findCredentialsByIdentifier(user.username);
 
       expect(credentials).toMatchObject({
-        user: { id: user.id },
+        authSession: { user: { id: user.id } },
         passwordHash: 'hashed-password',
       });
     });
@@ -236,6 +256,30 @@ describe('PrismaUserRepository', () => {
       expect(await userRepository.findById(user.id)).toMatchObject({
         isVerified: true,
       });
+    });
+  });
+
+  describe('incrementAuthVersion', () => {
+    it('increments and returns the persisted auth version', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const firstVersion: number = await userRepository.incrementAuthVersion(
+        user.id,
+      );
+      const secondVersion: number = await userRepository.incrementAuthVersion(
+        user.id,
+      );
+      const authSession: AuthSession | null =
+        await userRepository.findAuthSessionById(user.id);
+
+      expect(firstVersion).toBe(1);
+      expect(secondVersion).toBe(2);
+      expect(authSession?.authVersion).toBe(2);
     });
   });
 });

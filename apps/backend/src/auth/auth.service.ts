@@ -7,6 +7,7 @@ import {
   type SignInWithApple,
   type SignInWithGoogle,
   type User,
+  type UserId,
   UserIdSchema,
   type Username,
   UsernameSchema,
@@ -21,6 +22,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import type { AuthSession } from '../common/types/auth-session';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import {
   AUTH_CONFIG,
@@ -32,6 +34,7 @@ import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { buildMailOptions } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
+import type { UserCredentials } from '../user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { verifyAppleIdToken } from './utils';
 
@@ -94,19 +97,6 @@ export class AuthService {
       });
     });
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -119,17 +109,14 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    const authSession: AuthSession = { user, authVersion: 0 };
+    return this.createAuthResponse(authSession);
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
     const { identifier, password } = dto;
 
-    const credentials =
+    const credentials: UserCredentials | null =
       await this.userService.findCredentialsByIdentifier(identifier);
     if (!credentials?.passwordHash)
       throw new UnauthorizedException({
@@ -147,21 +134,6 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
-    const { user } = credentials;
-
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -174,11 +146,7 @@ export class AuthService {
       );
     }
 
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    return this.createAuthResponse(credentials.authSession);
   }
 
   async signInWithGoogle(
@@ -226,24 +194,8 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    return this.createAuthResponse(authSession);
   }
 
   async signInWithApple(
@@ -311,52 +263,12 @@ export class AuthService {
       }
     }
 
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    return this.createAuthResponse(authSession);
   }
 
-  async refresh(identifier: string): Promise<AuthResponse> {
-    const user = await this.userService.findByIdentifier(identifier);
-    if (!user)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_REFRESH_FAILED,
-        message: 'Invalid refresh token',
-      });
-
-    const access_token = await this.generateToken(
-      'access',
-      user.id,
-      user.username,
-      user.email,
-    );
-    const refresh_token = await this.generateToken(
-      'refresh',
-      user.id,
-      user.username,
-      user.email,
-    );
-
-    return {
-      access_token,
-      refresh_token,
-      user,
-    };
+  async refresh(authSession: AuthSession): Promise<AuthResponse> {
+    return this.createAuthResponse(authSession);
   }
 
   async getProfile(identifier: string): Promise<User> {
@@ -392,6 +304,20 @@ export class AuthService {
     return { id: user.id, username: user.username };
   }
 
+  async createAuthResponse(authSession: AuthSession): Promise<AuthResponse> {
+    const accessToken: string = await this.generateToken('access', authSession);
+    const refreshToken: string = await this.generateToken(
+      'refresh',
+      authSession,
+    );
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: authSession.user,
+    };
+  }
+
   private async sendVerificationEmail(
     user: {
       id: string;
@@ -417,14 +343,14 @@ export class AuthService {
 
   private async generateToken(
     type: 'access' | 'refresh',
-    id: string,
-    username: string,
-    email: string,
+    authSession: AuthSession,
   ): Promise<string> {
+    const { user, authVersion } = authSession;
     const payload = {
-      id: UserIdSchema.parse(id),
-      username: UsernameSchema.parse(username),
-      email,
+      id: UserIdSchema.parse(user.id),
+      username: UsernameSchema.parse(user.username),
+      email: user.email,
+      authVersion,
     };
 
     switch (type) {
@@ -440,6 +366,17 @@ export class AuthService {
           expiresIn: '7d',
         });
     }
+  }
+
+  private async requireAuthSession(userId: UserId): Promise<AuthSession> {
+    const authSession: AuthSession | null =
+      await this.userService.findAuthSessionById(userId);
+    if (authSession) return authSession;
+
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_NOT_FOUND,
+      message: 'User not found',
+    });
   }
 
   private async verifyGoogleToken(idToken: string) {

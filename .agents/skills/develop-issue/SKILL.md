@@ -15,6 +15,7 @@ description: "Issue GitHub Cityborn dans le checkout courant. À utiliser pour i
 4. Si aucune branche liée n'existe, en créer une depuis GitHub avec `gh issue develop <numéro> --base main`. Cela crée la branche distante depuis le `main` actuel de GitHub et l'associe à l'issue. Exécuter ensuite de nouveau `git fetch --all --prune` pour récupérer cette branche.
 5. Checkout la branche liée. Rebaser sur `origin/main` lorsque cela ne réécrit pas des commits déjà publiés ; sinon préserver l'historique et présenter la divergence.
 6. En cas de conflit, résoudre les conflits autonomement seulement si la résolution découle clairement de l'issue et du code actuel. Sinon, laisser le rebase en cours, présenter les fichiers en conflit et demander une décision.
+7. Si le checkout courant est un worktree (`git rev-parse --git-dir` différent de `git rev-parse --git-common-dir`), exécuter `./scripts/setup-worktree.sh` une fois sur la branche liée, juste avant de commencer le travail. L'étape est terminée quand les `.env` sont copiés et que `pnpm install` réussit ; en cas d'échec, signaler l'erreur telle quelle.
 
 Dans un checkout que l'utilisateur a explicitement demandé d'utiliser directement, ne pas changer de branche. Appliquer tout de même les étapes de propreté, fetch et rebase si la branche courante est la branche liée à l'issue. Sinon, signaler que l'environnement courant n'est pas sur la branche liée avant de modifier le code.
 
