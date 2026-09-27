@@ -5,14 +5,15 @@ import {
 } from '@cityborn/api';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { RemoteSocket } from 'socket.io';
-import type { AppServer, AppSocketData } from '../common/types/app-socket';
 import type {
-  SessionVersion,
+  AppServer,
+  AppSocket,
+  AppSocketData,
   SocketAuthentication,
-} from '../common/types/authentication';
-import { UserService } from '../user/user.service';
+} from '../common/types/app-socket';
+import type { SessionVersion } from '../common/types/authentication';
 
-export function userAuthenticationRoom(userId: UserId): string {
+function userAuthenticationRoom(userId: UserId): string {
   return `auth:user:${userId}`;
 }
 
@@ -24,21 +25,15 @@ function getSocketSessionVersion(
 }
 
 @Injectable()
-export class SessionRevocationService {
+export class AuthenticatedSocketService {
   private server: AppServer | null = null;
-
-  constructor(private readonly userService: UserService) {}
 
   registerServer(server: AppServer): void {
     this.server = server;
   }
 
-  async rotateSessionVersion(userId: UserId): Promise<SessionVersion> {
-    this.requireServer();
-    const sessionVersion: SessionVersion =
-      await this.userService.incrementSessionVersion(userId);
-    await this.disconnectOlderSessions(userId, sessionVersion);
-    return sessionVersion;
+  async joinUserRoom(socket: AppSocket, userId: UserId): Promise<void> {
+    await socket.join(userAuthenticationRoom(userId));
   }
 
   async disconnectOlderSessions(

@@ -11,7 +11,6 @@ import {
   resolveAuthenticationContext,
   validateAccessToken,
 } from '../auth/guards/utils';
-import { userAuthenticationRoom } from '../auth/session-revocation.service';
 import { extractAccessTokenFromWsClient } from '../auth/utils';
 import type { AppSocket } from '../common/types/app-socket';
 import type { AuthenticationContext } from '../common/types/authentication';
@@ -22,6 +21,7 @@ import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
 import { RateLimitService } from '../rate-limit/rate-limit.service';
 import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { UserService } from '../user/user.service';
+import { AuthenticatedSocketService } from './authenticated-socket.service';
 
 export class WsHandshakeError extends Error {
   constructor(readonly data: ApiError) {
@@ -44,6 +44,7 @@ export class WsHandshakeMiddleware {
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly rateLimitService: RateLimitService,
     private readonly wideEventService: WideEventService,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
@@ -55,26 +56,41 @@ export class WsHandshakeMiddleware {
       visitorId: parseVisitorId(socket.handshake.query['x-visitor-id']),
     };
 
-    this.wsWideEventLifecycle
-      .runConnection(socket, () => this.handshake(socket))
-      .then(
-        (rejection: ApiError | null) =>
-          next(rejection ? new WsHandshakeError(rejection) : undefined),
-        (error: unknown) =>
-          next(
-            new WsHandshakeError(
-              this.wideEventService.recordError(error, 'ws.connection'),
-            ),
-          ),
-      );
+    let handshakeContinued: boolean = false;
+    const continueHandshake: WsHandshakeNext = (
+      error?: WsHandshakeError,
+    ): void => {
+      handshakeContinued = true;
+      next(error);
+    };
+
+    void this.wsWideEventLifecycle
+      .runConnection(socket, () => this.handshake(socket, continueHandshake))
+      .catch((error: unknown) => {
+        const rejection: ApiError = this.wideEventService.recordError(
+          error,
+          'ws.connection',
+        );
+        if (handshakeContinued) {
+          if (socket.connected) socket.disconnect(true);
+          return;
+        }
+        continueHandshake(new WsHandshakeError(rejection));
+      });
   }
 
-  private async handshake(socket: AppSocket): Promise<ApiError | null> {
+  private async handshake(
+    socket: AppSocket,
+    next: WsHandshakeNext,
+  ): Promise<void> {
     const rateLimitRejection: ApiError | null =
       await this.consumeConnectionRateLimit(socket);
-    if (rateLimitRejection) return rateLimitRejection;
+    if (rateLimitRejection) {
+      next(new WsHandshakeError(rateLimitRejection));
+      return;
+    }
 
-    return this.authenticate(socket);
+    await this.authenticate(socket, next);
   }
 
   private async consumeConnectionRateLimit(
@@ -93,9 +109,15 @@ export class WsHandshakeMiddleware {
     }
   }
 
-  private async authenticate(socket: AppSocket): Promise<ApiError | null> {
+  private async authenticate(
+    socket: AppSocket,
+    next: WsHandshakeNext,
+  ): Promise<void> {
     const token: string | undefined = extractAccessTokenFromWsClient(socket);
-    if (!token) return null;
+    if (!token) {
+      next();
+      return;
+    }
 
     let payload: AuthTokenPayload;
     try {
@@ -106,7 +128,8 @@ export class WsHandshakeMiddleware {
       );
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
-      return null;
+      next();
+      return;
     }
 
     socket.data.authentication = {
@@ -114,25 +137,62 @@ export class WsHandshakeMiddleware {
       userId: payload.id,
       sessionVersion: payload.sessionVersion,
     };
-    await socket.join(userAuthenticationRoom(payload.id));
+    await this.authenticatedSocketService.joinUserRoom(socket, payload.id);
 
     try {
-      const authentication: AuthenticationContext | null =
-        await resolveAuthenticationContext(payload, this.userService);
-      if (!authentication) {
-        throw new UnauthorizedException({
-          code: ErrorCode.USER_NOT_FOUND,
-          message: 'User not found',
-        });
-      }
-
-      socket.data.authentication = {
-        status: 'authenticated',
-        ...authentication,
-      };
-      return null;
+      await this.requireAuthentication(payload);
     } catch (error) {
-      return this.wideEventService.recordError(error, 'ws.connection_auth');
+      const rejection: ApiError = this.wideEventService.recordError(
+        error,
+        'ws.connection_auth',
+      );
+      next(new WsHandshakeError(rejection));
+      return;
     }
+
+    const finalAuthentication: Promise<void> =
+      this.finalizeAuthenticationAfterConnection(socket, payload);
+    socket.use((_packet, nextPacket) => {
+      void finalAuthentication.then(
+        () => nextPacket(),
+        (error: Error) => nextPacket(error),
+      );
+    });
+    next();
+
+    try {
+      await finalAuthentication;
+    } catch (error) {
+      this.wideEventService.recordError(error, 'ws.connection_auth');
+      if (socket.connected) socket.disconnect(true);
+    }
+  }
+
+  private async finalizeAuthenticationAfterConnection(
+    socket: AppSocket,
+    payload: AuthTokenPayload,
+  ): Promise<void> {
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    if (!socket.connected) return;
+
+    const authentication: AuthenticationContext =
+      await this.requireAuthentication(payload);
+    socket.data.authentication = {
+      status: 'authenticated',
+      ...authentication,
+    };
+  }
+
+  private async requireAuthentication(
+    payload: AuthTokenPayload,
+  ): Promise<AuthenticationContext> {
+    const authentication: AuthenticationContext | null =
+      await resolveAuthenticationContext(payload, this.userService);
+    if (authentication) return authentication;
+
+    throw new UnauthorizedException({
+      code: ErrorCode.USER_NOT_FOUND,
+      message: 'User not found',
+    });
   }
 }

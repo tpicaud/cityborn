@@ -15,6 +15,7 @@ import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecyc
 import type { AuthConfig } from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
+import { AuthenticatedSocketService } from './authenticated-socket.service';
 import {
   WsHandshakeError,
   WsHandshakeMiddleware,
@@ -33,6 +34,7 @@ function buildSocket({
 }: HandshakeInput = {}): AppSocket {
   return createMock<AppSocket>({
     id: 'socket-1',
+    connected: false,
     handshake: {
       headers: cookie ? { cookie } : {},
       address: '203.0.113.7',
@@ -61,6 +63,7 @@ function buildMiddleware() {
       authConfig,
       jwtService,
       userService,
+      new AuthenticatedSocketService(),
       rateLimitService,
       wideEventService,
       new WsWideEventLifecycle(wideEventService),
@@ -80,7 +83,10 @@ function runHandshake(
   socket: AppSocket,
 ): Promise<WsHandshakeError | undefined> {
   return new Promise((resolve) =>
-    wsHandshakeMiddleware.use(socket, (error) => resolve(error)),
+    wsHandshakeMiddleware.use(socket, (error) => {
+      socket.connected = !error;
+      setImmediate(() => resolve(error));
+    }),
   );
 }
 
@@ -274,6 +280,41 @@ describe('WsHandshakeMiddleware', () => {
         userService.findAuthenticationContextById.mock.invocationCallOrder[0] ??
           0,
       );
+    });
+
+    it('disconnects when the session is revoked while the socket becomes visible', async () => {
+      const {
+        jwtService,
+        userService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      const user: User = buildUser();
+      jwtService.verifyAsync.mockResolvedValue({
+        id: user.id,
+        sessionVersion: 1,
+      });
+      userService.findAuthenticationContextById
+        .mockResolvedValueOnce({ user, sessionVersion: 1 })
+        .mockResolvedValueOnce({ user, sessionVersion: 2 });
+      const socket: AppSocket = buildSocket({
+        auth: { access_token: 'rotated-token' },
+      });
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error).toBeUndefined();
+      expect(userService.findAuthenticationContextById).toHaveBeenCalledTimes(
+        2,
+      );
+      expect(socket.disconnect).toHaveBeenCalledWith(true);
+      expect(socket.data.authentication).toEqual({
+        status: 'pending',
+        userId: user.id,
+        sessionVersion: 1,
+      });
     });
 
     it('keeps the first visitor id of the handshake query', async () => {
