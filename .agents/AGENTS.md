@@ -35,15 +35,19 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 ### Découpage
 
-- Concevoir des **modules profonds** : un service, un hook ou un domaine couvre une capacité métier entière derrière une surface publique courte et garde ses étapes internes privées (ex. `AuthService`, `SessionService`, `@cityborn/client/session`).
+Ces règles valent en développement comme en revue : chaque **symptôme** cité est un constat à corriger dans le périmètre de la tâche, ou à signaler sinon.
+
+- Concevoir des **modules profonds** : un service, un hook ou un domaine couvre une capacité métier entière derrière une surface publique courte (ex. `AuthService`, `SessionService`, `@cityborn/client/session`). Ses étapes, ses dépendances et sa configuration (secret, URL, options) restent privées : l'appelant fournit une entrée du domaine et reçoit un résultat du domaine. Symptôme : un appelant transmet un secret, un client d'infrastructure ou une option interne au module qu'il appelle.
+- **Surface minimale** : un symbole est exporté seulement pour un consommateur réel hors de son fichier. Symptôme : une constante ou une fonction exportée que seul son propre module lit.
 - Tracer une nouvelle frontière selon la **raison de changer** : un acteur aux règles distinctes, une dépendance d'infrastructure ou de plateforme à isoler (repository, provider, port), un cycle de vie propre (middleware de handshake, registre de connexions) ou plusieurs consommateurs réels. Une étape d'un même flux reste une méthode ou une fonction de son module.
-- **Cohésion** : ce qui change ensemble vit ensemble. Factoriser du code dupliqué au troisième usage réel.
+- **Variantes** : quand une capacité existe en plusieurs variantes (transport, plateforme, acteur), un seul module porte le comportement commun et reçoit la partie variable en paramètre (port, stratégie, fonction injectée), dès la deuxième variante. Symptômes : le même discriminant testé à plusieurs endroits (`if (x.kind === …)`), des classes sœurs qui ne diffèrent que par une méthode d'une ligne, deux factories au corps en grande partie recopié.
+- **Cohésion** : ce qui change ensemble vit ensemble ; une notion (ex. les cookies d'auth : noms, chemins, options, lecture, écriture) a une seule maison. Factoriser un fragment dupliqué au troisième usage réel. Symptôme : modifier une notion oblige à toucher plusieurs fichiers qui n'en portent chacun qu'un morceau.
 - Entre deux services d'un même domaine, chaque méthode exposée porte une règle ; un simple relais revient à son consommateur. Les couches prévues par les conventions (controller, repository, provider, port, server action) relaient légitimement.
 
 ## Style de code
 
 - **Aucun commentaire dans le code, JSDoc compris.** Le naming, les types et le découpage portent l'intention. Seule tolérance : le bloc `@deprecated` / `@deprecatedSince` posé par le skill `deprecate`. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
-- **Naming exact** : chaque nom (variable, fonction, type, fichier, colonne, champ de contrat, clé, room) dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Renommer un nom générique, redondant ou qui entre en collision avec un autre domaine (ex. « session » désigne la partie de jeu).
+- **Naming exact** : chaque nom (variable, fonction, type, fichier, colonne, champ de contrat, clé, room) dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Renommer un nom générique, redondant ou qui entre en collision avec un autre domaine (ex. « session » désigne la partie de jeu). Un fichier porte le nom du concept unique qu'il contient (`apple-id-token.ts`, `auth-cookies.ts`) ; un fourre-tout `utils`, `helpers` ou `constants` est éclaté en un fichier par concept.
   ```typescript
   const service = new RateLimitService(redisService);          // ❌ trop générique
   const rateLimitService = new RateLimitService(redisService); // ✅
@@ -58,7 +62,7 @@ Ne jamais dupliquer un type qui existe déjà dans un package.
 
 ## Frontières du monorepo
 
-- `packages/api` est la **source de vérité des contrats**. Toute évolution d'un contrat existant doit rester **rétrocompatible** (`check:api-compat` en CI). Un breaking change = bump de version d'API, jamais une modif silencieuse.
+- `packages/api` est la **source de vérité des contrats**. Toute évolution d'un contrat existant doit rester **rétrocompatible** (`check:api-compat` en CI). Un breaking change = bump de version d'API, jamais une modif silencieuse. Le code qui appelle une route en dérive chemin et méthode depuis `contract` (`contract.auth.refresh.path`) plutôt que de les écrire en littéral.
 - Modifier un contrat `@cityborn/api` (route, event WS, schéma zod, type, enum) → skill **`api-contract-change`**.
 - Déprécier / nettoyer un élément déprécié → skills **`deprecate`** / **`check-and-remove-deprecated`**.
 
