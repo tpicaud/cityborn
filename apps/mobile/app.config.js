@@ -32,6 +32,11 @@ export default {
 
     android: {
       package: getUniqueIdentifier(),
+      adaptiveIcon: {
+        foregroundImage:
+          './assets/stores/icons/android_adaptive_icon_foreground.png',
+        backgroundColor: '#42A6A3',
+      },
       predictiveBackGestureEnabled: false,
       userInterfaceStyle: 'light',
       config: {
