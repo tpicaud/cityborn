@@ -16,6 +16,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
@@ -26,7 +27,6 @@ import {
   type ConnectionInfo,
   ConnectionRegistryService,
 } from '../connection-registry/connection-registry.service';
-import { CurrentUser } from '../user/user.decorator';
 import { SessionService } from './session.service';
 
 @WebSocketGateway()

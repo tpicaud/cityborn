@@ -20,7 +20,9 @@ import type { MailService } from '../../mail/mail.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
 import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
-import { AuthService, type GoogleIdentityClient } from './auth.service';
+import type { GoogleIdentityClient } from '../identity-providers/google-client.provider';
+import { IdentityTokenService } from '../identity-providers/identity-token.service';
+import { AuthService } from './auth.service';
 import { AuthTokenService } from './auth-token.service';
 
 let mockPasswordMatches: boolean = true;
@@ -39,7 +41,7 @@ function mockVerifyAppleIdToken(): Promise<boolean> {
 }
 
 jest.mock('bcrypt', () => ({ hash: mockHash, compare: mockCompare }));
-jest.mock('../apple-id-token', () => ({
+jest.mock('../identity-providers/apple-id-token', () => ({
   verifyAppleIdToken: mockVerifyAppleIdToken,
 }));
 
@@ -73,13 +75,12 @@ function buildAuthService() {
   const authService: AuthService = new AuthService(
     userService,
     new AuthTokenService(jwtService, authConfig, userService),
-    authConfig,
     httpConfig,
     eventService,
     mailService,
     wideEventService,
     authenticatedSocketService,
-    googleClient,
+    new IdentityTokenService(googleClient, authConfig),
   );
 
   jwtService.signAsync

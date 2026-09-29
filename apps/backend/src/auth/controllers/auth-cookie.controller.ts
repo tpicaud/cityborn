@@ -7,7 +7,10 @@ import type { Response } from 'express';
 import { HttpResponse } from '../../common/decorators/http-response.decorator';
 import { VisitorId } from '../../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../../common/types/auth-session';
-import { CurrentAuthSession, CurrentUser } from '../../user/user.decorator';
+import {
+  CurrentAuthSession,
+  CurrentUser,
+} from '../current-auth-session.decorator';
 import { AuthGuard } from '../guards/access-token.guard';
 import { CookieRefreshGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';

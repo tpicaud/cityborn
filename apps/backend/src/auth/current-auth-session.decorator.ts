@@ -1,8 +1,8 @@
 import type { User } from '@cityborn/api';
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
-import type { AppRequest } from '../common/types/app-request';
 import type { AppSocket } from '../common/types/app-socket';
 import type { AuthSession } from '../common/types/auth-session';
+import type { AuthRequest } from './auth-request';
 
 function resolveCurrentAuthSession(
   ctx: ExecutionContext,
@@ -10,7 +10,7 @@ function resolveCurrentAuthSession(
   const contextType: 'http' | 'ws' = ctx.getType<'http' | 'ws'>();
 
   if (contextType === 'http') {
-    const request: AppRequest = ctx.switchToHttp().getRequest<AppRequest>();
+    const request: AuthRequest = ctx.switchToHttp().getRequest<AuthRequest>();
     return request.authSession;
   }
 

@@ -1,8 +1,8 @@
 import { contract, User } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
+import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { AuthGuard } from '../auth/guards/access-token.guard';
-import { CurrentUser } from './user.decorator';
 import { UserService } from './user.service';
 
 @Controller()

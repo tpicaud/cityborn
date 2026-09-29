@@ -7,9 +7,9 @@ import {
   type Type,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { AppRequest } from '../../common/types/app-request';
 import type { AuthSession } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
+import type { AuthRequest } from '../auth-request';
 import { AuthCookieService } from '../services/auth-cookie.service';
 import {
   type AuthTokenPayload,
@@ -39,9 +39,9 @@ function createAccessTokenGuard(
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request: AppRequest = context
+      const request: AuthRequest = context
         .switchToHttp()
-        .getRequest<AppRequest>();
+        .getRequest<AuthRequest>();
       const accessToken: string | undefined = this.readAccessToken(request);
       if (!accessToken) {
         return this.continueUnauthenticated({
@@ -69,7 +69,7 @@ function createAccessTokenGuard(
       return true;
     }
 
-    private readAccessToken(request: AppRequest): string | undefined {
+    private readAccessToken(request: AuthRequest): string | undefined {
       const bearerToken: string | undefined = extractBearerToken(
         request.headers,
       );

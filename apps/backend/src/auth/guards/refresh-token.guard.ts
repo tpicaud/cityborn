@@ -7,8 +7,8 @@ import {
   type Type,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { AppRequest } from '../../common/types/app-request';
 import type { AuthSession } from '../../common/types/auth-session';
+import type { AuthRequest } from '../auth-request';
 import { AuthCookieService } from '../services/auth-cookie.service';
 import {
   type AuthTokenPayload,
@@ -29,9 +29,9 @@ function createRefreshTokenGuard(
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request: AppRequest = context
+      const request: AuthRequest = context
         .switchToHttp()
-        .getRequest<AppRequest>();
+        .getRequest<AuthRequest>();
       const refreshToken: string | undefined = this.readRefreshToken(request);
       if (!refreshToken)
         throw new UnauthorizedException({
@@ -54,7 +54,7 @@ function createRefreshTokenGuard(
       return true;
     }
 
-    private readRefreshToken(request: AppRequest): string | undefined {
+    private readRefreshToken(request: AuthRequest): string | undefined {
       if (transport === 'bearer') {
         return extractBearerToken(request.headers);
       }

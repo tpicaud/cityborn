@@ -5,7 +5,10 @@ import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { VisitorId } from '../../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../../common/types/auth-session';
-import { CurrentAuthSession, CurrentUser } from '../../user/user.decorator';
+import {
+  CurrentAuthSession,
+  CurrentUser,
+} from '../current-auth-session.decorator';
 import { AuthGuard, BearerAuthGuard } from '../guards/access-token.guard';
 import { BearerRefreshGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';
