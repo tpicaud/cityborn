@@ -29,76 +29,50 @@ export interface AuthApi {
   verifyEmail(data: VerifyEmailData): Promise<ApiResult<PublicUser>>;
 }
 
-export function createAuthApi(
+interface AuthCredentialsPort
+  extends Pick<
+    AuthApi,
+    | 'signIn'
+    | 'signUp'
+    | 'signInWithGoogle'
+    | 'signInWithApple'
+    | 'signOut'
+    | 'updatePassword'
+  > {
+  mayHoldCredentials(): Promise<boolean>;
+}
+
+function toVoidResult<T>(result: ApiResult<T>): ApiResult<void> {
+  if (!result.ok) return result;
+  return { ok: true, data: undefined };
+}
+
+function buildAuthApi(
   client: Pick<ApiClient, 'auth'>,
-  tokenStorage: TokenStorage,
+  credentials: AuthCredentialsPort,
 ): AuthApi {
-  const storeSession = async (
-    result: ApiResult<AuthResponse>,
-  ): Promise<ApiResult<User>> => {
-    if (!result.ok) return result;
-    const { access_token, refresh_token, user } = result.data;
-    await tokenStorage.setTokens(access_token, refresh_token);
-    return { ok: true, data: user };
-  };
-
-  const toVoidResult = <T>(result: ApiResult<T>): ApiResult<void> => {
-    if (!result.ok) return result;
-    return { ok: true, data: undefined };
-  };
-
   return {
     async getCurrentUser() {
       try {
-        const [accessToken, refreshToken] = await Promise.all([
-          tokenStorage.getAccessToken(),
-          tokenStorage.getRefreshToken(),
-        ]);
-        if (!accessToken && !refreshToken) return null;
-        const result = await client.auth.me();
+        if (!(await credentials.mayHoldCredentials())) return null;
+        const result: ClientInferResponses<AppContract['auth']['me']> =
+          await client.auth.me();
         return result.status === 200 ? result.body : null;
       } catch {
         return null;
       }
     },
 
-    async signIn(data) {
-      return storeSession(
-        toApiResult(await client.auth.signIn({ body: data })),
-      );
-    },
-
-    async signUp(data) {
-      return storeSession(
-        toApiResult(await client.auth.signUp({ body: data })),
-      );
-    },
-
-    async signInWithGoogle(data) {
-      return storeSession(
-        toApiResult(await client.auth.signInWithGoogle({ body: data })),
-      );
-    },
-
-    async signInWithApple(data) {
-      return storeSession(
-        toApiResult(await client.auth.signInWithApple({ body: data })),
-      );
-    },
-
-    async signOut() {
-      await tokenStorage.clearTokens();
-    },
+    signIn: credentials.signIn,
+    signUp: credentials.signUp,
+    signInWithGoogle: credentials.signInWithGoogle,
+    signInWithApple: credentials.signInWithApple,
+    signOut: credentials.signOut,
+    updatePassword: credentials.updatePassword,
 
     async deleteUser() {
       return toVoidResult(
         toApiResult(await client.auth.deleteUser({ body: {} })),
-      );
-    },
-
-    async updatePassword(data) {
-      return storeSession(
-        toApiResult(await client.auth.updatePassword({ body: data })),
       );
     },
 
@@ -114,21 +88,67 @@ export function createAuthApi(
   };
 }
 
-export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
-  const toVoidResult = <T>(result: ApiResult<T>): ApiResult<void> => {
+function createBearerCredentials(
+  client: Pick<ApiClient, 'auth'>,
+  tokenStorage: TokenStorage,
+): AuthCredentialsPort {
+  const storeTokens = async (
+    result: ApiResult<AuthResponse>,
+  ): Promise<ApiResult<User>> => {
     if (!result.ok) return result;
-    return { ok: true, data: undefined };
+    const { access_token, refresh_token, user } = result.data;
+    await tokenStorage.setTokens(access_token, refresh_token);
+    return { ok: true, data: user };
   };
 
   return {
-    async getCurrentUser() {
-      try {
-        const result: ClientInferResponses<AppContract['auth']['me']> =
-          await client.auth.me();
-        return result.status === 200 ? result.body : null;
-      } catch {
-        return null;
-      }
+    async mayHoldCredentials() {
+      const [accessToken, refreshToken]: [string | null, string | null] =
+        await Promise.all([
+          tokenStorage.getAccessToken(),
+          tokenStorage.getRefreshToken(),
+        ]);
+      return Boolean(accessToken || refreshToken);
+    },
+
+    async signIn(data) {
+      return storeTokens(toApiResult(await client.auth.signIn({ body: data })));
+    },
+
+    async signUp(data) {
+      return storeTokens(toApiResult(await client.auth.signUp({ body: data })));
+    },
+
+    async signInWithGoogle(data) {
+      return storeTokens(
+        toApiResult(await client.auth.signInWithGoogle({ body: data })),
+      );
+    },
+
+    async signInWithApple(data) {
+      return storeTokens(
+        toApiResult(await client.auth.signInWithApple({ body: data })),
+      );
+    },
+
+    async signOut() {
+      await tokenStorage.clearTokens();
+    },
+
+    async updatePassword(data) {
+      return storeTokens(
+        toApiResult(await client.auth.updatePassword({ body: data })),
+      );
+    },
+  };
+}
+
+function createCookieCredentials(
+  client: Pick<ApiClient, 'auth'>,
+): AuthCredentialsPort {
+  return {
+    async mayHoldCredentials() {
+      return true;
     },
 
     async signIn(data) {
@@ -155,26 +175,21 @@ export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
       unwrapApiResponse(await client.auth.signOut({ body: {} }));
     },
 
-    async deleteUser() {
-      return toVoidResult(
-        toApiResult(await client.auth.deleteUser({ body: {} })),
-      );
-    },
-
     async updatePassword(data) {
       return toApiResult(
         await client.auth.cookie.updatePassword({ body: data }),
       );
     },
-
-    async resendVerificationEmail() {
-      return toVoidResult(
-        toApiResult(await client.auth.resendVerificationEmail({ body: {} })),
-      );
-    },
-
-    async verifyEmail(data) {
-      return toApiResult(await client.auth.verifyEmail({ body: data }));
-    },
   };
+}
+
+export function createAuthApi(
+  client: Pick<ApiClient, 'auth'>,
+  tokenStorage: TokenStorage,
+): AuthApi {
+  return buildAuthApi(client, createBearerCredentials(client, tokenStorage));
+}
+
+export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
+  return buildAuthApi(client, createCookieCredentials(client));
 }

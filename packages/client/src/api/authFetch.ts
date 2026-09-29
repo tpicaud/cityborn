@@ -1,11 +1,10 @@
-import {
-  ApiResponseError,
-  AuthResponseSchema,
-  ErrorCode,
-  parseApiError,
-} from '@cityborn/api';
-import type { ApiFetcherArgs } from '@ts-rest/core';
-import type { TokenStorage } from '../platform/tokenStorage';
+import { ApiResponseError, ErrorCode, parseApiError } from '@cityborn/api';
+import type { ApiFetcherArgs, AppRouteMutation } from '@ts-rest/core';
+import type {
+  AuthRouteResponse,
+  AuthTransport,
+  SendAuthRequest,
+} from './authTransport';
 
 export type ClientName = 'web' | 'mobile' | 'back-office';
 
@@ -13,10 +12,6 @@ export interface ClientInfo {
   name: ClientName;
   version?: string;
 }
-
-export type AuthTransport =
-  | { kind: 'bearer'; tokenStorage: TokenStorage }
-  | { kind: 'cookie' };
 
 export interface AuthFetchOptions {
   onResponseHeaders?: (headers: Headers) => void;
@@ -60,7 +55,7 @@ export class AuthFetch {
 
   private async buildHeaders(
     extra: Record<string, string>,
-    auth: { kind: 'access' } | { kind: 'bearer'; token: string },
+    bearerToken: string | null,
   ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       ...this.baseHeaders,
@@ -72,20 +67,11 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    const token: string | null =
-      auth.kind === 'bearer' ? auth.token : await this.getStoredAccessToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+    if (bearerToken) {
+      headers.Authorization = `Bearer ${bearerToken}`;
     }
 
     return headers;
-  }
-
-  private async getStoredAccessToken(): Promise<string | null> {
-    if (this.authTransport.kind === 'cookie') {
-      return null;
-    }
-    return await this.authTransport.tokenStorage.getAccessToken();
   }
 
   buildApiFunction() {
@@ -110,9 +96,10 @@ export class AuthFetch {
   private async fetchOnce(
     args: ApiFetcherArgs,
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
-    const headers = await this.buildHeaders(args.headers ?? {}, {
-      kind: 'access',
-    });
+    const headers: Record<string, string> = await this.buildHeaders(
+      args.headers ?? {},
+      await this.authTransport.readAccessToken(),
+    );
 
     const response = await this.timeoutFetch(args.path, {
       method: args.method,
@@ -156,77 +143,29 @@ export class AuthFetch {
 
     this.isRefreshing = true;
     try {
-      await this.refreshAuthentication();
+      await this.authTransport.refreshAuthentication(this.sendAuthRequest);
       this.processQueue(true);
       return await this.fetchOnce(args);
     } catch (err) {
       this.processQueue(false);
-      await this.clearAuthentication();
+      await this.authTransport.clearAuthentication(this.sendAuthRequest);
       throw err;
     } finally {
       this.isRefreshing = false;
     }
   }
 
-  private async refreshAuthentication(): Promise<void> {
-    if (this.authTransport.kind === 'cookie') {
-      await this.refreshCookieSession();
-      return;
-    }
-    await this.refreshBearerSession(this.authTransport.tokenStorage);
-  }
-
-  private async refreshBearerSession(
-    tokenStorage: TokenStorage,
-  ): Promise<void> {
-    const refreshToken: string | null = await tokenStorage.getRefreshToken();
-    if (!refreshToken) {
-      throw new ApiResponseError({
-        code: ErrorCode.USER_REFRESH_FAILED,
-        message: 'No refresh token available',
-        statusCode: 401,
-      });
-    }
-
-    const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
-      method: 'POST',
-      headers: await this.buildHeaders(
-        { 'Content-Type': 'application/json' },
-        { kind: 'bearer', token: refreshToken },
-      ),
-    });
-
-    if (this.onResponseHeaders) {
-      this.onResponseHeaders(response.headers);
-    }
-
-    if (!response.ok) {
-      throw new ApiResponseError(
-        parseApiError(response.status, await response.json()),
-      );
-    }
-
-    const raw = await response.json();
-    const parsed = AuthResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ApiResponseError({
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: 'Unexpected error',
-        statusCode: response.status,
-      });
-    }
-    const { access_token, refresh_token } = parsed.data;
-    await tokenStorage.setTokens(access_token, refresh_token);
-  }
-
-  private async refreshCookieSession(): Promise<void> {
+  private readonly sendAuthRequest: SendAuthRequest = async (
+    route: AppRouteMutation,
+    bearerToken: string | null,
+  ): Promise<AuthRouteResponse> => {
     const response: Response = await this.timeoutFetch(
-      `${this.baseURL}/auth/cookie/refresh`,
+      `${this.baseURL}${route.path}`,
       {
-        method: 'POST',
+        method: route.method,
         headers: await this.buildHeaders(
           { 'Content-Type': 'application/json' },
-          { kind: 'access' },
+          bearerToken,
         ),
         body: '{}',
         credentials: 'include',
@@ -237,31 +176,8 @@ export class AuthFetch {
       this.onResponseHeaders(response.headers);
     }
 
-    if (!response.ok) {
-      throw new ApiResponseError(
-        parseApiError(response.status, await this.parseBody(response)),
-      );
-    }
-  }
-
-  private async clearAuthentication(): Promise<void> {
-    if (this.authTransport.kind === 'bearer') {
-      await this.authTransport.tokenStorage.clearTokens();
-      return;
-    }
-
-    try {
-      await this.timeoutFetch(`${this.baseURL}/auth/sign-out`, {
-        method: 'POST',
-        headers: await this.buildHeaders(
-          { 'Content-Type': 'application/json' },
-          { kind: 'access' },
-        ),
-        body: '{}',
-        credentials: 'include',
-      });
-    } catch {}
-  }
+    return { status: response.status, body: await this.parseBody(response) };
+  };
 
   private processQueue(refreshed: boolean): void {
     this.refreshQueue.forEach((cb) => {

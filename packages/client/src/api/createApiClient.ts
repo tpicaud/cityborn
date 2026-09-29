@@ -1,11 +1,12 @@
 import { contract } from '@cityborn/api';
 import { initClient } from '@ts-rest/core';
 import type { TokenStorage } from '../platform/tokenStorage';
+import { AuthFetch, type AuthFetchOptions } from './authFetch';
 import {
-  AuthFetch,
-  type AuthFetchOptions,
   type AuthTransport,
-} from './authFetch';
+  createBearerAuthTransport,
+  createCookieAuthTransport,
+} from './authTransport';
 
 function createClient(
   baseURL: string,
@@ -26,14 +27,18 @@ export function createApiClient(
   tokenStorage: TokenStorage,
   options: AuthFetchOptions = {},
 ) {
-  return createClient(baseURL, { kind: 'bearer', tokenStorage }, options);
+  return createClient(
+    baseURL,
+    createBearerAuthTransport(tokenStorage),
+    options,
+  );
 }
 
 export function createCookieApiClient(
   baseURL: string,
   options: AuthFetchOptions = {},
 ) {
-  return createClient(baseURL, { kind: 'cookie' }, options);
+  return createClient(baseURL, createCookieAuthTransport(), options);
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
