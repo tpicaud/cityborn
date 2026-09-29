@@ -16,7 +16,7 @@ Utiliser ces cas après une modification de `AGENTS.md` ou d'un skill. Pour chaq
 | « Nettoie toutes les dépréciations éligibles. » | `check-and-remove-deprecated` | Rapport présenté puis suppressions sûres sans confirmation redondante |
 | « Corrige cette faute dans un message interne. » | Skill du domaine touché seulement | Vérification ciblée proportionnée, pas de nouveau test miroir ni de suite complète répétée |
 | « Ajoute un mapper dans ce module backend. » | `backend-conventions` | Placement déduit des fichiers voisins ; question seulement en cas d'ambiguïté architecturale réelle |
-| « Fais une review d'architecture de la PR #300. » | skills des domaines touchés (`backend-conventions`, `client-app-architecture`) | Chaque symptôme de « Découpage » vérifié sur le diff : dépendance ou config transmise par l'appelant, export sans consommateur externe, discriminant testé à plusieurs endroits, factories recopiées, notion répartie sur plusieurs fichiers, fichier fourre-tout, chemin d'API en littéral |
+| « Fais une review d'architecture de la PR #300. » | skills des domaines touchés (`backend-conventions`, `client-app-architecture`) | Chaque symptôme de « Découpage » vérifié sur le diff : dépendance ou config transmise par l'appelant, export sans consommateur externe, discriminant testé à plusieurs endroits, factories recopiées, notion répartie sur plusieurs fichiers, fichier mal rangé ou nommé d'après sa forme, chemin d'API en littéral |
 | « Ajoute un second mode d'authentification au client HTTP. » | `client-app-architecture` | Une seule implémentation paramétrée par la variante, sans `if (kind === …)` répété ni factory recopiée |
 
 ## Indicateurs à relever
