@@ -1,16 +1,28 @@
-import type { AuthResponse } from '@cityborn/api';
+import type { AuthResponse, User } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
+import * as cookie from 'cookie';
 import type { CookieOptions, Response } from 'express';
 import { RUNTIME_CONFIG, type RuntimeConfig } from '../../config/config.module';
-import { REFRESH_TOKEN_TTL_SECONDS } from '../auth.constants';
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  ACCESS_TOKEN_COOKIE_PATH,
-  REFRESH_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_PATH,
-} from '../auth-cookies';
+import { REFRESH_TOKEN_TTL_SECONDS } from './auth-token.service';
+
+export const ACCESS_TOKEN_COOKIE_NAME = 'cityborn_access_token';
+export const REFRESH_TOKEN_COOKIE_NAME = 'cityborn_refresh_token';
+const LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME = 'access_token';
+
+const ACCESS_TOKEN_COOKIE_PATH = '/';
+const REFRESH_TOKEN_COOKIE_PATH = '/auth';
 
 const authenticationCookieMaxAgeMs: number = REFRESH_TOKEN_TTL_SECONDS * 1000;
+
+function readCookie(
+  cookieHeader: string | undefined,
+  cookieName: string,
+): string | undefined {
+  if (cookieHeader === undefined) {
+    return undefined;
+  }
+  return cookie.parseCookie(cookieHeader)[cookieName];
+}
 
 @Injectable()
 export class AuthCookieService {
@@ -35,10 +47,28 @@ export class AuthCookieService {
     };
   }
 
-  setAuthenticationCookies(
-    response: Response,
-    authentication: AuthResponse,
-  ): void {
+  readAccessToken(cookieHeader: string | undefined): string | undefined {
+    return readCookie(cookieHeader, ACCESS_TOKEN_COOKIE_NAME);
+  }
+
+  readLegacyFrontendAccessToken(
+    cookieHeader: string | undefined,
+  ): string | undefined {
+    return readCookie(cookieHeader, LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME);
+  }
+
+  readRefreshToken(cookieHeader: string | undefined): string | undefined {
+    return readCookie(cookieHeader, REFRESH_TOKEN_COOKIE_NAME);
+  }
+
+  hasAuthenticationCookie(cookieHeader: string | undefined): boolean {
+    return (
+      this.readAccessToken(cookieHeader) !== undefined ||
+      this.readRefreshToken(cookieHeader) !== undefined
+    );
+  }
+
+  establishSession(response: Response, authentication: AuthResponse): User {
     response.cookie(ACCESS_TOKEN_COOKIE_NAME, authentication.access_token, {
       ...this.accessTokenCookieOptions,
       maxAge: authenticationCookieMaxAgeMs,
@@ -47,9 +77,10 @@ export class AuthCookieService {
       ...this.refreshTokenCookieOptions,
       maxAge: authenticationCookieMaxAgeMs,
     });
+    return authentication.user;
   }
 
-  clearAuthenticationCookies(response: Response): void {
+  clearSession(response: Response): void {
     response.clearCookie(
       ACCESS_TOKEN_COOKIE_NAME,
       this.accessTokenCookieOptions,

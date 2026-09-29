@@ -6,16 +6,22 @@ import { Reflector } from '@nestjs/core';
 import type { AppRoute } from '@ts-rest/core';
 import { TsRestAppRouteMetadataKey } from '@ts-rest/nest';
 import type { Request } from 'express';
-import type { HttpConfig } from '../../config/config.module';
+import type { HttpConfig, RuntimeConfig } from '../../config/config.module';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
+  AuthCookieService,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../auth-cookies';
+} from '../services/auth-cookie.service';
 import { CsrfOriginGuard } from './csrf-origin.guard';
 
 const httpConfig: HttpConfig = {
   corsOrigins: ['https://cityborn.test', 'https://admin.cityborn.test'],
   frontendUrl: 'https://cityborn.test',
+};
+
+const runtimeConfig: RuntimeConfig = {
+  nodeEnvironment: 'production',
+  port: 4000,
 };
 
 interface RequestInput {
@@ -52,7 +58,11 @@ function buildContext({
 }
 
 function buildGuard(): CsrfOriginGuard {
-  return new CsrfOriginGuard(httpConfig, new Reflector());
+  return new CsrfOriginGuard(
+    httpConfig,
+    new Reflector(),
+    new AuthCookieService(runtimeConfig),
+  );
 }
 
 function expectCsrfRejection(context: ExecutionContext): void {

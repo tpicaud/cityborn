@@ -5,6 +5,8 @@ import type { JwtService } from '@nestjs/jwt';
 import { JsonWebTokenError } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
 import { RateLimiterRes } from 'rate-limiter-flexible';
+import { AuthCookieService } from '../auth/services/auth-cookie.service';
+import { AuthTokenService } from '../auth/services/auth-token.service';
 import type { AppSocket } from '../common/types/app-socket';
 import type { WideEventLogger } from '../common/wide-event/wide-event';
 import {
@@ -12,7 +14,7 @@ import {
   WideEventService,
 } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
-import type { AuthConfig } from '../config/config.module';
+import type { AuthConfig, RuntimeConfig } from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { UserService } from '../user/user.service';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
@@ -57,11 +59,14 @@ function buildMiddleware() {
   const authConfig: AuthConfig = createMock<AuthConfig>({
     jwtAccessSecret: 'access-secret',
   });
+  const runtimeConfig: RuntimeConfig = {
+    nodeEnvironment: 'test',
+    port: 4000,
+  };
   const wsHandshakeMiddleware: WsHandshakeMiddleware =
     new WsHandshakeMiddleware(
-      authConfig,
-      jwtService,
-      userService,
+      new AuthTokenService(jwtService, authConfig, userService),
+      new AuthCookieService(runtimeConfig),
       new AuthenticatedSocketService(),
       rateLimitService,
       wideEventService,

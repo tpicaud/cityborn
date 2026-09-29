@@ -47,7 +47,7 @@ Ces règles valent en développement comme en revue : chaque **symptôme** cité
 ## Style de code
 
 - **Aucun commentaire dans le code, JSDoc compris.** Le naming, les types et le découpage portent l'intention. Seule tolérance : le bloc `@deprecated` / `@deprecatedSince` posé par le skill `deprecate`. Un *pourquoi* que le code ne peut pas porter (workaround, contrainte externe ou réglementaire) va dans le message de commit, la PR ou `docs/` — jamais en commentaire.
-- **Naming exact** : chaque nom (variable, fonction, type, fichier, colonne, champ de contrat, clé, room) dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Renommer un nom générique, redondant ou qui entre en collision avec un autre domaine (ex. « session » désigne la partie de jeu). Un fichier porte le nom du concept unique qu'il contient (`apple-id-token.ts`, `auth-cookies.ts`) ; un fourre-tout `utils`, `helpers` ou `constants` est éclaté en un fichier par concept.
+- **Naming exact** : chaque nom (variable, fonction, type, fichier, colonne, champ de contrat, clé, room) dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Renommer un nom générique, redondant ou qui entre en collision avec un autre domaine (ex. « session » désigne la partie de jeu). Un fichier porte le nom du concept unique qu'il contient (`apple-id-token.ts`, `bearer-token.ts`) ; un fourre-tout `utils`, `helpers` ou `constants` est éclaté en un fichier par concept.
   ```typescript
   const service = new RateLimitService(redisService);          // ❌ trop générique
   const rateLimitService = new RateLimitService(redisService); // ✅

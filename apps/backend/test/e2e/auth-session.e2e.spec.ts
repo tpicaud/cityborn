@@ -17,7 +17,7 @@ import type TestAgent from 'supertest/lib/agent';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../../src/auth/auth-cookies';
+} from '../../src/auth/services/auth-cookie.service';
 import { AUTH_CONFIG, type AuthConfig } from '../../src/config/config.module';
 import {
   USER_REPOSITORY,

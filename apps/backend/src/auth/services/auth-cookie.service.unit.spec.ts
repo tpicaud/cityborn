@@ -6,9 +6,9 @@ import type { Response } from 'express';
 import type { RuntimeConfig } from '../../config/config.module';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
+  AuthCookieService,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../auth-cookies';
-import { AuthCookieService } from './auth-cookie.service';
+} from './auth-cookie.service';
 
 function buildService(
   nodeEnvironment: RuntimeConfig['nodeEnvironment'],
@@ -20,7 +20,7 @@ function buildService(
   return new AuthCookieService(runtimeConfig);
 }
 
-describe('AuthCookieService.setAuthenticationCookies', () => {
+describe('AuthCookieService.establishSession', () => {
   it('sets production authentication cookies as HttpOnly, Secure and SameSite', () => {
     const response: DeepMocked<Response> = createMock<Response>();
     const user: User = buildUser();
@@ -31,8 +31,12 @@ describe('AuthCookieService.setAuthenticationCookies', () => {
     };
     const authCookieService: AuthCookieService = buildService('production');
 
-    authCookieService.setAuthenticationCookies(response, authentication);
+    const establishedUser: User = authCookieService.establishSession(
+      response,
+      authentication,
+    );
 
+    expect(establishedUser).toBe(user);
     expect(response.cookie).toHaveBeenCalledWith(
       ACCESS_TOKEN_COOKIE_NAME,
       'access-token',
@@ -58,12 +62,12 @@ describe('AuthCookieService.setAuthenticationCookies', () => {
   });
 });
 
-describe('AuthCookieService.clearAuthenticationCookies', () => {
+describe('AuthCookieService.clearSession', () => {
   it('clears both cookies with their original attributes', () => {
     const response: DeepMocked<Response> = createMock<Response>();
     const authCookieService: AuthCookieService = buildService('production');
 
-    authCookieService.clearAuthenticationCookies(response);
+    authCookieService.clearSession(response);
 
     expect(response.clearCookie).toHaveBeenCalledWith(
       ACCESS_TOKEN_COOKIE_NAME,

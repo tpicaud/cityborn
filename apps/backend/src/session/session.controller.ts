@@ -2,7 +2,7 @@ import { contract, ErrorCode, type Session, User } from '@cityborn/api';
 import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
+import { OptionalAuthGuard } from '../auth/guards/access-token.guard';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { GameService } from '../game/game.service';

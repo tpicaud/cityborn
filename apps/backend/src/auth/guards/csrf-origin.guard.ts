@@ -10,7 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { TsRestAppRouteMetadataKey } from '@ts-rest/nest';
 import type { Request } from 'express';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
-import { hasAuthenticationCookie } from '../auth-cookies';
+import { AuthCookieService } from '../services/auth-cookie.service';
 
 const safeMethods: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -23,6 +23,7 @@ export class CsrfOriginGuard implements CanActivate {
   constructor(
     @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     private readonly reflector: Reflector,
+    private readonly authCookieService: AuthCookieService,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -51,7 +52,7 @@ export class CsrfOriginGuard implements CanActivate {
   ): boolean {
     return (
       this.isCookieAuthRoute(context) ||
-      hasAuthenticationCookie(request.headers.cookie)
+      this.authCookieService.hasAuthenticationCookie(request.headers.cookie)
     );
   }
 

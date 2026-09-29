@@ -1,6 +1,6 @@
 import type { Provider } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
-import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
+import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
 
 export const GoogleClientProvider: Provider = {
   provide: 'GOOGLE_CLIENT',

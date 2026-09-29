@@ -22,28 +22,24 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { AuthSession, AuthVersion } from '../common/types/auth-session';
-import { WideEventService } from '../common/wide-event/wide-event.service';
+import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
+import { WideEventService } from '../../common/wide-event/wide-event.service';
 import {
   AUTH_CONFIG,
   type AuthConfig,
   HTTP_CONFIG,
   type HttpConfig,
-} from '../config/config.module';
-import { EventService } from '../event/event.service';
-import { createEvent } from '../event/event.types';
-import { buildMailOptions } from '../mail/email-templates';
-import { MailService } from '../mail/mail.service';
-import type { UserCredentials } from '../user/repositories/user.repository';
-import { UserService } from '../user/user.service';
-import { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
-import {
-  ACCESS_TOKEN_TTL_SECONDS,
-  REFRESH_TOKEN_TTL_SECONDS,
-} from './auth.constants';
-import { verifyAppleIdToken } from './utils';
+} from '../../config/config.module';
+import { EventService } from '../../event/event.service';
+import { createEvent } from '../../event/event.types';
+import { buildMailOptions } from '../../mail/email-templates';
+import { MailService } from '../../mail/mail.service';
+import type { UserCredentials } from '../../user/repositories/user.repository';
+import { UserService } from '../../user/user.service';
+import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
+import { verifyAppleIdToken } from '../apple-id-token';
+import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
 interface GoogleIdentityPayload {
@@ -67,7 +63,7 @@ export interface GoogleIdentityClient {
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
+    private readonly authTokenService: AuthTokenService,
     @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
     @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     private readonly eventService: EventService,
@@ -348,20 +344,6 @@ export class AuthService {
     return { id: user.id, username: user.username };
   }
 
-  async createAuthResponse(authSession: AuthSession): Promise<AuthResponse> {
-    const accessToken: string = await this.generateToken('access', authSession);
-    const refreshToken: string = await this.generateToken(
-      'refresh',
-      authSession,
-    );
-
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      user: authSession.user,
-    };
-  }
-
   private async sendVerificationEmail(
     user: {
       id: string;
@@ -385,31 +367,12 @@ export class AuthService {
     );
   }
 
-  private async generateToken(
-    type: 'access' | 'refresh',
+  private async createAuthResponse(
     authSession: AuthSession,
-  ): Promise<string> {
-    const { user, authVersion } = authSession;
-    const payload = {
-      id: UserIdSchema.parse(user.id),
-      username: UsernameSchema.parse(user.username),
-      email: user.email,
-      authVersion,
-    };
-
-    switch (type) {
-      case 'access':
-        return await this.jwtService.signAsync(payload, {
-          secret: this.authConfig.jwtAccessSecret,
-          expiresIn: ACCESS_TOKEN_TTL_SECONDS,
-        });
-
-      case 'refresh':
-        return await this.jwtService.signAsync(payload, {
-          secret: this.authConfig.jwtRefreshSecret,
-          expiresIn: REFRESH_TOKEN_TTL_SECONDS,
-        });
-    }
+  ): Promise<AuthResponse> {
+    const authTokenPair: AuthTokenPair =
+      await this.authTokenService.issueTokenPair(authSession);
+    return { ...authTokenPair, user: authSession.user };
   }
 
   private async requireAuthSession(userId: UserId): Promise<AuthSession> {
