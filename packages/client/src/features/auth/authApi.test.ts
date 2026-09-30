@@ -14,15 +14,15 @@ import { toCreateUser } from './authSchema';
 
 const username = UsernameSchema.parse('citizen');
 
-interface FakeTokenStorageState {
+type FakeTokenStorageState = {
   tokens: [string, string] | null;
   cleared: boolean;
-}
+};
 
-interface FakeTokenStorage {
+type FakeTokenStorage = {
   state: FakeTokenStorageState;
   tokenStorage: TokenStorage;
-}
+};
 
 const user: User = {
   id: UserIdSchema.parse('user-1'),

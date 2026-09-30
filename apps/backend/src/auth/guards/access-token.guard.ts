@@ -17,15 +17,15 @@ import {
 } from '../services/auth-token.service';
 import { extractBearerToken } from './bearer-token';
 
-interface AccessTokenGuardPolicy {
+type AccessTokenGuardPolicy = {
   acceptsCookie: boolean;
   requiresAuthentication: boolean;
-}
+};
 
-interface UnauthenticatedReason {
+type UnauthenticatedReason = {
   code: ErrorCode;
   message: string;
-}
+};
 
 function createAccessTokenGuard(
   policy: AccessTokenGuardPolicy,

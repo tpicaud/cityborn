@@ -8,16 +8,16 @@ import type {
 
 export type ClientName = 'web' | 'mobile' | 'back-office';
 
-export interface ClientInfo {
+export type ClientInfo = {
   name: ClientName;
   version?: string;
-}
+};
 
-export interface AuthFetchOptions {
+export type AuthFetchOptions = {
   onResponseHeaders?: (headers: Headers) => void;
   client?: ClientInfo;
   getVisitorId?: () => string | null | Promise<string | null>;
-}
+};
 
 function buildClientHeaders(
   client: ClientInfo | undefined,

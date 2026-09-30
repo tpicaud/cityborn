@@ -8,10 +8,10 @@ import {
 import type { AppRouteMutation } from '@ts-rest/core';
 import type { TokenStorage } from '../platform/tokenStorage';
 
-export interface AuthRouteResponse {
+export type AuthRouteResponse = {
   status: number;
   body: unknown;
-}
+};
 
 export type SendAuthRequest = (
   route: AppRouteMutation,

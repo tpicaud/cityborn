@@ -2,11 +2,11 @@ import type { Provider } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
 
-export interface GoogleIdentityPayload {
+export type GoogleIdentityPayload = {
   email_verified?: boolean;
   email?: string;
   name?: string;
-}
+};
 
 interface GoogleIdentityTicket {
   getPayload(): GoogleIdentityPayload | undefined;

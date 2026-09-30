@@ -8,10 +8,10 @@ import {
   type GoogleIdentityPayload,
 } from './google-client.provider';
 
-export interface GoogleIdentity {
+export type GoogleIdentity = {
   email: string;
   name: string;
-}
+};
 
 @Injectable()
 export class IdentityTokenService {

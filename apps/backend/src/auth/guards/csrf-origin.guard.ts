@@ -14,10 +14,10 @@ import { AuthCookieService } from '../services/auth-cookie.service';
 
 const safeMethods: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-interface RouteSignatureInput {
+type RouteSignatureInput = {
   method: string;
   path: string;
-}
+};
 
 function routeSignature(route: RouteSignatureInput): string {
   return `${route.method} ${route.path}`;

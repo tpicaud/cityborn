@@ -24,12 +24,12 @@ const runtimeConfig: RuntimeConfig = {
   port: 4000,
 };
 
-interface RequestInput {
+type RequestInput = {
   method: string;
   path: string;
   headers: Request['headers'];
   appRoute?: AppRoute;
-}
+};
 
 function buildHandler(appRoute: AppRoute | undefined): () => void {
   const handler: () => void = (): void => {};
