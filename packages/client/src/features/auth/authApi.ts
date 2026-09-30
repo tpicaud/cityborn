@@ -29,7 +29,7 @@ export interface AuthApi {
   verifyEmail(data: VerifyEmailData): Promise<ApiResult<PublicUser>>;
 }
 
-interface AuthCredentialsPort
+interface AuthCredentialsStrategy
   extends Pick<
     AuthApi,
     | 'signIn'
@@ -49,12 +49,12 @@ function toVoidResult<T>(result: ApiResult<T>): ApiResult<void> {
 
 function buildAuthApi(
   client: Pick<ApiClient, 'auth'>,
-  credentials: AuthCredentialsPort,
+  credentialsStrategy: AuthCredentialsStrategy,
 ): AuthApi {
   return {
     async getCurrentUser() {
       try {
-        if (!(await credentials.mayHoldCredentials())) return null;
+        if (!(await credentialsStrategy.mayHoldCredentials())) return null;
         const result: ClientInferResponses<AppContract['auth']['me']> =
           await client.auth.me();
         return result.status === 200 ? result.body : null;
@@ -63,12 +63,12 @@ function buildAuthApi(
       }
     },
 
-    signIn: credentials.signIn,
-    signUp: credentials.signUp,
-    signInWithGoogle: credentials.signInWithGoogle,
-    signInWithApple: credentials.signInWithApple,
-    signOut: credentials.signOut,
-    updatePassword: credentials.updatePassword,
+    signIn: credentialsStrategy.signIn,
+    signUp: credentialsStrategy.signUp,
+    signInWithGoogle: credentialsStrategy.signInWithGoogle,
+    signInWithApple: credentialsStrategy.signInWithApple,
+    signOut: credentialsStrategy.signOut,
+    updatePassword: credentialsStrategy.updatePassword,
 
     async deleteUser() {
       return toVoidResult(
@@ -88,10 +88,10 @@ function buildAuthApi(
   };
 }
 
-function createBearerCredentials(
+function createBearerCredentialsStrategy(
   client: Pick<ApiClient, 'auth'>,
   tokenStorage: TokenStorage,
-): AuthCredentialsPort {
+): AuthCredentialsStrategy {
   const storeTokens = async (
     result: ApiResult<AuthResponse>,
   ): Promise<ApiResult<User>> => {
@@ -143,9 +143,9 @@ function createBearerCredentials(
   };
 }
 
-function createCookieCredentials(
+function createCookieCredentialsStrategy(
   client: Pick<ApiClient, 'auth'>,
-): AuthCredentialsPort {
+): AuthCredentialsStrategy {
   return {
     async mayHoldCredentials() {
       return true;
@@ -187,9 +187,12 @@ export function createAuthApi(
   client: Pick<ApiClient, 'auth'>,
   tokenStorage: TokenStorage,
 ): AuthApi {
-  return buildAuthApi(client, createBearerCredentials(client, tokenStorage));
+  return buildAuthApi(
+    client,
+    createBearerCredentialsStrategy(client, tokenStorage),
+  );
 }
 
 export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
-  return buildAuthApi(client, createCookieCredentials(client));
+  return buildAuthApi(client, createCookieCredentialsStrategy(client));
 }
