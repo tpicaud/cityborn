@@ -9,20 +9,20 @@ import {
 } from '@cityborn/api';
 import type { ApiClient } from '../../api/createApiClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
-import { type AuthApi, createAuthApi } from './authApi';
+import { type AuthApi, createAuthApi, createCookieAuthApi } from './authApi';
 import { toCreateUser } from './authSchema';
 
 const username = UsernameSchema.parse('citizen');
 
-interface FakeTokenStorageState {
+type FakeTokenStorageState = {
   tokens: [string, string] | null;
   cleared: boolean;
-}
+};
 
-interface FakeTokenStorage {
+type FakeTokenStorage = {
   state: FakeTokenStorageState;
   tokenStorage: TokenStorage;
-}
+};
 
 const user: User = {
   id: UserIdSchema.parse('user-1'),
@@ -62,12 +62,23 @@ function unexpectedCall(): never {
 }
 
 function createFakeClient(
-  routes: Partial<ApiClient['auth']>,
+  routes: Partial<Omit<ApiClient['auth'], 'cookie'>>,
+  cookieRoutes: Partial<ApiClient['auth']['cookie']> = {},
 ): Pick<ApiClient, 'auth'> {
   return {
     auth: {
       me: unexpectedCall,
       refresh: unexpectedCall,
+      signOut: unexpectedCall,
+      cookie: {
+        refresh: unexpectedCall,
+        signUp: unexpectedCall,
+        signIn: unexpectedCall,
+        signInWithGoogle: unexpectedCall,
+        signInWithApple: unexpectedCall,
+        updatePassword: unexpectedCall,
+        ...cookieRoutes,
+      },
       signUp: unexpectedCall,
       signIn: unexpectedCall,
       signInWithGoogle: unexpectedCall,
@@ -187,4 +198,73 @@ test('toCreateUser drops confirmPassword from the sign-up payload', () => {
       password: 'Password1',
     },
   );
+});
+
+test('cookie signIn uses the cookie route without token storage', async () => {
+  let called: boolean = false;
+  const authApi: AuthApi = createCookieAuthApi(
+    createFakeClient(
+      {},
+      {
+        signIn: async () => {
+          called = true;
+          return {
+            status: 200,
+            body: user,
+            headers: new Headers(),
+          };
+        },
+      },
+    ),
+  );
+
+  const result: ApiResult<User> = await authApi.signIn({
+    identifier: 'citizen',
+    password: 'Password1',
+  });
+
+  assert.equal(called, true);
+  assert.deepEqual(result, { ok: true, data: user });
+});
+
+test('cookie updatePassword uses the cookie route without exposing tokens', async () => {
+  const authApi: AuthApi = createCookieAuthApi(
+    createFakeClient(
+      {},
+      {
+        updatePassword: async () => ({
+          status: 200,
+          body: user,
+          headers: new Headers(),
+        }),
+      },
+    ),
+  );
+
+  const result: ApiResult<User> = await authApi.updatePassword({
+    currentPassword: 'Password1',
+    newPassword: 'Password2',
+  });
+
+  assert.deepEqual(result, { ok: true, data: user });
+});
+
+test('cookie signOut clears the server session through the shared route', async () => {
+  let called: boolean = false;
+  const authApi: AuthApi = createCookieAuthApi(
+    createFakeClient({
+      signOut: async () => {
+        called = true;
+        return {
+          status: 200,
+          body: {},
+          headers: new Headers(),
+        };
+      },
+    }),
+  );
+
+  await authApi.signOut();
+
+  assert.equal(called, true);
 });

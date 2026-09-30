@@ -2,7 +2,6 @@ import { installFrenchZodErrorMap } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
-import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { VisitorIdInterceptor } from './common/interceptors/visitor-id.interceptor';
 import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-header.middleware';
@@ -26,8 +25,6 @@ export async function configureApp(app: NestExpressApplication): Promise<void> {
     origin: backendConfig.http.corsOrigins,
     credentials: true,
   });
-
-  app.use(cookieParser());
 
   app.useGlobalInterceptors(new VisitorIdInterceptor());
 

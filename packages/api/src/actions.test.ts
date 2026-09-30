@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  type HttpAction,
   httpActionRoutes,
   resolveHttpAction,
   resolveWsAction,
@@ -22,7 +23,7 @@ function matchesRoute(pattern: string, path: string): boolean {
 
 describe('resolveHttpAction', () => {
   it('resolves every contract route after Nest slash normalization', () => {
-    assert.equal(httpActionRoutes.length, 42);
+    assert.equal(httpActionRoutes.length, 49);
     for (const route of httpActionRoutes) {
       assert.equal(resolveHttpAction(route.method, route.path), route.action);
     }
@@ -35,6 +36,21 @@ describe('resolveHttpAction', () => {
       'admin.category.getCategoryTrees',
     );
     assert.equal(resolveHttpAction('GET', '/'), undefined);
+  });
+
+  it('prefixes nested router keys below the domain', () => {
+    const cookieSignInAction: HttpAction = 'auth.cookie.signIn';
+
+    assert.equal(
+      resolveHttpAction('POST', '/auth/cookie/sign-in'),
+      cookieSignInAction,
+    );
+  });
+
+  it('has unique actions', () => {
+    const actions: string[] = httpActionRoutes.map(({ action }) => action);
+
+    assert.equal(new Set(actions).size, actions.length);
   });
 
   it('has unique method and path pairs', () => {
@@ -113,6 +129,12 @@ describe('contract actions', () => {
       'admin.search.searchGuessObject',
       'admin.search.searchWorldLocation',
       'admin.world-location.createWorldLocation',
+      'auth.cookie.refresh',
+      'auth.cookie.signIn',
+      'auth.cookie.signInWithApple',
+      'auth.cookie.signInWithGoogle',
+      'auth.cookie.signUp',
+      'auth.cookie.updatePassword',
       'auth.deleteUser',
       'auth.me',
       'auth.refresh',
@@ -120,6 +142,7 @@ describe('contract actions', () => {
       'auth.signIn',
       'auth.signInWithApple',
       'auth.signInWithGoogle',
+      'auth.signOut',
       'auth.signUp',
       'auth.updatePassword',
       'auth.verifyEmail',

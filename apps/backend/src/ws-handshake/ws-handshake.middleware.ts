@@ -1,21 +1,17 @@
 import { type ApiError, type VisitorId, VisitorIdSchema } from '@cityborn/api';
-import { Inject, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable } from '@nestjs/common';
+import { AuthCookieService } from '../auth/services/auth-cookie.service';
 import {
   type AuthTokenPayload,
-  resolveAuthSession,
-  validateAccessToken,
-} from '../auth/guards/utils';
-import { extractAccessTokenFromWsClient } from '../auth/utils';
+  AuthTokenService,
+} from '../auth/services/auth-token.service';
 import type { AppSocket } from '../common/types/app-socket';
 import type { AuthSession } from '../common/types/auth-session';
 import { firstHeaderValue } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
-import { AUTH_CONFIG, type AuthConfig } from '../config/config.module';
 import { RateLimitService } from '../rate-limit/rate-limit.service';
 import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
-import { UserService } from '../user/user.service';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
 
 export class WsHandshakeError extends Error {
@@ -36,9 +32,8 @@ function parseVisitorId(
 @Injectable()
 export class WsHandshakeMiddleware {
   constructor(
-    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
-    private readonly jwtService: JwtService,
-    private readonly userService: UserService,
+    private readonly authTokenService: AuthTokenService,
+    private readonly authCookieService: AuthCookieService,
     private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly rateLimitService: RateLimitService,
     private readonly wideEventService: WideEventService,
@@ -95,25 +90,35 @@ export class WsHandshakeMiddleware {
   }
 
   private async authenticate(socket: AppSocket): Promise<AuthSession | null> {
-    const token: string | undefined = extractAccessTokenFromWsClient(socket);
+    const token: string | undefined = this.readAccessToken(socket);
     if (!token) return null;
 
     const payload: AuthTokenPayload | null =
       await this.validateHandshakeToken(token);
     if (!payload) return null;
 
-    return resolveAuthSession(payload, this.userService);
+    return this.authTokenService.resolveAuthSession(payload);
+  }
+
+  private readAccessToken(socket: AppSocket): string | undefined {
+    const cookieHeader: string | undefined = socket.handshake.headers.cookie;
+    const handshakeAccessToken: unknown = socket.handshake.auth.access_token;
+
+    return (
+      this.authCookieService.readAccessToken(cookieHeader) ??
+      this.authCookieService.readLegacyFrontendAccessToken(cookieHeader) ??
+      (typeof handshakeAccessToken === 'string' &&
+      handshakeAccessToken.length > 0
+        ? handshakeAccessToken
+        : undefined)
+    );
   }
 
   private async validateHandshakeToken(
     token: string,
   ): Promise<AuthTokenPayload | null> {
     try {
-      return await validateAccessToken(
-        token,
-        this.jwtService,
-        this.authConfig.jwtAccessSecret,
-      );
+      return await this.authTokenService.verifyAccessToken(token);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.connection_auth');
       return null;

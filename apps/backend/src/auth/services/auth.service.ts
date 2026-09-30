@@ -22,56 +22,36 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { AuthSession, AuthVersion } from '../common/types/auth-session';
-import { WideEventService } from '../common/wide-event/wide-event.service';
+import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
+import { WideEventService } from '../../common/wide-event/wide-event.service';
+import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
+import { EventService } from '../../event/event.service';
+import { createEvent } from '../../event/event.types';
+import { buildMailOptions } from '../../mail/email-templates';
+import { MailService } from '../../mail/mail.service';
+import type { UserCredentials } from '../../user/repositories/user.repository';
+import { UserService } from '../../user/user.service';
+import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
-  AUTH_CONFIG,
-  type AuthConfig,
-  HTTP_CONFIG,
-  type HttpConfig,
-} from '../config/config.module';
-import { EventService } from '../event/event.service';
-import { createEvent } from '../event/event.types';
-import { buildMailOptions } from '../mail/email-templates';
-import { MailService } from '../mail/mail.service';
-import type { UserCredentials } from '../user/repositories/user.repository';
-import { UserService } from '../user/user.service';
-import { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
-import { verifyAppleIdToken } from './utils';
+  type GoogleIdentity,
+  IdentityTokenService,
+} from '../identity-providers/identity-token.service';
+import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
-interface GoogleIdentityPayload {
-  email_verified?: boolean;
-  email?: string;
-  name?: string;
-}
-
-interface GoogleIdentityTicket {
-  getPayload(): GoogleIdentityPayload | undefined;
-}
-
-export interface GoogleIdentityClient {
-  verifyIdToken(options: {
-    idToken: string;
-    audience?: string;
-  }): Promise<GoogleIdentityTicket>;
-}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
-    @Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig,
+    private readonly authTokenService: AuthTokenService,
     @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     private readonly eventService: EventService,
     private readonly mailService: MailService,
     private readonly wideEventService: WideEventService,
     private readonly authenticatedSocketService: AuthenticatedSocketService,
-    @Inject('GOOGLE_CLIENT')
-    private readonly googleClient: GoogleIdentityClient,
+    private readonly identityTokenService: IdentityTokenService,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
@@ -159,7 +139,8 @@ export class AuthService {
   ): Promise<AuthResponse> {
     const { idToken } = dto;
 
-    const { email, name } = await this.verifyGoogleToken(idToken);
+    const { email, name }: GoogleIdentity =
+      await this.identityTokenService.verifyGoogleIdToken(idToken);
 
     let user = await this.userService.findByIdentifier(email);
 
@@ -209,7 +190,7 @@ export class AuthService {
     const { identity_token, apple_user_id, details } = dto;
 
     if (
-      !(await verifyAppleIdToken(identity_token, this.authConfig.appleAppId))
+      !(await this.identityTokenService.isAppleIdTokenValid(identity_token))
     ) {
       throw new UnauthorizedException({
         code: ErrorCode.BAD_REQUEST,
@@ -344,20 +325,6 @@ export class AuthService {
     return { id: user.id, username: user.username };
   }
 
-  async createAuthResponse(authSession: AuthSession): Promise<AuthResponse> {
-    const accessToken: string = await this.generateToken('access', authSession);
-    const refreshToken: string = await this.generateToken(
-      'refresh',
-      authSession,
-    );
-
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      user: authSession.user,
-    };
-  }
-
   private async sendVerificationEmail(
     user: {
       id: string;
@@ -381,31 +348,12 @@ export class AuthService {
     );
   }
 
-  private async generateToken(
-    type: 'access' | 'refresh',
+  private async createAuthResponse(
     authSession: AuthSession,
-  ): Promise<string> {
-    const { user, authVersion } = authSession;
-    const payload = {
-      id: UserIdSchema.parse(user.id),
-      username: UsernameSchema.parse(user.username),
-      email: user.email,
-      authVersion,
-    };
-
-    switch (type) {
-      case 'access':
-        return await this.jwtService.signAsync(payload, {
-          secret: this.authConfig.jwtAccessSecret,
-          expiresIn: '15m',
-        });
-
-      case 'refresh':
-        return await this.jwtService.signAsync(payload, {
-          secret: this.authConfig.jwtRefreshSecret,
-          expiresIn: '7d',
-        });
-    }
+  ): Promise<AuthResponse> {
+    const authTokenPair: AuthTokenPair =
+      await this.authTokenService.issueTokenPair(authSession);
+    return { ...authTokenPair, user: authSession.user };
   }
 
   private async requireAuthSession(userId: UserId): Promise<AuthSession> {
@@ -417,36 +365,6 @@ export class AuthService {
       code: ErrorCode.USER_NOT_FOUND,
       message: 'User not found',
     });
-  }
-
-  private async verifyGoogleToken(idToken: string) {
-    const ticket = await this.googleClient.verifyIdToken({
-      idToken,
-      audience: this.authConfig.googleClientId,
-    });
-    const payload = ticket.getPayload();
-    if (!payload)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Invalid credentials',
-      });
-
-    if (!payload.email_verified)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED,
-        message: 'Google account not verified',
-      });
-
-    if (!payload.email || !payload.name)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: 'Missing name or email',
-      });
-
-    return {
-      email: payload.email,
-      name: payload.name,
-    };
   }
 
   private async generateUniqueUsername(base: string): Promise<Username> {

@@ -15,15 +15,35 @@ type FirstSegment<Path extends string> =
 
 type DomainOf<Path extends string> = FirstSegment<StripAdmin<Path>>;
 
-export type HttpActionsOf<Router> = {
+type ActionDomainOf<Path extends string> = Path extends `/admin/${string}`
+  ? `admin.${DomainOf<Path>}`
+  : DomainOf<Path>;
+
+type JoinActionScope<Keys extends string[]> = Keys extends [
+  infer Head extends string,
+  ...infer Tail extends string[],
+]
+  ? `${Head}.${JoinActionScope<Tail>}`
+  : '';
+
+type ActionScopeOf<
+  Path extends string,
+  RouterKeys extends string[],
+> = Path extends `/admin/${string}`
+  ? RouterKeys extends [string, string, ...infer Scope extends string[]]
+    ? JoinActionScope<Scope>
+    : ''
+  : RouterKeys extends [string, ...infer Scope extends string[]]
+    ? JoinActionScope<Scope>
+    : '';
+
+export type HttpActionsOf<Router, RouterKeys extends string[] = []> = {
   [Key in keyof Router & string]: Router[Key] extends {
     method: string;
     path: infer Path extends string;
   }
-    ? Path extends `/admin/${string}`
-      ? `admin.${DomainOf<Path>}.${Key}`
-      : `${DomainOf<Path>}.${Key}`
-    : HttpActionsOf<Router[Key]>;
+    ? `${ActionDomainOf<Path>}.${ActionScopeOf<Path, RouterKeys>}${Key}`
+    : HttpActionsOf<Router[Key], [...RouterKeys, Key]>;
 }[keyof Router & string];
 
 export type HttpAction = HttpActionsOf<typeof contract>;
@@ -58,22 +78,33 @@ function domainFromPath(path: string): string {
   return segments[segments[0] === 'admin' ? 1 : 0] ?? '';
 }
 
-function collectHttpActionRoutes(router: AppRouter): HttpActionRoute[] {
+function collectHttpActionRoutes(
+  router: AppRouter,
+  routerKeys: readonly string[],
+): HttpActionRoute[] {
   return Object.entries(router).flatMap(
     ([key, entry]: [string, AppRoute | AppRouter]): HttpActionRoute[] => {
       if (isAppRoute(entry)) {
         const path: string = normalizeHttpPath(entry.path);
-        const domain: string = domainFromPath(path);
-        const action: string = `${path.startsWith('/admin/') ? 'admin.' : ''}${domain}.${key}`;
+        const isAdminRoute: boolean = path.startsWith('/admin/');
+        const actionScope: readonly string[] = routerKeys.slice(
+          isAdminRoute ? 2 : 1,
+        );
+        const action: string = [
+          ...(isAdminRoute ? ['admin'] : []),
+          domainFromPath(path),
+          ...actionScope,
+          key,
+        ].join('.');
         return [{ method: entry.method, path, action }];
       }
-      return collectHttpActionRoutes(entry);
+      return collectHttpActionRoutes(entry, [...routerKeys, key]);
     },
   );
 }
 
 export const httpActionRoutes: readonly HttpActionRoute[] =
-  collectHttpActionRoutes(contract);
+  collectHttpActionRoutes(contract, []);
 
 const httpActionIndex: ReadonlyMap<string, string> = new Map(
   httpActionRoutes.map(

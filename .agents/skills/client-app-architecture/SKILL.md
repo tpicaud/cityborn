@@ -25,7 +25,7 @@ Avant de créer un fichier, inspecter les fichiers voisins et suivre le précéd
   - `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
   - `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
 
-L'authentification fait exception : ses appels HTTP vivent dans `createAuthApi` (`@cityborn/client/auth`). Chaque app se contente de l'instancier avec son `TokenStorage` — `lib/api/auth.ts` côté mobile, `getServerAuthApi()` côté Next, les server actions n'étant que des passe-plats. Ajouter un appel d'auth se fait dans `AuthApi`, jamais dans une app.
+L'authentification fait exception : ses appels HTTP vivent dans `createAuthApi` (`@cityborn/client/auth`). Chaque app se contente de l'instancier avec son `TokenStorage` — `lib/api/auth.ts` côté mobile, `getServerAuthApi()` côté Next, les server actions n'étant que des passe-plats. Le navigateur authentifié par cookies Nest utilise `createCookieAuthApi`, sans `TokenStorage`. Ajouter un appel d'auth se fait dans `AuthApi`, jamais dans une app.
 
 Les sessions suivent le même principe avec un port : les hooks de `@cityborn/client/session` reçoivent un `SessionApi`. Le mobile l'obtient par `createSessionApi(client)` (`lib/api/session.ts`), Next l'implémente avec ses server actions (`lib/sessionApi.ts`) pour garder ses appels côté serveur. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
@@ -42,7 +42,7 @@ Rangé par domaine, en miroir des `features/` des apps. Chaque domaine expose un
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
-| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createApiClient`, visitorId. Sans React. |
+| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createApiClient` (bearer) / `createCookieApiClient` (cookies), visitorId. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |

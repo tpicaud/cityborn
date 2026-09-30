@@ -1,24 +1,23 @@
-import {
-  ApiResponseError,
-  AuthResponseSchema,
-  ErrorCode,
-  parseApiError,
-} from '@cityborn/api';
-import type { ApiFetcherArgs } from '@ts-rest/core';
-import type { TokenStorage } from '../platform/tokenStorage';
+import { ApiResponseError, ErrorCode, parseApiError } from '@cityborn/api';
+import type { ApiFetcherArgs, AppRouteMutation } from '@ts-rest/core';
+import type {
+  AuthRouteResponse,
+  AuthTransport,
+  SendAuthRequest,
+} from './authTransport';
 
 export type ClientName = 'web' | 'mobile' | 'back-office';
 
-export interface ClientInfo {
+export type ClientInfo = {
   name: ClientName;
   version?: string;
-}
+};
 
-export interface AuthFetchOptions {
+export type AuthFetchOptions = {
   onResponseHeaders?: (headers: Headers) => void;
   client?: ClientInfo;
   getVisitorId?: () => string | null | Promise<string | null>;
-}
+};
 
 function buildClientHeaders(
   client: ClientInfo | undefined,
@@ -35,20 +34,20 @@ function buildClientHeaders(
 
 export class AuthFetch {
   private isRefreshing = false;
-  private refreshQueue: ((token: string | null) => void)[] = [];
+  private refreshQueue: ((refreshed: boolean) => void)[] = [];
   private readonly baseURL: string;
-  private readonly tokenStorage: TokenStorage;
+  private readonly authTransport: AuthTransport;
   private readonly onResponseHeaders?: (headers: Headers) => void;
   private readonly baseHeaders: Record<string, string>;
   private readonly getVisitorId?: () => string | null | Promise<string | null>;
 
   constructor(
     baseURL: string,
-    tokenStorage: TokenStorage,
+    authTransport: AuthTransport,
     options: AuthFetchOptions = {},
   ) {
     this.baseURL = baseURL.replace(/\/+$/, '');
-    this.tokenStorage = tokenStorage;
+    this.authTransport = authTransport;
     this.onResponseHeaders = options.onResponseHeaders;
     this.baseHeaders = buildClientHeaders(options.client);
     this.getVisitorId = options.getVisitorId;
@@ -56,7 +55,7 @@ export class AuthFetch {
 
   private async buildHeaders(
     extra: Record<string, string>,
-    auth: { kind: 'access' } | { kind: 'bearer'; token: string },
+    bearerToken: string | null,
   ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       ...this.baseHeaders,
@@ -68,12 +67,8 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    const token =
-      auth.kind === 'bearer'
-        ? auth.token
-        : await this.tokenStorage.getAccessToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+    if (bearerToken) {
+      headers.Authorization = `Bearer ${bearerToken}`;
     }
 
     return headers;
@@ -90,9 +85,7 @@ export class AuthFetch {
 
     if (
       result.status === 401 &&
-      result.body !== null &&
-      typeof result.body === 'object' &&
-      (result.body as Record<string, unknown>).code === ErrorCode.TOKEN_EXPIRED
+      parseApiError(result.status, result.body).code === ErrorCode.TOKEN_EXPIRED
     ) {
       return this.handle401(args);
     }
@@ -103,9 +96,10 @@ export class AuthFetch {
   private async fetchOnce(
     args: ApiFetcherArgs,
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
-    const headers = await this.buildHeaders(args.headers ?? {}, {
-      kind: 'access',
-    });
+    const headers: Record<string, string> = await this.buildHeaders(
+      args.headers ?? {},
+      await this.authTransport.readAccessToken(),
+    );
 
     const response = await this.timeoutFetch(args.path, {
       method: args.method,
@@ -127,8 +121,8 @@ export class AuthFetch {
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
-        this.refreshQueue.push(async (newToken) => {
-          if (!newToken) {
+        this.refreshQueue.push(async (refreshed) => {
+          if (!refreshed) {
             reject(
               new ApiResponseError({
                 code: ErrorCode.USER_REFRESH_FAILED,
@@ -149,63 +143,45 @@ export class AuthFetch {
 
     this.isRefreshing = true;
     try {
-      const newToken = await this.refreshToken();
-      this.processQueue(newToken);
+      await this.authTransport.refreshAuthentication(this.sendAuthRequest);
+      this.processQueue(true);
       return await this.fetchOnce(args);
     } catch (err) {
-      this.processQueue(null);
-      await this.tokenStorage.clearTokens();
+      this.processQueue(false);
+      await this.authTransport.clearAuthentication(this.sendAuthRequest);
       throw err;
     } finally {
       this.isRefreshing = false;
     }
   }
 
-  private async refreshToken(): Promise<string> {
-    const refreshToken = await this.tokenStorage.getRefreshToken();
-    if (!refreshToken) {
-      throw new ApiResponseError({
-        code: ErrorCode.USER_REFRESH_FAILED,
-        message: 'No refresh token available',
-        statusCode: 401,
-      });
-    }
-
-    const response = await this.timeoutFetch(`${this.baseURL}/auth/refresh`, {
-      method: 'POST',
-      headers: await this.buildHeaders(
-        { 'Content-Type': 'application/json' },
-        { kind: 'bearer', token: refreshToken },
-      ),
-    });
+  private readonly sendAuthRequest: SendAuthRequest = async (
+    route: AppRouteMutation,
+    bearerToken: string | null,
+  ): Promise<AuthRouteResponse> => {
+    const response: Response = await this.timeoutFetch(
+      `${this.baseURL}${route.path}`,
+      {
+        method: route.method,
+        headers: await this.buildHeaders(
+          { 'Content-Type': 'application/json' },
+          bearerToken,
+        ),
+        body: '{}',
+        credentials: 'include',
+      },
+    );
 
     if (this.onResponseHeaders) {
       this.onResponseHeaders(response.headers);
     }
 
-    if (!response.ok) {
-      throw new ApiResponseError(
-        parseApiError(response.status, await response.json()),
-      );
-    }
+    return { status: response.status, body: await this.parseBody(response) };
+  };
 
-    const raw = await response.json();
-    const parsed = AuthResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ApiResponseError({
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: 'Unexpected error',
-        statusCode: response.status,
-      });
-    }
-    const { access_token, refresh_token } = parsed.data;
-    await this.tokenStorage.setTokens(access_token, refresh_token);
-    return access_token;
-  }
-
-  private processQueue(token: string | null) {
+  private processQueue(refreshed: boolean): void {
     this.refreshQueue.forEach((cb) => {
-      cb(token);
+      cb(refreshed);
     });
     this.refreshQueue = [];
   }

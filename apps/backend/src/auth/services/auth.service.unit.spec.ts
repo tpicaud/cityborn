@@ -13,14 +13,17 @@ import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import type { JwtService } from '@nestjs/jwt';
-import type { WideEventService } from '../common/wide-event/wide-event.service';
-import type { AuthConfig, HttpConfig } from '../config/config.module';
-import type { EventService } from '../event/event.service';
-import type { MailService } from '../mail/mail.service';
-import type { UserCredentials } from '../user/repositories/user.repository';
-import type { UserService } from '../user/user.service';
-import type { AuthenticatedSocketService } from '../ws-handshake/authenticated-socket.service';
-import { AuthService, type GoogleIdentityClient } from './auth.service';
+import type { WideEventService } from '../../common/wide-event/wide-event.service';
+import type { AuthConfig, HttpConfig } from '../../config/config.module';
+import type { EventService } from '../../event/event.service';
+import type { MailService } from '../../mail/mail.service';
+import type { UserCredentials } from '../../user/repositories/user.repository';
+import type { UserService } from '../../user/user.service';
+import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
+import type { GoogleIdentityClient } from '../identity-providers/google-client.provider';
+import { IdentityTokenService } from '../identity-providers/identity-token.service';
+import { AuthService } from './auth.service';
+import { AuthTokenService } from './auth-token.service';
 
 let mockPasswordMatches: boolean = true;
 let mockAppleTokenValid: boolean = true;
@@ -38,7 +41,7 @@ function mockVerifyAppleIdToken(): Promise<boolean> {
 }
 
 jest.mock('bcrypt', () => ({ hash: mockHash, compare: mockCompare }));
-jest.mock('./utils', () => ({
+jest.mock('../identity-providers/apple-id-token', () => ({
   verifyAppleIdToken: mockVerifyAppleIdToken,
 }));
 
@@ -71,14 +74,13 @@ function buildAuthService() {
     createMock<GoogleIdentityClient>();
   const authService: AuthService = new AuthService(
     userService,
-    jwtService,
-    authConfig,
+    new AuthTokenService(jwtService, authConfig, userService),
     httpConfig,
     eventService,
     mailService,
     wideEventService,
     authenticatedSocketService,
-    googleClient,
+    new IdentityTokenService(googleClient, authConfig),
   );
 
   jwtService.signAsync

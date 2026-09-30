@@ -6,16 +6,17 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
-import { extractTokenFromHTTPHeader } from '../utils';
+import { extractBearerToken } from './bearer-token';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(@Inject(AUTH_CONFIG) private readonly authConfig: AuthConfig) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = extractTokenFromHTTPHeader(request);
+    const request: Request = context.switchToHttp().getRequest<Request>();
+    const token: string | undefined = extractBearerToken(request.headers);
     if (!token)
       throw new UnauthorizedException({
         code: ErrorCode.USER_TOKEN_MISSING,

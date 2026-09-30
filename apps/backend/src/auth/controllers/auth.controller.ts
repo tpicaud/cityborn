@@ -1,15 +1,19 @@
-import { contract, User } from '@cityborn/api';
+import type { User } from '@cityborn/api';
+import { contract } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { VisitorId } from '../common/decorators/visitor-id.decorator';
-import type { AuthSession } from '../common/types/auth-session';
-import { CurrentAuthSession, CurrentUser } from '../user/user.decorator';
-import { AuthService } from './auth.service';
-import { AuthGuard } from './guards/auth.guard';
-import { RefreshGuard } from './guards/refresh.guard';
+import { VisitorId } from '../../common/decorators/visitor-id.decorator';
+import type { AuthSession } from '../../common/types/auth-session';
+import {
+  CurrentAuthSession,
+  CurrentUser,
+} from '../current-auth-session.decorator';
+import { AuthGuard, BearerAuthGuard } from '../guards/access-token.guard';
+import { BearerRefreshGuard } from '../guards/refresh-token.guard';
+import { AuthService } from '../services/auth.service';
 
-const c = initContract(); // TODO delete to use only shared contract
+const c = initContract();
 
 const publicAuthRoutes = c.router({
   signUp: contract.auth.signUp,
@@ -23,7 +27,6 @@ const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
   resendVerificationEmail: contract.auth.resendVerificationEmail,
-  updatePassword: contract.auth.updatePassword,
 });
 
 const refreshRoutes = c.router({
@@ -76,15 +79,20 @@ export class AuthController {
         await this.authService.resendVerificationEmail(user);
         return { status: 200 as const, body: {} };
       },
-      updatePassword: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.authService.updatePassword(user, body),
-      }),
     });
   }
 
+  @TsRestHandler(contract.auth.updatePassword)
+  @UseGuards(BearerAuthGuard)
+  async updatePasswordHandler(@CurrentUser() user: User) {
+    return tsRestHandler(contract.auth.updatePassword, async ({ body }) => ({
+      status: 200 as const,
+      body: await this.authService.updatePassword(user, body),
+    }));
+  }
+
   @TsRestHandler(refreshRoutes)
-  @UseGuards(RefreshGuard)
+  @UseGuards(BearerRefreshGuard)
   async refreshHandler(@CurrentAuthSession() authSession: AuthSession) {
     return tsRestHandler(refreshRoutes, {
       refresh: async () => ({
