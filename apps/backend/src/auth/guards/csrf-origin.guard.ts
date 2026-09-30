@@ -14,9 +14,42 @@ import { AuthCookieService } from '../services/auth-cookie.service';
 
 const safeMethods: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-const cookieAuthRoutes: ReadonlySet<unknown> = new Set<unknown>(
-  Object.values(contract.auth.cookie),
+interface RouteSignatureInput {
+  method: string;
+  path: string;
+}
+
+function routeSignature(route: RouteSignatureInput): string {
+  return `${route.method} ${route.path}`;
+}
+
+const cookieAuthRouteSignatures: ReadonlySet<string> = new Set(
+  Object.values(contract.auth.cookie).map(routeSignature),
 );
+
+function readResolvedRoute(
+  tsRestRouteMetadata: unknown,
+): RouteSignatureInput | undefined {
+  if (
+    typeof tsRestRouteMetadata !== 'object' ||
+    tsRestRouteMetadata === null ||
+    !('appRoute' in tsRestRouteMetadata)
+  ) {
+    return undefined;
+  }
+  const { appRoute } = tsRestRouteMetadata;
+  if (
+    typeof appRoute !== 'object' ||
+    appRoute === null ||
+    !('method' in appRoute) ||
+    !('path' in appRoute) ||
+    typeof appRoute.method !== 'string' ||
+    typeof appRoute.path !== 'string'
+  ) {
+    return undefined;
+  }
+  return { method: appRoute.method, path: appRoute.path };
+}
 
 @Injectable()
 export class CsrfOriginGuard implements CanActivate {
@@ -61,11 +94,11 @@ export class CsrfOriginGuard implements CanActivate {
       TsRestAppRouteMetadataKey,
       context.getHandler(),
     );
+    const resolvedRoute: RouteSignatureInput | undefined =
+      readResolvedRoute(tsRestRouteMetadata);
     return (
-      typeof tsRestRouteMetadata === 'object' &&
-      tsRestRouteMetadata !== null &&
-      'appRoute' in tsRestRouteMetadata &&
-      cookieAuthRoutes.has(tsRestRouteMetadata.appRoute)
+      resolvedRoute !== undefined &&
+      cookieAuthRouteSignatures.has(routeSignature(resolvedRoute))
     );
   }
 }

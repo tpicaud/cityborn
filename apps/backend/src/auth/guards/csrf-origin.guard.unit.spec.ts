@@ -3,7 +3,7 @@ import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { type ExecutionContext, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { AppRoute } from '@ts-rest/core';
+import { type AppRoute, initContract } from '@ts-rest/core';
 import { TsRestAppRouteMetadataKey } from '@ts-rest/nest';
 import type { Request } from 'express';
 import type { HttpConfig, RuntimeConfig } from '../../config/config.module';
@@ -153,6 +153,21 @@ describe('CsrfOriginGuard.canActivate', () => {
         path,
         headers: {},
         appRoute: contract.auth.cookie.signIn,
+      }),
+    );
+  });
+
+  it('rejects a cookie route regrouped by a controller router without origin', () => {
+    const regroupedCookieSignIn: AppRoute = initContract().router({
+      signIn: contract.auth.cookie.signIn,
+    }).signIn;
+
+    expectCsrfRejection(
+      buildContext({
+        method: 'POST',
+        path: '/auth/cookie/sign-in',
+        headers: {},
+        appRoute: regroupedCookieSignIn,
       }),
     );
   });
