@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  type CategoryTree,
   type GameConfig,
   type Guess,
   type PlayerId,
@@ -11,24 +10,23 @@ import {
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { useMultiSession } from '@cityborn/client/session';
+import { useCategoryTrees, useMultiSession } from '@cityborn/client/session';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
+import { fetchCategoryTrees } from '@/lib/api/category';
+import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
-import { sessionApi } from '@/lib/sessionApi';
 import { createSocketConnection } from '@/lib/socket';
 
-export default function MultiSessionComponent({
-  categoryTrees,
-}: {
-  categoryTrees: CategoryTree[];
-}) {
+export default function MultiSessionComponent() {
   const { user } = useAuth();
   const { invokeError } = useError();
   const navigation = useNavigation();
+  const { categoryTrees, isLoading: isLoadingCategoryTrees } =
+    useCategoryTrees(fetchCategoryTrees);
   const { sessionID: rawSessionID } = useParams<{ sessionID: string }>();
   const sessionID = SessionIdSchema.parse(rawSessionID);
 
@@ -43,10 +41,6 @@ export default function MultiSessionComponent({
     navigation,
     createSocket: createSocketConnection,
   });
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
 
   const handleJoinSession = async (playerID: string) => {
     try {
@@ -81,10 +75,6 @@ export default function MultiSessionComponent({
       invokeError(error, 'Une erreur est survenue');
     }
   };
-
-  ///////////////////////
-  // Game interactions //
-  ///////////////////////
 
   const handleStartGame = async () => {
     try {
@@ -134,12 +124,15 @@ export default function MultiSessionComponent({
     }
   };
 
-  ///////////////
-  // Rendering //
-  ///////////////
-
   if (!multiSession.session)
     return <LoadingComponent message="Chargement de la session" />;
+
+  if (
+    multiSession.session.status !== SessionStatus.IN_GAME &&
+    isLoadingCategoryTrees
+  ) {
+    return <LoadingComponent message="Chargement des catégories" />;
+  }
 
   return (
     <>

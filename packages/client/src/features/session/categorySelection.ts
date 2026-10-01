@@ -10,6 +10,11 @@ import type {
 import { useEffect, useMemo, useState } from 'react';
 import { useError } from '../../shared/errorContext';
 
+export type CategoryTreesState = {
+  categoryTrees: CategoryTree[];
+  isLoading: boolean;
+};
+
 export function toCategory(node: CategoryTree): Category {
   return {
     id: node.id,
@@ -29,38 +34,56 @@ export function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
 
 export function useCategoryTrees(
   fetchCategoryTrees: () => Promise<ApiResult<CategoryTree[]>>,
-): CategoryTree[] {
+): CategoryTreesState {
   const { invokeError } = useError();
   const [categoryTrees, setCategoryTrees] = useState<CategoryTree[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const loadCategoryTrees = async () => {
-      const result = await fetchCategoryTrees();
-      if (!result.ok) return invokeError(result.error);
-      setCategoryTrees(result.data);
+    let isMounted: boolean = true;
+
+    const loadCategoryTrees = async (): Promise<void> => {
+      try {
+        const result: ApiResult<CategoryTree[]> = await fetchCategoryTrees();
+        if (!isMounted) return;
+        if (!result.ok) {
+          invokeError(result.error);
+          return;
+        }
+        setCategoryTrees(result.data);
+      } catch (error: unknown) {
+        if (isMounted) invokeError(error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
+
     loadCategoryTrees();
+
+    return () => {
+      isMounted = false;
+    };
   }, [fetchCategoryTrees, invokeError]);
 
-  return categoryTrees;
+  return { categoryTrees, isLoading };
 }
 
-export interface CategorySelectionOptions {
+export type CategorySelectionOptions = {
   categoryTrees: CategoryTree[];
   session: Session;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   startGame: () => Promise<void>;
-}
+};
 
-export interface CategorySelection {
+export type CategorySelection = {
   selectedPath: CategoryTree[];
   currentNodes: CategoryTree[];
   currentName: string | undefined;
   openCategory: (node: CategoryTree) => void;
   goBack: () => void;
   playCategory: (node: CategoryTree) => Promise<void>;
-}
+};
 
 export function useCategorySelection({
   categoryTrees,

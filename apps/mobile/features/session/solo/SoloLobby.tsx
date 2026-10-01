@@ -10,12 +10,12 @@ import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { fetchCategoryTrees } from '@/lib/api/category';
 
-interface SoloLobbyProps {
+type SoloLobbyProps = {
   session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
-}
+};
 
 export function SoloLobby({
   session,
@@ -23,7 +23,7 @@ export function SoloLobby({
   handleUpdateGameConfig,
   handleStartGame,
 }: SoloLobbyProps) {
-  const categoryTrees = useCategoryTrees(fetchCategoryTrees);
+  const { categoryTrees } = useCategoryTrees(fetchCategoryTrees);
   const {
     selectedPath,
     currentNodes,

@@ -19,14 +19,14 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { fetchCategoryTrees } from '@/lib/api/category';
 
-interface MultiLobbyProps {
+type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
   handleJoinSession: (playerID: string) => Promise<void>;
-}
+};
 
 export function MultiLobby({
   localPlayerID,
@@ -38,7 +38,7 @@ export function MultiLobby({
 }: MultiLobbyProps) {
   const [copied, setCopied] = useState(false);
   const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
-  const categoryTrees = useCategoryTrees(fetchCategoryTrees);
+  const { categoryTrees } = useCategoryTrees(fetchCategoryTrees);
   const {
     selectedPath,
     currentNodes,

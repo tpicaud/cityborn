@@ -39,7 +39,9 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
    Le frontend est disponible sur `http://localhost:3000` et le back-office sur
    `http://localhost:3001`. Ces ports viennent de la variable `PORT` du `.env`
-   de chaque application.
+   de chaque application. Le navigateur appelle directement le backend Nest à
+   l'URL `NEXT_PUBLIC_REST_BACKEND_URL` configurée dans
+   `apps/frontend/.env` (`http://localhost:4000` par défaut).
 
 3. Arrêter les ressources locales avec `pnpm db:stop`.
 

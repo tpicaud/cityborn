@@ -1,38 +1,28 @@
 'use client';
 
-import {
-  type CategoryTree,
-  type GameConfig,
-  type Guess,
-  PlayerIdSchema,
-} from '@cityborn/api';
+import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { useSoloSession } from '@cityborn/client/session';
+import { useCategoryTrees, useSoloSession } from '@cityborn/client/session';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
+import { fetchCategoryTrees } from '@/lib/api/category';
+import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
-import { sessionApi } from '@/lib/sessionApi';
 
-export default function SoloSessionComponent({
-  categoryTrees,
-}: {
-  categoryTrees: CategoryTree[];
-}) {
+export default function SoloSessionComponent() {
   const { user } = useAuth();
   const { invokeError } = useError();
   const navigation = useNavigation();
+  const { categoryTrees, isLoading: isLoadingCategoryTrees } =
+    useCategoryTrees(fetchCategoryTrees);
   const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
   const soloSession = useSoloSession({
     localPlayerID,
     sessionApi,
     navigation,
   });
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
 
   const handleJoinSession = async () => {};
 
@@ -43,10 +33,6 @@ export default function SoloSessionComponent({
       invokeError(error, 'Une erreur est survenue');
     }
   };
-
-  ///////////////////////
-  // Game interactions //
-  ///////////////////////
 
   const handleStartGame = async () => {
     try {
@@ -96,10 +82,6 @@ export default function SoloSessionComponent({
     }
   };
 
-  ///////////////
-  // Rendering //
-  ///////////////
-
   if (!soloSession.session)
     return <LoadingComponent message="Chargement de la session" />;
 
@@ -117,6 +99,10 @@ export default function SoloSessionComponent({
         handleExitGame={handleExitGame}
       />
     );
+  }
+
+  if (isLoadingCategoryTrees) {
+    return <LoadingComponent message="Chargement des catégories" />;
   }
 
   return (

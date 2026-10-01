@@ -1,15 +1,16 @@
 'use client';
 
 import { useError } from '@cityborn/client';
-import { useSignInForm } from '@cityborn/client/auth';
+import { useAuth, useSignInForm } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { frontendClientConfig } from '@/config/client';
-import { signIn, signInWithGoogle } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
 import Button from '../ui/buttons/Button';
 
 export const SignInComponent = () => {
   const { invokeError } = useError();
+  const { setUser } = useAuth();
   const [isGoogleSignInFormSubmitting, setIsGoogleSignInFormSubmitting] =
     useState(false);
   const {
@@ -24,9 +25,11 @@ export const SignInComponent = () => {
     }) => {
       try {
         setIsGoogleSignInFormSubmitting(true);
-        const result = await signInWithGoogle({ idToken: response.credential });
+        const result = await authApi.signInWithGoogle({
+          idToken: response.credential,
+        });
         if (!result.ok) return invokeError(result.error);
-        window.location.reload();
+        setUser(result.data);
       } finally {
         setIsGoogleSignInFormSubmitting(false);
       }
@@ -42,13 +45,13 @@ export const SignInComponent = () => {
         { theme: 'outline', size: 'large', text: 'signin_with' },
       );
     }
-  }, [invokeError]);
+  }, [invokeError, setUser]);
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await signIn(values);
+    const result = await authApi.signIn(values);
 
     if (result.ok) {
-      window.location.reload();
+      setUser(result.data);
       return;
     }
 
