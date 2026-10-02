@@ -78,7 +78,7 @@
     },
     "cityborn-frontend#build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"],
+      "outputs": ["out/**", ".next/**"],
       "env": [
         "NEXT_PUBLIC_GOOGLE_MAP_API_KEY",
         "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
@@ -90,20 +90,12 @@
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
-        "NODE_ENV",
         "PORT",
-        "DOMAIN_NAME",
-        "REST_BACKEND_URL",
         "NEXT_PUBLIC_GOOGLE_MAP_API_KEY",
         "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
         "NEXT_PUBLIC_REST_BACKEND_URL",
         "NEXT_PUBLIC_WEBSOCKET_BACKEND_URL"
       ]
-    },
-    "cityborn-frontend#start": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "passThroughEnv": ["NODE_ENV", "DOMAIN_NAME", "REST_BACKEND_URL"]
     },
     "cityborn-back-office#build": {
       "dependsOn": ["^build"],

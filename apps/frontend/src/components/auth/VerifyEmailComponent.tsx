@@ -5,19 +5,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
+import { type ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { authApi } from '@/lib/api/auth';
 import Button from '../ui/buttons/Button';
 
-type VerifyEmailComponentProps = {
-  verificationToken: string;
-};
-
 type VerificationStatus = 'loading' | 'success' | 'error';
 
-export function VerifyEmailComponent({
-  verificationToken,
-}: VerifyEmailComponentProps) {
+export function VerifyEmailComponent() {
+  const searchParams: ReadonlyURLSearchParams = useSearchParams();
+  const verificationToken: string =
+    searchParams.get('verification_token') ?? searchParams.get('token') ?? '';
   const { refreshUser } = useAuth();
   const hasVerified = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');

@@ -5,15 +5,19 @@ import {
   type Guess,
   type PlayerId,
   PlayerIdSchema,
-  SessionIdSchema,
+  type SessionId,
   SessionStatus,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { useCategoryTrees } from '@cityborn/client/category';
-import { useMultiSession } from '@cityborn/client/session';
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import type { Navigation } from '@cityborn/client/platform';
+import {
+  sessionIdFromMultiSessionPath,
+  useMultiSession,
+} from '@cityborn/client/session';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
@@ -23,14 +27,33 @@ import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import { createSocketConnection } from '@/lib/socket';
 
+const sessionLoadingMessage = 'Chargement de la session';
+
+type MultiSessionProps = {
+  sessionID: SessionId;
+  navigation: Navigation;
+};
+
 export default function MultiSessionComponent() {
+  const navigation: Navigation = useNavigation();
+  const sessionID: SessionId | null = sessionIdFromMultiSessionPath(
+    usePathname(),
+  );
+
+  useEffect(() => {
+    if (!sessionID) navigation.returnTo('/');
+  }, [sessionID, navigation]);
+
+  if (!sessionID) return <LoadingComponent message={sessionLoadingMessage} />;
+
+  return <MultiSession sessionID={sessionID} navigation={navigation} />;
+}
+
+function MultiSession({ sessionID, navigation }: MultiSessionProps) {
   const { user } = useAuth();
   const { invokeError } = useError();
-  const navigation = useNavigation();
   const { categoryTrees, isLoading: isLoadingCategoryTrees } =
     useCategoryTrees(categoryApi);
-  const { sessionID: rawSessionID } = useParams<{ sessionID: string }>();
-  const sessionID = SessionIdSchema.parse(rawSessionID);
 
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
     user?.username,
@@ -127,7 +150,7 @@ export default function MultiSessionComponent() {
   };
 
   if (!multiSession.session)
-    return <LoadingComponent message="Chargement de la session" />;
+    return <LoadingComponent message={sessionLoadingMessage} />;
 
   if (
     multiSession.session.status !== SessionStatus.IN_GAME &&

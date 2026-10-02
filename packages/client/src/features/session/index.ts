@@ -9,6 +9,7 @@ export {
   type JoinSessionFormValues,
   type SessionLauncher,
   type SessionLauncherOptions,
+  sessionIdFromMultiSessionPath,
   useJoinSessionForm,
   useSessionLauncher,
 } from './sessionLauncher';

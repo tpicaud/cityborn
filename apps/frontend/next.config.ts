@@ -1,33 +1,22 @@
 import type { NextConfig } from 'next';
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
+export default function createNextConfig(phase: string): NextConfig {
+  const nextConfig: NextConfig = {
+    output: 'export',
+    images: { unoptimized: true },
+    reactStrictMode: false,
+    transpilePackages: ['@cityborn/api', '@cityborn/core', '@cityborn/client'],
+    compiler: {
+      removeConsole: process.env.NODE_ENV === 'production',
+    },
+  };
 
-const nextConfig: NextConfig = {
-  reactStrictMode: false,
-  transpilePackages: ['@cityborn/api', '@cityborn/core', '@cityborn/client'],
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
-          },
-        ],
-      },
-    ];
-  },
-};
+  if (phase !== PHASE_DEVELOPMENT_SERVER) return nextConfig;
 
-export default nextConfig;
+  return {
+    ...nextConfig,
+    rewrites: async () => [
+      { source: '/session/multi/:sessionId', destination: '/session/multi' },
+    ],
+  };
+}
