@@ -14,6 +14,7 @@ export type ClientInfo = {
 };
 
 export type AuthFetchOptions = {
+  forwardedFor?: string;
   onResponseHeaders?: (headers: Headers) => void;
   client?: ClientInfo;
   getVisitorId?: () => string | null | Promise<string | null>;
@@ -50,6 +51,8 @@ export class AuthFetch {
     this.authTransport = authTransport;
     this.onResponseHeaders = options.onResponseHeaders;
     this.baseHeaders = buildClientHeaders(options.client);
+    if (options.forwardedFor)
+      this.baseHeaders['x-forwarded-for'] = options.forwardedFor;
     this.getVisitorId = options.getVisitorId;
   }
 

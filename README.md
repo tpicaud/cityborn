@@ -90,6 +90,16 @@ pnpm dev:mobile
 
 En cas d'échec de connexion : vérifier que le téléphone et la machine sont sur le même réseau et que les ports `8081` (Metro) et `4000` (backend) sont accessibles (pare-feu, WSL).
 
+Pour tester la réinitialisation du mot de passe depuis le mobile, connecter le téléphone au même réseau local que la machine de développement et configurer `FRONTEND_URL=http://<local_ip>:3000` dans `apps/backend/.env`. Lancer également le frontend dans un autre terminal en remplaçant `<local_ip>` par l’adresse IP locale de cette machine :
+
+```bash
+pnpm --dir apps/frontend dev --hostname <local_ip> --port 3000
+```
+
+L’option `--hostname` permet à Next.js d’autoriser cette adresse pour ses ressources de développement. Ouvrir le frontend via `http://<local_ip>:3000` sur ordinateur comme sur téléphone : le serveur écoute sur cette adresse. Si le port 3000 est occupé, choisir un autre port et adapter `FRONTEND_URL`. Après modification de `FRONTEND_URL`, redémarrer le backend et demander un nouveau lien.
+
+Les e-mails utilisent la configuration Brevo existante. Voir la [recette de réinitialisation du mot de passe](docs/password-reset.md).
+
 ## Architecture
 
 ```text

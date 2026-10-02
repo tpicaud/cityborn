@@ -11,6 +11,7 @@ import TextInput from '@/components/ui/TextInput';
 import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInComponent = () => {
   const router = useRouter();
@@ -93,10 +94,9 @@ export const SignInComponent = () => {
                 </Text>
               )}
             </View>
-
-            <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
-              {errorMessage}
-            </Text>
+          </View>
+          <View className="w-full items-center py-6">
+            <RequestPasswordResetDialog />
           </View>
           <Button
             variant="filled"
@@ -106,6 +106,11 @@ export const SignInComponent = () => {
             label="SE CONNECTER"
             onPress={onSubmit}
           />
+          {errorMessage && (
+            <Text className="mt-3 w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
+              {errorMessage}
+            </Text>
+          )}
           <Button
             variant="default"
             label="Pas de compte ? Inscris-toi ici !"
