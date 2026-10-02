@@ -1,21 +1,14 @@
 'use client';
 
 import type {
-  ApiResult,
   Category,
   CategoryTree,
   GameConfig,
   Session,
 } from '@cityborn/api';
 import { useEffect, useMemo, useState } from 'react';
-import { useError } from '../../shared/errorContext';
 
-export type CategoryTreesState = {
-  categoryTrees: CategoryTree[];
-  isLoading: boolean;
-};
-
-export function toCategory(node: CategoryTree): Category {
+function toCategory(node: CategoryTree): Category {
   return {
     id: node.id,
     name: node.name,
@@ -25,47 +18,11 @@ export function toCategory(node: CategoryTree): Category {
   };
 }
 
-export function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
+function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
   return nodes.flatMap((node) => [
     toCategory(node),
     ...flattenCategoryTree(node.children),
   ]);
-}
-
-export function useCategoryTrees(
-  fetchCategoryTrees: () => Promise<ApiResult<CategoryTree[]>>,
-): CategoryTreesState {
-  const { invokeError } = useError();
-  const [categoryTrees, setCategoryTrees] = useState<CategoryTree[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    let isMounted: boolean = true;
-
-    const loadCategoryTrees = async (): Promise<void> => {
-      try {
-        const result: ApiResult<CategoryTree[]> = await fetchCategoryTrees();
-        if (!isMounted) return;
-        if (!result.ok) {
-          invokeError(result.error);
-          return;
-        }
-        setCategoryTrees(result.data);
-      } catch (error: unknown) {
-        if (isMounted) invokeError(error);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    loadCategoryTrees();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fetchCategoryTrees, invokeError]);
-
-  return { categoryTrees, isLoading };
 }
 
 export type CategorySelectionOptions = {

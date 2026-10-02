@@ -3,11 +3,12 @@
 import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
-import { useCategoryTrees, useSoloSession } from '@cityborn/client/session';
+import { useCategoryTrees } from '@cityborn/client/category';
+import { useSoloSession } from '@cityborn/client/session';
 import LoadingComponent from '@/components/others/LoadingComponent';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { fetchCategoryTrees } from '@/lib/api/category';
+import { categoryApi } from '@/lib/api/category';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
@@ -16,7 +17,7 @@ export default function SoloSessionComponent() {
   const { invokeError } = useError();
   const navigation = useNavigation();
   const { categoryTrees, isLoading: isLoadingCategoryTrees } =
-    useCategoryTrees(fetchCategoryTrees);
+    useCategoryTrees(categoryApi);
   const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
   const soloSession = useSoloSession({
     localPlayerID,

@@ -31,11 +31,11 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
   - `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
   - `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
 
-`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Le frontend et le mobile créent leur `contractClient` dans `lib/api/contractClient.ts`. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
+`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Le frontend et le mobile créent leur `contractClient` dans `lib/api/contractClient.ts`. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createCategoryApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
 L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap affiche une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant. Placer `AuthProvider` sous `ErrorProvider` pour afficher ces erreurs.
 
-Les hooks de session et de profil reçoivent leurs ports `SessionApi` et `ProfileApi`. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
+Les hooks de catégories, de session et de profil reçoivent leurs ports `CategoryApi`, `SessionApi` et `ProfileApi`. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
 L'authentification propre au back-office reste locale tant qu'aucune migration n'est demandée.
 
@@ -55,6 +55,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 | `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), visitorId. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
+| `@cityborn/client/category` | `src/features/category/` | Port `CategoryApi`, factory `createCategoryApi` et chargement des arbres de catégories (`useCategoryTrees`). |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |

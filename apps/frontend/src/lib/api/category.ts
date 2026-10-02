@@ -1,6 +1,4 @@
-import { type ApiResult, type CategoryTree, toApiResult } from '@cityborn/api';
+import { type CategoryApi, createCategoryApi } from '@cityborn/client/category';
 import { contractClient } from './contractClient';
 
-export async function fetchCategoryTrees(): Promise<ApiResult<CategoryTree[]>> {
-  return toApiResult(await contractClient.category.getCategoryTrees({}));
-}
+export const categoryApi: CategoryApi = createCategoryApi(contractClient);
