@@ -90,7 +90,7 @@ export default function Profile() {
     await authApi.signOut();
     setUser(null);
     setDeleteAccountModalOpen(false);
-    router.replace('/');
+    router.navigate('/');
   };
 
   return (

@@ -100,7 +100,7 @@ export function useSoloSession({
 
   const exitGame = async () => {
     if (!sessionRef.current?.currentGame) return;
-    navigation.replace('/');
+    navigation.returnTo('/');
   };
 
   return {

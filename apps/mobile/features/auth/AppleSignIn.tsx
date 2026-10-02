@@ -41,7 +41,7 @@ export const SignInWithAppleButton = () => {
         return;
       }
       setUser(result.data);
-      router.push('/');
+      router.dismissTo('/');
     } catch (e) {
       handleAppleSignInError(e);
     }

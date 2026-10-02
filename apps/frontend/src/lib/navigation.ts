@@ -10,7 +10,7 @@ export function useNavigation(): Navigation {
   return useMemo(
     () => ({
       push: (path: string) => router.push(path),
-      replace: (path: string) => router.replace(path),
+      returnTo: (path: string) => router.replace(path),
       back: () => router.back(),
     }),
     [router],

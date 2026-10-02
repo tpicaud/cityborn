@@ -38,7 +38,7 @@ export const SignInWithGoogleButton = () => {
           return;
         }
         setUser(result.data);
-        router.push('/');
+        router.dismissTo('/');
       }
     } catch (error) {
       console.error(error);

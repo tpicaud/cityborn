@@ -174,7 +174,7 @@ export function useMultiSession({
   };
 
   const exitGame = async () => {
-    navigation.replace('/');
+    navigation.returnTo('/');
   };
 
   return {
