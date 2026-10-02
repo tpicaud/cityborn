@@ -9,13 +9,13 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useError } from '../../shared/errorContext';
 import type {
   SocketConnection,
-  SocketFactory,
   SocketListenEvent,
   SocketListenEvents,
-} from '../../platform/socket';
-import { useError } from '../../shared/errorContext';
+} from '../../ws/socketConnection';
+import type { SocketFactory } from '../../ws/socketFactory';
 import {
   superviseWsConnection,
   type WsConnection,
@@ -45,7 +45,7 @@ export type SessionSocket = {
   ) => void;
   off: <Name extends SocketListenEvent>(
     event: Name,
-    listener?: SocketListenEvents[Name],
+    listener: SocketListenEvents[Name],
   ) => void;
 };
 
@@ -157,7 +157,7 @@ export function useSocket({
   const off = useCallback(
     <Name extends SocketListenEvent>(
       event: Name,
-      listener?: SocketListenEvents[Name],
+      listener: SocketListenEvents[Name],
     ) => {
       socket?.off(event, listener);
     },

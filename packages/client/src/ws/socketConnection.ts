@@ -33,10 +33,8 @@ export interface SocketConnection {
   ): void;
   off<Name extends SocketListenEvent>(
     event: Name,
-    listener?: SocketListenEvents[Name],
+    listener: SocketListenEvents[Name],
   ): void;
   onReconnection(event: SocketReconnectionEvent, listener: () => void): void;
   offReconnection(event: SocketReconnectionEvent, listener: () => void): void;
 }
-
-export type SocketFactory = () => Promise<SocketConnection>;

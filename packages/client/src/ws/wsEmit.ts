@@ -13,7 +13,7 @@ import {
   wsClientEventDefinitions,
   wsEmitArgs,
 } from '@cityborn/api';
-import type { SocketConnection } from '../platform/socket';
+import type { SocketConnection } from './socketConnection';
 
 export const WS_ACK_TIMEOUT_MS = 10_000;
 

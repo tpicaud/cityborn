@@ -7,7 +7,7 @@ import {
   SessionIdSchema,
   sessionWsEvent,
 } from '@cityborn/api';
-import type { SocketConnection } from '../platform/socket';
+import type { SocketConnection } from './socketConnection';
 import { createWsEmit, type WsEmit } from './wsEmit';
 
 const sessionID: SessionId = SessionIdSchema.parse('s1');
