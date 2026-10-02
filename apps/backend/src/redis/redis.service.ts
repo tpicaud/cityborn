@@ -31,6 +31,21 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async setIfAbsent(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const reply: 'OK' | null = await this.redisClient.set(
+      key,
+      value,
+      'EX',
+      ttlSeconds,
+      'NX',
+    );
+    return reply === 'OK';
+  }
+
   async get(key: string): Promise<string | null> {
     return await this.redisClient.get(key);
   }

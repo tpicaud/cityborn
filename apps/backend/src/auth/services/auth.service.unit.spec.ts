@@ -17,6 +17,7 @@ import type { WideEventService } from '../../common/wide-event/wide-event.servic
 import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
 import type { MailService } from '../../mail/mail.service';
+import type { RedisService } from '../../redis/redis.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
 import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
@@ -74,7 +75,12 @@ function buildAuthService() {
     createMock<GoogleIdentityClient>();
   const authService: AuthService = new AuthService(
     userService,
-    new AuthTokenService(jwtService, authConfig, userService),
+    new AuthTokenService(
+      jwtService,
+      authConfig,
+      userService,
+      createMock<RedisService>(),
+    ),
     httpConfig,
     eventService,
     mailService,

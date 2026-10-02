@@ -61,6 +61,27 @@ describe('RedisService with Redis', () => {
     });
   });
 
+  describe('setIfAbsent', () => {
+    it('writes only the first value and applies its TTL', async () => {
+      const firstWrite: boolean = await redisService.setIfAbsent(
+        'integration:once',
+        'first',
+        10,
+      );
+      const secondWrite: boolean = await redisService.setIfAbsent(
+        'integration:once',
+        'second',
+        10,
+      );
+
+      expect(firstWrite).toBe(true);
+      expect(secondWrite).toBe(false);
+      expect(await redisService.get('integration:once')).toBe('first');
+      expect(await redis.ttl('integration:once')).toBeGreaterThan(0);
+      expect(await redis.ttl('integration:once')).toBeLessThanOrEqual(10);
+    });
+  });
+
   describe('expire', () => {
     it('expires a key immediately when requested', async () => {
       await redisService.setJSON('integration:expiring', { value: true });
