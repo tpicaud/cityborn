@@ -116,6 +116,7 @@ jobs:
     needs:
       - get-tag
       - build-and-deploy-web-prod
+    if: ${{ !failure() && !cancelled() }}
     permissions:
       contents: write
     uses: ./.github/workflows/generate-release.yml
@@ -129,6 +130,7 @@ jobs:
   notify-discord:
     name: Notify Discord (Prod release)
     needs: [get-tag, create-release]
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Notify Discord
