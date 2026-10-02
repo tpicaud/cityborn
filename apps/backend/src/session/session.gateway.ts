@@ -1,6 +1,7 @@
 import {
   ErrorCode,
   type Session,
+  type SessionJoinAck,
   sessionWsChannel,
   sessionWsServerEvent,
   type User,
@@ -27,7 +28,7 @@ import {
   type ConnectionInfo,
   ConnectionRegistryService,
 } from '../connection-registry/connection-registry.service';
-import { SessionService } from './session.service';
+import { type JoinedSession, SessionService } from './session.service';
 
 @WebSocketGateway()
 @UseFilters(DefaultExceptionFilter)
@@ -83,13 +84,14 @@ export class SessionGateway implements OnGatewayDisconnect {
       sessionID,
       playerID,
     }: WsPayload<typeof sessionWsChannel, 'join'>,
-  ): Promise<void> {
+  ): Promise<SessionJoinAck> {
     this.wideEventService.enrichBusinessContext({
       sessionId: sessionID,
       playerId: playerID,
     });
 
-    const session = await this.sessionService.join(sessionID, playerID, user);
+    const { session, reconnectToken }: JoinedSession =
+      await this.sessionService.join(sessionID, playerID, user);
     await this.connectionRegistryService.register(
       socket.id,
       playerID,
@@ -99,6 +101,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
     await socket.join(session.id);
     this.broadcastSession(session);
+    return { reconnectToken };
   }
 
   @WsMessage(sessionWsChannel, 'updateHost')
@@ -236,6 +239,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     @MessageBody() {
       sessionID,
       playerID,
+      reconnectToken,
     }: WsPayload<typeof sessionWsChannel, 'reconnect'>,
   ): Promise<void> {
     this.wideEventService.enrichBusinessContext({
@@ -246,6 +250,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     const session = await this.sessionService.reconnectPlayer(
       sessionID,
       playerID,
+      reconnectToken,
       user,
     );
     this.enrichGame(session);

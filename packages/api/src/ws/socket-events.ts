@@ -78,6 +78,11 @@ export type WsAckOf<Name extends WsClientEventName> =
     ? WsAck<Ack>
     : WsAck;
 
+export type WsAckSuccessOf<Name extends WsClientEventName> = Extract<
+  WsAckOf<Name>,
+  { success: true }
+>;
+
 export type WsAckCallback<Name extends WsClientEventName> = (
   ack: WsAckOf<Name>,
 ) => void;

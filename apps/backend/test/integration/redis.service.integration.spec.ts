@@ -71,6 +71,15 @@ describe('RedisService with Redis', () => {
     });
   });
 
+  describe('hget', () => {
+    it('reads a hash field written by hset', async () => {
+      await redisService.hset('integration:hash', 'host', 'value');
+
+      expect(await redisService.hget('integration:hash', 'host')).toBe('value');
+      expect(await redisService.hget('integration:hash', 'missing')).toBeNull();
+    });
+  });
+
   describe('del', () => {
     it('deletes a stored value', async () => {
       await redisService.set('integration:deleting', 'value');

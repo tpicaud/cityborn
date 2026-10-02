@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { ApiError, GameConfig, PlayerId, SessionId } from '@cityborn/api';
+import type {
+  ApiError,
+  GameConfig,
+  PlayerId,
+  SessionId,
+  SessionReconnectToken,
+  WsAckSuccessOf,
+} from '@cityborn/api';
 import {
   ErrorCode,
   PlayerIdSchema,
   SessionIdSchema,
+  SessionReconnectTokenSchema,
   sessionWsEvent,
 } from '@cityborn/api';
 import type { SocketConnection } from './socketConnection';
@@ -54,6 +62,36 @@ test('sends the body before the callback', async () => {
   assert.equal(event, 'session:join');
   assert.deepEqual(body, { sessionID, playerID });
   assert.equal(typeof respond, 'function');
+});
+
+test('resolves with the data acknowledged by the server', async () => {
+  const reconnectToken: SessionReconnectToken =
+    SessionReconnectTokenSchema.parse('reconnect-token');
+  const { connection } = createConnection({ success: true, reconnectToken });
+  const emit: WsEmit = createWsEmit(connection);
+
+  const joinAck: WsAckSuccessOf<typeof sessionWsEvent.join> = await emit(
+    sessionWsEvent.join,
+    { sessionID, playerID },
+  );
+
+  assert.deepEqual(joinAck, { success: true, reconnectToken });
+});
+
+test('rejects acknowledged data outside the contract', async () => {
+  const { connection } = createConnection({
+    success: true,
+    reconnectToken: '',
+  });
+  const emit: WsEmit = createWsEmit(connection);
+
+  await assert.rejects(
+    () => emit(sessionWsEvent.join, { sessionID, playerID }),
+    (rejected: ApiError) => {
+      assert.equal(rejected.code, ErrorCode.UNKNOWN_ERROR);
+      return true;
+    },
+  );
 });
 
 test('emits without a body when the command takes none', async () => {

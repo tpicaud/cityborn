@@ -6,6 +6,8 @@ import type {
   PlayerId,
   Session,
   SessionId,
+  SessionReconnectToken,
+  WsAckSuccessOf,
 } from '@cityborn/api';
 import {
   SessionStatus,
@@ -45,6 +47,11 @@ export type MultiSessionController = SessionController & {
   kickPlayer: (playerToKick: PlayerId) => Promise<void>;
 };
 
+type JoinedPlayer = {
+  playerID: PlayerId;
+  reconnectToken: SessionReconnectToken | undefined;
+};
+
 export function useMultiSession({
   localPlayerID,
   sessionID,
@@ -54,16 +61,19 @@ export function useMultiSession({
 }: MultiSessionOptions): MultiSessionController {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
-  const joinedPlayerID: RefObject<PlayerId | null> = useRef<PlayerId | null>(
-    null,
-  );
+  const joinedPlayer: RefObject<JoinedPlayer | null> =
+    useRef<JoinedPlayer | null>(null);
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
 
   const restoreSession = useCallback(
     async (emit: WsEmit) => {
-      const playerID: PlayerId | null = joinedPlayerID.current;
-      if (!playerID) return;
-      await emit(sessionWsEvent.reconnect, { sessionID, playerID });
+      const player: JoinedPlayer | null = joinedPlayer.current;
+      if (!player) return;
+      await emit(sessionWsEvent.reconnect, {
+        sessionID,
+        playerID: player.playerID,
+        reconnectToken: player.reconnectToken,
+      });
     },
     [sessionID],
   );
@@ -99,8 +109,14 @@ export function useMultiSession({
         );
 
       joinAttempted.current = true;
-      await emit(sessionWsEvent.join, { sessionID: session.id, playerID });
-      joinedPlayerID.current = playerID;
+      const joinAck: WsAckSuccessOf<typeof sessionWsEvent.join> = await emit(
+        sessionWsEvent.join,
+        { sessionID: session.id, playerID },
+      );
+      joinedPlayer.current = {
+        playerID,
+        reconnectToken: joinAck.reconnectToken,
+      };
     },
     [session, emit],
   );

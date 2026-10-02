@@ -9,6 +9,10 @@ import { GameConfigSchema, GameSchema } from './game.schema';
 import { SessionPlayerSchema } from './player.schema';
 
 export const CreateSessionSchema = z.object({ mode: SessionModeSchema });
+export const SessionReconnectTokenSchema = z
+  .string()
+  .min(1)
+  .brand<'SessionReconnectToken'>();
 export const SessionHostIdSchema = z
   .string()
   .refine(
@@ -28,3 +32,4 @@ export const SessionSchema = z.object({
 
 export type CreateSession = z.infer<typeof CreateSessionSchema>;
 export type Session = z.infer<typeof SessionSchema>;
+export type SessionReconnectToken = z.infer<typeof SessionReconnectTokenSchema>;

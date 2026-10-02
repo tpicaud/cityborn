@@ -50,6 +50,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return JSON.parse(raw) as T;
   }
 
+  async hset(key: string, field: string, value: string): Promise<void> {
+    await this.redisClient.hset(key, field, value);
+  }
+
+  async hget(key: string, field: string): Promise<string | null> {
+    return await this.redisClient.hget(key, field);
+  }
+
   async expire(key: string, ttlSeconds: number): Promise<void> {
     await this.redisClient.expire(key, ttlSeconds);
   }

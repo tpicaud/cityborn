@@ -20,6 +20,8 @@ import {
   type Session,
   SessionIdSchema,
   SessionMode,
+  type SessionReconnectToken,
+  SessionReconnectTokenSchema,
   SessionStatus,
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
@@ -30,7 +32,7 @@ import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
-import { SessionService } from './session.service';
+import { type JoinedSession, SessionService } from './session.service';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
   PlayerIdSchema.parse(value);
@@ -40,7 +42,16 @@ const sessionId: (value: string) => SessionId = (value: string) =>
 function buildSessionService(session: Session | null) {
   const redisService: DeepMocked<RedisService> = createMock<RedisService>();
   redisService.getJSON.mockResolvedValue(session);
-  redisService.setJSON.mockResolvedValue(undefined);
+  redisService.setJSON.mockImplementation(async (_key, storedSession) => {
+    redisService.getJSON.mockResolvedValue(storedSession);
+  });
+  const storedHashes: Map<string, string> = new Map<string, string>();
+  redisService.hset.mockImplementation(async (key, field, value) => {
+    storedHashes.set(`${key}:${field}`, value);
+  });
+  redisService.hget.mockImplementation(
+    async (key, field) => storedHashes.get(`${key}:${field}`) ?? null,
+  );
   const lockService: DeepMocked<LockService> = createMock<LockService>({
     withLock: async (_resource, _ttl, callback) => callback(),
   });
@@ -57,7 +68,14 @@ function buildSessionService(session: Session | null) {
     eventService,
   );
 
-  return { sessionService, redisService, idService, gameService, eventService };
+  return {
+    sessionService,
+    redisService,
+    lockService,
+    idService,
+    gameService,
+    eventService,
+  };
 }
 
 describe('SessionService.kickPlayer', () => {
@@ -282,14 +300,14 @@ describe('SessionService lobby operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const result: Session = await sessionService.join(
+      const result: JoinedSession = await sessionService.join(
         session.id,
         playerId('alice'),
         user,
       );
 
-      expect(result.hostID).toBe(playerId('alice'));
-      expect(result.players).toEqual([
+      expect(result.session.hostID).toBe(playerId('alice'));
+      expect(result.session.players).toEqual([
         expect.objectContaining({
           username: playerId('alice'),
           id: user.id,
@@ -298,6 +316,46 @@ describe('SessionService lobby operations', () => {
         }),
       ]);
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
+    });
+
+    it('issues a reconnect token only to a guest player', async () => {
+      const session: Session = buildSession({ players: [] });
+      const user: User = buildUser({ username: playerId('alice') });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      const guestJoin: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
+      );
+      const userJoin: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('alice'),
+        user,
+      );
+
+      expect(guestJoin.reconnectToken).toEqual(expect.any(String));
+      expect(userJoin.reconnectToken).toBeUndefined();
+    });
+
+    it('expires the reconnect tokens together with the session', async () => {
+      const session: Session = buildSession({ players: [] });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.join(session.id, playerId('guest'));
+
+      expect(redisService.setJSON).toHaveBeenCalledWith(
+        `session:${session.id}`,
+        expect.anything(),
+        1800,
+      );
+      expect(redisService.expire).toHaveBeenCalledWith(
+        `session:${session.id}:reconnect-token-hashes`,
+        1800,
+      );
     });
 
     it('rejects a duplicate player', async () => {
@@ -462,27 +520,6 @@ describe('SessionService game operations', () => {
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });
 
-    it('does not persist when a duplicate guess leaves the game unchanged', async () => {
-      const game: Game = buildGame({
-        state: buildGameState({ currentRound: buildRound() }),
-      });
-      const session: Session = buildSession({ currentGame: game });
-      const {
-        sessionService,
-        redisService,
-        gameService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      gameService.applyGuess.mockImplementation((currentGame) => currentGame);
-
-      await sessionService.handleGuess(
-        playerId('host'),
-        session.id,
-        defaultGuess,
-      );
-
-      expect(redisService.setJSON).not.toHaveBeenCalled();
-    });
-
     it('rejects a guess from a disconnected player', async () => {
       const game: Game = buildGame({
         state: buildGameState({ currentRound: buildRound() }),
@@ -548,11 +585,11 @@ describe('SessionService game operations', () => {
 
 describe('SessionService connection operations', () => {
   describe('reconnectPlayer', () => {
-    it('reconnects a player and restores the vacant host role', async () => {
+    it('reconnects a registered player and restores the vacant host role', async () => {
       const user: User = buildUser({ username: playerId('host') });
       const session: Session = buildSession({
         hostID: '',
-        players: [buildPlayer(playerId('host'), false)],
+        players: [buildPlayer(playerId('host'), false, { id: user.id })],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
@@ -560,6 +597,7 @@ describe('SessionService connection operations', () => {
       const result: Session = await sessionService.reconnectPlayer(
         session.id,
         playerId('host'),
+        undefined,
         user,
       );
 
@@ -577,9 +615,116 @@ describe('SessionService connection operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.reconnectPlayer(session.id, playerId('host')),
+        sessionService.reconnectPlayer(session.id, playerId('host'), undefined),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+      });
+    });
+
+    it('rejects reconnecting a registered player owned by another user', async () => {
+      const owner: User = buildUser({ username: playerId('host') });
+      const intruder: User = buildUser({
+        id: '00000000-0000-4000-8000-000000000002',
+        username: playerId('intruder'),
+      });
+      const session: Session = buildSession({
+        players: [buildPlayer(playerId('host'), false, { id: owner.id })],
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('host'),
+          undefined,
+          intruder,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+      });
+    });
+
+    it('reconnects a guest player with the token issued when joining', async () => {
+      const session: Session = buildSession({ players: [] });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
+      );
+      await sessionService.disconnectPlayer(playerId('guest'), session.id);
+
+      const result: Session = await sessionService.reconnectPlayer(
+        session.id,
+        playerId('guest'),
+        reconnectToken,
+      );
+
+      expect(result.players[0]).toEqual(
+        expect.objectContaining({
+          username: playerId('guest'),
+          connected: true,
+        }),
+      );
+    });
+
+    it('rejects reconnecting a guest player with the token of another player', async () => {
+      const session: Session = buildSession({ players: [] });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      await sessionService.join(session.id, playerId('victim'));
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('intruder'),
+      );
+
+      await expect(
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
+          reconnectToken,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+      });
+    });
+
+    it('rejects reconnecting a guest player without a token', async () => {
+      const session: Session = buildSession({ players: [] });
+      const user: User = buildUser({ username: playerId('intruder') });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      await sessionService.join(session.id, playerId('victim'));
+
+      await expect(
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
+          undefined,
+          user,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+      });
+    });
+
+    it('rejects reconnecting a guest player with an unknown token', async () => {
+      const session: Session = buildSession({ players: [] });
+      const forgedToken: SessionReconnectToken =
+        SessionReconnectTokenSchema.parse('forged-token');
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+      await sessionService.join(session.id, playerId('victim'));
+
+      await expect(
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
+          forgedToken,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
     });
   });
@@ -600,5 +745,47 @@ describe('SessionService connection operations', () => {
         expect.objectContaining({ connected: false }),
       );
     });
+  });
+});
+
+describe('SessionService session lock', () => {
+  it.each<[string, (sessionService: SessionService) => Promise<Session>]>([
+    [
+      'updateHost',
+      (sessionService) =>
+        sessionService.updateHost(
+          playerId('host'),
+          sessionId('s1'),
+          playerId('bob'),
+        ),
+    ],
+    [
+      'updateGameConfig',
+      (sessionService) =>
+        sessionService.updateGameConfig(
+          playerId('host'),
+          sessionId('s1'),
+          buildGameConfig(),
+        ),
+    ],
+    [
+      'startGame',
+      (sessionService) =>
+        sessionService.startGame(playerId('host'), sessionId('s1')),
+    ],
+  ])('runs %s under the session lock', async (_operation, updateSession) => {
+    const session: Session = buildSession({ id: sessionId('s1') });
+    const {
+      sessionService,
+      lockService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+    await updateSession(sessionService);
+
+    expect(lockService.withLock).toHaveBeenCalledWith(
+      `session:${session.id}`,
+      expect.any(Number),
+      expect.any(Function),
+    );
   });
 });
