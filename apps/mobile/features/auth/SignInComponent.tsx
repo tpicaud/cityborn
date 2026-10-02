@@ -94,12 +94,9 @@ export const SignInComponent = () => {
                 </Text>
               )}
             </View>
-
+          </View>
+          <View className="w-full items-center py-6">
             <RequestPasswordResetDialog />
-
-            <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
-              {errorMessage}
-            </Text>
           </View>
           <Button
             variant="filled"
@@ -109,6 +106,11 @@ export const SignInComponent = () => {
             label="SE CONNECTER"
             onPress={onSubmit}
           />
+          {errorMessage && (
+            <Text className="mt-3 w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
+              {errorMessage}
+            </Text>
+          )}
           <Button
             variant="default"
             label="Pas de compte ? Inscris-toi ici !"

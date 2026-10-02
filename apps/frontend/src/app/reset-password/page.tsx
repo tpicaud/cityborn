@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ResetPasswordComponent } from '@/features/auth/ResetPasswordComponent';
 
 export const metadata: Metadata = {
-  title: 'Réinitialiser son mot de passe',
+  title: 'Réinitialiser son mot de passe | Cityborn',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 };

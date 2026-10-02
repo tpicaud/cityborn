@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import type { SendMailOptions } from './providers/mail.provider';
 
-const logoFilename = 'logo-transparent.png';
-const logoContentId = logoFilename;
-const logoPath = resolve(
+const logoFilename: string = 'logo-transparent.png';
+const logoContentId: string = logoFilename;
+const logoPath: string = resolve(
   __dirname,
   '../../frontend/assets/logo-transparent.png',
 );
@@ -11,6 +11,18 @@ const logoPath = resolve(
 type EmailTemplateHeaderParams = {
   preheader: string;
   title: string;
+};
+
+type ActionEmailParams = {
+  email: string;
+  subject: string;
+  text: string;
+  preheader: string;
+  title: string;
+  introduction: string;
+  actionUrl: URL;
+  actionLabel: string;
+  validityDuration: string;
 };
 
 const buildEmailTemplateHeader = ({
@@ -110,13 +122,11 @@ function buildVerificationEmail({
   verificationToken,
   username,
 }: VerificationEmailParams): SendMailOptions {
-  const verificationUrl = new URL('/verify-email', frontendUrl);
+  const verificationUrl: URL = new URL('/verify-email', frontendUrl);
   verificationUrl.searchParams.set('verification_token', verificationToken);
-  const escapedUsername = escapeHtml(username);
-  const verificationHref = escapeHtml(verificationUrl.toString());
 
-  return {
-    to: email,
+  return buildActionEmail({
+    email,
     subject: 'Vérifiez votre adresse e-mail Cityborn',
     text: [
       `Bonjour ${username},`,
@@ -130,18 +140,35 @@ function buildVerificationEmail({
       '',
       "L'équipe Cityborn",
     ].join('\n'),
+    preheader: "Plus qu'une étape pour commencer votre aventure Cityborn.",
+    title: `Bienvenue, ${username} !`,
+    introduction:
+      'Votre compte est presque prêt. Confirmez votre adresse e-mail pour finaliser votre inscription et commencer à explorer le monde avec Cityborn.',
+    actionUrl: verificationUrl,
+    actionLabel: 'Vérifier mon adresse e-mail',
+    validityDuration: '24 heures',
+  });
+}
+
+function buildActionEmail(params: ActionEmailParams): SendMailOptions {
+  const actionHref: string = escapeHtml(params.actionUrl.toString());
+
+  return {
+    to: params.email,
+    subject: params.subject,
+    text: params.text,
     html: `
       ${buildEmailTemplateHeader({
-        preheader: "Plus qu'une étape pour commencer votre aventure Cityborn.",
-        title: 'Vérifiez votre adresse e-mail Cityborn',
+        preheader: params.preheader,
+        title: params.subject,
       })}
                   <tr>
                     <td style="padding:42px 44px 20px;">
                       <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
-                        Bienvenue, ${escapedUsername} !
+                        ${escapeHtml(params.title)}
                       </h1>
                       <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Votre compte est presque prêt. Confirmez votre adresse e-mail pour finaliser votre inscription et commencer à explorer le monde avec Cityborn.
+                        ${escapeHtml(params.introduction)}
                       </p>
                       <p style="margin:0 0 28px; color:#3f5555; font-size:16px; line-height:26px;">
                         Il vous suffit de cliquer sur le bouton ci-dessous :
@@ -150,8 +177,8 @@ function buildVerificationEmail({
                       <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
                         <tr>
                           <td align="center" bgcolor="#ff7600" style="border-radius:12px; mso-padding-alt:15px 28px;">
-                            <a href="${verificationHref}" style="display:inline-block; padding:15px 28px; color:#ffffff; font-size:16px; line-height:20px; font-weight:800; text-decoration:none; border-radius:12px;">
-                              Vérifier mon adresse e-mail
+                            <a href="${actionHref}" style="display:inline-block; padding:15px 28px; color:#ffffff; font-size:16px; line-height:20px; font-weight:800; text-decoration:none; border-radius:12px;">
+                              ${escapeHtml(params.actionLabel)}
                             </a>
                           </td>
                         </tr>
@@ -161,7 +188,7 @@ function buildVerificationEmail({
                         <tr>
                           <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
                             <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
-                              Ce lien est valable pendant <strong style="color:#008988;">24 heures</strong>.
+                              Ce lien est valable pendant <strong style="color:#008988;">${escapeHtml(params.validityDuration)}</strong>.
                             </p>
                           </td>
                         </tr>
@@ -171,7 +198,7 @@ function buildVerificationEmail({
                         Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :
                       </p>
                       <p style="margin:6px 0 0; font-size:12px; line-height:19px; word-break:break-all;">
-                        <a href="${verificationHref}" style="color:#008988; text-decoration:underline;">${verificationHref}</a>
+                        <a href="${actionHref}" style="color:#008988; text-decoration:underline;">${actionHref}</a>
                       </p>
                     </td>
                   </tr>
@@ -187,7 +214,7 @@ function buildVerificationEmail({
     `,
     attachments: [
       {
-        filename: 'logo-transparent.png',
+        filename: logoFilename,
         path: logoPath,
         cid: logoContentId,
         contentDisposition: 'inline',
@@ -211,12 +238,18 @@ function buildPasswordResetEmail(
   const url: URL = new URL('/reset-password', params.frontendUrl);
   url.hash = new URLSearchParams({ token: params.token }).toString();
   const subject: string = 'Réinitialisez votre mot de passe Cityborn';
-  return {
-    to: params.email,
+  return buildActionEmail({
+    email: params.email,
     subject,
     text: `Bonjour ${params.username},\nRéinitialisez votre mot de passe : ${url.toString()}\nCe lien expire dans 30 minutes. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.`,
-    html: `<h1>${subject}</h1><p>Bonjour ${escapeHtml(params.username)},</p><p><a href="${escapeHtml(url.toString())}">Réinitialiser mon mot de passe</a></p><p>Ce lien expire dans 30 minutes. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.</p>`,
-  };
+    preheader: 'Choisissez un nouveau mot de passe pour votre compte Cityborn.',
+    title: `Bonjour ${params.username},`,
+    introduction:
+      'Vous avez demandé la réinitialisation de votre mot de passe Cityborn. Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.',
+    actionUrl: url,
+    actionLabel: 'Réinitialiser mon mot de passe',
+    validityDuration: '30 minutes',
+  });
 }
 
 function buildPasswordChangedEmail(

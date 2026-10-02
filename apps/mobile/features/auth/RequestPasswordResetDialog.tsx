@@ -68,6 +68,7 @@ export function RequestPasswordResetDialog() {
                     name="email"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
+                        className="w-full"
                         accessibilityLabel="Adresse e-mail"
                         placeholder="Adresse e-mail"
                         keyboardType="email-address"
@@ -102,6 +103,7 @@ export function RequestPasswordResetDialog() {
               <Button
                 variant="ghost"
                 label="Fermer"
+                className="self-center"
                 disabled={isSubmitting}
                 onPress={() => setOpen(false)}
               />
