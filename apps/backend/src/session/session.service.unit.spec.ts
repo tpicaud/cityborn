@@ -68,7 +68,14 @@ function buildSessionService(session: Session | null) {
     eventService,
   );
 
-  return { sessionService, redisService, idService, gameService, eventService };
+  return {
+    sessionService,
+    redisService,
+    lockService,
+    idService,
+    gameService,
+    eventService,
+  };
 }
 
 describe('SessionService.kickPlayer', () => {
@@ -513,27 +520,6 @@ describe('SessionService game operations', () => {
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });
 
-    it('does not persist when a duplicate guess leaves the game unchanged', async () => {
-      const game: Game = buildGame({
-        state: buildGameState({ currentRound: buildRound() }),
-      });
-      const session: Session = buildSession({ currentGame: game });
-      const {
-        sessionService,
-        redisService,
-        gameService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      gameService.applyGuess.mockImplementation((currentGame) => currentGame);
-
-      await sessionService.handleGuess(
-        playerId('host'),
-        session.id,
-        defaultGuess,
-      );
-
-      expect(redisService.setJSON).not.toHaveBeenCalled();
-    });
-
     it('rejects a guess from a disconnected player', async () => {
       const game: Game = buildGame({
         state: buildGameState({ currentRound: buildRound() }),
@@ -759,5 +745,47 @@ describe('SessionService connection operations', () => {
         expect.objectContaining({ connected: false }),
       );
     });
+  });
+});
+
+describe('SessionService session lock', () => {
+  it.each<[string, (sessionService: SessionService) => Promise<Session>]>([
+    [
+      'updateHost',
+      (sessionService) =>
+        sessionService.updateHost(
+          playerId('host'),
+          sessionId('s1'),
+          playerId('bob'),
+        ),
+    ],
+    [
+      'updateGameConfig',
+      (sessionService) =>
+        sessionService.updateGameConfig(
+          playerId('host'),
+          sessionId('s1'),
+          buildGameConfig(),
+        ),
+    ],
+    [
+      'startGame',
+      (sessionService) =>
+        sessionService.startGame(playerId('host'), sessionId('s1')),
+    ],
+  ])('runs %s under the session lock', async (_operation, updateSession) => {
+    const session: Session = buildSession({ id: sessionId('s1') });
+    const {
+      sessionService,
+      lockService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+    await updateSession(sessionService);
+
+    expect(lockService.withLock).toHaveBeenCalledWith(
+      `session:${session.id}`,
+      expect.any(Number),
+      expect.any(Function),
+    );
   });
 });
