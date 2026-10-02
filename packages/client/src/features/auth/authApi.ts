@@ -146,6 +146,15 @@ function createBearerCredentialsStrategy(
     },
 
     async signOut() {
+      const refreshToken: string | null = await tokenStorage.getRefreshToken();
+      if (refreshToken) {
+        await contractClient.auth
+          .signOut({
+            body: {},
+            extraHeaders: { authorization: `Bearer ${refreshToken}` },
+          })
+          .catch(() => undefined);
+      }
       await tokenStorage.clearTokens();
     },
 

@@ -315,4 +315,108 @@ describe('Authentication transports', () => {
     const currentUser: User = UserSchema.parse(currentUserResponse.body);
     expect(currentUser.id).toBe(user.id);
   });
+
+  it('rotates the bearer refresh token and rejects a reused one', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const signInResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password })
+      .expect(200);
+    const authentication: AuthResponse = AuthResponseSchema.parse(
+      signInResponse.body,
+    );
+
+    const refreshResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.refresh.path)
+      .set('Authorization', `Bearer ${authentication.refresh_token}`)
+      .send({})
+      .expect(200);
+    const rotatedAuthentication: AuthResponse = AuthResponseSchema.parse(
+      refreshResponse.body,
+    );
+
+    expect(rotatedAuthentication.refresh_token).not.toBe(
+      authentication.refresh_token,
+    );
+    const reuseResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.refresh.path)
+      .set('Authorization', `Bearer ${authentication.refresh_token}`)
+      .send({})
+      .expect(401);
+    expect(ApiErrorSchema.parse(reuseResponse.body).code).toBe(
+      ErrorCode.USER_INVALID_TOKEN,
+    );
+    await request(app.getHttpServer())
+      .post(contract.auth.refresh.path)
+      .set('Authorization', `Bearer ${rotatedAuthentication.refresh_token}`)
+      .send({})
+      .expect(200);
+  });
+
+  it('revokes the bearer refresh token on sign-out', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const signInResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password })
+      .expect(200);
+    const authentication: AuthResponse = AuthResponseSchema.parse(
+      signInResponse.body,
+    );
+
+    await request(app.getHttpServer())
+      .post(contract.auth.signOut.path)
+      .set('Authorization', `Bearer ${authentication.refresh_token}`)
+      .send({})
+      .expect(200);
+
+    const refreshResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.refresh.path)
+      .set('Authorization', `Bearer ${authentication.refresh_token}`)
+      .send({})
+      .expect(401);
+    expect(ApiErrorSchema.parse(refreshResponse.body).code).toBe(
+      ErrorCode.USER_INVALID_TOKEN,
+    );
+  });
+
+  it('revokes the cookie refresh token on sign-out', async () => {
+    const password: string = 'Password1';
+    const userData: User = buildUser();
+    const user: User = await persistEmailUser(userData, password);
+    const origin: string = 'http://localhost:3000';
+    const webAgent: TestAgent = request.agent(app.getHttpServer());
+    const signInResponse: request.Response = await webAgent
+      .post(contract.auth.cookie.signIn.path)
+      .set('Origin', origin)
+      .send({ identifier: user.email, password })
+      .expect(200);
+    const refreshTokenCookie: string | undefined = responseCookies(
+      signInResponse.headers['set-cookie'],
+    )
+      .find((cookie: string): boolean =>
+        cookie.startsWith(`${REFRESH_TOKEN_COOKIE_NAME}=`),
+      )
+      ?.split(';')[0];
+    expect(refreshTokenCookie).toBeDefined();
+
+    await webAgent
+      .post(contract.auth.signOut.path)
+      .set('Origin', origin)
+      .send({})
+      .expect(200);
+
+    const refreshResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.cookie.refresh.path)
+      .set('Origin', origin)
+      .set('Cookie', refreshTokenCookie ?? '')
+      .send({})
+      .expect(401);
+    expect(ApiErrorSchema.parse(refreshResponse.body).code).toBe(
+      ErrorCode.USER_INVALID_TOKEN,
+    );
+  });
 });

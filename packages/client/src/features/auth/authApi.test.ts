@@ -297,10 +297,41 @@ authApiFactories.forEach(({ name, create }: AuthApiFactory) => {
   });
 });
 
-test('signOut clears the stored tokens', async () => {
+test('bearer signOut revokes the stored refresh token before clearing it', async () => {
   const { state, tokenStorage } = createFakeTokenStorage();
   await tokenStorage.setTokens('access', 'refresh');
-  const authApi = createAuthApi(createFakeClient({}), tokenStorage);
+  const signOutCalls: Parameters<ContractClient['auth']['signOut']>[0][] = [];
+  const authApi: AuthApi = createAuthApi(
+    createFakeClient({
+      signOut: async (args) => {
+        signOutCalls.push(args);
+        assert.equal(state.cleared, false);
+        return { status: 200, body: {}, headers: new Headers() };
+      },
+    }),
+    tokenStorage,
+  );
+
+  await authApi.signOut();
+
+  assert.deepEqual(signOutCalls, [
+    { body: {}, extraHeaders: { authorization: 'Bearer refresh' } },
+  ]);
+  assert.equal(state.tokens, null);
+  assert.equal(state.cleared, true);
+});
+
+test('bearer signOut clears the stored tokens when the server is unreachable', async () => {
+  const { state, tokenStorage } = createFakeTokenStorage();
+  await tokenStorage.setTokens('access', 'refresh');
+  const authApi: AuthApi = createAuthApi(
+    createFakeClient({
+      signOut: async () => {
+        throw new TypeError('Network request failed');
+      },
+    }),
+    tokenStorage,
+  );
 
   await authApi.signOut();
 

@@ -1,6 +1,7 @@
+import type { IncomingHttpHeaders } from 'node:http';
 import type { User } from '@cityborn/api';
 import { contract } from '@cityborn/api';
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, Headers, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import type { Response } from 'express';
@@ -12,9 +13,11 @@ import {
   CurrentUser,
 } from '../current-auth-session.decorator';
 import { AuthGuard } from '../guards/access-token.guard';
+import { extractBearerToken } from '../guards/bearer-token';
 import { CookieRefreshGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';
 import { AuthCookieService } from '../services/auth-cookie.service';
+import { AuthTokenService } from '../services/auth-token.service';
 
 const c = initContract();
 
@@ -39,11 +42,13 @@ export class AuthCookieController {
   constructor(
     private readonly authService: AuthService,
     private readonly authCookieService: AuthCookieService,
+    private readonly authTokenService: AuthTokenService,
   ) {}
 
   @TsRestHandler(publicCookieAuthRoutes)
   async handler(
     @HttpResponse() response: Response,
+    @Headers() headers: IncomingHttpHeaders,
     @VisitorId() visitorId?: string,
   ) {
     return tsRestHandler(publicCookieAuthRoutes, {
@@ -76,6 +81,18 @@ export class AuthCookieController {
         ),
       }),
       signOut: async () => {
+        const presentedRefreshTokens: string[] = [
+          this.authCookieService.readRefreshToken(headers.cookie),
+          extractBearerToken(headers),
+        ].filter(
+          (refreshToken: string | undefined): refreshToken is string =>
+            refreshToken !== undefined,
+        );
+        await Promise.all(
+          presentedRefreshTokens.map((refreshToken: string) =>
+            this.authTokenService.revokeRefreshToken(refreshToken),
+          ),
+        );
         this.authCookieService.clearSession(response);
         return { status: 200 as const, body: {} };
       },

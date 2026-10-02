@@ -16,6 +16,7 @@ import {
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 import type { AuthConfig, RuntimeConfig } from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
+import type { RedisService } from '../redis/redis.service';
 import type { UserService } from '../user/user.service';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
 import {
@@ -65,7 +66,12 @@ function buildMiddleware() {
   };
   const wsHandshakeMiddleware: WsHandshakeMiddleware =
     new WsHandshakeMiddleware(
-      new AuthTokenService(jwtService, authConfig, userService),
+      new AuthTokenService(
+        jwtService,
+        authConfig,
+        userService,
+        createMock<RedisService>(),
+      ),
       new AuthCookieService(runtimeConfig),
       new AuthenticatedSocketService(),
       rateLimitService,

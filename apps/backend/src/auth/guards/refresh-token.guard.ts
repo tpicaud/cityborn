@@ -10,10 +10,7 @@ import {
 import type { AuthSession } from '../../common/types/auth-session';
 import type { AuthRequest } from '../auth-request';
 import { AuthCookieService } from '../services/auth-cookie.service';
-import {
-  type AuthTokenPayload,
-  AuthTokenService,
-} from '../services/auth-token.service';
+import { AuthTokenService } from '../services/auth-token.service';
 import { extractBearerToken } from './bearer-token';
 
 type RefreshTokenTransport = 'bearer' | 'cookie';
@@ -39,10 +36,8 @@ function createRefreshTokenGuard(
           message: 'No refresh token provided',
         });
 
-      const payload: AuthTokenPayload =
-        await this.authTokenService.verifyRefreshToken(refreshToken);
       const authSession: AuthSession | null =
-        await this.authTokenService.resolveAuthSession(payload);
+        await this.authTokenService.redeemRefreshToken(refreshToken);
       if (!authSession) {
         throw new UnauthorizedException({
           code: ErrorCode.USER_NOT_FOUND,
