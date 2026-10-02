@@ -1,6 +1,11 @@
 'use client';
 
-import { resolveErrorMessage, type User } from '@cityborn/api';
+import {
+  getFriendlyErrorMessage,
+  parseApiError,
+  resolveErrorMessage,
+  type User,
+} from '@cityborn/api';
 import { AuthProvider } from '@cityborn/client/auth';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
@@ -41,7 +46,10 @@ function CurrentUserBootstrap({
         if (!isActive) return;
         setCurrentUserState({
           status: 'failed',
-          errorMessage: resolveErrorMessage(error),
+          errorMessage: resolveErrorMessage(
+            error,
+            getFriendlyErrorMessage(parseApiError(0, error)),
+          ),
         });
       }
     };

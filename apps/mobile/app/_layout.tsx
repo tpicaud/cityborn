@@ -29,8 +29,12 @@ const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isBackendUnreachable, setIsBackendUnreachable] = useState(false);
+  const [isLoadingCurrentUser, setIsLoadingCurrentUser] =
+    useState<boolean>(true);
+  const [isBackendUnreachable, setIsBackendUnreachable] =
+    useState<boolean>(false);
+  const [hasCurrentUserLoadFailed, setHasCurrentUserLoadFailed] =
+    useState<boolean>(false);
   const minSupportedApiVersion = useMinSupportedApiVersion();
   const isForceUpdateRequired =
     minSupportedApiVersion !== null &&
@@ -64,7 +68,7 @@ export default function RootLayout() {
   }, [runHealthCheck]);
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted: boolean = true;
     authApi
       .getCurrentUser()
       .then((fetchedUser) => {
@@ -75,9 +79,9 @@ export default function RootLayout() {
       .catch((error: unknown) => {
         if (!isMounted) return;
         console.error(error);
-        setIsBackendUnreachable(true);
+        setHasCurrentUserLoadFailed(true);
       })
-      .finally(() => isMounted && setLoading(false));
+      .finally(() => isMounted && setIsLoadingCurrentUser(false));
 
     return () => {
       isMounted = false;
@@ -88,22 +92,23 @@ export default function RootLayout() {
     <>
       <ForceUpdateDialog visible={isForceUpdateRequired} />
       <BackendUnreachableDialog
-        visible={isBackendUnreachable}
+        visible={isBackendUnreachable || hasCurrentUserLoadFailed}
         onRetry={async () => {
-          setLoading(true);
+          setIsLoadingCurrentUser(true);
           try {
             await runHealthCheck();
             const currentUser: User | null = await authApi.getCurrentUser();
             setUser(currentUser);
+            setHasCurrentUserLoadFailed(false);
           } catch (error: unknown) {
             console.error(error);
-            setIsBackendUnreachable(true);
+            setHasCurrentUserLoadFailed(true);
           } finally {
-            setLoading(false);
+            setIsLoadingCurrentUser(false);
           }
         }}
       />
-      {loading ? (
+      {isLoadingCurrentUser || hasCurrentUserLoadFailed ? (
         <View className="flex-1 items-center justify-center">
           <LoaderIcon />
         </View>
