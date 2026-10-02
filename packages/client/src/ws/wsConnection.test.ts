@@ -165,7 +165,7 @@ function rejectHandshake(fake: FakeSocket, data?: ApiError): void {
   fake.fire('connect_error', connectError(data));
 }
 
-test('ouvre la connexion puis passe connecté une fois les channels restaurés', async () => {
+test('opens the connection and becomes connected once channels are restored', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
 
@@ -176,7 +176,7 @@ test('ouvre la connexion puis passe connecté une fois les channels restaurés',
   assert.equal(supervision.restorationCalls(), 1);
 });
 
-test('restaure les channels à chaque nouvelle connexion, même après un échec intermédiaire', async () => {
+test('restores channels on every new connection, even after an intermediate failure', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
   await connect(fake);
@@ -197,7 +197,7 @@ test('restaure les channels à chaque nouvelle connexion, même après un échec
   assert.deepEqual(supervision.failures, []);
 });
 
-test('se reconnecte explicitement après une déconnexion par le serveur', async () => {
+test('reconnects explicitly after a server-side disconnection', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
   await connect(fake);
@@ -209,7 +209,7 @@ test('se reconnecte explicitement après une déconnexion par le serveur', async
   assert.equal(supervision.statuses.at(-1), 'reconnecting');
 });
 
-test('ferme la connexion avec une seule erreur quand le serveur refuse le handshake', async () => {
+test('closes the connection with a single error when the server rejects the handshake', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
 
@@ -219,7 +219,7 @@ test('ferme la connexion avec une seule erreur quand le serveur refuse le handsh
   assert.deepEqual(supervision.failures, [rateLimitError]);
 });
 
-test('n’affiche qu’une erreur pour une séquence de reconnexion abandonnée', async () => {
+test('reports a single error for an abandoned reconnection sequence', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
   await connect(fake);
@@ -234,7 +234,7 @@ test('n’affiche qu’une erreur pour une séquence de reconnexion abandonnée'
   assert.deepEqual(supervision.failures, [lastError]);
 });
 
-test('rafraîchit l’authentification puis se reconnecte quand le token est refusé', async () => {
+test('refreshes authentication then reconnects when the token is rejected', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
 
@@ -252,7 +252,7 @@ test('rafraîchit l’authentification puis se reconnecte quand le token est ref
   assert.deepEqual(supervision.failures, [expiredTokenError]);
 });
 
-test('ignore la restauration d’une connexion déjà perdue', async () => {
+test('ignores the restoration of an already lost connection', async () => {
   const fake: FakeSocket = createFakeSocket();
   let resolveRestore: () => void = () => {};
   const supervision: Supervision = supervise(fake, {
@@ -271,7 +271,7 @@ test('ignore la restauration d’une connexion déjà perdue', async () => {
   assert.deepEqual(supervision.statuses, ['connecting', 'reconnecting']);
 });
 
-test('ferme la connexion quand la restauration des channels échoue', async () => {
+test('closes the connection when channel restoration fails', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake, {
     restoreChannels: () => Promise.reject(rateLimitError),
@@ -283,7 +283,7 @@ test('ferme la connexion quand la restauration des channels échoue', async () =
   assert.deepEqual(supervision.failures, [rateLimitError]);
 });
 
-test('réessaie la restauration sur une connexion toujours ouverte', async () => {
+test('retries the restoration on a connection that is still open', async () => {
   const fake: FakeSocket = createFakeSocket();
   let shouldFail = true;
   const supervision: Supervision = supervise(fake, {
@@ -300,7 +300,7 @@ test('réessaie la restauration sur une connexion toujours ouverte', async () =>
   assert.equal(supervision.statuses.at(-1), 'connected');
 });
 
-test('se détache du socket à la fermeture', async () => {
+test('detaches from the socket when closed', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
   await connect(fake);
