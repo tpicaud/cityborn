@@ -72,7 +72,11 @@ export default function RootLayout() {
           setUser(fetchedUser);
         }
       })
-      .catch((error) => console.error('Failed to fetch user:', error))
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        console.error(error);
+        setIsBackendUnreachable(true);
+      })
       .finally(() => isMounted && setLoading(false));
 
     return () => {
@@ -85,7 +89,19 @@ export default function RootLayout() {
       <ForceUpdateDialog visible={isForceUpdateRequired} />
       <BackendUnreachableDialog
         visible={isBackendUnreachable}
-        onRetry={runHealthCheck}
+        onRetry={async () => {
+          setLoading(true);
+          try {
+            await runHealthCheck();
+            const currentUser: User | null = await authApi.getCurrentUser();
+            setUser(currentUser);
+          } catch (error: unknown) {
+            console.error(error);
+            setIsBackendUnreachable(true);
+          } finally {
+            setLoading(false);
+          }
+        }}
       />
       {loading ? (
         <View className="flex-1 items-center justify-center">

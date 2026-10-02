@@ -8,12 +8,13 @@ import {
   useContext,
   useState,
 } from 'react';
+import { useError } from '../../shared/errorContext';
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   refreshUser: () => Promise<void>;
-}
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,15 +28,16 @@ export const AuthProvider = ({
   children: ReactNode;
 }) => {
   const [user, setUser] = useState<User | null>(initialValue);
+  const { invokeError } = useError();
 
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(async (): Promise<void> => {
     try {
-      const user = await getCurrentUser();
-      setUser(user);
-    } catch {
-      setUser(null);
+      const currentUser: User | null = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error: unknown) {
+      invokeError(error);
     }
-  }, [getCurrentUser]);
+  }, [getCurrentUser, invokeError]);
 
   return (
     <AuthContext.Provider value={{ user, setUser, refreshUser }}>
@@ -45,7 +47,7 @@ export const AuthProvider = ({
 };
 
 export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
+  const context: AuthContextType | undefined = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

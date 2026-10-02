@@ -11,7 +11,11 @@ import type {
   User,
   VerifyEmailData,
 } from '@cityborn/api';
-import { toApiResult, unwrapApiResponse } from '@cityborn/api';
+import {
+  ApiResponseError,
+  toApiResult,
+  unwrapApiResponse,
+} from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
 import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
@@ -57,9 +61,13 @@ function buildAuthApi(
         if (!(await credentialsStrategy.mayHoldCredentials())) return null;
         const result: ClientInferResponses<AppContract['auth']['me']> =
           await contractClient.auth.me();
-        return result.status === 200 ? result.body : null;
-      } catch {
-        return null;
+        if (result.status === 401) return null;
+        return unwrapApiResponse(result);
+      } catch (error: unknown) {
+        if (error instanceof ApiResponseError && error.statusCode === 401) {
+          return null;
+        }
+        throw error;
       }
     },
 

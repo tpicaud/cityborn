@@ -33,7 +33,7 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 
 `ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Le frontend et le mobile créent leur `contractClient` dans `lib/api/contractClient.ts`. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
-L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port.
+L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap affiche une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant. Placer `AuthProvider` sous `ErrorProvider` pour afficher ces erreurs.
 
 Les hooks de session et de profil reçoivent leurs ports `SessionApi` et `ProfileApi`. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
