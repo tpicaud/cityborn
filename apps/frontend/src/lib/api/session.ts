@@ -1,4 +1,4 @@
 import { createSessionApi, type SessionApi } from '@cityborn/client/session';
-import { apiClient } from './client';
+import { contractClient } from './contractClient';
 
-export const sessionApi: SessionApi = createSessionApi(apiClient);
+export const sessionApi: SessionApi = createSessionApi(contractClient);

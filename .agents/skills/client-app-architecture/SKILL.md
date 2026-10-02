@@ -25,18 +25,19 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 
 ## Accès à l'API
 
-- **Mobile** → `apps/mobile/lib/api/`.
-- **Frontend Next** → `apps/frontend/src/server/`.
-- **Back-office Next** → `apps/back-office/server/`.
+- **Frontend joueur** → `apps/frontend/src/lib/api/`, exécuté dans le navigateur avec les cookies Nest.
+- **Mobile** → `apps/mobile/lib/api/`, exécuté avec les tokens du stockage sécurisé.
+- **Back-office** → `apps/back-office/server/` :
+  - `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
+  - `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
 
-Dans les deux apps Next, séparer :
+`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Le frontend et le mobile créent leur `contractClient` dans `lib/api/contractClient.ts`. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
-- `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
-- `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
+L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port.
 
-L'authentification du frontend public et du mobile fait exception : ses appels HTTP vivent dans `createAuthApi` (`@cityborn/client/auth`). Le mobile l'instancie dans `lib/api/auth.ts` avec son `TokenStorage` ; le frontend l'obtient par `getServerAuthApi()`, ses server actions restant des passe-plats. Le navigateur authentifié par cookies Nest utilise `createCookieAuthApi`, sans `TokenStorage`. Ajouter un appel à cette API d'auth se fait dans `AuthApi`, jamais dans une app. L'authentification propre au back-office reste locale tant qu'aucune migration n'est demandée.
+Les hooks de session et de profil reçoivent leurs ports `SessionApi` et `ProfileApi`. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
-Les sessions suivent le même principe avec un port : les hooks de `@cityborn/client/session` reçoivent un `SessionApi`. Le mobile l'obtient par `createSessionApi(client)` (`lib/api/session.ts`) ; le frontend l'implémente dans `src/lib/sessionApi.ts` avec ses server actions pour garder ses appels côté serveur. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
+L'authentification propre au back-office reste locale tant qu'aucune migration n'est demandée.
 
 Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers, voir le skill `client-error-handling`.
 
@@ -51,7 +52,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
-| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createApiClient` (bearer) / `createCookieApiClient` (cookies), visitorId. Sans React. |
+| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), visitorId. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |
@@ -70,7 +71,7 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 
 | Port | Implémenté avec |
 |---|---|
-| `TokenStorage` | cookies `httpOnly` côté frontend Next, `expo-secure-store` côté mobile. |
+| `TokenStorage` | `expo-secure-store` côté mobile. Le navigateur laisse Nest gérer les cookies `httpOnly`. |
 | `KeyValueStorage` | `localStorage` côté web, `AsyncStorage` côté mobile. Stocke des chaînes : le domaine décode ce qu'il a écrit. |
 | `SocketConnection` / `SocketFactory` | `socket.io-client`. La factory est asynchrone car le mobile lit le token avant d'ouvrir la socket. |
 | `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. |

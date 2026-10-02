@@ -8,7 +8,7 @@ import {
   createCookieAuthTransport,
 } from './authTransport';
 
-function createClient(
+function createContractClient(
   baseURL: string,
   authTransport: AuthTransport,
   options: AuthFetchOptions = {},
@@ -22,23 +22,23 @@ function createClient(
   });
 }
 
-export function createApiClient(
+export function createBearerContractClient(
   baseURL: string,
   tokenStorage: TokenStorage,
   options: AuthFetchOptions = {},
 ) {
-  return createClient(
+  return createContractClient(
     baseURL,
     createBearerAuthTransport(tokenStorage),
     options,
   );
 }
 
-export function createCookieApiClient(
+export function createCookieContractClient(
   baseURL: string,
   options: AuthFetchOptions = {},
 ) {
-  return createClient(baseURL, createCookieAuthTransport(), options);
+  return createContractClient(baseURL, createCookieAuthTransport(), options);
 }
 
-export type ApiClient = ReturnType<typeof createApiClient>;
+export type ContractClient = ReturnType<typeof createContractClient>;

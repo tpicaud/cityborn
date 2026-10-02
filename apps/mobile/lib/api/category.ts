@@ -4,14 +4,14 @@ import {
   type CategoryTree,
   toApiResult,
 } from '@cityborn/api';
-import { client } from './client';
+import { contractClient } from './contractClient';
 
 export async function fetchCategories(): Promise<ApiResult<Category[]>> {
-  const result = await client.category.getCategories({ query: {} });
+  const result = await contractClient.category.getCategories({ query: {} });
   return toApiResult(result);
 }
 
 export async function fetchCategoryTrees(): Promise<ApiResult<CategoryTree[]>> {
-  const result = await client.category.getCategoryTrees({});
+  const result = await contractClient.category.getCategoryTrees({});
   return toApiResult(result);
 }

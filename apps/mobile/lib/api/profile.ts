@@ -1,4 +1,4 @@
-import { createProfileApi } from '@cityborn/client/profile';
-import { client } from './client';
+import { createProfileApi, type ProfileApi } from '@cityborn/client/profile';
+import { contractClient } from './contractClient';
 
-export const profileApi = createProfileApi(client);
+export const profileApi: ProfileApi = createProfileApi(contractClient);

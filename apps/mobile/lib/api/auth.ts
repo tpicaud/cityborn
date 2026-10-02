@@ -1,4 +1,4 @@
-import { createAuthApi } from '@cityborn/client/auth';
-import { client, tokenStorage } from './client';
+import { type AuthApi, createAuthApi } from '@cityborn/client/auth';
+import { contractClient, tokenStorage } from './contractClient';
 
-export const authApi = createAuthApi(client, tokenStorage);
+export const authApi: AuthApi = createAuthApi(contractClient, tokenStorage);

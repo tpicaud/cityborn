@@ -1,7 +1,10 @@
-import { createApiClient } from '@cityborn/client/api';
+import {
+  type ContractClient,
+  createBearerContractClient,
+} from '@cityborn/client/api';
 import { getBackOfficeServerConfig } from '@/config/server';
 
-type AdminClient = ReturnType<typeof createApiClient>['admin'];
+type AdminClient = ContractClient['admin'];
 
 let adminClient: AdminClient | undefined;
 
@@ -9,7 +12,7 @@ export function getAdminClient(): AdminClient {
   if (adminClient) return adminClient;
 
   const backOfficeServerConfig = getBackOfficeServerConfig();
-  const client = createApiClient(
+  const contractClient: ContractClient = createBearerContractClient(
     backOfficeServerConfig.backendUrl,
     {
       getAccessToken: async () => backOfficeServerConfig.adminDashboardToken,
@@ -19,6 +22,6 @@ export function getAdminClient(): AdminClient {
     },
     { client: { name: 'back-office' } },
   );
-  adminClient = client.admin;
+  adminClient = contractClient.admin;
   return adminClient;
 }

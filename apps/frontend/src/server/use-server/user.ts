@@ -7,7 +7,7 @@ import {
   type UpdateUsername,
   type User,
 } from '@cityborn/api';
-import type { ApiClient } from '@cityborn/client/api';
+import type { ContractClient } from '@cityborn/client/api';
 import { getServerClient } from '@/lib/serverClient';
 
 export async function getGameRecords(): Promise<ApiResult<GameRecord[]>> {
@@ -19,6 +19,6 @@ export async function getGameRecords(): Promise<ApiResult<GameRecord[]>> {
 export async function updateUsername(
   data: UpdateUsername,
 ): Promise<ApiResult<User>> {
-  const client: ApiClient = await getServerClient();
+  const client: ContractClient = await getServerClient();
   return toApiResult(await client.user.updateUsername({ body: data }));
 }

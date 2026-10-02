@@ -9,10 +9,10 @@ import {
 import type { ClientInferResponses } from '@ts-rest/core';
 import type { TokenStorage } from '../platform/tokenStorage';
 import {
-  type ApiClient,
-  createApiClient,
-  createCookieApiClient,
-} from './createApiClient';
+  type ContractClient,
+  createBearerContractClient,
+  createCookieContractClient,
+} from './contractClient';
 
 type FetchCall = {
   url: string;
@@ -53,12 +53,15 @@ test('cookie transport refreshes through the cookie route without exposing an au
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client: ApiClient = createCookieApiClient('https://api.cityborn.test', {
-    client: { name: 'web' },
-  });
+  const contractClient: ContractClient = createCookieContractClient(
+    'https://api.cityborn.test',
+    {
+      client: { name: 'web' },
+    },
+  );
 
   const result: ClientInferResponses<AppContract['auth']['me']> =
-    await client.auth.me();
+    await contractClient.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(
@@ -126,7 +129,7 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client: ApiClient = createApiClient(
+  const contractClient: ContractClient = createBearerContractClient(
     'https://api.cityborn.test',
     tokenStorage,
     {
@@ -135,7 +138,7 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   );
 
   const result: ClientInferResponses<AppContract['auth']['me']> =
-    await client.auth.me();
+    await contractClient.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(

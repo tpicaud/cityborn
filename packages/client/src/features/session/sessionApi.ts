@@ -7,7 +7,7 @@ import type {
 } from '@cityborn/api';
 import { toApiResult } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
-import type { ApiClient } from '../../api/createApiClient';
+import type { ContractClient } from '../../api/contractClient';
 
 type FinalizedSession = Session & {
   currentGame: NonNullable<Session['currentGame']>;
@@ -28,25 +28,33 @@ export interface SessionApi {
 }
 
 export function createSessionApi(
-  client: Pick<ApiClient, 'session'>,
+  contractClient: Pick<ContractClient, 'session'>,
 ): SessionApi {
   return {
     async createSession(data) {
-      return toApiResult(await client.session.createSession({ body: data }));
+      return toApiResult(
+        await contractClient.session.createSession({ body: data }),
+      );
     },
 
     async fetchSession(id) {
-      return toApiResult(await client.session.getSession({ params: { id } }));
+      return toApiResult(
+        await contractClient.session.getSession({ params: { id } }),
+      );
     },
 
     async createSoloGame(session) {
-      return toApiResult(await client.session.createGame({ body: session }));
+      return toApiResult(
+        await contractClient.session.createGame({ body: session }),
+      );
     },
 
     async finalizeGame(session) {
       const body = buildFinalizeGameBody(session);
       if (!body) return { ok: true, data: undefined };
-      const result = toApiResult(await client.session.finalizeGame({ body }));
+      const result = toApiResult(
+        await contractClient.session.finalizeGame({ body }),
+      );
       if (!result.ok) return result;
       return { ok: true, data: undefined };
     },
