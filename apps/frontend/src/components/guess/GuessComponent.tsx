@@ -7,10 +7,7 @@ import OverlayComponent from '@/components/guess/OverlayComponent';
 import { frontendClientConfig } from '@/config/client';
 import RoundCountdownComponent from './RoundCountdown';
 
-const GoogleMapComponent = dynamic(
-  () => import('@/components/guess/maps/GoogleMapComponent'),
-  { ssr: false },
-);
+const GameMap = dynamic(() => import('@/components/guess/Map'), { ssr: false });
 
 type GuessComponentProps = Pick<
   GameComponentProps,
@@ -32,8 +29,8 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
   return (
     <div>
       <div className="fixed w-full h-full z-0">
-        <GoogleMapComponent
-          API_KEY={frontendClientConfig.googleMapsApiKey}
+        <GameMap
+          googleMapsApiKey={frontendClientConfig.googleMapsApiKey}
           mapProps={gameRound.mapProps}
         />
       </div>
