@@ -37,6 +37,9 @@ function toSocketConnection(socket: Socket): SocketConnection {
     get connected() {
       return socket.connected;
     },
+    get active() {
+      return socket.active;
+    },
     connect: () => {
       socket.connect();
     },
@@ -51,6 +54,12 @@ function toSocketConnection(socket: Socket): SocketConnection {
     },
     off: (event, listener) => {
       socket.off(toUntypedEventName(event), listener);
+    },
+    onReconnection: (event, listener) => {
+      socket.io.on(event, listener);
+    },
+    offReconnection: (event, listener) => {
+      socket.io.off(event, listener);
     },
   };
 }

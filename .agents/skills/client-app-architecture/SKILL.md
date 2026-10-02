@@ -56,7 +56,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/category` | `src/features/category/` | Port `CategoryApi`, factory `createCategoryApi` et chargement des arbres de catégories (`useCategoryTrees`). |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`), la supervision de connexion (`sessionConnection` : statut `connecting | connected | reconnecting | closed`, restauration de la session à chaque `connect`, rafraîchissement d'auth sur rejet du handshake) et les transitions (`sessionState`) restent privés au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
 | `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil et hook `useProfile`. |
@@ -74,7 +74,7 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 |---|---|
 | `TokenStorage` | `expo-secure-store` côté mobile. Le navigateur laisse Nest gérer les cookies `httpOnly`. |
 | `KeyValueStorage` | `localStorage` côté web, `AsyncStorage` côté mobile. Stocke des chaînes : le domaine décode ce qu'il a écrit. |
-| `SocketConnection` / `SocketFactory` | `socket.io-client`. La factory est asynchrone car le mobile lit le token avant d'ouvrir la socket. |
+| `SocketConnection` / `SocketFactory` | `socket.io-client`, events de reconnexion du `Manager` compris. La factory est asynchrone car le mobile lit son visitorId avant d'ouvrir la socket ; son `auth` est une fonction relue à chaque handshake. |
 | `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. |
 
 `packages/client/biome.json` fait échouer `pnpm format:check` sur un import de `next/*`, `expo-*`, `react-native*`, `react-dom` ou `@cityborn/design-system` dans le package. Quand la règle se déclenche, déclarer un port et l'implémenter dans l'app.

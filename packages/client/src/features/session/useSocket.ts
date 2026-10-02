@@ -1,7 +1,14 @@
 'use client';
 
 import { WS_ERROR_EVENT } from '@cityborn/api';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type {
   SocketConnection,
   SocketFactory,
@@ -10,10 +17,27 @@ import type {
 } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
 import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
+import { useAuth } from '../auth';
+import {
+  type SessionConnection,
+  type SessionConnectionStatus,
+  superviseSessionConnection,
+} from './sessionConnection';
 
-export interface SessionSocket {
-  connected: boolean;
-  hasDisconnected: boolean;
+type SessionSocketOptions = {
+  createSocket: SocketFactory;
+  restoreSession: (emit: WsEmit) => Promise<void>;
+};
+
+type SessionSocketCallbacks = {
+  restoreSession: (emit: WsEmit) => Promise<void>;
+  refreshAuthentication: () => Promise<void>;
+  invokeError: (error: unknown, fallbackMessage?: string) => void;
+};
+
+export type SessionSocket = {
+  connectionStatus: SessionConnectionStatus;
+  retryConnection: () => void;
   emit: WsEmit;
   on: <Name extends SocketListenEvent>(
     event: Name,
@@ -23,61 +47,98 @@ export interface SessionSocket {
     event: Name,
     listener?: SocketListenEvents[Name],
   ) => void;
-}
+};
 
-export function useSocket(createSocket: SocketFactory): SessionSocket {
+const CONNECTION_FAILED_MESSAGE = 'La connexion au serveur a échoué';
+
+export function useSocket({
+  createSocket,
+  restoreSession,
+}: SessionSocketOptions): SessionSocket {
   const [socket, setSocket] = useState<SocketConnection | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [hasDisconnected, setHasDisconnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] =
+    useState<SessionConnectionStatus>('connecting');
+  const retryConnectionRef: RefObject<() => void> = useRef<() => void>(
+    () => {},
+  );
 
   const { invokeError } = useError();
+  const { refreshUser } = useAuth();
+
+  const callbacks: RefObject<SessionSocketCallbacks> =
+    useRef<SessionSocketCallbacks>({
+      restoreSession,
+      refreshAuthentication: refreshUser,
+      invokeError,
+    });
+
+  useEffect(() => {
+    callbacks.current = {
+      restoreSession,
+      refreshAuthentication: refreshUser,
+      invokeError,
+    };
+  });
 
   useEffect(() => {
     let mounted = true;
     let openedSocket: SocketConnection | null = null;
+    let sessionConnection: SessionConnection | null = null;
 
-    createSocket().then((socket) => {
-      if (!mounted) return socket.disconnect();
+    const handleWsError: SocketListenEvents[typeof WS_ERROR_EVENT] = (
+      error,
+    ) => {
+      callbacks.current.invokeError(error, 'Une erreur est survenue');
+    };
 
-      openedSocket = socket;
+    const openSocket = (): void => {
+      setConnectionStatus('connecting');
 
-      socket.on('connect', () => setConnected(true));
+      createSocket()
+        .then((createdSocket: SocketConnection) => {
+          if (!mounted) return createdSocket.disconnect();
 
-      socket.on('disconnect', () => {
-        setHasDisconnected(true);
-        setConnected(false);
-      });
+          openedSocket = createdSocket;
+          createdSocket.on(WS_ERROR_EVENT, handleWsError);
 
-      socket.on('connect_error', (error) => {
-        setHasDisconnected(false);
-        invokeError(error, 'La connexion au serveur a échoué');
-      });
+          const supervisedConnection: SessionConnection =
+            superviseSessionConnection(createdSocket, {
+              restoreSession: (emit) => callbacks.current.restoreSession(emit),
+              refreshAuthentication: () =>
+                callbacks.current.refreshAuthentication(),
+              onStatusChange: setConnectionStatus,
+              onFailure: (error) =>
+                callbacks.current.invokeError(error, CONNECTION_FAILED_MESSAGE),
+            });
 
-      socket.on(WS_ERROR_EVENT, (error) => {
-        invokeError(error, 'Une erreur est survenue');
-      });
+          sessionConnection = supervisedConnection;
+          retryConnectionRef.current = supervisedConnection.retry;
+          setSocket(createdSocket);
+        })
+        .catch((error: unknown) => {
+          if (!mounted) return;
+          retryConnectionRef.current = openSocket;
+          setConnectionStatus('closed');
+          callbacks.current.invokeError(error, CONNECTION_FAILED_MESSAGE);
+        });
+    };
 
-      if (!socket.connected) socket.connect();
-
-      setConnected(socket.connected);
-      setSocket(socket);
-    });
+    openSocket();
 
     return () => {
       mounted = false;
+      retryConnectionRef.current = () => {};
 
-      if (!openedSocket) return;
-
-      openedSocket.off('connect');
-      openedSocket.off('disconnect');
-      openedSocket.off('connect_error');
-      openedSocket.off(WS_ERROR_EVENT);
-      openedSocket.disconnect();
+      openedSocket?.off(WS_ERROR_EVENT, handleWsError);
+      sessionConnection?.close();
 
       setSocket(null);
-      setConnected(false);
     };
-  }, [createSocket, invokeError]);
+  }, [createSocket]);
+
+  const retryConnection = useCallback(() => {
+    retryConnectionRef.current();
+  }, []);
 
   const emit: WsEmit = useMemo(() => createWsEmit(socket), [socket]);
 
@@ -101,5 +162,5 @@ export function useSocket(createSocket: SocketFactory): SessionSocket {
     [socket],
   );
 
-  return { connected, hasDisconnected, emit, on, off };
+  return { connectionStatus, retryConnection, emit, on, off };
 }

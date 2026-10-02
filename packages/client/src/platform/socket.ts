@@ -4,20 +4,23 @@ import type {
   WsServerToClientEvents,
 } from '@cityborn/api';
 
-interface SocketLifecycleEvents {
+export type SocketConnectError = Error & { data?: unknown };
+
+type SocketLifecycleEvents = {
   connect: () => void;
   disconnect: (reason: string) => void;
-  connect_error: (error: Error) => void;
-}
+  connect_error: (error: SocketConnectError) => void;
+};
 
-export interface SocketListenEvents
-  extends WsServerToClientEvents,
-    SocketLifecycleEvents {}
+export type SocketListenEvents = WsServerToClientEvents & SocketLifecycleEvents;
 
 export type SocketListenEvent = keyof SocketListenEvents;
 
+export type SocketReconnectionEvent = 'reconnect_attempt' | 'reconnect_failed';
+
 export interface SocketConnection {
   readonly connected: boolean;
+  readonly active: boolean;
   connect(): void;
   disconnect(): void;
   emit<Name extends WsClientEventName>(
@@ -32,10 +35,8 @@ export interface SocketConnection {
     event: Name,
     listener?: SocketListenEvents[Name],
   ): void;
+  onReconnection(event: SocketReconnectionEvent, listener: () => void): void;
+  offReconnection(event: SocketReconnectionEvent, listener: () => void): void;
 }
 
-/**
- * Asynchrone car le mobile doit lire le token stocké avant d'ouvrir la socket,
- * là où le web s'authentifie par cookie et peut résoudre immédiatement.
- */
 export type SocketFactory = () => Promise<SocketConnection>;

@@ -10,6 +10,7 @@ import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { useMultiSession } from '@cityborn/client/session';
 import { useState } from 'react';
+import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
@@ -120,11 +121,23 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
     );
   }
 
-  if (multiSession.hasDisconnected && !multiSession.connected) {
+  if (multiSession.connectionStatus === 'reconnecting') {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
         <Text className="text-center">Reconnexion...</Text>
+      </View>
+    );
+  }
+
+  if (multiSession.connectionStatus === 'closed') {
+    return (
+      <View className="flex-1 items-center justify-center gap-4">
+        <Text className="text-center">Connexion à la session perdue</Text>
+        <View className="flex-row gap-3">
+          <Button label="Quitter" variant="outlined" onPress={handleExitGame} />
+          <Button label="Réessayer" onPress={multiSession.retryConnection} />
+        </View>
       </View>
     );
   }

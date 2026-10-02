@@ -25,6 +25,7 @@ function createConnection(ack?: unknown): {
 
   const connection: SocketConnection = {
     connected: true,
+    active: true,
     connect: () => {},
     disconnect: () => {},
     emit: (event, ...args) => {
@@ -36,6 +37,8 @@ function createConnection(ack?: unknown): {
     },
     on: () => {},
     off: () => {},
+    onReconnection: () => {},
+    offReconnection: () => {},
   };
 
   return { connection, calls };

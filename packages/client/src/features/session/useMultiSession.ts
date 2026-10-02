@@ -12,31 +12,38 @@ import {
   sessionWsEvent,
   sessionWsServerEvent,
 } from '@cityborn/api';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { Navigation } from '../../platform/navigation';
 import type { SocketFactory } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
+import type { WsEmit } from '../../ws/wsEmit';
 import type { SessionApi } from './sessionApi';
+import type { SessionConnectionStatus } from './sessionConnection';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
 
-export interface MultiSessionOptions {
+export type MultiSessionOptions = {
   localPlayerID: PlayerId | undefined;
   sessionID: SessionId;
   sessionApi: SessionApi;
   navigation: Navigation;
   createSocket: SocketFactory;
-}
+};
 
-export interface MultiSessionController extends SessionController {
-  connected: boolean;
-  hasDisconnected: boolean;
+export type MultiSessionController = SessionController & {
+  connectionStatus: SessionConnectionStatus;
+  retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
   kickPlayer: (playerToKick: PlayerId) => Promise<void>;
-  reconnect: () => Promise<void>;
-}
+};
 
 export function useMultiSession({
   localPlayerID,
@@ -47,15 +54,24 @@ export function useMultiSession({
 }: MultiSessionOptions): MultiSessionController {
   const { invokeError } = useError();
   const [session, setSession] = useState<Session>();
-  const [connected, setConnected] = useState(false);
-  const {
-    connected: socketConnected,
-    hasDisconnected,
-    emit,
-    on,
-    off,
-  } = useSocket(createSocket);
-  const hasJoined = useRef(false);
+  const joinedPlayerID: RefObject<PlayerId | null> = useRef<PlayerId | null>(
+    null,
+  );
+  const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
+
+  const restoreSession = useCallback(
+    async (emit: WsEmit) => {
+      const playerID: PlayerId | null = joinedPlayerID.current;
+      if (!playerID) return;
+      await emit(sessionWsEvent.reconnect, { sessionID, playerID });
+    },
+    [sessionID],
+  );
+
+  const { connectionStatus, retryConnection, emit, on, off } = useSocket({
+    createSocket,
+    restoreSession,
+  });
 
   useEffect(() => {
     const loadSession = async () => {
@@ -65,10 +81,6 @@ export function useMultiSession({
     };
     loadSession();
   }, [sessionID, sessionApi, invokeError]);
-
-  useEffect(() => {
-    if (!socketConnected) setConnected(false);
-  }, [socketConnected]);
 
   useEffect(() => {
     const handleSessionUpdate = (incoming: Session) => {
@@ -86,49 +98,26 @@ export function useMultiSession({
           'Joining session failed: session or player not initialized',
         );
 
-      hasJoined.current = true;
+      joinAttempted.current = true;
       await emit(sessionWsEvent.join, { sessionID: session.id, playerID });
-      setConnected(true);
+      joinedPlayerID.current = playerID;
     },
     [session, emit],
   );
 
-  const reconnect = useCallback(async () => {
-    if (!session || !localPlayerID)
-      throw new Error('Reconnection failed: player or session not initialized');
-
-    await emit(sessionWsEvent.reconnect, {
-      sessionID: session.id,
-      playerID: localPlayerID,
-    });
-    setConnected(true);
-  }, [session, localPlayerID, emit]);
-
   useEffect(() => {
-    if (!session || !localPlayerID || connected || !socketConnected) return;
+    if (
+      connectionStatus !== 'connected' ||
+      !session ||
+      !localPlayerID ||
+      joinAttempted.current
+    )
+      return;
 
-    const joinOrReconnect = async () => {
-      try {
-        if (hasJoined.current) {
-          if (hasDisconnected) await reconnect();
-          return;
-        }
-        await join(localPlayerID);
-      } catch (error) {
-        invokeError(error, 'Une erreur est survenue');
-      }
-    };
-    joinOrReconnect();
-  }, [
-    session,
-    localPlayerID,
-    connected,
-    socketConnected,
-    hasDisconnected,
-    join,
-    reconnect,
-    invokeError,
-  ]);
+    join(localPlayerID).catch((error: unknown) => {
+      invokeError(error, 'Une erreur est survenue');
+    });
+  }, [connectionStatus, session, localPlayerID, join, invokeError]);
 
   const requireSession = (action: string): Session => {
     if (!session) throw new Error(`${action} failed: session not initialized`);
@@ -191,8 +180,8 @@ export function useMultiSession({
   return {
     session,
     isHost: isHostOf(session, localPlayerID),
-    connected,
-    hasDisconnected,
+    connectionStatus,
+    retryConnection,
     join,
     updateHost,
     updateGameConfig,
@@ -203,6 +192,5 @@ export function useMultiSession({
     endGame,
     playAgain,
     exitGame,
-    reconnect,
   };
 }
