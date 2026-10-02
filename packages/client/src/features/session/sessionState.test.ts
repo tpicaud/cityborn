@@ -60,7 +60,7 @@ function createSession(currentGame?: Game): Session {
   };
 }
 
-test('withHost et withStatus ne mutent pas la session reçue', () => {
+test('withHost and withStatus do not mutate the given session', () => {
   const session = createSession();
 
   assert.equal(
@@ -75,7 +75,7 @@ test('withHost et withStatus ne mutent pas la session reçue', () => {
   assert.equal(session.status, SessionStatus.IN_LOBBY);
 });
 
-test('withGameConfig fusionne la configuration partielle', () => {
+test('withGameConfig merges the partial configuration', () => {
   const session = createSession();
 
   const updated = withGameConfig(session, { timer: 10 });
@@ -85,7 +85,7 @@ test('withGameConfig fusionne la configuration partielle', () => {
   assert.equal(session.gameConfig.timer, 25);
 });
 
-test('withGame puis withoutGame ouvrent et referment la partie', () => {
+test('withGame then withoutGame open and close the game', () => {
   const session = createSession();
   const game = createGame();
 
@@ -94,7 +94,7 @@ test('withGame puis withoutGame ouvrent et referment la partie', () => {
   assert.equal(withoutGame(inGame).currentGame, undefined);
 });
 
-test('isHostOf est faux sans session ou sans joueur', () => {
+test('isHostOf is false without a session or a player', () => {
   const session = createSession();
 
   assert.equal(isHostOf(session, citizen), true);
@@ -103,7 +103,7 @@ test('isHostOf est faux sans session ou sans joueur', () => {
   assert.equal(isHostOf(undefined, citizen), false);
 });
 
-test('startSoloGame passe la session en jeu et démarre le premier tour', () => {
+test('startSoloGame puts the session in game and starts the first round', () => {
   const session = startSoloGame(createSession(), createGame());
 
   assert.equal(session.status, SessionStatus.IN_GAME);
@@ -118,7 +118,7 @@ test('startSoloGame passe la session en jeu et démarre le premier tour', () => 
   );
 });
 
-test('applySoloGuess clôture le tour du joueur solo', () => {
+test('applySoloGuess ends the round of the solo player', () => {
   const started = startSoloGame(createSession(), createGame());
 
   const guessed = applySoloGuess(started, citizen, guess);
@@ -128,7 +128,7 @@ test('applySoloGuess clôture le tour du joueur solo', () => {
   assert.deepEqual(round?.playersGuesses?.[citizen], guess);
 });
 
-test('applySoloGuess est sans effet hors tour en cours', () => {
+test('applySoloGuess has no effect outside an ongoing round', () => {
   const session = createSession(createGame());
 
   assert.equal(applySoloGuess(session, citizen, guess), session);
@@ -138,7 +138,7 @@ test('applySoloGuess est sans effet hors tour en cours', () => {
   );
 });
 
-test('advanceSoloRound enchaîne les tours puis signale la fin de partie', () => {
+test('advanceSoloRound moves through rounds then reports the end of the game', () => {
   const firstRound = applySoloGuess(
     startSoloGame(createSession(), createGame()),
     citizen,
@@ -161,13 +161,13 @@ test('advanceSoloRound enchaîne les tours puis signale la fin de partie', () =>
   );
 });
 
-test('advanceSoloRound sans partie ne signale pas de fin de partie', () => {
+test('advanceSoloRound without a game does not report the end of the game', () => {
   const session = createSession();
 
   assert.deepEqual(advanceSoloRound(session), { session, isGameOver: false });
 });
 
-test('mergeSessionUpdate conserve les guessObjects locaux absents du serveur', () => {
+test('mergeSessionUpdate keeps local guessObjects missing from the server', () => {
   const guessObjects: FullGuessObject[] = [
     {
       id: firstObjectId,
@@ -194,7 +194,7 @@ test('mergeSessionUpdate conserve les guessObjects locaux absents du serveur', (
   assert.deepEqual(merged.currentGame?.state.guessObjects, guessObjects);
 });
 
-test('mergeSessionUpdate adopte la partie du serveur quand elle est complète', () => {
+test('mergeSessionUpdate adopts the server game when it is complete', () => {
   const incoming = withGame(createSession(), createGame());
 
   const merged = mergeSessionUpdate(undefined, incoming);

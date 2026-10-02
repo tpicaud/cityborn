@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ApiError } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/api';
-import type { SocketConnectError, SocketConnection } from '../platform/socket';
+import type { SocketConnectError, SocketConnection } from './socketConnection';
 import {
   superviseWsConnection,
   type WsConnection,

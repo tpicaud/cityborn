@@ -7,7 +7,7 @@ import {
   synchronizeRoundDisplayState,
 } from './gameRound';
 
-test('createTimedOutGuess conserve le pré-guess ou utilise le guess vide', () => {
+test('createTimedOutGuess keeps the pre-guess or falls back to an empty guess', () => {
   assert.deepEqual(createTimedOutGuess(undefined), {
     coordinates: { lat: 0, lng: 0 },
     distance: -1,
@@ -30,7 +30,7 @@ test('createTimedOutGuess conserve le pré-guess ou utilise le guess vide', () =
   );
 });
 
-test('le flow de round synchronise les transitions serveur', () => {
+test('round flow follows server transitions', () => {
   assert.equal(
     synchronizeRoundDisplayState(RoundStatus.SHOWING_RESULTS),
     'results',

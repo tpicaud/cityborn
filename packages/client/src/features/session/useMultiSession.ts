@@ -20,8 +20,8 @@ import {
   useState,
 } from 'react';
 import type { Navigation } from '../../platform/navigation';
-import type { SocketFactory } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
+import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
 import type { SessionApi } from './sessionApi';

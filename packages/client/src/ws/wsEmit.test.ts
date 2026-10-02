@@ -7,7 +7,7 @@ import {
   SessionIdSchema,
   sessionWsEvent,
 } from '@cityborn/api';
-import type { SocketConnection } from '../platform/socket';
+import type { SocketConnection } from './socketConnection';
 import { createWsEmit, type WsEmit } from './wsEmit';
 
 const sessionID: SessionId = SessionIdSchema.parse('s1');
@@ -44,7 +44,7 @@ function createConnection(ack?: unknown): {
   return { connection, calls };
 }
 
-test('transmet le corps avant le callback', async () => {
+test('sends the body before the callback', async () => {
   const { connection, calls } = createConnection({ success: true });
   const emit: WsEmit = createWsEmit(connection);
 
@@ -56,7 +56,7 @@ test('transmet le corps avant le callback', async () => {
   assert.equal(typeof respond, 'function');
 });
 
-test('émet sans corps quand la commande n’en prend pas', async () => {
+test('emits without a body when the command takes none', async () => {
   const { connection, calls } = createConnection({ success: true });
   const emit: WsEmit = createWsEmit(connection);
 
@@ -66,7 +66,7 @@ test('émet sans corps quand la commande n’en prend pas', async () => {
   assert.equal(typeof calls[0][1], 'function');
 });
 
-test('rejette avec l’erreur renvoyée par le serveur', async () => {
+test('rejects with the error returned by the server', async () => {
   const error: ApiError = {
     code: ErrorCode.SESSION_FORBIDDEN_HOST,
     message: 'Seul l’hôte peut démarrer la partie',
@@ -78,7 +78,7 @@ test('rejette avec l’erreur renvoyée par le serveur', async () => {
   await assert.rejects(() => emit(sessionWsEvent.startGame), error);
 });
 
-test('normalise un accusé d’échec sans erreur exploitable', async () => {
+test('normalizes a failure ack without a usable error', async () => {
   const { connection } = createConnection({ success: false });
   const emit: WsEmit = createWsEmit(connection);
 
@@ -92,7 +92,7 @@ test('normalise un accusé d’échec sans erreur exploitable', async () => {
   );
 });
 
-test('normalise un accusé hors enveloppe du contrat', async () => {
+test('normalizes an ack outside the contract envelope', async () => {
   const { connection } = createConnection({ done: true });
   const emit: WsEmit = createWsEmit(connection);
 
@@ -105,7 +105,7 @@ test('normalise un accusé hors enveloppe du contrat', async () => {
   );
 });
 
-test('rejette un corps venu d’une source non typée, sans rien émettre', async () => {
+test('rejects a body from an untyped source without emitting anything', async () => {
   const { connection, calls } = createConnection({ success: true });
   const emit: WsEmit = createWsEmit(connection);
   const gameConfig: GameConfig = JSON.parse('{"timer":"fast"}');
@@ -121,7 +121,7 @@ test('rejette un corps venu d’une source non typée, sans rien émettre', asyn
   assert.equal(calls.length, 0);
 });
 
-test('rejette quand la socket n’est pas disponible', async () => {
+test('rejects when the socket is unavailable', async () => {
   const emit: WsEmit = createWsEmit(null);
 
   await assert.rejects(
@@ -133,7 +133,7 @@ test('rejette quand la socket n’est pas disponible', async () => {
   );
 });
 
-test('rejette quand le serveur n’accuse jamais réception', async () => {
+test('rejects when the server never acknowledges', async () => {
   const { connection } = createConnection();
   const emit: WsEmit = createWsEmit(connection, 5);
 

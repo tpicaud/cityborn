@@ -1,5 +1,5 @@
 import { ErrorCode, isApiError } from '@cityborn/api';
-import type { SocketConnectError, SocketConnection } from '../platform/socket';
+import type { SocketConnectError, SocketConnection } from './socketConnection';
 import { createWsEmit, type WsEmit } from './wsEmit';
 
 export type WsConnectionStatus =
