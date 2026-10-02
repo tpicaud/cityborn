@@ -2,17 +2,17 @@
 
 import { type RoundTimer, useRoundTimer } from '@cityborn/client/game';
 
-type TimerComponentProps = {
+type TimerProps = {
   totalTimeInSeconds: number;
   endMessage: string;
   onTimeUp: () => void;
 };
 
-export default function TimerComponent({
+export default function Timer({
   totalTimeInSeconds,
   endMessage,
   onTimeUp,
-}: TimerComponentProps) {
+}: TimerProps) {
   const roundTimer: RoundTimer = useRoundTimer({
     totalTimeInSeconds,
     onTimeUp,

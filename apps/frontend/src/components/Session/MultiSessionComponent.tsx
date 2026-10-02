@@ -10,7 +10,7 @@ import {
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog';
-import { GameComponent } from '@/components/Session/GameComponent';
+import { Game } from '@/components/Session/Game';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import { sessionApi } from '@/lib/api/session';
@@ -54,7 +54,7 @@ function MultiSession({ sessionID, navigation }: MultiSessionProps) {
     <>
       {multiSession.session.status === SessionStatus.IN_GAME &&
       multiSession.session.currentGame ? (
-        <GameComponent
+        <Game
           localPlayerID={multiSession.localPlayerID}
           isHost={multiSession.isHost}
           session={multiSession.session}

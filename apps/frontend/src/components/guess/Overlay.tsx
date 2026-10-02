@@ -18,9 +18,9 @@ import {
 import { Box } from '@mui/material';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import GuessObjectComponent from './GuessObjectComponent';
-import TimerComponent from './TimerComponent';
+import Timer from './Timer';
 
-type OverlayComponentProps = {
+type OverlayProps = {
   localPlayerID: PlayerId;
   preGuess: Guess | undefined;
   game: Game;
@@ -115,13 +115,13 @@ function GuessResult({ roundResult }: { roundResult: RoundResult }) {
   );
 }
 
-export default function OverlayComponent({
+export default function Overlay({
   localPlayerID,
   preGuess,
   game,
   handleGuess,
   handleIsTimeUp,
-}: OverlayComponentProps) {
+}: OverlayProps) {
   const guessObject: FullGuessObject | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
     game,
@@ -135,7 +135,7 @@ export default function OverlayComponent({
       {guessObject && <GuessObjectComponent guessObject={guessObject} />}
       <div className="absolute w-[27%] mx-6 my-14">
         {isGuessing && (
-          <TimerComponent
+          <Timer
             totalTimeInSeconds={game.config.timer}
             endMessage="Terminé !"
             onTimeUp={handleIsTimeUp}

@@ -7,7 +7,7 @@ import {
   useGameRound,
 } from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
-import OverlayComponent from '@/components/guess/OverlayComponent';
+import Overlay from '@/components/guess/Overlay';
 import { frontendClientConfig } from '@/config/client';
 import RoundCountdown from './RoundCountdown';
 
@@ -15,15 +15,15 @@ const GameMap = dynamic(() => import('@/components/guess/Map'), {
   ssr: false,
 });
 
-type GuessComponentProps = Pick<GameComponentProps, 'game' | 'handleGuess'> & {
+type GuessProps = Pick<GameComponentProps, 'game' | 'handleGuess'> & {
   localPlayerID: PlayerId;
 };
 
-export default function GuessComponent({
+export default function Guess({
   localPlayerID,
   game,
   handleGuess,
-}: GuessComponentProps) {
+}: GuessProps) {
   const gameRound: GameRoundController = useGameRound({
     game,
     localPlayerID,
@@ -45,7 +45,7 @@ export default function GuessComponent({
 
       {gameRound.showOverlay && (
         <div className="z-10">
-          <OverlayComponent
+          <Overlay
             localPlayerID={localPlayerID}
             preGuess={gameRound.preGuess}
             game={game}

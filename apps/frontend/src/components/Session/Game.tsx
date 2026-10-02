@@ -7,12 +7,12 @@ import {
 } from '@cityborn/client/game';
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
-import GuessComponent from '@/components/guess/GuessComponent';
+import Guess from '@/components/guess/Guess';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import ResultsComponent from './ResultsComponent';
+import Results from './Results';
 
-export const GameComponent = ({
+export const Game = ({
   localPlayerID,
   isHost,
   session,
@@ -34,7 +34,7 @@ export const GameComponent = ({
 
   return (
     <div>
-      <GuessComponent
+      <Guess
         localPlayerID={activePlayerID}
         game={game}
         handleGuess={handleGuess}
@@ -76,7 +76,7 @@ export const GameComponent = ({
           <div className="flex flex-row w-full h-full items-center justify-center">
             <Backdrop open={true}>
               <div className="w-[80%]">
-                <ResultsComponent
+                <Results
                   game={game}
                   localPlayerID={activePlayerID}
                   isHost={isHost}

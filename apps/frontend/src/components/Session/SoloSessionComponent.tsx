@@ -4,7 +4,7 @@ import {
   type SessionController,
   useSoloSession,
 } from '@cityborn/client/session';
-import { GameComponent } from '@/components/Session/GameComponent';
+import { Game } from '@/components/Session/Game';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import { sessionApi } from '@/lib/api/session';
@@ -22,7 +22,7 @@ export default function SoloSessionComponent() {
 
   if (soloSession.session.currentGame) {
     return (
-      <GameComponent
+      <Game
         localPlayerID={soloSession.localPlayerID}
         isHost={soloSession.isHost}
         session={soloSession.session}

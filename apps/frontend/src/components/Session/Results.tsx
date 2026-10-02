@@ -19,7 +19,7 @@ import {
 import LoadingButton from '../ui/buttons/LoadingButton';
 import LoadingComponent from '../ui/loaders/LoadingComponent';
 
-const ResultsComponent = ({
+const Results = ({
   game,
   localPlayerID,
   isHost,
@@ -236,4 +236,4 @@ const ResultsComponent = ({
   );
 };
 
-export default ResultsComponent;
+export default Results;
