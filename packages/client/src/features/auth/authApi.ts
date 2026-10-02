@@ -11,9 +11,13 @@ import type {
   User,
   VerifyEmailData,
 } from '@cityborn/api';
-import { toApiResult, unwrapApiResponse } from '@cityborn/api';
+import {
+  ApiResponseError,
+  toApiResult,
+  unwrapApiResponse,
+} from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
-import type { ApiClient } from '../../api/createApiClient';
+import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
 export interface AuthApi {
@@ -48,7 +52,7 @@ function toVoidResult<T>(result: ApiResult<T>): ApiResult<void> {
 }
 
 function buildAuthApi(
-  client: Pick<ApiClient, 'auth'>,
+  contractClient: Pick<ContractClient, 'auth'>,
   credentialsStrategy: AuthCredentialsStrategy,
 ): AuthApi {
   return {
@@ -56,10 +60,14 @@ function buildAuthApi(
       try {
         if (!(await credentialsStrategy.mayHoldCredentials())) return null;
         const result: ClientInferResponses<AppContract['auth']['me']> =
-          await client.auth.me();
-        return result.status === 200 ? result.body : null;
-      } catch {
-        return null;
+          await contractClient.auth.me();
+        if (result.status === 401) return null;
+        return unwrapApiResponse(result);
+      } catch (error: unknown) {
+        if (error instanceof ApiResponseError && error.statusCode === 401) {
+          return null;
+        }
+        throw error;
       }
     },
 
@@ -72,24 +80,26 @@ function buildAuthApi(
 
     async deleteUser() {
       return toVoidResult(
-        toApiResult(await client.auth.deleteUser({ body: {} })),
+        toApiResult(await contractClient.auth.deleteUser({ body: {} })),
       );
     },
 
     async resendVerificationEmail() {
       return toVoidResult(
-        toApiResult(await client.auth.resendVerificationEmail({ body: {} })),
+        toApiResult(
+          await contractClient.auth.resendVerificationEmail({ body: {} }),
+        ),
       );
     },
 
     async verifyEmail(data) {
-      return toApiResult(await client.auth.verifyEmail({ body: data }));
+      return toApiResult(await contractClient.auth.verifyEmail({ body: data }));
     },
   };
 }
 
 function createBearerCredentialsStrategy(
-  client: Pick<ApiClient, 'auth'>,
+  contractClient: Pick<ContractClient, 'auth'>,
   tokenStorage: TokenStorage,
 ): AuthCredentialsStrategy {
   const storeTokens = async (
@@ -112,22 +122,26 @@ function createBearerCredentialsStrategy(
     },
 
     async signIn(data) {
-      return storeTokens(toApiResult(await client.auth.signIn({ body: data })));
+      return storeTokens(
+        toApiResult(await contractClient.auth.signIn({ body: data })),
+      );
     },
 
     async signUp(data) {
-      return storeTokens(toApiResult(await client.auth.signUp({ body: data })));
+      return storeTokens(
+        toApiResult(await contractClient.auth.signUp({ body: data })),
+      );
     },
 
     async signInWithGoogle(data) {
       return storeTokens(
-        toApiResult(await client.auth.signInWithGoogle({ body: data })),
+        toApiResult(await contractClient.auth.signInWithGoogle({ body: data })),
       );
     },
 
     async signInWithApple(data) {
       return storeTokens(
-        toApiResult(await client.auth.signInWithApple({ body: data })),
+        toApiResult(await contractClient.auth.signInWithApple({ body: data })),
       );
     },
 
@@ -137,14 +151,14 @@ function createBearerCredentialsStrategy(
 
     async updatePassword(data) {
       return storeTokens(
-        toApiResult(await client.auth.updatePassword({ body: data })),
+        toApiResult(await contractClient.auth.updatePassword({ body: data })),
       );
     },
   };
 }
 
 function createCookieCredentialsStrategy(
-  client: Pick<ApiClient, 'auth'>,
+  contractClient: Pick<ContractClient, 'auth'>,
 ): AuthCredentialsStrategy {
   return {
     async mayHoldCredentials() {
@@ -152,47 +166,56 @@ function createCookieCredentialsStrategy(
     },
 
     async signIn(data) {
-      return toApiResult(await client.auth.cookie.signIn({ body: data }));
+      return toApiResult(
+        await contractClient.auth.cookie.signIn({ body: data }),
+      );
     },
 
     async signUp(data) {
-      return toApiResult(await client.auth.cookie.signUp({ body: data }));
+      return toApiResult(
+        await contractClient.auth.cookie.signUp({ body: data }),
+      );
     },
 
     async signInWithGoogle(data) {
       return toApiResult(
-        await client.auth.cookie.signInWithGoogle({ body: data }),
+        await contractClient.auth.cookie.signInWithGoogle({ body: data }),
       );
     },
 
     async signInWithApple(data) {
       return toApiResult(
-        await client.auth.cookie.signInWithApple({ body: data }),
+        await contractClient.auth.cookie.signInWithApple({ body: data }),
       );
     },
 
     async signOut() {
-      unwrapApiResponse(await client.auth.signOut({ body: {} }));
+      unwrapApiResponse(await contractClient.auth.signOut({ body: {} }));
     },
 
     async updatePassword(data) {
       return toApiResult(
-        await client.auth.cookie.updatePassword({ body: data }),
+        await contractClient.auth.cookie.updatePassword({ body: data }),
       );
     },
   };
 }
 
 export function createAuthApi(
-  client: Pick<ApiClient, 'auth'>,
+  contractClient: Pick<ContractClient, 'auth'>,
   tokenStorage: TokenStorage,
 ): AuthApi {
   return buildAuthApi(
-    client,
-    createBearerCredentialsStrategy(client, tokenStorage),
+    contractClient,
+    createBearerCredentialsStrategy(contractClient, tokenStorage),
   );
 }
 
-export function createCookieAuthApi(client: Pick<ApiClient, 'auth'>): AuthApi {
-  return buildAuthApi(client, createCookieCredentialsStrategy(client));
+export function createCookieAuthApi(
+  contractClient: Pick<ContractClient, 'auth'>,
+): AuthApi {
+  return buildAuthApi(
+    contractClient,
+    createCookieCredentialsStrategy(contractClient),
+  );
 }

@@ -1,3 +1,3 @@
 export * from './authFetch';
-export * from './createApiClient';
+export * from './contractClient';
 export * from './visitorId';

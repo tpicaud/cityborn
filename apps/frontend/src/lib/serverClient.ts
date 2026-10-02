@@ -1,4 +1,7 @@
-import { createApiClient } from '@cityborn/client/api';
+import {
+  type ContractClient,
+  createBearerContractClient,
+} from '@cityborn/client/api';
 import { type AuthApi, createAuthApi } from '@cityborn/client/auth';
 import { cookies } from 'next/headers';
 import { getFrontendServerConfig } from '@/config/server';
@@ -7,7 +10,7 @@ import { WebTokenStorage } from './tokenStorage';
 async function createServerContext() {
   const frontendServerConfig = getFrontendServerConfig();
   const tokenStorage = new WebTokenStorage(await cookies());
-  const client = createApiClient(
+  const contractClient: ContractClient = createBearerContractClient(
     frontendServerConfig.restBackendUrl,
     tokenStorage,
     {
@@ -15,15 +18,15 @@ async function createServerContext() {
     },
   );
 
-  return { client, tokenStorage };
+  return { contractClient, tokenStorage };
 }
 
-export async function getServerClient() {
-  const { client } = await createServerContext();
-  return client;
+export async function getServerClient(): Promise<ContractClient> {
+  const { contractClient } = await createServerContext();
+  return contractClient;
 }
 
 export async function getServerAuthApi(): Promise<AuthApi> {
-  const { client, tokenStorage } = await createServerContext();
-  return createAuthApi(client, tokenStorage);
+  const { contractClient, tokenStorage } = await createServerContext();
+  return createAuthApi(contractClient, tokenStorage);
 }

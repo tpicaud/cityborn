@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  ApiResponseError,
   type ApiResult,
   ErrorCode,
   type User,
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
-import type { ApiClient } from '../../api/createApiClient';
+import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 import { type AuthApi, createAuthApi, createCookieAuthApi } from './authApi';
 import { toCreateUser } from './authSchema';
@@ -62,9 +63,9 @@ function unexpectedCall(): never {
 }
 
 function createFakeClient(
-  routes: Partial<Omit<ApiClient['auth'], 'cookie'>>,
-  cookieRoutes: Partial<ApiClient['auth']['cookie']> = {},
-): Pick<ApiClient, 'auth'> {
+  routes: Partial<Omit<ContractClient['auth'], 'cookie'>>,
+  cookieRoutes: Partial<ContractClient['auth']['cookie']> = {},
+): Pick<ContractClient, 'auth'> {
   return {
     auth: {
       me: unexpectedCall,
@@ -171,6 +172,129 @@ test('getCurrentUser resolves to null without calling the API when no token is s
   const authApi = createAuthApi(createFakeClient({}), tokenStorage);
 
   assert.equal(await authApi.getCurrentUser(), null);
+});
+
+type AuthApiFactory = {
+  name: string;
+  create: (contractClient: Pick<ContractClient, 'auth'>) => AuthApi;
+};
+
+const authApiFactories: AuthApiFactory[] = [
+  { name: 'cookie', create: createCookieAuthApi },
+  {
+    name: 'bearer',
+    create: (contractClient) => {
+      const { state, tokenStorage }: FakeTokenStorage =
+        createFakeTokenStorage();
+      state.tokens = ['access', 'refresh'];
+      return createAuthApi(contractClient, tokenStorage);
+    },
+  },
+];
+
+authApiFactories.forEach(({ name, create }: AuthApiFactory) => {
+  test(`${name} getCurrentUser returns the authenticated user`, async () => {
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => ({ status: 200, body: user, headers: new Headers() }),
+      }),
+    );
+
+    assert.deepEqual(await authApi.getCurrentUser(), user);
+  });
+
+  test(`${name} getCurrentUser returns null for a refused session`, async () => {
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => ({
+          status: 401,
+          body: {
+            code: ErrorCode.USER_TOKEN_MISSING,
+            message: 'No token',
+            statusCode: 401,
+          },
+          headers: new Headers(),
+        }),
+      }),
+    );
+
+    assert.equal(await authApi.getCurrentUser(), null);
+  });
+
+  test(`${name} getCurrentUser returns null when refreshing refuses the session`, async () => {
+    const refreshError: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.USER_REFRESH_FAILED,
+      message: 'Invalid refresh token',
+      statusCode: 401,
+    });
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => {
+          throw refreshError;
+        },
+      }),
+    );
+
+    assert.equal(await authApi.getCurrentUser(), null);
+  });
+
+  test(`${name} getCurrentUser propagates network failures`, async () => {
+    const networkError: TypeError = new TypeError('Failed to fetch');
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => {
+          throw networkError;
+        },
+      }),
+    );
+
+    await assert.rejects(
+      authApi.getCurrentUser(),
+      (error: unknown): boolean => error === networkError,
+    );
+  });
+
+  test(`${name} getCurrentUser propagates server errors`, async () => {
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => ({
+          status: 500,
+          body: {
+            code: ErrorCode.UNKNOWN_ERROR,
+            message: 'Backend unavailable',
+            statusCode: 500,
+          },
+          headers: new Headers(),
+        }),
+      }),
+    );
+
+    await assert.rejects(
+      authApi.getCurrentUser(),
+      (error: unknown): boolean =>
+        error instanceof ApiResponseError && error.statusCode === 500,
+    );
+  });
+
+  test(`${name} getCurrentUser propagates technical refresh errors`, async () => {
+    const refreshError: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.UNKNOWN_ERROR,
+      message: 'Refresh backend unavailable',
+      statusCode: 503,
+    });
+    const authApi: AuthApi = create(
+      createFakeClient({
+        me: async () => {
+          throw refreshError;
+        },
+      }),
+    );
+
+    await assert.rejects(
+      authApi.getCurrentUser(),
+      (error: unknown): boolean => error === refreshError,
+    );
+  });
 });
 
 test('signOut clears the stored tokens', async () => {

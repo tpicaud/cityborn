@@ -1,21 +1,19 @@
 import type { GameConfig, Session } from '@cityborn/api';
-import {
-  useCategorySelection,
-  useCategoryTrees,
-} from '@cityborn/client/session';
+import { useCategoryTrees } from '@cityborn/client/category';
+import { useCategorySelection } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { fetchCategoryTrees } from '@/lib/api/category';
+import { categoryApi } from '@/lib/api/category';
 
-interface SoloLobbyProps {
+type SoloLobbyProps = {
   session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
-}
+};
 
 export function SoloLobby({
   session,
@@ -23,7 +21,7 @@ export function SoloLobby({
   handleUpdateGameConfig,
   handleStartGame,
 }: SoloLobbyProps) {
-  const categoryTrees = useCategoryTrees(fetchCategoryTrees);
+  const { categoryTrees } = useCategoryTrees(categoryApi);
   const {
     selectedPath,
     currentNodes,

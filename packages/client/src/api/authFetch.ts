@@ -19,6 +19,8 @@ export type AuthFetchOptions = {
   getVisitorId?: () => string | null | Promise<string | null>;
 };
 
+type AuthenticationRefreshResult = { ok: true } | { ok: false; error: unknown };
+
 function buildClientHeaders(
   client: ClientInfo | undefined,
 ): Record<string, string> {
@@ -34,7 +36,7 @@ function buildClientHeaders(
 
 export class AuthFetch {
   private isRefreshing = false;
-  private refreshQueue: ((refreshed: boolean) => void)[] = [];
+  private refreshQueue: ((result: AuthenticationRefreshResult) => void)[] = [];
   private readonly baseURL: string;
   private readonly authTransport: AuthTransport;
   private readonly onResponseHeaders?: (headers: Headers) => void;
@@ -121,15 +123,9 @@ export class AuthFetch {
   ): Promise<{ status: number; body: unknown; headers: Headers }> {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
-        this.refreshQueue.push(async (refreshed) => {
-          if (!refreshed) {
-            reject(
-              new ApiResponseError({
-                code: ErrorCode.USER_REFRESH_FAILED,
-                message: 'Refresh failed',
-                statusCode: 401,
-              }),
-            );
+        this.refreshQueue.push(async (result) => {
+          if (!result.ok) {
+            reject(result.error);
             return;
           }
           try {
@@ -144,12 +140,14 @@ export class AuthFetch {
     this.isRefreshing = true;
     try {
       await this.authTransport.refreshAuthentication(this.sendAuthRequest);
-      this.processQueue(true);
+      this.processQueue({ ok: true });
       return await this.fetchOnce(args);
-    } catch (err) {
-      this.processQueue(false);
-      await this.authTransport.clearAuthentication(this.sendAuthRequest);
-      throw err;
+    } catch (error: unknown) {
+      this.processQueue({ ok: false, error });
+      if (error instanceof ApiResponseError && error.statusCode === 401) {
+        await this.authTransport.clearAuthentication(this.sendAuthRequest);
+      }
+      throw error;
     } finally {
       this.isRefreshing = false;
     }
@@ -179,9 +177,9 @@ export class AuthFetch {
     return { status: response.status, body: await this.parseBody(response) };
   };
 
-  private processQueue(refreshed: boolean): void {
+  private processQueue(result: AuthenticationRefreshResult): void {
     this.refreshQueue.forEach((cb) => {
-      cb(refreshed);
+      cb(result);
     });
     this.refreshQueue = [];
   }

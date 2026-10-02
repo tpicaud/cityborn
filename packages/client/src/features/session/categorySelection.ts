@@ -1,16 +1,14 @@
 'use client';
 
 import type {
-  ApiResult,
   Category,
   CategoryTree,
   GameConfig,
   Session,
 } from '@cityborn/api';
 import { useEffect, useMemo, useState } from 'react';
-import { useError } from '../../shared/errorContext';
 
-export function toCategory(node: CategoryTree): Category {
+function toCategory(node: CategoryTree): Category {
   return {
     id: node.id,
     name: node.name,
@@ -20,47 +18,29 @@ export function toCategory(node: CategoryTree): Category {
   };
 }
 
-export function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
+function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
   return nodes.flatMap((node) => [
     toCategory(node),
     ...flattenCategoryTree(node.children),
   ]);
 }
 
-export function useCategoryTrees(
-  fetchCategoryTrees: () => Promise<ApiResult<CategoryTree[]>>,
-): CategoryTree[] {
-  const { invokeError } = useError();
-  const [categoryTrees, setCategoryTrees] = useState<CategoryTree[]>([]);
-
-  useEffect(() => {
-    const loadCategoryTrees = async () => {
-      const result = await fetchCategoryTrees();
-      if (!result.ok) return invokeError(result.error);
-      setCategoryTrees(result.data);
-    };
-    loadCategoryTrees();
-  }, [fetchCategoryTrees, invokeError]);
-
-  return categoryTrees;
-}
-
-export interface CategorySelectionOptions {
+export type CategorySelectionOptions = {
   categoryTrees: CategoryTree[];
   session: Session;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   startGame: () => Promise<void>;
-}
+};
 
-export interface CategorySelection {
+export type CategorySelection = {
   selectedPath: CategoryTree[];
   currentNodes: CategoryTree[];
   currentName: string | undefined;
   openCategory: (node: CategoryTree) => void;
   goBack: () => void;
   playCategory: (node: CategoryTree) => Promise<void>;
-}
+};
 
 export function useCategorySelection({
   categoryTrees,

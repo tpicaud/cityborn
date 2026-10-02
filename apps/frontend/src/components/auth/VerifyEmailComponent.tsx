@@ -6,7 +6,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { verifyEmail } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
 import Button from '../ui/buttons/Button';
 
 type VerifyEmailComponentProps = {
@@ -44,7 +44,7 @@ export function VerifyEmailComponent({
       };
 
       try {
-        const result = await verifyEmail({
+        const result = await authApi.verifyEmail({
           verification_token: verificationToken,
         });
         if (!result.ok) return failVerification();

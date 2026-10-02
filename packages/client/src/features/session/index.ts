@@ -2,7 +2,6 @@ export {
   type CategorySelection,
   type CategorySelectionOptions,
   useCategorySelection,
-  useCategoryTrees,
 } from './categorySelection';
 export * from './sessionApi';
 export * from './sessionContract';

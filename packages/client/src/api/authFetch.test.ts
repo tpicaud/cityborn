@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { setImmediate } from 'node:timers/promises';
 import {
+  ApiResponseError,
   type AppContract,
   buildUser,
+  contract,
   ErrorCode,
   type User,
 } from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
 import type { TokenStorage } from '../platform/tokenStorage';
 import {
-  type ApiClient,
-  createApiClient,
-  createCookieApiClient,
-} from './createApiClient';
+  type ContractClient,
+  createBearerContractClient,
+  createCookieContractClient,
+} from './contractClient';
 
 type FetchCall = {
   url: string;
@@ -53,12 +56,15 @@ test('cookie transport refreshes through the cookie route without exposing an au
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client: ApiClient = createCookieApiClient('https://api.cityborn.test', {
-    client: { name: 'web' },
-  });
+  const contractClient: ContractClient = createCookieContractClient(
+    'https://api.cityborn.test',
+    {
+      client: { name: 'web' },
+    },
+  );
 
   const result: ClientInferResponses<AppContract['auth']['me']> =
-    await client.auth.me();
+    await contractClient.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(
@@ -126,7 +132,7 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   context.after(() => {
     globalThis.fetch = originalFetch;
   });
-  const client: ApiClient = createApiClient(
+  const contractClient: ContractClient = createBearerContractClient(
     'https://api.cityborn.test',
     tokenStorage,
     {
@@ -135,7 +141,7 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   );
 
   const result: ClientInferResponses<AppContract['auth']['me']> =
-    await client.auth.me();
+    await contractClient.auth.me();
 
   assert.equal(result.status, 200);
   assert.deepEqual(
@@ -156,4 +162,172 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
     access: 'new-access',
     refresh: 'new-refresh',
   });
+});
+
+type RefreshFailureCase = {
+  name: string;
+  response: () => Promise<Response>;
+  expectedStatus: number | null;
+};
+
+test('concurrent requests share the refresh failure without replacing it with an authentication error', async (context) => {
+  const refreshStarted = Promise.withResolvers<void>();
+  const refreshResponse = Promise.withResolvers<Response>();
+  let refreshCount: number = 0;
+  const originalFetch: typeof fetch = globalThis.fetch;
+  globalThis.fetch = async (input: RequestInfo | URL): Promise<Response> => {
+    const url: URL = new URL(String(input));
+    if (url.pathname === contract.auth.me.path) {
+      return jsonResponse(
+        { code: ErrorCode.TOKEN_EXPIRED, message: 'Expired', statusCode: 401 },
+        401,
+      );
+    }
+    if (url.pathname === contract.auth.cookie.refresh.path) {
+      refreshCount += 1;
+      refreshStarted.resolve();
+      return refreshResponse.promise;
+    }
+    throw new Error(`Unexpected request: ${url.pathname}`);
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  const contractClient: ContractClient = createCookieContractClient(
+    'https://api.cityborn.test',
+  );
+  const isServerFailure = (error: unknown): boolean =>
+    error instanceof ApiResponseError && error.statusCode === 503;
+  const firstRequest: Promise<void> = assert.rejects(
+    contractClient.auth.me(),
+    isServerFailure,
+  );
+  await refreshStarted.promise;
+  const secondRequest: Promise<void> = assert.rejects(
+    contractClient.auth.me(),
+    isServerFailure,
+  );
+  await setImmediate();
+  refreshResponse.resolve(
+    jsonResponse(
+      {
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'Backend unavailable',
+        statusCode: 503,
+      },
+      503,
+    ),
+  );
+
+  await Promise.all([firstRequest, secondRequest]);
+
+  assert.equal(refreshCount, 1);
+});
+
+const refreshFailureCases: RefreshFailureCase[] = [
+  {
+    name: 'network failure',
+    response: async () => {
+      throw new TypeError('Failed to fetch');
+    },
+    expectedStatus: null,
+  },
+  {
+    name: 'server failure',
+    response: async () =>
+      jsonResponse(
+        {
+          code: ErrorCode.UNKNOWN_ERROR,
+          message: 'Backend unavailable',
+          statusCode: 503,
+        },
+        503,
+      ),
+    expectedStatus: 503,
+  },
+  {
+    name: 'refused refresh token',
+    response: async () =>
+      jsonResponse(
+        {
+          code: ErrorCode.USER_INVALID_TOKEN,
+          message: 'Invalid refresh token',
+          statusCode: 401,
+        },
+        401,
+      ),
+    expectedStatus: 401,
+  },
+];
+
+const authenticationTransports: ('cookie' | 'bearer')[] = ['cookie', 'bearer'];
+
+authenticationTransports.forEach((authenticationTransport) => {
+  refreshFailureCases.forEach(
+    ({ name, response, expectedStatus }: RefreshFailureCase) => {
+      test(`${authenticationTransport} refresh handles ${name} without treating technical errors as a logout`, async (context) => {
+        let hasClearedTokens: boolean = false;
+        let hasSignedOut: boolean = false;
+        const tokenStorage: TokenStorage = {
+          getAccessToken: async () => 'expired-access',
+          getRefreshToken: async () => 'refresh-token',
+          setTokens: async () => {},
+          clearTokens: async () => {
+            hasClearedTokens = true;
+          },
+        };
+        const originalFetch: typeof fetch = globalThis.fetch;
+        globalThis.fetch = async (
+          input: RequestInfo | URL,
+        ): Promise<Response> => {
+          const url: URL = new URL(String(input));
+          if (url.pathname === contract.auth.me.path) {
+            return jsonResponse(
+              {
+                code: ErrorCode.TOKEN_EXPIRED,
+                message: 'Expired',
+                statusCode: 401,
+              },
+              401,
+            );
+          }
+          if (url.pathname === contract.auth.signOut.path) {
+            hasSignedOut = true;
+            return jsonResponse({});
+          }
+          return response();
+        };
+        context.after(() => {
+          globalThis.fetch = originalFetch;
+        });
+        const contractClient: ContractClient =
+          authenticationTransport === 'cookie'
+            ? createCookieContractClient('https://api.cityborn.test')
+            : createBearerContractClient(
+                'https://api.cityborn.test',
+                tokenStorage,
+              );
+
+        await assert.rejects(
+          contractClient.auth.me(),
+          (error: unknown): boolean => {
+            if (expectedStatus === null) return error instanceof TypeError;
+            return (
+              error instanceof ApiResponseError &&
+              error.statusCode === expectedStatus
+            );
+          },
+        );
+
+        assert.equal(
+          hasClearedTokens,
+          authenticationTransport === 'bearer' && expectedStatus === 401,
+        );
+        assert.equal(
+          hasSignedOut,
+          authenticationTransport === 'cookie' && expectedStatus === 401,
+        );
+      });
+    },
+  );
 });

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Script from 'next/script';
-import { getCurrentUser } from '@/server/server-only/auth';
 import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
@@ -11,13 +10,11 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getCurrentUser();
-
   return (
     <html lang="fr" className="h-full">
       <head>
@@ -37,7 +34,7 @@ export default async function RootLayout({
       </head>
       <body className="h-full antialiased font-sans">
         <main className="min-h-screen h-full">
-          <AppProviders user={user}>{children}</AppProviders>
+          <AppProviders>{children}</AppProviders>
         </main>
       </body>
     </html>

@@ -1,7 +1,13 @@
 'use client';
 
 import { resolveErrorMessage } from '@cityborn/api';
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from 'react';
 
 type ErrorContextType = {
   invokeError: (error: unknown, fallbackMessage?: string) => void;
@@ -11,7 +17,7 @@ const ErrorContext = createContext<ErrorContextType>({
   invokeError: () => {},
 });
 
-interface ErrorProviderProps {
+type ErrorProviderProps = {
   children: ReactNode;
   ErrorDialogComponent?: React.ComponentType<{
     errorMessage: string;
@@ -19,20 +25,23 @@ interface ErrorProviderProps {
     setOpen: (open: boolean) => void;
     onExited?: () => void;
   }>;
-}
+};
 
 export const ErrorProvider = ({
   children,
   ErrorDialogComponent,
 }: ErrorProviderProps) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const invokeError = (error: unknown, fallbackMessage?: string) => {
-    setErrorMessage(resolveErrorMessage(error, fallbackMessage));
-    console.error(error);
-    setOpenDialog(true);
-  };
+  const invokeError = useCallback(
+    (error: unknown, fallbackMessage?: string): void => {
+      setErrorMessage(resolveErrorMessage(error, fallbackMessage));
+      console.error(error);
+      setOpenDialog(true);
+    },
+    [],
+  );
 
   return (
     <ErrorContext.Provider value={{ invokeError }}>
@@ -49,8 +58,8 @@ export const ErrorProvider = ({
   );
 };
 
-export const useError = () => {
-  const context = useContext(ErrorContext);
+export const useError = (): ErrorContextType => {
+  const context: ErrorContextType = useContext(ErrorContext);
   if (!context) {
     throw new Error('useError must be used within an ErrorProvider');
   }

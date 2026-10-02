@@ -10,7 +10,7 @@ import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { signOut } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
 import { SignInComponent } from './auth/SignInComponent';
 import { SignUpComponent } from './auth/SignUpComponent';
 import MenuComponent from './menu/MenuComponent';
@@ -27,7 +27,7 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-interface GoogleIdentityServices {
+type GoogleIdentityServices = {
   accounts: {
     id: {
       initialize: (config: {
@@ -40,7 +40,7 @@ interface GoogleIdentityServices {
       ) => void;
     };
   };
-}
+};
 
 declare global {
   interface Window {
@@ -49,7 +49,7 @@ declare global {
 }
 
 export default function HomeComponent() {
-  const { user, refreshUser } = useAuth();
+  const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const [state, setState] = useState<
     'menu' | 'sign-in' | 'sign-up' | 'profile'
@@ -136,8 +136,8 @@ export default function HomeComponent() {
                 <LoadingIconButton
                   onClick={async () => {
                     try {
-                      await signOut();
-                      await refreshUser();
+                      await authApi.signOut();
+                      setUser(null);
                       setState('menu');
                     } catch (error: unknown) {
                       invokeError(error, 'Une erreur est survenue');

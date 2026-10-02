@@ -34,8 +34,8 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { profileApi } from '@/lib/profileApi';
-import { updatePassword } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
+import { profileApi } from '@/lib/api/profile';
 
 export const ProfileComponent = ({ user }: { user: User }) => {
   const { setUser } = useAuth();
@@ -79,7 +79,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
 
   const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
     async (values) => {
-      const result: ApiResult<User> = await updatePassword(
+      const result: ApiResult<User> = await authApi.updatePassword(
         toUpdatePassword(values),
       );
       if (!result.ok) return invokeError(result.error);

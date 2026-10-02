@@ -1,14 +1,15 @@
 'use client';
 
 import { useError } from '@cityborn/client';
-import { toCreateUser, useSignUpForm } from '@cityborn/client/auth';
+import { toCreateUser, useAuth, useSignUpForm } from '@cityborn/client/auth';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { frontendClientConfig } from '@/config/client';
-import { signInWithGoogle, signUp } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
 
 export const SignUpComponent = () => {
   const { invokeError } = useError();
+  const { setUser } = useAuth();
   const {
     register,
     handleSubmit,
@@ -19,9 +20,11 @@ export const SignUpComponent = () => {
     const handleCredentialResponse = async (response: {
       credential: string;
     }) => {
-      const result = await signInWithGoogle({ idToken: response.credential });
+      const result = await authApi.signInWithGoogle({
+        idToken: response.credential,
+      });
       if (!result.ok) return invokeError(result.error);
-      window.location.reload();
+      setUser(result.data);
     };
 
     if (window.google) {
@@ -34,13 +37,13 @@ export const SignUpComponent = () => {
         { theme: 'outline', size: 'large', text: 'signin_with' },
       );
     }
-  }, [invokeError]);
+  }, [invokeError, setUser]);
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await signUp(toCreateUser(values));
+    const result = await authApi.signUp(toCreateUser(values));
 
     if (result.ok) {
-      window.location.reload();
+      setUser(result.data);
       return;
     }
 
