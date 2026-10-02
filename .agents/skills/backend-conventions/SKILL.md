@@ -33,4 +33,11 @@ Pour enrichir un wide event, remonter une erreur, instrumenter une gateway, ajou
 
 ## Critère de fin
 
-Pour chaque fichier backend touché, vérifier que sa capacité propriétaire et sa frontière sont explicites, que les controllers restent fins, que les services ne dépendent pas de Prisma, que les transactions excluent Redis et les appels externes, et que chaque erreur suit le chemin typé prévu. Toute modification liée à l'observabilité doit aussi respecter la référence ci-dessus.
+Pour chaque fichier backend touché, vérifier que :
+
+- sa capacité propriétaire et sa frontière sont explicites ;
+- les controllers restent fins ;
+- les services ne dépendent pas de Prisma ;
+- les transactions excluent Redis et les appels externes ;
+- chaque erreur suit le chemin typé prévu ;
+- toute modification liée à l'observabilité respecte la référence ci-dessus.

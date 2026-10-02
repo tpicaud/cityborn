@@ -46,4 +46,7 @@ Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la réf
 
 ## Critère de fin
 
-Chaque comportement significatif est couvert une seule fois au tier le plus bas qui permet de l'observer. Les ressources ouvertes par le test sont fermées, aucun détail déjà prouvé à un tier inférieur n'est répété, et la commande ciblée du tier modifié passe.
+- Chaque comportement significatif est couvert une seule fois, au tier le plus bas qui permet de l'observer.
+- Chaque ressource ouverte par le test est fermée.
+- Aucun détail déjà prouvé à un tier inférieur n'est répété.
+- La commande ciblée du tier modifié passe.

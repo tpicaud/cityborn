@@ -88,4 +88,8 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 
 ## Critère de fin
 
-Chaque nouveau fichier appartient à un domaine et respecte l'arborescence de son app. Le code partagé suit la frontière `api` / `core` / `client` / app, `@cityborn/client` reste agnostique des plateformes, et tout nouveau sous-chemin public figure dans l'`exports` map. Les déplacements architecturaux restent limités à la capacité réellement touchée.
+- Chaque nouveau fichier appartient à un domaine et respecte l'arborescence de son app.
+- Le code partagé suit la frontière `api` / `core` / `client` / app.
+- `@cityborn/client` reste agnostique des plateformes.
+- Tout nouveau sous-chemin public figure dans l'`exports` map.
+- Les déplacements architecturaux restent limités à la capacité réellement touchée.

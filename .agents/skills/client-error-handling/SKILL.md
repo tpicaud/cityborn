@@ -20,4 +20,8 @@ description: Erreurs et validation client Cityborn. À utiliser pour modifier un
 
 ## Critère de fin
 
-Chaque appel utilise le wrapper de son contexte, conserve l'`ApiError` jusqu'à sa normalisation et affiche les messages métier depuis `ErrorCode`. Les formulaires utilisent le schéma partagé et transmettent leur erreur au mécanisme commun sans conversion intermédiaire.
+- Chaque appel utilise le wrapper de son contexte.
+- L'`ApiError` reste intacte jusqu'à sa normalisation.
+- Les messages métier proviennent d'`ErrorCode`.
+- Chaque formulaire utilise le schéma partagé.
+- Chaque erreur de formulaire rejoint le mécanisme commun sans conversion intermédiaire.
