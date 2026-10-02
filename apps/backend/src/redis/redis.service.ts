@@ -31,11 +31,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async setIfAbsent(
-    key: string,
-    value: string,
-    ttlSeconds: number,
-  ): Promise<boolean> {
+  async setIfAbsent({
+    key,
+    value,
+    ttlSeconds,
+  }: {
+    key: string;
+    value: string;
+    ttlSeconds: number;
+  }): Promise<boolean> {
     const reply: 'OK' | null = await this.redisClient.set(
       key,
       value,

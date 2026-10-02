@@ -63,16 +63,16 @@ describe('RedisService with Redis', () => {
 
   describe('setIfAbsent', () => {
     it('writes only the first value and applies its TTL', async () => {
-      const firstWrite: boolean = await redisService.setIfAbsent(
-        'integration:once',
-        'first',
-        10,
-      );
-      const secondWrite: boolean = await redisService.setIfAbsent(
-        'integration:once',
-        'second',
-        10,
-      );
+      const firstWrite: boolean = await redisService.setIfAbsent({
+        key: 'integration:once',
+        value: 'first',
+        ttlSeconds: 10,
+      });
+      const secondWrite: boolean = await redisService.setIfAbsent({
+        key: 'integration:once',
+        value: 'second',
+        ttlSeconds: 10,
+      });
 
       expect(firstWrite).toBe(true);
       expect(secondWrite).toBe(false);

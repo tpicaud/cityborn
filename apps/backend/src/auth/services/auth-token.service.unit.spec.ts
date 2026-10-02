@@ -93,12 +93,12 @@ describe('AuthTokenService', () => {
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('refresh-token', {
         secret: 'refresh-secret',
       });
-      expect(redisService.setIfAbsent).toHaveBeenCalledWith(
-        'auth:consumed-refresh-token:0eb17643d4e9261163783a420859c92c7d212fa9624106a12b510afbec266120',
-        '1',
-        expect.any(Number),
-      );
-      const [, , ttlSeconds]: Parameters<RedisService['setIfAbsent']> =
+      expect(redisService.setIfAbsent).toHaveBeenCalledWith({
+        key: 'auth:consumed-refresh-token:0eb17643d4e9261163783a420859c92c7d212fa9624106a12b510afbec266120',
+        value: '1',
+        ttlSeconds: expect.any(Number),
+      });
+      const [{ ttlSeconds }]: Parameters<RedisService['setIfAbsent']> =
         redisService.setIfAbsent.mock.calls[0];
       expect(ttlSeconds).toBeGreaterThan(595);
       expect(ttlSeconds).toBeLessThanOrEqual(600);

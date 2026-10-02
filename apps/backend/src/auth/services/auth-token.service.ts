@@ -85,10 +85,10 @@ export class AuthTokenService {
       await this.resolveAuthSession(payload);
     if (!authSession) return null;
 
-    const consumed: boolean = await this.consumeRefreshToken(
+    const consumed: boolean = await this.consumeRefreshToken({
       refreshToken,
       payload,
-    );
+    });
     if (!consumed) {
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_TOKEN,
@@ -104,7 +104,7 @@ export class AuthTokenService {
     ).catch(() => null);
     if (!payload) return;
 
-    await this.consumeRefreshToken(refreshToken, payload);
+    await this.consumeRefreshToken({ refreshToken, payload });
   }
 
   async resolveAuthSession(
@@ -132,10 +132,13 @@ export class AuthTokenService {
     return RefreshTokenPayloadSchema.parse(payload);
   }
 
-  private async consumeRefreshToken(
-    refreshToken: string,
-    payload: RefreshTokenPayload,
-  ): Promise<boolean> {
+  private async consumeRefreshToken({
+    refreshToken,
+    payload,
+  }: {
+    refreshToken: string;
+    payload: RefreshTokenPayload;
+  }): Promise<boolean> {
     const refreshTokenHash: string = createHash('sha256')
       .update(refreshToken)
       .digest('hex');
@@ -143,10 +146,10 @@ export class AuthTokenService {
       payload.exp - Math.floor(Date.now() / 1000),
       1,
     );
-    return await this.redisService.setIfAbsent(
-      `${CONSUMED_REFRESH_TOKEN_KEY_PREFIX}${refreshTokenHash}`,
-      '1',
-      remainingLifetimeSeconds,
-    );
+    return await this.redisService.setIfAbsent({
+      key: `${CONSUMED_REFRESH_TOKEN_KEY_PREFIX}${refreshTokenHash}`,
+      value: '1',
+      ttlSeconds: remainingLifetimeSeconds,
+    });
   }
 }
