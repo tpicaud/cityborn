@@ -30,7 +30,7 @@ function createGame(): Game {
   };
 }
 
-test('createGameDisplay expose l’état et la progression du jeu', () => {
+test('createGameDisplay exposes the game state and progress', () => {
   const display = createGameDisplay(createGame(), localPlayerID);
 
   assert.deepEqual(display, {
@@ -43,7 +43,7 @@ test('createGameDisplay expose l’état et la progression du jeu', () => {
   });
 });
 
-test('createGameDisplay distingue le chargement et le joueur absent', () => {
+test('createGameDisplay distinguishes loading from a missing player', () => {
   const game = createGame();
 
   assert.equal(

@@ -12,7 +12,7 @@ import {
 } from '@cityborn/api';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
-test('createProfileGames calcule les scores du profil', () => {
+test('createProfileGames computes the profile scores', () => {
   const localPlayerID: PlayerId = PlayerIdSchema.parse('local-player');
   const localUser: Pick<User, 'id' | 'username'> = {
     id: UserIdSchema.parse('user-1'),

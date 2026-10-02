@@ -41,7 +41,7 @@ const game: Game = {
   },
 };
 
-test('createGameResults classe et enrichit les résultats', () => {
+test('createGameResults ranks and enriches the results', () => {
   const results = createGameResults(game, localPlayerID);
 
   assert.equal(results.isMultiplayer, true);
