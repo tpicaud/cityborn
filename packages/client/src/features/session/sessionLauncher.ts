@@ -4,7 +4,7 @@ import { type SessionId, SessionIdSchema, SessionMode } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import type { Navigation } from '../../platform/navigation';
+import type { Navigation, NavigationPath } from '../../platform/navigation';
 import { useError } from '../../shared/errorContext';
 import type { SessionApi } from './sessionApi';
 
@@ -26,9 +26,9 @@ export function useJoinSessionForm(): UseFormReturn<
   });
 }
 
-export const soloSessionPath = '/session/solo';
+export const soloSessionPath: NavigationPath = '/session/solo';
 
-export function multiSessionPath(sessionID: SessionId): string {
+export function multiSessionPath(sessionID: SessionId): NavigationPath {
   return `/session/multi/${sessionID}`;
 }
 

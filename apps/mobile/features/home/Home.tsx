@@ -1,8 +1,8 @@
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { AppState, Image, Pressable } from 'react-native';
+import { useState } from 'react';
+import { Image, Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -11,18 +11,11 @@ import { cn } from '@/lib/utils';
 
 export default function Home() {
   const router = useRouter();
-  const { user, setUser, refreshUser } = useAuth();
+  const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const [isSendingVerificationEmail, setIsSendingVerificationEmail] =
     useState(false);
   const [verificationEmailSent, setVerificationEmailSent] = useState(false);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') refreshUser();
-    });
-    return () => subscription.remove();
-  }, [refreshUser]);
 
   const handleResendVerificationEmail = async () => {
     setIsSendingVerificationEmail(true);

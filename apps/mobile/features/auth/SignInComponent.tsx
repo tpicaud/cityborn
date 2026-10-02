@@ -28,7 +28,7 @@ export const SignInComponent = () => {
 
     if (result.ok) {
       setUser(result.data);
-      router.push('/');
+      router.dismissTo('/');
       return;
     }
 

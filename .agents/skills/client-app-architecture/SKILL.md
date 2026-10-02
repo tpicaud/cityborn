@@ -53,10 +53,10 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
 | `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), visitorId. Sans React. |
-| `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé. Sans React. |
+| `@cityborn/client/ws` | `src/ws/` | Transport WS : `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api` et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
 | `@cityborn/client/category` | `src/features/category/` | Port `CategoryApi`, factory `createCategoryApi` et chargement des arbres de catégories (`useCategoryTrees`). |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). Le transport (`useSocket`) et les transitions (`sessionState`) restent privés au domaine. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
 | `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil et hook `useProfile`. |
@@ -74,8 +74,8 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 |---|---|
 | `TokenStorage` | `expo-secure-store` côté mobile. Le navigateur laisse Nest gérer les cookies `httpOnly`. |
 | `KeyValueStorage` | `localStorage` côté web, `AsyncStorage` côté mobile. Stocke des chaînes : le domaine décode ce qu'il a écrit. |
-| `SocketConnection` / `SocketFactory` | `socket.io-client`. La factory est asynchrone car le mobile lit le token avant d'ouvrir la socket. |
-| `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. |
+| `SocketConnection` / `SocketFactory` | `socket.io-client`, events de reconnexion du `Manager` compris. La factory est asynchrone car le mobile lit son visitorId avant d'ouvrir la socket ; son `auth` est une fonction relue à chaque handshake. |
+| `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. Ses chemins sont typés par `NavigationPath`, la liste des routes vers lesquelles `@cityborn/client` navigue. Un chemin ajouté doit exister dans les deux apps : la CI ne le vérifie pas (Next accepte toute chaîne, et les routes typées d'Expo ne sont générées qu'au lancement). |
 
 `packages/client/biome.json` fait échouer `pnpm format:check` sur un import de `next/*`, `expo-*`, `react-native*`, `react-dom` ou `@cityborn/design-system` dans le package. Quand la règle se déclenche, déclarer un port et l'implémenter dans l'app.
 

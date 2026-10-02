@@ -29,7 +29,7 @@ export const SignUpComponent = () => {
 
     if (result.ok) {
       setUser(result.data);
-      router.push('/');
+      router.dismissTo('/');
       return;
     }
 

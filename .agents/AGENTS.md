@@ -53,6 +53,7 @@ Ces règles valent en développement comme en revue : chaque **symptôme** cité
   const service = new RateLimitService(redisService);          // ❌ trop générique
   const rateLimitService = new RateLimitService(redisService); // ✅
   ```
+- **Code en anglais** : identifiants, noms de tests, logs et messages d'erreur techniques s'écrivent en anglais. Le français est réservé aux textes destinés à l'utilisateur final (UI, messages d'`ErrorCode`, map zod FR).
 - **Éviter `as`** : un cast casse l'inférence et masque des erreurs.
 - **Objets typés** : quand un type nommé décrit l'objet créé, préférer `const objet: Type = { ... }`. Réserver `satisfies Type` aux cas où conserver le type inféré de l'expression est utile ; éviter `satisfies Parameters<typeof méthode>[0]` si un type nommé existe.
 - **`type` par défaut** : une forme de données, une union, un type dérivé ou des options s'écrivent avec `type`. `interface` est réservée aux contrats que plusieurs implémentations respectent (port, stratégie, repository, client externe simulé en test ; par exemple `TokenStorage`, `AuthTransport`, `UserRepository`) et à l'augmentation de déclarations (`declare global { interface Window { … } }`). Une `interface` qui décrit des données (DTO, options, requête enrichie, résultat de fonction) est convertie dès qu'elle se trouve dans le périmètre touché.

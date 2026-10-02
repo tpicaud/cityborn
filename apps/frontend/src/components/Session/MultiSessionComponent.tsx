@@ -14,6 +14,7 @@ import { useCategoryTrees } from '@cityborn/client/category';
 import { useMultiSession } from '@cityborn/client/session';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
 import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
@@ -164,8 +165,15 @@ export default function MultiSessionComponent() {
         />
       )}
 
-      {multiSession.hasDisconnected && !multiSession.connected && (
+      {multiSession.connectionStatus === 'reconnecting' && (
         <LoadingComponent message="Reconnexion..." />
+      )}
+
+      {multiSession.connectionStatus === 'closed' && (
+        <ConnectionLostDialog
+          onRetry={multiSession.retryConnection}
+          onExit={handleExitGame}
+        />
       )}
     </>
   );
