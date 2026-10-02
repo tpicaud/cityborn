@@ -98,7 +98,7 @@ En cas d'échec de connexion : vérifier que le téléphone et la machine sont s
 cityborn/
 ├── apps/
 │   ├── backend/         # API NestJS, Prisma et WebSocket
-│   ├── frontend/        # Application web Next.js
+│   ├── frontend/        # Application web Next.js exportée en site statique
 │   ├── back-office/     # Administration Next.js
 │   └── mobile/          # Application Expo / React Native
 ├── packages/

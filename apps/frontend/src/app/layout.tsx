@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   description: 'Trouvez le lieu de naissances des personnalités',
 };
 
-export const dynamic = 'force-dynamic';
-
 export default function RootLayout({
   children,
 }: Readonly<{

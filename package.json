@@ -26,7 +26,6 @@
     "frontend": "pnpm --dir apps/frontend",
     "frontend:build": "turbo run build --filter=cityborn-frontend",
     "frontend:dev": "turbo run dev --filter=cityborn-frontend",
-    "frontend:start": "turbo run start --filter=cityborn-frontend",
     "frontend:format": "pnpm --dir apps/frontend format",
     "frontend:check": "pnpm --dir apps/frontend check",
     "back-office": "pnpm --dir apps/back-office",
