@@ -11,7 +11,7 @@ description: Architecture client Cityborn. À utiliser pour placer ou modifier u
 
 | App | Routing | Capacité métier | Transverse et infrastructure |
 |---|---|---|---|
-| `apps/frontend` | `src/app/` | `src/features/<domaine>/` | `src/components/ui/`, `src/hooks/`, `src/contexts/`, `src/lib/`, `src/server/` |
+| `apps/frontend` | `src/app/` | `src/features/<domaine>/` | `src/components/ui/`, `src/hooks/`, `src/contexts/`, `src/lib/` |
 | `apps/back-office` | `app/` | `components/<capacité>/` | `components/ui/`, `hooks/`, `lib/`, `server/` |
 | `apps/mobile` | `app/` | `features/<domaine>/` | `components/ui/`, `lib/` |
 
@@ -28,10 +28,10 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 - **Frontend joueur** → `apps/frontend/src/lib/api/`, exécuté dans le navigateur avec les cookies Nest.
 - **Mobile** → `apps/mobile/lib/api/`, exécuté avec les tokens du stockage sécurisé.
 - **Back-office** → `apps/back-office/server/` :
-  - `server/use-server/` — server actions (`'use server'`), wrappées par `toApiResult` → renvoient un `ApiResult<T>`.
-  - `server/server-only/` — loaders de Server Components (`server-only`), wrappés par `unwrapApiResponse` → renvoient le body typé ou `throw`.
+  - `server/use-server/` — server actions (`'use server'`).
+  - `server/server-only/` — loaders de Server Components (`server-only`).
 
-`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Le frontend et le mobile créent leur `contractClient` dans `lib/api/contractClient.ts`. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createCategoryApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
+`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createCategoryApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
 L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap affiche une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant. Placer `AuthProvider` sous `ErrorProvider` pour afficher ces erreurs.
 
@@ -44,6 +44,10 @@ Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers,
 ## Routing
 
 `apps/frontend/src/app/`, `apps/back-office/app/` et `apps/mobile/app/` restent des surfaces de routing. Les fichiers de route assemblent la capacité correspondante ; ses règles, son état et ses composants métier restent dans son dossier propriétaire décrit plus haut.
+
+### Frontend en export statique
+
+Le frontend joueur est exporté en statique (`output: 'export'`), sans code serveur Next. Une URL à identifiant (`/session/multi/<id>`) sert une page sans segment dynamique, atteinte par une réécriture dans `next.config.ts` (dev) et `vercel.json`. La page lit l'identifiant avec `usePathname()` et le parseur colocalisé avec le constructeur du chemin (`sessionIdFromMultiSessionPath`).
 
 ## `@cityborn/client` : logique partagée front + mobile
 
