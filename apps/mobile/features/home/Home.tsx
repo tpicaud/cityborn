@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { authApi } from '@/lib/api/auth';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
 export default function Home() {
   const router = useRouter();

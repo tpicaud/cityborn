@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
 import { mobileClientConfig } from '@/config/client';
 import { authApi } from '@/lib/api/auth';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
 GoogleSignin.configure({
   webClientId: mobileClientConfig.googleOAuthWebClientId,

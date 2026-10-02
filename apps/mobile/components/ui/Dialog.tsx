@@ -6,7 +6,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
 interface DialogProps extends ModalProps {
   visible: boolean;

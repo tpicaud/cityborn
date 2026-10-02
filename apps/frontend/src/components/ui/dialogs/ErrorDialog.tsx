@@ -1,13 +1,7 @@
+import type { ErrorDialogProps } from '@cityborn/client';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DialogContent, DialogTitle } from '@mui/material';
 import { Dialog } from './Dialog';
-
-interface ErrorDialogProps {
-  errorMessage: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onExited?: () => void;
-}
 
 export function ErrorDialog({
   errorMessage,
