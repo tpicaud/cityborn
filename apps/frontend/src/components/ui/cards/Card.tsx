@@ -2,13 +2,13 @@ import { Card as MuiCard } from '@mui/material';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
-interface CardProps {
+type CardProps = {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'accent';
   size?: 'sm' | 'md' | 'lg' | 'auto';
   className?: string;
   onClick?: () => Promise<void>;
-}
+};
 
 const baseCardStyle = '';
 

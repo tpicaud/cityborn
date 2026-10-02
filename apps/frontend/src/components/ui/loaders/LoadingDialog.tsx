@@ -1,7 +1,7 @@
 import { Box, CircularProgress } from '@mui/material';
 import { Dialog } from '../dialogs/Dialog';
 
-const LoadingComponent = ({ message }: { message?: string }) => {
+const LoadingDialog = ({ message }: { message?: string }) => {
   return (
     <Dialog open={true}>
       <Box className="flex flex-col justify-center items-center gap-5 px-12 py-8 bg-slate-100 shadow-xl rounded-2xl">
@@ -12,4 +12,4 @@ const LoadingComponent = ({ message }: { message?: string }) => {
   );
 };
 
-export default LoadingComponent;
+export default LoadingDialog;

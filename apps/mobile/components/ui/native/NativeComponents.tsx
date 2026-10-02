@@ -4,7 +4,7 @@ import {
   View as NativeView,
   type ViewProps as NativeViewProps,
 } from 'react-native';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
 export function Text({ children, className = '', ...props }: NativeTextProps) {
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { type Game, type PlayerId, SessionMode } from '@cityborn/api';
-import { createGameResults } from '@cityborn/client/game';
+import { createGameResults, formatDistanceInKm } from '@cityborn/client/game';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,
@@ -16,10 +16,10 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import LoadingComponent from '../others/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
+import LoadingDialog from '../ui/loaders/LoadingDialog';
 
-const ResultsComponent = ({
+const Results = ({
   game,
   localPlayerID,
   isHost,
@@ -40,7 +40,7 @@ const ResultsComponent = ({
   const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {
-    return <LoadingComponent message="Chargement des résultats" />;
+    return <LoadingDialog message="Chargement des résultats" />;
   }
 
   return (
@@ -99,7 +99,11 @@ const ResultsComponent = ({
                               </TableCell>
                               <TableCell align="right">
                                 {roundResult.distanceInKm !== undefined ? (
-                                  <p>{roundResult.distanceInKm.toFixed(2)}</p>
+                                  <p>
+                                    {formatDistanceInKm(
+                                      roundResult.distanceInKm,
+                                    )}
+                                  </p>
                                 ) : (
                                   <p>Pas de guess</p>
                                 )}
@@ -169,7 +173,9 @@ const ResultsComponent = ({
                                   <TableCell align="right">
                                     {roundResult.distanceInKm !== undefined ? (
                                       <p>
-                                        {roundResult.distanceInKm.toFixed(2)}
+                                        {formatDistanceInKm(
+                                          roundResult.distanceInKm,
+                                        )}
                                       </p>
                                     ) : (
                                       <p>Pas de guess</p>
@@ -230,4 +236,4 @@ const ResultsComponent = ({
   );
 };
 
-export default ResultsComponent;
+export default Results;

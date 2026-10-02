@@ -1,59 +1,23 @@
 'use client';
 
-import { useError } from '@cityborn/client';
-import { toCreateUser, useAuth, useSignUpForm } from '@cityborn/client/auth';
+import { type SignUpFlow, useSignUp } from '@cityborn/client/auth';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
-import { useEffect } from 'react';
-import { frontendClientConfig } from '@/config/client';
 import { authApi } from '@/lib/api/auth';
+import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignUpComponent = () => {
-  const { invokeError } = useError();
-  const { setUser } = useAuth();
+export const SignUpForm = () => {
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useSignUpForm();
-
-  useEffect(() => {
-    const handleCredentialResponse = async (response: {
-      credential: string;
-    }) => {
-      const result = await authApi.signInWithGoogle({
-        idToken: response.credential,
-      });
-      if (!result.ok) return invokeError(result.error);
-      setUser(result.data);
-    };
-
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: frontendClientConfig.googleClientId,
-        callback: handleCredentialResponse,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('googleSignInDiv'),
-        { theme: 'outline', size: 'large', text: 'signin_with' },
-      );
-    }
-  }, [invokeError, setUser]);
-
-  const onSubmit = handleSubmit(async (values) => {
-    const result = await authApi.signUp(toCreateUser(values));
-
-    if (result.ok) {
-      setUser(result.data);
-      return;
-    }
-
-    invokeError(result.error);
-  });
+    form: {
+      register,
+      formState: { errors, isSubmitting },
+    },
+    submit,
+  }: SignUpFlow = useSignUp({ authApi });
 
   return (
     <Box
       component="form"
-      onSubmit={onSubmit}
+      onSubmit={submit}
       sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
     >
       <Typography variant="h5" align="center">
@@ -109,9 +73,7 @@ export const SignUpComponent = () => {
         <div className="flex-1 h-px bg-black rounded-full"></div>
       </div>
 
-      <div className="flex justify-center items-center h-[44px] w-full">
-        <div id="googleSignInDiv"></div>
-      </div>
+      <SignInWithGoogleButton />
     </Box>
   );
 };

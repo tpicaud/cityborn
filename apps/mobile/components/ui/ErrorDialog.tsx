@@ -1,14 +1,8 @@
+import type { ErrorDialogProps } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import Dialog from './Dialog';
 import { Icon } from './Icon';
 import { Text, View } from './native/NativeComponents';
-
-interface ErrorDialogProps {
-  errorMessage: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onExited?: () => void;
-}
 
 function ErrorDialog({
   errorMessage,

@@ -1,11 +1,8 @@
-import { generateVisitorId } from '@cityborn/client/api';
-import { asyncStorage } from './asyncStorage';
+import {
+  createVisitorIdProvider,
+  type VisitorIdProvider,
+} from '@cityborn/client/api';
+import { keyValueStorage } from './keyValueStorage';
 
-export async function getOrCreateVisitorId(): Promise<string> {
-  let visitor_id = await asyncStorage.get<string>('visitor_id');
-  if (!visitor_id) {
-    visitor_id = generateVisitorId();
-    asyncStorage.set<string>('visitor_id', visitor_id);
-  }
-  return visitor_id;
-}
+export const getOrCreateVisitorId: VisitorIdProvider =
+  createVisitorIdProvider(keyValueStorage);

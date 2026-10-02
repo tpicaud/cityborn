@@ -1,7 +1,5 @@
-import { resolveErrorMessage } from '@cityborn/api';
-import { useAuth, useSignInForm } from '@cityborn/client/auth';
+import { type SignUpFlow, useSignUp } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -12,27 +10,17 @@ import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignInComponent = () => {
+export const SignUpForm = () => {
   const router = useRouter();
-  const { setUser } = useAuth();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useSignInForm();
-
-  const onSubmit = handleSubmit(async (values) => {
-    setErrorMessage(null);
-    const result = await authApi.signIn(values);
-
-    if (result.ok) {
-      setUser(result.data);
-      router.dismissTo('/');
-      return;
-    }
-
-    setErrorMessage(resolveErrorMessage(result.error));
+    form: {
+      control,
+      formState: { errors, isSubmitting },
+    },
+    submit,
+  }: SignUpFlow = useSignUp({
+    authApi,
+    onSignedIn: () => router.dismissTo('/'),
   });
 
   return (
@@ -44,29 +32,51 @@ export const SignInComponent = () => {
       }}
       enableOnAndroid
     >
-      <View className="flex-1 flex-col gap-8 items-center w-70 self-center justify-center">
-        <Text className="text-2xl font-bold text-foreground">CONNEXION</Text>
+      <View className="flex-col gap-8 items-center w-70 self-center">
+        <Text className="text-2xl font-bold text-foreground">INSCRIPTION</Text>
 
-        <View className="flex-col items-center justify-center w-auto gap-0">
+        <View className="flex-col items-center justify-center gap-0 w-70">
           <View className="flex-col items-center justify-center gap-6">
             <View className="w-full relative">
               <Controller
                 control={control}
-                name="identifier"
+                name="username"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    placeholder="Username"
+                    placeholder="Nom d'utilisateur"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     autoCapitalize="none"
-                    error={!!errors.identifier}
+                    error={!!errors.username}
                   />
                 )}
               />
-              {errors.identifier && (
+              {errors.username && (
                 <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.identifier.message}
+                  {errors.username.message}
+                </Text>
+              )}
+            </View>
+
+            <View className="w-full relative">
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Email"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    error={!!errors.email}
+                  />
+                )}
+              />
+              {errors.email && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.email.message}
                 </Text>
               )}
             </View>
@@ -77,7 +87,7 @@ export const SignInComponent = () => {
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    placeholder="Password"
+                    placeholder="Mot de passe"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -94,23 +104,36 @@ export const SignInComponent = () => {
               )}
             </View>
 
-            <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
-              {errorMessage}
-            </Text>
+            <View className="w-full relative">
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    placeholder="Confirmez le mot de passe"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    secureTextEntry
+                    error={!!errors.confirmPassword}
+                  />
+                )}
+              />
+              {errors.confirmPassword && (
+                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
+                  {errors.confirmPassword.message}
+                </Text>
+              )}
+            </View>
           </View>
           <Button
             variant="filled"
             color="primary"
             size="large"
             disabled={isSubmitting}
-            label="SE CONNECTER"
-            onPress={onSubmit}
-          />
-          <Button
-            variant="default"
-            label="Pas de compte ? Inscris-toi ici !"
-            onPress={() => router.navigate('/auth/sign-up')}
-            className="mt-6"
+            label="S'INSCRIRE"
+            onPress={submit}
           />
         </View>
         <View className="flex flex-row items-center gap-2 w-full">

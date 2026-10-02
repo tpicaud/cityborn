@@ -1,13 +1,20 @@
 'use client';
 
 import {
-  type CategoryTree,
   type GameConfig,
-  type OnlinePlayer,
+  type PlayerId,
   type Session,
   SessionMode,
 } from '@cityborn/api';
-import { useCategorySelection } from '@cityborn/client/session';
+import {
+  type CategorySelection,
+  type PlayerConnectionStatus,
+  type PlayerNameForm,
+  playerConnectionStatus,
+  sortPlayersConnectedFirst,
+  useCategorySelection,
+  usePlayerNameForm,
+} from '@cityborn/client/session';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -25,9 +32,29 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { categoryApi } from '@/lib/api/category';
 import { useNavigation } from '@/lib/navigation';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
+import LoadingDialog from '../ui/loaders/LoadingDialog';
+
+type LobbyComponentProps = {
+  localPlayerID: PlayerId | undefined;
+  session: Session;
+  isHost: boolean;
+  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
+  handleStartGame: () => Promise<void>;
+  handleJoinSession?: (playerID: PlayerId) => Promise<void>;
+};
+
+const playerConnectionLabels: Record<
+  PlayerConnectionStatus,
+  string | undefined
+> = {
+  connected: 'Connecté',
+  disconnected: 'Déconnecté',
+  unknown: undefined,
+};
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -38,37 +65,27 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-export const LobbyComponent = ({
+export const Lobby = ({
   localPlayerID,
   session,
-  categoryTrees,
   isHost,
   handleUpdateGameConfig,
   handleStartGame,
   handleJoinSession,
-}: {
-  localPlayerID: string | undefined;
-  session: Session;
-  categoryTrees: CategoryTree[];
-  isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
-  handleStartGame: () => Promise<void>;
-  handleUpdateHost?: (newHostID: string) => Promise<void>;
-  handleKickPlayer?: (playerToKick: string) => Promise<void>;
-  handleJoinSession: (playerID: string) => Promise<void>;
-}) => {
+}: LobbyComponentProps) => {
   const [copied, setCopied] = useState(false);
-  const [currentInput, setCurrentInput] = useState<string>('');
+  const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const navigation = useNavigation();
   const {
+    isLoading: isLoadingCategories,
     selectedPath,
     currentNodes,
     currentName,
     openCategory,
     goBack,
     playCategory,
-  } = useCategorySelection({
-    categoryTrees,
+  }: CategorySelection = useCategorySelection({
+    categoryApi,
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
@@ -80,6 +97,14 @@ export const LobbyComponent = ({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const submitPlayerName = playerNameForm.handleSubmit(async ({ playerID }) => {
+    await handleJoinSession?.(playerID);
+  });
+
+  if (isLoadingCategories) {
+    return <LoadingDialog message="Chargement des catégories" />;
+  }
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -155,12 +180,7 @@ export const LobbyComponent = ({
                   },
                 }}
               >
-                {(session.players.every((p) => 'connected' in p)
-                  ? (session.players as OnlinePlayer[]).sort((a, b) =>
-                      a.connected === b.connected ? 0 : a.connected ? -1 : 1,
-                    )
-                  : session.players
-                ).map((player) => (
+                {sortPlayersConnectedFirst(session.players).map((player) => (
                   <ListItem key={player.username} divider>
                     <ListItemText
                       primary={
@@ -169,16 +189,11 @@ export const LobbyComponent = ({
                           : `${player.username}`
                       }
                       secondary={
-                        'connected' in player
-                          ? (player as OnlinePlayer).connected
-                            ? 'Connecté'
-                            : 'Déconnecté'
-                          : undefined
+                        playerConnectionLabels[playerConnectionStatus(player)]
                       }
                       sx={{
                         color:
-                          'connected' in player &&
-                          !(player as OnlinePlayer).connected
+                          playerConnectionStatus(player) === 'disconnected'
                             ? 'text.disabled'
                             : 'text.primary',
                       }}
@@ -245,7 +260,7 @@ export const LobbyComponent = ({
                       <LoadingButton
                         size="small"
                         variant="contained"
-                        disabled={session.hostID !== localPlayerID}
+                        disabled={!isHost}
                         onClick={() => playCategory(node)}
                         sx={{ width: 96, fontSize: '0.7rem' }}
                       >
@@ -272,7 +287,7 @@ export const LobbyComponent = ({
             variant="contained"
             color="primary"
             fullWidth
-            disabled={session.hostID !== localPlayerID}
+            disabled={!isHost}
             onClick={() => navigation.push('/')}
           >
             Menu
@@ -280,7 +295,7 @@ export const LobbyComponent = ({
         </Box>
       </div>
 
-      <Dialog open={!localPlayerID}>
+      <Dialog open={session.mode === SessionMode.MULTI && !localPlayerID}>
         <DialogTitle>
           <p>Entrez votre pseudo</p>
         </DialogTitle>
@@ -290,15 +305,15 @@ export const LobbyComponent = ({
             style={{ marginTop: 10 }}
             label={'Pseudo'}
             variant="outlined"
-            value={currentInput}
-            onChange={(e) => setCurrentInput(e.target.value)}
+            {...playerNameForm.register('playerID')}
+            error={!!playerNameForm.formState.errors.playerID}
+            helperText={playerNameForm.formState.errors.playerID?.message}
           />
           <LoadingButton
             variant="contained"
             color="primary"
             style={{ marginTop: 10 }}
-            disabled={currentInput.trim() === ''}
-            onClick={async () => await handleJoinSession(currentInput)}
+            onClick={submitPlayerName}
           >
             <ArrowCircleRightIcon />
           </LoadingButton>

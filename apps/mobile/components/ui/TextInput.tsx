@@ -2,12 +2,12 @@ import {
   TextInput as NativeTextInput,
   type TextInputProps,
 } from 'react-native';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
-interface InputProps extends TextInputProps {
+type InputProps = TextInputProps & {
   className?: string;
   error?: boolean;
-}
+};
 
 export default function TextInput({
   className = '',

@@ -7,16 +7,16 @@ import type {
 } from '@cityborn/api';
 import { calculateTotalPoints } from '@cityborn/core';
 
-export interface ProfilePlayerScore {
+export type ProfilePlayerScore = {
   playerID: PlayerId;
   points: number;
-}
+};
 
-export interface ProfileGame {
+export type ProfileGame = {
   gameRecord: GameRecord;
   localPlayerPoints: number;
   playerScores: ProfilePlayerScore[];
-}
+};
 
 export function createProfileGames(
   gameRecords: GameRecord[],

@@ -1,5 +1,5 @@
-import SoloSessionComponent from '@/components/Session/SoloSessionComponent';
+import SoloSession from '@/components/Session/SoloSession';
 
 export default function SoloSessionPage() {
-  return <SoloSessionComponent />;
+  return <SoloSession />;
 }

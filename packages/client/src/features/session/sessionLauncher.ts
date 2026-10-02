@@ -15,11 +15,13 @@ export const JoinSessionSchema = z.object({
 export type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
 export type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
 
-export function useJoinSessionForm(): UseFormReturn<
+export type JoinSessionForm = UseFormReturn<
   JoinSessionFormInput,
   undefined,
   JoinSessionFormValues
-> {
+>;
+
+export function useJoinSessionForm(): JoinSessionForm {
   return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
     resolver: zodResolver(JoinSessionSchema),
     defaultValues: { code: '' },
@@ -41,16 +43,16 @@ export function sessionIdFromMultiSessionPath(path: string): SessionId | null {
   return SessionIdSchema.parse(pathSegment);
 }
 
-export interface SessionLauncherOptions {
+export type SessionLauncherOptions = {
   sessionApi: SessionApi;
   navigation: Navigation;
-}
+};
 
-export interface SessionLauncher {
+export type SessionLauncher = {
   playSolo: () => void;
   playMulti: () => Promise<void>;
   joinSession: (code: SessionId) => Promise<void>;
-}
+};
 
 export function useSessionLauncher({
   sessionApi,

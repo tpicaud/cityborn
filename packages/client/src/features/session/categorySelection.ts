@@ -7,6 +7,8 @@ import type {
   Session,
 } from '@cityborn/api';
 import { useEffect, useMemo, useState } from 'react';
+import type { CategoryApi } from '../category/categoryApi';
+import { useCategoryTrees } from '../category/useCategoryTrees';
 
 function toCategory(node: CategoryTree): Category {
   return {
@@ -26,7 +28,7 @@ function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
 }
 
 export type CategorySelectionOptions = {
-  categoryTrees: CategoryTree[];
+  categoryApi: CategoryApi;
   session: Session;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
@@ -34,6 +36,7 @@ export type CategorySelectionOptions = {
 };
 
 export type CategorySelection = {
+  isLoading: boolean;
   selectedPath: CategoryTree[];
   currentNodes: CategoryTree[];
   currentName: string | undefined;
@@ -43,12 +46,13 @@ export type CategorySelection = {
 };
 
 export function useCategorySelection({
-  categoryTrees,
+  categoryApi,
   session,
   isHost,
   updateGameConfig,
   startGame,
 }: CategorySelectionOptions): CategorySelection {
+  const { categoryTrees, isLoading } = useCategoryTrees(categoryApi);
   const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
 
   const allCategories = useMemo(
@@ -74,6 +78,7 @@ export function useCategorySelection({
   };
 
   return {
+    isLoading,
     selectedPath,
     currentNodes,
     currentName: selectedPath[selectedPath.length - 1]?.name,

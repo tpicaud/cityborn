@@ -1,12 +1,12 @@
 import type { Game, PlayerId } from '@cityborn/api';
 import { GameStatus, RoundStatus } from '@cityborn/api';
 
-interface GameDisplayBase {
+type GameDisplayBase = {
   showNextRound: boolean;
   showResults: boolean;
   roundNumber: number | undefined;
   roundCount: number;
-}
+};
 
 export type GameDisplay = GameDisplayBase &
   (

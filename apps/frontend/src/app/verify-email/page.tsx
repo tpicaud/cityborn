@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import { VerifyEmailComponent } from '@/components/auth/VerifyEmailComponent';
+import { VerifyEmail } from '@/components/auth/VerifyEmail';
 
 export default function VerifyEmailPage() {
   return (
     <Suspense>
-      <VerifyEmailComponent />
+      <VerifyEmail />
     </Suspense>
   );
 }

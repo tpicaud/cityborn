@@ -1,17 +1,20 @@
 import {
   type Coord,
   type FullGuessObject,
-  type Guess,
   type Round,
   RoundStatus,
 } from '@cityborn/api';
 import type { MapProps } from '@cityborn/client/game';
-import { calculatePoints } from '@cityborn/core';
+import {
+  createGuess,
+  type GuessObjectArea,
+  guessObjectArea,
+  guessObjectCenter,
+} from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
-import * as turf from '@turf/turf';
-import type * as GeoJSON from 'geojson';
-import React, { useCallback, useEffect, useRef } from 'react';
-import { Appearance, Image, View } from 'react-native';
+import type { Position } from 'geojson';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Image, View } from 'react-native';
 import MapView, {
   type LatLng,
   Marker,
@@ -20,109 +23,80 @@ import MapView, {
   PROVIDER_GOOGLE,
 } from 'react-native-maps';
 
+type RoundMapProps = Omit<MapProps, 'game'> & {
+  currentRound: Round;
+  guessObject: FullGuessObject;
+};
+
+function toLatLng(coord: Coord): LatLng {
+  return { latitude: coord.lat, longitude: coord.lng };
+}
+
+function positionToLatLng([lng, lat]: Position): LatLng {
+  return { latitude: lat, longitude: lng };
+}
+
+function areaOuterRings(area: GuessObjectArea): Position[][] {
+  if (area.type === 'Polygon') return [area.coordinates[0]];
+  return area.coordinates.map((polygon) => polygon[0]);
+}
+
 export default function GameMap({ mapProps }: { mapProps: MapProps }) {
-  const { center, zoom, preGuess, game, localPlayerID, handlePreGuess } =
-    mapProps;
+  const { game, ...roundMapProps } = mapProps;
+  const currentRound: Round | undefined = game.state.currentRound;
+  const guessObject: FullGuessObject | undefined =
+    game.state.guessObjects?.find(
+      ({ id }) => id === currentRound?.guessObjectId,
+    );
 
-  const mapRef = useRef<MapView>(null);
-  if (!game.state.currentRound) {
-    throw new Error('GameMap rendered without an active round');
-  }
-  const currentRound: Round = game.state.currentRound;
-  const guessObject = (game.state.guessObjects ?? []).find(
-    (obj: FullGuessObject) => obj.id === currentRound.guessObjectId,
-  ) as FullGuessObject;
+  if (!currentRound || !guessObject) return null;
 
-  const getCenterOfGuessObject = useCallback(
-    (guessObject: FullGuessObject): Coord => ({
-      lat: guessObject.world_location.centroid[0],
-      lng: guessObject.world_location.centroid[1],
-    }),
-    [],
+  return (
+    <RoundMap
+      {...roundMapProps}
+      currentRound={currentRound}
+      guessObject={guessObject}
+    />
   );
+}
 
-  const getDistanceTo = (lat: number, lng: number): number => {
-    if (isGeoJSON(guessObject) && hasWin({ lat, lng }, guessObject)) return 0;
+function RoundMap({
+  center,
+  zoom,
+  preGuess,
+  localPlayerID,
+  handlePreGuess,
+  currentRound,
+  guessObject,
+}: RoundMapProps) {
+  const mapRef = useRef<MapView>(null);
+  const answer: Coord = useMemo(
+    () => guessObjectCenter(guessObject),
+    [guessObject],
+  );
+  const localGuess = currentRound.playersGuesses?.[localPlayerID];
 
-    const answer = getCenterOfGuessObject(guessObject);
-    const from = turf.point([lng, lat]);
-    const to = turf.point([answer.lng, answer.lat]);
-    return turf.distance(from, to, { units: 'kilometers' });
+  const handleMapPress = (event: {
+    nativeEvent: { coordinate: LatLng };
+  }): void => {
+    if (currentRound.status !== RoundStatus.GUESSING || localGuess) return;
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    handlePreGuess(createGuess(guessObject, { lat: latitude, lng: longitude }));
   };
 
-  function toLatLng(coord: Coord): LatLng {
-    return {
-      latitude: coord.lat,
-      longitude: coord.lng,
-    };
-  }
+  const renderArea = () => {
+    const area: GuessObjectArea | undefined = guessObjectArea(guessObject);
+    if (!area) return null;
 
-  const handleMapPress = (event: { nativeEvent: { coordinate: LatLng } }) => {
-    const { coordinate } = event.nativeEvent;
-    const distance = getDistanceTo(coordinate.latitude, coordinate.longitude);
-    const points = calculatePoints(distance);
-
-    const newGuess: Guess = {
-      coordinates: { lat: coordinate.latitude, lng: coordinate.longitude },
-      distance,
-      points,
-      win: distance === 0,
-    };
-
-    handlePreGuess(newGuess);
-  };
-
-  const isGeoJSON = (guessObject: FullGuessObject) => {
-    const type = guessObject.world_location.geometry.type;
-    return type === 'Polygon' || type === 'MultiPolygon';
-  };
-
-  const hasWin = (point: Coord, guessObject: FullGuessObject) => {
-    try {
-      const geoJson = guessObject.world_location.geometry;
-      if (geoJson.type === 'Point') return false;
-      const turfPoint = turf.point([point.lng, point.lat]);
-      return turf.booleanPointInPolygon(
-        turfPoint,
-        geoJson as unknown as GeoJSON.Polygon | GeoJSON.MultiPolygon,
-      );
-    } catch {
-      return false;
-    }
-  };
-
-  const renderPolygons = () => {
-    if (!isGeoJSON(guessObject)) return null;
-
-    const geometry = guessObject.world_location.geometry;
-    if (geometry.type === 'Polygon') {
-      const polygonCoords = (geometry.coordinates[0] as number[][]).map(
-        ([lng, lat]) => ({ latitude: lat, longitude: lng }),
-      );
-
-      return (
-        <Polygon
-          coordinates={polygonCoords}
-          strokeColor="#FF0000"
-          fillColor="rgba(255,0,0,0.2)"
-          strokeWidth={1}
-        />
-      );
-    } else if (geometry.type === 'MultiPolygon') {
-      return (geometry.coordinates as number[][][][]).map((polygon) => (
-        <Polygon
-          key={JSON.stringify(polygon[0][0])}
-          coordinates={polygon[0].map(([lng, lat]) => ({
-            latitude: lat,
-            longitude: lng,
-          }))}
-          strokeColor="#FF0000"
-          fillColor="rgba(255,0,0,0.2)"
-          strokeWidth={1}
-        />
-      ));
-    }
-    return null;
+    return areaOuterRings(area).map((outerRing) => (
+      <Polygon
+        key={JSON.stringify(outerRing[0])}
+        coordinates={outerRing.map(positionToLatLng)}
+        strokeColor="#FF0000"
+        fillColor="rgba(255,0,0,0.2)"
+        strokeWidth={1}
+      />
+    ));
   };
 
   const renderLine = (guess: Coord, answer: Coord, isLocalPlayer: boolean) => (
@@ -167,22 +141,15 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
               resizeMode="contain"
             />
           </Marker>
-          {renderLine(
-            guess.coordinates,
-            getCenterOfGuessObject(guessObject),
-            false,
-          )}
+          {renderLine(guess.coordinates, answer, false)}
         </React.Fragment>
       );
     });
   };
 
-  const localGuess = currentRound.playersGuesses?.[localPlayerID];
-
   const focusMap = useCallback(() => {
     if (!mapRef.current) return;
 
-    const answer = getCenterOfGuessObject(guessObject);
     const coords: LatLng[] = [{ latitude: answer.lat, longitude: answer.lng }];
 
     if (localGuess && localGuess.distance !== -1) {
@@ -207,12 +174,11 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
       },
       100,
     );
-  }, [guessObject, localGuess, getCenterOfGuessObject]);
+  }, [answer, localGuess]);
 
   useEffect(() => {
     if (currentRound.status === RoundStatus.SHOWING_RESULTS) focusMap();
   }, [currentRound, focusMap]);
-  const _theme = Appearance.getColorScheme();
 
   return (
     <View style={{ flex: 1 }}>
@@ -237,11 +203,8 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
           pitch: 0,
           heading: 0,
         }}
-        onPoiClick={(e) => handleMapPress(e)}
-        onPress={(e) => {
-          if (currentRound.status === RoundStatus.GUESSING && !localGuess)
-            handleMapPress(e);
-        }}
+        onPoiClick={handleMapPress}
+        onPress={handleMapPress}
       >
         {preGuess && preGuess.distance !== -1 && (
           <Marker
@@ -255,7 +218,7 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
 
         {currentRound.status === RoundStatus.SHOWING_RESULTS && (
           <Marker
-            coordinate={toLatLng(getCenterOfGuessObject(guessObject))}
+            coordinate={toLatLng(answer)}
             anchor={{ x: 0.5, y: 0.5 }}
             tappable={false}
           >
@@ -272,13 +235,9 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
             {localGuess &&
               localGuess.distance !== -1 &&
               !localGuess.win &&
-              renderLine(
-                localGuess.coordinates,
-                getCenterOfGuessObject(guessObject),
-                true,
-              )}
+              renderLine(localGuess.coordinates, answer, true)}
             {renderOtherPlayers()}
-            {renderPolygons()}
+            {renderArea()}
           </>
         )}
       </MapView>

@@ -1,14 +1,9 @@
-import type { ApiResult, User } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import type { User } from '@cityborn/api';
 import {
-  type ChangePasswordForm,
-  type ProfileFormSubmitHandler,
-  toUpdatePassword,
-  type UsernameForm,
-  useChangePasswordForm,
+  type ProfileEditor,
+  type ProfileState,
   useProfile,
-  useUsernameForm,
+  useProfileEditor,
 } from '@cityborn/client/profile';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -33,62 +28,37 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { authApi } from '@/lib/api/auth';
 import { profileApi } from '@/lib/api/profile';
+import LoadingButton from '../ui/buttons/LoadingButton';
 
-export const ProfileComponent = ({ user }: { user: User }) => {
-  const { setUser } = useAuth();
-  const { invokeError } = useError();
-  const { games, loading, refreshGames } = useProfile({
+export const Profile = ({ user }: { user: User }) => {
+  const { games, loading, refreshGames }: ProfileState = useProfile({
     profileApi,
     localUser: user,
   });
-  const usernameForm: UsernameForm = useUsernameForm(user.username);
-  const passwordForm: ChangePasswordForm = useChangePasswordForm();
-  const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] =
-    useState<boolean>(false);
-  const [isPasswordUpdated, setIsPasswordUpdated] = useState<boolean>(false);
+  const {
+    usernameForm,
+    isEditingUsername,
+    startUsernameEdit,
+    cancelUsernameEdit,
+    submitUsername,
+    passwordForm,
+    isPasswordDialogOpen,
+    isPasswordUpdated,
+    openPasswordDialog,
+    closePasswordDialog,
+    submitPassword,
+    isDeleteAccountDialogOpen,
+    openDeleteAccountDialog,
+    closeDeleteAccountDialog,
+    deleteAccount,
+  }: ProfileEditor = useProfileEditor({ profileApi, authApi });
 
   useEffect(() => {
     refreshGames();
   }, [refreshGames]);
-
-  const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
-    async (data) => {
-      const result: ApiResult<User> = await profileApi.updateUsername(data);
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      usernameForm.reset({ username: result.data.username });
-      setIsEditingUsername(false);
-    },
-  );
-
-  const cancelUsernameEdit = (): void => {
-    usernameForm.reset({ username: user.username });
-    setIsEditingUsername(false);
-  };
-
-  const closePasswordDialog = (): void => {
-    passwordForm.reset();
-    setIsPasswordUpdated(false);
-    setIsPasswordDialogOpen(false);
-  };
-
-  const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
-    async (values) => {
-      const result: ApiResult<User> = await authApi.updatePassword(
-        toUpdatePassword(values),
-      );
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      passwordForm.reset();
-      setIsPasswordUpdated(true);
-    },
-  );
 
   return (
     <Box
@@ -146,7 +116,7 @@ export const ProfileComponent = ({ user }: { user: User }) => {
                 aria-label="Modifier le pseudo"
                 onClick={(event) => {
                   event.preventDefault();
-                  setIsEditingUsername(true);
+                  startUsernameEdit();
                 }}
               >
                 <EditIcon />
@@ -158,13 +128,17 @@ export const ProfileComponent = ({ user }: { user: User }) => {
           <strong>Email :</strong> {user.email}
         </Typography>
         {user.type === 'email' && (
-          <Button
-            variant="outlined"
-            onClick={() => setIsPasswordDialogOpen(true)}
-          >
+          <Button variant="outlined" onClick={openPasswordDialog}>
             Modifier mon mot de passe
           </Button>
         )}
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={openDeleteAccountDialog}
+        >
+          Supprimer mon compte
+        </Button>
       </Box>
 
       <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
@@ -298,6 +272,25 @@ export const ProfileComponent = ({ user }: { user: User }) => {
             </Button>
           </DialogActions>
         </Box>
+      </Dialog>
+
+      <Dialog
+        open={isDeleteAccountDialogOpen}
+        onClose={closeDeleteAccountDialog}
+      >
+        <DialogTitle>Veux-tu vraiment supprimer ton compte ?</DialogTitle>
+        <DialogActions>
+          <Button type="button" onClick={closeDeleteAccountDialog}>
+            Annuler
+          </Button>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            onClick={deleteAccount}
+          >
+            Supprimer
+          </LoadingButton>
+        </DialogActions>
       </Dialog>
     </Box>
   );

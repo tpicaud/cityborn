@@ -2,12 +2,15 @@
 
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import {
+  useAuth,
+  useVerificationEmailResend,
+  type VerificationEmailResend,
+} from '@cityborn/client/auth';
 import { usePlay } from '@cityborn/client/play';
 import Image from 'next/image';
 import Link from 'next/link';
-import { type Dispatch, type SetStateAction, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { authApi } from '@/lib/api/auth';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
@@ -15,7 +18,7 @@ import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
 
-export default function MenuComponent({
+export default function Menu({
   setState,
 }: {
   setState: Dispatch<
@@ -23,9 +26,9 @@ export default function MenuComponent({
   >;
 }) {
   const { user } = useAuth();
-  const { invokeError } = useError();
   const navigation = useNavigation();
-  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
+  const verificationEmailResend: VerificationEmailResend =
+    useVerificationEmailResend(authApi);
   const {
     joinSessionForm: {
       register,
@@ -37,20 +40,9 @@ export default function MenuComponent({
     authenticationRequired,
     dismissAuthenticationRequired,
   } = usePlay({
-    isAuthenticated: user !== null,
     sessionApi,
     navigation,
   });
-
-  const handleResendVerificationEmail = async () => {
-    try {
-      const result = await authApi.resendVerificationEmail();
-      if (!result.ok) return invokeError(result.error);
-      setVerificationEmailSent(true);
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
 
   return (
     <div className="flex flex-col items-center gap-5">
@@ -84,10 +76,10 @@ export default function MenuComponent({
                 color="warning"
                 size="small"
                 className="normal-case underline"
-                onClick={handleResendVerificationEmail}
-                disabled={verificationEmailSent}
+                onClick={verificationEmailResend.resend}
+                disabled={verificationEmailResend.isSent}
               >
-                {verificationEmailSent
+                {verificationEmailResend.isSent
                   ? 'E-mail de vérification envoyé'
                   : 'Renvoyer un e-mail de vérification'}
               </LoadingButton>

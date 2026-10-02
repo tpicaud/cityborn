@@ -26,13 +26,14 @@ import { useError } from '../../shared/errorContext';
 import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
+import { useAuth } from '../auth/authContext';
+import { reportActionErrors } from './reportedAction';
 import type { SessionApi } from './sessionApi';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
 
 export type MultiSessionOptions = {
-  localPlayerID: PlayerId | undefined;
   sessionID: SessionId;
   sessionApi: SessionApi;
   navigation: Navigation;
@@ -53,13 +54,16 @@ type JoinedPlayer = {
 };
 
 export function useMultiSession({
-  localPlayerID,
   sessionID,
   sessionApi,
   navigation,
   createSocket,
 }: MultiSessionOptions): MultiSessionController {
+  const { user } = useAuth();
   const { invokeError } = useError();
+  const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
+    user?.username,
+  );
   const [session, setSession] = useState<Session>();
   const joinedPlayer: RefObject<JoinedPlayer | null> =
     useRef<JoinedPlayer | null>(null);
@@ -86,11 +90,15 @@ export function useMultiSession({
   useEffect(() => {
     const loadSession = async () => {
       const result = await sessionApi.fetchSession(sessionID);
-      if (!result.ok) return invokeError(result.error);
+      if (!result.ok) {
+        invokeError(result.error);
+        navigation.returnTo('/');
+        return;
+      }
       setSession(result.data);
     };
-    loadSession();
-  }, [sessionID, sessionApi, invokeError]);
+    loadSession().catch(invokeError);
+  }, [sessionID, sessionApi, navigation, invokeError]);
 
   useEffect(() => {
     const handleSessionUpdate = (incoming: Session) => {
@@ -117,6 +125,7 @@ export function useMultiSession({
         playerID,
         reconnectToken: joinAck.reconnectToken,
       };
+      setLocalPlayerID(playerID);
     },
     [session, emit],
   );
@@ -130,9 +139,7 @@ export function useMultiSession({
     )
       return;
 
-    join(localPlayerID).catch((error: unknown) => {
-      invokeError(error, 'Une erreur est survenue');
-    });
+    join(localPlayerID).catch(invokeError);
   }, [connectionStatus, session, localPlayerID, join, invokeError]);
 
   const requireSession = (action: string): Session => {
@@ -195,18 +202,19 @@ export function useMultiSession({
 
   return {
     session,
+    localPlayerID,
     isHost: isHostOf(session, localPlayerID),
     connectionStatus,
     retryConnection,
-    join,
-    updateHost,
-    updateGameConfig,
-    kickPlayer,
-    startGame,
-    guess,
-    nextRound,
-    endGame,
-    playAgain,
-    exitGame,
+    join: reportActionErrors(join, invokeError),
+    updateHost: reportActionErrors(updateHost, invokeError),
+    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
+    kickPlayer: reportActionErrors(kickPlayer, invokeError),
+    startGame: reportActionErrors(startGame, invokeError),
+    guess: reportActionErrors(guess, invokeError),
+    nextRound: reportActionErrors(nextRound, invokeError),
+    endGame: reportActionErrors(endGame, invokeError),
+    playAgain: reportActionErrors(playAgain, invokeError),
+    exitGame: reportActionErrors(exitGame, invokeError),
   };
 }

@@ -17,14 +17,16 @@ const ErrorContext = createContext<ErrorContextType>({
   invokeError: () => {},
 });
 
+export type ErrorDialogProps = {
+  errorMessage: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onExited?: () => void;
+};
+
 type ErrorProviderProps = {
   children: ReactNode;
-  ErrorDialogComponent?: React.ComponentType<{
-    errorMessage: string;
-    open: boolean;
-    setOpen: (open: boolean) => void;
-    onExited?: () => void;
-  }>;
+  ErrorDialogComponent?: React.ComponentType<ErrorDialogProps>;
 };
 
 export const ErrorProvider = ({

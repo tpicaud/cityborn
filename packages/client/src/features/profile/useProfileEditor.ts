@@ -1,0 +1,123 @@
+'use client';
+
+import type { ApiResult, User } from '@cityborn/api';
+import { useState } from 'react';
+import { useError } from '../../shared/errorContext';
+import type { AuthApi } from '../auth/authApi';
+import { useAuth } from '../auth/authContext';
+import type { ProfileApi } from './profileApi';
+import {
+  type ChangePasswordForm,
+  type ProfileFormSubmitHandler,
+  toUpdatePassword,
+  type UsernameForm,
+  useChangePasswordForm,
+  useUsernameForm,
+} from './profileForms';
+
+export type ProfileEditorOptions = {
+  profileApi: ProfileApi;
+  authApi: AuthApi;
+  onAccountDeleted?: () => void;
+};
+
+export type ProfileEditor = {
+  usernameForm: UsernameForm;
+  isEditingUsername: boolean;
+  startUsernameEdit: () => void;
+  cancelUsernameEdit: () => void;
+  submitUsername: ProfileFormSubmitHandler;
+  passwordForm: ChangePasswordForm;
+  isPasswordDialogOpen: boolean;
+  isPasswordUpdated: boolean;
+  openPasswordDialog: () => void;
+  closePasswordDialog: () => void;
+  submitPassword: ProfileFormSubmitHandler;
+  isDeleteAccountDialogOpen: boolean;
+  openDeleteAccountDialog: () => void;
+  closeDeleteAccountDialog: () => void;
+  deleteAccount: () => Promise<void>;
+};
+
+export function useProfileEditor({
+  profileApi,
+  authApi,
+  onAccountDeleted,
+}: ProfileEditorOptions): ProfileEditor {
+  const { user, setUser } = useAuth();
+  const { invokeError } = useError();
+  const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
+  const passwordForm: ChangePasswordForm = useChangePasswordForm();
+  const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] =
+    useState<boolean>(false);
+  const [isPasswordUpdated, setIsPasswordUpdated] = useState<boolean>(false);
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] =
+    useState<boolean>(false);
+
+  const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
+    async (data) => {
+      const result: ApiResult<User> = await profileApi.updateUsername(data);
+      if (!result.ok) return invokeError(result.error);
+
+      setUser(result.data);
+      usernameForm.reset({ username: result.data.username });
+      setIsEditingUsername(false);
+    },
+  );
+
+  const cancelUsernameEdit = (): void => {
+    usernameForm.reset({ username: user?.username ?? '' });
+    setIsEditingUsername(false);
+  };
+
+  const closePasswordDialog = (): void => {
+    passwordForm.reset();
+    setIsPasswordUpdated(false);
+    setIsPasswordDialogOpen(false);
+  };
+
+  const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
+    async (values) => {
+      const result: ApiResult<User> = await authApi.updatePassword(
+        toUpdatePassword(values),
+      );
+      if (!result.ok) return invokeError(result.error);
+
+      setUser(result.data);
+      passwordForm.reset();
+      setIsPasswordUpdated(true);
+    },
+  );
+
+  const deleteAccount = async (): Promise<void> => {
+    try {
+      const result: ApiResult<void> = await authApi.deleteUser();
+      if (!result.ok) return invokeError(result.error);
+      await authApi.signOut();
+      setUser(null);
+      setIsDeleteAccountDialogOpen(false);
+      onAccountDeleted?.();
+    } catch (error: unknown) {
+      invokeError(error);
+    }
+  };
+
+  return {
+    usernameForm,
+    isEditingUsername,
+    startUsernameEdit: () => setIsEditingUsername(true),
+    cancelUsernameEdit,
+    submitUsername,
+    passwordForm,
+    isPasswordDialogOpen,
+    isPasswordUpdated,
+    openPasswordDialog: () => setIsPasswordDialogOpen(true),
+    closePasswordDialog,
+    submitPassword,
+    isDeleteAccountDialogOpen,
+    openDeleteAccountDialog: () => setIsDeleteAccountDialogOpen(true),
+    closeDeleteAccountDialog: () => setIsDeleteAccountDialogOpen(false),
+    deleteAccount,
+  };
+}

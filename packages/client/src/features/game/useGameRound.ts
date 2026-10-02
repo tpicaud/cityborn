@@ -13,14 +13,14 @@ import type { MapProps } from './viewContracts';
 const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
 const DEFAULT_MAP_ZOOM = 2;
 
-export interface GameRoundController {
+export type GameRoundController = {
   mapProps: MapProps;
   preGuess: Guess | undefined;
   showCountdown: boolean;
   showOverlay: boolean;
   handleCountdownEnd: () => void;
   handleIsTimeUp: () => void;
-}
+};
 
 function useGuess(handleGuess: (guess: Guess) => void) {
   const [preGuess, setPreGuess] = useState<Guess>();

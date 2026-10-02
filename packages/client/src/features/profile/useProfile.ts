@@ -6,16 +6,16 @@ import { useError } from '../../shared/errorContext';
 import type { ProfileApi } from './profileApi';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
-export interface ProfileOptions {
+export type ProfileOptions = {
   profileApi: ProfileApi;
   localUser: Pick<User, 'id' | 'username'> | undefined;
-}
+};
 
-export interface ProfileState {
+export type ProfileState = {
   games: ProfileGame[];
   loading: boolean;
   refreshGames: () => Promise<void>;
-}
+};
 
 export function useProfile({
   profileApi,

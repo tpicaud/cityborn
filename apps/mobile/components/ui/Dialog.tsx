@@ -6,15 +6,15 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
-interface DialogProps extends ModalProps {
+type DialogProps = ModalProps & {
   visible: boolean;
   onClose?: () => void;
   title?: string;
   message?: string;
   className?: string;
-}
+};
 
 const Dialog = ({
   visible,

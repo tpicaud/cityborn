@@ -1,10 +1,12 @@
 'use client';
 
 import type { GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
-import { SessionMode } from '@cityborn/api';
+import { PlayerIdSchema, SessionMode } from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { useError } from '../../shared/errorContext';
+import { useAuth } from '../auth/authContext';
+import { reportActionErrors } from './reportedAction';
 import type { SessionApi } from './sessionApi';
 import type { SessionController } from './sessionContract';
 import {
@@ -16,18 +18,20 @@ import {
   withoutGame,
 } from './sessionState';
 
-export interface SoloSessionOptions {
-  localPlayerID: PlayerId;
+const guestPlayerID: PlayerId = PlayerIdSchema.parse('guest');
+
+export type SoloSessionOptions = {
   sessionApi: SessionApi;
   navigation: Navigation;
-}
+};
 
 export function useSoloSession({
-  localPlayerID,
   sessionApi,
   navigation,
 }: SoloSessionOptions): SessionController {
+  const { user } = useAuth();
   const { invokeError } = useError();
+  const localPlayerID: PlayerId = user?.username ?? guestPlayerID;
   const [session, setSession] = useState<Session>();
   const sessionRef = useRef<Session | undefined>(undefined);
 
@@ -42,7 +46,7 @@ export function useSoloSession({
       if (!result.ok) return invokeError(result.error);
       updateSession(withHost(result.data, localPlayerID));
     };
-    initSession();
+    initSession().catch(invokeError);
   }, [localPlayerID, sessionApi, invokeError, updateSession]);
 
   const requireSession = (action: string): Session => {
@@ -105,13 +109,14 @@ export function useSoloSession({
 
   return {
     session,
+    localPlayerID,
     isHost: true,
-    updateGameConfig,
-    startGame,
-    guess,
-    nextRound,
-    endGame,
-    playAgain,
-    exitGame,
+    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
+    startGame: reportActionErrors(startGame, invokeError),
+    guess: reportActionErrors(guess, invokeError),
+    nextRound: reportActionErrors(nextRound, invokeError),
+    endGame: reportActionErrors(endGame, invokeError),
+    playAgain: reportActionErrors(playAgain, invokeError),
+    exitGame: reportActionErrors(exitGame, invokeError),
   };
 }

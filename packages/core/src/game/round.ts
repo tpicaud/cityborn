@@ -56,10 +56,10 @@ export function applyGuess(
     };
   }
 
-  for (const rawPlayerId of Object.keys(game.state.results)) {
+  Object.keys(game.state.results).forEach((rawPlayerId: string) => {
     const playerId = PlayerIdSchema.parse(rawPlayerId);
     if (!playersGuesses[playerId]) playersGuesses[playerId] = defaultGuess;
-  }
+  });
 
   return {
     ...game,
@@ -85,7 +85,7 @@ export function aggregateGameResults(
     ...game.state.results,
   };
 
-  for (const rawPlayerId of Object.keys(game.state.results)) {
+  Object.keys(game.state.results).forEach((rawPlayerId: string) => {
     const playerId = PlayerIdSchema.parse(rawPlayerId);
     const guess = playersGuesses?.[playerId];
     const newResult: Result = {
@@ -98,7 +98,7 @@ export function aggregateGameResults(
     updatedResults[playerId] = playerResults
       ? { results: [...playerResults.results, newResult] }
       : { results: [newResult] };
-  }
+  });
 
   return updatedResults;
 }

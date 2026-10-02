@@ -1,10 +1,8 @@
-import { generateVisitorId } from '@cityborn/client/api';
+import {
+  createVisitorIdProvider,
+  type VisitorIdProvider,
+} from '@cityborn/client/api';
+import { keyValueStorage } from './keyValueStorage';
 
-export function getOrCreateVisitorId(): string {
-  let visitor_id = localStorage.getItem('visitor_id');
-  if (!visitor_id) {
-    visitor_id = generateVisitorId();
-    localStorage.setItem('visitor_id', visitor_id);
-  }
-  return visitor_id;
-}
+export const getOrCreateVisitorId: VisitorIdProvider =
+  createVisitorIdProvider(keyValueStorage);
