@@ -20,6 +20,7 @@ import ErrorDialog from '@/components/ui/ErrorDialog';
 import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
+import { ForegroundUserRefresh } from '@/features/auth/ForegroundUserRefresh';
 import { authApi } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
 
@@ -120,6 +121,7 @@ export default function RootLayout() {
                 initialValue={user}
                 getCurrentUser={authApi.getCurrentUser}
               >
+                <ForegroundUserRefresh />
                 <StatusBar hidden={true} />
                 <Stack
                   screenOptions={{
