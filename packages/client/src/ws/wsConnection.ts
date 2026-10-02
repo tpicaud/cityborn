@@ -1,24 +1,21 @@
 import { ErrorCode, isApiError } from '@cityborn/api';
-import type {
-  SocketConnectError,
-  SocketConnection,
-} from '../../platform/socket';
-import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
+import type { SocketConnectError, SocketConnection } from '../platform/socket';
+import { createWsEmit, type WsEmit } from './wsEmit';
 
-export type SessionConnectionStatus =
+export type WsConnectionStatus =
   | 'connecting'
   | 'connected'
   | 'reconnecting'
   | 'closed';
 
-export type SessionConnectionOptions = {
-  restoreSession: (emit: WsEmit) => Promise<void>;
+export type WsConnectionOptions = {
+  restoreChannels: (emit: WsEmit) => Promise<void>;
   refreshAuthentication: () => Promise<void>;
-  onStatusChange: (status: SessionConnectionStatus) => void;
+  onStatusChange: (status: WsConnectionStatus) => void;
   onFailure: (error: unknown) => void;
 };
 
-export type SessionConnection = {
+export type WsConnection = {
   retry: () => void;
   close: () => void;
 };
@@ -38,10 +35,10 @@ function isAuthenticationRejection(error: SocketConnectError): boolean {
   );
 }
 
-export function superviseSessionConnection(
+export function superviseWsConnection(
   socket: SocketConnection,
-  options: SessionConnectionOptions,
-): SessionConnection {
+  options: WsConnectionOptions,
+): WsConnection {
   const emit: WsEmit = createWsEmit(socket);
   let hasConnected = false;
   let authenticationRefreshed = false;
@@ -49,7 +46,7 @@ export function superviseSessionConnection(
   let lastConnectError: unknown;
   let stopped = false;
 
-  const pendingStatus = (): SessionConnectionStatus =>
+  const pendingStatus = (): WsConnectionStatus =>
     hasConnected ? 'reconnecting' : 'connecting';
 
   const fail = (error: unknown): void => {
@@ -65,7 +62,7 @@ export function superviseSessionConnection(
     const isCurrentConnection = (): boolean =>
       !stopped && generation === connectionGeneration;
 
-    options.restoreSession(emit).then(
+    options.restoreChannels(emit).then(
       () => {
         if (!isCurrentConnection()) return;
         authenticationRefreshed = false;

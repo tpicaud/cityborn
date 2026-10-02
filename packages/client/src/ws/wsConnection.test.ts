@@ -2,15 +2,12 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ApiError } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/api';
-import type {
-  SocketConnectError,
-  SocketConnection,
-} from '../../platform/socket';
+import type { SocketConnectError, SocketConnection } from '../platform/socket';
 import {
-  type SessionConnection,
-  type SessionConnectionStatus,
-  superviseSessionConnection,
-} from './sessionConnection';
+  superviseWsConnection,
+  type WsConnection,
+  type WsConnectionStatus,
+} from './wsConnection';
 
 type Listener = (...args: unknown[]) => void;
 
@@ -24,15 +21,15 @@ type FakeSocket = {
 };
 
 type Supervision = {
-  connection: SessionConnection;
-  statuses: SessionConnectionStatus[];
+  connection: WsConnection;
+  statuses: WsConnectionStatus[];
   failures: unknown[];
-  restoreCalls: () => number;
+  restorationCalls: () => number;
   refreshCalls: () => number;
 };
 
 type SupervisionOptions = {
-  restoreSession?: () => Promise<void>;
+  restoreChannels?: () => Promise<void>;
   refreshAuthentication?: () => Promise<void>;
 };
 
@@ -124,32 +121,29 @@ function supervise(
   fake: FakeSocket,
   options: SupervisionOptions = {},
 ): Supervision {
-  const statuses: SessionConnectionStatus[] = [];
+  const statuses: WsConnectionStatus[] = [];
   const failures: unknown[] = [];
-  let restoreCalls = 0;
+  let restorationCalls = 0;
   let refreshCalls = 0;
 
-  const connection: SessionConnection = superviseSessionConnection(
-    fake.socket,
-    {
-      restoreSession: async () => {
-        restoreCalls += 1;
-        await options.restoreSession?.();
-      },
-      refreshAuthentication: async () => {
-        refreshCalls += 1;
-        await options.refreshAuthentication?.();
-      },
-      onStatusChange: (status) => statuses.push(status),
-      onFailure: (error) => failures.push(error),
+  const connection: WsConnection = superviseWsConnection(fake.socket, {
+    restoreChannels: async () => {
+      restorationCalls += 1;
+      await options.restoreChannels?.();
     },
-  );
+    refreshAuthentication: async () => {
+      refreshCalls += 1;
+      await options.refreshAuthentication?.();
+    },
+    onStatusChange: (status) => statuses.push(status),
+    onFailure: (error) => failures.push(error),
+  });
 
   return {
     connection,
     statuses,
     failures,
-    restoreCalls: () => restoreCalls,
+    restorationCalls: () => restorationCalls,
     refreshCalls: () => refreshCalls,
   };
 }
@@ -171,7 +165,7 @@ function rejectHandshake(fake: FakeSocket, data?: ApiError): void {
   fake.fire('connect_error', connectError(data));
 }
 
-test('ouvre la connexion puis passe connecté une fois la session restaurée', async () => {
+test('ouvre la connexion puis passe connecté une fois les channels restaurés', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
 
@@ -179,10 +173,10 @@ test('ouvre la connexion puis passe connecté une fois la session restaurée', a
   await connect(fake);
 
   assert.deepEqual(supervision.statuses, ['connecting', 'connected']);
-  assert.equal(supervision.restoreCalls(), 1);
+  assert.equal(supervision.restorationCalls(), 1);
 });
 
-test('restaure la session à chaque nouvelle connexion, même après un échec intermédiaire', async () => {
+test('restaure les channels à chaque nouvelle connexion, même après un échec intermédiaire', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake);
   await connect(fake);
@@ -199,7 +193,7 @@ test('restaure la session à chaque nouvelle connexion, même après un échec i
     'reconnecting',
     'connected',
   ]);
-  assert.equal(supervision.restoreCalls(), 2);
+  assert.equal(supervision.restorationCalls(), 2);
   assert.deepEqual(supervision.failures, []);
 });
 
@@ -262,7 +256,7 @@ test('ignore la restauration d’une connexion déjà perdue', async () => {
   const fake: FakeSocket = createFakeSocket();
   let resolveRestore: () => void = () => {};
   const supervision: Supervision = supervise(fake, {
-    restoreSession: () =>
+    restoreChannels: () =>
       new Promise<void>((resolve) => {
         resolveRestore = resolve;
       }),
@@ -277,10 +271,10 @@ test('ignore la restauration d’une connexion déjà perdue', async () => {
   assert.deepEqual(supervision.statuses, ['connecting', 'reconnecting']);
 });
 
-test('ferme la connexion quand la restauration de la session échoue', async () => {
+test('ferme la connexion quand la restauration des channels échoue', async () => {
   const fake: FakeSocket = createFakeSocket();
   const supervision: Supervision = supervise(fake, {
-    restoreSession: () => Promise.reject(rateLimitError),
+    restoreChannels: () => Promise.reject(rateLimitError),
   });
 
   await connect(fake);
@@ -293,7 +287,7 @@ test('réessaie la restauration sur une connexion toujours ouverte', async () =>
   const fake: FakeSocket = createFakeSocket();
   let shouldFail = true;
   const supervision: Supervision = supervise(fake, {
-    restoreSession: () =>
+    restoreChannels: () =>
       shouldFail ? Promise.reject(rateLimitError) : Promise.resolve(),
   });
   await connect(fake);
@@ -302,7 +296,7 @@ test('réessaie la restauration sur une connexion toujours ouverte', async () =>
   supervision.connection.retry();
   await settle();
 
-  assert.equal(supervision.restoreCalls(), 2);
+  assert.equal(supervision.restorationCalls(), 2);
   assert.equal(supervision.statuses.at(-1), 'connected');
 });
 

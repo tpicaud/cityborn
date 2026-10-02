@@ -22,9 +22,9 @@ import {
 import type { Navigation } from '../../platform/navigation';
 import type { SocketFactory } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
+import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
 import type { SessionApi } from './sessionApi';
-import type { SessionConnectionStatus } from './sessionConnection';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
@@ -38,7 +38,7 @@ export type MultiSessionOptions = {
 };
 
 export type MultiSessionController = SessionController & {
-  connectionStatus: SessionConnectionStatus;
+  connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;

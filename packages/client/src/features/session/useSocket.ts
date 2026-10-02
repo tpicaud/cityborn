@@ -16,13 +16,13 @@ import type {
   SocketListenEvents,
 } from '../../platform/socket';
 import { useError } from '../../shared/errorContext';
+import {
+  superviseWsConnection,
+  type WsConnection,
+  type WsConnectionStatus,
+} from '../../ws/wsConnection';
 import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
 import { useAuth } from '../auth';
-import {
-  type SessionConnection,
-  type SessionConnectionStatus,
-  superviseSessionConnection,
-} from './sessionConnection';
 
 type SessionSocketOptions = {
   createSocket: SocketFactory;
@@ -36,7 +36,7 @@ type SessionSocketCallbacks = {
 };
 
 export type SessionSocket = {
-  connectionStatus: SessionConnectionStatus;
+  connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   emit: WsEmit;
   on: <Name extends SocketListenEvent>(
@@ -57,7 +57,7 @@ export function useSocket({
 }: SessionSocketOptions): SessionSocket {
   const [socket, setSocket] = useState<SocketConnection | null>(null);
   const [connectionStatus, setConnectionStatus] =
-    useState<SessionConnectionStatus>('connecting');
+    useState<WsConnectionStatus>('connecting');
   const retryConnectionRef: RefObject<() => void> = useRef<() => void>(
     () => {},
   );
@@ -83,7 +83,7 @@ export function useSocket({
   useEffect(() => {
     let mounted = true;
     let openedSocket: SocketConnection | null = null;
-    let sessionConnection: SessionConnection | null = null;
+    let wsConnection: WsConnection | null = null;
 
     const handleWsError: SocketListenEvents[typeof WS_ERROR_EVENT] = (
       error,
@@ -101,17 +101,19 @@ export function useSocket({
           openedSocket = createdSocket;
           createdSocket.on(WS_ERROR_EVENT, handleWsError);
 
-          const supervisedConnection: SessionConnection =
-            superviseSessionConnection(createdSocket, {
-              restoreSession: (emit) => callbacks.current.restoreSession(emit),
+          const supervisedConnection: WsConnection = superviseWsConnection(
+            createdSocket,
+            {
+              restoreChannels: (emit) => callbacks.current.restoreSession(emit),
               refreshAuthentication: () =>
                 callbacks.current.refreshAuthentication(),
               onStatusChange: setConnectionStatus,
               onFailure: (error) =>
                 callbacks.current.invokeError(error, CONNECTION_FAILED_MESSAGE),
-            });
+            },
+          );
 
-          sessionConnection = supervisedConnection;
+          wsConnection = supervisedConnection;
           retryConnectionRef.current = supervisedConnection.retry;
           setSocket(createdSocket);
         })
@@ -130,7 +132,7 @@ export function useSocket({
       retryConnectionRef.current = () => {};
 
       openedSocket?.off(WS_ERROR_EVENT, handleWsError);
-      sessionConnection?.close();
+      wsConnection?.close();
 
       setSocket(null);
     };
