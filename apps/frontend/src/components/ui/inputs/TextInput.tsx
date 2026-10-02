@@ -2,10 +2,10 @@
 
 import { Input as MuiInput } from '@mui/material';
 
-interface TextInputProps {
+type TextInputProps = {
   placeholder: string;
   className: string;
-}
+};
 
 export default function Input({
   placeholder = '',

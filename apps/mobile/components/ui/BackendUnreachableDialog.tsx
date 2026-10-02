@@ -4,10 +4,10 @@ import Dialog from './Dialog';
 import { Icon } from './Icon';
 import { Text, View } from './native/NativeComponents';
 
-interface BackendUnreachableDialogProps {
+type BackendUnreachableDialogProps = {
   visible: boolean;
   onRetry: () => Promise<void>;
-}
+};
 
 function BackendUnreachableDialog({
   visible,

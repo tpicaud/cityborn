@@ -4,14 +4,14 @@ import { CircularProgress, Button as MuiButton } from '@mui/material';
 import clsx from 'clsx';
 import { type ReactNode, useState } from 'react';
 
-interface ButtonProps {
+type ButtonProps = {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'accent';
   size?: 'sm' | 'md' | 'lg' | 'auto';
   className?: string;
   disabled?: boolean;
   onClick?: () => void;
-}
+};
 
 function applyBreakpoint(classes: string, prefix: 'sm' | 'md' | 'lg') {
   return classes

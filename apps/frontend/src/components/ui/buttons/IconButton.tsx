@@ -4,10 +4,10 @@ import {
 } from '@mui/material';
 import type { ReactNode } from 'react';
 
-interface IconButtonProps extends MuiIconButtonProps {
+type IconButtonProps = MuiIconButtonProps & {
   onClick?: () => Promise<void> | void;
   children: ReactNode;
-}
+};
 
 export default function IconButton({
   onClick,

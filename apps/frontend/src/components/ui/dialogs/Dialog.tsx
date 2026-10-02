@@ -4,10 +4,10 @@ import {
 } from '@mui/material';
 import type { ReactNode } from 'react';
 
-interface DialogProps extends MuiDialogProps {
+type DialogProps = MuiDialogProps & {
   open: boolean;
   children: ReactNode;
-}
+};
 
 export function Dialog({ open, children, ...props }: DialogProps) {
   return (

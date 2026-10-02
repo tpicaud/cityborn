@@ -4,10 +4,10 @@ import {
 } from 'react-native';
 import { cn } from '@/lib/classNames';
 
-interface InputProps extends TextInputProps {
+type InputProps = TextInputProps & {
   className?: string;
   error?: boolean;
-}
+};
 
 export default function TextInput({
   className = '',

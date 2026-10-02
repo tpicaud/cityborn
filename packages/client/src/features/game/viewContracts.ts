@@ -1,6 +1,6 @@
 import type { Coord, Game, Guess, PlayerId } from '@cityborn/api';
 
-export interface GameComponentProps {
+export type GameComponentProps = {
   localPlayerID: PlayerId | undefined;
   isHost: boolean;
   game: Game;
@@ -9,13 +9,13 @@ export interface GameComponentProps {
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
-}
+};
 
-export interface MapProps {
+export type MapProps = {
   center: Coord;
   zoom: number;
   preGuess: Guess | undefined;
   game: Game;
   localPlayerID: PlayerId;
   handlePreGuess: (value: Guess) => void;
-}
+};

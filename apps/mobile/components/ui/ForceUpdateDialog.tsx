@@ -6,9 +6,9 @@ import Dialog from './Dialog';
 import { Icon } from './Icon';
 import { Text, View } from './native/NativeComponents';
 
-interface ForceUpdateDialogProps {
+type ForceUpdateDialogProps = {
   visible: boolean;
-}
+};
 
 function getStoreUrl(): string {
   const storeUrls = Constants.expoConfig?.extra?.storeUrls;

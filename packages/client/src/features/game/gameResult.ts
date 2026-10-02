@@ -7,24 +7,24 @@ import type {
 import { PlayerIdSchema } from '@cityborn/api';
 import { calculateTotalPoints } from '@cityborn/core';
 
-export interface GameRoundResult {
+export type GameRoundResult = {
   guessObjectID: GuessObjectId;
   guessObjectName: string;
   distanceInKm: number | undefined;
   points: number;
-}
+};
 
-export interface GamePlayerResults {
+export type GamePlayerResults = {
   playerID: PlayerId;
   totalPoints: number;
   roundResults: GameRoundResult[];
-}
+};
 
-export interface GameResults {
+export type GameResults = {
   localPlayerResults: GamePlayerResults | undefined;
   playersResults: GamePlayerResults[];
   isMultiplayer: boolean;
-}
+};
 
 function getGuessObjectName(game: Game, guessObjectID: GuessObjectId): string {
   return (
