@@ -12,7 +12,7 @@ Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les c
 | `apps/frontend`, `apps/back-office` | Next.js (App Router). |
 | `apps/mobile` | Expo / React Native. |
 | `packages/api` | **Source de vérité des contrats** : ts-rest et WebSocket + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
-| `packages/client` | Code partagé **front + mobile** qui **ne transite pas** par l'API, rangé par domaine et exposé en sous-chemins (`./api`, `./ws`, `./auth`, `./session`, `./game`, `./platform`). Agnostique de Next, Expo et du rendu. |
+| `packages/client` | Code partagé **front + mobile** qui **ne transite pas** par l'API, rangé par domaine et exposé par l'`exports` map de son `package.json`. Agnostique de Next, Expo et du rendu. |
 | `packages/core` | Code partagé **backend + client** (front/mobile). Aujourd'hui la logique de jeu (`src/game`) ; a vocation à s'étoffer. Dépend de `@cityborn/api`. |
 | `packages/design-system` | Composants UI partagés. |
 
@@ -81,6 +81,7 @@ Ces règles valent en développement comme en revue : chaque **symptôme** cité
 |---|---|
 | `pnpm typecheck` | typecheck du monorepo (CI, doit toujours passer) |
 | `pnpm format` / `pnpm format:check` | Biome (lint + format) |
+| `pnpm check:agent-docs` | structure, liens, routage et couverture des instructions agents |
 | `pnpm check:api-compat` | rétrocompat des contrats API (CI) |
 | `pnpm dev:web` / `pnpm dev:mobile` | stack web / mobile + backend + packages |
 | `pnpm --dir apps/backend test` | tests backend unitaires (Jest) |
@@ -124,5 +125,7 @@ Les conventions propres à un domaine sont découvertes automatiquement depuis l
 ## Maintenir ce guide
 
 Tout changement qui modifie une convention ou une décision d'archi doit mettre à jour, **dans le même lot**, soit ce fichier (si transverse), soit le `SKILL.md` concerné (si propre à un domaine) — jamais les deux, jamais en double. Le guide reflète l'état réel du code.
+
+Après une modification d'`AGENTS.md` ou d'un skill, lancer `pnpm check:agent-docs`, puis vérifier dans `.agents/evals/skill-cases.md` les cas du skill touché, ses non-déclenchements et ses chevauchements.
 
 Tout changement qui affecte le démarrage local, ses prérequis, les variables d'environnement, les ports, les commandes `dev:web` / `dev:mobile` ou l'arborescence présentée dans le `README.md` racine doit mettre à jour ce README dans le même lot. Vérifier en fin de tâche qu'il reste cohérent avec les scripts, les `.env.example` et la structure du monorepo.

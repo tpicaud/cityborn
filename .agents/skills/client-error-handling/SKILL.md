@@ -17,3 +17,7 @@ description: Erreurs et validation client Cityborn. À utiliser pour modifier un
 - **Messages FR** : seule source = `ErrorCode` dans `@cityborn/api` (`resolveErrorMessage` / `getFriendlyErrorMessage`). Ne pas écrire de message en dur.
 - **Map zod FR** : `installFrenchZodErrorMap()` (de `@cityborn/api`) installe les messages de validation zod en français. Appelé une fois au bootstrap de chaque app — `apps/backend/src/main.ts`, `apps/frontend/src/app/providers.tsx`, `apps/back-office/app/providers.tsx`, `apps/mobile/app/_layout.tsx`. Pas d'effet de bord à l'import : l'appel doit rester explicite.
 - **Validation de formulaire** : `zodResolver` + schéma partagé (`@cityborn/api` ou `@cityborn/client`). On ne route pas les `fieldErrors` d'un 400 vers les champs (le client valide avec le même schéma) → `!result.ok` → `invokeError(result.error)`.
+
+## Critère de fin
+
+Chaque appel utilise le wrapper de son contexte, conserve l'`ApiError` jusqu'à sa normalisation et affiche les messages métier depuis `ErrorCode`. Les formulaires utilisent le schéma partagé et transmettent leur erreur au mécanisme commun sans conversion intermédiaire.

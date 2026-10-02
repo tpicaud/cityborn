@@ -12,7 +12,7 @@ description: Issues GitHub Cityborn. À utiliser pour préparer ou publier une i
 ## Règles de style
 - Toujours en français.
 - Ajouter les labels appropriés parmi la liste disponible sur GitHub. Demander uniquement si plusieurs labels possibles changent le routage ou la responsabilité du ticket.
-- Être concis : 60 lignes maximum.
+- Être concis : utiliser le moins de lignes possible pour transmettre tout le besoin, sans jamais dépasser 60 lignes.
 - Utiliser le Markdown seulement quand il rend le ticket plus clair.
 
 ## Autorisations
@@ -22,8 +22,8 @@ description: Issues GitHub Cityborn. À utiliser pour préparer ou publier une i
 
 ## Ce qu'il ne faut pas oublier
 
-- Lors d'une publication, rattacher l'issue au project Cityborn avec le Type `DEV` et le statut `À faire dans l'itération`.
-- Toute issue publiée porte aussi un Sprint, à renseigner explicitement : le champ a une valeur par défaut qui ne correspond pas au sprint courant. Si l'utilisateur ne l'a pas précisé, lui demander lequel affecter avant de publier, en lui présentant les sprints existants (`gh project field-list 1 --owner tpicaud --format json -q '.fields[] | select(.name=="Sprint") | .options[] | "\(.id) \(.name)"'`).
+- Résoudre le Sprint avant d'exécuter `gh issue create` : le champ a une valeur par défaut qui ne correspond pas au sprint courant. Si l'utilisateur ne l'a pas précisé, lui demander lequel affecter en lui présentant les sprints existants (`gh project field-list 1 --owner tpicaud --format json -q '.fields[] | select(.name=="Sprint") | .options[] | "\(.id) \(.name)"'`). Ne créer ni l'issue ni son item de projet tant que le Sprint manque.
+- Après la création, rattacher l'issue au project Cityborn avec le Type `DEV`, le statut `À faire dans l'itération` et le Sprint résolu.
 
 ## Brouillon ou publication
 

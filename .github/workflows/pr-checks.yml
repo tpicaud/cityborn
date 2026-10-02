@@ -9,6 +9,25 @@ jobs:
     name: Detect changes
     uses: ./.github/workflows/detect-changes.yml
 
+  agent-docs:
+    name: Agent instructions
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Check agent instructions
+        run: pnpm check:agent-docs
+
   typecheck:
     name: Typecheck
     if: github.event.pull_request.draft == false

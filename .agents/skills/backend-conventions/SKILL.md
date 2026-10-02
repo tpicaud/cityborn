@@ -30,3 +30,7 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou 
 ## Observabilité
 
 Pour enrichir un wide event, remonter une erreur, instrumenter une gateway, ajouter un domaine ou toucher au contexte CLS, au filtre d'erreurs ou au lifecycle WS, lire [la référence d'observabilité](references/observability.md).
+
+## Critère de fin
+
+Pour chaque fichier backend touché, vérifier que sa capacité propriétaire et sa frontière sont explicites, que les controllers restent fins, que les services ne dépendent pas de Prisma, que les transactions excluent Redis et les appels externes, et que chaque erreur suit le chemin typé prévu. Toute modification liée à l'observabilité doit aussi respecter la référence ci-dessus.

@@ -43,3 +43,7 @@ Réserver un nouvel e2e à une route, un événement ou un guard qui active un p
 ## Harnais réel
 
 Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md). Elle porte les invariants d'infrastructure, le bootstrap de production, les transports HTTP/WS et le teardown sans fuite.
+
+## Critère de fin
+
+Chaque comportement significatif est couvert une seule fois au tier le plus bas qui permet de l'observer. Les ressources ouvertes par le test sont fermées, aucun détail déjà prouvé à un tier inférieur n'est répété, et la commande ciblée du tier modifié passe.
