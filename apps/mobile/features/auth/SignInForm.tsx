@@ -80,8 +80,9 @@ export const SignInForm = () => {
                 </Text>
               )}
             </View>
+          </View>
+          <View className="w-full items-center py-6">
             <RequestPasswordResetDialog />
-
           </View>
           <Button
             variant="filled"
@@ -90,7 +91,6 @@ export const SignInForm = () => {
             disabled={isSubmitting}
             label="SE CONNECTER"
             onPress={submit}
-            className="mt-8"
           />
           <Button
             variant="default"
