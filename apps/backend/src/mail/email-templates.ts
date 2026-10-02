@@ -1,5 +1,8 @@
 import { resolve } from 'node:path';
-import type { SendMailOptions } from './providers/mail.provider';
+import type {
+  MailAttachment,
+  SendMailOptions,
+} from './providers/mail.provider';
 
 const logoFilename: string = 'logo-transparent.png';
 const logoContentId: string = logoFilename;
@@ -7,6 +10,15 @@ const logoPath: string = resolve(
   __dirname,
   '../../frontend/assets/logo-transparent.png',
 );
+
+function buildLogoAttachment(): MailAttachment {
+  return {
+    filename: logoFilename,
+    path: logoPath,
+    cid: logoContentId,
+    contentDisposition: 'inline',
+  };
+}
 
 type EmailTemplateHeaderParams = {
   preheader: string;
@@ -212,14 +224,7 @@ function buildActionEmail(params: ActionEmailParams): SendMailOptions {
                   </tr>
                   ${buildEmailTemplateFooter()}
     `,
-    attachments: [
-      {
-        filename: logoFilename,
-        path: logoPath,
-        cid: logoContentId,
-        contentDisposition: 'inline',
-      },
-    ],
+    attachments: [buildLogoAttachment()],
   };
 }
 
@@ -261,7 +266,36 @@ function buildPasswordChangedEmail(
   return {
     to: params.email,
     subject,
-    text: `Bonjour ${params.username},\n${message}`,
-    html: `<h1>${subject}</h1><p>Bonjour ${escapeHtml(params.username)},</p><p>${message}</p>`,
+    text: `Bonjour ${params.username},\n\n${message}\n\nL’équipe Cityborn`,
+    html: `
+      ${buildEmailTemplateHeader({
+        preheader: 'Votre nouveau mot de passe est prêt à être utilisé.',
+        title: subject,
+      })}
+                  <tr>
+                    <td style="padding:42px 44px 32px;">
+                      <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
+                        Votre mot de passe a été modifié
+                      </h1>
+                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
+                        Bonjour ${escapeHtml(params.username)},
+                      </p>
+                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
+                        Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées.
+                      </p>
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
+                        <tr>
+                          <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
+                            <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
+                              Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+      ${buildEmailTemplateFooter()}
+    `,
+    attachments: [buildLogoAttachment()],
   };
 }
