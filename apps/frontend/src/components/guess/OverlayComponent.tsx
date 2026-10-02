@@ -5,29 +5,44 @@ import {
   type Game,
   type Guess,
   type PlayerId,
-  type Round,
   RoundStatus,
-  type Session,
 } from '@cityborn/api';
+import {
+  canSubmitGuess,
+  createRoundResult,
+  currentGuessObject,
+  formatDistanceInKm,
+  type RoundGuessOutcome,
+  type RoundResult,
+} from '@cityborn/client/game';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import GuessObjectComponent from './GuessObjectComponent';
 import TimerComponent from './TimerComponent';
+
+type OverlayComponentProps = {
+  localPlayerID: PlayerId;
+  preGuess: Guess | undefined;
+  game: Game;
+  handleGuess: (value: Guess) => Promise<void>;
+  handleIsTimeUp: () => void;
+};
 
 function GuessButton({
   preGuess,
   disabled,
   handleGuess,
 }: {
-  preGuess: OverlayComponentProps['preGuess'];
+  preGuess: Guess | undefined;
   disabled: boolean;
-  handleGuess: OverlayComponentProps['handleGuess'];
+  handleGuess: (value: Guess) => Promise<void>;
 }) {
   return (
     <LoadingButton
       variant="contained"
-      onClick={async () => preGuess && (await handleGuess(preGuess))}
+      onClick={async () => {
+        if (preGuess) await handleGuess(preGuess);
+      }}
       disabled={disabled}
       sx={{
         color: 'white',
@@ -44,153 +59,102 @@ function GuessButton({
   );
 }
 
-function GuessResult({
-  currentRound,
-  guessObject,
-  localPlayerID,
-}: {
-  currentRound: Round;
-  guessObject: FullGuessObject;
-  localPlayerID: PlayerId;
-}) {
+function LocalGuessOutcome({ outcome }: { outcome: RoundGuessOutcome }) {
+  if (outcome.kind === 'timedOut') {
+    return (
+      <p>
+        <b>Tu n'as pas deviné à temps !</b>
+      </p>
+    );
+  }
+  if (outcome.kind === 'found') {
+    return (
+      <p>
+        <b>Bien joué ! Tu as deviné !</b>
+      </p>
+    );
+  }
   return (
-    currentRound.playersGuesses &&
-    currentRound.status === RoundStatus.SHOWING_RESULTS && (
-      <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
-        <Box className="flex flex-col py-2 px-4 text-xl md:text-xl lg:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm">
-          <p>
-            <b>{currentRound.playersGuesses[localPlayerID].points}</b> pts
-          </p>
-          {Object.keys(currentRound.playersGuesses).length > 1 && (
-            <>
-              <hr className="my-1 border-green-600 w-[70%] self-center" />
-              <div className="flex flex-wrap justify-center mt-2 gap-1 text-sm w-full">
-                {Object.entries(currentRound.playersGuesses).map(
-                  ([playerID, guess]) => {
-                    if (playerID === localPlayerID) return null;
-
-                    return (
-                      <div
-                        key={playerID}
-                        className="px-1 text-green-700 text-xs md:text-base "
-                      >
-                        <b>{playerID}</b>: {guess.points}
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </>
-          )}
-        </Box>
-        <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full">
-          <p>
-            <b>{guessObject.name}</b> est né à{' '}
-            <b>{guessObject.world_location?.name}</b>
-          </p>
-          {currentRound.playersGuesses[localPlayerID].distance !== -1 ? (
-            currentRound.playersGuesses[localPlayerID].distance === 0 ? (
-              <p>
-                <b>Bien joué ! Tu as deviné !</b>
-              </p>
-            ) : (
-              <p>
-                Tu es à{' '}
-                <b>
-                  {currentRound.playersGuesses[localPlayerID].distance.toFixed(
-                    2,
-                  )}
-                </b>{' '}
-                km
-              </p>
-            )
-          ) : (
-            <p>
-              <b>Tu n'as pas deviné à temps !</b>
-            </p>
-          )}
-        </Box>
-      </div>
-    )
+    <p>
+      Tu es à <b>{formatDistanceInKm(outcome.distanceInKm)}</b> km
+    </p>
   );
 }
 
-interface OverlayComponentProps {
-  localPlayerID: PlayerId;
-  preGuess: Guess | undefined;
-  session: Session;
-  game: Game;
-  handleGuess: (value: Guess) => void;
-  handleIsTimeUp: () => void;
-  handleNextRound: () => void;
+function GuessResult({ roundResult }: { roundResult: RoundResult }) {
+  return (
+    <div className="flex flex-col m-2 gap-2 items-center justify-center w-full">
+      <Box className="flex flex-col py-2 px-4 text-xl md:text-xl lg:text-2xl text-center bg-green-200 text-green-600 rounded shadow-sm">
+        <p>
+          <b>{roundResult.localPoints}</b> pts
+        </p>
+        {roundResult.otherPlayersPoints.length > 0 && (
+          <>
+            <hr className="my-1 border-green-600 w-[70%] self-center" />
+            <div className="flex flex-wrap justify-center mt-2 gap-1 text-sm w-full">
+              {roundResult.otherPlayersPoints.map(({ playerID, points }) => (
+                <div
+                  key={playerID}
+                  className="px-1 text-green-700 text-xs md:text-base "
+                >
+                  <b>{playerID}</b>: {points}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Box>
+      <Box className="p-2 text-xs md:text-base lg:text-xl text-center bg-blue-200 text-blue-600 rounded shadow-sm w-full">
+        <p>
+          <b>{roundResult.guessObject.name}</b> est né à{' '}
+          <b>{roundResult.guessObject.world_location.name}</b>
+        </p>
+        <LocalGuessOutcome outcome={roundResult.localOutcome} />
+      </Box>
+    </div>
+  );
 }
 
-const OverlayComponent: React.FC<OverlayComponentProps> = ({
+export default function OverlayComponent({
   localPlayerID,
   preGuess,
-  session,
   game,
   handleGuess,
   handleIsTimeUp,
-}) => {
-  const [timerEnded, setTimerEnded] = useState(false);
-
-  const currentGuessObject = game.state.guessObjects?.find(
-    (guessObject) => game.state.currentRound?.guessObjectId === guessObject.id,
+}: OverlayComponentProps) {
+  const guessObject: FullGuessObject | undefined = currentGuessObject(game);
+  const roundResult: RoundResult | undefined = createRoundResult(
+    game,
+    localPlayerID,
   );
-
-  useEffect(() => {
-    setTimerEnded(false);
-  }, []);
-
-  useEffect(() => {
-    if (timerEnded) {
-      setTimerEnded(false);
-      handleIsTimeUp();
-    }
-  }, [timerEnded, handleIsTimeUp]);
+  const isGuessing: boolean =
+    game.state.currentRound?.status === RoundStatus.GUESSING;
 
   return (
     <div>
-      {currentGuessObject && (
-        <GuessObjectComponent guessObject={currentGuessObject} />
-      )}
+      {guessObject && <GuessObjectComponent guessObject={guessObject} />}
       <div className="absolute w-[27%] mx-6 my-14">
-        {game.state.currentRound?.status === RoundStatus.GUESSING && (
+        {isGuessing && (
           <TimerComponent
-            totalTime={session.gameConfig.timer}
+            totalTimeInSeconds={game.config.timer}
             endMessage="Terminé !"
-            setTimerEnded={setTimerEnded}
+            onTimeUp={handleIsTimeUp}
           />
         )}
       </div>
       <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 min-w-20 w-[80%]">
-        {game.state.currentRound?.status === RoundStatus.GUESSING && (
+        {isGuessing && (
           <div className="relative w-full flex justify-center items-center">
             <GuessButton
               preGuess={preGuess}
-              disabled={
-                !preGuess ||
-                game.state.currentRound?.playersGuesses?.[localPlayerID] !==
-                  undefined
-              }
+              disabled={!canSubmitGuess(game, localPlayerID, preGuess)}
               handleGuess={handleGuess}
             />
           </div>
         )}
 
-        {game.state.currentRound &&
-          game.state.currentRound.status === RoundStatus.SHOWING_RESULTS &&
-          currentGuessObject && (
-            <GuessResult
-              currentRound={game.state.currentRound}
-              guessObject={currentGuessObject}
-              localPlayerID={localPlayerID}
-            />
-          )}
+        {roundResult && <GuessResult roundResult={roundResult} />}
       </div>
     </div>
   );
-};
-
-export default OverlayComponent;
+}

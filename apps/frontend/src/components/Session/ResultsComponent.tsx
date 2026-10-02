@@ -1,7 +1,7 @@
 'use client';
 
 import { type Game, type PlayerId, SessionMode } from '@cityborn/api';
-import { createGameResults } from '@cityborn/client/game';
+import { createGameResults, formatDistanceInKm } from '@cityborn/client/game';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Accordion,
@@ -99,7 +99,11 @@ const ResultsComponent = ({
                               </TableCell>
                               <TableCell align="right">
                                 {roundResult.distanceInKm !== undefined ? (
-                                  <p>{roundResult.distanceInKm.toFixed(2)}</p>
+                                  <p>
+                                    {formatDistanceInKm(
+                                      roundResult.distanceInKm,
+                                    )}
+                                  </p>
                                 ) : (
                                   <p>Pas de guess</p>
                                 )}
@@ -169,7 +173,9 @@ const ResultsComponent = ({
                                   <TableCell align="right">
                                     {roundResult.distanceInKm !== undefined ? (
                                       <p>
-                                        {roundResult.distanceInKm.toFixed(2)}
+                                        {formatDistanceInKm(
+                                          roundResult.distanceInKm,
+                                        )}
                                       </p>
                                     ) : (
                                       <p>Pas de guess</p>

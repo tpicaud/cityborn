@@ -1,30 +1,10 @@
 'use client';
 
+import { type CountdownOptions, useCountdown } from '@cityborn/client/game';
 import { Backdrop, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 
-interface TimerComponentProps {
-  onCountdownEnd: () => void;
-  initialCount?: number;
-}
-
-const TimerComponent: React.FC<TimerComponentProps> = ({
-  onCountdownEnd,
-  initialCount = 3,
-}) => {
-  const [countdown, setCountdown] = useState(initialCount);
-
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    } else {
-      onCountdownEnd();
-    }
-  }, [countdown, onCountdownEnd]);
+export default function RoundCountdown(countdownOptions: CountdownOptions) {
+  const count: number = useCountdown(countdownOptions);
 
   return (
     <Backdrop
@@ -36,10 +16,8 @@ const TimerComponent: React.FC<TimerComponentProps> = ({
         component="div"
         sx={{ fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif' }}
       >
-        {countdown}
+        {count}
       </Typography>
     </Backdrop>
   );
-};
-
-export default TimerComponent;
+}

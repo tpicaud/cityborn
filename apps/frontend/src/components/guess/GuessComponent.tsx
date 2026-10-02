@@ -1,30 +1,34 @@
 'use client';
 
-import type { PlayerId, Session } from '@cityborn/api';
-import { type GameComponentProps, useGameRound } from '@cityborn/client/game';
+import type { PlayerId } from '@cityborn/api';
+import {
+  type GameComponentProps,
+  type GameRoundController,
+  useGameRound,
+} from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
 import OverlayComponent from '@/components/guess/OverlayComponent';
 import { frontendClientConfig } from '@/config/client';
-import RoundCountdownComponent from './RoundCountdown';
+import RoundCountdown from './RoundCountdown';
 
-const GameMap = dynamic(() => import('@/components/guess/Map'), { ssr: false });
+const GameMap = dynamic(() => import('@/components/guess/Map'), {
+  ssr: false,
+});
 
-type GuessComponentProps = Pick<
-  GameComponentProps,
-  'game' | 'handleGuess' | 'handleNextRound'
-> & {
+type GuessComponentProps = Pick<GameComponentProps, 'game' | 'handleGuess'> & {
   localPlayerID: PlayerId;
-  session: Session;
 };
 
-const GuessComponent: React.FC<GuessComponentProps> = ({
+export default function GuessComponent({
   localPlayerID,
-  session,
   game,
   handleGuess,
-  handleNextRound,
-}) => {
-  const gameRound = useGameRound({ game, localPlayerID, handleGuess });
+}: GuessComponentProps) {
+  const gameRound: GameRoundController = useGameRound({
+    game,
+    localPlayerID,
+    handleGuess,
+  });
 
   return (
     <div>
@@ -36,9 +40,7 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
       </div>
 
       {gameRound.showCountdown && (
-        <RoundCountdownComponent
-          onCountdownEnd={gameRound.handleCountdownEnd}
-        />
+        <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
       )}
 
       {gameRound.showOverlay && (
@@ -46,16 +48,12 @@ const GuessComponent: React.FC<GuessComponentProps> = ({
           <OverlayComponent
             localPlayerID={localPlayerID}
             preGuess={gameRound.preGuess}
-            session={session}
             game={game}
             handleGuess={handleGuess}
             handleIsTimeUp={gameRound.handleIsTimeUp}
-            handleNextRound={handleNextRound}
           />
         </div>
       )}
     </div>
   );
-};
-
-export default GuessComponent;
+}

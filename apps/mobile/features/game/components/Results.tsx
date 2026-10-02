@@ -1,5 +1,5 @@
 import type { Game, PlayerId } from '@cityborn/api';
-import { createGameResults } from '@cityborn/client/game';
+import { createGameResults, formatDistanceInKm } from '@cityborn/client/game';
 import { ScrollView } from 'react-native';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -74,7 +74,7 @@ const Results = ({
                 </Text>
                 <Text className="flex-1 text-center text-sm">
                   {roundResult.distanceInKm !== undefined
-                    ? roundResult.distanceInKm.toFixed(2)
+                    ? formatDistanceInKm(roundResult.distanceInKm)
                     : 'Pas de guess'}
                 </Text>
                 <Text className="flex-1 text-right text-sm">

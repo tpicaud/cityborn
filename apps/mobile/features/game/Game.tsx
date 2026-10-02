@@ -2,7 +2,10 @@ import {
   createGameDisplay,
   type GameComponentProps,
 } from '@cityborn/client/game';
-import { useFocusEffect, useNavigation } from 'expo-router';
+import {
+  useNavigation as useExpoNavigation,
+  useFocusEffect,
+} from 'expo-router';
 import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -21,17 +24,17 @@ export const Game = ({
   handlePlayAgain,
   handleExitGame,
 }: GameComponentProps) => {
-  const navigation = useNavigation();
+  const expoNavigation = useExpoNavigation();
   const gameDisplay = createGameDisplay(game, localPlayerID);
 
   useFocusEffect(
     useCallback(() => {
-      navigation.setOptions({ headerShown: false });
+      expoNavigation.setOptions({ headerShown: false });
 
       return () => {
-        navigation.setOptions({ headerShown: true });
+        expoNavigation.setOptions({ headerShown: true });
       };
-    }, [navigation.setOptions]),
+    }, [expoNavigation.setOptions]),
   );
 
   if (gameDisplay.state === 'loading') {
@@ -45,7 +48,7 @@ export const Game = ({
     return (
       <View className="flex-1 items-center justify-center">
         <Text>La partie est déjà en cours</Text>
-        <Button size="large" label="Menu" />
+        <Button size="large" label="Menu" onPress={handleExitGame} />
       </View>
     );
   }

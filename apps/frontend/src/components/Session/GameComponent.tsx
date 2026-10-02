@@ -36,10 +36,8 @@ export const GameComponent = ({
     <div>
       <GuessComponent
         localPlayerID={activePlayerID}
-        session={session}
         game={game}
         handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
       />
       {gameDisplay.roundNumber !== undefined && (
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
