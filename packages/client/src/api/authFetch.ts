@@ -69,7 +69,10 @@ export class AuthFetch {
       headers['x-visitor-id'] = visitorId;
     }
 
-    if (bearerToken) {
+    const hasExplicitAuthorization: boolean = Object.keys(headers).some(
+      (name: string): boolean => name.toLowerCase() === 'authorization',
+    );
+    if (bearerToken && !hasExplicitAuthorization) {
       headers.Authorization = `Bearer ${bearerToken}`;
     }
 

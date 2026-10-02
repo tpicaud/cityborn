@@ -164,6 +164,47 @@ test('bearer transport keeps refreshing mobile tokens through the legacy route',
   });
 });
 
+test('bearer transport keeps an explicit authorization header instead of the stored access token', async (context) => {
+  const calls: FetchCall[] = [];
+  const tokenStorage: TokenStorage = {
+    async getAccessToken(): Promise<string> {
+      return 'mobile-access';
+    },
+    async getRefreshToken(): Promise<string> {
+      return 'mobile-refresh';
+    },
+    async setTokens(): Promise<void> {},
+    async clearTokens(): Promise<void> {},
+  };
+  const originalFetch: typeof fetch = globalThis.fetch;
+  globalThis.fetch = async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    calls.push({ url: String(input), init });
+    return jsonResponse({});
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  const contractClient: ContractClient = createBearerContractClient(
+    'https://api.cityborn.test',
+    tokenStorage,
+  );
+
+  await contractClient.auth.signOut({
+    body: {},
+    extraHeaders: { authorization: 'Bearer mobile-refresh' },
+  });
+
+  assert.deepEqual(
+    calls.map(({ init }: FetchCall): string | null =>
+      new Headers(init?.headers).get('Authorization'),
+    ),
+    ['Bearer mobile-refresh'],
+  );
+});
+
 type RefreshFailureCase = {
   name: string;
   response: () => Promise<Response>;
