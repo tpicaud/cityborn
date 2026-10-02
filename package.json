@@ -50,6 +50,7 @@
     "db:reset": "pnpm backend db:reset",
     "db:restore": "node --env-file-if-exists=apps/backend/.env.restore scripts/database-backup/restore.mts",
     "db:restore:test": "pnpm backend test:int --runTestsByPath test/integration/database-restore.integration.spec.ts",
+    "check:agent-docs": "node scripts/check-agent-docs.mts",
     "check:api-compat": "pnpm --dir packages/api check:compat",
     "format": "biome check --write .",
     "format:check": "biome check .",

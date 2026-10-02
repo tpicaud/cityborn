@@ -9,7 +9,8 @@ Deux contrats y cohabitent : les routes ts-rest (`src/contract/`) et les channel
 
 ## Règle : additif d'abord
 
-- Ajouter un champ optionnel, une route, une valeur d'enum, un type → OK, rétrocompatible.
+- Ajouter un champ optionnel, une route ou un type est additif et rétrocompatible.
+- Ajouter une valeur d'enum exige de vérifier le sens du contrat : une valeur seulement acceptée en entrée reste additive ; une valeur que l'API HTTP ou WebSocket peut émettre exige que les clients déjà déployés tolèrent une valeur inconnue. Si cette tolérance n'est pas démontrable, traiter l'ajout comme un breaking change et demander à l'utilisateur avant d'agir.
 - Rendre un champ requis, retirer/renommer une route ou un champ, restreindre un type → **breaking change**. Interdit en silence.
   - Créer le remplaçant **à côté** de l'ancien, sans toucher à l'ancien.
   - Déprécier l'ancien via le skill `deprecate` (il sera supprimé plus tard par `check-and-remove-deprecated`, une fois la fenêtre de compat passée).
@@ -27,6 +28,10 @@ Un event ajouté se propage dans le même lot :
 `check:api-compat` ne couvre pas le WS : aucun schéma WS n'entre dans l'OpenAPI. Les gardes sont `pnpm typecheck` et le test d'exhaustivité de `session.gateway.unit.spec.ts`, qui échoue sur un event du contrat sans handler comme sur un handler hors contrat.
 
 Les builds mobile déjà déployés restent le vrai frein : renommer un event, retirer un champ de payload ou resserrer un schéma existant les casse sans qu'aucune vérification ne l'annonce. Traiter ces cas comme un breaking change et **demander à l'utilisateur avant**.
+
+## Propagation
+
+Pour toute modification de contrat, rechercher ses producteurs et consommateurs dans tout le monorepo. Mettre à jour dans le même lot les handlers backend et les clients frontend, back-office ou mobile concernés. La compatibilité est acquise seulement lorsque les consommateurs déjà déployés continuent de comprendre les valeurs que le serveur peut leur envoyer.
 
 ## Vérifier
 
