@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import { usePlay } from '@cityborn/client/play';
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Dispatch, type SetStateAction, useState } from 'react';
@@ -166,14 +167,20 @@ export default function MenuComponent({
             <b>MULTI</b>
           </LoadingButton>
         </div>
-        <p className="w-full text-center">
+        <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
+          <a
+            href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
+            className="text-sm text-gray-600 hover:underline"
+          >
+            Nous contacter
+          </a>
           <Link
             href="/terms-and-policies"
             className="text-sm text-gray-600 hover:underline text-center"
           >
-            Politique de confidentialité
+            Politiques et conditions
           </Link>
-        </p>{' '}
+        </footer>
       </div>
 
       <Dialog

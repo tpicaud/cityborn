@@ -10,12 +10,13 @@ import {
   useProfile,
   useUsernameForm,
 } from '@cityborn/client/profile';
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { useCallback, useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { Pressable, ScrollView } from 'react-native';
+import { Linking, Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
@@ -91,6 +92,14 @@ export default function Profile() {
     setUser(null);
     setDeleteAccountModalOpen(false);
     router.replace('/');
+  };
+
+  const openProfileFooterLink = async (url: string): Promise<void> => {
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      invokeError(error);
+    }
   };
 
   return (
@@ -248,6 +257,31 @@ export default function Profile() {
           </View>
         </View>
       )}
+
+      <View className="shrink-0 flex-row flex-wrap justify-center gap-x-4 border-t border-neutral-200 py-2">
+        <Pressable
+          accessibilityRole="link"
+          className="min-h-11 justify-center"
+          onPress={() =>
+            openProfileFooterLink(`mailto:${CITYBORN_CONTACT_EMAIL}`)
+          }
+        >
+          <Text className="text-sm text-neutral-600 underline">
+            Nous contacter
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          className="min-h-11 justify-center"
+          onPress={() =>
+            openProfileFooterLink('https://www.cityborn.app/terms-and-policies')
+          }
+        >
+          <Text className="text-sm text-neutral-600 underline">
+            Politiques et conditions
+          </Text>
+        </Pressable>
+      </View>
 
       <Dialog
         visible={passwordModalOpen}
