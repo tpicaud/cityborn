@@ -1,10 +1,10 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import { SignUpComponent } from '@/features/auth/SignUpComponent';
+import { SignUpForm } from '@/features/auth/SignUpForm';
 
 export default function SignInScreen() {
   return (
     <ScreenLayout>
-      <SignUpComponent />
+      <SignUpForm />
     </ScreenLayout>
   );
 }

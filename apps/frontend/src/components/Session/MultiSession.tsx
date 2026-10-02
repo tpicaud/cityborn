@@ -1,45 +1,24 @@
 'use client';
 
 import { type SessionId, SessionStatus } from '@cityborn/api';
-import type { Navigation } from '@cityborn/client/platform';
 import {
   type MultiSessionController,
-  sessionIdFromMultiSessionPath,
   useMultiSession,
 } from '@cityborn/client/session';
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
 import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog';
 import { Game } from '@/components/Session/Game';
-import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
+import { Lobby } from '@/components/Session/Lobby';
+import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import { createSocketConnection } from '@/lib/socket';
 
-const sessionLoadingMessage = 'Chargement de la session';
-
 type MultiSessionProps = {
   sessionID: SessionId;
-  navigation: Navigation;
 };
 
-export default function MultiSessionComponent() {
-  const navigation: Navigation = useNavigation();
-  const sessionID: SessionId | null = sessionIdFromMultiSessionPath(
-    usePathname(),
-  );
-
-  useEffect(() => {
-    if (!sessionID) navigation.returnTo('/');
-  }, [sessionID, navigation]);
-
-  if (!sessionID) return <LoadingComponent message={sessionLoadingMessage} />;
-
-  return <MultiSession sessionID={sessionID} navigation={navigation} />;
-}
-
-function MultiSession({ sessionID, navigation }: MultiSessionProps) {
+export default function MultiSession({ sessionID }: MultiSessionProps) {
+  const navigation = useNavigation();
   const multiSession: MultiSessionController = useMultiSession({
     sessionID,
     sessionApi,
@@ -48,7 +27,7 @@ function MultiSession({ sessionID, navigation }: MultiSessionProps) {
   });
 
   if (!multiSession.session)
-    return <LoadingComponent message={sessionLoadingMessage} />;
+    return <LoadingDialog message="Chargement de la session" />;
 
   return (
     <>
@@ -66,7 +45,7 @@ function MultiSession({ sessionID, navigation }: MultiSessionProps) {
           handleExitGame={multiSession.exitGame}
         />
       ) : (
-        <LobbyComponent
+        <Lobby
           localPlayerID={multiSession.localPlayerID}
           isHost={multiSession.isHost}
           session={multiSession.session}
@@ -77,7 +56,7 @@ function MultiSession({ sessionID, navigation }: MultiSessionProps) {
       )}
 
       {multiSession.connectionStatus === 'reconnecting' && (
-        <LoadingComponent message="Reconnexion..." />
+        <LoadingDialog message="Reconnexion..." />
       )}
 
       {multiSession.connectionStatus === 'closed' && (

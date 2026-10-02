@@ -10,10 +10,10 @@ import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { authApi } from '@/lib/api/auth';
-import { SignInComponent } from './auth/SignInComponent';
-import { SignUpComponent } from './auth/SignUpComponent';
-import MenuComponent from './menu/MenuComponent';
-import { ProfileComponent } from './menu/ProfileComponent';
+import { SignInForm } from './auth/SignInForm';
+import { SignUpForm } from './auth/SignUpForm';
+import Menu from './menu/Menu';
+import { Profile } from './menu/Profile';
 import IconButton from './ui/buttons/IconButton';
 import LoadingIconButton from './ui/buttons/LoadingIconButton';
 
@@ -26,7 +26,7 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-export default function HomeComponent() {
+export default function Home() {
   const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const [state, setState] = useState<
@@ -44,27 +44,23 @@ export default function HomeComponent() {
 
   switch (state) {
     case 'sign-in':
-      content = <SignInComponent />;
+      content = <SignInForm />;
       break;
 
     case 'sign-up':
-      content = <SignUpComponent />;
+      content = <SignUpForm />;
       break;
 
     case 'menu':
-      content = <MenuComponent setState={setState} />;
+      content = <Menu setState={setState} />;
       break;
 
     case 'profile':
-      content = user ? (
-        <ProfileComponent user={user} />
-      ) : (
-        <MenuComponent setState={setState} />
-      );
+      content = user ? <Profile user={user} /> : <Menu setState={setState} />;
       break;
 
     default:
-      content = <MenuComponent setState={setState} />;
+      content = <Menu setState={setState} />;
   }
 
   return (

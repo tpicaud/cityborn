@@ -10,7 +10,7 @@ import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignInComponent = () => {
+export const SignInForm = () => {
   const router = useRouter();
   const {
     form: {

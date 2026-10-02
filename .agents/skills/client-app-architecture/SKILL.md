@@ -21,7 +21,7 @@ Pour le frontend, les composants métier et services encore placés hors de `src
 
 Le back-office ne possède pas de dossier `features/`. Regrouper son UI métier dans `components/<capacité>/` jusqu'à une migration explicitement demandée, sans introduire seul un nouvel arbre parallèle.
 
-Un composant présent dans le frontend et le mobile porte le même nom de fichier dans les deux apps (`Map.tsx`, `Overlay.tsx`) ; aligner ce nom quand la tâche modifie le composant.
+Un composant présent dans le frontend et le mobile porte le même nom de fichier dans les deux apps, celui de son concept sans suffixe `Component` (`Map.tsx`, `SignInForm.tsx`) ; aligner ce nom quand la tâche modifie le composant.
 
 Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app concernée. Préférer étendre un fichier existant si sa responsabilité reste cohérente. Demander seulement si plusieurs emplacements impliquent des responsabilités architecturales différentes.
 

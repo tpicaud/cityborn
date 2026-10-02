@@ -36,7 +36,7 @@ import { categoryApi } from '@/lib/api/category';
 import { useNavigation } from '@/lib/navigation';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import LoadingComponent from '../ui/loaders/LoadingComponent';
+import LoadingDialog from '../ui/loaders/LoadingDialog';
 
 type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;
@@ -65,7 +65,7 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-export const LobbyComponent = ({
+export const Lobby = ({
   localPlayerID,
   session,
   isHost,
@@ -103,7 +103,7 @@ export const LobbyComponent = ({
   });
 
   if (isLoadingCategories) {
-    return <LoadingComponent message="Chargement des catégories" />;
+    return <LoadingDialog message="Chargement des catégories" />;
   }
 
   return (

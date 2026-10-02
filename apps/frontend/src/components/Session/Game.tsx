@@ -8,7 +8,7 @@ import {
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
 import Guess from '@/components/guess/Guess';
-import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
+import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import Results from './Results';
 
@@ -27,7 +27,7 @@ export const Game = ({
 }) => {
   const gameDisplay = createGameDisplay(game, localPlayerID);
 
-  if (gameDisplay.state === 'loading') return <LoadingComponent />;
+  if (gameDisplay.state === 'loading') return <LoadingDialog />;
   if (gameDisplay.state === 'unavailable')
     return <p>La partie est déjà en cours</p>;
   const activePlayerID = gameDisplay.localPlayerID;

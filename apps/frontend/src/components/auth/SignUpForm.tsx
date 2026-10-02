@@ -5,7 +5,7 @@ import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { authApi } from '@/lib/api/auth';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignUpComponent = () => {
+export const SignUpForm = () => {
   const {
     form: {
       register,

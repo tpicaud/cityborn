@@ -6,7 +6,7 @@ import { authApi } from '@/lib/api/auth';
 import Button from '../ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignInComponent = () => {
+export const SignInForm = () => {
   const {
     form: {
       register,

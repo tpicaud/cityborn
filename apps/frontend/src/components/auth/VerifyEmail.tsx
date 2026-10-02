@@ -12,7 +12,7 @@ import Button from '../ui/buttons/Button';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
 
-export function VerifyEmailComponent() {
+export function VerifyEmail() {
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
   const verificationToken: string =
     searchParams.get('verification_token') ?? searchParams.get('token') ?? '';

@@ -18,7 +18,7 @@ import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import { Dialog } from '../ui/dialogs/Dialog';
 
-export default function MenuComponent({
+export default function Menu({
   setState,
 }: {
   setState: Dispatch<

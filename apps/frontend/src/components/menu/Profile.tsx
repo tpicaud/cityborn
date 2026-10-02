@@ -33,7 +33,7 @@ import { authApi } from '@/lib/api/auth';
 import { profileApi } from '@/lib/api/profile';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
-export const ProfileComponent = ({ user }: { user: User }) => {
+export const Profile = ({ user }: { user: User }) => {
   const { games, loading, refreshGames }: ProfileState = useProfile({
     profileApi,
     localUser: user,

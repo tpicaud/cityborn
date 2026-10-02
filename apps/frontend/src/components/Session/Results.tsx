@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@mui/material';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import LoadingComponent from '../ui/loaders/LoadingComponent';
+import LoadingDialog from '../ui/loaders/LoadingDialog';
 
 const Results = ({
   game,
@@ -40,7 +40,7 @@ const Results = ({
   const { localPlayerResults } = gameResults;
 
   if (!localPlayerResults) {
-    return <LoadingComponent message="Chargement des résultats" />;
+    return <LoadingDialog message="Chargement des résultats" />;
   }
 
   return (

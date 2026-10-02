@@ -17,7 +17,7 @@ import {
 } from '@cityborn/client/game';
 import { Box } from '@mui/material';
 import LoadingButton from '../ui/buttons/LoadingButton';
-import GuessObjectComponent from './GuessObjectComponent';
+import GuessObjectCard from './GuessObjectCard';
 import Timer from './Timer';
 
 type OverlayProps = {
@@ -132,7 +132,7 @@ export default function Overlay({
 
   return (
     <div>
-      {guessObject && <GuessObjectComponent guessObject={guessObject} />}
+      {guessObject && <GuessObjectCard guessObject={guessObject} />}
       <div className="absolute w-[27%] mx-6 my-14">
         {isGuessing && (
           <Timer

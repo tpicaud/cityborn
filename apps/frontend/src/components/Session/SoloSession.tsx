@@ -5,12 +5,12 @@ import {
   useSoloSession,
 } from '@cityborn/client/session';
 import { Game } from '@/components/Session/Game';
-import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
+import { Lobby } from '@/components/Session/Lobby';
+import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
-export default function SoloSessionComponent() {
+export default function SoloSession() {
   const navigation = useNavigation();
   const soloSession: SessionController = useSoloSession({
     sessionApi,
@@ -18,7 +18,7 @@ export default function SoloSessionComponent() {
   });
 
   if (!soloSession.session)
-    return <LoadingComponent message="Chargement de la session" />;
+    return <LoadingDialog message="Chargement de la session" />;
 
   if (soloSession.session.currentGame) {
     return (
@@ -37,7 +37,7 @@ export default function SoloSessionComponent() {
   }
 
   return (
-    <LobbyComponent
+    <Lobby
       localPlayerID={soloSession.localPlayerID}
       isHost={soloSession.isHost}
       session={soloSession.session}
