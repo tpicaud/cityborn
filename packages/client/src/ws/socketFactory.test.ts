@@ -38,7 +38,7 @@ const socketFactories: [string, SocketFactory][] = [
 ];
 
 socketFactories.forEach(([authenticationMode, createSocket]) => {
-  test(`la fabrique ${authenticationMode} rend une socket non connectée`, async () => {
+  test(`${authenticationMode} socket factory returns a disconnected socket`, async () => {
     const connection: SocketConnection = await createSocket();
 
     assert.equal(connection.connected, false);
@@ -46,7 +46,7 @@ socketFactories.forEach(([authenticationMode, createSocket]) => {
   });
 });
 
-test('chaque appel de la fabrique crée sa propre socket', async () => {
+test('each socket factory call creates its own socket', async () => {
   const createSocket: SocketFactory = createCookieSocketFactory(
     unreachableWebsocketUrl,
     socketFactoryOptions,
