@@ -28,8 +28,17 @@ export function useJoinSessionForm(): UseFormReturn<
 
 export const soloSessionPath: NavigationPath = '/session/solo';
 
+const multiSessionPathPrefix = '/session/multi/';
+
 export function multiSessionPath(sessionID: SessionId): NavigationPath {
-  return `/session/multi/${sessionID}`;
+  return `${multiSessionPathPrefix}${sessionID}`;
+}
+
+export function sessionIdFromMultiSessionPath(path: string): SessionId | null {
+  if (!path.startsWith(multiSessionPathPrefix)) return null;
+  const pathSegment: string = path.slice(multiSessionPathPrefix.length);
+  if (pathSegment === '' || pathSegment.includes('/')) return null;
+  return SessionIdSchema.parse(pathSegment);
 }
 
 export interface SessionLauncherOptions {
