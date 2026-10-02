@@ -1,19 +1,15 @@
-import type { ApiResult, User } from '@cityborn/api';
-import { isoToLocalDate, useError } from '@cityborn/client';
+import { isoToLocalDate } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import {
-  type ChangePasswordForm,
-  type ProfileFormSubmitHandler,
-  toUpdatePassword,
-  type UsernameForm,
-  useChangePasswordForm,
+  type ProfileEditor,
+  type ProfileState,
   useProfile,
-  useUsernameForm,
+  useProfileEditor,
 } from '@cityborn/client/profile';
 import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router/react-navigation';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -27,71 +23,39 @@ import { authApi } from '@/lib/api/auth';
 import { profileApi } from '@/lib/api/profile';
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
-  const { invokeError } = useError();
+  const { user } = useAuth();
   const router = useRouter();
-  const { games, loading, refreshGames } = useProfile({
+  const { games, loading, refreshGames }: ProfileState = useProfile({
     profileApi,
     localUser: user ?? undefined,
   });
-  const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
-  const passwordForm: ChangePasswordForm = useChangePasswordForm();
-  const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
-  const [passwordModalOpen, setPasswordModalOpen] = useState<boolean>(false);
-  const [passwordUpdated, setPasswordUpdated] = useState<boolean>(false);
-  const [deleteAccountModalOpen, setDeleteAccountModalOpen] =
-    useState<boolean>(false);
+  const {
+    usernameForm,
+    isEditingUsername,
+    startUsernameEdit,
+    cancelUsernameEdit,
+    submitUsername,
+    passwordForm,
+    isPasswordDialogOpen,
+    isPasswordUpdated,
+    openPasswordDialog,
+    closePasswordDialog,
+    submitPassword,
+    isDeleteAccountDialogOpen,
+    openDeleteAccountDialog,
+    closeDeleteAccountDialog,
+    deleteAccount,
+  }: ProfileEditor = useProfileEditor({
+    profileApi,
+    authApi,
+    onAccountDeleted: () => router.navigate('/'),
+  });
 
   useFocusEffect(
     useCallback(() => {
       refreshGames();
     }, [refreshGames]),
   );
-
-  const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
-    async (data) => {
-      const result: ApiResult<User> = await profileApi.updateUsername(data);
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      usernameForm.reset({ username: result.data.username });
-      setIsEditingUsername(false);
-    },
-  );
-
-  const cancelUsernameEdit = (): void => {
-    if (user) usernameForm.reset({ username: user.username });
-    setIsEditingUsername(false);
-  };
-
-  const closePasswordModal = (): void => {
-    passwordForm.reset();
-    setPasswordUpdated(false);
-    setPasswordModalOpen(false);
-  };
-
-  const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
-    async (values) => {
-      const result: ApiResult<User> = await authApi.updatePassword(
-        toUpdatePassword(values),
-      );
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      passwordForm.reset();
-      setPasswordUpdated(true);
-    },
-  );
-
-  const handleDeleteAccount = async (): Promise<void> => {
-    if (!user) return;
-    const result: ApiResult<void> = await authApi.deleteUser();
-    if (!result.ok) return invokeError(result.error);
-    await authApi.signOut();
-    setUser(null);
-    setDeleteAccountModalOpen(false);
-    router.navigate('/');
-  };
 
   return (
     <View className="flex-1">
@@ -162,7 +126,7 @@ export default function Profile() {
                 </Text>
                 <Pressable
                   accessibilityLabel="Modifier le pseudo"
-                  onPress={() => setIsEditingUsername(true)}
+                  onPress={startUsernameEdit}
                 >
                   <Icon name="edit_outline" size={28} />
                 </Pressable>
@@ -199,14 +163,14 @@ export default function Profile() {
                 variant="default"
                 label="Modifier mon mot de passe"
                 className="self-center"
-                onPress={() => setPasswordModalOpen(true)}
+                onPress={openPasswordDialog}
               />
             )}
             <Button
               variant="default"
               label="Supprimer mon compte"
               className="self-center"
-              onPress={() => setDeleteAccountModalOpen(true)}
+              onPress={openDeleteAccountDialog}
             />
           </View>
           <View className="flex-1">
@@ -250,8 +214,8 @@ export default function Profile() {
       )}
 
       <Dialog
-        visible={passwordModalOpen}
-        onClose={closePasswordModal}
+        visible={isPasswordDialogOpen}
+        onClose={closePasswordDialog}
         className="h-auto max-h-[80%]"
       >
         <ScrollView
@@ -329,7 +293,7 @@ export default function Profile() {
                 )}
               </View>
             </View>
-            {passwordUpdated && (
+            {isPasswordUpdated && (
               <Text className="text-primary-500">Mot de passe modifié.</Text>
             )}
             <View className="flex-row gap-2">
@@ -337,7 +301,7 @@ export default function Profile() {
                 variant="outlined"
                 label="Annuler"
                 className="w-32"
-                onPress={closePasswordModal}
+                onPress={closePasswordDialog}
               />
               <Button
                 variant="filled"
@@ -352,8 +316,8 @@ export default function Profile() {
       </Dialog>
 
       <Dialog
-        visible={deleteAccountModalOpen}
-        onClose={() => setDeleteAccountModalOpen(false)}
+        visible={isDeleteAccountDialogOpen}
+        onClose={closeDeleteAccountDialog}
         className="h-auto"
       >
         <View className="flex justify-center items-center gap-4">
@@ -369,14 +333,14 @@ export default function Profile() {
               color="destructive"
               label="Annuler"
               className="w-32"
-              onPress={() => setDeleteAccountModalOpen(false)}
+              onPress={closeDeleteAccountDialog}
             />
             <Button
               variant="filled"
               color="destructive"
               label="Supprimer"
               className="w-32"
-              onPress={handleDeleteAccount}
+              onPress={deleteAccount}
             />
           </View>
         </View>

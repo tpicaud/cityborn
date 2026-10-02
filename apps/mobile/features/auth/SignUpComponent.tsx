@@ -1,7 +1,5 @@
-import { resolveErrorMessage } from '@cityborn/api';
-import { toCreateUser, useAuth, useSignUpForm } from '@cityborn/client/auth';
+import { type SignUpFlow, useSignUp } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -14,26 +12,15 @@ import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export const SignUpComponent = () => {
   const router = useRouter();
-  const { setUser } = useAuth();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useSignUpForm();
-
-  const onSubmit = handleSubmit(async (values) => {
-    setErrorMessage(null);
-
-    const result = await authApi.signUp(toCreateUser(values));
-
-    if (result.ok) {
-      setUser(result.data);
-      router.dismissTo('/');
-      return;
-    }
-
-    setErrorMessage(resolveErrorMessage(result.error));
+    form: {
+      control,
+      formState: { errors, isSubmitting },
+    },
+    submit,
+  }: SignUpFlow = useSignUp({
+    authApi,
+    onSignedIn: () => router.dismissTo('/'),
   });
 
   return (
@@ -139,10 +126,6 @@ export const SignUpComponent = () => {
                 </Text>
               )}
             </View>
-
-            <Text className="w-68 text-destructive-500 text-center text-ellipsis overflow-hidden">
-              {errorMessage}
-            </Text>
           </View>
           <Button
             variant="filled"
@@ -150,7 +133,7 @@ export const SignUpComponent = () => {
             size="large"
             disabled={isSubmitting}
             label="S'INSCRIRE"
-            onPress={onSubmit}
+            onPress={submit}
           />
         </View>
         <View className="flex flex-row items-center gap-2 w-full">

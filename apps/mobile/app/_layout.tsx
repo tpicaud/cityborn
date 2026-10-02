@@ -6,20 +6,24 @@ import {
   getApiVersionInfo,
   installFrenchZodErrorMap,
   isApiVersionOutdated,
-  type User,
 } from '@cityborn/api';
 import { ErrorProvider, useMinSupportedApiVersion } from '@cityborn/client';
-import { AuthProvider } from '@cityborn/client/auth';
+import {
+  AuthProvider,
+  type CurrentUserBootstrap,
+  useCurrentUserBootstrap,
+} from '@cityborn/client/auth';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BackendUnreachableDialog from '@/components/ui/BackendUnreachableDialog';
+import Button from '@/components/ui/Button';
 import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
 import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
-import { View } from '@/components/ui/native/NativeComponents';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 import { ForegroundUserRefresh } from '@/features/auth/ForegroundUserRefresh';
 import { authApi } from '@/lib/api/auth';
 import { checkHealth } from '@/lib/api/health';
@@ -29,12 +33,11 @@ installFrenchZodErrorMap();
 const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoadingCurrentUser, setIsLoadingCurrentUser] =
-    useState<boolean>(true);
+  const {
+    currentUserState,
+    retry: retryCurrentUserLoad,
+  }: CurrentUserBootstrap = useCurrentUserBootstrap(authApi);
   const [isBackendUnreachable, setIsBackendUnreachable] =
-    useState<boolean>(false);
-  const [hasCurrentUserLoadFailed, setHasCurrentUserLoadFailed] =
     useState<boolean>(false);
   const minSupportedApiVersion = useMinSupportedApiVersion();
   const isForceUpdateRequired =
@@ -68,57 +71,35 @@ export default function RootLayout() {
     runHealthCheck();
   }, [runHealthCheck]);
 
-  useEffect(() => {
-    let isMounted: boolean = true;
-    authApi
-      .getCurrentUser()
-      .then((fetchedUser) => {
-        if (isMounted) {
-          setUser(fetchedUser);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!isMounted) return;
-        console.error(error);
-        setHasCurrentUserLoadFailed(true);
-      })
-      .finally(() => isMounted && setIsLoadingCurrentUser(false));
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   return (
     <>
       <ForceUpdateDialog visible={isForceUpdateRequired} />
       <BackendUnreachableDialog
-        visible={isBackendUnreachable || hasCurrentUserLoadFailed}
+        visible={isBackendUnreachable}
         onRetry={async () => {
-          setIsLoadingCurrentUser(true);
-          try {
-            await runHealthCheck();
-            const currentUser: User | null = await authApi.getCurrentUser();
-            setUser(currentUser);
-            setHasCurrentUserLoadFailed(false);
-          } catch (error: unknown) {
-            console.error(error);
-            setHasCurrentUserLoadFailed(true);
-          } finally {
-            setIsLoadingCurrentUser(false);
-          }
+          await runHealthCheck();
+          retryCurrentUserLoad();
         }}
       />
-      {isLoadingCurrentUser || hasCurrentUserLoadFailed ? (
+      {currentUserState.status === 'loading' && (
         <View className="flex-1 items-center justify-center">
           <LoaderIcon />
         </View>
-      ) : (
+      )}
+      {currentUserState.status === 'failed' && (
+        <View className="flex-1 items-center justify-center gap-4 px-6">
+          <Text className="text-lg text-center">
+            {currentUserState.errorMessage}
+          </Text>
+          <Button label="Réessayer" onPress={retryCurrentUserLoad} />
+        </View>
+      )}
+      {currentUserState.status === 'ready' && (
         <ErrorProvider ErrorDialogComponent={ErrorDialog}>
           <SafeAreaProvider>
             <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
               <AuthProvider
-                initialValue={user}
+                initialValue={currentUserState.user}
                 getCurrentUser={authApi.getCurrentUser}
               >
                 <ForegroundUserRefresh />

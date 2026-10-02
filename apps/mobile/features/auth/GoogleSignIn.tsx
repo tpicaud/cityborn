@@ -1,5 +1,8 @@
 import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import {
+  type IdentityProviderSignIn,
+  useIdentityProviderSignIn,
+} from '@cityborn/client/auth';
 import {
   GoogleSignin,
   isSuccessResponse,
@@ -17,9 +20,13 @@ GoogleSignin.configure({
 });
 
 export const SignInWithGoogleButton = () => {
-  const { setUser } = useAuth();
   const { invokeError } = useError();
   const router = useRouter();
+  const { signInWithGoogle }: IdentityProviderSignIn =
+    useIdentityProviderSignIn({
+      authApi,
+      onSignedIn: () => router.dismissTo('/'),
+    });
   const [isLoading, setIsLoading] = useState(false);
 
   const signIn = async () => {
@@ -32,16 +39,9 @@ export const SignInWithGoogleButton = () => {
         const idToken = userInfo.idToken;
         if (!idToken) return;
 
-        const result = await authApi.signInWithGoogle({ idToken });
-        if (!result.ok) {
-          invokeError(result.error);
-          return;
-        }
-        setUser(result.data);
-        router.dismissTo('/');
+        await signInWithGoogle({ idToken });
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
       invokeError(error, 'La connexion avec Google a échoué.');
     }
   };

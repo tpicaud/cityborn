@@ -1,5 +1,8 @@
 import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import {
+  type IdentityProviderSignIn,
+  useIdentityProviderSignIn,
+} from '@cityborn/client/auth';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
@@ -10,9 +13,14 @@ import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
 
 export const SignInWithAppleButton = () => {
-  const { setUser } = useAuth();
   const { invokeError } = useError();
   const router = useRouter();
+  const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
+    {
+      authApi,
+      onSignedIn: () => router.dismissTo('/'),
+    },
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const signIn = async () => {
@@ -31,17 +39,11 @@ export const SignInWithAppleButton = () => {
 
       const userDetails = extractAppleUserDetails(credential);
 
-      const result = await authApi.signInWithApple({
+      await signInWithApple({
         identity_token: credential.identityToken,
         apple_user_id: credential.user,
         details: userDetails,
       });
-      if (!result.ok) {
-        invokeError(result.error);
-        return;
-      }
-      setUser(result.data);
-      router.dismissTo('/');
     } catch (e) {
       handleAppleSignInError(e);
     }
@@ -68,7 +70,6 @@ export const SignInWithAppleButton = () => {
       throw error;
     }
 
-    console.error('Apple sign in error:', error);
     invokeError(error, 'La connexion avec Apple a échoué.');
   }
 

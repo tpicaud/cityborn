@@ -4,9 +4,8 @@ import { useError } from '@cityborn/client';
 import { useAuth } from '@cityborn/client/auth';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import { Box } from '@mui/material';
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
@@ -27,34 +26,12 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-type GoogleIdentityServices = {
-  accounts: {
-    id: {
-      initialize: (config: {
-        client_id?: string;
-        callback: (response: { credential: string }) => void;
-      }) => void;
-      renderButton: (
-        parent: HTMLElement | null,
-        options: { theme?: string; size?: string; text?: string },
-      ) => void;
-    };
-  };
-};
-
-declare global {
-  interface Window {
-    google?: GoogleIdentityServices;
-  }
-}
-
 export default function HomeComponent() {
   const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const [state, setState] = useState<
     'menu' | 'sign-in' | 'sign-up' | 'profile'
   >('menu');
-  const [openProfile, setOpenProfile] = useState(false);
   const isAuthenticated: boolean = user !== null;
 
   useEffect(() => {
@@ -156,35 +133,6 @@ export default function HomeComponent() {
           {content}
         </Box>
       </div>
-
-      <Dialog open={openProfile} onClose={() => setOpenProfile(false)}>
-        <IconButton
-          aria-label="close"
-          onClick={() => setOpenProfile(false)}
-          sx={{
-            position: 'absolute',
-            right: 0,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-        <DialogTitle className="text-center">
-          <p>Profile</p>
-        </DialogTitle>
-        <DialogContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 justify-items-start gap-4 w-full">
-            <div className="flex flex-col justify-items-start gap-0 w-full">
-              <p className="font-bold">Nom d'utilisateur</p>
-              <p>{user?.username}</p>
-            </div>
-            <div className="flex flex-col justify-items-start gap-0 w-full">
-              <p className="font-bold">Email</p>
-              <div>{user?.email}</div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

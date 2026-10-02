@@ -8,7 +8,7 @@ import {
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
 import GuessComponent from '@/components/guess/GuessComponent';
-import LoadingComponent from '@/components/others/LoadingComponent';
+import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import LoadingButton from '../ui/buttons/LoadingButton';
 import ResultsComponent from './ResultsComponent';
 

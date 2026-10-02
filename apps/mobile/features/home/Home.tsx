@@ -1,7 +1,9 @@
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import {
+  useAuth,
+  useVerificationEmailResend,
+  type VerificationEmailResend,
+} from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
@@ -12,18 +14,8 @@ import { cn } from '@/lib/utils';
 export default function Home() {
   const router = useRouter();
   const { user, setUser } = useAuth();
-  const { invokeError } = useError();
-  const [isSendingVerificationEmail, setIsSendingVerificationEmail] =
-    useState(false);
-  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
-
-  const handleResendVerificationEmail = async () => {
-    setIsSendingVerificationEmail(true);
-    const result = await authApi.resendVerificationEmail();
-    setIsSendingVerificationEmail(false);
-    if (!result.ok) return invokeError(result.error);
-    setVerificationEmailSent(true);
-  };
+  const verificationEmailResend: VerificationEmailResend =
+    useVerificationEmailResend(authApi);
 
   return (
     <View className="flex-1 w-70 self-center">
@@ -45,21 +37,24 @@ export default function Home() {
                   Ton adresse e-mail n'est pas vérifiée
                 </Text>
                 <Pressable
-                  onPress={handleResendVerificationEmail}
-                  disabled={verificationEmailSent || isSendingVerificationEmail}
+                  onPress={verificationEmailResend.resend}
+                  disabled={
+                    verificationEmailResend.isSent ||
+                    verificationEmailResend.isSending
+                  }
                 >
-                  {isSendingVerificationEmail ? (
+                  {verificationEmailResend.isSending ? (
                     <LoaderIcon size={18} color="#92400e" />
                   ) : (
                     <Text
                       className={cn(
                         'text-sm font-medium',
-                        verificationEmailSent
+                        verificationEmailResend.isSent
                           ? 'text-amber-900/50'
                           : 'text-amber-900 underline',
                       )}
                     >
-                      {verificationEmailSent
+                      {verificationEmailResend.isSent
                         ? 'E-mail de vérification envoyé'
                         : 'Renvoyer un e-mail de vérification'}
                     </Text>
