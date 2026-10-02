@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { PlayerIdSchema, SessionIdSchema } from '../schemas/common.schema';
 import { GameConfigSchema, GuessSchema } from '../schemas/game.schema';
-import { SessionSchema } from '../schemas/session.schema';
+import {
+  SessionReconnectTokenSchema,
+  SessionSchema,
+} from '../schemas/session.schema';
 import type {
   WsChannel,
   WsClientEventNames,
@@ -14,11 +17,21 @@ const SessionMembershipSchema = z.object({
   playerID: PlayerIdSchema,
 });
 
+export const SessionJoinAckSchema = z.object({
+  reconnectToken: SessionReconnectTokenSchema.optional(),
+});
+
+const SessionReconnectionSchema = SessionMembershipSchema.extend({
+  reconnectToken: SessionReconnectTokenSchema.optional(),
+});
+
+export type SessionJoinAck = z.infer<typeof SessionJoinAckSchema>;
+
 export const sessionWsChannel = {
   domain: 'session',
   clientToServer: {
-    join: { payload: SessionMembershipSchema },
-    reconnect: { payload: SessionMembershipSchema },
+    join: { payload: SessionMembershipSchema, ack: SessionJoinAckSchema },
+    reconnect: { payload: SessionReconnectionSchema },
     updateHost: { payload: z.object({ newHostID: PlayerIdSchema }) },
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     kickPlayer: { payload: z.object({ playerToKick: PlayerIdSchema }) },

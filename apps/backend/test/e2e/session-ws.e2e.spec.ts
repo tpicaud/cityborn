@@ -1,10 +1,11 @@
-import type { PlayerId, Session } from '@cityborn/api';
+import type { PlayerId, Session, SessionJoinAck } from '@cityborn/api';
 import {
   buildPlayer,
   buildSession,
   buildUser,
   ErrorCode,
   PlayerIdSchema,
+  SessionJoinAckSchema,
   SessionSchema,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -144,7 +145,10 @@ describe('Session gateway over a real socket', () => {
       playerID,
     });
 
-    expect(ack).toEqual({ success: true });
+    expect(ack).toEqual({
+      success: true,
+      reconnectToken: expect.any(String),
+    });
     expect(SessionSchema.parse(await broadcast).players).toEqual([
       ...session.players,
       { username: playerID, isGuest: true, connected: true },
@@ -183,7 +187,7 @@ describe('Session gateway over a real socket', () => {
         playerID: observerID,
       },
     );
-    expect(observerJoin).toEqual({ success: true });
+    expect(observerJoin).toMatchObject({ success: true });
     const authenticatedClient: Socket = await connectClient({
       auth: { access_token: accessToken },
     });
@@ -233,5 +237,80 @@ describe('Session gateway over a real socket', () => {
         .get(ConnectionRegistryService)
         .getConnection(authenticatedSocketID),
     ).toBeNull();
+  });
+
+  it('restores a guest player only for the client holding its reconnect token', async () => {
+    const session: Session = buildSession();
+    const playerID: PlayerId = PlayerIdSchema.parse('carol');
+    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    const guestClient: Socket = await connectClient();
+    const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
+      await emitWithAck(guestClient, sessionWsEvent.join, {
+        sessionID: session.id,
+        playerID,
+      }),
+    );
+    await disconnectClient(guestClient);
+    const intruderClient: Socket = await connectClient();
+    const restoredGuestClient: Socket = await connectClient();
+
+    const intruderAck: unknown = await emitWithAck(
+      intruderClient,
+      sessionWsEvent.reconnect,
+      { sessionID: session.id, playerID },
+    );
+    const restoredGuestAck: unknown = await emitWithAck(
+      restoredGuestClient,
+      sessionWsEvent.reconnect,
+      { sessionID: session.id, playerID, reconnectToken },
+    );
+
+    expect(intruderAck).toMatchObject({
+      success: false,
+      error: { statusCode: 403, code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+    });
+    expect(restoredGuestAck).toEqual({ success: true });
+  });
+
+  it('rejects an authenticated user reconnecting as another registered player', async () => {
+    const owner: User = buildUser();
+    const intruder: User = buildUser({
+      id: '00000000-0000-4000-8000-000000000002',
+      username: PlayerIdSchema.parse('intruder'),
+      email: 'intruder@cityborn.test',
+    });
+    await app.get(PrismaService).user.create({
+      data: {
+        id: intruder.id,
+        email: intruder.email,
+        username: intruder.username,
+        type: intruder.type,
+        isVerified: intruder.isVerified,
+      },
+    });
+    const intruderAccessToken: string = await createAccessToken(
+      app,
+      intruder.id,
+    );
+    const session: Session = buildSession({
+      players: [
+        buildPlayer(owner.username, false, { id: owner.id, isGuest: false }),
+      ],
+    });
+    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    const intruderClient: Socket = await connectClient({
+      auth: { access_token: intruderAccessToken },
+    });
+
+    const intruderAck: unknown = await emitWithAck(
+      intruderClient,
+      sessionWsEvent.reconnect,
+      { sessionID: session.id, playerID: owner.username },
+    );
+
+    expect(intruderAck).toMatchObject({
+      success: false,
+      error: { statusCode: 403, code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+    });
   });
 });

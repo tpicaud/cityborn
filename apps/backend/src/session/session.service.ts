@@ -1,3 +1,4 @@
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   type CreateSession,
   defaultGameConfig,
@@ -10,6 +11,9 @@ import {
   type SessionId,
   SessionIdSchema,
   SessionMode,
+  type SessionPlayer,
+  type SessionReconnectToken,
+  SessionReconnectTokenSchema,
   SessionSchema,
   SessionStatus,
   type User,
@@ -29,6 +33,11 @@ import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
 import { RedisService } from '../redis/redis.service';
 
+export type JoinedSession = {
+  session: Session;
+  reconnectToken: SessionReconnectToken | undefined;
+};
+
 @Injectable()
 export class SessionService {
   private readonly prefix = 'session:';
@@ -45,6 +54,10 @@ export class SessionService {
 
   private getKey(id: SessionId): string {
     return `${this.prefix}${id}`;
+  }
+
+  private getReconnectTokenHashesKey(id: SessionId): string {
+    return `${this.getKey(id)}:reconnect-token-hashes`;
   }
 
   ////////////////////
@@ -109,7 +122,11 @@ export class SessionService {
     return session;
   }
 
-  async join(sessionID: SessionId, playerID: PlayerId, user?: User) {
+  async join(
+    sessionID: SessionId,
+    playerID: PlayerId,
+    user?: User,
+  ): Promise<JoinedSession> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -138,7 +155,7 @@ export class SessionService {
 
         const isGuest = !user;
 
-        const newPlayer: Session['players'][number] = {
+        const newPlayer: SessionPlayer = {
           username: playerID,
           isGuest,
           id: isGuest ? undefined : user?.id,
@@ -149,8 +166,11 @@ export class SessionService {
 
         if (session.hostID === '') session.hostID = playerID;
 
+        const reconnectToken: SessionReconnectToken | undefined = isGuest
+          ? await this.issueReconnectToken(sessionID, playerID)
+          : undefined;
         await this.saveSession(session);
-        return session;
+        return { session, reconnectToken };
       },
     );
   }
@@ -391,7 +411,12 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer(sessionID: SessionId, playerID: PlayerId, user?: User) {
+  async reconnectPlayer(
+    sessionID: SessionId,
+    playerID: PlayerId,
+    reconnectToken: SessionReconnectToken | undefined,
+    user?: User,
+  ): Promise<Session> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
@@ -414,12 +439,12 @@ export class SessionService {
             message: `Player not found in session`,
           });
 
-        const player = players[playerIndex];
-        if (!user && !player.isGuest)
-          throw new UnauthorizedException({
-            code: ErrorCode.USER_INVALID_CREDENTIALS,
-            message: 'Invalid or missing user token',
-          });
+        await this.assertReconnectingPlayerIdentity(
+          sessionID,
+          players[playerIndex],
+          reconnectToken,
+          user,
+        );
 
         players[playerIndex].connected = true;
 
@@ -530,12 +555,88 @@ export class SessionService {
     session: Session,
     ttl: number = this.TTL,
   ): Promise<void> {
-    await this.redisService.setJSON(this.getKey(session.id), session, ttl);
+    await Promise.all([
+      this.redisService.setJSON(this.getKey(session.id), session, ttl),
+      this.redisService.expire(
+        this.getReconnectTokenHashesKey(session.id),
+        ttl,
+      ),
+    ]);
+  }
+
+  private async issueReconnectToken(
+    sessionID: SessionId,
+    playerID: PlayerId,
+  ): Promise<SessionReconnectToken> {
+    const reconnectToken: SessionReconnectToken =
+      SessionReconnectTokenSchema.parse(randomBytes(32).toString('base64url'));
+    await this.redisService.hset(
+      this.getReconnectTokenHashesKey(sessionID),
+      playerID,
+      this.hashReconnectToken(reconnectToken),
+    );
+    return reconnectToken;
+  }
+
+  private async isReconnectTokenValid(
+    sessionID: SessionId,
+    playerID: PlayerId,
+    reconnectToken: SessionReconnectToken | undefined,
+  ): Promise<boolean> {
+    if (!reconnectToken) return false;
+
+    const storedHash: string | null = await this.redisService.hget(
+      this.getReconnectTokenHashesKey(sessionID),
+      playerID,
+    );
+    if (!storedHash) return false;
+
+    return timingSafeEqual(
+      Buffer.from(storedHash, 'hex'),
+      Buffer.from(this.hashReconnectToken(reconnectToken), 'hex'),
+    );
+  }
+
+  private hashReconnectToken(reconnectToken: SessionReconnectToken): string {
+    return createHash('sha256').update(reconnectToken).digest('hex');
   }
 
   //////////////////////
   // Private function //
   //////////////////////
+
+  private async assertReconnectingPlayerIdentity(
+    sessionID: SessionId,
+    player: SessionPlayer,
+    reconnectToken: SessionReconnectToken | undefined,
+    user: User | undefined,
+  ): Promise<void> {
+    if (player.isGuest) {
+      const reconnectTokenValid: boolean = await this.isReconnectTokenValid(
+        sessionID,
+        player.username,
+        reconnectToken,
+      );
+      if (reconnectTokenValid) return;
+
+      throw new ForbiddenException({
+        code: ErrorCode.SESSION_RECONNECT_FORBIDDEN,
+        message: 'Invalid or missing reconnect token',
+      });
+    }
+
+    if (!user)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_CREDENTIALS,
+        message: 'Invalid or missing user token',
+      });
+
+    if (user.id !== player.id)
+      throw new ForbiddenException({
+        code: ErrorCode.SESSION_RECONNECT_FORBIDDEN,
+        message: 'Authenticated user does not own this player',
+      });
+  }
 
   private reassignHostAfterRemoval(
     session: Session,

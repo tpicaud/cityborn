@@ -1,6 +1,8 @@
 import type {
   ApiError,
   WsAckCallback,
+  WsAckOf,
+  WsAckSuccessOf,
   WsClientEvent,
   WsClientEventName,
   WsPayloadArgs,
@@ -24,7 +26,7 @@ const WS_UNEXPECTED_ACK_STATUS = 500;
 export type WsEmit = <Name extends WsClientEventName>(
   event: Name,
   ...payload: WsPayloadArgs<Name>
-) => Promise<void>;
+) => Promise<WsAckSuccessOf<Name>>;
 
 function transportError(
   code: ErrorCode,
@@ -32,6 +34,12 @@ function transportError(
   message: string,
 ): ApiError {
   return { code, statusCode, message };
+}
+
+function isWsAckSuccess<Name extends WsClientEventName>(
+  ack: WsAckOf<Name>,
+): ack is WsAckSuccessOf<Name> {
+  return ack.success;
 }
 
 function invalidPayloadError(event: string, reason: string): ApiError {
@@ -49,8 +57,8 @@ export function createWsEmit(
   return <Name extends WsClientEventName>(
     event: Name,
     ...payload: WsPayloadArgs<Name>
-  ): Promise<void> =>
-    new Promise<void>((resolve, reject) => {
+  ): Promise<WsAckSuccessOf<Name>> =>
+    new Promise<WsAckSuccessOf<Name>>((resolve, reject) => {
       if (!connection)
         return reject(
           transportError(
@@ -94,7 +102,7 @@ export function createWsEmit(
         const ack = ackSchema.safeParse(response);
         if (!ack.success)
           return reject(parseApiError(WS_UNEXPECTED_ACK_STATUS, response));
-        if (ack.data.success) return resolve();
+        if (isWsAckSuccess(response)) return resolve(response);
         reject(parseApiError(WS_UNEXPECTED_ACK_STATUS, ack.data.error));
       };
 
