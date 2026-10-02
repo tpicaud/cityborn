@@ -1,87 +1,21 @@
 'use client';
 
-import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
-import { useCategoryTrees } from '@cityborn/client/category';
-import { useSoloSession } from '@cityborn/client/session';
-import LoadingComponent from '@/components/others/LoadingComponent';
+import {
+  type SessionController,
+  useSoloSession,
+} from '@cityborn/client/session';
 import { GameComponent } from '@/components/Session/GameComponent';
 import { LobbyComponent } from '@/components/Session/LobbyComponent';
-import { categoryApi } from '@/lib/api/category';
+import LoadingComponent from '@/components/ui/loaders/LoadingComponent';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
 export default function SoloSessionComponent() {
-  const { user } = useAuth();
-  const { invokeError } = useError();
   const navigation = useNavigation();
-  const { categoryTrees, isLoading: isLoadingCategoryTrees } =
-    useCategoryTrees(categoryApi);
-  const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
-  const soloSession = useSoloSession({
-    localPlayerID,
+  const soloSession: SessionController = useSoloSession({
     sessionApi,
     navigation,
   });
-
-  const handleJoinSession = async () => {};
-
-  const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
-    try {
-      await soloSession.updateGameConfig(gameConfig);
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
-
-  const handleStartGame = async () => {
-    try {
-      await soloSession.startGame();
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
-
-  const handleGuess = async (guess: Guess) => {
-    try {
-      await soloSession.guess(guess);
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
-
-  const handleNextRound = async () => {
-    try {
-      await soloSession.nextRound();
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
-
-  const handleEndGame = async () => {
-    try {
-      await soloSession.endGame();
-    } catch (error) {
-      invokeError(error, 'Une erreur est survenue');
-    }
-  };
-
-  const handlePlayAgain = async () => {
-    try {
-      await soloSession.playAgain();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleExitGame = async () => {
-    try {
-      await soloSession.exitGame();
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   if (!soloSession.session)
     return <LoadingComponent message="Chargement de la session" />;
@@ -89,32 +23,26 @@ export default function SoloSessionComponent() {
   if (soloSession.session.currentGame) {
     return (
       <GameComponent
-        localPlayerID={localPlayerID}
+        localPlayerID={soloSession.localPlayerID}
         isHost={soloSession.isHost}
         session={soloSession.session}
         game={soloSession.session.currentGame}
-        handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
-        handleEndGame={handleEndGame}
-        handlePlayAgain={handlePlayAgain}
-        handleExitGame={handleExitGame}
+        handleGuess={soloSession.guess}
+        handleNextRound={soloSession.nextRound}
+        handleEndGame={soloSession.endGame}
+        handlePlayAgain={soloSession.playAgain}
+        handleExitGame={soloSession.exitGame}
       />
     );
   }
 
-  if (isLoadingCategoryTrees) {
-    return <LoadingComponent message="Chargement des catégories" />;
-  }
-
   return (
     <LobbyComponent
-      localPlayerID={localPlayerID}
+      localPlayerID={soloSession.localPlayerID}
       isHost={soloSession.isHost}
       session={soloSession.session}
-      categoryTrees={categoryTrees}
-      handleUpdateGameConfig={handleUpdateGameConfig}
-      handleStartGame={handleStartGame}
-      handleJoinSession={handleJoinSession}
+      handleUpdateGameConfig={soloSession.updateGameConfig}
+      handleStartGame={soloSession.startGame}
     />
   );
 }

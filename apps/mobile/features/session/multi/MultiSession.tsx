@@ -1,15 +1,8 @@
+import { type SessionId, SessionStatus } from '@cityborn/api';
 import {
-  type GameConfig,
-  type Guess,
-  type PlayerId,
-  PlayerIdSchema,
-  type SessionId,
-  SessionStatus,
-} from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
-import { useMultiSession } from '@cityborn/client/session';
-import { useState } from 'react';
+  type MultiSessionController,
+  useMultiSession,
+} from '@cityborn/client/session';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -19,98 +12,18 @@ import { useNavigation } from '@/lib/navigation';
 import { createSocketConnection } from '@/lib/socket';
 import { MultiLobby } from './MultiLobby';
 
-interface MultiSessionProps {
+type MultiSessionProps = {
   sessionID: SessionId;
-}
+};
 
 export default function MultiSession({ sessionID }: MultiSessionProps) {
-  const { user } = useAuth();
-  const { invokeError } = useError();
   const navigation = useNavigation();
-  const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
-    user?.username,
-  );
-  const multiSession = useMultiSession({
-    localPlayerID,
+  const multiSession: MultiSessionController = useMultiSession({
     sessionID,
     sessionApi,
     navigation,
     createSocket: createSocketConnection,
   });
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
-
-  const handleJoinSession = async (playerID: string) => {
-    try {
-      const parsedPlayerId = PlayerIdSchema.parse(playerID);
-      await multiSession.join(parsedPlayerId);
-      setLocalPlayerID(parsedPlayerId);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
-    try {
-      await multiSession.updateGameConfig(gameConfig);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  ///////////////////////
-  // Game interactions //
-  ///////////////////////
-
-  const handleStartGame = async () => {
-    try {
-      await multiSession.startGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleGuess = async (guess: Guess) => {
-    try {
-      await multiSession.guess(guess);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleNextRound = async () => {
-    try {
-      await multiSession.nextRound();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleEndGame = async () => {
-    try {
-      await multiSession.endGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handlePlayAgain = async () => {
-    try {
-      await multiSession.playAgain();
-    } catch {}
-  };
-
-  const handleExitGame = async () => {
-    try {
-      await multiSession.exitGame();
-    } catch {}
-  };
-
-  ///////////////
-  // Rendering //
-  ///////////////
 
   if (!multiSession.session) {
     return (
@@ -126,23 +39,23 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
       {multiSession.session.status === SessionStatus.IN_GAME &&
       multiSession.session.currentGame ? (
         <Game
-          localPlayerID={localPlayerID}
+          localPlayerID={multiSession.localPlayerID}
           isHost={multiSession.isHost}
           game={multiSession.session.currentGame}
-          handleGuess={handleGuess}
-          handleNextRound={handleNextRound}
-          handleEndGame={handleEndGame}
-          handlePlayAgain={handlePlayAgain}
-          handleExitGame={handleExitGame}
+          handleGuess={multiSession.guess}
+          handleNextRound={multiSession.nextRound}
+          handleEndGame={multiSession.endGame}
+          handlePlayAgain={multiSession.playAgain}
+          handleExitGame={multiSession.exitGame}
         />
       ) : (
         <MultiLobby
-          localPlayerID={localPlayerID}
+          localPlayerID={multiSession.localPlayerID}
           isHost={multiSession.isHost}
           session={multiSession.session}
-          handleUpdateGameConfig={handleUpdateGameConfig}
-          handleStartGame={handleStartGame}
-          handleJoinSession={handleJoinSession}
+          handleUpdateGameConfig={multiSession.updateGameConfig}
+          handleStartGame={multiSession.startGame}
+          handleJoinSession={multiSession.join}
         />
       )}
 
@@ -163,7 +76,7 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
               <Button
                 label="Quitter"
                 variant="outlined"
-                onPress={handleExitGame}
+                onPress={multiSession.exitGame}
               />
               <Button
                 label="Réessayer"

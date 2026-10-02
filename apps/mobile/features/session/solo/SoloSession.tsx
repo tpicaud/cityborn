@@ -1,88 +1,20 @@
-import { type GameConfig, type Guess, PlayerIdSchema } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
-import { useSoloSession } from '@cityborn/client/session';
+import {
+  type SessionController,
+  useSoloSession,
+} from '@cityborn/client/session';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
+import { Game } from '@/features/game/Game';
 import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
-import { Game } from '../../game/Game';
 import { SoloLobby } from './SoloLobby';
 
 export default function SoloSession() {
-  const { user } = useAuth();
-  const { invokeError } = useError();
   const navigation = useNavigation();
-  const localPlayerID = user?.username ?? PlayerIdSchema.parse('guest');
-  const soloSession = useSoloSession({
-    localPlayerID,
+  const soloSession: SessionController = useSoloSession({
     sessionApi,
     navigation,
   });
-
-  //////////////////////////
-  // Session interactions //
-  //////////////////////////
-
-  const handleUpdateGameConfig = async (gameConfig: Partial<GameConfig>) => {
-    try {
-      await soloSession.updateGameConfig(gameConfig);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  ///////////////////////
-  // Game interactions //
-  ///////////////////////
-
-  const handleStartGame = async () => {
-    try {
-      await soloSession.startGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleGuess = async (guess: Guess) => {
-    try {
-      await soloSession.guess(guess);
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleNextRound = async () => {
-    try {
-      await soloSession.nextRound();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handleEndGame = async () => {
-    try {
-      await soloSession.endGame();
-    } catch (error) {
-      invokeError(error);
-    }
-  };
-
-  const handlePlayAgain = async () => {
-    try {
-      await soloSession.playAgain();
-    } catch {}
-  };
-
-  const handleExitGame = async () => {
-    try {
-      await soloSession.exitGame();
-    } catch {}
-  };
-
-  ///////////////
-  // Rendering //
-  ///////////////
 
   if (!soloSession.session)
     return (
@@ -94,14 +26,14 @@ export default function SoloSession() {
   if (soloSession.session.currentGame) {
     return (
       <Game
-        localPlayerID={localPlayerID}
+        localPlayerID={soloSession.localPlayerID}
         isHost={soloSession.isHost}
         game={soloSession.session.currentGame}
-        handleGuess={handleGuess}
-        handleNextRound={handleNextRound}
-        handleEndGame={handleEndGame}
-        handlePlayAgain={handlePlayAgain}
-        handleExitGame={handleExitGame}
+        handleGuess={soloSession.guess}
+        handleNextRound={soloSession.nextRound}
+        handleEndGame={soloSession.endGame}
+        handlePlayAgain={soloSession.playAgain}
+        handleExitGame={soloSession.exitGame}
       />
     );
   }
@@ -110,8 +42,8 @@ export default function SoloSession() {
     <SoloLobby
       isHost={soloSession.isHost}
       session={soloSession.session}
-      handleUpdateGameConfig={handleUpdateGameConfig}
-      handleStartGame={handleStartGame}
+      handleUpdateGameConfig={soloSession.updateGameConfig}
+      handleStartGame={soloSession.startGame}
     />
   );
 }

@@ -1,7 +1,8 @@
-import type { GameConfig, Guess, Session } from '@cityborn/api';
+import type { GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 
-export interface SessionController {
+export type SessionController = {
   session: Session | undefined;
+  localPlayerID: PlayerId | undefined;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   startGame: () => Promise<void>;
@@ -10,4 +11,4 @@ export interface SessionController {
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
   exitGame: () => Promise<void>;
-}
+};

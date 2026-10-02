@@ -1,4 +1,3 @@
-import { useAuth } from '@cityborn/client/auth';
 import { usePlay } from '@cityborn/client/play';
 import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
@@ -11,7 +10,6 @@ import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
 export default function Play() {
-  const { user } = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
   const {
@@ -25,7 +23,6 @@ export default function Play() {
     authenticationRequired,
     dismissAuthenticationRequired,
   } = usePlay({
-    isAuthenticated: user !== null,
     sessionApi,
     navigation,
   });

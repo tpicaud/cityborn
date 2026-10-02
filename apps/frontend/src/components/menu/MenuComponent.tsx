@@ -37,7 +37,6 @@ export default function MenuComponent({
     authenticationRequired,
     dismissAuthenticationRequired,
   } = usePlay({
-    isAuthenticated: user !== null,
     sessionApi,
     navigation,
   });

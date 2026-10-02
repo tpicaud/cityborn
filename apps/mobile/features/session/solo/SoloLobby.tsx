@@ -1,10 +1,13 @@
 import type { GameConfig, Session } from '@cityborn/api';
-import { useCategoryTrees } from '@cityborn/client/category';
-import { useCategorySelection } from '@cityborn/client/session';
+import {
+  type CategorySelection,
+  useCategorySelection,
+} from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { categoryApi } from '@/lib/api/category';
 
@@ -21,21 +24,29 @@ export function SoloLobby({
   handleUpdateGameConfig,
   handleStartGame,
 }: SoloLobbyProps) {
-  const { categoryTrees } = useCategoryTrees(categoryApi);
   const {
+    isLoading: isLoadingCategories,
     selectedPath,
     currentNodes,
     currentName,
     openCategory,
     goBack,
     playCategory,
-  } = useCategorySelection({
-    categoryTrees,
+  }: CategorySelection = useCategorySelection({
+    categoryApi,
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });
+
+  if (isLoadingCategories) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <LoaderIcon />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 justify-center items-center">

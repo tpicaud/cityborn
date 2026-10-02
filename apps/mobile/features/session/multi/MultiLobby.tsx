@@ -1,18 +1,21 @@
-import type {
-  GameConfig,
-  OnlinePlayer,
-  PlayerId,
-  Session,
-} from '@cityborn/api';
-import { useCategoryTrees } from '@cityborn/client/category';
-import { useCategorySelection } from '@cityborn/client/session';
+import type { GameConfig, PlayerId, Session } from '@cityborn/api';
+import {
+  type CategorySelection,
+  type PlayerNameForm,
+  playerConnectionStatus,
+  sortPlayersConnectedFirst,
+  useCategorySelection,
+  usePlayerNameForm,
+} from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
+import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { categoryApi } from '@/lib/api/category';
@@ -23,7 +26,7 @@ type MultiLobbyProps = {
   isHost: boolean;
   handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
   handleStartGame: () => Promise<void>;
-  handleJoinSession: (playerID: string) => Promise<void>;
+  handleJoinSession: (playerID: PlayerId) => Promise<void>;
 };
 
 export function MultiLobby({
@@ -35,28 +38,40 @@ export function MultiLobby({
   handleJoinSession,
 }: MultiLobbyProps) {
   const [copied, setCopied] = useState(false);
-  const [currentPseudoInput, setCurrentPseudoInput] = useState<string>('');
-  const { categoryTrees } = useCategoryTrees(categoryApi);
+  const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const {
+    isLoading: isLoadingCategories,
     selectedPath,
     currentNodes,
     currentName,
     openCategory,
     goBack,
     playCategory,
-  } = useCategorySelection({
-    categoryTrees,
+  }: CategorySelection = useCategorySelection({
+    categoryApi,
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });
 
+  const submitPlayerName = playerNameForm.handleSubmit(({ playerID }) =>
+    handleJoinSession(playerID),
+  );
+
   const handleCopy = async () => {
     await Clipboard.setStringAsync(session.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (isLoadingCategories) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <LoaderIcon />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 justify-center items-center">
@@ -86,15 +101,10 @@ export function MultiLobby({
           <View className=" w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
           <ScrollView className="max-h-40">
             <View className="flex-row flex-wrap justify-between gap-2 w-full">
-              {(session.players.every((p) => 'connected' in p)
-                ? (session.players as OnlinePlayer[]).sort((a, b) =>
-                    a.connected === b.connected ? 0 : a.connected ? -1 : 1,
-                  )
-                : session.players
-              ).map((player) => (
+              {sortPlayersConnectedFirst(session.players).map((player) => (
                 <View
                   key={player.username}
-                  className={`w-6/13 flex-row items-center gap-2 h-7 ${!(player as OnlinePlayer).connected && 'opacity-30'}`}
+                  className={`w-6/13 flex-row items-center gap-2 h-7 ${playerConnectionStatus(player) === 'disconnected' && 'opacity-30'}`}
                 >
                   <View className="w-[3px] h-full bg-foreground/30 rounded-full" />
                   <Text className="text-xl">{player.username}</Text>
@@ -161,16 +171,29 @@ export function MultiLobby({
           <Text className="text-center text-xl mb-4">
             Comment tu t'appelles ?
           </Text>
-          <TextInput
-            value={currentPseudoInput}
-            onChangeText={(text) => setCurrentPseudoInput(text)}
-            className="mb-3"
+          <Controller
+            control={playerNameForm.control}
+            name="playerID"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={!!playerNameForm.formState.errors.playerID}
+                className="mb-3"
+              />
+            )}
           />
+          {playerNameForm.formState.errors.playerID && (
+            <Text className="text-destructive-500 mb-3">
+              {playerNameForm.formState.errors.playerID.message}
+            </Text>
+          )}
           <Button
             label="Jouer"
             size="medium"
-            disabled={!currentPseudoInput}
-            onPress={() => handleJoinSession(currentPseudoInput)}
+            disabled={playerNameForm.formState.isSubmitting}
+            onPress={submitPlayerName}
           />
         </View>
       </Dialog>

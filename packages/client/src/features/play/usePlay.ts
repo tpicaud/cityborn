@@ -1,30 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { type BaseSyntheticEvent, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
+import { useAuth } from '../auth/authContext';
 import {
+  type JoinSessionForm,
   type SessionApi,
   useJoinSessionForm,
   useSessionLauncher,
 } from '../session';
 
-export interface PlayOptions {
-  isAuthenticated: boolean;
+export type PlayOptions = {
   sessionApi: SessionApi;
   navigation: Navigation;
-}
+};
 
-export function usePlay({
-  isAuthenticated,
-  sessionApi,
-  navigation,
-}: PlayOptions) {
-  const [authenticationRequired, setAuthenticationRequired] = useState(false);
-  const joinSessionForm = useJoinSessionForm();
+export type Play = {
+  joinSessionForm: JoinSessionForm;
+  playSolo: () => void;
+  playMulti: () => Promise<void>;
+  joinSession: (event?: BaseSyntheticEvent) => Promise<void>;
+  authenticationRequired: boolean;
+  dismissAuthenticationRequired: () => void;
+};
+
+export function usePlay({ sessionApi, navigation }: PlayOptions): Play {
+  const { user } = useAuth();
+  const [authenticationRequired, setAuthenticationRequired] =
+    useState<boolean>(false);
+  const joinSessionForm: JoinSessionForm = useJoinSessionForm();
   const sessionLauncher = useSessionLauncher({ sessionApi, navigation });
 
-  const playMulti = async () => {
-    if (!isAuthenticated) {
+  const playMulti = async (): Promise<void> => {
+    if (!user) {
       setAuthenticationRequired(true);
       return;
     }
