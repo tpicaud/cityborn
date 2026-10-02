@@ -21,6 +21,8 @@ Pour le frontend, les composants métier et services encore placés hors de `src
 
 Le back-office ne possède pas de dossier `features/`. Regrouper son UI métier dans `components/<capacité>/` jusqu'à une migration explicitement demandée, sans introduire seul un nouvel arbre parallèle.
 
+Un composant présent dans le frontend et le mobile porte le même nom de fichier dans les deux apps (`Map.tsx`, `Overlay.tsx`) ; aligner ce nom quand la tâche modifie le composant.
+
 Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app concernée. Préférer étendre un fichier existant si sa responsabilité reste cohérente. Demander seulement si plusieurs emplacements impliquent des responsabilités architecturales différentes.
 
 ## Accès à l'API
@@ -33,9 +35,9 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 
 `ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createCategoryApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
-L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap affiche une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant. Placer `AuthProvider` sous `ErrorProvider` pour afficher ces erreurs.
+L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap (`useCurrentUserBootstrap`) expose une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant. Placer `AuthProvider` sous `ErrorProvider` pour afficher ces erreurs.
 
-Les hooks de catégories, de session et de profil reçoivent leurs ports `CategoryApi`, `SessionApi` et `ProfileApi`. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
+Les hooks de catégories, de session et de profil reçoivent leurs ports `CategoryApi`, `SessionApi` et `ProfileApi`. Un hook de domaine signale lui-même les erreurs de ses actions via `invokeError` : l'app branche ses actions directement sur la vue, et seule la vue reste dans l'app. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
 L'authentification propre au back-office reste locale tant qu'aucune migration n'est demandée.
 
@@ -55,15 +57,15 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
-| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider`, version d'API minimale supportée, formatage de date. |
-| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), visitorId. Sans React. |
+| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ErrorProvider` et `ErrorDialogProps`, version d'API minimale supportée, formatage de date. |
+| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
-| `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, hooks de formulaire headless. |
-| `@cityborn/client/category` | `src/features/category/` | Port `CategoryApi`, factory `createCategoryApi` et chargement des arbres de catégories (`useCategoryTrees`). |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController`, port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection`) et création / jonction (`useSessionLauncher`). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
-| `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultats, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
+| `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, bootstrap de l'utilisateur, connexion, inscription et renvoi de l'email de vérification. |
+| `@cityborn/client/category` | `src/features/category/` | Port `CategoryApi` et factory `createCategoryApi` ; le chargement des arbres reste privé au package. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController` (joueur local compris), port `SessionApi`, hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection` charge les catégories, `usePlayerNameForm`, `sortPlayersConnectedFirst`) et création / jonction (`useSessionLauncher`). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
+| `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultat de round, timer et compte à rebours, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
-| `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil et hook `useProfile`. |
+| `@cityborn/client/profile` | `src/features/profile/` | Port `ProfileApi`, projection des parties du profil, hooks `useProfile` et `useProfileEditor` (pseudo, mot de passe, suppression du compte). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 
 Un nouveau domaine se crée en ajoutant `src/features/<domaine>/index.ts` **et** son entrée dans l'`exports` map. Un type ou un helper vit dans son domaine ; `src/shared/` ne reçoit que ce qui sert à plusieurs domaines.
