@@ -75,7 +75,7 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 | `TokenStorage` | `expo-secure-store` côté mobile. Le navigateur laisse Nest gérer les cookies `httpOnly`. |
 | `KeyValueStorage` | `localStorage` côté web, `AsyncStorage` côté mobile. Stocke des chaînes : le domaine décode ce qu'il a écrit. |
 | `SocketConnection` / `SocketFactory` | `socket.io-client`, events de reconnexion du `Manager` compris. La factory est asynchrone car le mobile lit son visitorId avant d'ouvrir la socket ; son `auth` est une fonction relue à chaque handshake. |
-| `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. |
+| `Navigation` | `useRouter` de `next/navigation` ou d'`expo-router`. Ses chemins sont typés par `NavigationPath`, la liste des routes vers lesquelles `@cityborn/client` navigue. Un chemin ajouté doit exister dans les deux apps : la CI ne le vérifie pas (Next accepte toute chaîne, et les routes typées d'Expo ne sont générées qu'au lancement). |
 
 `packages/client/biome.json` fait échouer `pnpm format:check` sur un import de `next/*`, `expo-*`, `react-native*`, `react-dom` ou `@cityborn/design-system` dans le package. Quand la règle se déclenche, déclarer un port et l'implémenter dans l'app.
 
