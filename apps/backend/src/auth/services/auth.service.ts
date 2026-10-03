@@ -31,7 +31,10 @@ import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
-import type { UserCredentials } from '../../user/repositories/user.repository';
+import type {
+  UnverifiedAccountReclaim,
+  UserCredentials,
+} from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
@@ -42,6 +45,10 @@ import {
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
+
+type IdentityProviderSessionRequest = {
+  user: User;
+} & Omit<UnverifiedAccountReclaim, 'userId'>;
 
 @Injectable()
 export class AuthService {
@@ -187,7 +194,10 @@ export class AuthService {
       }
     }
 
-    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: 'google',
+    });
     return this.createAuthResponse(authSession);
   }
 
@@ -250,7 +260,11 @@ export class AuthService {
       }
     }
 
-    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: 'apple',
+      appleId: appleUserId,
+    });
     return this.createAuthResponse(authSession);
   }
 
@@ -356,6 +370,24 @@ export class AuthService {
     const authTokenPair: AuthTokenPair =
       await this.authTokenService.issueTokenPair(authSession);
     return { ...authTokenPair, user: authSession.user };
+  }
+
+  private async openIdentityProviderSession({
+    user,
+    ...reclaim
+  }: IdentityProviderSessionRequest): Promise<AuthSession> {
+    if (user.isVerified) return this.requireAuthSession(user.id);
+
+    const authSession: AuthSession =
+      await this.userService.reclaimUnverifiedAccount({
+        userId: user.id,
+        ...reclaim,
+      });
+    this.authenticatedSocketService.disconnectOlderSessions(
+      user.id,
+      authSession.authVersion,
+    );
+    return authSession;
   }
 
   private async requireAuthSession(userId: UserId): Promise<AuthSession> {

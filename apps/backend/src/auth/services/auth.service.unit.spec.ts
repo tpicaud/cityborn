@@ -644,6 +644,51 @@ describe('AuthService.signInWithGoogle', () => {
         visitorId: 'visitor-1',
       }),
     );
+    expect(userService.reclaimUnverifiedAccount).not.toHaveBeenCalled();
+  });
+
+  it('reclaims an unverified email account for its Google owner', async () => {
+    const unverifiedUser: User = buildUser({
+      type: 'email',
+      isVerified: false,
+    });
+    const reclaimedUser: User = buildUser({ type: 'google', isVerified: true });
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const {
+      authService,
+      userService,
+      googleClient,
+      jwtService,
+      authenticatedSocketService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
+    ticket.getPayload.mockReturnValue({
+      email_verified: true,
+      email: unverifiedUser.email,
+      name: 'Alice Doe',
+    });
+    googleClient.verifyIdToken.mockResolvedValue(ticket);
+    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.reclaimUnverifiedAccount.mockResolvedValue({
+      user: reclaimedUser,
+      authVersion: 3,
+    });
+
+    const result: AuthResponse = await authService.signInWithGoogle(signInData);
+
+    expect(userService.reclaimUnverifiedAccount).toHaveBeenCalledWith({
+      userId: unverifiedUser.id,
+      type: 'google',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(unverifiedUser.id, 3);
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ authVersion: 3 }),
+      expect.any(Object),
+    );
+    expect(result.user.type).toBe('google');
   });
 
   it('creates a Google user with an available generated username', async () => {
@@ -818,6 +863,46 @@ describe('AuthService.signInWithApple', () => {
     expect(userService.findByIdentifier).not.toHaveBeenCalledWith(
       'admin@cityborn.test',
     );
+  });
+
+  it('reclaims an unverified email account for its Apple owner', async () => {
+    const unverifiedUser: User = buildUser({
+      email: 'alice@cityborn.test',
+      type: 'email',
+      isVerified: false,
+    });
+    const reclaimedUser: User = buildUser({ type: 'apple', isVerified: true });
+    const signInData: SignInWithApple = {
+      identity_token: 'apple-token',
+      apple_user_id: 'apple-user-1',
+      details: {
+        email: 'alice@cityborn.test',
+        given_name: 'Alice',
+        family_name: 'Apple',
+      },
+    };
+    const {
+      authService,
+      userService,
+      authenticatedSocketService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByAppleId.mockResolvedValue(null);
+    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.reclaimUnverifiedAccount.mockResolvedValue({
+      user: reclaimedUser,
+      authVersion: 1,
+    });
+
+    await authService.signInWithApple(signInData);
+
+    expect(userService.reclaimUnverifiedAccount).toHaveBeenCalledWith({
+      userId: unverifiedUser.id,
+      type: 'apple',
+      appleId: 'apple-user-1',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(unverifiedUser.id, 1);
   });
 
   it('creates a user during the first Apple connection', async () => {
