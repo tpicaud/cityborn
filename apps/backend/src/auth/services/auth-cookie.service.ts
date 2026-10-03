@@ -7,7 +7,6 @@ import { REFRESH_TOKEN_TTL_SECONDS } from './auth-token.service';
 
 export const ACCESS_TOKEN_COOKIE_NAME = 'cityborn_access_token';
 export const REFRESH_TOKEN_COOKIE_NAME = 'cityborn_refresh_token';
-const LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME = 'access_token';
 
 const ACCESS_TOKEN_COOKIE_PATH = '/';
 const REFRESH_TOKEN_COOKIE_PATH = '/auth';
@@ -49,12 +48,6 @@ export class AuthCookieService {
 
   readAccessToken(cookieHeader: string | undefined): string | undefined {
     return readCookie(cookieHeader, ACCESS_TOKEN_COOKIE_NAME);
-  }
-
-  readLegacyFrontendAccessToken(
-    cookieHeader: string | undefined,
-  ): string | undefined {
-    return readCookie(cookieHeader, LEGACY_FRONTEND_ACCESS_TOKEN_COOKIE_NAME);
   }
 
   readRefreshToken(cookieHeader: string | undefined): string | undefined {

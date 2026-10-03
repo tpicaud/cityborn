@@ -1,5 +1,10 @@
-import { type ApiError, type VisitorId, VisitorIdSchema } from '@cityborn/api';
-import { Injectable } from '@nestjs/common';
+import {
+  type ApiError,
+  ErrorCode,
+  type VisitorId,
+  VisitorIdSchema,
+} from '@cityborn/api';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { AuthCookieService } from '../auth/services/auth-cookie.service';
 import {
   type AuthTokenPayload,
@@ -10,6 +15,7 @@ import type { AuthSession } from '../common/types/auth-session';
 import { firstHeaderValue } from '../common/wide-event/wide-event';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
+import { HTTP_CONFIG, type HttpConfig } from '../config/config.module';
 import { RateLimitService } from '../rate-limit/rate-limit.service';
 import { resolveClientIpFromHeaders } from '../rate-limit/resolve-client-ip';
 import { AuthenticatedSocketService } from './authenticated-socket.service';
@@ -29,9 +35,18 @@ function parseVisitorId(
   return VisitorIdSchema.safeParse(firstHeaderValue(value)).data;
 }
 
+function readHandshakeAuthAccessToken(socket: AppSocket): string | undefined {
+  const handshakeAccessToken: unknown = socket.handshake.auth.access_token;
+  return typeof handshakeAccessToken === 'string' &&
+    handshakeAccessToken.length > 0
+    ? handshakeAccessToken
+    : undefined;
+}
+
 @Injectable()
 export class WsHandshakeMiddleware {
   constructor(
+    @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     private readonly authTokenService: AuthTokenService,
     private readonly authCookieService: AuthCookieService,
     private readonly authenticatedSocketService: AuthenticatedSocketService,
@@ -90,28 +105,51 @@ export class WsHandshakeMiddleware {
   }
 
   private async authenticate(socket: AppSocket): Promise<AuthSession | null> {
-    const token: string | undefined = this.readAccessToken(socket);
-    if (!token) return null;
+    const cookieAccessToken: string | undefined =
+      this.authCookieService.readAccessToken(socket.handshake.headers.cookie);
+    if (cookieAccessToken) {
+      return await this.authenticateCookie(socket, cookieAccessToken);
+    }
 
-    const payload: AuthTokenPayload | null =
-      await this.validateHandshakeToken(token);
-    if (!payload) return null;
+    const handshakeAuthAccessToken: string | undefined =
+      readHandshakeAuthAccessToken(socket);
+    if (handshakeAuthAccessToken) {
+      return await this.authenticateHandshakeAuth(handshakeAuthAccessToken);
+    }
 
-    return this.authTokenService.resolveAuthSession(payload);
+    return null;
   }
 
-  private readAccessToken(socket: AppSocket): string | undefined {
-    const cookieHeader: string | undefined = socket.handshake.headers.cookie;
-    const handshakeAccessToken: unknown = socket.handshake.auth.access_token;
+  private async authenticateCookie(
+    socket: AppSocket,
+    accessToken: string,
+  ): Promise<AuthSession | null> {
+    this.assertAllowedOrigin(socket);
+    const payload: AuthTokenPayload =
+      await this.authTokenService.verifyAccessToken(accessToken);
+    return await this.authTokenService.resolveAuthSession(payload);
+  }
 
-    return (
-      this.authCookieService.readAccessToken(cookieHeader) ??
-      this.authCookieService.readLegacyFrontendAccessToken(cookieHeader) ??
-      (typeof handshakeAccessToken === 'string' &&
-      handshakeAccessToken.length > 0
-        ? handshakeAccessToken
-        : undefined)
-    );
+  private async authenticateHandshakeAuth(
+    accessToken: string,
+  ): Promise<AuthSession | null> {
+    const payload: AuthTokenPayload | null =
+      await this.validateHandshakeToken(accessToken);
+    if (!payload) return null;
+
+    return await this.authTokenService.resolveAuthSession(payload);
+  }
+
+  private assertAllowedOrigin(socket: AppSocket): void {
+    const origin: string | undefined = socket.handshake.headers.origin;
+    if (origin !== undefined && this.httpConfig.corsOrigins.includes(origin)) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
+      message: 'Handshake origin is not allowed',
+    });
   }
 
   private async validateHandshakeToken(
