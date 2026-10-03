@@ -2,6 +2,7 @@ import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
+  ForbiddenException,
   Injectable,
   mixin,
   type Type,
@@ -20,6 +21,7 @@ import { extractBearerToken } from './bearer-token';
 type AccessTokenGuardPolicy = {
   acceptsCookie: boolean;
   requiresAuthentication: boolean;
+  requiresAdminRole: boolean;
 };
 
 type UnauthenticatedReason = {
@@ -66,7 +68,18 @@ function createAccessTokenGuard(
         userId: authSession.user.id,
         isAuthenticated: true,
       });
+      this.assertAdminRole(authSession);
       return true;
+    }
+
+    private assertAdminRole(authSession: AuthSession): void {
+      if (!policy.requiresAdminRole || authSession.user.role === 'admin') {
+        return;
+      }
+      throw new ForbiddenException({
+        code: ErrorCode.USER_NOT_ADMIN,
+        message: 'Admin role required',
+      });
     }
 
     private readAccessToken(request: AuthRequest): string | undefined {
@@ -94,14 +107,23 @@ function createAccessTokenGuard(
 export const AuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: true,
   requiresAuthentication: true,
+  requiresAdminRole: false,
 });
 
 export const BearerAuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: false,
   requiresAuthentication: true,
+  requiresAdminRole: false,
+});
+
+export const AdminGuard: Type<CanActivate> = createAccessTokenGuard({
+  acceptsCookie: true,
+  requiresAuthentication: true,
+  requiresAdminRole: true,
 });
 
 export const OptionalAuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: true,
   requiresAuthentication: false,
+  requiresAdminRole: false,
 });

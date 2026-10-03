@@ -16,11 +16,17 @@ datasource db {
 // User & Profile //
 ////////////////////
 
+enum UserRole {
+  player
+  admin
+}
+
 model User {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique
   username   String    @unique
   type       String    @default("unknown")
+  role       UserRole  @default(player)
   password   String?
   authVersion Int   @default(0)
   createdAt  DateTime  @default(now())

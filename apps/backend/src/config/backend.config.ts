@@ -8,7 +8,7 @@ const optionalNonEmptyStringSchema = z.preprocess(
 
 const corsOriginsSchema = z
   .string()
-  .default('http://localhost:3000')
+  .default('http://localhost:3000,http://localhost:3001')
   .transform((value: string) =>
     value.split(',').map((origin: string) => origin.trim()),
   )
@@ -26,7 +26,6 @@ const backendEnvironmentSchema = z
     JWT_REFRESH_SECRET: z.string().trim().min(1),
     GOOGLE_CLIENT_ID: z.string().trim().min(1),
     APP_ID: z.string().trim().min(1),
-    ADMIN_DASHBOARD_TOKEN: z.string().trim().min(1),
     DATABASE_URL: z.string().url(),
     REDIS_URL: z.string().url(),
     BREVO_API_KEY: z.string().trim().min(1),
@@ -65,7 +64,6 @@ export interface BackendConfig {
     jwtRefreshSecret: string;
     googleClientId: string;
     appleAppId: string;
-    adminDashboardToken: string;
   };
   persistence: {
     databaseUrl: string;
@@ -104,7 +102,6 @@ export function parseBackendConfig(
       jwtRefreshSecret: parsedEnvironment.JWT_REFRESH_SECRET,
       googleClientId: parsedEnvironment.GOOGLE_CLIENT_ID,
       appleAppId: parsedEnvironment.APP_ID,
-      adminDashboardToken: parsedEnvironment.ADMIN_DASHBOARD_TOKEN,
     },
     persistence: {
       databaseUrl: parsedEnvironment.DATABASE_URL,

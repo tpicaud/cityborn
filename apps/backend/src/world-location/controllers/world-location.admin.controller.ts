@@ -1,7 +1,7 @@
 import { contract } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { AdminGuard } from '../../auth/guards/admin.guard';
+import { AdminGuard } from '../../auth/guards/access-token.guard';
 import { WorldLocationService } from '../world-location.service';
 
 @UseGuards(AdminGuard)

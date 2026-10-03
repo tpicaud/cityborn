@@ -5,7 +5,6 @@ const validEnvironment: NodeJS.ProcessEnv = {
   JWT_REFRESH_SECRET: 'refresh-secret',
   GOOGLE_CLIENT_ID: 'google-client',
   APP_ID: 'cityborn-app',
-  ADMIN_DASHBOARD_TOKEN: 'admin-token',
   DATABASE_URL: 'postgresql://localhost:5432/cityborn',
   REDIS_URL: 'redis://localhost:6379/0',
   BREVO_API_KEY: 'brevo-key',
@@ -21,7 +20,7 @@ describe('parseBackendConfig', () => {
       port: 3001,
     });
     expect(config.http).toEqual({
-      corsOrigins: ['http://localhost:3000'],
+      corsOrigins: ['http://localhost:3000', 'http://localhost:3001'],
       frontendUrl: 'http://localhost:3000',
     });
     expect(config.mail.senderName).toBe('Cityborn');

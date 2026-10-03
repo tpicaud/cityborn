@@ -1,7 +1,7 @@
 import { contract, ErrorCode, GuessObjectIdSchema } from '@cityborn/api';
 import { Controller, NotFoundException, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { AdminGuard } from '../../auth/guards/admin.guard';
+import { AdminGuard } from '../../auth/guards/access-token.guard';
 import { GuessObjectService } from '../guess-object.service';
 
 @UseGuards(AdminGuard)

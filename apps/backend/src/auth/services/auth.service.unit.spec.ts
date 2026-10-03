@@ -59,7 +59,6 @@ function buildAuthService() {
     jwtRefreshSecret: 'refresh-secret',
     googleClientId: 'google-client',
     appleAppId: 'cityborn-app',
-    adminDashboardToken: 'admin-token',
   };
   const httpConfig: HttpConfig = {
     corsOrigins: ['https://cityborn.test'],
