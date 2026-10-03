@@ -3,6 +3,7 @@ import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
 import {
+  ApiResponseError,
   getApiVersionInfo,
   installFrenchZodErrorMap,
   isApiVersionOutdated,
@@ -55,13 +56,13 @@ export default function RootLayout() {
 
   const runHealthCheck = useCallback(async () => {
     try {
-      const result = await checkHealth();
-      if (result.ok) {
-        setIsBackendUnreachable(false);
-      } else {
-        console.error('Healthcheck failed:', result.error);
+      await checkHealth();
+      setIsBackendUnreachable(false);
+    } catch (error: unknown) {
+      if (error instanceof ApiResponseError) {
+        console.error('Healthcheck failed:', error.apiError);
+        return;
       }
-    } catch (error) {
       console.error('Healthcheck unreachable:', error);
       setIsBackendUnreachable(true);
     }

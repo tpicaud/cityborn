@@ -1,6 +1,6 @@
 'use client';
 
-import type { ApiResult, User } from '@cityborn/api';
+import type { User } from '@cityborn/api';
 import { useState } from 'react';
 import { useError } from '../../shared/errorContext';
 import type { AuthApi } from '../auth/authApi';
@@ -57,12 +57,14 @@ export function useProfileEditor({
 
   const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
-      const result: ApiResult<User> = await profileApi.updateUsername(data);
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      usernameForm.reset({ username: result.data.username });
-      setIsEditingUsername(false);
+      try {
+        const updatedUser: User = await profileApi.updateUsername(data);
+        setUser(updatedUser);
+        usernameForm.reset({ username: updatedUser.username });
+        setIsEditingUsername(false);
+      } catch (error: unknown) {
+        invokeError(error);
+      }
     },
   );
 
@@ -79,21 +81,22 @@ export function useProfileEditor({
 
   const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
     async (values) => {
-      const result: ApiResult<User> = await authApi.updatePassword(
-        toUpdatePassword(values),
-      );
-      if (!result.ok) return invokeError(result.error);
-
-      setUser(result.data);
-      passwordForm.reset();
-      setIsPasswordUpdated(true);
+      try {
+        const updatedUser: User = await authApi.updatePassword(
+          toUpdatePassword(values),
+        );
+        setUser(updatedUser);
+        passwordForm.reset();
+        setIsPasswordUpdated(true);
+      } catch (error: unknown) {
+        invokeError(error);
+      }
     },
   );
 
   const deleteAccount = async (): Promise<void> => {
     try {
-      const result: ApiResult<void> = await authApi.deleteUser();
-      if (!result.ok) return invokeError(result.error);
+      await authApi.deleteUser();
       await authApi.signOut();
       setUser(null);
       setIsDeleteAccountDialogOpen(false);

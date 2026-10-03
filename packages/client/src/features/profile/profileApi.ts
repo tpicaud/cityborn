@@ -1,15 +1,10 @@
-import type {
-  ApiResult,
-  GameRecord,
-  UpdateUsername,
-  User,
-} from '@cityborn/api';
-import { toApiResult } from '@cityborn/api';
+import type { GameRecord, UpdateUsername, User } from '@cityborn/api';
+import { unwrapApiResponse } from '@cityborn/api';
 import type { ContractClient } from '../../api/contractClient';
 
 export interface ProfileApi {
-  getGameRecords(): Promise<ApiResult<GameRecord[]>>;
-  updateUsername(data: UpdateUsername): Promise<ApiResult<User>>;
+  getGameRecords(): Promise<GameRecord[]>;
+  updateUsername(data: UpdateUsername): Promise<User>;
 }
 
 export function createProfileApi(
@@ -17,11 +12,11 @@ export function createProfileApi(
 ): ProfileApi {
   return {
     async getGameRecords() {
-      return toApiResult(await contractClient.user.getGameRecords());
+      return unwrapApiResponse(await contractClient.user.getGameRecords());
     },
 
     async updateUsername(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.user.updateUsername({ body: data }),
       );
     },

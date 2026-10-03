@@ -1,9 +1,9 @@
-import type { ApiResult, CategoryTree } from '@cityborn/api';
-import { toApiResult } from '@cityborn/api';
+import type { CategoryTree } from '@cityborn/api';
+import { unwrapApiResponse } from '@cityborn/api';
 import type { ContractClient } from '../../api/contractClient';
 
 export interface CategoryApi {
-  getCategoryTrees(): Promise<ApiResult<CategoryTree[]>>;
+  getCategoryTrees(): Promise<CategoryTree[]>;
 }
 
 export function createCategoryApi(
@@ -11,7 +11,9 @@ export function createCategoryApi(
 ): CategoryApi {
   return {
     async getCategoryTrees() {
-      return toApiResult(await contractClient.category.getCategoryTrees({}));
+      return unwrapApiResponse(
+        await contractClient.category.getCategoryTrees({}),
+      );
     },
   };
 }

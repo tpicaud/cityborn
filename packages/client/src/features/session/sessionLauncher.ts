@@ -1,6 +1,11 @@
 'use client';
 
-import { type SessionId, SessionIdSchema, SessionMode } from '@cityborn/api';
+import {
+  type Session,
+  type SessionId,
+  SessionIdSchema,
+  SessionMode,
+} from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -64,17 +69,23 @@ export function useSessionLauncher({
     playSolo: () => navigation.push(soloSessionPath),
 
     playMulti: async () => {
-      const result = await sessionApi.createSession({
-        mode: SessionMode.MULTI,
-      });
-      if (!result.ok) return invokeError(result.error);
-      navigation.push(multiSessionPath(result.data.id));
+      try {
+        const session: Session = await sessionApi.createSession({
+          mode: SessionMode.MULTI,
+        });
+        navigation.push(multiSessionPath(session.id));
+      } catch (error: unknown) {
+        invokeError(error);
+      }
     },
 
     joinSession: async (code: SessionId) => {
-      const result = await sessionApi.fetchSession(code);
-      if (!result.ok) return invokeError(result.error);
-      navigation.push(multiSessionPath(code));
+      try {
+        await sessionApi.fetchSession(code);
+        navigation.push(multiSessionPath(code));
+      } catch (error: unknown) {
+        invokeError(error);
+      }
     },
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import type { GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
+import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { PlayerIdSchema, SessionMode } from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
@@ -42,9 +42,10 @@ export function useSoloSession({
 
   useEffect(() => {
     const initSession = async () => {
-      const result = await sessionApi.createSession({ mode: SessionMode.SOLO });
-      if (!result.ok) return invokeError(result.error);
-      updateSession(withHost(result.data, localPlayerID));
+      const createdSession: Session = await sessionApi.createSession({
+        mode: SessionMode.SOLO,
+      });
+      updateSession(withHost(createdSession, localPlayerID));
     };
     initSession().catch(invokeError);
   }, [localPlayerID, sessionApi, invokeError, updateSession]);
@@ -64,10 +65,8 @@ export function useSoloSession({
     const current = sessionRef.current;
     if (!current) return;
 
-    const result = await sessionApi.createSoloGame(current);
-    if (!result.ok) return invokeError(result.error);
-
-    updateSession(startSoloGame(current, result.data));
+    const game: Game = await sessionApi.createSoloGame(current);
+    updateSession(startSoloGame(current, game));
   };
 
   const guess = async (playerGuess: Guess) => {
@@ -86,8 +85,7 @@ export function useSoloSession({
 
     if (!isGameOver) return;
 
-    const result = await sessionApi.finalizeGame(nextSession);
-    if (!result.ok) invokeError(result.error);
+    await sessionApi.finalizeGame(nextSession);
   };
 
   const endGame = async () => {

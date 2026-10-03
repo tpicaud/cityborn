@@ -88,16 +88,15 @@ export function useMultiSession({
   });
 
   useEffect(() => {
-    const loadSession = async () => {
-      const result = await sessionApi.fetchSession(sessionID);
-      if (!result.ok) {
-        invokeError(result.error);
+    const loadSession = async (): Promise<void> => {
+      try {
+        setSession(await sessionApi.fetchSession(sessionID));
+      } catch (error: unknown) {
+        invokeError(error);
         navigation.returnTo('/');
-        return;
       }
-      setSession(result.data);
     };
-    loadSession().catch(invokeError);
+    loadSession();
   }, [sessionID, sessionApi, navigation, invokeError]);
 
   useEffect(() => {

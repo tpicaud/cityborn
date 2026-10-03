@@ -1,7 +1,6 @@
 'use client';
 
 import type {
-  ApiResult,
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
@@ -44,7 +43,7 @@ export type IdentityProviderSignIn = {
 function useSignInCompletion({
   onSignedIn,
 }: Pick<SignInFlowOptions, 'onSignedIn'>): (
-  signInRequest: Promise<ApiResult<User>>,
+  signInRequest: Promise<User>,
 ) => Promise<void> {
   const { setUser } = useAuth();
   const { invokeError } = useError();
@@ -52,11 +51,10 @@ function useSignInCompletion({
   onSignedInRef.current = onSignedIn;
 
   return useCallback(
-    async (signInRequest: Promise<ApiResult<User>>): Promise<void> => {
+    async (signInRequest: Promise<User>): Promise<void> => {
       try {
-        const result: ApiResult<User> = await signInRequest;
-        if (!result.ok) return invokeError(result.error);
-        setUser(result.data);
+        const signedInUser: User = await signInRequest;
+        setUser(signedInUser);
         onSignedInRef.current?.();
       } catch (error: unknown) {
         invokeError(error);
