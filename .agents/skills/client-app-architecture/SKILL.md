@@ -12,7 +12,7 @@ description: Architecture client Cityborn. À utiliser pour placer ou modifier u
 | App | Routing | Capacité métier | Transverse et infrastructure |
 |---|---|---|---|
 | `apps/frontend` | `src/app/` | `src/features/<domaine>/` | `src/components/ui/`, `src/hooks/`, `src/contexts/`, `src/lib/` |
-| `apps/back-office` | `app/` | `components/<capacité>/` | `components/ui/`, `hooks/`, `lib/` |
+| `apps/back-office` | `app/` | `components/<capacité>/` | `components/ui/`, `lib/` |
 | `apps/mobile` | `app/` | `features/<domaine>/` | `components/ui/`, `lib/` |
 
 Les dossiers de routing portent les pages, layouts, erreurs, providers et autres points d'entrée du framework. La logique du domaine vit dans le dossier de capacité de l'app.
