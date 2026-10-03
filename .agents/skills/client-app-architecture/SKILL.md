@@ -12,7 +12,7 @@ description: Architecture client Cityborn. À utiliser pour placer ou modifier u
 | App | Routing | Capacité métier | Transverse et infrastructure |
 |---|---|---|---|
 | `apps/frontend` | `src/app/` | `src/features/<domaine>/` | `src/components/ui/`, `src/hooks/`, `src/contexts/`, `src/lib/` |
-| `apps/back-office` | `app/` | `components/<capacité>/` | `components/ui/`, `hooks/`, `lib/`, `server/` |
+| `apps/back-office` | `app/` | `components/<capacité>/` | `components/ui/`, `hooks/`, `lib/` |
 | `apps/mobile` | `app/` | `features/<domaine>/` | `components/ui/`, `lib/` |
 
 Les dossiers de routing portent les pages, layouts, erreurs, providers et autres points d'entrée du framework. La logique du domaine vit dans le dossier de capacité de l'app.
@@ -29,9 +29,7 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 
 - **Frontend joueur** → `apps/frontend/src/lib/api/`, exécuté dans le navigateur avec les cookies Nest.
 - **Mobile** → `apps/mobile/lib/api/`, exécuté avec les tokens du stockage sécurisé.
-- **Back-office** → `apps/back-office/server/` :
-  - `server/use-server/` — server actions (`'use server'`).
-  - `server/server-only/` — loaders de Server Components (`server-only`).
+- **Back-office** → `apps/back-office/lib/api/`, exécuté dans le navigateur avec les cookies Nest ; ses routes `admin` exigent un compte de rôle `admin`.
 
 `ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Les factories de domaine (`createAuthApi`, `createCookieAuthApi`, `createCategoryApi`, `createSessionApi`, `createProfileApi`) adaptent ce transport aux ports métier consommés par les hooks. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
@@ -39,7 +37,7 @@ L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile inst
 
 Les hooks de catégories, de session et de profil reçoivent leurs ports `CategoryApi`, `SessionApi` et `ProfileApi`. Un hook de domaine signale lui-même les erreurs de ses actions via `invokeError` : l'app branche ses actions directement sur la vue, et seule la vue reste dans l'app. Web et mobile les instancient avec les mêmes factories, à partir de leur `contractClient`. Le port est un objet de module, donc d'identité stable : les hooks le prennent en dépendance d'effet.
 
-L'authentification propre au back-office reste locale tant qu'aucune migration n'est demandée.
+Le back-office instancie aussi `createCookieAuthApi` ; `AdminAccessGuard` (`components/auth/`) redirige vers `/login` sans utilisateur et réserve ses pages au rôle `admin`.
 
 Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers, voir le skill `client-error-handling`.
 
@@ -47,9 +45,9 @@ Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers,
 
 `apps/frontend/src/app/`, `apps/back-office/app/` et `apps/mobile/app/` restent des surfaces de routing. Les fichiers de route assemblent la capacité correspondante ; ses règles, son état et ses composants métier restent dans son dossier propriétaire décrit plus haut.
 
-### Frontend en export statique
+### Export statique
 
-Le frontend joueur est exporté en statique (`output: 'export'`), sans code serveur Next. Une URL à identifiant (`/session/multi/<id>`) sert une page sans segment dynamique, atteinte par une réécriture dans `next.config.ts` (dev) et `vercel.json`. La page lit l'identifiant avec `usePathname()` et le parseur colocalisé avec le constructeur du chemin (`sessionIdFromMultiSessionPath`).
+Le frontend joueur et le back-office sont exportés en statique (`output: 'export'`), sans code serveur Next : chaque page charge ses données dans le navigateur, et un paramètre de requête se lit avec `useSearchParams()` sous une `Suspense`. Une URL à identifiant (`/session/multi/<id>`) sert une page sans segment dynamique, atteinte par une réécriture dans `next.config.ts` (dev) et `vercel.json`. La page lit l'identifiant avec `usePathname()` et le parseur colocalisé avec le constructeur du chemin (`sessionIdFromMultiSessionPath`).
 
 ## `@cityborn/client` : logique partagée front + mobile
 

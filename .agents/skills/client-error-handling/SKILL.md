@@ -1,15 +1,13 @@
 ---
 name: client-error-handling
-description: Erreurs et validation client Cityborn. À utiliser pour modifier un wrapper d'API, un loader de Server Component du back-office, l'affichage d'une erreur ou un formulaire dans les apps front et mobile.
+description: Erreurs et validation client Cityborn. À utiliser pour modifier un wrapper d'API, l'affichage d'une erreur ou un formulaire dans les apps front et mobile.
 ---
 
 # Gestion des erreurs — front & mobile
 
 | Contexte | Helper | Résultat |
 |---|---|---|
-| Factory de domaine `@cityborn/client`, `apps/mobile/lib/api/` | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` ; le hook l'attrape (`try/catch`) et le passe à `invokeError` |
-| Server action du back-office (`server/use-server/`) | `toApiResult(result)` | `ApiResult<T>` = `{ ok: true, data } \| { ok: false, error: ApiError }`, sérialisable entre serveur et client — brancher sur `result.ok` |
-| Loader de Server Component du back-office (`server-only/`) | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` capté par `error.tsx` |
+| Factory de domaine `@cityborn/client`, `apps/mobile/lib/api/`, `apps/back-office/lib/api/` | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` ; le hook l'attrape (`try/catch`) et le passe à `invokeError` |
 | Afficher une erreur | `useError()` → `invokeError(error)` | dialog ; accepte `unknown`, normalise via `resolveErrorMessage` (ne pas pré-convertir) ; repli : `invokeError(error, 'message par défaut')` |
 
 ## Règles
