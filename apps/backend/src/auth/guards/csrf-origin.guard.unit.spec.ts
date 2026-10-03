@@ -16,6 +16,7 @@ import { CsrfOriginGuard } from './csrf-origin.guard';
 
 const httpConfig: HttpConfig = {
   corsOrigins: ['https://cityborn.test', 'https://admin.cityborn.test'],
+  backOfficeOrigin: 'https://admin.cityborn.test',
   frontendUrl: 'https://cityborn.test',
 };
 
