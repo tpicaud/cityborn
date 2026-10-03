@@ -3,7 +3,7 @@ import { z } from 'zod';
 const frontendClientConfigSchema = z.object({
   googleMapsApiKey: z.string().trim().min(1),
   restBackendUrl: z.string().url(),
-  websocketBackendUrl: z.string().url().default('ws://localhost:3001'),
+  websocketBackendUrl: z.string().url().default('ws://localhost:4000'),
   googleOAuthWebClientId: z.string().trim().min(1),
 });
 

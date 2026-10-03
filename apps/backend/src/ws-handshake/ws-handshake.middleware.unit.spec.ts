@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { buildUser, ErrorCode, type User } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import type { JwtService } from '@nestjs/jwt';
-import { JsonWebTokenError } from '@nestjs/jwt';
+import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
 import { RateLimiterRes } from 'rate-limiter-flexible';
 import { AuthCookieService } from '../auth/services/auth-cookie.service';
@@ -14,7 +14,11 @@ import {
   WideEventService,
 } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
-import type { AuthConfig, RuntimeConfig } from '../config/config.module';
+import type {
+  AuthConfig,
+  HttpConfig,
+  RuntimeConfig,
+} from '../config/config.module';
 import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { RedisService } from '../redis/redis.service';
 import type { UserService } from '../user/user.service';
@@ -24,21 +28,28 @@ import {
   WsHandshakeMiddleware,
 } from './ws-handshake.middleware';
 
-interface HandshakeInput {
+type HandshakeInput = {
   query?: Record<string, string | string[]>;
   cookie?: string;
+  origin?: string;
   auth?: Record<string, unknown>;
-}
+};
+
+const allowedOrigin: string = 'https://cityborn.test';
 
 function buildSocket({
   query = {},
   cookie,
+  origin,
   auth = {},
 }: HandshakeInput = {}): AppSocket {
   return createMock<AppSocket>({
     id: 'socket-1',
     handshake: {
-      headers: cookie ? { cookie } : {},
+      headers: {
+        ...(cookie ? { cookie } : {}),
+        ...(origin ? { origin } : {}),
+      },
       address: '203.0.113.7',
       query,
       auth,
@@ -64,8 +75,14 @@ function buildMiddleware() {
     nodeEnvironment: 'test',
     port: 4000,
   };
+  const httpConfig: HttpConfig = {
+    corsOrigins: [allowedOrigin],
+    backOfficeOrigin: 'https://admin.cityborn.test',
+    frontendUrl: allowedOrigin,
+  };
   const wsHandshakeMiddleware: WsHandshakeMiddleware =
     new WsHandshakeMiddleware(
+      httpConfig,
       new AuthTokenService(
         jwtService,
         authConfig,
@@ -210,7 +227,8 @@ describe('WsHandshakeMiddleware', () => {
         wsHandshakeMiddleware,
       }: ReturnType<typeof buildMiddleware> = buildMiddleware();
       const socket: AppSocket = buildSocket({
-        cookie: 'access_token=cookie-token',
+        cookie: 'cityborn_access_token=cookie-token',
+        origin: allowedOrigin,
         auth: { access_token: 'auth-token' },
       });
 
@@ -221,7 +239,75 @@ describe('WsHandshakeMiddleware', () => {
       });
     });
 
-    it('accepts a handshake with an invalid token as anonymous and records the token error', async () => {
+    it('rejects a cookie handshake from an unauthorized origin before reading its token', async () => {
+      const {
+        jwtService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      const socket: AppSocket = buildSocket({
+        cookie: 'cityborn_access_token=cookie-token',
+        origin: 'https://attacker.test',
+      });
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error?.data).toEqual({
+        statusCode: 403,
+        code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
+        message: 'Handshake origin is not allowed',
+      });
+      expect(socket.data.authSession).toBeNull();
+      expect(jwtService.verifyAsync).not.toHaveBeenCalled();
+    });
+
+    it('rejects a cookie handshake without origin', async () => {
+      const { wsHandshakeMiddleware }: ReturnType<typeof buildMiddleware> =
+        buildMiddleware();
+      const socket: AppSocket = buildSocket({
+        cookie: 'cityborn_access_token=cookie-token',
+      });
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error?.data).toMatchObject({
+        statusCode: 403,
+        code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
+      });
+    });
+
+    it('rejects an expired cookie access token so the browser can refresh it', async () => {
+      const {
+        jwtService,
+        wsHandshakeMiddleware,
+      }: ReturnType<typeof buildMiddleware> = buildMiddleware();
+      jwtService.verifyAsync.mockRejectedValue(
+        new TokenExpiredError('jwt expired', new Date()),
+      );
+      const socket: AppSocket = buildSocket({
+        cookie: 'cityborn_access_token=expired-token',
+        origin: allowedOrigin,
+      });
+
+      const error: WsHandshakeError | undefined = await runHandshake(
+        wsHandshakeMiddleware,
+        socket,
+      );
+
+      expect(error?.data).toEqual({
+        statusCode: 401,
+        code: ErrorCode.TOKEN_EXPIRED,
+        message: 'Token expired',
+      });
+      expect(socket.data.authSession).toBeNull();
+    });
+
+    it('accepts a handshake with an invalid auth access token as anonymous and records the token error', async () => {
       const {
         logger,
         jwtService,
