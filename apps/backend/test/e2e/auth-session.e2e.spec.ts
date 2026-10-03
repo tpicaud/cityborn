@@ -419,4 +419,27 @@ describe('Authentication transports', () => {
       ErrorCode.USER_INVALID_TOKEN,
     );
   });
+
+  it('blocks password sign-in after repeated failures on the same account', async () => {
+    const password: string = 'Password1';
+    const user: User = await persistEmailUser(buildUser(), password);
+    const failedAttemptCount: number = 10;
+
+    await Promise.all(
+      Array.from({ length: failedAttemptCount }, () =>
+        request(app.getHttpServer())
+          .post(contract.auth.signIn.path)
+          .send({ identifier: user.email, password: 'WrongPassword1' })
+          .expect(401),
+      ),
+    );
+
+    const blockedResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.username, password })
+      .expect(429);
+    expect(ApiErrorSchema.parse(blockedResponse.body).code).toBe(
+      ErrorCode.RATE_LIMIT_EXCEEDED,
+    );
+  });
 });

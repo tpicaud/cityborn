@@ -1,16 +1,22 @@
 'use client';
 
+import { useError } from '@cityborn/client';
+import { useAuth } from '@cityborn/client/auth';
 import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { logout } from '@/server/use-server/auth';
+import { authApi } from '@/lib/api/auth';
 import { Button } from './ui/Button';
 
 export default function LogoutButton() {
-  const router = useRouter();
+  const { setUser } = useAuth();
+  const { invokeError } = useError();
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await authApi.signOut();
+      setUser(null);
+    } catch (error: unknown) {
+      invokeError(error);
+    }
   };
 
   return (

@@ -44,9 +44,9 @@
         "BREVO_API_KEY",
         "BREVO_SENDER_EMAIL",
         "BREVO_SENDER_NAME",
-        "ADMIN_DASHBOARD_TOKEN",
         "DATABASE_URL",
         "CORS_ORIGIN",
+        "BACK_OFFICE_ORIGIN",
         "APP_ID",
         "GOOGLE_CLIENT_ID",
         "REDIS_URL"
@@ -67,10 +67,10 @@
         "BREVO_API_KEY",
         "BREVO_SENDER_EMAIL",
         "BREVO_SENDER_NAME",
-        "ADMIN_DASHBOARD_TOKEN",
         "DIRECT_URL",
         "DATABASE_URL",
         "CORS_ORIGIN",
+        "BACK_OFFICE_ORIGIN",
         "APP_ID",
         "GOOGLE_CLIENT_ID",
         "REDIS_URL"
@@ -99,32 +99,16 @@
     },
     "cityborn-back-office#build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"],
-      "env": ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"]
+      "outputs": ["out/**", ".next/**"],
+      "env": ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_REST_BACKEND_URL"]
     },
     "cityborn-back-office#dev": {
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
-        "NODE_ENV",
         "PORT",
-        "AUTH_SECRET",
-        "ADMIN_PASSWORD",
-        "BACKEND_URL",
-        "ADMIN_DASHBOARD_TOKEN",
-        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
-      ]
-    },
-    "cityborn-back-office#start": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "passThroughEnv": [
-        "NODE_ENV",
-        "PORT",
-        "AUTH_SECRET",
-        "ADMIN_PASSWORD",
-        "BACKEND_URL",
-        "ADMIN_DASHBOARD_TOKEN"
+        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+        "NEXT_PUBLIC_REST_BACKEND_URL"
       ]
     },
     "cityborn-mobile#dev": {

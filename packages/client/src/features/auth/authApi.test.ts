@@ -29,6 +29,7 @@ const user: User = {
   username,
   email: 'citizen@cityborn.fr',
   type: 'email',
+  role: 'player',
   isVerified: true,
 };
 

@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MailModule } from '../mail/mail.module';
+import { RateLimitModule } from '../rate-limit/rate-limit.module';
 import { UserModule } from '../user/user.module';
 import { WsHandshakeModule } from '../ws-handshake/ws-handshake.module';
 import { AuthController } from './controllers/auth.controller';
@@ -16,6 +17,7 @@ import { AuthTokenService } from './services/auth-token.service';
   imports: [
     UserModule,
     MailModule,
+    RateLimitModule,
     WsHandshakeModule,
     JwtModule.register({ global: true }),
   ],

@@ -30,16 +30,25 @@ import { EventService } from '../../event/event.service';
 import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
-import type { UserCredentials } from '../../user/repositories/user.repository';
+import { RateLimitService } from '../../rate-limit/rate-limit.service';
+import type {
+  UnverifiedAccountReclaim,
+  UserCredentials,
+} from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
+  type AppleIdentity,
   type GoogleIdentity,
   IdentityTokenService,
 } from '../identity-providers/identity-token.service';
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
+
+type IdentityProviderSessionRequest = {
+  user: User;
+} & Omit<UnverifiedAccountReclaim, 'userId'>;
 
 @Injectable()
 export class AuthService {
@@ -52,6 +61,7 @@ export class AuthService {
     private readonly wideEventService: WideEventService,
     private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly identityTokenService: IdentityTokenService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
@@ -108,15 +118,20 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
+    const userId: UserId = credentials.authSession.user.id;
+    await this.rateLimitService.assertSignInAllowed(userId);
     const isPasswordValid = await bcrypt.compare(
       password,
       credentials.passwordHash,
     );
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
+      await this.rateLimitService.recordFailedSignIn(userId);
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
+    }
+    await this.rateLimitService.clearFailedSignIns(userId);
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -179,7 +194,10 @@ export class AuthService {
       }
     }
 
-    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: 'google',
+    });
     return this.createAuthResponse(authSession);
   }
 
@@ -187,38 +205,32 @@ export class AuthService {
     dto: SignInWithApple,
     visitorId?: string,
   ): Promise<AuthResponse> {
-    const { identity_token, apple_user_id, details } = dto;
+    const { identity_token, details } = dto;
 
-    if (
-      !(await this.identityTokenService.isAppleIdTokenValid(identity_token))
-    ) {
-      throw new UnauthorizedException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad request',
-      });
-    }
+    const { appleUserId, verifiedEmail }: AppleIdentity =
+      await this.identityTokenService.verifyAppleIdToken(identity_token);
 
-    let user = await this.userService.findByAppleId(apple_user_id);
+    let user = await this.userService.findByAppleId(appleUserId);
 
     if (!user) {
-      if (!details) {
+      if (!details || !verifiedEmail) {
         throw new UnauthorizedException({
           code: ErrorCode.USER_INVALID_CREDENTIALS,
           message: `Invalid credentials`,
         });
       }
 
-      user = await this.userService.findByIdentifier(details.email);
+      user = await this.userService.findByIdentifier(verifiedEmail);
       if (!user) {
         const uniqueUsername = await this.generateUniqueUsername(
           `${details.given_name}${details.family_name}`,
         );
 
         user = await this.userService.createUser({
-          email: details.email,
+          email: verifiedEmail,
           username: uniqueUsername,
           type: 'apple',
-          appleId: apple_user_id,
+          appleId: appleUserId,
           isVerified: true,
         });
 
@@ -248,7 +260,11 @@ export class AuthService {
       }
     }
 
-    const authSession: AuthSession = await this.requireAuthSession(user.id);
+    const authSession: AuthSession = await this.openIdentityProviderSession({
+      user,
+      type: 'apple',
+      appleId: appleUserId,
+    });
     return this.createAuthResponse(authSession);
   }
 
@@ -354,6 +370,24 @@ export class AuthService {
     const authTokenPair: AuthTokenPair =
       await this.authTokenService.issueTokenPair(authSession);
     return { ...authTokenPair, user: authSession.user };
+  }
+
+  private async openIdentityProviderSession({
+    user,
+    ...reclaim
+  }: IdentityProviderSessionRequest): Promise<AuthSession> {
+    if (user.isVerified) return this.requireAuthSession(user.id);
+
+    const authSession: AuthSession =
+      await this.userService.reclaimUnverifiedAccount({
+        userId: user.id,
+        ...reclaim,
+      });
+    this.authenticatedSocketService.disconnectOlderSessions(
+      user.id,
+      authSession.authVersion,
+    );
+    return authSession;
   }
 
   private async requireAuthSession(userId: UserId): Promise<AuthSession> {

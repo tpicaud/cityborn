@@ -21,6 +21,7 @@ export const UserMapper = {
     return UserSchema.parse({
       id: prismaUser.id,
       type: prismaUser.type,
+      role: prismaUser.role,
       email: prismaUser.email,
       username: prismaUser.username,
       isVerified: prismaUser.isVerified,

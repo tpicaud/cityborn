@@ -1,6 +1,12 @@
 import { type ApiError, parseApiError } from '../schemas/api-error.schema';
 import type { HttpSuccessStatus } from './http-status';
 
+/**
+ * @deprecated Utiliser `unwrapApiResponse` et propager l'`ApiResponseError`
+ * levée. Conservé pour les consommateurs publiés avant la migration du
+ * back-office en export statique.
+ * @deprecatedSince 2026-10-03
+ */
 export type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: ApiError };
@@ -44,6 +50,12 @@ function assertSuccess<T extends { status: number; body: unknown }>(
   }
 }
 
+/**
+ * @deprecated Utiliser `unwrapApiResponse` et propager l'`ApiResponseError`
+ * levée. Conservé pour les consommateurs publiés avant la migration du
+ * back-office en export statique.
+ * @deprecatedSince 2026-10-03
+ */
 export function toApiResult<T extends { status: number; body: unknown }>(
   result: T,
 ): ApiResult<SuccessBody<T>> {

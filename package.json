@@ -31,7 +31,6 @@
     "back-office": "pnpm --dir apps/back-office",
     "back-office:build": "turbo run build --filter=cityborn-back-office",
     "back-office:dev": "turbo run dev --filter=cityborn-back-office",
-    "back-office:start": "turbo run start --filter=cityborn-back-office",
     "back-office:format": "pnpm --dir apps/back-office format",
     "back-office:check": "pnpm --dir apps/back-office check",
     "mobile": "pnpm --dir apps/mobile",

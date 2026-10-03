@@ -4,6 +4,7 @@ import {
   GameMode,
   type GameRecord as PrismaGameRecord,
   type User as PrismaUser,
+  UserRole,
 } from '@prisma/client';
 import { UserMapper } from './user.mapper';
 
@@ -14,6 +15,7 @@ describe('UserMapper.toUser', () => {
       email: 'host@cityborn.test',
       username: 'host',
       type: 'email',
+      role: UserRole.admin,
       password: 'hashed-password',
       authVersion: 0,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -49,6 +51,7 @@ describe('UserMapper.toUser', () => {
     expect(() => UserSchema.parse(user)).not.toThrow();
     expect(user).toMatchObject({
       type: 'email',
+      role: 'admin',
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-02T00:00:00.000Z',
       relations: { games: [{ mode: SessionMode.MULTI }] },
@@ -61,6 +64,7 @@ describe('UserMapper.toUser', () => {
       email: 'host@cityborn.test',
       username: 'host',
       type: 'email',
+      role: UserRole.player,
       password: 'hashed-password',
       authVersion: 0,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),

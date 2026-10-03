@@ -4,6 +4,8 @@ import { GameRecordSchema } from './game.schema';
 
 export const AccountTypeSchema = z.enum(['email', 'google', 'apple']);
 
+export const UserRoleSchema = z.enum(['player', 'admin']);
+
 export const PublicUserSchema = z.object({
   id: UserIdSchema,
   username: UsernameSchema,
@@ -12,6 +14,7 @@ export const PublicUserSchema = z.object({
 export const UserSchema = PublicUserSchema.extend({
   email: z.string().email(),
   type: AccountTypeSchema,
+  role: UserRoleSchema,
   isVerified: z.boolean(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
@@ -84,6 +87,7 @@ export const VerifyEmailDataSchema = z.object({
 });
 
 export type AccountType = z.infer<typeof AccountTypeSchema>;
+export type UserRole = z.infer<typeof UserRoleSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;

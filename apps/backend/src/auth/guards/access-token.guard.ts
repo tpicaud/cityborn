@@ -2,6 +2,8 @@ import { ErrorCode } from '@cityborn/api';
 import {
   type CanActivate,
   type ExecutionContext,
+  ForbiddenException,
+  Inject,
   Injectable,
   mixin,
   type Type,
@@ -9,6 +11,7 @@ import {
 } from '@nestjs/common';
 import type { AuthSession } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
+import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
 import type { AuthRequest } from '../auth-request';
 import { AuthCookieService } from '../services/auth-cookie.service';
 import {
@@ -19,7 +22,20 @@ import { extractBearerToken } from './bearer-token';
 
 type AccessTokenGuardPolicy = {
   acceptsCookie: boolean;
-  requiresAuthentication: boolean;
+  requiredAccess: 'none' | 'user' | 'admin';
+};
+
+type AccessTokenTransport = 'bearer' | 'cookie';
+
+type AccessTokenSource = {
+  accessToken: string;
+  transport: AccessTokenTransport;
+};
+
+type AdminAccessRequest = {
+  authSession: AuthSession;
+  transport: AccessTokenTransport;
+  origin: string | undefined;
 };
 
 type UnauthenticatedReason = {
@@ -36,14 +52,16 @@ function createAccessTokenGuard(
       private readonly authTokenService: AuthTokenService,
       private readonly authCookieService: AuthCookieService,
       private readonly wideEventService: WideEventService,
+      @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request: AuthRequest = context
         .switchToHttp()
         .getRequest<AuthRequest>();
-      const accessToken: string | undefined = this.readAccessToken(request);
-      if (!accessToken) {
+      const accessTokenSource: AccessTokenSource | undefined =
+        this.readAccessToken(request);
+      if (!accessTokenSource) {
         return this.continueUnauthenticated({
           code: ErrorCode.USER_TOKEN_MISSING,
           message: 'Token missing',
@@ -51,7 +69,9 @@ function createAccessTokenGuard(
       }
 
       const payload: AuthTokenPayload =
-        await this.authTokenService.verifyAccessToken(accessToken);
+        await this.authTokenService.verifyAccessToken(
+          accessTokenSource.accessToken,
+        );
       const authSession: AuthSession | null =
         await this.authTokenService.resolveAuthSession(payload);
       if (!authSession) {
@@ -66,21 +86,59 @@ function createAccessTokenGuard(
         userId: authSession.user.id,
         isAuthenticated: true,
       });
+      if (policy.requiredAccess === 'admin') {
+        this.assertAdminAccess({
+          authSession,
+          transport: accessTokenSource.transport,
+          origin: request.headers.origin,
+        });
+      }
       return true;
     }
 
-    private readAccessToken(request: AuthRequest): string | undefined {
+    private assertAdminAccess({
+      authSession,
+      transport,
+      origin,
+    }: AdminAccessRequest): void {
+      if (
+        transport === 'cookie' &&
+        origin !== this.httpConfig.backOfficeOrigin
+      ) {
+        throw new ForbiddenException({
+          code: ErrorCode.CSRF_ORIGIN_FORBIDDEN,
+          message: 'Admin cookie sessions are restricted to the back-office',
+        });
+      }
+      if (authSession.user.role !== 'admin' || !authSession.user.isVerified) {
+        throw new ForbiddenException({
+          code: ErrorCode.USER_NOT_ADMIN,
+          message: 'Admin role required',
+        });
+      }
+    }
+
+    private readAccessToken(
+      request: AuthRequest,
+    ): AccessTokenSource | undefined {
       const bearerToken: string | undefined = extractBearerToken(
         request.headers,
       );
-      if (bearerToken !== undefined || !policy.acceptsCookie) {
-        return bearerToken;
+      if (bearerToken !== undefined) {
+        return { accessToken: bearerToken, transport: 'bearer' };
       }
-      return this.authCookieService.readAccessToken(request.headers.cookie);
+      if (!policy.acceptsCookie) {
+        return undefined;
+      }
+      const cookieToken: string | undefined =
+        this.authCookieService.readAccessToken(request.headers.cookie);
+      return cookieToken === undefined
+        ? undefined
+        : { accessToken: cookieToken, transport: 'cookie' };
     }
 
     private continueUnauthenticated(reason: UnauthenticatedReason): true {
-      if (policy.requiresAuthentication) {
+      if (policy.requiredAccess !== 'none') {
         throw new UnauthorizedException(reason);
       }
       this.wideEventService.enrichAuth({ isAuthenticated: false });
@@ -93,15 +151,20 @@ function createAccessTokenGuard(
 
 export const AuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: true,
-  requiresAuthentication: true,
+  requiredAccess: 'user',
 });
 
 export const BearerAuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: false,
-  requiresAuthentication: true,
+  requiredAccess: 'user',
+});
+
+export const AdminGuard: Type<CanActivate> = createAccessTokenGuard({
+  acceptsCookie: true,
+  requiredAccess: 'admin',
 });
 
 export const OptionalAuthGuard: Type<CanActivate> = createAccessTokenGuard({
   acceptsCookie: true,
-  requiresAuthentication: false,
+  requiredAccess: 'none',
 });

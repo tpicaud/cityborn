@@ -6,9 +6,13 @@ const optionalNonEmptyStringSchema = z.preprocess(
   z.string().trim().min(1).optional(),
 );
 
+const localOriginEnvironment: NodeJS.ProcessEnv = {
+  CORS_ORIGIN: 'http://localhost:3000',
+  BACK_OFFICE_ORIGIN: 'http://localhost:3001',
+};
+
 const corsOriginsSchema = z
   .string()
-  .default('http://localhost:3000')
   .transform((value: string) =>
     value.split(',').map((origin: string) => origin.trim()),
   )
@@ -21,12 +25,12 @@ const backendEnvironmentSchema = z
       .default('development'),
     PORT: z.coerce.number().int().positive().default(3001),
     CORS_ORIGIN: corsOriginsSchema,
+    BACK_OFFICE_ORIGIN: z.string().url(),
     FRONTEND_URL: z.string().url().default('http://localhost:3000'),
     JWT_ACCESS_SECRET: z.string().trim().min(1),
     JWT_REFRESH_SECRET: z.string().trim().min(1),
     GOOGLE_CLIENT_ID: z.string().trim().min(1),
     APP_ID: z.string().trim().min(1),
-    ADMIN_DASHBOARD_TOKEN: z.string().trim().min(1),
     DATABASE_URL: z.string().url(),
     REDIS_URL: z.string().url(),
     BREVO_API_KEY: z.string().trim().min(1),
@@ -58,6 +62,7 @@ export interface BackendConfig {
   };
   http: {
     corsOrigins: string[];
+    backOfficeOrigin: string;
     frontendUrl: string;
   };
   auth: {
@@ -65,7 +70,6 @@ export interface BackendConfig {
     jwtRefreshSecret: string;
     googleClientId: string;
     appleAppId: string;
-    adminDashboardToken: string;
   };
   persistence: {
     databaseUrl: string;
@@ -89,14 +93,24 @@ export function parseBackendConfig(
   environment: NodeJS.ProcessEnv,
 ): BackendConfig {
   const parsedEnvironment: RawBackendEnvironment =
-    backendEnvironmentSchema.parse(environment);
+    backendEnvironmentSchema.parse(
+      environment.NODE_ENV === 'production'
+        ? environment
+        : { ...localOriginEnvironment, ...environment },
+    );
   const config: BackendConfig = {
     runtime: {
       nodeEnvironment: parsedEnvironment.NODE_ENV,
       port: parsedEnvironment.PORT,
     },
     http: {
-      corsOrigins: parsedEnvironment.CORS_ORIGIN,
+      corsOrigins: [
+        ...new Set([
+          ...parsedEnvironment.CORS_ORIGIN,
+          parsedEnvironment.BACK_OFFICE_ORIGIN,
+        ]),
+      ],
+      backOfficeOrigin: parsedEnvironment.BACK_OFFICE_ORIGIN,
       frontendUrl: parsedEnvironment.FRONTEND_URL,
     },
     auth: {
@@ -104,7 +118,6 @@ export function parseBackendConfig(
       jwtRefreshSecret: parsedEnvironment.JWT_REFRESH_SECRET,
       googleClientId: parsedEnvironment.GOOGLE_CLIENT_ID,
       appleAppId: parsedEnvironment.APP_ID,
-      adminDashboardToken: parsedEnvironment.ADMIN_DASHBOARD_TOKEN,
     },
     persistence: {
       databaseUrl: parsedEnvironment.DATABASE_URL,

@@ -6,7 +6,6 @@
     "typecheck": "next typegen && tsc --noEmit",
     "dev": "pnpm check-env:development && dotenv -c development -- next dev",
     "build": "pnpm check-env:production && next build --turbopack",
-    "start": "next start",
     "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "check-env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
@@ -25,7 +24,6 @@
     "@types/google.maps": "^3.64.0",
     "@vis.gl/react-google-maps": "^1.8.3",
     "clsx": "^2.1.1",
-    "jose": "^6.2.2",
     "lucide-react": "^1.11.0",
     "next": "16.3.6",
     "papaparse": "^5.5.3",
@@ -34,7 +32,6 @@
     "react-dom": "19.2.5",
     "react-hook-form": "^7.86.0",
     "swagger-ui-react": "^5.32.4",
-    "swr": "^2.4.1",
     "tailwind-merge": "^3.5.0",
     "zod": "^3.25.76"
   },

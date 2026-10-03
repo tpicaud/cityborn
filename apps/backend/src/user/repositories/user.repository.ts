@@ -1,4 +1,4 @@
-import type { User, UserId, Username } from '@cityborn/api';
+import type { AccountType, User, UserId, Username } from '@cityborn/api';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
@@ -13,6 +13,12 @@ export type CreateUserData = Pick<User, 'email' | 'username' | 'type'> &
     password?: string;
     appleId?: string;
   };
+
+export type UnverifiedAccountReclaim = {
+  userId: UserId;
+  type: Exclude<AccountType, 'email'>;
+  appleId?: string;
+};
 
 export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
@@ -34,4 +40,7 @@ export interface UserRepository {
   updateUsername(userId: UserId, username: Username): Promise<User>;
   updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
+  reclaimUnverifiedAccount(
+    reclaim: UnverifiedAccountReclaim,
+  ): Promise<AuthSession>;
 }

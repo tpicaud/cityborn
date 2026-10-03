@@ -9,6 +9,7 @@ export function buildUser(
     username: 'host',
     email: 'host@cityborn.test',
     type: 'email',
+    role: 'player',
     isVerified: true,
     ...overrides,
   });

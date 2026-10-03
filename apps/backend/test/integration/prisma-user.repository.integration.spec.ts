@@ -324,4 +324,54 @@ describe('PrismaUserRepository', () => {
       expect(authSession?.authVersion).toBe(2);
     });
   });
+
+  describe('reclaimUnverifiedAccount', () => {
+    it('hands an unverified account over to its identity provider owner', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'email',
+        password: 'squatter-hash',
+        isVerified: userData.isVerified,
+      });
+
+      const authSession: AuthSession =
+        await userRepository.reclaimUnverifiedAccount({
+          userId: user.id,
+          type: 'apple',
+          appleId: 'apple-user-1',
+        });
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsById(user.id);
+
+      expect(authSession).toMatchObject({
+        user: { id: user.id, type: 'apple', isVerified: true },
+        authVersion: 1,
+      });
+      expect(credentials?.passwordHash).toBeNull();
+      expect(await userRepository.findByAppleId('apple-user-1')).toMatchObject({
+        id: user.id,
+      });
+    });
+  });
+
+  describe('admin role constraint', () => {
+    it('rejects the admin role on an unverified account', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        isVerified: userData.isVerified,
+      });
+
+      await expect(
+        infrastructure.prisma.user.update({
+          where: { id: user.id },
+          data: { role: 'admin' },
+        }),
+      ).rejects.toThrow('User_admin_requires_verified_email');
+    });
+  });
 });

@@ -40,10 +40,36 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
    Le frontend est disponible sur `http://localhost:3000` et le back-office sur
    `http://localhost:3001`. Ces ports viennent de la variable `PORT` du `.env`
    de chaque application. Le navigateur appelle directement le backend Nest à
-   l'URL `NEXT_PUBLIC_REST_BACKEND_URL` configurée dans
-   `apps/frontend/.env` (`http://localhost:4000` par défaut).
+   l'URL `NEXT_PUBLIC_REST_BACKEND_URL` configurée dans `apps/frontend/.env` et
+   `apps/back-office/.env` (`http://localhost:4000` par défaut). Le backend
+   autorise l'origine du frontend via `CORS_ORIGIN` et celle du back-office via
+   `BACK_OFFICE_ORIGIN` ; les deux sont obligatoires en production.
 
 3. Arrêter les ressources locales avec `pnpm db:stop`.
+
+## Accès au back-office
+
+Le back-office se connecte avec un compte Cityborn de rôle `admin`. Un compte est
+créé avec le rôle `player`. Ne promouvoir qu'un compte dont l'email est vérifié
+et dont la personne a confirmé être à l'origine de la création, puis exécuter sur
+la base concernée :
+
+```sql
+UPDATE "User" SET role = 'admin' WHERE email = 'admin@example.com' AND "isVerified" = true;
+```
+
+La base refuse le rôle `admin` sur un compte non vérifié, et le backend refuse
+l'accès admin à un compte non vérifié.
+
+Pour retirer le rôle et fermer les sessions ouvertes du compte :
+
+```sql
+UPDATE "User" SET role = 'player', "authVersion" = "authVersion" + 1 WHERE email = 'admin@example.com';
+```
+
+Le backend applique le changement de rôle dès la requête suivante ; recharger le
+back-office suffit à mettre à jour l'interface. Un compte `player` connecté au
+back-office voit un message d'accès refusé.
 
 ## Mobile
 
@@ -99,7 +125,7 @@ cityborn/
 ├── apps/
 │   ├── backend/         # API NestJS, Prisma et WebSocket
 │   ├── frontend/        # Application web Next.js exportée en site statique
-│   ├── back-office/     # Administration Next.js
+│   ├── back-office/     # Administration Next.js exportée en site statique
 │   └── mobile/          # Application Expo / React Native
 ├── packages/
 │   ├── api/             # Contrats API, schémas et types partagés

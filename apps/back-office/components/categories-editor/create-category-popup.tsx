@@ -1,7 +1,5 @@
 import * as Ariakit from '@ariakit/react';
 import {
-  type ApiResult,
-  type Category,
   type CreateCategory,
   type CreateCategoryInput,
   CreateCategorySchema,
@@ -15,9 +13,7 @@ import { Button } from '../ui/Button';
 export function CreateCategoryDialog({
   handleCreateCategory,
 }: {
-  handleCreateCategory: (
-    createCategory: CreateCategory,
-  ) => Promise<ApiResult<Category>>;
+  handleCreateCategory: (createCategory: CreateCategory) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const { invokeError } = useError();
@@ -32,14 +28,13 @@ export function CreateCategoryDialog({
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await handleCreateCategory(values);
-    if (result.ok) {
+    try {
+      await handleCreateCategory(values);
       dialog.hide();
       reset();
-      return;
+    } catch (error: unknown) {
+      invokeError(error);
     }
-
-    invokeError(result.error);
   });
 
   return (

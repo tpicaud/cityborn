@@ -1,9 +1,11 @@
 'use client';
 
 import type {
+  FullGuessObject,
   GuessObjectDraft,
   GuessObjectSearchResult,
   WorldLocation,
+  WorldLocationId,
   WorldLocationSearchResult,
 } from '@cityborn/api';
 import { useError } from '@cityborn/client';
@@ -14,7 +16,7 @@ import {
   getFullGuessObject,
   searchGuessObjectByExternalId,
   searchWorldLocationById,
-} from '@/server/use-server/guess-object';
+} from '@/lib/api/guess-object';
 import GuessObjectCard from './guess-object-card';
 import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';
@@ -45,15 +47,18 @@ export function GuessObjectBuilder({
     const updateGuessObjectDraft = async () => {
       if (!guessObjectDraft?.id) return;
       try {
-        const result = await getFullGuessObject(guessObjectDraft.id);
-        if (result?.ok) {
-          setGuessObjectDraft(result.data);
+        const fullGuessObject: FullGuessObject | null =
+          await getFullGuessObject(guessObjectDraft.id);
+        if (fullGuessObject) {
+          setGuessObjectDraft(fullGuessObject);
         }
-      } catch {}
+      } catch (error: unknown) {
+        invokeError(error);
+      }
     };
 
     updateGuessObjectDraft();
-  }, [guessObjectDraft?.id, setGuessObjectDraft]);
+  }, [guessObjectDraft?.id, setGuessObjectDraft, invokeError]);
 
   const updateGuessObjectDraft = (update: Partial<GuessObjectDraft>) => {
     setGuessObjectDraft((prev) =>
@@ -69,41 +74,28 @@ export function GuessObjectBuilder({
       if (!guessObjectDraftPreview) return;
 
       if (guessObjectDraftPreview.id) {
-        const existingResult = await getFullGuessObject(
-          guessObjectDraftPreview.id,
-        );
-        if (!existingResult) return;
-        if (!existingResult.ok) {
-          invokeError(existingResult.error);
-          return;
-        }
+        const existingGuessObject: FullGuessObject | null =
+          await getFullGuessObject(guessObjectDraftPreview.id);
+        if (!existingGuessObject) return;
 
-        setGuessObjectDraft(existingResult.data);
+        setGuessObjectDraft(existingGuessObject);
         return;
       }
 
       const externalId = guessObjectDraftPreview.source?.external_id;
       if (!externalId) return;
 
-      const result = await searchGuessObjectByExternalId(externalId);
-      if (!result.ok) {
-        invokeError(result.error);
-        return;
-      }
-      const fullDraft = result.data;
+      const fullDraft: GuessObjectSearchResult | undefined =
+        await searchGuessObjectByExternalId(externalId);
 
       if (fullDraft) {
         let worldLocation: WorldLocation | undefined;
         if (fullDraft.world_location?.source) {
-          const created = await createWorldLocation({
+          const worldLocationId: WorldLocationId = await createWorldLocation({
             ...fullDraft.world_location,
             source: fullDraft.world_location.source,
           });
-          if (!created.ok) {
-            invokeError(created.error);
-            return;
-          }
-          worldLocation = { ...fullDraft.world_location, id: created.data };
+          worldLocation = { ...fullDraft.world_location, id: worldLocationId };
         }
 
         setGuessObjectDraft({
@@ -126,28 +118,20 @@ export function GuessObjectBuilder({
       setIsLoadingLocation(true);
       if (!world_location?.id) return;
 
-      const result = await searchWorldLocationById(
-        world_location.id,
-        world_location.osm_type,
-      );
-      if (!result.ok) {
-        invokeError(result.error);
-        return;
-      }
-      const fullCandidate = result.data;
+      const fullCandidate: WorldLocationSearchResult | undefined =
+        await searchWorldLocationById({
+          id: world_location.id,
+          osmType: world_location.osm_type,
+        });
       if (!fullCandidate?.source) return;
 
-      const created = await createWorldLocation({
+      const worldLocationId: WorldLocationId = await createWorldLocation({
         ...fullCandidate,
         source: fullCandidate.source,
       });
-      if (!created.ok) {
-        invokeError(created.error);
-        return;
-      }
 
       updateGuessObjectDraft({
-        world_location: { ...fullCandidate, id: created.data },
+        world_location: { ...fullCandidate, id: worldLocationId },
       });
     } catch (error) {
       invokeError(error, 'Erreur lors de la récupération de la localisation');

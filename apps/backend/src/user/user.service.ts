@@ -24,6 +24,7 @@ import {
 } from './repositories/email-verification-token.repository';
 import {
   type CreateUserData,
+  type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
   type UserRepository,
@@ -53,6 +54,12 @@ export class UserService {
 
   async incrementAuthVersion(userId: UserId): Promise<AuthVersion> {
     return this.userRepository.incrementAuthVersion(userId);
+  }
+
+  async reclaimUnverifiedAccount(
+    reclaim: UnverifiedAccountReclaim,
+  ): Promise<AuthSession> {
+    return this.userRepository.reclaimUnverifiedAccount(reclaim);
   }
 
   async findCredentialsById(userId: UserId): Promise<UserCredentials | null> {

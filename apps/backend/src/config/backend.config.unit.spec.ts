@@ -5,7 +5,6 @@ const validEnvironment: NodeJS.ProcessEnv = {
   JWT_REFRESH_SECRET: 'refresh-secret',
   GOOGLE_CLIENT_ID: 'google-client',
   APP_ID: 'cityborn-app',
-  ADMIN_DASHBOARD_TOKEN: 'admin-token',
   DATABASE_URL: 'postgresql://localhost:5432/cityborn',
   REDIS_URL: 'redis://localhost:6379/0',
   BREVO_API_KEY: 'brevo-key',
@@ -21,7 +20,8 @@ describe('parseBackendConfig', () => {
       port: 3001,
     });
     expect(config.http).toEqual({
-      corsOrigins: ['http://localhost:3000'],
+      corsOrigins: ['http://localhost:3000', 'http://localhost:3001'],
+      backOfficeOrigin: 'http://localhost:3001',
       frontendUrl: 'http://localhost:3000',
     });
     expect(config.mail.senderName).toBe('Cityborn');
@@ -41,7 +41,34 @@ describe('parseBackendConfig', () => {
     expect(config.http.corsOrigins).toEqual([
       'https://cityborn.test',
       'https://admin.cityborn.test',
+      'http://localhost:3001',
     ]);
+  });
+
+  it('allows the back-office origin once in the CORS origins', () => {
+    const environment: NodeJS.ProcessEnv = {
+      ...validEnvironment,
+      CORS_ORIGIN: 'https://cityborn.test,https://admin.cityborn.test',
+      BACK_OFFICE_ORIGIN: 'https://admin.cityborn.test',
+    };
+
+    const config = parseBackendConfig(environment);
+
+    expect(config.http.corsOrigins).toEqual([
+      'https://cityborn.test',
+      'https://admin.cityborn.test',
+    ]);
+    expect(config.http.backOfficeOrigin).toBe('https://admin.cityborn.test');
+  });
+
+  it('requires explicit browser origins in production', () => {
+    const environment: NodeJS.ProcessEnv = {
+      ...validEnvironment,
+      NODE_ENV: 'production',
+      CORS_ORIGIN: 'https://cityborn.test',
+    };
+
+    expect(() => parseBackendConfig(environment)).toThrow('BACK_OFFICE_ORIGIN');
   });
 
   it('rejects missing required values', () => {

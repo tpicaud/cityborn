@@ -12,22 +12,30 @@ import type {
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
 import type { WideEventService } from '../../common/wide-event/wide-event.service';
 import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
 import type { MailService } from '../../mail/mail.service';
+import type { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type { RedisService } from '../../redis/redis.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
 import type { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
+import type { AppleIdTokenClaims } from '../identity-providers/apple-id-token';
 import type { GoogleIdentityClient } from '../identity-providers/google-client.provider';
 import { IdentityTokenService } from '../identity-providers/identity-token.service';
 import { AuthService } from './auth.service';
 import { AuthTokenService } from './auth-token.service';
 
 let mockPasswordMatches: boolean = true;
-let mockAppleTokenValid: boolean = true;
+const validAppleIdTokenClaims: AppleIdTokenClaims = {
+  sub: 'apple-user-1',
+  email: 'alice@cityborn.test',
+  email_verified: true,
+};
+let mockAppleIdTokenClaims: AppleIdTokenClaims | null = validAppleIdTokenClaims;
 
 function mockHash(): Promise<string> {
   return Promise.resolve('hashed-password');
@@ -37,8 +45,8 @@ function mockCompare(): Promise<boolean> {
   return Promise.resolve(mockPasswordMatches);
 }
 
-function mockVerifyAppleIdToken(): Promise<boolean> {
-  return Promise.resolve(mockAppleTokenValid);
+function mockVerifyAppleIdToken(): Promise<AppleIdTokenClaims | null> {
+  return Promise.resolve(mockAppleIdTokenClaims);
 }
 
 jest.mock('bcrypt', () => ({ hash: mockHash, compare: mockCompare }));
@@ -48,7 +56,7 @@ jest.mock('../identity-providers/apple-id-token', () => ({
 
 beforeEach(() => {
   mockPasswordMatches = true;
-  mockAppleTokenValid = true;
+  mockAppleIdTokenClaims = validAppleIdTokenClaims;
 });
 
 function buildAuthService() {
@@ -59,10 +67,10 @@ function buildAuthService() {
     jwtRefreshSecret: 'refresh-secret',
     googleClientId: 'google-client',
     appleAppId: 'cityborn-app',
-    adminDashboardToken: 'admin-token',
   };
   const httpConfig: HttpConfig = {
-    corsOrigins: ['https://cityborn.test'],
+    corsOrigins: ['https://cityborn.test', 'https://admin.cityborn.test'],
+    backOfficeOrigin: 'https://admin.cityborn.test',
     frontendUrl: 'https://cityborn.test',
   };
   const eventService: DeepMocked<EventService> = createMock<EventService>();
@@ -73,6 +81,8 @@ function buildAuthService() {
     createMock<AuthenticatedSocketService>();
   const googleClient: DeepMocked<GoogleIdentityClient> =
     createMock<GoogleIdentityClient>();
+  const rateLimitService: DeepMocked<RateLimitService> =
+    createMock<RateLimitService>();
   const authService: AuthService = new AuthService(
     userService,
     new AuthTokenService(
@@ -87,6 +97,7 @@ function buildAuthService() {
     wideEventService,
     authenticatedSocketService,
     new IdentityTokenService(googleClient, authConfig),
+    rateLimitService,
   );
 
   jwtService.signAsync
@@ -102,6 +113,7 @@ function buildAuthService() {
     wideEventService,
     authenticatedSocketService,
     googleClient,
+    rateLimitService,
   };
 }
 
@@ -257,6 +269,86 @@ describe('AuthService.signIn', () => {
         visitorId: 'visitor-1',
       }),
     );
+  });
+
+  it('records a failed sign-in for a wrong password', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+    mockPasswordMatches = false;
+
+    await expect(
+      authService.signIn({
+        identifier: persistedUser.email,
+        password: 'wrong-password',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+    });
+
+    expect(rateLimitService.recordFailedSignIn).toHaveBeenCalledWith(
+      persistedUser.id,
+    );
+    expect(rateLimitService.clearFailedSignIns).not.toHaveBeenCalled();
+  });
+
+  it('clears failed sign-ins after a successful sign-in', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+
+    await authService.signIn({
+      identifier: persistedUser.email,
+      password: 'plain-password',
+    });
+
+    expect(rateLimitService.clearFailedSignIns).toHaveBeenCalledWith(
+      persistedUser.id,
+    );
+  });
+
+  it('rejects a sign-in while the account has too many failed attempts', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+    rateLimitService.assertSignInAllowed.mockRejectedValue(
+      new HttpException(
+        { code: ErrorCode.RATE_LIMIT_EXCEEDED, message: 'Too many attempts' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      ),
+    );
+
+    await expect(
+      authService.signIn({
+        identifier: persistedUser.email,
+        password: 'plain-password',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.RATE_LIMIT_EXCEEDED },
+    });
+
+    expect(rateLimitService.clearFailedSignIns).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -552,6 +644,51 @@ describe('AuthService.signInWithGoogle', () => {
         visitorId: 'visitor-1',
       }),
     );
+    expect(userService.reclaimUnverifiedAccount).not.toHaveBeenCalled();
+  });
+
+  it('reclaims an unverified email account for its Google owner', async () => {
+    const unverifiedUser: User = buildUser({
+      type: 'email',
+      isVerified: false,
+    });
+    const reclaimedUser: User = buildUser({ type: 'google', isVerified: true });
+    const signInData: SignInWithGoogle = { idToken: 'google-token' };
+    const {
+      authService,
+      userService,
+      googleClient,
+      jwtService,
+      authenticatedSocketService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const ticket: DeepMocked<GoogleIdentityTicket> =
+      createMock<GoogleIdentityTicket>();
+    ticket.getPayload.mockReturnValue({
+      email_verified: true,
+      email: unverifiedUser.email,
+      name: 'Alice Doe',
+    });
+    googleClient.verifyIdToken.mockResolvedValue(ticket);
+    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.reclaimUnverifiedAccount.mockResolvedValue({
+      user: reclaimedUser,
+      authVersion: 3,
+    });
+
+    const result: AuthResponse = await authService.signInWithGoogle(signInData);
+
+    expect(userService.reclaimUnverifiedAccount).toHaveBeenCalledWith({
+      userId: unverifiedUser.id,
+      type: 'google',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(unverifiedUser.id, 3);
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ authVersion: 3 }),
+      expect.any(Object),
+    );
+    expect(result.user.type).toBe('google');
   });
 
   it('creates a Google user with an available generated username', async () => {
@@ -638,18 +775,18 @@ describe('AuthService.signInWithGoogle', () => {
 });
 
 describe('AuthService.signInWithApple', () => {
-  it('rejects an invalid Apple identity token', async () => {
+  it('rejects an Apple identity token without valid claims', async () => {
     const { authService }: ReturnType<typeof buildAuthService> =
       buildAuthService();
     const signInData: SignInWithApple = {
       identity_token: 'invalid-token',
       apple_user_id: 'apple-user-1',
     };
-    mockAppleTokenValid = false;
+    mockAppleIdTokenClaims = null;
 
     await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
       {
-        response: { code: ErrorCode.BAD_REQUEST },
+        response: { code: ErrorCode.USER_INVALID_TOKEN },
       },
     );
   });
@@ -668,6 +805,104 @@ describe('AuthService.signInWithApple', () => {
         response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
       },
     );
+  });
+
+  it('requires a verified Apple email for a first Apple connection', async () => {
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    const signInData: SignInWithApple = {
+      identity_token: 'apple-token',
+      apple_user_id: 'apple-user-1',
+      details: {
+        email: 'alice@cityborn.test',
+        given_name: 'Alice',
+        family_name: 'Apple',
+      },
+    };
+    mockAppleIdTokenClaims = {
+      sub: 'apple-user-1',
+      email: 'alice@cityborn.test',
+      email_verified: false,
+    };
+    userService.findByAppleId.mockResolvedValue(null);
+
+    await expect(authService.signInWithApple(signInData)).rejects.toMatchObject(
+      {
+        response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+      },
+    );
+    expect(userService.findByIdentifier).not.toHaveBeenCalled();
+  });
+
+  it('identifies the account from the token claims instead of the request body', async () => {
+    const appleUser: User = buildUser({ type: 'apple' });
+    const signInData: SignInWithApple = {
+      identity_token: 'apple-token',
+      apple_user_id: 'admin-apple-user',
+      details: {
+        email: 'admin@cityborn.test',
+        given_name: 'Alice',
+        family_name: 'Apple',
+      },
+    };
+    const { authService, userService }: ReturnType<typeof buildAuthService> =
+      buildAuthService();
+    userService.findByAppleId.mockResolvedValue(null);
+    userService.findByIdentifier.mockResolvedValue(appleUser);
+    userService.findAuthSessionById.mockResolvedValue({
+      user: appleUser,
+      authVersion: 0,
+    });
+
+    await authService.signInWithApple(signInData);
+
+    expect(userService.findByAppleId).toHaveBeenCalledWith('apple-user-1');
+    expect(userService.findByIdentifier).toHaveBeenCalledWith(
+      'alice@cityborn.test',
+    );
+    expect(userService.findByIdentifier).not.toHaveBeenCalledWith(
+      'admin@cityborn.test',
+    );
+  });
+
+  it('reclaims an unverified email account for its Apple owner', async () => {
+    const unverifiedUser: User = buildUser({
+      email: 'alice@cityborn.test',
+      type: 'email',
+      isVerified: false,
+    });
+    const reclaimedUser: User = buildUser({ type: 'apple', isVerified: true });
+    const signInData: SignInWithApple = {
+      identity_token: 'apple-token',
+      apple_user_id: 'apple-user-1',
+      details: {
+        email: 'alice@cityborn.test',
+        given_name: 'Alice',
+        family_name: 'Apple',
+      },
+    };
+    const {
+      authService,
+      userService,
+      authenticatedSocketService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByAppleId.mockResolvedValue(null);
+    userService.findByIdentifier.mockResolvedValue(unverifiedUser);
+    userService.reclaimUnverifiedAccount.mockResolvedValue({
+      user: reclaimedUser,
+      authVersion: 1,
+    });
+
+    await authService.signInWithApple(signInData);
+
+    expect(userService.reclaimUnverifiedAccount).toHaveBeenCalledWith({
+      userId: unverifiedUser.id,
+      type: 'apple',
+      appleId: 'apple-user-1',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(unverifiedUser.id, 1);
   });
 
   it('creates a user during the first Apple connection', async () => {
