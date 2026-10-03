@@ -92,6 +92,24 @@ describe('AdminGuard.canActivate', () => {
     );
   });
 
+  it('rejects an admin whose email is not verified', async () => {
+    const unverifiedAdmin: User = buildUser({
+      role: 'admin',
+      isVerified: false,
+    });
+    const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({
+      user: unverifiedAdmin,
+      headers: { authorization: 'Bearer access-token' },
+    });
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      expect.objectContaining({
+        status: 403,
+        response: expect.objectContaining({ code: ErrorCode.USER_NOT_ADMIN }),
+      }),
+    );
+  });
+
   it('rejects an anonymous request as unauthenticated', async () => {
     const admin: User = buildUser({ role: 'admin' });
     const { guard, context }: AdminGuardScenario = buildAdminGuardScenario({

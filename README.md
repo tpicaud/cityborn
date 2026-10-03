@@ -58,6 +58,9 @@ la base concernée :
 UPDATE "User" SET role = 'admin' WHERE email = 'admin@example.com' AND "isVerified" = true;
 ```
 
+La base refuse le rôle `admin` sur un compte non vérifié, et le backend refuse
+l'accès admin à un compte non vérifié.
+
 Pour retirer le rôle et fermer les sessions ouvertes du compte :
 
 ```sql

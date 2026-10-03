@@ -110,7 +110,7 @@ function createAccessTokenGuard(
           message: 'Admin cookie sessions are restricted to the back-office',
         });
       }
-      if (authSession.user.role !== 'admin') {
+      if (authSession.user.role !== 'admin' || !authSession.user.isVerified) {
         throw new ForbiddenException({
           code: ErrorCode.USER_NOT_ADMIN,
           message: 'Admin role required',
