@@ -50,13 +50,21 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 ## Accès au back-office
 
 Le back-office se connecte avec un compte Cityborn de rôle `admin`. Un compte est
-créé avec le rôle `player` ; pour le promouvoir, exécuter sur la base concernée :
+créé avec le rôle `player`. Ne promouvoir qu'un compte dont l'email est vérifié
+et dont la personne a confirmé être à l'origine de la création, puis exécuter sur
+la base concernée :
 
 ```sql
-UPDATE "User" SET role = 'admin' WHERE email = 'admin@example.com';
+UPDATE "User" SET role = 'admin' WHERE email = 'admin@example.com' AND "isVerified" = true;
 ```
 
-Le backend applique la promotion dès la requête suivante ; recharger le
+Pour retirer le rôle et fermer les sessions ouvertes du compte :
+
+```sql
+UPDATE "User" SET role = 'player', "authVersion" = "authVersion" + 1 WHERE email = 'admin@example.com';
+```
+
+Le backend applique le changement de rôle dès la requête suivante ; recharger le
 back-office suffit à mettre à jour l'interface. Un compte `player` connecté au
 back-office voit un message d'accès refusé.
 
