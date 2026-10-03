@@ -1,19 +1,24 @@
-import { notFound } from 'next/navigation';
-import { CategoryBuilder } from '@/components/category-builder/category-builder';
-import { getCategories, getFullCategory } from '@/server/server-only/category';
+'use client';
 
-export default async function EditCategory({
-  searchParams,
-}: {
-  searchParams: Promise<{ id: string }>;
-}) {
-  const { id } = await searchParams;
-  const [category, categories] = await Promise.all([
-    getFullCategory(id),
-    getCategories(),
-  ]);
+import { CategoryIdSchema } from '@cityborn/api';
+import { notFound, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { CategoryBuilderLoader } from '@/components/category-builder/category-builder-loader';
+import Loader from '@/components/ui/Loader';
 
-  if (!category) notFound();
+function EditedCategory() {
+  const categoryId: string | null = useSearchParams().get('id');
+  if (!categoryId) notFound();
 
-  return <CategoryBuilder fetchedCategory={category} categories={categories} />;
+  return (
+    <CategoryBuilderLoader categoryId={CategoryIdSchema.parse(categoryId)} />
+  );
+}
+
+export default function EditCategoryPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <EditedCategory />
+    </Suspense>
+  );
 }

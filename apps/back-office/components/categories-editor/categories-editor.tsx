@@ -1,35 +1,38 @@
 'use client';
 
-import {
-  type ApiResult,
-  type Category,
-  type CreateCategory,
-  ErrorCode,
-} from '@cityborn/api';
+import type { Category, CreateCategory } from '@cityborn/api';
+import { useError } from '@cityborn/client';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState, useTransition } from 'react';
-import { createCategory } from '@/server/use-server/category';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createCategory, getCategories } from '@/lib/api/category';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 import { CategoriesList } from './categories-list';
 import { CreateCategoryDialog } from './create-category-popup';
 
-export function CategoriesEditor({
-  initialCategories,
-}: {
-  initialCategories: Category[];
-}) {
+export function CategoriesEditor() {
   const router = useRouter();
+  const { invokeError } = useError();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchValue, setSearchValue] = useState<string>('');
 
+  const loadCategories = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      setCategories(await getCategories());
+    } catch (error: unknown) {
+      invokeError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [invokeError]);
+
   useEffect(() => {
-    setCategories(initialCategories);
-  }, [initialCategories]);
+    loadCategories();
+  }, [loadCategories]);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
@@ -37,30 +40,17 @@ export function CategoriesEditor({
     );
   }, [categories, searchValue]);
 
-  function handleFetchCategories() {
-    startTransition(() => router.refresh());
-  }
-
   async function handleCreateCategory(
     newCategory: CreateCategory,
-  ): Promise<ApiResult<Category>> {
+  ): Promise<void> {
     setIsLoading(true);
     try {
-      const result = await createCategory(newCategory);
-      if (result.ok) {
-        categories.push(result.data);
-        await onCategorySelect(result.data);
-      }
-      return result;
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: ErrorCode.UNKNOWN_ERROR,
-          statusCode: 500,
-          message: error instanceof Error ? error.message : 'Erreur inattendue',
-        },
-      };
+      const createdCategory: Category = await createCategory(newCategory);
+      setCategories((previousCategories: Category[]) => [
+        ...previousCategories,
+        createdCategory,
+      ]);
+      await onCategorySelect(createdCategory);
     } finally {
       setIsLoading(false);
     }
@@ -91,11 +81,11 @@ export function CategoriesEditor({
       <div className="flex flex-col items-center justify-center gap-4">
         <div className="flex flex-row gap-2 mb-1">
           <CreateCategoryDialog handleCreateCategory={handleCreateCategory} />
-          <Button variant="outline" onClick={handleFetchCategories}>
+          <Button variant="outline" onClick={loadCategories}>
             <RefreshCcw />
           </Button>
         </div>
-        {!isLoading && !isPending ? (
+        {!isLoading ? (
           !filteredCategories || filteredCategories.length === 0 ? (
             <p className="text-center text-gray-300">
               Aucunes catégories trouvées

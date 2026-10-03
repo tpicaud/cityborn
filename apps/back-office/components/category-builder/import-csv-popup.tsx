@@ -1,5 +1,10 @@
 import * as Ariakit from '@ariakit/react';
-import { type GuessObjectId, resolveErrorMessage } from '@cityborn/api';
+import {
+  type GuessObjectId,
+  type GuessObjectSearchResult,
+  resolveErrorMessage,
+  type WorldLocationId,
+} from '@cityborn/api';
 import Papa from 'papaparse';
 import { useRef, useState } from 'react';
 import {
@@ -7,21 +12,21 @@ import {
   saveGuessObject,
   searchGuessObjectByExternalId,
   searchGuessObjectByName,
-} from '@/server/use-server/guess-object';
+} from '@/lib/api/guess-object';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 
-interface Objects {
+type Objects = {
   name: string;
   description?: string;
   errorMessage?: string;
-}
+};
 
-interface ImportRecap {
+type ImportRecap = {
   success: number;
   failed: number;
   failed_objects: Objects[];
-}
+};
 
 export function ImportCSVPopup({
   addOrUpdateGuessObjectToCategory,
@@ -76,18 +81,90 @@ export function ImportCSVPopup({
     }[]
   > {
     const result = Papa.parse<Record<string, string>>(csv, { header: true });
-    const objects: { name: string; description: string }[] = [];
 
-    for (const row of result.data) {
-      if (row.Name?.trim()) {
-        objects.push({
-          name: row.Name.trim(),
-          description: row.Description.trim() ?? undefined,
-        });
-      }
+    return result.data
+      .filter((row: Record<string, string>) => row.Name?.trim())
+      .map((row: Record<string, string>) => ({
+        name: row.Name.trim(),
+        description: row.Description?.trim(),
+      }));
+  }
+
+  async function importObject(importedObject: Objects): Promise<void> {
+    const searchResults: GuessObjectSearchResult[] =
+      await searchGuessObjectByName(importedObject.name);
+
+    const external_id = searchResults.at(0)?.source?.external_id;
+    if (!external_id) throw new Error('Identifiant externe introuvable');
+    const full_obj: GuessObjectSearchResult | undefined =
+      await searchGuessObjectByExternalId(external_id);
+    if (!full_obj) throw new Error('Objet introuvable');
+    if (importedObject.description)
+      full_obj.short_description = importedObject.description;
+
+    const worldLocation = full_obj.world_location;
+    if (!worldLocation) throw new Error('Localisation introuvable');
+
+    const worldLocationId: WorldLocationId =
+      await createWorldLocation(worldLocation);
+
+    const {
+      id: _id,
+      world_location: _worldLocation,
+      ...createGuessObject
+    } = full_obj;
+
+    const guessObjectId: GuessObjectId = await saveGuessObject({
+      ...createGuessObject,
+      world_location_id: worldLocationId,
+    });
+
+    await addOrUpdateGuessObjectToCategory(guessObjectId);
+  }
+
+  async function importRemainingObjects(
+    remainingObjects: Objects[],
+  ): Promise<void> {
+    const [importedObject, ...nextObjects] = remainingObjects;
+    if (!importedObject || !objects || cancelImportRef.current) return;
+    const totalCount: number = objects.length;
+
+    try {
+      await importObject(importedObject);
+
+      setImportRecap((prev) => {
+        const newRecap = {
+          ...prev,
+          success: prev.success + 1,
+        };
+        setProgress(
+          Math.round(((newRecap.success + newRecap.failed) / totalCount) * 100),
+        );
+        return newRecap;
+      });
+    } catch (error) {
+      const errorMessage = resolveErrorMessage(error);
+      console.error(`Error importing ${importedObject.name}: ${errorMessage}`);
+
+      setImportRecap((prev) => {
+        const newRecap = {
+          ...prev,
+          failed: prev.failed + 1,
+          failed_objects: [
+            ...prev.failed_objects,
+            { ...importedObject, errorMessage },
+          ],
+        };
+        setProgress(
+          Math.round(((newRecap.success + newRecap.failed) / totalCount) * 100),
+        );
+        return newRecap;
+      });
+    } finally {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    return objects;
+    await importRemainingObjects(nextObjects);
   }
 
   async function handleImportObjects() {
@@ -101,76 +178,7 @@ export function ImportCSVPopup({
       failed_objects: [],
     });
 
-    for (const obj of objects) {
-      if (cancelImportRef.current) break;
-
-      try {
-        const searchResult = await searchGuessObjectByName(obj.name);
-        if (!searchResult.ok) throw searchResult.error;
-        const candidate_obj = searchResult.data[0];
-
-        const external_id = candidate_obj.source?.external_id;
-        if (!external_id) throw new Error('Identifiant externe introuvable');
-        const candidateResult =
-          await searchGuessObjectByExternalId(external_id);
-        if (!candidateResult.ok) throw candidateResult.error;
-        const full_obj = candidateResult.data;
-        if (!full_obj) throw new Error('Objet introuvable');
-        if (obj.description) full_obj.short_description = obj.description;
-
-        const worldLocation = full_obj.world_location;
-        if (!worldLocation) throw new Error('Localisation introuvable');
-
-        const locationResult = await createWorldLocation(worldLocation);
-        if (!locationResult.ok) throw locationResult.error;
-
-        const {
-          id: _id,
-          world_location: _worldLocation,
-          ...createGuessObject
-        } = full_obj;
-
-        const saveResult = await saveGuessObject({
-          ...createGuessObject,
-          world_location_id: locationResult.data,
-        });
-        if (!saveResult.ok) throw saveResult.error;
-
-        await addOrUpdateGuessObjectToCategory(saveResult.data);
-
-        setImportRecap((prev) => {
-          const newRecap = {
-            ...prev,
-            success: prev.success + 1,
-          };
-          setProgress(
-            Math.round(
-              ((newRecap.success + newRecap.failed) / objects.length) * 100,
-            ),
-          );
-          return newRecap;
-        });
-      } catch (error) {
-        const errorMessage = resolveErrorMessage(error);
-        console.error(`Error importing ${obj.name}: ${errorMessage}`);
-
-        setImportRecap((prev) => {
-          const newRecap = {
-            ...prev,
-            failed: prev.failed + 1,
-            failed_objects: [...prev.failed_objects, { ...obj, errorMessage }],
-          };
-          setProgress(
-            Math.round(
-              ((newRecap.success + newRecap.failed) / objects.length) * 100,
-            ),
-          );
-          return newRecap;
-        });
-      } finally {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
+    await importRemainingObjects(objects);
 
     setState('recap');
   }

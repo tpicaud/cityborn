@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { searchGuessObjectByName } from '@/server/use-server/guess-object';
+import { searchGuessObjectByName } from '@/lib/api/guess-object';
 
 export function GuessObjectSearchInput({
   type = 'text',
@@ -42,9 +42,7 @@ export function GuessObjectSearchInput({
 
     const timeoutId = setTimeout(async () => {
       try {
-        const result = await searchGuessObjectByName(searchValue);
-        if (!result.ok) throw new Error(result.error.message);
-        setMatches(result.data);
+        setMatches(await searchGuessObjectByName(searchValue));
       } catch (error) {
         console.error('Search error:', error);
         setMatches([]);
