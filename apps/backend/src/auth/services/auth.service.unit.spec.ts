@@ -12,11 +12,13 @@ import type {
 import { buildUser, ErrorCode, UsernameSchema } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
 import type { WideEventService } from '../../common/wide-event/wide-event.service';
 import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
 import type { MailService } from '../../mail/mail.service';
+import type { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type { RedisService } from '../../redis/redis.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import type { UserService } from '../../user/user.service';
@@ -79,6 +81,8 @@ function buildAuthService() {
     createMock<AuthenticatedSocketService>();
   const googleClient: DeepMocked<GoogleIdentityClient> =
     createMock<GoogleIdentityClient>();
+  const rateLimitService: DeepMocked<RateLimitService> =
+    createMock<RateLimitService>();
   const authService: AuthService = new AuthService(
     userService,
     new AuthTokenService(
@@ -93,6 +97,7 @@ function buildAuthService() {
     wideEventService,
     authenticatedSocketService,
     new IdentityTokenService(googleClient, authConfig),
+    rateLimitService,
   );
 
   jwtService.signAsync
@@ -108,6 +113,7 @@ function buildAuthService() {
     wideEventService,
     authenticatedSocketService,
     googleClient,
+    rateLimitService,
   };
 }
 
@@ -263,6 +269,86 @@ describe('AuthService.signIn', () => {
         visitorId: 'visitor-1',
       }),
     );
+  });
+
+  it('records a failed sign-in for a wrong password', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+    mockPasswordMatches = false;
+
+    await expect(
+      authService.signIn({
+        identifier: persistedUser.email,
+        password: 'wrong-password',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
+    });
+
+    expect(rateLimitService.recordFailedSignIn).toHaveBeenCalledWith(
+      persistedUser.id,
+    );
+    expect(rateLimitService.clearFailedSignIns).not.toHaveBeenCalled();
+  });
+
+  it('clears failed sign-ins after a successful sign-in', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+
+    await authService.signIn({
+      identifier: persistedUser.email,
+      password: 'plain-password',
+    });
+
+    expect(rateLimitService.clearFailedSignIns).toHaveBeenCalledWith(
+      persistedUser.id,
+    );
+  });
+
+  it('rejects a sign-in while the account has too many failed attempts', async () => {
+    const {
+      authService,
+      userService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    const persistedUser: User = buildUser();
+    userService.findCredentialsByIdentifier.mockResolvedValue({
+      authSession: { user: persistedUser, authVersion: 0 },
+      passwordHash: 'hashed-password',
+    });
+    rateLimitService.assertSignInAllowed.mockRejectedValue(
+      new HttpException(
+        { code: ErrorCode.RATE_LIMIT_EXCEEDED, message: 'Too many attempts' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      ),
+    );
+
+    await expect(
+      authService.signIn({
+        identifier: persistedUser.email,
+        password: 'plain-password',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.RATE_LIMIT_EXCEEDED },
+    });
+
+    expect(rateLimitService.clearFailedSignIns).not.toHaveBeenCalled();
   });
 
   it.each([

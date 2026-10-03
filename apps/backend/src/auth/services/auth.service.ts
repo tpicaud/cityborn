@@ -30,6 +30,7 @@ import { EventService } from '../../event/event.service';
 import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
+import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
@@ -53,6 +54,7 @@ export class AuthService {
     private readonly wideEventService: WideEventService,
     private readonly authenticatedSocketService: AuthenticatedSocketService,
     private readonly identityTokenService: IdentityTokenService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   async signUp(dto: CreateUser, visitorId?: string): Promise<AuthResponse> {
@@ -109,15 +111,20 @@ export class AuthService {
         message: `Invalid credentials`,
       });
 
+    const userId: UserId = credentials.authSession.user.id;
+    await this.rateLimitService.assertSignInAllowed(userId);
     const isPasswordValid = await bcrypt.compare(
       password,
       credentials.passwordHash,
     );
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
+      await this.rateLimitService.recordFailedSignIn(userId);
       throw new UnauthorizedException({
         code: ErrorCode.USER_INVALID_CREDENTIALS,
         message: `Invalid credentials`,
       });
+    }
+    await this.rateLimitService.clearFailedSignIns(userId);
 
     if (visitorId) {
       await this.eventService.trackEvent(
