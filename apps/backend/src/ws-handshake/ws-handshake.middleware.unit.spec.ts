@@ -77,6 +77,7 @@ function buildMiddleware() {
   };
   const httpConfig: HttpConfig = {
     corsOrigins: [allowedOrigin],
+    backOfficeOrigin: 'https://admin.cityborn.test',
     frontendUrl: allowedOrigin,
   };
   const wsHandshakeMiddleware: WsHandshakeMiddleware =
