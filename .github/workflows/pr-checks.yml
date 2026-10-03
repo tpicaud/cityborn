@@ -185,6 +185,38 @@ jobs:
       - name: Build static frontend
         run: pnpm frontend:build
 
+  back-office-static-build:
+    name: Back-office static build
+    needs: detect-changes
+    if: github.event.pull_request.draft == false && needs.detect-changes.outputs.backofficeHasChanged == 'true'
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: dummy-key
+      NEXT_PUBLIC_REST_BACKEND_URL: https://api.example.com
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build static back-office
+        run: pnpm back-office:build
+
   backend-unit:
     name: Backend unit tests
     needs: detect-changes
