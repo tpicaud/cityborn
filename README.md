@@ -41,7 +41,10 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
    `http://localhost:3001`. Ces ports viennent de la variable `PORT` du `.env`
    de chaque application. Le navigateur appelle directement le backend Nest à
    l'URL `NEXT_PUBLIC_REST_BACKEND_URL` configurée dans `apps/frontend/.env` et
-   `apps/back-office/.env` (`http://localhost:4000` par défaut). Le backend
+   `apps/back-office/.env` (`http://localhost:4000` par défaut). Le frontend
+   ouvre le WebSocket à `NEXT_PUBLIC_WEBSOCKET_BACKEND_URL` (`ws://localhost:4000`
+   par défaut) : cette URL doit désigner le même nom d'hôte que l'API REST, car
+   les cookies d'authentification ne sont envoyés qu'à cet hôte. Le backend
    autorise l'origine du frontend via `CORS_ORIGIN` et celle du back-office via
    `BACK_OFFICE_ORIGIN` ; les deux sont obligatoires en production.
 
