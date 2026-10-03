@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   ApiResponseError,
-  type ApiResult,
   ErrorCode,
   type User,
   UserIdSchema,
@@ -106,12 +105,12 @@ test('signIn stores the returned tokens and exposes the user', async () => {
     tokenStorage,
   );
 
-  const result = await authApi.signIn({
+  const signedInUser: User = await authApi.signIn({
     identifier: 'citizen',
     password: 'Password1',
   });
 
-  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(signedInUser, user);
   assert.deepEqual(state.tokens, ['access', 'refresh']);
 });
 
@@ -132,12 +131,12 @@ test('a rejected signIn stores no token', async () => {
     tokenStorage,
   );
 
-  const result = await authApi.signIn({
-    identifier: 'citizen',
-    password: 'wrong',
-  });
-
-  assert.equal(result.ok, false);
+  await assert.rejects(
+    authApi.signIn({ identifier: 'citizen', password: 'wrong' }),
+    (error: unknown): boolean =>
+      error instanceof ApiResponseError &&
+      error.code === ErrorCode.USER_INVALID_CREDENTIALS,
+  );
   assert.equal(state.tokens, null);
 });
 
@@ -158,12 +157,12 @@ test('updatePassword stores the rotated tokens', async () => {
     tokenStorage,
   );
 
-  const result: ApiResult<User> = await authApi.updatePassword({
+  const updatedUser: User = await authApi.updatePassword({
     currentPassword: 'Password1',
     newPassword: 'Password2',
   });
 
-  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(updatedUser, user);
   assert.deepEqual(state.tokens, ['new-access', 'new-refresh']);
 });
 
@@ -373,13 +372,13 @@ test('cookie signIn uses the cookie route without token storage', async () => {
     ),
   );
 
-  const result: ApiResult<User> = await authApi.signIn({
+  const signedInUser: User = await authApi.signIn({
     identifier: 'citizen',
     password: 'Password1',
   });
 
   assert.equal(called, true);
-  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(signedInUser, user);
 });
 
 test('cookie updatePassword uses the cookie route without exposing tokens', async () => {
@@ -396,12 +395,12 @@ test('cookie updatePassword uses the cookie route without exposing tokens', asyn
     ),
   );
 
-  const result: ApiResult<User> = await authApi.updatePassword({
+  const updatedUser: User = await authApi.updatePassword({
     currentPassword: 'Password1',
     newPassword: 'Password2',
   });
 
-  assert.deepEqual(result, { ok: true, data: user });
+  assert.deepEqual(updatedUser, user);
 });
 
 test('cookie signOut clears the server session through the shared route', async () => {

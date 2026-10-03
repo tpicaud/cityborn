@@ -7,7 +7,8 @@ description: Erreurs et validation client Cityborn. À utiliser pour modifier un
 
 | Contexte | Helper | Résultat |
 |---|---|---|
-| Wrapper d'API (`apps/back-office/server/use-server/`, factories de domaine `@cityborn/client`, `apps/mobile/lib/api/`) | `toApiResult(result)` | `ApiResult<T>` = `{ ok: true, data } \| { ok: false, error: ApiError }` — brancher sur `result.ok` |
+| Factory de domaine `@cityborn/client`, `apps/mobile/lib/api/` | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` ; le hook l'attrape (`try/catch`) et le passe à `invokeError` |
+| Server action du back-office (`server/use-server/`) | `toApiResult(result)` | `ApiResult<T>` = `{ ok: true, data } \| { ok: false, error: ApiError }`, sérialisable entre serveur et client — brancher sur `result.ok` |
 | Loader de Server Component du back-office (`server-only/`) | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` capté par `error.tsx` |
 | Afficher une erreur | `useError()` → `invokeError(error)` | dialog ; accepte `unknown`, normalise via `resolveErrorMessage` (ne pas pré-convertir) ; repli : `invokeError(error, 'message par défaut')` |
 
@@ -16,7 +17,7 @@ description: Erreurs et validation client Cityborn. À utiliser pour modifier un
 - **Ne jamais `throw` un objet nu** : `throw new ApiResponseError(apiError)` (vraie `Error` : stack, `instanceof`).
 - **Messages FR** : seule source = `ErrorCode` dans `@cityborn/api` (`resolveErrorMessage` / `getFriendlyErrorMessage`). Ne pas écrire de message en dur.
 - **Map zod FR** : `installFrenchZodErrorMap()` (de `@cityborn/api`) installe les messages de validation zod en français. Appelé une fois au bootstrap de chaque app — `apps/backend/src/main.ts`, `apps/frontend/src/app/providers.tsx`, `apps/back-office/app/providers.tsx`, `apps/mobile/app/_layout.tsx`. Pas d'effet de bord à l'import : l'appel doit rester explicite.
-- **Validation de formulaire** : `zodResolver` + schéma partagé (`@cityborn/api` ou `@cityborn/client`). On ne route pas les `fieldErrors` d'un 400 vers les champs (le client valide avec le même schéma) → `!result.ok` → `invokeError(result.error)`.
+- **Validation de formulaire** : `zodResolver` + schéma partagé (`@cityborn/api` ou `@cityborn/client`). On ne route pas les `fieldErrors` d'un 400 vers les champs (le client valide avec le même schéma) → l'erreur rejoint `invokeError` telle quelle.
 
 ## Critère de fin
 

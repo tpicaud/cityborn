@@ -42,11 +42,7 @@ export function VerifyEmail() {
       };
 
       try {
-        const result = await authApi.verifyEmail({
-          verification_token: verificationToken,
-        });
-        if (!result.ok) return failVerification();
-
+        await authApi.verifyEmail({ verification_token: verificationToken });
         await refreshUser();
         setStatus('success');
         setMessage('Votre adresse e-mail est maintenant vérifiée.');

@@ -1,6 +1,5 @@
 'use client';
 
-import type { ApiResult } from '@cityborn/api';
 import { useState } from 'react';
 import { useError } from '../../shared/errorContext';
 import type { AuthApi } from './authApi';
@@ -21,8 +20,7 @@ export function useVerificationEmailResend(
   const resend = async (): Promise<void> => {
     setIsSending(true);
     try {
-      const result: ApiResult<void> = await authApi.resendVerificationEmail();
-      if (!result.ok) return invokeError(result.error);
+      await authApi.resendVerificationEmail();
       setIsSent(true);
     } catch (error: unknown) {
       invokeError(error);

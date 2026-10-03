@@ -1,6 +1,6 @@
 'use client';
 
-import type { ApiResult, GameRecord, User } from '@cityborn/api';
+import type { GameRecord, User } from '@cityborn/api';
 import { useCallback, useState } from 'react';
 import { useError } from '../../shared/errorContext';
 import type { ProfileApi } from './profileApi';
@@ -34,9 +34,10 @@ export function useProfile({
 
     setLoading(true);
     try {
-      const result: ApiResult<GameRecord[]> = await profileApi.getGameRecords();
-      if (!result.ok) return invokeError(result.error);
-      setGames(createProfileGames(result.data, localUser));
+      const gameRecords: GameRecord[] = await profileApi.getGameRecords();
+      setGames(createProfileGames(gameRecords, localUser));
+    } catch (error: unknown) {
+      invokeError(error);
     } finally {
       setLoading(false);
     }

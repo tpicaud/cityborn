@@ -1,11 +1,5 @@
-import type {
-  ApiResult,
-  CreateSession,
-  Game,
-  Session,
-  SessionId,
-} from '@cityborn/api';
-import { toApiResult } from '@cityborn/api';
+import type { CreateSession, Game, Session, SessionId } from '@cityborn/api';
+import { unwrapApiResponse } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
 import type { ContractClient } from '../../api/contractClient';
 
@@ -21,10 +15,10 @@ export function buildFinalizeGameBody(
 }
 
 export interface SessionApi {
-  createSession(data: CreateSession): Promise<ApiResult<Session>>;
-  fetchSession(id: SessionId): Promise<ApiResult<Session>>;
-  createSoloGame(session: Session): Promise<ApiResult<Game>>;
-  finalizeGame(session: Session): Promise<ApiResult<void>>;
+  createSession(data: CreateSession): Promise<Session>;
+  fetchSession(id: SessionId): Promise<Session>;
+  createSoloGame(session: Session): Promise<Game>;
+  finalizeGame(session: Session): Promise<void>;
 }
 
 export function createSessionApi(
@@ -32,31 +26,27 @@ export function createSessionApi(
 ): SessionApi {
   return {
     async createSession(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.session.createSession({ body: data }),
       );
     },
 
     async fetchSession(id) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.session.getSession({ params: { id } }),
       );
     },
 
     async createSoloGame(session) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.session.createGame({ body: session }),
       );
     },
 
     async finalizeGame(session) {
-      const body = buildFinalizeGameBody(session);
-      if (!body) return { ok: true, data: undefined };
-      const result = toApiResult(
-        await contractClient.session.finalizeGame({ body }),
-      );
-      if (!result.ok) return result;
-      return { ok: true, data: undefined };
+      const body: FinalizedSession | null = buildFinalizeGameBody(session);
+      if (!body) return;
+      unwrapApiResponse(await contractClient.session.finalizeGame({ body }));
     },
   };
 }

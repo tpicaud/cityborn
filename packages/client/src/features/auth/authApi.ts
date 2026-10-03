@@ -1,5 +1,4 @@
 import type {
-  ApiResult,
   AppContract,
   AuthResponse,
   CreateUser,
@@ -11,26 +10,22 @@ import type {
   User,
   VerifyEmailData,
 } from '@cityborn/api';
-import {
-  ApiResponseError,
-  toApiResult,
-  unwrapApiResponse,
-} from '@cityborn/api';
+import { ApiResponseError, unwrapApiResponse } from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
 import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
 export interface AuthApi {
   getCurrentUser(): Promise<User | null>;
-  signIn(data: SignIn): Promise<ApiResult<User>>;
-  signUp(data: CreateUser): Promise<ApiResult<User>>;
-  signInWithGoogle(data: SignInWithGoogle): Promise<ApiResult<User>>;
-  signInWithApple(data: SignInWithApple): Promise<ApiResult<User>>;
+  signIn(data: SignIn): Promise<User>;
+  signUp(data: CreateUser): Promise<User>;
+  signInWithGoogle(data: SignInWithGoogle): Promise<User>;
+  signInWithApple(data: SignInWithApple): Promise<User>;
   signOut(): Promise<void>;
-  deleteUser(): Promise<ApiResult<void>>;
-  updatePassword(data: UpdatePassword): Promise<ApiResult<User>>;
-  resendVerificationEmail(): Promise<ApiResult<void>>;
-  verifyEmail(data: VerifyEmailData): Promise<ApiResult<PublicUser>>;
+  deleteUser(): Promise<void>;
+  updatePassword(data: UpdatePassword): Promise<User>;
+  resendVerificationEmail(): Promise<void>;
+  verifyEmail(data: VerifyEmailData): Promise<PublicUser>;
 }
 
 interface AuthCredentialsStrategy
@@ -44,11 +39,6 @@ interface AuthCredentialsStrategy
     | 'updatePassword'
   > {
   mayHoldCredentials(): Promise<boolean>;
-}
-
-function toVoidResult<T>(result: ApiResult<T>): ApiResult<void> {
-  if (!result.ok) return result;
-  return { ok: true, data: undefined };
 }
 
 function buildAuthApi(
@@ -79,21 +69,19 @@ function buildAuthApi(
     updatePassword: credentialsStrategy.updatePassword,
 
     async deleteUser() {
-      return toVoidResult(
-        toApiResult(await contractClient.auth.deleteUser({ body: {} })),
-      );
+      unwrapApiResponse(await contractClient.auth.deleteUser({ body: {} }));
     },
 
     async resendVerificationEmail() {
-      return toVoidResult(
-        toApiResult(
-          await contractClient.auth.resendVerificationEmail({ body: {} }),
-        ),
+      unwrapApiResponse(
+        await contractClient.auth.resendVerificationEmail({ body: {} }),
       );
     },
 
     async verifyEmail(data) {
-      return toApiResult(await contractClient.auth.verifyEmail({ body: data }));
+      return unwrapApiResponse(
+        await contractClient.auth.verifyEmail({ body: data }),
+      );
     },
   };
 }
@@ -102,13 +90,13 @@ function createBearerCredentialsStrategy(
   contractClient: Pick<ContractClient, 'auth'>,
   tokenStorage: TokenStorage,
 ): AuthCredentialsStrategy {
-  const storeTokens = async (
-    result: ApiResult<AuthResponse>,
-  ): Promise<ApiResult<User>> => {
-    if (!result.ok) return result;
-    const { access_token, refresh_token, user } = result.data;
+  const storeTokens = async ({
+    access_token,
+    refresh_token,
+    user,
+  }: AuthResponse): Promise<User> => {
     await tokenStorage.setTokens(access_token, refresh_token);
-    return { ok: true, data: user };
+    return user;
   };
 
   return {
@@ -123,25 +111,29 @@ function createBearerCredentialsStrategy(
 
     async signIn(data) {
       return storeTokens(
-        toApiResult(await contractClient.auth.signIn({ body: data })),
+        unwrapApiResponse(await contractClient.auth.signIn({ body: data })),
       );
     },
 
     async signUp(data) {
       return storeTokens(
-        toApiResult(await contractClient.auth.signUp({ body: data })),
+        unwrapApiResponse(await contractClient.auth.signUp({ body: data })),
       );
     },
 
     async signInWithGoogle(data) {
       return storeTokens(
-        toApiResult(await contractClient.auth.signInWithGoogle({ body: data })),
+        unwrapApiResponse(
+          await contractClient.auth.signInWithGoogle({ body: data }),
+        ),
       );
     },
 
     async signInWithApple(data) {
       return storeTokens(
-        toApiResult(await contractClient.auth.signInWithApple({ body: data })),
+        unwrapApiResponse(
+          await contractClient.auth.signInWithApple({ body: data }),
+        ),
       );
     },
 
@@ -160,7 +152,9 @@ function createBearerCredentialsStrategy(
 
     async updatePassword(data) {
       return storeTokens(
-        toApiResult(await contractClient.auth.updatePassword({ body: data })),
+        unwrapApiResponse(
+          await contractClient.auth.updatePassword({ body: data }),
+        ),
       );
     },
   };
@@ -175,25 +169,25 @@ function createCookieCredentialsStrategy(
     },
 
     async signIn(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.auth.cookie.signIn({ body: data }),
       );
     },
 
     async signUp(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.auth.cookie.signUp({ body: data }),
       );
     },
 
     async signInWithGoogle(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.auth.cookie.signInWithGoogle({ body: data }),
       );
     },
 
     async signInWithApple(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.auth.cookie.signInWithApple({ body: data }),
       );
     },
@@ -203,7 +197,7 @@ function createCookieCredentialsStrategy(
     },
 
     async updatePassword(data) {
-      return toApiResult(
+      return unwrapApiResponse(
         await contractClient.auth.cookie.updatePassword({ body: data }),
       );
     },
