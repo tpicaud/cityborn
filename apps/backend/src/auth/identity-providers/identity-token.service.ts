@@ -1,7 +1,7 @@
 import { ErrorCode } from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AUTH_CONFIG, type AuthConfig } from '../../config/config.module';
-import { verifyAppleIdToken } from './apple-id-token';
+import { type AppleIdTokenClaims, verifyAppleIdToken } from './apple-id-token';
 import {
   GOOGLE_IDENTITY_CLIENT,
   type GoogleIdentityClient,
@@ -11,6 +11,11 @@ import {
 export type GoogleIdentity = {
   email: string;
   name: string;
+};
+
+export type AppleIdentity = {
+  appleUserId: string;
+  verifiedEmail: string | undefined;
 };
 
 @Injectable()
@@ -52,9 +57,20 @@ export class IdentityTokenService {
     };
   }
 
-  async isAppleIdTokenValid(identityToken: string): Promise<boolean> {
-    return Boolean(
-      await verifyAppleIdToken(identityToken, this.authConfig.appleAppId),
-    );
+  async verifyAppleIdToken(identityToken: string): Promise<AppleIdentity> {
+    const claims: AppleIdTokenClaims | null = await verifyAppleIdToken({
+      idToken: identityToken,
+      audience: this.authConfig.appleAppId,
+    });
+    if (!claims)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_INVALID_TOKEN,
+        message: 'Invalid Apple identity token claims',
+      });
+
+    return {
+      appleUserId: claims.sub,
+      verifiedEmail: claims.email_verified ? claims.email : undefined,
+    };
   }
 }

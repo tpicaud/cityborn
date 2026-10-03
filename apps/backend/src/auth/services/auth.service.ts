@@ -34,6 +34,7 @@ import type { UserCredentials } from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
+  type AppleIdentity,
   type GoogleIdentity,
   IdentityTokenService,
 } from '../identity-providers/identity-token.service';
@@ -187,38 +188,32 @@ export class AuthService {
     dto: SignInWithApple,
     visitorId?: string,
   ): Promise<AuthResponse> {
-    const { identity_token, apple_user_id, details } = dto;
+    const { identity_token, details } = dto;
 
-    if (
-      !(await this.identityTokenService.isAppleIdTokenValid(identity_token))
-    ) {
-      throw new UnauthorizedException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Bad request',
-      });
-    }
+    const { appleUserId, verifiedEmail }: AppleIdentity =
+      await this.identityTokenService.verifyAppleIdToken(identity_token);
 
-    let user = await this.userService.findByAppleId(apple_user_id);
+    let user = await this.userService.findByAppleId(appleUserId);
 
     if (!user) {
-      if (!details) {
+      if (!details || !verifiedEmail) {
         throw new UnauthorizedException({
           code: ErrorCode.USER_INVALID_CREDENTIALS,
           message: `Invalid credentials`,
         });
       }
 
-      user = await this.userService.findByIdentifier(details.email);
+      user = await this.userService.findByIdentifier(verifiedEmail);
       if (!user) {
         const uniqueUsername = await this.generateUniqueUsername(
           `${details.given_name}${details.family_name}`,
         );
 
         user = await this.userService.createUser({
-          email: details.email,
+          email: verifiedEmail,
           username: uniqueUsername,
           type: 'apple',
-          appleId: apple_user_id,
+          appleId: appleUserId,
           isVerified: true,
         });
 
