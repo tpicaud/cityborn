@@ -90,13 +90,17 @@ pnpm dev:mobile
 
 En cas d'échec de connexion : vérifier que le téléphone et la machine sont sur le même réseau et que les ports `8081` (Metro) et `4000` (backend) sont accessibles (pare-feu, WSL).
 
-Pour tester la réinitialisation du mot de passe depuis le mobile, connecter le téléphone au même réseau local que la machine de développement et configurer `FRONTEND_URL=http://<local_ip>:3000` dans `apps/backend/.env`. Lancer également le frontend dans un autre terminal en remplaçant `<local_ip>` par l’adresse IP locale de cette machine :
+Pour tester la réinitialisation du mot de passe, garder `FRONTEND_URL=http://localhost:3000` dans `apps/backend/.env`. Avec `pnpm dev:mobile` en cours, lancer le frontend depuis la racine du projet dans un autre terminal :
 
 ```bash
-pnpm --dir apps/frontend dev --hostname <local_ip> --port 3000
+pnpm frontend:dev
 ```
 
-L’option `--hostname` permet à Next.js d’autoriser cette adresse pour ses ressources de développement. Ouvrir le frontend via `http://<local_ip>:3000` sur ordinateur comme sur téléphone : le serveur écoute sur cette adresse. Si le port 3000 est occupé, choisir un autre port et adapter `FRONTEND_URL`. Après modification de `FRONTEND_URL`, redémarrer le backend et demander un nouveau lien.
+1. Depuis l’application mobile, ouvrir « Mot de passe oublié ? » et demander le lien.
+2. Ouvrir l’e-mail sur l’ordinateur de développement, puis suivre le lien pour changer le mot de passe sur `http://localhost:3000`.
+3. Revenir dans l’application mobile et vérifier que le nouveau mot de passe permet de se connecter et que l’ancien est refusé.
+
+Si le frontend tourne déjà avec `pnpm frontend:dev`, le conserver. Après modification de `FRONTEND_URL`, redémarrer le backend et demander un nouveau lien. L’IP locale reste nécessaire dans la configuration mobile pour joindre le backend ; le lien de réinitialisation de cette recette s’ouvre sur l’ordinateur de développement.
 
 Les e-mails utilisent la configuration Brevo existante. Voir la [recette de réinitialisation du mot de passe](docs/password-reset.md).
 

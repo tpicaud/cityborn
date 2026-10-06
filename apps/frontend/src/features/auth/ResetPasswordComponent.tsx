@@ -22,7 +22,7 @@ type TokenStatus =
   | 'loading'
   | 'valid'
   | 'invalid'
-  | 'network-error'
+  | 'verification-error'
   | 'success';
 
 export function ResetPasswordComponent() {
@@ -54,10 +54,10 @@ export function ResetPasswordComponent() {
           setStatus('invalid');
           return;
         }
-        setStatus('network-error');
+        setStatus('verification-error');
         invokeError(result.error);
       } catch (error) {
-        setStatus('network-error');
+        setStatus('verification-error');
         invokeError(error);
       }
     },
@@ -179,7 +179,7 @@ export function ResetPasswordComponent() {
         </>
       )}
 
-      {status === 'network-error' && (
+      {status === 'verification-error' && (
         <Button variant="outlined" onClick={() => void validate(token)}>
           Réessayer la vérification
         </Button>

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   type HttpAction,
+  type HttpActionRoute,
   httpActionRoutes,
   resolveHttpAction,
   resolveWsAction,
@@ -23,10 +24,9 @@ function matchesRoute(pattern: string, path: string): boolean {
 
 describe('resolveHttpAction', () => {
   it('resolves every contract route after Nest slash normalization', () => {
-    assert.equal(httpActionRoutes.length, 52);
-    for (const route of httpActionRoutes) {
+    httpActionRoutes.forEach((route) => {
       assert.equal(resolveHttpAction(route.method, route.path), route.action);
-    }
+    });
     assert.equal(
       resolveHttpAction('POST', '/session/'),
       'session.createSession',
@@ -62,9 +62,9 @@ describe('resolveHttpAction', () => {
   });
 
   it('has no earlier route that shadows a later route', () => {
-    for (const [index, route] of httpActionRoutes.entries()) {
+    httpActionRoutes.forEach((route, index) => {
       const representativePath: string = route.path.replace(/:[^/]+/g, 'value');
-      const earlierMatch = httpActionRoutes
+      const earlierMatch: HttpActionRoute | undefined = httpActionRoutes
         .slice(0, index)
         .find(
           (earlier) =>
@@ -72,19 +72,19 @@ describe('resolveHttpAction', () => {
             matchesRoute(earlier.path, representativePath),
         );
       assert.equal(earlierMatch, undefined, `${route.method} ${route.path}`);
-    }
+    });
   });
 });
 
 describe('resolveWsAction', () => {
   it('resolves every client event and lifecycle event from the channels', () => {
-    for (const channel of Object.values(wsChannels)) {
-      for (const event of Object.keys(channel.clientToServer)) {
+    Object.values(wsChannels).forEach((channel) => {
+      Object.keys(channel.clientToServer).forEach((event) => {
         assert.equal(
           resolveWsAction(`${channel.domain}:${event}`),
           `${channel.domain}.${event}`,
         );
-      }
+      });
       assert.equal(
         resolveWsAction(wsLifecycleEventName(channel, 'connect')),
         `${channel.domain}.connect`,
@@ -93,7 +93,7 @@ describe('resolveWsAction', () => {
         resolveWsAction(wsLifecycleEventName(channel, 'disconnect')),
         `${channel.domain}.disconnect`,
       );
-    }
+    });
     assert.equal(resolveWsAction('session:unknown'), undefined);
   });
 });

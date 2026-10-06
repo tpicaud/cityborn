@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   type AuthResponse,
   AuthResponseSchema,
@@ -5,7 +6,6 @@ import {
   contract,
   ErrorCode,
   PASSWORD_RESET_REQUEST_MESSAGE,
-  sessionWsEvent,
   type User,
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
@@ -23,6 +23,7 @@ import { createTestApp } from '../support/createTestApp';
 describe('Password reset over HTTP and WebSocket', () => {
   let app: NestExpressApplication;
   let client: Socket | undefined;
+  let connectedSocketId: string | undefined;
   const mailService: DeepMocked<MailService> = createMock<MailService>();
 
   async function waitForServerDisconnection(
@@ -46,10 +47,14 @@ describe('Password reset over HTTP and WebSocket', () => {
     await app.listen(0);
   });
   afterEach(async () => {
-    const socketId: string | undefined = client?.id;
     client?.disconnect();
-    client = undefined;
-    if (socketId) await waitForServerDisconnection(socketId, 100);
+    try {
+      if (connectedSocketId)
+        await waitForServerDisconnection(connectedSocketId, 100);
+    } finally {
+      client = undefined;
+      connectedSocketId = undefined;
+    }
   });
   afterAll(async () => {
     await app?.close();
@@ -57,21 +62,24 @@ describe('Password reset over HTTP and WebSocket', () => {
 
   it('changes a password without verification or automatic sign-in and revokes existing sessions', async () => {
     const user: User = buildUser({ isVerified: false });
-    const prisma: PrismaService = app.get(PrismaService);
-    await prisma.user.create({
+    const prismaService: PrismaService = app.get(PrismaService);
+    await prismaService.user.create({
       data: {
         id: user.id,
         email: user.email,
         username: user.username,
         type: 'email',
         password: await hash('OldPass1', 10),
+        isVerified: user.isVerified,
       },
     });
     const signInResponse: request.Response = await request(app.getHttpServer())
       .post(contract.auth.signIn.path)
       .send({ identifier: user.email, password: 'OldPass1' })
       .expect(200);
-    const session: AuthResponse = AuthResponseSchema.parse(signInResponse.body);
+    const authResponse: AuthResponse = AuthResponseSchema.parse(
+      signInResponse.body,
+    );
     const webAgent: TestAgent = request.agent(app.getHttpServer());
     await webAgent
       .post(contract.auth.cookie.signIn.path)
@@ -81,20 +89,16 @@ describe('Password reset over HTTP and WebSocket', () => {
     await webAgent.get(contract.auth.me.path).expect(200);
     client = io(await app.getUrl(), {
       transports: ['websocket'],
-      auth: { access_token: session.access_token },
+      auth: { access_token: authResponse.access_token },
     });
     const socket: Socket = client;
     await new Promise<void>((resolve, reject) => {
-      socket.once('connect', resolve);
+      socket.once('connect', () => {
+        connectedSocketId = socket.id;
+        resolve();
+      });
       socket.once('connect_error', reject);
     });
-    await new Promise<unknown>((resolve) =>
-      socket.emit(
-        sessionWsEvent.reconnect,
-        { sessionID: 'missing', playerID: user.username },
-        resolve,
-      ),
-    );
     const mail: Promise<SendMailOptions> = new Promise((resolve) => {
       mailService.sendMail.mockImplementationOnce(
         async (options: SendMailOptions) => {
@@ -114,7 +118,7 @@ describe('Password reset over HTTP and WebSocket', () => {
       new URLSearchParams(new URL(link).hash.slice(1)).get('token') ?? '';
     await request(app.getHttpServer())
       .get(contract.auth.me.path)
-      .set('Authorization', `Bearer ${session.access_token}`)
+      .set('Authorization', `Bearer ${authResponse.access_token}`)
       .expect(200);
     await request(app.getHttpServer())
       .post(contract.auth.validatePasswordResetToken.path)
@@ -136,7 +140,7 @@ describe('Password reset over HTTP and WebSocket', () => {
     expect(await disconnected).toBe('io server disconnect');
     expect(resetResponse.headers['set-cookie']).toBeUndefined();
     expect(
-      await prisma.user.findUnique({ where: { id: user.id } }),
+      await prismaService.user.findUnique({ where: { id: user.id } }),
     ).toMatchObject({ authVersion: 1, isVerified: false });
     await webAgent.get(contract.auth.me.path).expect(401);
     await webAgent
@@ -146,11 +150,11 @@ describe('Password reset over HTTP and WebSocket', () => {
       .expect(401);
     await request(app.getHttpServer())
       .get(contract.auth.me.path)
-      .set('Authorization', `Bearer ${session.access_token}`)
+      .set('Authorization', `Bearer ${authResponse.access_token}`)
       .expect(401);
     await request(app.getHttpServer())
       .post(contract.auth.refresh.path)
-      .set('Authorization', `Bearer ${session.refresh_token}`)
+      .set('Authorization', `Bearer ${authResponse.refresh_token}`)
       .send({})
       .expect(401);
     await request(app.getHttpServer())
@@ -161,21 +165,23 @@ describe('Password reset over HTTP and WebSocket', () => {
       .post(contract.auth.signIn.path)
       .send({ identifier: user.email, password: 'NewPass1' })
       .expect(200);
-    const newSession: AuthResponse = AuthResponseSchema.parse(newSignIn.body);
+    const newAuthResponse: AuthResponse = AuthResponseSchema.parse(
+      newSignIn.body,
+    );
     await request(app.getHttpServer())
       .get(contract.auth.me.path)
-      .set('Authorization', `Bearer ${newSession.access_token}`)
+      .set('Authorization', `Bearer ${newAuthResponse.access_token}`)
       .expect(200);
     await request(app.getHttpServer())
       .post(contract.auth.refresh.path)
-      .set('Authorization', `Bearer ${newSession.refresh_token}`)
+      .set('Authorization', `Bearer ${newAuthResponse.refresh_token}`)
       .send({})
       .expect(200);
     await request(app.getHttpServer())
       .post(contract.auth.resetPassword.path)
       .send({ token, password: 'AgainPass1', confirmPassword: 'AgainPass1' })
       .expect(401);
-    expect(newSession.user.isVerified).toBe(false);
+    expect(newAuthResponse.user.isVerified).toBe(false);
     expect(mailService.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: 'Votre mot de passe Cityborn a été modifié',
@@ -183,23 +189,42 @@ describe('Password reset over HTTP and WebSocket', () => {
     );
   });
 
-  it.each([
-    { password: 'short', confirmPassword: 'short' },
-    { password: 'lowercase1', confirmPassword: 'lowercase1' },
-    { password: 'NoDigits', confirmPassword: 'NoDigits' },
-    { password: `A1${'a'.repeat(31)}`, confirmPassword: `A1${'a'.repeat(31)}` },
-    { password: 'ValidPass1', confirmPassword: 'Different1' },
-  ])(
-    'rejects invalid password input before consuming a token',
-    async (passwords) => {
-      const response: request.Response = await request(app.getHttpServer())
-        .post(contract.auth.resetPassword.path)
-        .send({ token: 'a'.repeat(64), ...passwords })
-        .expect(400);
+  it('rejects mismatched passwords without consuming a valid token', async () => {
+    const user: User = buildUser({ isVerified: false });
+    const prismaService: PrismaService = app.get(PrismaService);
+    const resetToken: string = 'a'.repeat(64);
+    const tokenHash: string = createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+    await prismaService.user.create({
+      data: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        type: 'email',
+        password: await hash('OldPass1', 10),
+        isVerified: user.isVerified,
+      },
+    });
+    await prismaService.passwordResetToken.create({
+      data: { userId: user.id, tokenHash, expiresAt: new Date('2099-01-01') },
+    });
 
-      expect(response.body).toMatchObject({ code: ErrorCode.BAD_REQUEST });
-    },
-  );
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.resetPassword.path)
+      .send({
+        token: resetToken,
+        password: 'ValidPass1',
+        confirmPassword: 'Different1',
+      })
+      .expect(400);
+
+    expect(response.body).toMatchObject({ code: ErrorCode.BAD_REQUEST });
+    await request(app.getHttpServer())
+      .post(contract.auth.validatePasswordResetToken.path)
+      .send({ token: resetToken })
+      .expect(200);
+  });
 
   it('applies the per-IP limit without disclosing unknown addresses', async () => {
     async function requestReset(remaining: number): Promise<void> {

@@ -1,13 +1,15 @@
+import type { Ref } from 'react';
 import {
   TextInput as NativeTextInput,
   type TextInputProps,
 } from 'react-native';
 import { cn } from '@/lib/utils';
 
-interface InputProps extends TextInputProps {
+type InputProps = TextInputProps & {
+  ref?: Ref<NativeTextInput>;
   className?: string;
   error?: boolean;
-}
+};
 
 export default function TextInput({
   className = '',
