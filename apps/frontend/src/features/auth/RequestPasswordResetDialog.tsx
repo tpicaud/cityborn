@@ -5,7 +5,6 @@ import type { ApiResult, PasswordResetRequestResponse } from '@cityborn/api';
 import { useError } from '@cityborn/client';
 import { useRequestPasswordResetForm } from '@cityborn/client/auth';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
+import Button from '@/components/ui/buttons/Button';
 import { requestPasswordReset } from '@/server/use-server/auth';
 
 export function RequestPasswordResetDialog() {
@@ -23,6 +23,7 @@ export function RequestPasswordResetDialog() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useRequestPasswordResetForm();
   const onSubmit = handleSubmit(async (values) => {
@@ -41,6 +42,7 @@ export function RequestPasswordResetDialog() {
       <Button
         type="button"
         onClick={() => {
+          reset();
           setMessage(null);
           setOpen(true);
         }}

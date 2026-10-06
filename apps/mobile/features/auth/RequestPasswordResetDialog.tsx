@@ -3,12 +3,7 @@ import { useError } from '@cityborn/client';
 import { useRequestPasswordResetForm } from '@cityborn/client/auth';
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import { ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
@@ -22,6 +17,7 @@ export function RequestPasswordResetDialog() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useRequestPasswordResetForm();
   const onSubmit = handleSubmit(async (values) => {
@@ -41,6 +37,7 @@ export function RequestPasswordResetDialog() {
         variant="default"
         label="Mot de passe oublié ?"
         onPress={() => {
+          reset();
           setMessage(null);
           setOpen(true);
         }}
@@ -53,63 +50,57 @@ export function RequestPasswordResetDialog() {
         title="Réinitialiser son mot de passe"
         className="h-auto max-h-[85%]"
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <ScrollView
           style={{ width: '100%' }}
+          keyboardShouldPersistTaps="handled"
         >
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <View className="gap-4 w-full">
-              {message ? (
-                <Text accessibilityLiveRegion="polite">{message}</Text>
-              ) : (
-                <>
-                  <Controller
-                    control={control}
-                    name="email"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        className="w-full"
-                        accessibilityLabel="Adresse e-mail"
-                        placeholder="Adresse e-mail"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        autoComplete="email"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        error={!!errors.email}
-                      />
-                    )}
-                  />
-                  {errors.email && (
-                    <Text className="text-destructive-500">
-                      {errors.email.message}
-                    </Text>
+          <View className="gap-4 w-full">
+            {message ? (
+              <Text accessibilityLiveRegion="polite">{message}</Text>
+            ) : (
+              <>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value, ref } }) => (
+                    <TextInput
+                      ref={ref}
+                      className="w-full"
+                      accessibilityLabel="Adresse e-mail"
+                      placeholder="Adresse e-mail"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={!!errors.email}
+                    />
                   )}
-                  {isSubmitting && (
-                    <ActivityIndicator accessibilityLabel="Envoi en cours" />
-                  )}
-                  <Button
-                    label="Envoyer le lien de réinitialisation"
-                    className="w-full h-auto min-h-14 py-3"
-                    disabled={isSubmitting}
-                    onPress={() => {
-                      if (!isSubmitting) void onSubmit();
-                    }}
-                  />
-                </>
-              )}
-              <Button
-                variant="ghost"
-                label="Fermer"
-                className="self-center"
-                disabled={isSubmitting}
-                onPress={() => setOpen(false)}
-              />
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+                />
+                {errors.email && (
+                  <Text className="text-destructive-500">
+                    {errors.email.message}
+                  </Text>
+                )}
+                <Button
+                  label="Envoyer le lien de réinitialisation"
+                  className="w-full h-auto min-h-14 py-3"
+                  disabled={isSubmitting}
+                  onPress={() => onSubmit()}
+                />
+              </>
+            )}
+            <Button
+              variant="ghost"
+              label="Fermer"
+              className="self-center"
+              disabled={isSubmitting}
+              onPress={() => setOpen(false)}
+            />
+          </View>
+        </ScrollView>
       </Dialog>
     </>
   );

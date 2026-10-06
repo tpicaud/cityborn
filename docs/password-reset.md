@@ -18,11 +18,13 @@ La migration initiale de cette branche reste inchangée pour les bases où elle 
 
 ## Recette manuelle web et mobile
 
-Utiliser une boîte e-mail de test et un compte avec mot de passe. Pour le mobile, rendre le frontend configuré par `FRONTEND_URL` accessible depuis le téléphone, et garder une session authentifiée ouverte dans une autre fenêtre ou sur un autre appareil.
+Utiliser une boîte e-mail de test et un compte avec mot de passe. Garder une session authentifiée ouverte dans une autre fenêtre ou sur un autre appareil.
+
+Pour le test mobile local, conserver `FRONTEND_URL=http://localhost:3000` dans `apps/backend/.env`. Lancer `pnpm dev:mobile`, puis `pnpm frontend:dev` dans un autre terminal depuis la racine du projet si le frontend ne tourne pas déjà. Demander le lien depuis l’application mobile, ouvrir l’e-mail et changer le mot de passe sur l’ordinateur de développement, puis tester la reconnexion dans l’application mobile. Après un changement de `FRONTEND_URL`, redémarrer le backend et demander un nouveau lien.
 
 1. Sur chaque formulaire de connexion, ouvrir « Mot de passe oublié ? ». Vérifier le champ e-mail, les erreurs de saisie, le chargement, la désactivation pendant l’envoi et la fermeture de la modale, y compris avec le clavier mobile ouvert.
 2. Demander un lien pour un compte avec mot de passe, puis une adresse inconnue et un compte exclusivement Google/Apple. Vérifier le même message public. Seul le compte avec mot de passe reçoit le lien.
-3. Ouvrir l’e-mail sur ordinateur et téléphone. Vérifier la mise en page et les libellés, puis recharger la page : le lien reste utilisable tant qu’aucun mot de passe n’a été validé.
+3. Vérifier la mise en page et les libellés de l’e-mail sur ordinateur et téléphone. Pour la recette locale, ouvrir le lien sur l’ordinateur de développement, puis recharger la page : le lien reste utilisable tant qu’aucun mot de passe n’a été validé. Vérifier aussi la page aux dimensions d’un écran mobile avec le mode responsive du navigateur.
 4. Vérifier les erreurs pour un mot de passe trop court, trop long, sans majuscule ou chiffre, et pour deux champs différents. Couper le réseau puis réessayer après rétablissement.
 5. Valider : vérifier le message de succès, l’e-mail de confirmation sans mot de passe, le retour à la connexion web et la mention de reconnexion mobile. L’ancien mot de passe et les anciennes sessions doivent être refusés ; le nouveau doit fonctionner. Un compte non vérifié reste non vérifié.
 6. Réouvrir le lien consommé, un lien expiré ou `/reset-password` sans fragment. Vérifier le message explicite et la possibilité de redemander un lien.

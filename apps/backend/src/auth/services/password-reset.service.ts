@@ -23,6 +23,8 @@ import {
   type PasswordResetRepository,
 } from '../repositories/password-reset.repository';
 
+const PASSWORD_RESET_TOKEN_VALIDITY_MINUTES: number = 30;
+
 @Injectable()
 export class PasswordResetService {
   constructor(
@@ -129,7 +131,7 @@ export class PasswordResetService {
     await this.passwordResetRepository.replaceToken(
       user.id,
       this.hash(token),
-      new Date(Date.now() + 30 * 60 * 1000),
+      new Date(Date.now() + PASSWORD_RESET_TOKEN_VALIDITY_MINUTES * 60 * 1000),
     );
     await this.mailService.sendMail(
       buildMailOptions('password-reset', {
@@ -137,6 +139,7 @@ export class PasswordResetService {
         username: user.username,
         token,
         frontendUrl: this.httpConfig.frontendUrl,
+        validityDurationMinutes: PASSWORD_RESET_TOKEN_VALIDITY_MINUTES,
       }),
     );
   }

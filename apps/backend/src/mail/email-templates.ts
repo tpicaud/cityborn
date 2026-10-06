@@ -104,6 +104,7 @@ type MailTemplateParams = {
     username: string;
     token: string;
     frontendUrl: string;
+    validityDurationMinutes: number;
   };
   'password-changed': { email: string; username: string };
 };
@@ -243,17 +244,22 @@ function buildPasswordResetEmail(
   const url: URL = new URL('/reset-password', params.frontendUrl);
   url.hash = new URLSearchParams({ token: params.token }).toString();
   const subject: string = 'Réinitialisez votre mot de passe Cityborn';
+  const validityDuration: string = new Intl.NumberFormat('fr', {
+    style: 'unit',
+    unit: 'minute',
+    unitDisplay: 'long',
+  }).format(params.validityDurationMinutes);
   return buildActionEmail({
     email: params.email,
     subject,
-    text: `Bonjour ${params.username},\nRéinitialisez votre mot de passe : ${url.toString()}\nCe lien expire dans 30 minutes. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.`,
+    text: `Bonjour ${params.username},\nRéinitialisez votre mot de passe : ${url.toString()}\nCe lien expire dans ${validityDuration}. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.`,
     preheader: 'Choisissez un nouveau mot de passe pour votre compte Cityborn.',
     title: `Bonjour ${params.username},`,
     introduction:
       'Vous avez demandé la réinitialisation de votre mot de passe Cityborn. Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.',
     actionUrl: url,
     actionLabel: 'Réinitialiser mon mot de passe',
-    validityDuration: '30 minutes',
+    validityDuration,
   });
 }
 
@@ -261,12 +267,15 @@ function buildPasswordChangedEmail(
   params: MailTemplateParams['password-changed'],
 ): SendMailOptions {
   const subject: string = 'Votre mot de passe Cityborn a été modifié';
-  const message: string =
-    'Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées. Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.';
+  const greeting: string = `Bonjour ${params.username},`;
+  const confirmationMessage: string =
+    'Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées.';
+  const securityNotice: string =
+    'Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.';
   return {
     to: params.email,
     subject,
-    text: `Bonjour ${params.username},\n\n${message}\n\nL’équipe Cityborn`,
+    text: `${greeting}\n\n${confirmationMessage} ${securityNotice}\n\nL’équipe Cityborn`,
     html: `
       ${buildEmailTemplateHeader({
         preheader: 'Votre nouveau mot de passe est prêt à être utilisé.',
@@ -278,16 +287,16 @@ function buildPasswordChangedEmail(
                         Votre mot de passe a été modifié
                       </h1>
                       <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Bonjour ${escapeHtml(params.username)},
+                        ${escapeHtml(greeting)}
                       </p>
                       <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées.
+                        ${escapeHtml(confirmationMessage)}
                       </p>
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
                         <tr>
                           <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
                             <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
-                              Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.
+                              ${escapeHtml(securityNotice)}
                             </p>
                           </td>
                         </tr>

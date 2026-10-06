@@ -15,6 +15,7 @@ import {
   buildUser,
   buildWorldLocation,
   CreateWorldLocationSchema,
+  ErrorCode,
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -218,6 +219,7 @@ describe('Prisma transactions', () => {
             id: user.id,
             email: user.email,
             username: user.username,
+            isVerified: user.isVerified,
             type: 'email',
             password: 'old-hash',
           },
@@ -244,16 +246,25 @@ describe('Prisma transactions', () => {
           authVersion: 0,
           isVerified: false,
         });
-        expect(await prisma.passwordResetToken.count()).toBe(1);
+        expect(
+          await prisma.passwordResetToken.findUnique({
+            where: { userId: user.id },
+          }),
+        ).toEqual({
+          userId: user.id,
+          tokenHash: 'hash',
+          expiresAt: new Date('2099-01-01'),
+        });
       });
 
-      it('commits one password update and session revocation during concurrent resets', async () => {
+      it('commits one password update and auth version increment during concurrent resets', async () => {
         const user: User = buildUser({ isVerified: false });
         await prisma.user.create({
           data: {
             id: user.id,
             email: user.email,
             username: user.username,
+            isVerified: user.isVerified,
             type: 'email',
             password: 'old-hash',
           },
@@ -277,10 +288,35 @@ describe('Prisma transactions', () => {
         ).toHaveLength(1);
         expect(
           results.filter((result) => result.status === 'rejected'),
-        ).toHaveLength(1);
+        ).toEqual([
+          expect.objectContaining({
+            reason: expect.objectContaining({
+              status: 401,
+              response: expect.objectContaining({
+                code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+              }),
+            }),
+          }),
+        ]);
+        const successfulResetIndex: number = results.findIndex(
+          (result) => result.status === 'fulfilled',
+        );
+        const successfulReset: PromiseSettledResult<AuthSession> | undefined =
+          results[successfulResetIndex];
+        if (successfulReset?.status !== 'fulfilled') {
+          throw new Error('Expected one successful password reset');
+        }
+        expect(successfulReset.value).toMatchObject({
+          user: { id: user.id, isVerified: false },
+          authVersion: 1,
+        });
         expect(
           await prisma.user.findUnique({ where: { id: user.id } }),
-        ).toMatchObject({ authVersion: 1, isVerified: false });
+        ).toMatchObject({
+          password: successfulResetIndex === 0 ? 'new-hash' : 'other-hash',
+          authVersion: 1,
+          isVerified: false,
+        });
         expect(await prisma.passwordResetToken.count()).toBe(0);
       });
     });
