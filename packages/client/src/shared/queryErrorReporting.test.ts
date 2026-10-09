@@ -21,7 +21,7 @@ type QueryErrorReportingHarness = {
 
 type ObservedQueryOptions = {
   queryClient: QueryClient;
-  queryFn: () => Promise<never>;
+  queryFn: () => Promise<string>;
   reportsError: boolean;
 };
 
@@ -42,7 +42,7 @@ function observeQuery({
   queryFn,
   reportsError,
 }: ObservedQueryOptions): () => void {
-  const queryObserver: QueryObserver<never> = new QueryObserver(queryClient, {
+  const queryObserver: QueryObserver<string> = new QueryObserver(queryClient, {
     queryKey: observedQueryKey,
     queryFn,
     retry: 1,
@@ -129,6 +129,28 @@ test('reportQueryErrors ignores the error of a query whose last observer left du
   await queryErrorReceived;
 
   assert.deepEqual(reportedErrors, []);
+  stopReporting();
+  queryClient.clear();
+});
+
+test('reportQueryErrors ignores the refetch error of a query that already has data', async () => {
+  const {
+    queryClient,
+    reportedErrors,
+    stopReporting,
+  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+  queryClient.setQueryData<string>(observedQueryKey, 'cached category trees');
+  const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
+
+  const stopObserving: () => void = observeQuery({
+    queryClient,
+    queryFn: () => Promise.reject(new Error('category trees unavailable')),
+    reportsError: true,
+  });
+  await queryErrorReceived;
+
+  assert.deepEqual(reportedErrors, []);
+  stopObserving();
   stopReporting();
   queryClient.clear();
 });

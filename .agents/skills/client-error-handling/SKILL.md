@@ -8,7 +8,7 @@ description: Erreurs et validation client Cityborn. À utiliser pour modifier un
 | Contexte | Helper | Résultat |
 |---|---|---|
 | Factory de domaine `@cityborn/client`, `apps/mobile/lib/api/`, `apps/back-office/lib/api/` | `unwrapApiResponse(result)` | body typé, ou `throw` un `ApiResponseError` ; l'action du hook l'attrape (`try/catch`) et le passe à `invokeError` |
-| Query `@cityborn/client` (`api/<domaine>Queries.ts`) | `meta: { reportsError }` dans ses `queryOptions` | le `queryFn` appelle le port sans `try/catch` ; `true` : le pont monté par `ErrorProvider` passe l'erreur finale, après les `retry`, à `invokeError` si un composant observe encore la query ; `false` : le hook expose l'erreur à la vue |
+| Query `@cityborn/client` (`api/<domaine>Queries.ts`) | `meta: { reportsError }` dans ses `queryOptions` | le `queryFn` appelle le port sans `try/catch` ; `true` : le pont monté par `ErrorProvider` passe l'erreur finale, après les `retry`, à `invokeError` si un composant observe encore la query et qu'elle n'a pas encore de données ; `false` : le hook expose l'erreur à la vue |
 | Afficher une erreur | `useError()` → `invokeError(error)` | dialog ; accepte `unknown`, normalise via `resolveErrorMessage` (ne pas pré-convertir) ; repli : `invokeError(error, 'message par défaut')` |
 
 ## Règles
