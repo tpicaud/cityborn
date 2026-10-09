@@ -461,41 +461,6 @@ export class SessionService {
     });
   }
 
-  async kickPlayer(
-    playerID: PlayerId,
-    sessionID: SessionId,
-    playerToKick: PlayerId,
-  ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
-      if (session.hostID !== playerID)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_FORBIDDEN_HOST,
-          message: `Player is not the host`,
-        });
-
-      if (session.currentGame)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_ALREADY_IN_GAME,
-          message: `Session already in game`,
-        });
-
-      const playerIndex = session.players.findIndex(
-        (player) => player.username === playerToKick,
-      );
-      if (playerIndex === -1)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
-        });
-
-      session.players.splice(playerIndex, 1);
-
-      this.reassignHostAfterRemoval(session, playerToKick);
-
-      return session;
-    });
-  }
-
   ///////////
   // Store //
   ///////////

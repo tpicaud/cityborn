@@ -71,7 +71,7 @@ export class SessionGateway
 
   private resolvePlayer(socket: AppSocket): SocketPlayer {
     const { player } = socket.data;
-    if (!player || !socket.rooms.has(player.sessionID))
+    if (!player)
       throw new NotFoundException({
         code: ErrorCode.CONNECTION_NOT_FOUND,
         message: 'No connection associated with this socket',
@@ -164,32 +164,6 @@ export class SessionGateway
       sessionID,
       gameConfig,
     );
-    this.broadcastSession(session);
-  }
-
-  @WsMessage(sessionWsChannel, 'kickPlayer')
-  async kickPlayer(
-    @ConnectedSocket() socket: AppSocket,
-    @MessageBody() {
-      playerToKick,
-    }: WsPayload<typeof sessionWsChannel, 'kickPlayer'>,
-  ): Promise<void> {
-    const { playerID, sessionID } = this.resolvePlayer(socket);
-    const session = await this.sessionService.kickPlayer(
-      playerID,
-      sessionID,
-      playerToKick,
-    );
-
-    const socketsInRoom = await this.io.in(sessionID).fetchSockets();
-    socketsInRoom
-      .filter(
-        (remoteSocket) => remoteSocket.data.player?.playerID === playerToKick,
-      )
-      .forEach((remoteSocket) => {
-        remoteSocket.leave(sessionID);
-      });
-
     this.broadcastSession(session);
   }
 
@@ -299,9 +273,7 @@ export class SessionGateway
     try {
       const presentPlayers: SocketPlayer[] = (
         await this.io.fetchSockets()
-      ).flatMap(({ data, rooms }) =>
-        data.player && rooms.has(data.player.sessionID) ? [data.player] : [],
-      );
+      ).flatMap(({ data }) => (data.player ? [data.player] : []));
       const sessionIDs: SessionId[] =
         await this.sessionService.listMultiSessionIDs();
       await Promise.all(

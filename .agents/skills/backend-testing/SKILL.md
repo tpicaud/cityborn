@@ -17,7 +17,7 @@ Placer chaque branche métier dans le tier le plus bas qui permette de l'observe
 
 ## Nommer et structurer
 
-- Pour une méthode testée, prévoir un `describe` par méthode couverte, même avec un seul `it`. Quand un `describe` parent nomme déjà la classe, le repository ou l'adaptateur, nommer l'enfant par la méthode seule (`describe('delete', ...)`) ; sans parent, utiliser `Classe.méthode` (`describe('SessionService.kickPlayer', ...)`). En e2e, le `describe` nomme le parcours ou la frontière observée.
+- Pour une méthode testée, prévoir un `describe` par méthode couverte, même avec un seul `it`. Quand un `describe` parent nomme déjà la classe, le repository ou l'adaptateur, nommer l'enfant par la méthode seule (`describe('delete', ...)`) ; sans parent, utiliser `Classe.méthode` (`describe('SessionService.updateHost', ...)`). En e2e, le `describe` nomme le parcours ou la frontière observée.
 - Un `it` décrit en anglais un comportement au présent (`rejects when the requester is not the host`), jamais avec `should`.
 - Un `it` couvre un seul comportement. Plusieurs assertions sont permises lorsqu'elles caractérisent ensemble ce même résultat.
 - Séparer Arrange, Act et Assert par une ligne vide, sans commentaires `Arrange` / `Act` / `Assert`.

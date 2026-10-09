@@ -48,7 +48,6 @@ export type MultiSessionController = SessionController & {
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
-  kickPlayer: (playerToKick: PlayerId) => Promise<void>;
 };
 
 type JoinedPlayer = {
@@ -176,11 +175,6 @@ export function useMultiSession({
     await emit(sessionWsEvent.updateGameConfig, { gameConfig });
   };
 
-  const kickPlayer = async (playerToKick: PlayerId) => {
-    requireSession('Kicking player');
-    await emit(sessionWsEvent.kickPlayer, { playerToKick });
-  };
-
   const startGame = async () => {
     requireSession('Starting game');
     await emit(sessionWsEvent.startGame);
@@ -220,7 +214,6 @@ export function useMultiSession({
     join: reportActionErrors(join, invokeError),
     updateHost: reportActionErrors(updateHost, invokeError),
     updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
-    kickPlayer: reportActionErrors(kickPlayer, invokeError),
     startGame: reportActionErrors(startGame, invokeError),
     guess: reportActionErrors(guess, invokeError),
     nextRound: reportActionErrors(nextRound, invokeError),

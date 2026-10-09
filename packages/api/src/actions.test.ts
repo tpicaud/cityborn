@@ -162,7 +162,6 @@ describe('contract actions', () => {
       'session.getSession',
       'session.guess',
       'session.join',
-      'session.kickPlayer',
       'session.nextRound',
       'session.playAgain',
       'session.reconnect',

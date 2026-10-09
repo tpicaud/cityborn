@@ -26,7 +26,6 @@ import {
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import { NotFoundException } from '@nestjs/common';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
@@ -80,122 +79,6 @@ function buildSessionService(session: Session | null) {
   };
 }
 
-describe('SessionService.kickPlayer', () => {
-  it('removes the kicked player and persists the session', async () => {
-    const session: Session = buildSession();
-    const {
-      sessionService,
-      redisService,
-    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('bob'),
-    );
-
-    expect(result.players.map((p) => p.username)).toEqual([playerId('host')]);
-    expect(redisService.setJSON).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejects when the requester is not the host', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(buildSession());
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('bob'),
-        sessionId('s1'),
-        playerId('host'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
-    });
-  });
-
-  it('rejects when the session has no such player', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(buildSession());
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('unknown'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
-    });
-  });
-
-  it('rejects once a game is in progress', async () => {
-    const session: Session = buildSession({ currentGame: buildGame() });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('bob'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_ALREADY_IN_GAME },
-    });
-  });
-
-  it('rejects when the session does not exist', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(null);
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('bob'),
-      ),
-    ).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('reassigns the host to another connected player when the host kicks itself', async () => {
-    const session: Session = buildSession({
-      players: [
-        buildPlayer(playerId('host')),
-        buildPlayer(playerId('bob')),
-        buildPlayer(playerId('carol'), false),
-      ],
-    });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('host'),
-    );
-
-    expect(result.hostID).toBe(playerId('bob'));
-  });
-
-  it('clears the host when no connected player remains after the kick', async () => {
-    const session: Session = buildSession({
-      players: [
-        buildPlayer(playerId('host')),
-        buildPlayer(playerId('bob'), false),
-      ],
-    });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('host'),
-    );
-
-    expect(result.hostID).toBe('');
-  });
-});
 describe('SessionService.create', () => {
   it('creates and persists a multiplayer session', async () => {
     const {
