@@ -1,12 +1,7 @@
 import * as Ariakit from '@ariakit/react';
 import type { WorldLocationSearchResult } from '@cityborn/api';
-import {
-  type ChangeEventHandler,
-  startTransition,
-  useEffect,
-  useState,
-} from 'react';
-import { searchWorldLocationByName } from '@/lib/api/guess-object';
+import { useWorldLocationSearch } from '@cityborn/client/admin';
+import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function WorldLocationSearchInput({
   type = 'text',
@@ -32,25 +27,8 @@ export function WorldLocationSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<WorldLocationSearchResult[]>([]);
-
-  useEffect(() => {
-    if (!searchValue) {
-      setMatches([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        setMatches(await searchWorldLocationByName(searchValue));
-      } catch (error) {
-        console.error('Search error:', error);
-        setMatches([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchValue]);
+  const matches: WorldLocationSearchResult[] =
+    useWorldLocationSearch(searchValue);
 
   return (
     <Ariakit.ComboboxProvider

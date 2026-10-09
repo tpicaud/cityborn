@@ -5,19 +5,14 @@ import {
   CategoryIdSchema,
   type FullCategory,
   type GuessObject,
-  type GuessObjectDraft,
-  type GuessObjectId,
-  type UpdateCategory,
 } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import {
+  type CategoryEditor,
+  type GuessObjectDraftEditor,
+  useCategoryEditor,
+} from '@cityborn/client/admin';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { deleteCategory, saveCategory } from '@/lib/api/category';
-import {
-  getGuessObject,
-  patchGuessObject,
-  saveGuessObject,
-} from '@/lib/api/guess-object';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
@@ -26,186 +21,47 @@ import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
 import { PublishCategoryPopup } from './publish-category-popup';
 
-interface CategoryBuilderProps {
-  fetchedCategory: FullCategory;
+type CategoryBuilderProps = {
+  editedCategory: FullCategory;
   categories: Category[];
-}
+};
 
 export function CategoryBuilder({
-  fetchedCategory,
+  editedCategory,
   categories,
 }: CategoryBuilderProps) {
   const router = useRouter();
-  const { invokeError } = useError();
-  const [category, setCategory] = useState<FullCategory>(fetchedCategory);
-  const [guessObjectDraft, setGuessObjectDraft] = useState<GuessObjectDraft>();
-  const [isSaveLoading, setIsSaveLoading] = useState(false);
+  const {
+    category,
+    isSaving,
+    updateCategory,
+    saveCategory,
+    publishCategory,
+    deleteCategory,
+    removeGuessObject,
+    saveGuessObjectDraft,
+    addImportedGuessObject,
+    guessObjectDraftEditor,
+  }: CategoryEditor = useCategoryEditor({
+    editedCategory,
+    onCategoryDeleted: () => router.push('/dashboard'),
+  });
+  const {
+    guessObjectDraft,
+    startGuessObjectCreation,
+    toggleGuessObjectSelection,
+  }: GuessObjectDraftEditor = guessObjectDraftEditor;
   const [searchObjectValue, setSearchObjectValue] = useState('');
 
-  const filteredGuessObjects = useMemo(() => {
-    if (category?.guessObjects) {
-      return category.guessObjects.filter((category) =>
-        category.name.toLowerCase().includes(searchObjectValue.toLowerCase()),
-      );
-    } else {
-      return [];
-    }
-  }, [category, searchObjectValue]);
-
-  const updateCategory = (update: Partial<FullCategory>) => {
-    setCategory((prev) =>
-      prev ? { ...prev, ...update } : (update as FullCategory),
-    );
-  };
-
-  function handleCreateGuessObject() {
-    setGuessObjectDraft({
-      name: '',
-    });
-  }
-
-  function handleSelectGuessObject(guessObject: GuessObject) {
-    if (guessObjectDraft?.name === guessObject.name) {
-      setGuessObjectDraft(undefined);
-    } else {
-      setGuessObjectDraft(guessObject);
-    }
-  }
-
-  async function handleSaveGuessObjectDraft(): Promise<void> {
-    try {
-      if (!guessObjectDraft) {
-        invokeError('Objet non valide');
-        return;
-      }
-
-      const locationId = guessObjectDraft.world_location?.id;
-      if (!locationId) {
-        invokeError('Localisation non valide, veuillez resélectionner');
-        return;
-      }
-
-      const {
-        id: _id,
-        world_location: _world_location,
-        ...rest
-      } = guessObjectDraft;
-
-      const id: GuessObjectId = guessObjectDraft.id
-        ? await patchGuessObject({
-            id: guessObjectDraft.id,
-            updatedFields: { ...rest, world_location_id: locationId },
-          })
-        : await saveGuessObject({ ...rest, world_location_id: locationId });
-
-      await addOrUpdateGuessObjectToCategory(id);
-      handleCreateGuessObject();
-    } catch (error) {
-      invokeError(error, 'Erreur inattendue');
-    }
-  }
-
-  async function handleSaveCategory(publish?: boolean) {
-    try {
-      setIsSaveLoading(true);
-      const updatedCategory: UpdateCategory = {
-        id: category.id,
-        name: category.name,
-        isPublished: publish ?? false,
-        description: category.description,
-        parentId: category.parentId,
-      };
-      await saveCategory({ id: category.id, category: updatedCategory });
-    } catch (error) {
-      invokeError(error, 'Erreur inattendue');
-    } finally {
-      setIsSaveLoading(false);
-    }
-  }
-
-  async function handlePublishCategory(publish: boolean) {
-    await handleSaveCategory(publish);
-    updateCategory({ isPublished: publish });
-  }
-
-  async function handleDeleteCategory() {
-    try {
-      setIsSaveLoading(true);
-      await deleteCategory(category.id);
-      router.push('/dashboard');
-    } catch (error) {
-      invokeError(error, 'Erreur inattendue');
-    } finally {
-      setIsSaveLoading(false);
-    }
-  }
-
-  async function addOrUpdateGuessObjectToCategory(id: GuessObjectId) {
-    try {
-      const object: GuessObject | null = await getGuessObject({
-        id,
-        includes: ['world_location_preview'],
-      });
-      if (!object) return;
-
-      const updatedCategory: UpdateCategory = {
-        id: category.id,
-        name: category.name,
-        isPublished: category.isPublished,
-        connectIds: [id],
-      };
-
-      await saveCategory({ id: category.id, category: updatedCategory });
-
-      setCategory((prev) => {
-        if (!prev.guessObjects) prev.guessObjects = [];
-
-        const index = prev.guessObjects.findIndex(
-          (obj) => obj.id === object.id,
-        );
-        let updatedGuessObjects: typeof prev.guessObjects;
-
-        if (index === -1) {
-          updatedGuessObjects = [...prev.guessObjects, object];
-        } else {
-          updatedGuessObjects = prev.guessObjects.map((obj) =>
-            obj.id === object.id ? object : obj,
-          );
-        }
-
-        return { ...prev, guessObjects: updatedGuessObjects };
-      });
-
-      setGuessObjectDraft(object);
-    } catch (error) {
-      invokeError(error, 'Erreur inattendue');
-    }
-  }
-
-  async function handleRemoveFromCategory(guessObject: GuessObject) {
-    try {
-      if (!category.guessObjects) return;
-      const index = category.guessObjects.findIndex(
-        (obj) => obj.id === guessObject.id,
-      );
-      if (index === -1) return;
-      const updatedGuessObjects: GuessObject[] = category.guessObjects.filter(
-        (obj) => obj.id !== guessObject.id,
-      );
-
-      const updated_category: UpdateCategory = {
-        id: category.id,
-        name: category.name,
-        isPublished: category.isPublished,
-        disconnectIds: [guessObject.id],
-      };
-      setCategory({ ...category, guessObjects: updatedGuessObjects });
-      await saveCategory({ id: category.id, category: updated_category });
-      setGuessObjectDraft(undefined);
-    } catch (error) {
-      invokeError(error, 'Erreur inattendue');
-    }
-  }
+  const filteredGuessObjects: GuessObject[] = useMemo(
+    () =>
+      category.guessObjects.filter((guessObject: GuessObject) =>
+        guessObject.name
+          .toLowerCase()
+          .includes(searchObjectValue.toLowerCase()),
+      ),
+    [category, searchObjectValue],
+  );
 
   return (
     <div className="flex-1 w-full flex flex-row gap-12">
@@ -214,20 +70,14 @@ export function CategoryBuilder({
           <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
             <h2 className="text-xl font-bold">Editeur de catégorie</h2>
             <div className="flex flex-row items-center justify-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleSaveCategory(category.isPublished)}
-              >
-                {isSaveLoading ? <Loader /> : <p>Enregistrer</p>}
+              <Button size="sm" variant="outline" onClick={saveCategory}>
+                {isSaving ? <Loader /> : <p>Enregistrer</p>}
               </Button>
               <PublishCategoryPopup
                 isPublished={category.isPublished}
-                handlePublishCategory={handlePublishCategory}
+                handlePublishCategory={publishCategory}
               />
-              <DeleteCategoryPopup
-                handleDeleteCategory={handleDeleteCategory}
-              />
+              <DeleteCategoryPopup handleDeleteCategory={deleteCategory} />
             </div>
           </div>
           <span className="h-[2px] w-full bg-foreground"></span>
@@ -320,16 +170,12 @@ export function CategoryBuilder({
               />
               <Button
                 variant="primary"
-                onClick={handleCreateGuessObject}
+                onClick={startGuessObjectCreation}
                 className="h-full font-bold p-auto"
               >
                 +
               </Button>
-              <ImportCSVPopup
-                addOrUpdateGuessObjectToCategory={
-                  addOrUpdateGuessObjectToCategory
-                }
-              />
+              <ImportCSVPopup onGuessObjectImported={addImportedGuessObject} />
             </div>
 
             <div className="relative flex-1 min-h-0 rounded-xl border border-gray-300 overflow-hidden">
@@ -340,9 +186,9 @@ export function CategoryBuilder({
                 <div className="p-3">
                   <GuessObjectsList
                     guessObjects={filteredGuessObjects}
-                    selectedGuessObject={guessObjectDraft as GuessObject}
-                    handleSelectGuessObject={handleSelectGuessObject}
-                    handleRemoveFromCategory={handleRemoveFromCategory}
+                    selectedGuessObjectId={guessObjectDraft?.id}
+                    handleSelectGuessObject={toggleGuessObjectSelection}
+                    handleRemoveFromCategory={removeGuessObject}
                   />
                 </div>
               </div>
@@ -364,7 +210,7 @@ export function CategoryBuilder({
                 <Button
                   size="sm"
                   variant={`${guessObjectDraft.id ? 'outline' : 'primary'}`}
-                  onClick={handleSaveGuessObjectDraft}
+                  onClick={saveGuessObjectDraft}
                 >
                   <p className="font-bold">
                     {!guessObjectDraft.id
@@ -377,10 +223,7 @@ export function CategoryBuilder({
           </div>
           <span className="h-[2px] w-full bg-foreground"></span>
         </div>
-        <GuessObjectBuilder
-          guessObjectDraft={guessObjectDraft}
-          setGuessObjectDraft={setGuessObjectDraft}
-        />
+        <GuessObjectBuilder guessObjectDraftEditor={guessObjectDraftEditor} />
       </div>
     </div>
   );

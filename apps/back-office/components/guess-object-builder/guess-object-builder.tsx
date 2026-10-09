@@ -1,37 +1,26 @@
 'use client';
 
-import type {
-  FullGuessObject,
-  GuessObjectDraft,
-  GuessObjectSearchResult,
-  WorldLocation,
-  WorldLocationId,
-  WorldLocationSearchResult,
-} from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import type { GuessObjectDraftEditor } from '@cityborn/client/admin';
+import { useEffect, useState } from 'react';
 import { backOfficeClientConfig } from '@/config/client';
-import {
-  createWorldLocation,
-  getFullGuessObject,
-  searchGuessObjectByExternalId,
-  searchWorldLocationById,
-} from '@/lib/api/guess-object';
 import GuessObjectCard from './guess-object-card';
 import { GuessObjectSearchInput } from './guess-object-search-input';
 import { WorldLocationSearchInput } from './world-location-search-input';
 import { WorldLocationViewer } from './world-location-viewer';
 
 export function GuessObjectBuilder({
-  guessObjectDraft,
-  setGuessObjectDraft,
+  guessObjectDraftEditor,
 }: {
-  guessObjectDraft: GuessObjectDraft | undefined;
-  setGuessObjectDraft: Dispatch<SetStateAction<GuessObjectDraft | undefined>>;
+  guessObjectDraftEditor: GuessObjectDraftEditor;
 }) {
-  const { invokeError } = useError();
-  const [isLoadingFullObject, setIsLoadingFullObject] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const {
+    guessObjectDraft,
+    isLoadingGuessObject: isLoadingFullObject,
+    isLoadingWorldLocation: isLoadingLocation,
+    updateGuessObjectDraft,
+    selectGuessObjectSearchResult,
+    selectWorldLocationSearchResult,
+  }: GuessObjectDraftEditor = guessObjectDraftEditor;
   const [worldLocationQuery, setWorldLocationQuery] = useState('');
 
   useEffect(() => {
@@ -42,103 +31,6 @@ export function GuessObjectBuilder({
         : '',
     );
   }, [guessObjectDraft?.world_location]);
-
-  useEffect(() => {
-    const updateGuessObjectDraft = async () => {
-      if (!guessObjectDraft?.id) return;
-      try {
-        const fullGuessObject: FullGuessObject | null =
-          await getFullGuessObject(guessObjectDraft.id);
-        if (fullGuessObject) {
-          setGuessObjectDraft(fullGuessObject);
-        }
-      } catch (error: unknown) {
-        invokeError(error);
-      }
-    };
-
-    updateGuessObjectDraft();
-  }, [guessObjectDraft?.id, setGuessObjectDraft, invokeError]);
-
-  const updateGuessObjectDraft = (update: Partial<GuessObjectDraft>) => {
-    setGuessObjectDraft((prev) =>
-      prev ? { ...prev, ...update } : (update as GuessObjectDraft),
-    );
-  };
-
-  async function handleFetchGuessObjectDraft(
-    guessObjectDraftPreview: GuessObjectSearchResult | undefined,
-  ) {
-    try {
-      setIsLoadingFullObject(true);
-      if (!guessObjectDraftPreview) return;
-
-      if (guessObjectDraftPreview.id) {
-        const existingGuessObject: FullGuessObject | null =
-          await getFullGuessObject(guessObjectDraftPreview.id);
-        if (!existingGuessObject) return;
-
-        setGuessObjectDraft(existingGuessObject);
-        return;
-      }
-
-      const externalId = guessObjectDraftPreview.source?.external_id;
-      if (!externalId) return;
-
-      const fullDraft: GuessObjectSearchResult | undefined =
-        await searchGuessObjectByExternalId(externalId);
-
-      if (fullDraft) {
-        let worldLocation: WorldLocation | undefined;
-        if (fullDraft.world_location?.source) {
-          const worldLocationId: WorldLocationId = await createWorldLocation({
-            ...fullDraft.world_location,
-            source: fullDraft.world_location.source,
-          });
-          worldLocation = { ...fullDraft.world_location, id: worldLocationId };
-        }
-
-        setGuessObjectDraft({
-          ...fullDraft,
-          name: guessObjectDraftPreview.name,
-          world_location: worldLocation,
-        });
-      }
-    } catch (error) {
-      invokeError(error, "Erreur lors de la récupération de l'objet");
-    } finally {
-      setIsLoadingFullObject(false);
-    }
-  }
-
-  async function handleFetchWorldLocationCandidate(
-    world_location: WorldLocationSearchResult | undefined,
-  ) {
-    try {
-      setIsLoadingLocation(true);
-      if (!world_location?.id) return;
-
-      const fullCandidate: WorldLocationSearchResult | undefined =
-        await searchWorldLocationById({
-          id: world_location.id,
-          osmType: world_location.osm_type,
-        });
-      if (!fullCandidate?.source) return;
-
-      const worldLocationId: WorldLocationId = await createWorldLocation({
-        ...fullCandidate,
-        source: fullCandidate.source,
-      });
-
-      updateGuessObjectDraft({
-        world_location: { ...fullCandidate, id: worldLocationId },
-      });
-    } catch (error) {
-      invokeError(error, 'Erreur lors de la récupération de la localisation');
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  }
 
   if (!guessObjectDraft)
     return (
@@ -164,7 +56,7 @@ export function GuessObjectBuilder({
                 onChange={(e) =>
                   updateGuessObjectDraft({ name: e.target.value })
                 }
-                onSelect={handleFetchGuessObjectDraft}
+                onSelect={selectGuessObjectSearchResult}
                 className={`rounded-md shadow-lg text-gray-800
                                       mt-3 p-2 h-10 w-full max-w-96
                                       ${isLoadingFullObject ? 'bg-neutral-300 ' : 'bg-white'}`}
@@ -224,7 +116,7 @@ export function GuessObjectBuilder({
               value={worldLocationQuery}
               disabled={isLoadingFullObject}
               onChange={(e) => setWorldLocationQuery(e.target.value)}
-              onSelect={handleFetchWorldLocationCandidate}
+              onSelect={selectWorldLocationSearchResult}
               className={`rounded-md shadow-xl text-gray-800
                                       p-2 h-10 w-full max-w-[50%]
                                       absolute left-0 m-3 z-40

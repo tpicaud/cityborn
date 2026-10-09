@@ -1,59 +1,49 @@
 import * as Ariakit from '@ariakit/react';
+import type { GuessObjectId } from '@cityborn/api';
 import {
-  type GuessObjectId,
-  type GuessObjectSearchResult,
-  resolveErrorMessage,
-  type WorldLocationId,
-} from '@cityborn/api';
+  type GuessObjectImport,
+  type ImportedGuessObject,
+  useGuessObjectImport,
+} from '@cityborn/client/admin';
 import Papa from 'papaparse';
-import { useRef, useState } from 'react';
-import {
-  createWorldLocation,
-  saveGuessObject,
-  searchGuessObjectByExternalId,
-  searchGuessObjectByName,
-} from '@/lib/api/guess-object';
+import { useState } from 'react';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 
-type Objects = {
-  name: string;
-  description?: string;
-  errorMessage?: string;
-};
+function parseGuessObjectsFromCSV(csv: string): ImportedGuessObject[] {
+  const result: Papa.ParseResult<Record<string, string>> = Papa.parse<
+    Record<string, string>
+  >(csv, { header: true });
 
-type ImportRecap = {
-  success: number;
-  failed: number;
-  failed_objects: Objects[];
-};
+  return result.data
+    .filter((row: Record<string, string>) => row.Name?.trim())
+    .map((row: Record<string, string>) => ({
+      name: row.Name.trim(),
+      description: row.Description?.trim(),
+    }));
+}
 
 export function ImportCSVPopup({
-  addOrUpdateGuessObjectToCategory,
+  onGuessObjectImported,
 }: {
-  addOrUpdateGuessObjectToCategory: (id: GuessObjectId) => Promise<void>;
+  onGuessObjectImported: (guessObjectId: GuessObjectId) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
   const [file, setFile] = useState<File>();
-  const [objects, setObjects] = useState<Objects[]>();
-  const [state, setState] = useState<'start' | 'loading' | 'recap'>('start');
-  const cancelImportRef = useRef(false);
-  const [progress, setProgress] = useState(0);
-  const [importRecap, setImportRecap] = useState<ImportRecap>({
-    success: 0,
-    failed: 0,
-    failed_objects: [],
-  });
+  const [objects, setObjects] = useState<ImportedGuessObject[]>();
+  const {
+    importStatus,
+    importRecap,
+    progressPercent,
+    importGuessObjects,
+    stopImport,
+    resetImport,
+  }: GuessObjectImport = useGuessObjectImport({ onGuessObjectImported });
 
   function handleClose() {
-    setState('start');
+    resetImport();
     setFile(undefined);
     setObjects(undefined);
-    setImportRecap({
-      success: 0,
-      failed: 0,
-      failed_objects: [],
-    });
   }
 
   const handleFileChange = async (
@@ -67,130 +57,15 @@ export function ImportCSVPopup({
 
     reader.onload = async (e) => {
       const csvText = e.target?.result as string;
-      const parsed_objects = await parseObjectFromCSV(csvText);
-      setObjects(parsed_objects);
+      setObjects(parseGuessObjectsFromCSV(csvText));
     };
 
     reader.readAsText(file);
   };
 
-  async function parseObjectFromCSV(csv: string): Promise<
-    {
-      name: string;
-      description?: string;
-    }[]
-  > {
-    const result = Papa.parse<Record<string, string>>(csv, { header: true });
-
-    return result.data
-      .filter((row: Record<string, string>) => row.Name?.trim())
-      .map((row: Record<string, string>) => ({
-        name: row.Name.trim(),
-        description: row.Description?.trim(),
-      }));
-  }
-
-  async function importObject(importedObject: Objects): Promise<void> {
-    const searchResults: GuessObjectSearchResult[] =
-      await searchGuessObjectByName(importedObject.name);
-
-    const external_id = searchResults.at(0)?.source?.external_id;
-    if (!external_id) throw new Error('Identifiant externe introuvable');
-    const full_obj: GuessObjectSearchResult | undefined =
-      await searchGuessObjectByExternalId(external_id);
-    if (!full_obj) throw new Error('Objet introuvable');
-    if (importedObject.description)
-      full_obj.short_description = importedObject.description;
-
-    const worldLocation = full_obj.world_location;
-    if (!worldLocation) throw new Error('Localisation introuvable');
-
-    const worldLocationId: WorldLocationId =
-      await createWorldLocation(worldLocation);
-
-    const {
-      id: _id,
-      world_location: _worldLocation,
-      ...createGuessObject
-    } = full_obj;
-
-    const guessObjectId: GuessObjectId = await saveGuessObject({
-      ...createGuessObject,
-      world_location_id: worldLocationId,
-    });
-
-    await addOrUpdateGuessObjectToCategory(guessObjectId);
-  }
-
-  async function importRemainingObjects(
-    remainingObjects: Objects[],
-  ): Promise<void> {
-    const [importedObject, ...nextObjects] = remainingObjects;
-    if (!importedObject || !objects || cancelImportRef.current) return;
-    const totalCount: number = objects.length;
-
-    try {
-      await importObject(importedObject);
-
-      setImportRecap((prev) => {
-        const newRecap = {
-          ...prev,
-          success: prev.success + 1,
-        };
-        setProgress(
-          Math.round(((newRecap.success + newRecap.failed) / totalCount) * 100),
-        );
-        return newRecap;
-      });
-    } catch (error) {
-      const errorMessage = resolveErrorMessage(error);
-      console.error(`Error importing ${importedObject.name}: ${errorMessage}`);
-
-      setImportRecap((prev) => {
-        const newRecap = {
-          ...prev,
-          failed: prev.failed + 1,
-          failed_objects: [
-            ...prev.failed_objects,
-            { ...importedObject, errorMessage },
-          ],
-        };
-        setProgress(
-          Math.round(((newRecap.success + newRecap.failed) / totalCount) * 100),
-        );
-        return newRecap;
-      });
-    } finally {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    await importRemainingObjects(nextObjects);
-  }
-
   async function handleImportObjects() {
     if (!objects) return;
-
-    setState('loading');
-    cancelImportRef.current = false;
-    setImportRecap({
-      success: 0,
-      failed: 0,
-      failed_objects: [],
-    });
-
-    await importRemainingObjects(objects);
-
-    setState('recap');
-  }
-
-  function handleStopImport() {
-    cancelImportRef.current = true;
-
-    const interval = setInterval(() => {
-      if (state !== 'loading') {
-        clearInterval(interval);
-      }
-    }, 100);
+    await importGuessObjects(objects);
   }
 
   return (
@@ -203,7 +78,7 @@ export function ImportCSVPopup({
         store={dialog}
         portal={false}
         onClose={handleClose}
-        hideOnInteractOutside={state !== 'loading'}
+        hideOnInteractOutside={importStatus !== 'importing'}
         backdrop={<div className="fixed bg-black/40 backdrop-blur-sm z-40" />}
         className="fixed z-60 flex flex-col items-center justify-center w-md
                            top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
@@ -211,7 +86,7 @@ export function ImportCSVPopup({
                            focus:outline-none"
       >
         <div className="h-full w-full p-6">
-          {state === 'start' ? (
+          {importStatus === 'idle' ? (
             <div className="w-full h-full flex flex-col gap-4">
               <label
                 htmlFor="csvInput"
@@ -245,33 +120,34 @@ export function ImportCSVPopup({
                 </Button>
               </div>
             </div>
-          ) : state === 'loading' ? (
+          ) : importStatus === 'importing' ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-4">
               <Loader />
               <p>
-                {importRecap.failed + importRecap.success} / {objects?.length}
+                {importRecap.importedCount + importRecap.failedImports.length} /{' '}
+                {objects?.length}
               </p>
 
               <div className="w-full bg-gray-300 h-3 mt-2">
                 <div
                   className="bg-blue-500 h-3 transition-all"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${progressPercent}%` }}
                 />
               </div>
 
-              <Button variant="destructive" onClick={handleStopImport}>
+              <Button variant="destructive" onClick={stopImport}>
                 Annuler
               </Button>
             </div>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-              <p>✅ {importRecap.success} objets ajoutés</p>
+              <p>✅ {importRecap.importedCount} objets ajoutés</p>
               <div className="flex flex-col items-center justify-center gap-2">
-                <p>❌ {importRecap.failed} imports échoués</p>
-                {importRecap.failed_objects && (
+                <p>❌ {importRecap.failedImports.length} imports échoués</p>
+                {importRecap.failedImports && (
                   <div className="h-max-24 overflow-y-auto">
                     <ul className="list-disc pl-5">
-                      {importRecap.failed_objects.map((obj) => (
+                      {importRecap.failedImports.map((obj) => (
                         <li key={obj.name}>
                           {obj.name} — {obj.errorMessage}
                         </li>
