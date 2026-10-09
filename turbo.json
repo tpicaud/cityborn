@@ -49,8 +49,7 @@
         "BACK_OFFICE_ORIGIN",
         "APP_ID",
         "GOOGLE_CLIENT_ID",
-        "REDIS_URL",
-        "SESSION_PLAYER_DISCONNECT_GRACE_PERIOD_MS"
+        "REDIS_URL"
       ]
     },
     "cityborn-backend#start": {
@@ -74,8 +73,7 @@
         "BACK_OFFICE_ORIGIN",
         "APP_ID",
         "GOOGLE_CLIENT_ID",
-        "REDIS_URL",
-        "SESSION_PLAYER_DISCONNECT_GRACE_PERIOD_MS"
+        "REDIS_URL"
       ]
     },
     "cityborn-frontend#build": {

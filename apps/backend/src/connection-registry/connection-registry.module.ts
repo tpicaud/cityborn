@@ -1,20 +1,15 @@
 import { Module } from '@nestjs/common';
-import { SESSION_CONFIG } from '../config/config.module';
 import { RedisModule } from '../redis/redis.module';
 import { ConnectionRegistryService } from './connection-registry.service';
 import {
   CONNECTION_REGISTRY_TIMING,
-  createConnectionRegistryTiming,
+  connectionRegistryTiming,
 } from './connection-registry-timing';
 
 @Module({
   imports: [RedisModule],
   providers: [
-    {
-      provide: CONNECTION_REGISTRY_TIMING,
-      inject: [SESSION_CONFIG],
-      useFactory: createConnectionRegistryTiming,
-    },
+    { provide: CONNECTION_REGISTRY_TIMING, useValue: connectionRegistryTiming },
     ConnectionRegistryService,
   ],
   exports: [ConnectionRegistryService],

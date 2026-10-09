@@ -33,11 +33,6 @@ const backendEnvironmentSchema = z
     APP_ID: z.string().trim().min(1),
     DATABASE_URL: z.string().url(),
     REDIS_URL: z.string().url(),
-    SESSION_PLAYER_DISCONNECT_GRACE_PERIOD_MS: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .default(30_000),
     BREVO_API_KEY: z.string().trim().min(1),
     BREVO_SENDER_EMAIL: z.string().email(),
     BREVO_SENDER_NAME: z.string().trim().min(1).default('Cityborn'),
@@ -57,9 +52,10 @@ const backendEnvironmentSchema = z
     }
   });
 
-type RawBackendEnvironment = z.infer<typeof backendEnvironmentSchema>;
+interface RawBackendEnvironment
+  extends z.infer<typeof backendEnvironmentSchema> {}
 
-export type BackendConfig = {
+export interface BackendConfig {
   runtime: {
     nodeEnvironment: 'development' | 'production' | 'test';
     port: number;
@@ -81,9 +77,6 @@ export type BackendConfig = {
   redis: {
     url: string;
   };
-  session: {
-    playerDisconnectGracePeriodMs: number;
-  };
   mail: {
     apiKey: string;
     senderEmail: string;
@@ -94,7 +87,7 @@ export type BackendConfig = {
     axiomToken: string | undefined;
     axiomDataset: string | undefined;
   };
-};
+}
 
 export function parseBackendConfig(
   environment: NodeJS.ProcessEnv,
@@ -131,10 +124,6 @@ export function parseBackendConfig(
     },
     redis: {
       url: parsedEnvironment.REDIS_URL,
-    },
-    session: {
-      playerDisconnectGracePeriodMs:
-        parsedEnvironment.SESSION_PLAYER_DISCONNECT_GRACE_PERIOD_MS,
     },
     mail: {
       apiKey: parsedEnvironment.BREVO_API_KEY,

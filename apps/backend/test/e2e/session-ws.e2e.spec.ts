@@ -19,6 +19,11 @@ import {
   type SocketOptions,
 } from 'socket.io-client';
 import { ConnectionRegistryService } from '../../src/connection-registry/connection-registry.service';
+import {
+  CONNECTION_REGISTRY_TIMING,
+  type ConnectionRegistryTiming,
+  connectionRegistryTiming,
+} from '../../src/connection-registry/connection-registry-timing';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
@@ -80,7 +85,15 @@ describe('Session gateway over a real socket', () => {
   }
 
   beforeAll(async () => {
-    app = await createTestApp();
+    const testConnectionRegistryTiming: ConnectionRegistryTiming = {
+      ...connectionRegistryTiming,
+      disconnectGracePeriodMs: 100,
+    };
+    app = await createTestApp((builder) =>
+      builder
+        .overrideProvider(CONNECTION_REGISTRY_TIMING)
+        .useValue(testConnectionRegistryTiming),
+    );
     await app.listen(0);
     appUrl = await app.getUrl();
   });

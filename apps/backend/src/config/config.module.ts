@@ -7,7 +7,6 @@ export type HttpConfig = BackendConfig['http'];
 export type MailConfig = BackendConfig['mail'];
 export type PersistenceConfig = BackendConfig['persistence'];
 export type RedisConfig = BackendConfig['redis'];
-export type SessionConfig = BackendConfig['session'];
 
 export const RUNTIME_CONFIG: symbol = Symbol('RUNTIME_CONFIG');
 export const AUTH_CONFIG: symbol = Symbol('AUTH_CONFIG');
@@ -15,7 +14,6 @@ export const HTTP_CONFIG: symbol = Symbol('HTTP_CONFIG');
 export const MAIL_CONFIG: symbol = Symbol('MAIL_CONFIG');
 export const PERSISTENCE_CONFIG: symbol = Symbol('PERSISTENCE_CONFIG');
 export const REDIS_CONFIG: symbol = Symbol('REDIS_CONFIG');
-export const SESSION_CONFIG: symbol = Symbol('SESSION_CONFIG');
 
 @Global()
 @Module({
@@ -26,7 +24,6 @@ export const SESSION_CONFIG: symbol = Symbol('SESSION_CONFIG');
     { provide: MAIL_CONFIG, useValue: backendConfig.mail },
     { provide: PERSISTENCE_CONFIG, useValue: backendConfig.persistence },
     { provide: REDIS_CONFIG, useValue: backendConfig.redis },
-    { provide: SESSION_CONFIG, useValue: backendConfig.session },
   ],
   exports: [
     RUNTIME_CONFIG,
@@ -35,7 +32,6 @@ export const SESSION_CONFIG: symbol = Symbol('SESSION_CONFIG');
     MAIL_CONFIG,
     PERSISTENCE_CONFIG,
     REDIS_CONFIG,
-    SESSION_CONFIG,
   ],
 })
 export class BackendConfigModule {}
