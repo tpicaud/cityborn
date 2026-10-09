@@ -14,6 +14,7 @@ import {
   ConnectedSocket,
   MessageBody,
   type OnGatewayDisconnect,
+  type OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -27,12 +28,13 @@ import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecyc
 import {
   type ConnectionInfo,
   ConnectionRegistryService,
+  type PlayerPresence,
 } from '../connection-registry/connection-registry.service';
 import { type JoinedSession, SessionService } from './session.service';
 
 @WebSocketGateway()
 @UseFilters(DefaultExceptionFilter)
-export class SessionGateway implements OnGatewayDisconnect {
+export class SessionGateway implements OnGatewayInit, OnGatewayDisconnect {
   constructor(
     private readonly sessionService: SessionService,
     private readonly connectionRegistryService: ConnectionRegistryService,
@@ -42,6 +44,12 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   @WebSocketServer()
   io!: AppServer;
+
+  afterInit(): void {
+    this.connectionRegistryService.onPresenceExpired((presence) =>
+      this.disconnectAbsentPlayer(presence),
+    );
+  }
 
   private async resolveConnection(socketID: string): Promise<ConnectionInfo> {
     const connection =
@@ -91,13 +99,12 @@ export class SessionGateway implements OnGatewayDisconnect {
     });
 
     const { session, reconnectToken }: JoinedSession =
-      await this.sessionService.join(sessionID, playerID, user);
-    await this.connectionRegistryService.register(
-      socket.id,
-      playerID,
-      sessionID,
-      !user,
-    );
+      await this.sessionService.join({
+        sessionID,
+        playerID,
+        user,
+        socketID: socket.id,
+      });
 
     await socket.join(session.id);
     this.broadcastSession(session);
@@ -247,19 +254,14 @@ export class SessionGateway implements OnGatewayDisconnect {
       playerId: playerID,
     });
 
-    const session = await this.sessionService.reconnectPlayer(
+    const session = await this.sessionService.reconnectPlayer({
       sessionID,
       playerID,
       reconnectToken,
       user,
-    );
+      socketID: socket.id,
+    });
     this.enrichGame(session);
-    await this.connectionRegistryService.register(
-      socket.id,
-      playerID,
-      sessionID,
-      !user,
-    );
 
     await socket.join(sessionID);
     this.broadcastSession(session);
@@ -267,28 +269,25 @@ export class SessionGateway implements OnGatewayDisconnect {
 
   private async disconnect(socket: AppSocket): Promise<void> {
     try {
-      const connection = await this.connectionRegistryService.getConnection(
-        socket.id,
-      );
+      const connection: ConnectionInfo | null =
+        await this.connectionRegistryService.release(socket.id);
       if (!connection) return;
 
       this.wideEventService.enrichBusinessContext({
         sessionId: connection.sessionID,
         playerId: connection.playerID,
       });
-
-      const session = await this.sessionService.disconnectPlayer(
-        connection.playerID,
-        connection.sessionID,
-      );
-      await this.connectionRegistryService.unregister(socket.id);
-
-      await socket.leave(session.id);
-      this.broadcastSession(session);
-      this.enrichGame(session);
     } catch (error) {
       this.wideEventService.recordError(error, 'ws.disconnect');
     }
+  }
+
+  private async disconnectAbsentPlayer(
+    presence: PlayerPresence,
+  ): Promise<void> {
+    const session: Session | null =
+      await this.sessionService.disconnectAbsentPlayer(presence);
+    if (session) this.broadcastSession(session);
   }
 
   async handleDisconnect(@ConnectedSocket() socket: AppSocket): Promise<void> {

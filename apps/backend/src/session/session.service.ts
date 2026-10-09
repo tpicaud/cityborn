@@ -26,6 +26,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import {
+  ConnectionRegistryService,
+  type PlayerPresence,
+} from '../connection-registry/connection-registry.service';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
@@ -35,6 +39,17 @@ import { RedisService } from '../redis/redis.service';
 
 export type JoinedSession = {
   session: Session;
+  reconnectToken: SessionReconnectToken | undefined;
+};
+
+type SessionJoin = {
+  sessionID: SessionId;
+  playerID: PlayerId;
+  user: User | undefined;
+  socketID: string;
+};
+
+type SessionReconnection = SessionJoin & {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
@@ -50,6 +65,7 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
+    private readonly connectionRegistryService: ConnectionRegistryService,
   ) {}
 
   private getKey(id: SessionId): string {
@@ -113,11 +129,12 @@ export class SessionService {
     return await this.requireSession(sessionID);
   }
 
-  async join(
-    sessionID: SessionId,
-    playerID: PlayerId,
-    user?: User,
-  ): Promise<JoinedSession> {
+  async join({
+    sessionID,
+    playerID,
+    user,
+    socketID,
+  }: SessionJoin): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
       if (session.currentGame)
         throw new ForbiddenException({
@@ -150,6 +167,10 @@ export class SessionService {
       const reconnectToken: SessionReconnectToken | undefined = isGuest
         ? await this.issueReconnectToken(sessionID, playerID)
         : undefined;
+      await this.connectionRegistryService.register({
+        socketID,
+        connection: { playerID, sessionID, isGuest },
+      });
       return { session, reconnectToken };
     });
   }
@@ -344,12 +365,13 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer(
-    sessionID: SessionId,
-    playerID: PlayerId,
-    reconnectToken: SessionReconnectToken | undefined,
-    user?: User,
-  ): Promise<Session> {
+  async reconnectPlayer({
+    sessionID,
+    playerID,
+    reconnectToken,
+    user,
+    socketID,
+  }: SessionReconnection): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
       const players = session.players;
 
@@ -369,6 +391,10 @@ export class SessionService {
         user,
       );
 
+      await this.connectionRegistryService.register({
+        socketID,
+        connection: { playerID, sessionID, isGuest: !user },
+      });
       players[playerIndex].connected = true;
 
       if (session.hostID === '') session.hostID = playerID;
@@ -377,22 +403,27 @@ export class SessionService {
     });
   }
 
-  async disconnectPlayer(
-    playerID: PlayerId,
-    sessionID: SessionId,
-  ): Promise<Session> {
+  async disconnectAbsentPlayer({
+    sessionID,
+    playerID,
+  }: PlayerPresence): Promise<Session | null> {
+    const storedSession: Session | null = await this.getSession(sessionID);
+    if (!storedSession) return null;
+
     return await this.updateSession(sessionID, async (session) => {
-      const playerIndex = session.players.findIndex(
-        (player) => player.username === playerID,
+      const player: SessionPlayer | undefined = session.players.find(
+        (sessionPlayer) => sessionPlayer.username === playerID,
       );
-      if (playerIndex === -1)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
+      if (!player || player.connected === false) return null;
+
+      const playerIsPresent: boolean =
+        await this.connectionRegistryService.hasLiveConnection({
+          sessionID,
+          playerID,
         });
+      if (playerIsPresent) return null;
 
-      session.players[playerIndex].connected = false;
-
+      player.connected = false;
       this.reassignHostAfterRemoval(session, playerID);
 
       return session;

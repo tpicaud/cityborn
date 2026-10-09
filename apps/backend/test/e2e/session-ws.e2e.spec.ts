@@ -155,7 +155,7 @@ describe('Session gateway over a real socket', () => {
     ]);
   });
 
-  it('authenticates a reconnect and broadcasts the explicit disconnection cleanup', async () => {
+  it('authenticates a reconnect and broadcasts the disconnection after the grace period', async () => {
     const user: User = buildUser();
     const prismaService: PrismaService = app.get(PrismaService);
     await prismaService.user.create({

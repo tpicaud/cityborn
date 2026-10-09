@@ -26,6 +26,7 @@ describe('parseBackendConfig', () => {
     });
     expect(config.mail.senderName).toBe('Cityborn');
     expect(config.logger.level).toBe('info');
+    expect(config.session).toEqual({ playerDisconnectGracePeriodMs: 30_000 });
   });
 
   it('parses numbers and URL lists', () => {
@@ -33,11 +34,13 @@ describe('parseBackendConfig', () => {
       ...validEnvironment,
       PORT: '4100',
       CORS_ORIGIN: 'https://cityborn.test, https://admin.cityborn.test',
+      SESSION_PLAYER_DISCONNECT_GRACE_PERIOD_MS: '5000',
     };
 
     const config = parseBackendConfig(environment);
 
     expect(config.runtime.port).toBe(4100);
+    expect(config.session.playerDisconnectGracePeriodMs).toBe(5_000);
     expect(config.http.corsOrigins).toEqual([
       'https://cityborn.test',
       'https://admin.cityborn.test',
