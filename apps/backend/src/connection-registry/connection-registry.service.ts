@@ -76,10 +76,14 @@ return dueChecks
 `;
 
 const COMPLETE_CLAIMED_PRESENCE_CHECK_SCRIPT = `
-if redis.call('ZSCORE', KEYS[1], ARGV[1]) == ARGV[2] then
-  return redis.call('ZREM', KEYS[1], ARGV[1])
+if redis.call('ZSCORE', KEYS[1], ARGV[1]) ~= ARGV[2] then
+  return 0
 end
-return 0
+local latestLease = redis.call('ZRANGE', KEYS[2], -1, -1, 'WITHSCORES')
+if latestLease[2] and tonumber(latestLease[2]) > tonumber(ARGV[3]) then
+  return redis.call('ZADD', KEYS[1], latestLease[2], ARGV[1])
+end
+return redis.call('ZREM', KEYS[1], ARGV[1])
 `;
 
 @Injectable()
@@ -346,10 +350,12 @@ export class ConnectionRegistryService
     await presenceExpiryHandler(presence);
     await this.redisClient.eval(
       COMPLETE_CLAIMED_PRESENCE_CHECK_SCRIPT,
-      1,
+      2,
       PRESENCE_CHECKS_KEY,
+      this.getPresenceKey(presence),
       presenceCheck,
       String(claimedUntil),
+      Date.now(),
     );
   }
 

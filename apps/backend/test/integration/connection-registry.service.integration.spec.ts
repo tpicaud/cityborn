@@ -190,6 +190,94 @@ describe('ConnectionRegistryService with Redis', () => {
         }),
       ).toBe(false);
     });
+
+    it('retries a presence check whose handler failed once its claim expires', async () => {
+      const attemptTimes: number[] = [];
+      const connectionRegistryService: ConnectionRegistryService =
+        startRegistry();
+      connectionRegistryService.onPresenceExpired(async () => {
+        attemptTimes.push(Date.now());
+        if (attemptTimes.length === 1)
+          throw new Error('Presence expiry handler failed');
+      });
+      await connectionRegistryService.register({
+        socketID: 'socket-1',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+      await connectionRegistryService.release('socket-1');
+
+      await waitUntil({
+        condition: async () =>
+          attemptTimes.length === 2 &&
+          (await redis.zcard('connection-presence-checks')) === 0,
+        deadline: Date.now() + timing.presenceCheckClaimMs * 3,
+      });
+
+      const [firstAttemptTime, secondAttemptTime]: number[] = attemptTimes;
+      expect(secondAttemptTime - firstAttemptTime).toBeGreaterThanOrEqual(
+        timing.presenceCheckClaimMs - timing.presenceCheckIntervalMs,
+      );
+      expect(await redis.zcard('connection-presence-checks')).toBe(0);
+    });
+
+    it('keeps a presence check rescheduled while its handler runs', async () => {
+      const expiredPresences: PlayerPresence[] = [];
+      const owningRegistry: ConnectionRegistryService = createRegistry();
+      const checkingRegistry: ConnectionRegistryService = startRegistry();
+      checkingRegistry.onPresenceExpired(async (presence: PlayerPresence) => {
+        expiredPresences.push(presence);
+        if (expiredPresences.length === 1)
+          await owningRegistry.release('socket-2');
+      });
+      await owningRegistry.register({
+        socketID: 'socket-1',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+      await owningRegistry.register({
+        socketID: 'socket-2',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+
+      await owningRegistry.release('socket-1');
+
+      await waitUntil({
+        condition: async () => expiredPresences.length === 2,
+        deadline: Date.now() + timing.disconnectGracePeriodMs * 4,
+      });
+
+      expect(expiredPresences).toEqual([
+        { sessionID, playerID: hostID },
+        { sessionID, playerID: hostID },
+      ]);
+    });
+
+    it('checks the presence again when the remaining lease of a crashed instance expires', async () => {
+      const presenceLiveness: boolean[] = [];
+      const crashedRegistry: ConnectionRegistryService = createRegistry();
+      const survivingRegistry: ConnectionRegistryService = startRegistry();
+      survivingRegistry.onPresenceExpired(async (presence: PlayerPresence) => {
+        presenceLiveness.push(
+          await survivingRegistry.hasLiveConnection(presence),
+        );
+      });
+      await crashedRegistry.register({
+        socketID: 'socket-1',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+      await crashedRegistry.register({
+        socketID: 'socket-2',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+
+      await crashedRegistry.release('socket-1');
+      await waitUntil({
+        condition: async () => presenceLiveness.length === 2,
+        deadline: Date.now() + timing.leaseMs * 3,
+      });
+
+      expect(presenceLiveness).toEqual([true, false]);
+      expect(await redis.zcard('connection-presence-checks')).toBe(0);
+    });
   });
 
   describe('release', () => {
@@ -254,6 +342,26 @@ describe('ConnectionRegistryService with Redis', () => {
           playerID: hostID,
         }),
       ).toBe(false);
+    });
+
+    it('stops renewing on the owning instance a connection removed by another instance', async () => {
+      const owningRegistry: ConnectionRegistryService = startRegistry();
+      const kickingRegistry: ConnectionRegistryService = createRegistry();
+      await owningRegistry.register({
+        socketID: 'socket-1',
+        connection: { playerID: hostID, sessionID, isGuest: true },
+      });
+
+      await kickingRegistry.unregister('socket-1');
+      await delay(timing.heartbeatIntervalMs * 2);
+
+      expect(
+        await owningRegistry.hasLiveConnection({
+          sessionID,
+          playerID: hostID,
+        }),
+      ).toBe(false);
+      expect(await owningRegistry.release('socket-1')).toBeNull();
     });
   });
 
