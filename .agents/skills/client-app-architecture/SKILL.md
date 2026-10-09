@@ -53,7 +53,10 @@ Le frontend joueur et le back-office sont exportés en statique (`output: 'expor
 
 ## `@cityborn/client` : logique partagée front + mobile
 
-Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque domaine expose un `index.ts` unique atteint par un sous-chemin ; ce qu'un `index.ts` n'exporte pas est privé au package. Il n'y a pas de barrel racine : l'`exports` map de `packages/client/package.json` est la surface publique.
+Rangé par domaine, en miroir des capacités fonctionnelles des apps. Il n'y a pas de barrel racine : l'`exports` map de `packages/client/package.json` est la surface publique.
+
+- Un domaine consommé par les apps expose un `index.ts` unique atteint par un sous-chemin ; ce que son `index.ts` n'exporte pas est privé au package.
+- Un domaine consommé seulement à l'intérieur du package (`category`) n'a ni `index.ts` ni sous-chemin : ses consommateurs importent directement ses fichiers.
 
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
@@ -67,7 +70,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Chaque dom
 | `@cityborn/client/profile` | `src/features/profile/` | Projection des parties du profil, hooks `useProfile` et `useProfileEditor` (pseudo, mot de passe, suppression du compte). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 
-Un nouveau domaine se crée en ajoutant `src/features/<domaine>/index.ts` **et** son entrée dans l'`exports` map. Un type ou un helper vit dans son domaine ; `src/shared/` ne reçoit que ce qui sert à plusieurs domaines.
+Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<domaine>/index.ts` **et** son entrée dans l'`exports` map. Un type ou un helper vit dans son domaine ; `src/shared/` ne reçoit que ce qui sert à plusieurs domaines.
 
 ### État serveur
 
