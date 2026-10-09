@@ -7,7 +7,7 @@ import {
   type QueryKey,
   QueryObserver,
 } from '@tanstack/react-query';
-import { reportQueryErrors } from './queryErrorReporting';
+import { createErrorReportingQueryCache } from './queryErrorReporting';
 
 notifyManager.setScheduler((notify: () => void) => notify());
 
@@ -16,7 +16,6 @@ const observedQueryKey: QueryKey = ['observed'];
 type QueryErrorReportingHarness = {
   queryClient: QueryClient;
   reportedErrors: unknown[];
-  stopReporting: () => void;
 };
 
 type ObservedQueryOptions = {
@@ -26,15 +25,14 @@ type ObservedQueryOptions = {
 };
 
 function createQueryErrorReportingHarness(): QueryErrorReportingHarness {
+  const reportedErrors: unknown[] = [];
   const queryClient: QueryClient = new QueryClient({
+    queryCache: createErrorReportingQueryCache((error: unknown) =>
+      reportedErrors.push(error),
+    ),
     defaultOptions: { queries: { gcTime: Number.POSITIVE_INFINITY } },
   });
-  const reportedErrors: unknown[] = [];
-  const stopReporting: () => void = reportQueryErrors({
-    queryCache: queryClient.getQueryCache(),
-    invokeError: (error: unknown) => reportedErrors.push(error),
-  });
-  return { queryClient, reportedErrors, stopReporting };
+  return { queryClient, reportedErrors };
 }
 
 function observeQuery({
@@ -64,12 +62,9 @@ function waitForQueryError(queryClient: QueryClient): Promise<void> {
   });
 }
 
-test('reportQueryErrors reports the final error of an observed query that reports its errors', async () => {
-  const {
-    queryClient,
-    reportedErrors,
-    stopReporting,
-  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+test('createErrorReportingQueryCache reports the final error of an observed query that reports its errors', async () => {
+  const { queryClient, reportedErrors }: QueryErrorReportingHarness =
+    createQueryErrorReportingHarness();
   const queryError: Error = new Error('category trees unavailable');
   const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -82,16 +77,12 @@ test('reportQueryErrors reports the final error of an observed query that report
 
   assert.deepEqual(reportedErrors, [queryError]);
   stopObserving();
-  stopReporting();
   queryClient.clear();
 });
 
-test('reportQueryErrors ignores a query that does not report its errors', async () => {
-  const {
-    queryClient,
-    reportedErrors,
-    stopReporting,
-  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+test('createErrorReportingQueryCache ignores a query that does not report its errors', async () => {
+  const { queryClient, reportedErrors }: QueryErrorReportingHarness =
+    createQueryErrorReportingHarness();
   const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
   const stopObserving: () => void = observeQuery({
@@ -103,16 +94,12 @@ test('reportQueryErrors ignores a query that does not report its errors', async 
 
   assert.deepEqual(reportedErrors, []);
   stopObserving();
-  stopReporting();
   queryClient.clear();
 });
 
-test('reportQueryErrors ignores the error of a query whose last observer left during the fetch', async () => {
-  const {
-    queryClient,
-    reportedErrors,
-    stopReporting,
-  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+test('createErrorReportingQueryCache ignores the error of a query whose last observer left during the fetch', async () => {
+  const { queryClient, reportedErrors }: QueryErrorReportingHarness =
+    createQueryErrorReportingHarness();
   let failCategoryTreesFetch: (error: Error) => void = () => undefined;
   const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -129,16 +116,12 @@ test('reportQueryErrors ignores the error of a query whose last observer left du
   await queryErrorReceived;
 
   assert.deepEqual(reportedErrors, []);
-  stopReporting();
   queryClient.clear();
 });
 
-test('reportQueryErrors ignores the refetch error of a query that already has data', async () => {
-  const {
-    queryClient,
-    reportedErrors,
-    stopReporting,
-  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+test('createErrorReportingQueryCache ignores the refetch error of a query that already has data', async () => {
+  const { queryClient, reportedErrors }: QueryErrorReportingHarness =
+    createQueryErrorReportingHarness();
   queryClient.setQueryData<string>(observedQueryKey, 'cached category trees');
   const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -151,6 +134,5 @@ test('reportQueryErrors ignores the refetch error of a query that already has da
 
   assert.deepEqual(reportedErrors, []);
   stopObserving();
-  stopReporting();
   queryClient.clear();
 });

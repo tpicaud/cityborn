@@ -8,7 +8,6 @@ import {
   useContext,
   useState,
 } from 'react';
-import { useQueryErrorReporting } from './queryErrorReporting';
 
 type ErrorContextType = {
   invokeError: (error: unknown, fallbackMessage?: string) => void;
@@ -43,8 +42,6 @@ export const ErrorProvider = ({
     },
     [],
   );
-
-  useQueryErrorReporting(invokeError);
 
   return (
     <ErrorContext.Provider value={{ invokeError }}>

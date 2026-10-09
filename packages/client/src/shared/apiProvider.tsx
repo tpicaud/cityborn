@@ -28,6 +28,8 @@ import {
   type SessionApi,
 } from '../features/session/api/sessionApi';
 import type { AppFocus } from '../platform/appFocus';
+import { useError } from './errorContext';
+import { createErrorReportingQueryCache } from './queryErrorReporting';
 
 export type DomainApis = {
   authApi: AuthApi;
@@ -51,7 +53,13 @@ export function ApiProvider({
   appFocus,
   children,
 }: ApiProviderProps) {
-  const [queryClient] = useState<QueryClient>(() => new QueryClient());
+  const { invokeError } = useError();
+  const [queryClient] = useState<QueryClient>(
+    () =>
+      new QueryClient({
+        queryCache: createErrorReportingQueryCache(invokeError),
+      }),
+  );
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
       authApi,

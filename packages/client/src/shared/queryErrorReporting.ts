@@ -1,12 +1,4 @@
-'use client';
-
-import {
-  type QueryCache,
-  type QueryCacheNotifyEvent,
-  type QueryClient,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { type Query, QueryCache } from '@tanstack/react-query';
 
 type QueryErrorReportingMeta = {
   reportsError: boolean;
@@ -20,33 +12,21 @@ declare module '@tanstack/react-query' {
 
 type InvokeError = (error: unknown) => void;
 
-type QueryErrorReportingOptions = {
-  queryCache: QueryCache;
-  invokeError: InvokeError;
-};
-
-export function reportQueryErrors({
-  queryCache,
-  invokeError,
-}: QueryErrorReportingOptions): () => void {
-  return queryCache.subscribe((event: QueryCacheNotifyEvent) => {
-    if (event.type !== 'updated' || event.action.type !== 'error') return;
-    if (!event.query.meta?.reportsError) return;
-    if (event.query.state.data !== undefined) return;
-    if (event.query.getObserversCount() === 0) return;
-    invokeError(event.action.error);
-  });
+function shouldReportQueryError(
+  query: Query<unknown, unknown, unknown>,
+): boolean {
+  if (!query.meta?.reportsError) return false;
+  if (query.state.data !== undefined) return false;
+  return query.getObserversCount() > 0;
 }
 
-export function useQueryErrorReporting(invokeError: InvokeError): void {
-  const queryClient: QueryClient = useQueryClient();
-
-  useEffect(
-    () =>
-      reportQueryErrors({
-        queryCache: queryClient.getQueryCache(),
-        invokeError,
-      }),
-    [queryClient, invokeError],
-  );
+export function createErrorReportingQueryCache(
+  invokeError: InvokeError,
+): QueryCache {
+  return new QueryCache({
+    onError: (error, query) => {
+      if (!shouldReportQueryError(query)) return;
+      invokeError(error);
+    },
+  });
 }

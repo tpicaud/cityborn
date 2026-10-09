@@ -18,11 +18,11 @@ type AppProvidersProps = {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-      <ApiProvider contractClient={contractClient} authApi={authApi}>
-        <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+      <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+        <ApiProvider contractClient={contractClient} authApi={authApi}>
           <AuthBootstrap>{children}</AuthBootstrap>
-        </ErrorProvider>
-      </ApiProvider>
+        </ApiProvider>
+      </ErrorProvider>
     </AppRouterCacheProvider>
   );
 }

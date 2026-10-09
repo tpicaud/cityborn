@@ -12,10 +12,10 @@ installFrenchZodErrorMap();
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ApiProvider contractClient={contractClient} authApi={authApi}>
-      <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+      <ApiProvider contractClient={contractClient} authApi={authApi}>
         <AuthBootstrap>{children}</AuthBootstrap>
-      </ErrorProvider>
-    </ApiProvider>
+      </ApiProvider>
+    </ErrorProvider>
   );
 }

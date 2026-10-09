@@ -41,13 +41,15 @@ const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   return (
-    <ApiProvider
-      contractClient={contractClient}
-      authApi={authApi}
-      appFocus={appFocus}
-    >
-      <RootLayoutContent />
-    </ApiProvider>
+    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+      <ApiProvider
+        contractClient={contractClient}
+        authApi={authApi}
+        appFocus={appFocus}
+      >
+        <RootLayoutContent />
+      </ApiProvider>
+    </ErrorProvider>
   );
 }
 
@@ -114,35 +116,33 @@ function RootLayoutContent() {
         </View>
       )}
       {currentUserState.status === 'ready' && (
-        <ErrorProvider ErrorDialogComponent={ErrorDialog}>
-          <SafeAreaProvider>
-            <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-              <AuthProvider initialValue={currentUserState.user}>
-                <ForegroundUserRefresh />
-                <StatusBar hidden={true} />
-                <Stack
-                  screenOptions={{
+        <SafeAreaProvider>
+          <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
+            <AuthProvider initialValue={currentUserState.user}>
+              <ForegroundUserRefresh />
+              <StatusBar hidden={true} />
+              <Stack
+                screenOptions={{
+                  contentStyle: { backgroundColor: 'transparent' },
+                  animation: 'none',
+                  header: (props) => <CustomHeader {...props} />,
+                }}
+              >
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{
+                    headerShown: false,
                     contentStyle: { backgroundColor: 'transparent' },
-                    animation: 'none',
-                    header: (props) => <CustomHeader {...props} />,
                   }}
-                >
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{
-                      headerShown: false,
-                      contentStyle: { backgroundColor: 'transparent' },
-                    }}
-                  />
-                  <Stack.Screen name="auth/sign-in" />
-                  <Stack.Screen name="auth/sign-up" />
-                  <Stack.Screen name="session/solo" />
-                  <Stack.Screen name="session/multi/[sessionID]" />
-                </Stack>
-              </AuthProvider>
-            </View>
-          </SafeAreaProvider>
-        </ErrorProvider>
+                />
+                <Stack.Screen name="auth/sign-in" />
+                <Stack.Screen name="auth/sign-up" />
+                <Stack.Screen name="session/solo" />
+                <Stack.Screen name="session/multi/[sessionID]" />
+              </Stack>
+            </AuthProvider>
+          </View>
+        </SafeAreaProvider>
       )}
     </>
   );

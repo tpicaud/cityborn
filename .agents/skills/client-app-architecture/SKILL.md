@@ -33,7 +33,7 @@ Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app c
 
 `ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Chaque app crée dans son `lib/api/` son `contractClient` et son `authApi`, puis les passe à `ApiProvider` (`@cityborn/client`). Ce provider unique crée le `QueryClient`, construit les autres API de domaine (`createCategoryApi`, `createSessionApi`, `createProfileApi`) et les expose par contexte : un hook lit ses ports par `useDomainApis()`, jamais en paramètre. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
-Ordre des providers dans chaque app : `ApiProvider`, puis `ErrorProvider`, puis `AuthProvider`. Sur mobile, le chargement de l'utilisateur et le healthcheck s'exécutent avant le montage d'`ErrorProvider` : `ApiProvider` reste donc au-dessus.
+Ordre des providers dans chaque app : `ErrorProvider`, puis `ApiProvider`, puis `AuthProvider`. `ApiProvider` lit `invokeError` pour créer la `QueryCache` qui remonte les erreurs de query.
 
 L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap (`useCurrentUserBootstrap`) expose une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant.
 
