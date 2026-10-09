@@ -132,6 +132,7 @@ export const SignUpForm = () => {
             disabled={isSubmitting}
             label="S'INSCRIRE"
             onPress={submit}
+            className="mt-8"
           />
         </View>
         <View className="flex flex-row items-center gap-2 w-full">

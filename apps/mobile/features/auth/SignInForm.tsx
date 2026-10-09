@@ -87,6 +87,7 @@ export const SignInForm = () => {
             disabled={isSubmitting}
             label="SE CONNECTER"
             onPress={submit}
+            className="mt-8"
           />
           <Button
             variant="default"
