@@ -1,14 +1,28 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { notifyManager, QueryClient } from '@tanstack/react-query';
+import {
+  notifyManager,
+  type QueryCacheNotifyEvent,
+  QueryClient,
+  type QueryKey,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { reportQueryErrors } from './queryErrorReporting';
 
 notifyManager.setScheduler((notify: () => void) => notify());
+
+const observedQueryKey: QueryKey = ['observed'];
 
 type QueryErrorReportingHarness = {
   queryClient: QueryClient;
   reportedErrors: unknown[];
   stopReporting: () => void;
+};
+
+type ObservedQueryOptions = {
+  queryClient: QueryClient;
+  queryFn: () => Promise<never>;
+  reportsError: boolean;
 };
 
 function createQueryErrorReportingHarness(): QueryErrorReportingHarness {
@@ -23,25 +37,51 @@ function createQueryErrorReportingHarness(): QueryErrorReportingHarness {
   return { queryClient, reportedErrors, stopReporting };
 }
 
-test('reportQueryErrors reports the final error of a query that reports its errors', async () => {
+function observeQuery({
+  queryClient,
+  queryFn,
+  reportsError,
+}: ObservedQueryOptions): () => void {
+  const queryObserver: QueryObserver<never> = new QueryObserver(queryClient, {
+    queryKey: observedQueryKey,
+    queryFn,
+    retry: 1,
+    retryDelay: 0,
+    meta: { reportsError },
+  });
+  return queryObserver.subscribe(() => undefined);
+}
+
+function waitForQueryError(queryClient: QueryClient): Promise<void> {
+  return new Promise((resolve: () => void) => {
+    const stopWaiting: () => void = queryClient
+      .getQueryCache()
+      .subscribe((event: QueryCacheNotifyEvent) => {
+        if (event.type !== 'updated' || event.action.type !== 'error') return;
+        stopWaiting();
+        resolve();
+      });
+  });
+}
+
+test('reportQueryErrors reports the final error of an observed query that reports its errors', async () => {
   const {
     queryClient,
     reportedErrors,
     stopReporting,
   }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
   const queryError: Error = new Error('category trees unavailable');
+  const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
-  await assert.rejects(
-    queryClient.fetchQuery({
-      queryKey: ['reported'],
-      queryFn: () => Promise.reject(queryError),
-      retry: 1,
-      retryDelay: 0,
-      meta: { reportsError: true },
-    }),
-  );
+  const stopObserving: () => void = observeQuery({
+    queryClient,
+    queryFn: () => Promise.reject(queryError),
+    reportsError: true,
+  });
+  await queryErrorReceived;
 
   assert.deepEqual(reportedErrors, [queryError]);
+  stopObserving();
   stopReporting();
   queryClient.clear();
 });
@@ -52,15 +92,41 @@ test('reportQueryErrors ignores a query that does not report its errors', async 
     reportedErrors,
     stopReporting,
   }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+  const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
-  await assert.rejects(
-    queryClient.fetchQuery({
-      queryKey: ['silent'],
-      queryFn: () => Promise.reject(new Error('silent failure')),
-      retry: false,
-      meta: { reportsError: false },
-    }),
-  );
+  const stopObserving: () => void = observeQuery({
+    queryClient,
+    queryFn: () => Promise.reject(new Error('silent failure')),
+    reportsError: false,
+  });
+  await queryErrorReceived;
+
+  assert.deepEqual(reportedErrors, []);
+  stopObserving();
+  stopReporting();
+  queryClient.clear();
+});
+
+test('reportQueryErrors ignores the error of a query whose last observer left during the fetch', async () => {
+  const {
+    queryClient,
+    reportedErrors,
+    stopReporting,
+  }: QueryErrorReportingHarness = createQueryErrorReportingHarness();
+  let failCategoryTreesFetch: (error: Error) => void = () => undefined;
+  const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
+
+  const stopObserving: () => void = observeQuery({
+    queryClient,
+    queryFn: () =>
+      new Promise<never>((_resolve, reject) => {
+        failCategoryTreesFetch = reject;
+      }),
+    reportsError: true,
+  });
+  stopObserving();
+  failCategoryTreesFetch(new Error('category trees unavailable'));
+  await queryErrorReceived;
 
   assert.deepEqual(reportedErrors, []);
   stopReporting();

@@ -32,6 +32,7 @@ export function reportQueryErrors({
   return queryCache.subscribe((event: QueryCacheNotifyEvent) => {
     if (event.type !== 'updated' || event.action.type !== 'error') return;
     if (!event.query.meta?.reportsError) return;
+    if (event.query.getObserversCount() === 0) return;
     invokeError(event.action.error);
   });
 }
