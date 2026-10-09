@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/shared/index.ts",
+    "./admin": "./src/features/admin/index.ts",
     "./api": "./src/api/index.ts",
     "./auth": "./src/features/auth/index.ts",
     "./health": "./src/features/health/index.ts",

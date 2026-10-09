@@ -14,6 +14,7 @@ import {
   useState,
 } from 'react';
 import type { ContractClient } from '../api/contractClient';
+import { type AdminApi, createAdminApi } from '../features/admin/api/adminApi';
 import type { AuthApi } from '../features/auth/api/authApi';
 import {
   type CategoryApi,
@@ -36,6 +37,7 @@ import { useError } from './errorContext';
 import { createErrorReportingQueryCache } from './queryErrorReporting';
 
 export type DomainApis = {
+  adminApi: AdminApi;
   authApi: AuthApi;
   categoryApi: CategoryApi;
   healthApi: HealthApi;
@@ -67,6 +69,7 @@ export function ApiProvider({
   );
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
+      adminApi: createAdminApi(contractClient),
       authApi,
       categoryApi: createCategoryApi(contractClient),
       healthApi: createHealthApi(contractClient),
