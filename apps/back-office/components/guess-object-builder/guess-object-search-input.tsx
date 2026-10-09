@@ -1,6 +1,6 @@
 import * as Ariakit from '@ariakit/react';
 import type { GuessObjectSearchResult } from '@cityborn/api';
-import { useGuessObjectSearch } from '@cityborn/client/admin';
+import { type NameSearch, useGuessObjectSearch } from '@cityborn/client/admin';
 import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function GuessObjectSearchInput({
@@ -27,7 +27,10 @@ export function GuessObjectSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const matches: GuessObjectSearchResult[] = useGuessObjectSearch(searchValue);
+  const {
+    searchResults: matches,
+    searchErrorMessage,
+  }: NameSearch<GuessObjectSearchResult> = useGuessObjectSearch(searchValue);
 
   return (
     <Ariakit.ComboboxProvider
@@ -52,7 +55,11 @@ export function GuessObjectSearchInput({
         portal
         className={popoverClassName}
       >
-        {matches.length ? (
+        {searchErrorMessage ? (
+          <div className="p-2 text-red-700 bg-white rounded-md shadow-md min-w-full">
+            {searchErrorMessage}
+          </div>
+        ) : matches.length ? (
           matches.slice(0, 5).map((draft) => (
             <Ariakit.ComboboxItem
               key={draft.id ?? draft.source?.external_id}

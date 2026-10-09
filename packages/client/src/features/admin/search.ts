@@ -1,8 +1,11 @@
 'use client';
 
-import type {
-  GuessObjectSearchResult,
-  WorldLocationSearchResult,
+import {
+  type GuessObjectSearchResult,
+  getFriendlyErrorMessage,
+  parseApiError,
+  resolveErrorMessage,
+  type WorldLocationSearchResult,
 } from '@cityborn/api';
 import {
   type QueryKey,
@@ -17,7 +20,12 @@ import {
   worldLocationSearchQueryOptions,
 } from './api/adminQueries';
 
-type DebouncedSearch<TSearchResult> = {
+export type NameSearch<TSearchResult> = {
+  searchResults: TSearchResult[];
+  searchErrorMessage: string | null;
+};
+
+type DebouncedSearchOptions<TSearchResult> = {
   searchTerm: string;
   toSearchQueryOptions: (
     debouncedSearchTerm: string,
@@ -33,6 +41,10 @@ function useDebouncedSearchTerm(searchTerm: string): string {
     useState<string>(searchTerm);
 
   useEffect(() => {
+    if (searchTerm === '') {
+      setDebouncedSearchTerm('');
+      return;
+    }
     const timeoutId: ReturnType<typeof setTimeout> = setTimeout(
       () => setDebouncedSearchTerm(searchTerm),
       searchDelayMs,
@@ -43,24 +55,35 @@ function useDebouncedSearchTerm(searchTerm: string): string {
   return debouncedSearchTerm;
 }
 
+function toSearchErrorMessage(searchError: Error | null): string | null {
+  if (!searchError) return null;
+  return resolveErrorMessage(
+    searchError,
+    getFriendlyErrorMessage(parseApiError(0, searchError)),
+  );
+}
+
 function useDebouncedSearch<TSearchResult>({
   searchTerm,
   toSearchQueryOptions,
-}: DebouncedSearch<TSearchResult>): TSearchResult[] {
+}: DebouncedSearchOptions<TSearchResult>): NameSearch<TSearchResult> {
   const debouncedSearchTerm: string = useDebouncedSearchTerm(searchTerm);
-  const {
-    data: searchResults = noSearchResults,
-  }: UseQueryResult<TSearchResult[]> = useQuery(
+  const searchQuery: UseQueryResult<TSearchResult[]> = useQuery(
     toSearchQueryOptions(debouncedSearchTerm),
   );
 
-  if (searchTerm === '' || debouncedSearchTerm === '') return noSearchResults;
-  return searchResults;
+  if (searchTerm === '') {
+    return { searchResults: noSearchResults, searchErrorMessage: null };
+  }
+  return {
+    searchResults: searchQuery.data ?? noSearchResults,
+    searchErrorMessage: toSearchErrorMessage(searchQuery.error),
+  };
 }
 
 export function useGuessObjectSearch(
   searchTerm: string,
-): GuessObjectSearchResult[] {
+): NameSearch<GuessObjectSearchResult> {
   const { adminApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,
@@ -74,7 +97,7 @@ export function useGuessObjectSearch(
 
 export function useWorldLocationSearch(
   searchTerm: string,
-): WorldLocationSearchResult[] {
+): NameSearch<WorldLocationSearchResult> {
   const { adminApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,

@@ -1,6 +1,9 @@
 import * as Ariakit from '@ariakit/react';
 import type { WorldLocationSearchResult } from '@cityborn/api';
-import { useWorldLocationSearch } from '@cityborn/client/admin';
+import {
+  type NameSearch,
+  useWorldLocationSearch,
+} from '@cityborn/client/admin';
 import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function WorldLocationSearchInput({
@@ -27,7 +30,10 @@ export function WorldLocationSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const matches: WorldLocationSearchResult[] =
+  const {
+    searchResults: matches,
+    searchErrorMessage,
+  }: NameSearch<WorldLocationSearchResult> =
     useWorldLocationSearch(searchValue);
 
   return (
@@ -54,7 +60,11 @@ export function WorldLocationSearchInput({
         portal
         className={popoverClassName}
       >
-        {matches.length ? (
+        {searchErrorMessage ? (
+          <div className="p-2 text-red-700 bg-white rounded-md shadow-md min-w-full">
+            {searchErrorMessage}
+          </div>
+        ) : matches.length ? (
           matches.slice(0, 5).map((candidate) => (
             <Ariakit.ComboboxItem
               key={candidate.id}

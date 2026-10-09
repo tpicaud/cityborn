@@ -10,10 +10,14 @@ export {
   useCategoryEditor,
   useCategoryEditorLoad,
 } from './categoryEditor';
+export {
+  type NameSearch,
+  useGuessObjectSearch,
+  useWorldLocationSearch,
+} from './search';
 export type { GuessObjectDraftEditor } from './useGuessObjectDraft';
 export {
   type GuessObjectImport,
   type ImportedGuessObject,
   useGuessObjectImport,
 } from './useGuessObjectImport';
-export { useGuessObjectSearch, useWorldLocationSearch } from './search';
