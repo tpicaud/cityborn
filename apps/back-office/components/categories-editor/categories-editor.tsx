@@ -1,11 +1,13 @@
 'use client';
 
-import type { Category, CreateCategory } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import type { Category } from '@cityborn/api';
+import {
+  type CategoryCatalog,
+  useCategoryCatalog,
+} from '@cityborn/client/admin';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createCategory, getCategories } from '@/lib/api/category';
+import { useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 import { CategoriesList } from './categories-list';
@@ -13,26 +15,9 @@ import { CreateCategoryDialog } from './create-category-popup';
 
 export function CategoriesEditor() {
   const router = useRouter();
-  const { invokeError } = useError();
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, isLoading, reloadCategories }: CategoryCatalog =
+    useCategoryCatalog();
   const [searchValue, setSearchValue] = useState<string>('');
-
-  const loadCategories = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      setCategories(await getCategories());
-    } catch (error: unknown) {
-      invokeError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [invokeError]);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
@@ -40,23 +25,7 @@ export function CategoriesEditor() {
     );
   }, [categories, searchValue]);
 
-  async function handleCreateCategory(
-    newCategory: CreateCategory,
-  ): Promise<void> {
-    setIsLoading(true);
-    try {
-      const createdCategory: Category = await createCategory(newCategory);
-      setCategories((previousCategories: Category[]) => [
-        ...previousCategories,
-        createdCategory,
-      ]);
-      await onCategorySelect(createdCategory);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function onCategorySelect(category: Category) {
+  function onCategorySelect(category: Category): void {
     router.push(`/dashboard/edit-category?id=${category.id}`);
   }
 
@@ -80,8 +49,8 @@ export function CategoriesEditor() {
       </div>
       <div className="flex flex-col items-center justify-center gap-4">
         <div className="flex flex-row gap-2 mb-1">
-          <CreateCategoryDialog handleCreateCategory={handleCreateCategory} />
-          <Button variant="outline" onClick={loadCategories}>
+          <CreateCategoryDialog onCategoryCreated={onCategorySelect} />
+          <Button variant="outline" onClick={reloadCategories}>
             <RefreshCcw />
           </Button>
         </div>

@@ -6,11 +6,11 @@ import {
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
-import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import { type Query, QueryClient, type QueryKey } from '@tanstack/react-query';
 import type { AuthApi } from './authApi';
 import {
   accountQueryKey,
-  clearCurrentUser,
+  clearCacheAfterSignOut,
   currentUserQueryOptions,
 } from './authQueries';
 
@@ -29,6 +29,8 @@ const signedInUserGameRecordsQueryKey: QueryKey = [
 ];
 
 const categoryTreesQueryKey: QueryKey = ['category', 'trees'];
+
+const adminCategoryListQueryKey: QueryKey = ['admin', 'categories', 'list'];
 
 function unexpectedCall(): never {
   throw new Error('unexpected auth call');
@@ -49,30 +51,31 @@ function createFakeAuthApi(getCurrentUser: AuthApi['getCurrentUser']): AuthApi {
   };
 }
 
-test('clearCurrentUser signs the user out and drops the account data but keeps shared data', async () => {
+test('clearCacheAfterSignOut signs the user out and drops every other cached query', async () => {
   const authApi: AuthApi = createFakeAuthApi(async () => signedInUser);
   const queryClient: QueryClient = new QueryClient();
   await queryClient.fetchQuery(currentUserQueryOptions(authApi));
   queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
   queryClient.setQueryData<string[]>(categoryTreesQueryKey, ['cities']);
+  queryClient.setQueryData<string[]>(adminCategoryListQueryKey, ['draft']);
 
-  await clearCurrentUser(queryClient);
+  await clearCacheAfterSignOut(queryClient);
 
   assert.equal(
     queryClient.getQueryData(currentUserQueryOptions(authApi).queryKey),
     null,
   );
-  assert.equal(
-    queryClient.getQueryCache().find({
-      queryKey: signedInUserGameRecordsQueryKey,
-    }),
-    undefined,
+  assert.deepEqual(
+    queryClient
+      .getQueryCache()
+      .getAll()
+      .map((query: Query) => query.queryKey),
+    [currentUserQueryOptions(authApi).queryKey],
   );
-  assert.deepEqual(queryClient.getQueryData(categoryTreesQueryKey), ['cities']);
   queryClient.clear();
 });
 
-test('clearCurrentUser keeps the user signed out when a current user fetch was in flight', async () => {
+test('clearCacheAfterSignOut keeps the user signed out when a current user fetch was in flight', async () => {
   let resolveCurrentUser: (user: User) => void = () => undefined;
   const authApi: AuthApi = createFakeAuthApi(
     () =>
@@ -85,7 +88,7 @@ test('clearCurrentUser keeps the user signed out when a current user fetch was i
     .fetchQuery(currentUserQueryOptions(authApi))
     .catch(() => null);
 
-  await clearCurrentUser(queryClient);
+  await clearCacheAfterSignOut(queryClient);
   resolveCurrentUser(signedInUser);
   await currentUserFetch;
 

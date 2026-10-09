@@ -1,12 +1,7 @@
 import * as Ariakit from '@ariakit/react';
 import type { GuessObjectSearchResult } from '@cityborn/api';
-import {
-  type ChangeEventHandler,
-  startTransition,
-  useEffect,
-  useState,
-} from 'react';
-import { searchGuessObjectByName } from '@/lib/api/guess-object';
+import { type NameSearch, useGuessObjectSearch } from '@cityborn/client/admin';
+import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function GuessObjectSearchInput({
   type = 'text',
@@ -32,25 +27,10 @@ export function GuessObjectSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<GuessObjectSearchResult[]>([]);
-
-  useEffect(() => {
-    if (!searchValue) {
-      setMatches([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        setMatches(await searchGuessObjectByName(searchValue));
-      } catch (error) {
-        console.error('Search error:', error);
-        setMatches([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchValue]);
+  const {
+    searchResults: matches,
+    searchErrorMessage,
+  }: NameSearch<GuessObjectSearchResult> = useGuessObjectSearch(searchValue);
 
   return (
     <Ariakit.ComboboxProvider
@@ -75,7 +55,11 @@ export function GuessObjectSearchInput({
         portal
         className={popoverClassName}
       >
-        {matches.length ? (
+        {searchErrorMessage ? (
+          <div className="p-2 text-red-700 bg-white rounded-md shadow-md min-w-full">
+            {searchErrorMessage}
+          </div>
+        ) : matches.length ? (
           matches.slice(0, 5).map((draft) => (
             <Ariakit.ComboboxItem
               key={draft.id ?? draft.source?.external_id}

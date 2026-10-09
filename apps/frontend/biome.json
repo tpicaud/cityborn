@@ -16,11 +16,37 @@
               {
                 "group": ["@tanstack/*", "@tanstack/*/**"],
                 "message": "L'état serveur reste dans @cityborn/client : consommer ses hooks plutôt qu'importer @tanstack/* dans l'app."
+              },
+              {
+                "group": ["**/contractClient"],
+                "message": "Le contractClient de l'app ne sert qu'au provider racine et à l'authApi : consommer les hooks de @cityborn/client."
               }
             ]
           }
         }
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/app/providers.tsx", "src/lib/api/auth.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@tanstack/*", "@tanstack/*/**"],
+                    "message": "L'état serveur reste dans @cityborn/client : consommer ses hooks plutôt qu'importer @tanstack/* dans l'app."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

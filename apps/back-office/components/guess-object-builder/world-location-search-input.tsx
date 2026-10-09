@@ -1,12 +1,10 @@
 import * as Ariakit from '@ariakit/react';
 import type { WorldLocationSearchResult } from '@cityborn/api';
 import {
-  type ChangeEventHandler,
-  startTransition,
-  useEffect,
-  useState,
-} from 'react';
-import { searchWorldLocationByName } from '@/lib/api/guess-object';
+  type NameSearch,
+  useWorldLocationSearch,
+} from '@cityborn/client/admin';
+import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function WorldLocationSearchInput({
   type = 'text',
@@ -32,25 +30,11 @@ export function WorldLocationSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const [matches, setMatches] = useState<WorldLocationSearchResult[]>([]);
-
-  useEffect(() => {
-    if (!searchValue) {
-      setMatches([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        setMatches(await searchWorldLocationByName(searchValue));
-      } catch (error) {
-        console.error('Search error:', error);
-        setMatches([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchValue]);
+  const {
+    searchResults: matches,
+    searchErrorMessage,
+  }: NameSearch<WorldLocationSearchResult> =
+    useWorldLocationSearch(searchValue);
 
   return (
     <Ariakit.ComboboxProvider
@@ -76,7 +60,11 @@ export function WorldLocationSearchInput({
         portal
         className={popoverClassName}
       >
-        {matches.length ? (
+        {searchErrorMessage ? (
+          <div className="p-2 text-red-700 bg-white rounded-md shadow-md min-w-full">
+            {searchErrorMessage}
+          </div>
+        ) : matches.length ? (
           matches.slice(0, 5).map((candidate) => (
             <Ariakit.ComboboxItem
               key={candidate.id}

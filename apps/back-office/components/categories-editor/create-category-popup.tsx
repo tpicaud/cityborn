@@ -1,40 +1,29 @@
 import * as Ariakit from '@ariakit/react';
+import type { Category } from '@cityborn/api';
 import {
-  type CreateCategory,
-  type CreateCategoryInput,
-  CreateCategorySchema,
-} from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { zodResolver } from '@hookform/resolvers/zod';
+  type CategoryCreation,
+  useCategoryCreation,
+} from '@cityborn/client/admin';
 import { Plus } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import { Button } from '../ui/Button';
 
 export function CreateCategoryDialog({
-  handleCreateCategory,
+  onCategoryCreated,
 }: {
-  handleCreateCategory: (createCategory: CreateCategory) => Promise<void>;
+  onCategoryCreated: (category: Category) => void;
 }) {
   const dialog = Ariakit.useDialogStore();
-  const { invokeError } = useError();
   const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateCategoryInput, undefined, CreateCategory>({
-    resolver: zodResolver(CreateCategorySchema),
-    defaultValues: { name: '', description: '', isPublished: false },
-  });
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      await handleCreateCategory(values);
+    form: {
+      register,
+      formState: { errors, isSubmitting },
+    },
+    submit,
+  }: CategoryCreation = useCategoryCreation({
+    onCategoryCreated: (category: Category) => {
       dialog.hide();
-      reset();
-    } catch (error: unknown) {
-      invokeError(error);
-    }
+      onCategoryCreated(category);
+    },
   });
 
   return (
@@ -58,7 +47,7 @@ export function CreateCategoryDialog({
           </Ariakit.DialogHeading>
 
           <form
-            onSubmit={onSubmit}
+            onSubmit={submit}
             className="w-full h-full flex flex-col gap-4 mt-4"
           >
             <label htmlFor="name">Nom</label>

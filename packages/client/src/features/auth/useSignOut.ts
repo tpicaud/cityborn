@@ -4,7 +4,7 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import { clearCurrentUser } from './api/authQueries';
+import { clearCacheAfterSignOut } from './api/authQueries';
 
 type SignOutOptions = {
   onSignedOut?: () => void;
@@ -22,7 +22,7 @@ export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
   return useCallback(async (): Promise<void> => {
     try {
       await authApi.signOut();
-      await clearCurrentUser(queryClient);
+      await clearCacheAfterSignOut(queryClient);
       onSignedOutRef.current?.();
     } catch (error: unknown) {
       invokeError(error);

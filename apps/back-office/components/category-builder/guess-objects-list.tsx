@@ -1,14 +1,14 @@
-import type { GuessObject } from '@cityborn/api';
+import type { GuessObject, GuessObjectId } from '@cityborn/api';
 import { Button } from '../ui/Button';
 
 export function GuessObjectsList({
   guessObjects,
-  selectedGuessObject,
+  selectedGuessObjectId,
   handleSelectGuessObject,
   handleRemoveFromCategory,
 }: {
   guessObjects: GuessObject[] | undefined;
-  selectedGuessObject: GuessObject | undefined;
+  selectedGuessObjectId: GuessObjectId | undefined;
   handleSelectGuessObject: (guessObject: GuessObject) => void;
   handleRemoveFromCategory: (guessObject: GuessObject) => void;
 }) {
@@ -25,7 +25,7 @@ export function GuessObjectsList({
               key={obj.id}
               className={`rounded-xl border-2 p-3 bg-neutral-700 transition
                                           hover:border-gray-100
-                                            ${selectedGuessObject?.id === obj.id ? 'border-gray-100' : 'border-transparent'}`}
+                                            ${selectedGuessObjectId === obj.id ? 'border-gray-100' : 'border-transparent'}`}
             >
               <div className="flex flex-row items-center justify-between">
                 <button

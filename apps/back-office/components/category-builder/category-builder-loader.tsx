@@ -1,66 +1,36 @@
 'use client';
 
-import type { Category, CategoryId, FullCategory } from '@cityborn/api';
-import { useError } from '@cityborn/client';
+import type { CategoryId } from '@cityborn/api';
+import {
+  type CategoryEditorLoad,
+  useCategoryEditorLoad,
+} from '@cityborn/client/admin';
 import { notFound } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { getCategories, getFullCategory } from '@/lib/api/category';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 import { CategoryBuilder } from './category-builder';
-
-type CategoryLoadState =
-  | { status: 'loading' }
-  | { status: 'missing' }
-  | { status: 'failed' }
-  | { status: 'loaded'; category: FullCategory; categories: Category[] };
-
-async function loadCategory(
-  categoryId: CategoryId,
-): Promise<CategoryLoadState> {
-  const [category, categories]: [FullCategory | null, Category[]] =
-    await Promise.all([getFullCategory(categoryId), getCategories()]);
-  if (!category) return { status: 'missing' };
-  return { status: 'loaded', category, categories };
-}
 
 export function CategoryBuilderLoader({
   categoryId,
 }: {
   categoryId: CategoryId;
 }) {
-  const { invokeError } = useError();
-  const [categoryLoadState, setCategoryLoadState] = useState<CategoryLoadState>(
-    { status: 'loading' },
-  );
+  const { categoryEditorState, retry }: CategoryEditorLoad =
+    useCategoryEditorLoad({ categoryId });
 
-  const reloadCategory = useCallback(async (): Promise<void> => {
-    setCategoryLoadState({ status: 'loading' });
-    try {
-      setCategoryLoadState(await loadCategory(categoryId));
-    } catch (error: unknown) {
-      setCategoryLoadState({ status: 'failed' });
-      invokeError(error);
-    }
-  }, [categoryId, invokeError]);
+  if (categoryEditorState.status === 'missing') notFound();
 
-  useEffect(() => {
-    reloadCategory();
-  }, [reloadCategory]);
-
-  if (categoryLoadState.status === 'missing') notFound();
-
-  if (categoryLoadState.status === 'failed') {
+  if (categoryEditorState.status === 'failed') {
     return (
       <div className="h-full w-full flex items-center justify-center">
-        <Button variant="primary" onClick={reloadCategory}>
+        <Button variant="primary" onClick={retry}>
           Réessayer
         </Button>
       </div>
     );
   }
 
-  if (categoryLoadState.status === 'loading') {
+  if (categoryEditorState.status === 'loading') {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader />
@@ -70,8 +40,9 @@ export function CategoryBuilderLoader({
 
   return (
     <CategoryBuilder
-      fetchedCategory={categoryLoadState.category}
-      categories={categoryLoadState.categories}
+      key={categoryEditorState.category.id}
+      editedCategory={categoryEditorState.category}
+      categories={categoryEditorState.categories}
     />
   );
 }
