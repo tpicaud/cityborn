@@ -8,6 +8,7 @@ import {
   useContext,
   useState,
 } from 'react';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 
 type AuthContextType = {
@@ -20,24 +21,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({
   initialValue,
-  getCurrentUser,
   children,
 }: {
   initialValue: User | null;
-  getCurrentUser: () => Promise<User | null>;
   children: ReactNode;
 }) => {
   const [user, setUser] = useState<User | null>(initialValue);
+  const { authApi }: DomainApis = useDomainApis();
   const { invokeError } = useError();
 
   const refreshUser = useCallback(async (): Promise<void> => {
     try {
-      const currentUser: User | null = await getCurrentUser();
+      const currentUser: User | null = await authApi.getCurrentUser();
       setUser(currentUser);
     } catch (error: unknown) {
       invokeError(error);
     }
-  }, [getCurrentUser, invokeError]);
+  }, [authApi, invokeError]);
 
   return (
     <AuthContext.Provider value={{ user, setUser, refreshUser }}>

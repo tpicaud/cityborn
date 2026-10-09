@@ -6,7 +6,6 @@ import {
 } from '@cityborn/client/auth';
 import { useEffect, useRef, useState } from 'react';
 import { frontendClientConfig } from '@/config/client';
-import { authApi } from '@/lib/api/auth';
 
 type GoogleCredentialResponse = { credential: string };
 
@@ -33,7 +32,7 @@ declare global {
 
 export function SignInWithGoogleButton() {
   const { signInWithGoogle }: IdentityProviderSignIn =
-    useIdentityProviderSignIn({ authApi });
+    useIdentityProviderSignIn();
   const googleButtonContainer = useRef<HTMLDivElement>(null);
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
 

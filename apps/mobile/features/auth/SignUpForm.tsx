@@ -6,7 +6,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Button from '@/components/ui/Button';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { authApi } from '@/lib/api/auth';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -19,7 +18,6 @@ export const SignUpForm = () => {
     },
     submit,
   }: SignUpFlow = useSignUp({
-    authApi,
     onSignedIn: () => router.dismissTo('/'),
   });
 
@@ -134,6 +132,7 @@ export const SignUpForm = () => {
             disabled={isSubmitting}
             label="S'INSCRIRE"
             onPress={submit}
+            className="mt-8"
           />
         </View>
         <View className="flex flex-row items-center gap-2 w-full">

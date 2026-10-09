@@ -9,7 +9,6 @@ import { CodedError } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/classNames';
 
 export const SignInWithAppleButton = () => {
@@ -17,7 +16,6 @@ export const SignInWithAppleButton = () => {
   const router = useRouter();
   const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
     {
-      authApi,
       onSignedIn: () => router.dismissTo('/'),
     },
   );

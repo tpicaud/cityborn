@@ -12,8 +12,8 @@ import type {
 } from '@cityborn/api';
 import { ApiResponseError, unwrapApiResponse } from '@cityborn/api';
 import type { ClientInferResponses } from '@ts-rest/core';
-import type { ContractClient } from '../../api/contractClient';
-import type { TokenStorage } from '../../platform/tokenStorage';
+import type { ContractClient } from '../../../api/contractClient';
+import type { TokenStorage } from '../../../platform/tokenStorage';
 
 export interface AuthApi {
   getCurrentUser(): Promise<User | null>;

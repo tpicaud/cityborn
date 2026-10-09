@@ -9,15 +9,16 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import type { Navigation, NavigationPath } from '../../platform/navigation';
+import type { Navigation } from '../../platform/navigation';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import type { SessionApi } from './sessionApi';
+import { multiSessionPath, soloSessionPath } from './sessionPath';
 
-export const JoinSessionSchema = z.object({
+const JoinSessionSchema = z.object({
   code: z.string().min(1, 'Veuillez entrer un code').pipe(SessionIdSchema),
 });
 
-export type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
+type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
 export type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
 
 export type JoinSessionForm = UseFormReturn<
@@ -26,30 +27,7 @@ export type JoinSessionForm = UseFormReturn<
   JoinSessionFormValues
 >;
 
-export function useJoinSessionForm(): JoinSessionForm {
-  return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
-    resolver: zodResolver(JoinSessionSchema),
-    defaultValues: { code: '' },
-  });
-}
-
-export const soloSessionPath: NavigationPath = '/session/solo';
-
-const multiSessionPathPrefix = '/session/multi/';
-
-export function multiSessionPath(sessionID: SessionId): NavigationPath {
-  return `${multiSessionPathPrefix}${sessionID}`;
-}
-
-export function sessionIdFromMultiSessionPath(path: string): SessionId | null {
-  if (!path.startsWith(multiSessionPathPrefix)) return null;
-  const pathSegment: string = path.slice(multiSessionPathPrefix.length);
-  if (pathSegment === '' || pathSegment.includes('/')) return null;
-  return SessionIdSchema.parse(pathSegment);
-}
-
 export type SessionLauncherOptions = {
-  sessionApi: SessionApi;
   navigation: Navigation;
 };
 
@@ -59,10 +37,17 @@ export type SessionLauncher = {
   joinSession: (code: SessionId) => Promise<void>;
 };
 
+export function useJoinSessionForm(): JoinSessionForm {
+  return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
+    resolver: zodResolver(JoinSessionSchema),
+    defaultValues: { code: '' },
+  });
+}
+
 export function useSessionLauncher({
-  sessionApi,
   navigation,
 }: SessionLauncherOptions): SessionLauncher {
+  const { sessionApi }: DomainApis = useDomainApis();
   const { invokeError } = useError();
 
   return {

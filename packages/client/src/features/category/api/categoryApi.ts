@@ -1,6 +1,6 @@
 import type { CategoryTree } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
-import type { ContractClient } from '../../api/contractClient';
+import type { ContractClient } from '../../../api/contractClient';
 
 export interface CategoryApi {
   getCategoryTrees(): Promise<CategoryTree[]>;

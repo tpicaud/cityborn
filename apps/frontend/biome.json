@@ -6,6 +6,21 @@
     "domains": {
       "react": "recommended",
       "next": "recommended"
+    },
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["@tanstack/*", "@tanstack/*/**"],
+                "message": "L'état serveur reste dans @cityborn/client : consommer ses hooks plutôt qu'importer @tanstack/* dans l'app."
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }

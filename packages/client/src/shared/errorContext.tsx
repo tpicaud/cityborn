@@ -13,9 +13,7 @@ type ErrorContextType = {
   invokeError: (error: unknown, fallbackMessage?: string) => void;
 };
 
-const ErrorContext = createContext<ErrorContextType>({
-  invokeError: () => {},
-});
+const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export type ErrorDialogProps = {
   errorMessage: string;
@@ -61,7 +59,7 @@ export const ErrorProvider = ({
 };
 
 export const useError = (): ErrorContextType => {
-  const context: ErrorContextType = useContext(ErrorContext);
+  const context: ErrorContextType | undefined = useContext(ErrorContext);
   if (!context) {
     throw new Error('useError must be used within an ErrorProvider');
   }

@@ -5,16 +5,12 @@ import {
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import { SoloLobby } from './SoloLobby';
 
 export default function SoloSession() {
   const navigation = useNavigation();
-  const soloSession: SessionController = useSoloSession({
-    sessionApi,
-    navigation,
-  });
+  const soloSession: SessionController = useSoloSession({ navigation });
 
   if (!soloSession.session)
     return (

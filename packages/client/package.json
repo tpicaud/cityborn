@@ -6,7 +6,6 @@
     ".": "./src/shared/index.ts",
     "./api": "./src/api/index.ts",
     "./auth": "./src/features/auth/index.ts",
-    "./category": "./src/features/category/index.ts",
     "./session": "./src/features/session/index.ts",
     "./game": "./src/features/game/index.ts",
     "./play": "./src/features/play/index.ts",
@@ -33,7 +32,8 @@
     "@types/react": "~19.2.14",
     "react-hook-form": "^7.86.0",
     "@hookform/resolvers": "^5.9.1",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "@tanstack/react-query": "^5.104.1"
   },
   "license": "ISC"
 }

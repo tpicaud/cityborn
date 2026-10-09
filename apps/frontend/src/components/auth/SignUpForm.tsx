@@ -2,7 +2,6 @@
 
 import { type SignUpFlow, useSignUp } from '@cityborn/client/auth';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
-import { authApi } from '@/lib/api/auth';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export const SignUpForm = () => {
@@ -12,7 +11,7 @@ export const SignUpForm = () => {
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignUpFlow = useSignUp({ authApi });
+  }: SignUpFlow = useSignUp();
 
   return (
     <Box

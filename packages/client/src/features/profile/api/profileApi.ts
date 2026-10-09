@@ -1,6 +1,6 @@
 import type { GameRecord, UpdateUsername, User } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
-import type { ContractClient } from '../../api/contractClient';
+import type { ContractClient } from '../../../api/contractClient';
 
 export interface ProfileApi {
   getGameRecords(): Promise<GameRecord[]>;

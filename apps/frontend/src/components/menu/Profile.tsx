@@ -29,13 +29,10 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect } from 'react';
-import { authApi } from '@/lib/api/auth';
-import { profileApi } from '@/lib/api/profile';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 export const Profile = ({ user }: { user: User }) => {
   const { games, loading, refreshGames }: ProfileState = useProfile({
-    profileApi,
     localUser: user,
   });
   const {
@@ -54,7 +51,7 @@ export const Profile = ({ user }: { user: User }) => {
     openDeleteAccountDialog,
     closeDeleteAccountDialog,
     deleteAccount,
-  }: ProfileEditor = useProfileEditor({ profileApi, authApi });
+  }: ProfileEditor = useProfileEditor();
 
   useEffect(() => {
     refreshGames();

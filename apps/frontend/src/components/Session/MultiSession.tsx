@@ -9,7 +9,6 @@ import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog'
 import { Game } from '@/components/Session/Game';
 import { Lobby } from '@/components/Session/Lobby';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import { createSocketConnection } from '@/lib/socket';
 
@@ -21,7 +20,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const navigation = useNavigation();
   const multiSession: MultiSessionController = useMultiSession({
     sessionID,
-    sessionApi,
     navigation,
     createSocket: createSocketConnection,
   });
