@@ -6,9 +6,12 @@ import type {
   GameConfig,
   Session,
 } from '@cityborn/api';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import type { CategoryApi } from '../category/categoryApi';
-import { useCategoryTrees } from '../category/useCategoryTrees';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { categoryTreesQueryOptions } from '../category/api/categoryQueries';
+
+const noCategoryTrees: CategoryTree[] = [];
 
 function toCategory(node: CategoryTree): Category {
   return {
@@ -28,7 +31,6 @@ function flattenCategoryTree(nodes: CategoryTree[]): Category[] {
 }
 
 export type CategorySelectionOptions = {
-  categoryApi: CategoryApi;
   session: Session;
   isHost: boolean;
   updateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
@@ -46,13 +48,18 @@ export type CategorySelection = {
 };
 
 export function useCategorySelection({
-  categoryApi,
   session,
   isHost,
   updateGameConfig,
   startGame,
 }: CategorySelectionOptions): CategorySelection {
-  const { categoryTrees, isLoading } = useCategoryTrees(categoryApi);
+  const { categoryApi }: DomainApis = useDomainApis();
+  const {
+    data: categoryTrees = noCategoryTrees,
+    isPending: isLoading,
+  }: UseQueryResult<CategoryTree[]> = useQuery(
+    categoryTreesQueryOptions(categoryApi),
+  );
   const [selectedPath, setSelectedPath] = useState<CategoryTree[]>([]);
 
   const allCategories = useMemo(

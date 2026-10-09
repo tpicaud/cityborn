@@ -7,7 +7,6 @@ import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import { createSocketConnection } from '@/lib/socket';
 import { MultiLobby } from './MultiLobby';
@@ -20,7 +19,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const navigation = useNavigation();
   const multiSession: MultiSessionController = useMultiSession({
     sessionID,
-    sessionApi,
     navigation,
     createSocket: createSocketConnection,
   });

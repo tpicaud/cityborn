@@ -2,23 +2,20 @@ export {
   type AuthApi,
   createAuthApi,
   createCookieAuthApi,
-} from './authApi';
+} from './api/authApi';
 export { AuthProvider, useAuth } from './authContext';
 export {
   type CurrentUserBootstrap,
   type CurrentUserState,
   useCurrentUserBootstrap,
-} from './currentUserBootstrap';
+} from './useCurrentUserBootstrap';
 export {
   type IdentityProviderSignIn,
-  type SignInFlow,
-  type SignInFlowOptions,
-  type SignUpFlow,
   useIdentityProviderSignIn,
-  useSignIn,
-  useSignUp,
-} from './signInFlows';
+} from './useIdentityProviderSignIn';
+export { type SignInFlow, useSignIn } from './useSignIn';
+export { type SignUpFlow, useSignUp } from './useSignUp';
 export {
   useVerificationEmailResend,
   type VerificationEmailResend,
-} from './verificationEmailResend';
+} from './useVerificationEmailResend';

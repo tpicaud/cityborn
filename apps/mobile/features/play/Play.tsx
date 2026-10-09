@@ -6,7 +6,6 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
 export default function Play() {
@@ -22,10 +21,7 @@ export default function Play() {
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlay({
-    sessionApi,
-    navigation,
-  });
+  } = usePlay({ navigation });
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

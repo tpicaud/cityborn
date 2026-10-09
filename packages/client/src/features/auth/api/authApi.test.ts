@@ -7,10 +7,10 @@ import {
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
-import type { ContractClient } from '../../api/contractClient';
-import type { TokenStorage } from '../../platform/tokenStorage';
+import type { ContractClient } from '../../../api/contractClient';
+import type { TokenStorage } from '../../../platform/tokenStorage';
+import { toCreateUser } from '../authSchema';
 import { type AuthApi, createAuthApi, createCookieAuthApi } from './authApi';
-import { toCreateUser } from './authSchema';
 
 const username = UsernameSchema.parse('citizen');
 

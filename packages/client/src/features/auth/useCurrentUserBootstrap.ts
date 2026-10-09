@@ -7,7 +7,8 @@ import {
   type User,
 } from '@cityborn/api';
 import { useCallback, useEffect, useState } from 'react';
-import type { AuthApi } from './authApi';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import type { AuthApi } from './api/authApi';
 
 export type CurrentUserState =
   | { status: 'loading' }
@@ -36,9 +37,8 @@ async function loadCurrentUserState(
   }
 }
 
-export function useCurrentUserBootstrap(
-  authApi: AuthApi,
-): CurrentUserBootstrap {
+export function useCurrentUserBootstrap(): CurrentUserBootstrap {
+  const { authApi }: DomainApis = useDomainApis();
   const [currentUserState, setCurrentUserState] = useState<CurrentUserState>({
     status: 'loading',
   });

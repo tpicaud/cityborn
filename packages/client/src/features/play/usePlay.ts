@@ -5,13 +5,12 @@ import type { Navigation } from '../../platform/navigation';
 import { useAuth } from '../auth/authContext';
 import {
   type JoinSessionForm,
-  type SessionApi,
+  type SessionLauncher,
   useJoinSessionForm,
   useSessionLauncher,
 } from '../session';
 
 export type PlayOptions = {
-  sessionApi: SessionApi;
   navigation: Navigation;
 };
 
@@ -24,12 +23,12 @@ export type Play = {
   dismissAuthenticationRequired: () => void;
 };
 
-export function usePlay({ sessionApi, navigation }: PlayOptions): Play {
+export function usePlay({ navigation }: PlayOptions): Play {
   const { user } = useAuth();
   const [authenticationRequired, setAuthenticationRequired] =
     useState<boolean>(false);
   const joinSessionForm: JoinSessionForm = useJoinSessionForm();
-  const sessionLauncher = useSessionLauncher({ sessionApi, navigation });
+  const sessionLauncher: SessionLauncher = useSessionLauncher({ navigation });
 
   const playMulti = async (): Promise<void> => {
     if (!user) {

@@ -2,7 +2,6 @@
 
 import { type SignInFlow, useSignIn } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api/auth';
 import { Button } from '../ui/Button';
 
 const inputClassName: string =
@@ -17,7 +16,6 @@ export function SignInForm() {
     },
     submit,
   }: SignInFlow = useSignIn({
-    authApi,
     onSignedIn: () => router.replace('/dashboard'),
   });
 

@@ -3,12 +3,15 @@
 import type { SignIn } from '@cityborn/api';
 import { SignInSchema } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { BaseSyntheticEvent } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import {
   type SignUpFormInput,
   SignUpFormSchema,
   type SignUpFormValues,
 } from './authSchema';
+
+export type FormSubmitHandler = (event?: BaseSyntheticEvent) => Promise<void>;
 
 const signInFormDefaultValues: SignIn = { identifier: '', password: '' };
 

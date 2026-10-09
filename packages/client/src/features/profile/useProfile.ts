@@ -2,12 +2,11 @@
 
 import type { GameRecord, User } from '@cityborn/api';
 import { useCallback, useState } from 'react';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import type { ProfileApi } from './profileApi';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
 export type ProfileOptions = {
-  profileApi: ProfileApi;
   localUser: Pick<User, 'id' | 'username'> | undefined;
 };
 
@@ -17,10 +16,8 @@ export type ProfileState = {
   refreshGames: () => Promise<void>;
 };
 
-export function useProfile({
-  profileApi,
-  localUser,
-}: ProfileOptions): ProfileState {
+export function useProfile({ localUser }: ProfileOptions): ProfileState {
+  const { profileApi }: DomainApis = useDomainApis();
   const { invokeError } = useError();
   const [games, setGames] = useState<ProfileGame[]>([]);
   const [loading, setLoading] = useState(true);

@@ -32,7 +32,6 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import { categoryApi } from '@/lib/api/category';
 import { useNavigation } from '@/lib/navigation';
 import IconButton from '../ui/buttons/IconButton';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -85,7 +84,6 @@ export const Lobby = ({
     goBack,
     playCategory,
   }: CategorySelection = useCategorySelection({
-    categoryApi,
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,

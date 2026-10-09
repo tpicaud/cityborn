@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import type { AuthApi } from './authApi';
 
 export type VerificationEmailResend = {
   isSending: boolean;
@@ -10,9 +10,8 @@ export type VerificationEmailResend = {
   resend: () => Promise<void>;
 };
 
-export function useVerificationEmailResend(
-  authApi: AuthApi,
-): VerificationEmailResend {
+export function useVerificationEmailResend(): VerificationEmailResend {
+  const { authApi }: DomainApis = useDomainApis();
   const { invokeError } = useError();
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isSent, setIsSent] = useState<boolean>(false);

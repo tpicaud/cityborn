@@ -4,10 +4,10 @@ import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { PlayerIdSchema, SessionMode } from '@cityborn/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import { useAuth } from '../auth/authContext';
 import { reportActionErrors } from './reportedAction';
-import type { SessionApi } from './sessionApi';
 import type { SessionController } from './sessionContract';
 import {
   advanceSoloRound,
@@ -21,14 +21,13 @@ import {
 const guestPlayerID: PlayerId = PlayerIdSchema.parse('guest');
 
 export type SoloSessionOptions = {
-  sessionApi: SessionApi;
   navigation: Navigation;
 };
 
 export function useSoloSession({
-  sessionApi,
   navigation,
 }: SoloSessionOptions): SessionController {
+  const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const { invokeError } = useError();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;

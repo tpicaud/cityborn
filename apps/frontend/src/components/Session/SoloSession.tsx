@@ -7,15 +7,11 @@ import {
 import { Game } from '@/components/Session/Game';
 import { Lobby } from '@/components/Session/Lobby';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 
 export default function SoloSession() {
   const navigation = useNavigation();
-  const soloSession: SessionController = useSoloSession({
-    sessionApi,
-    navigation,
-  });
+  const soloSession: SessionController = useSoloSession({ navigation });
 
   if (!soloSession.session)
     return <LoadingDialog message="Chargement de la session" />;

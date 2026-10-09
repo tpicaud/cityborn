@@ -2,10 +2,9 @@
 
 import type { User } from '@cityborn/api';
 import { useState } from 'react';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import type { AuthApi } from '../auth/authApi';
 import { useAuth } from '../auth/authContext';
-import type { ProfileApi } from './profileApi';
 import {
   type ChangePasswordForm,
   type ProfileFormSubmitHandler,
@@ -16,8 +15,6 @@ import {
 } from './profileForms';
 
 export type ProfileEditorOptions = {
-  profileApi: ProfileApi;
-  authApi: AuthApi;
   onAccountDeleted?: () => void;
 };
 
@@ -40,10 +37,9 @@ export type ProfileEditor = {
 };
 
 export function useProfileEditor({
-  profileApi,
-  authApi,
   onAccountDeleted,
-}: ProfileEditorOptions): ProfileEditor {
+}: ProfileEditorOptions = {}): ProfileEditor {
+  const { authApi, profileApi }: DomainApis = useDomainApis();
   const { user, setUser } = useAuth();
   const { invokeError } = useError();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');

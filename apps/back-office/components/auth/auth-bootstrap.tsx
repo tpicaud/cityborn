@@ -6,13 +6,12 @@ import {
   useCurrentUserBootstrap,
 } from '@cityborn/client/auth';
 import type { ReactNode } from 'react';
-import { authApi } from '@/lib/api/auth';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 
 export function AuthBootstrap({ children }: { children: ReactNode }) {
   const { currentUserState, retry }: CurrentUserBootstrap =
-    useCurrentUserBootstrap(authApi);
+    useCurrentUserBootstrap();
 
   if (currentUserState.status === 'loading') {
     return (
@@ -37,11 +36,6 @@ export function AuthBootstrap({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthProvider
-      initialValue={currentUserState.user}
-      getCurrentUser={authApi.getCurrentUser}
-    >
-      {children}
-    </AuthProvider>
+    <AuthProvider initialValue={currentUserState.user}>{children}</AuthProvider>
   );
 }

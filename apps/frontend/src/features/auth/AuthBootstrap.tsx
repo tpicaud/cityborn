@@ -8,7 +8,6 @@ import {
 import type { ReactNode } from 'react';
 import Button from '@/components/ui/buttons/Button';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import { authApi } from '@/lib/api/auth';
 
 type AuthBootstrapProps = {
   children: ReactNode;
@@ -16,7 +15,7 @@ type AuthBootstrapProps = {
 
 export function AuthBootstrap({ children }: AuthBootstrapProps) {
   const { currentUserState, retry }: CurrentUserBootstrap =
-    useCurrentUserBootstrap(authApi);
+    useCurrentUserBootstrap();
 
   if (currentUserState.status === 'loading') {
     return <LoadingDialog message="Chargement de l'utilisateur" />;
@@ -37,11 +36,6 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
   }
 
   return (
-    <AuthProvider
-      initialValue={currentUserState.user}
-      getCurrentUser={authApi.getCurrentUser}
-    >
-      {children}
-    </AuthProvider>
+    <AuthProvider initialValue={currentUserState.user}>{children}</AuthProvider>
   );
 }

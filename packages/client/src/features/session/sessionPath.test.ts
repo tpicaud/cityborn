@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { type SessionId, SessionIdSchema } from '@cityborn/api';
-import {
-  multiSessionPath,
-  sessionIdFromMultiSessionPath,
-} from './sessionLauncher';
+import { multiSessionPath, sessionIdFromMultiSessionPath } from './sessionPath';
 
 const sessionId: SessionId = SessionIdSchema.parse('brave-golden-lynx');
 

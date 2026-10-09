@@ -22,20 +22,19 @@ import {
   useState,
 } from 'react';
 import type { Navigation } from '../../platform/navigation';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
 import { useAuth } from '../auth/authContext';
 import { reportActionErrors } from './reportedAction';
-import type { SessionApi } from './sessionApi';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
 
 export type MultiSessionOptions = {
   sessionID: SessionId;
-  sessionApi: SessionApi;
   navigation: Navigation;
   createSocket: SocketFactory;
 };
@@ -55,10 +54,10 @@ type JoinedPlayer = {
 
 export function useMultiSession({
   sessionID,
-  sessionApi,
   navigation,
   createSocket,
 }: MultiSessionOptions): MultiSessionController {
+  const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const { invokeError } = useError();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(

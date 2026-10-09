@@ -1,7 +1,7 @@
 import type { CreateSession, Game, Session, SessionId } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
-import type { ContractClient } from '../../api/contractClient';
+import type { ContractClient } from '../../../api/contractClient';
 
 type FinalizedSession = Session & {
   currentGame: NonNullable<Session['currentGame']>;

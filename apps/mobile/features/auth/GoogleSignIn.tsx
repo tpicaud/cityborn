@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable } from 'react-native';
 import { mobileClientConfig } from '@/config/client';
-import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/classNames';
 
 GoogleSignin.configure({
@@ -24,7 +23,6 @@ export const SignInWithGoogleButton = () => {
   const router = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn({
-      authApi,
       onSignedIn: () => router.dismissTo('/'),
     });
   const [isLoading, setIsLoading] = useState(false);

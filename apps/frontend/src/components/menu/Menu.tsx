@@ -11,8 +11,6 @@ import { usePlay } from '@cityborn/client/play';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
-import { authApi } from '@/lib/api/auth';
-import { sessionApi } from '@/lib/api/session';
 import { useNavigation } from '@/lib/navigation';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -28,7 +26,7 @@ export default function Menu({
   const { user } = useAuth();
   const navigation = useNavigation();
   const verificationEmailResend: VerificationEmailResend =
-    useVerificationEmailResend(authApi);
+    useVerificationEmailResend();
   const {
     joinSessionForm: {
       register,
@@ -39,10 +37,7 @@ export default function Menu({
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlay({
-    sessionApi,
-    navigation,
-  });
+  } = usePlay({ navigation });
 
   return (
     <div className="flex flex-col items-center gap-5">

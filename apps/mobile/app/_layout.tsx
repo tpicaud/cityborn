@@ -8,7 +8,11 @@ import {
   installFrenchZodErrorMap,
   isApiVersionOutdated,
 } from '@cityborn/api';
-import { ErrorProvider, useMinSupportedApiVersion } from '@cityborn/client';
+import {
+  ApiProvider,
+  ErrorProvider,
+  useMinSupportedApiVersion,
+} from '@cityborn/client';
 import {
   AuthProvider,
   type CurrentUserBootstrap,
@@ -27,17 +31,31 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { ForegroundUserRefresh } from '@/features/auth/ForegroundUserRefresh';
 import { authApi } from '@/lib/api/auth';
+import { contractClient } from '@/lib/api/contractClient';
 import { checkHealth } from '@/lib/api/health';
+import { appFocus } from '@/lib/appFocus';
 
 installFrenchZodErrorMap();
 
 const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
+  return (
+    <ApiProvider
+      contractClient={contractClient}
+      authApi={authApi}
+      appFocus={appFocus}
+    >
+      <RootLayoutContent />
+    </ApiProvider>
+  );
+}
+
+function RootLayoutContent() {
   const {
     currentUserState,
     retry: retryCurrentUserLoad,
-  }: CurrentUserBootstrap = useCurrentUserBootstrap(authApi);
+  }: CurrentUserBootstrap = useCurrentUserBootstrap();
   const [isBackendUnreachable, setIsBackendUnreachable] =
     useState<boolean>(false);
   const minSupportedApiVersion = useMinSupportedApiVersion();
@@ -99,10 +117,7 @@ export default function RootLayout() {
         <ErrorProvider ErrorDialogComponent={ErrorDialog}>
           <SafeAreaProvider>
             <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-              <AuthProvider
-                initialValue={currentUserState.user}
-                getCurrentUser={authApi.getCurrentUser}
-              >
+              <AuthProvider initialValue={currentUserState.user}>
                 <ForegroundUserRefresh />
                 <StatusBar hidden={true} />
                 <Stack

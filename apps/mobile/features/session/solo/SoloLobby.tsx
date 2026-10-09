@@ -9,7 +9,6 @@ import Button from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { categoryApi } from '@/lib/api/category';
 
 type SoloLobbyProps = {
   session: Session;
@@ -33,7 +32,6 @@ export function SoloLobby({
     goBack,
     playCategory,
   }: CategorySelection = useCategorySelection({
-    categoryApi,
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,

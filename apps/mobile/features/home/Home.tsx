@@ -15,7 +15,7 @@ export default function Home() {
   const router = useRouter();
   const { user, setUser } = useAuth();
   const verificationEmailResend: VerificationEmailResend =
-    useVerificationEmailResend(authApi);
+    useVerificationEmailResend();
 
   return (
     <View className="flex-1 w-70 self-center">

@@ -19,14 +19,11 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { authApi } from '@/lib/api/auth';
-import { profileApi } from '@/lib/api/profile';
 
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
   const { games, loading, refreshGames }: ProfileState = useProfile({
-    profileApi,
     localUser: user ?? undefined,
   });
   const {
@@ -46,8 +43,6 @@ export default function Profile() {
     closeDeleteAccountDialog,
     deleteAccount,
   }: ProfileEditor = useProfileEditor({
-    profileApi,
-    authApi,
     onAccountDeleted: () => router.navigate('/'),
   });
 
