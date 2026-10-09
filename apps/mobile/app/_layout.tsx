@@ -3,7 +3,6 @@ import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
 import {
-  ApiResponseError,
   getApiVersionInfo,
   installFrenchZodErrorMap,
   isApiVersionOutdated,
@@ -18,8 +17,12 @@ import {
   type CurrentUserLoad,
   useCurrentUserLoad,
 } from '@cityborn/client/auth';
+import {
+  type ServerReachability,
+  useServerReachability,
+} from '@cityborn/client/health';
 import * as NavigationBar from 'expo-navigation-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BackendUnreachableDialog from '@/components/ui/BackendUnreachableDialog';
@@ -31,7 +34,6 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { authApi } from '@/lib/api/auth';
 import { contractClient } from '@/lib/api/contractClient';
-import { checkHealth } from '@/lib/api/health';
 import { appFocus } from '@/lib/appFocus';
 
 installFrenchZodErrorMap();
@@ -55,8 +57,8 @@ export default function RootLayout() {
 function RootLayoutContent() {
   const { currentUserState, retry: retryCurrentUserLoad }: CurrentUserLoad =
     useCurrentUserLoad();
-  const [isBackendUnreachable, setIsBackendUnreachable] =
-    useState<boolean>(false);
+  const { isServerUnreachable, recheckServerReachability }: ServerReachability =
+    useServerReachability();
   const minSupportedApiVersion = useMinSupportedApiVersion();
   const isForceUpdateRequired =
     minSupportedApiVersion !== null &&
@@ -71,31 +73,13 @@ function RootLayoutContent() {
     }
   }, []);
 
-  const runHealthCheck = useCallback(async () => {
-    try {
-      await checkHealth();
-      setIsBackendUnreachable(false);
-    } catch (error: unknown) {
-      if (error instanceof ApiResponseError) {
-        console.error('Healthcheck failed:', error.apiError);
-        return;
-      }
-      console.error('Healthcheck unreachable:', error);
-      setIsBackendUnreachable(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    runHealthCheck();
-  }, [runHealthCheck]);
-
   return (
     <>
       <ForceUpdateDialog visible={isForceUpdateRequired} />
       <BackendUnreachableDialog
-        visible={isBackendUnreachable}
+        visible={isServerUnreachable}
         onRetry={async () => {
-          await runHealthCheck();
+          await recheckServerReachability();
           retryCurrentUserLoad();
         }}
       />

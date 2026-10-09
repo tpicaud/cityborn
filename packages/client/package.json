@@ -6,6 +6,7 @@
     ".": "./src/shared/index.ts",
     "./api": "./src/api/index.ts",
     "./auth": "./src/features/auth/index.ts",
+    "./health": "./src/features/health/index.ts",
     "./session": "./src/features/session/index.ts",
     "./game": "./src/features/game/index.ts",
     "./play": "./src/features/play/index.ts",
