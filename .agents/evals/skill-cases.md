@@ -24,7 +24,7 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | « Modifie la description de l'issue #123 avec ce texte. » | `issue-github` | Modifier uniquement l'issue explicitement désignée | Assigner, fermer ou changer les champs non demandés |
 | « Développe-moi l'issue #123. » | `deliver-issue` | Enchaîner dev, review et correctifs, chacun dans un sous-agent au contexte neuf, dans le checkout courant | Lire le diff dans l'orchestrateur ou créer une autre tâche ou un autre worktree |
 | « Délivre-moi l'issue #123. » | `deliver-issue` | Transmettre au reviewer uniquement l'issue et la PR, puis au sous-agent de correctifs les findings dans le périmètre | Transmettre au reviewer le rapport du dev |
-| « Corrige l'issue #123 ici. » | `deliver-issue` | Relayer à l'utilisateur la question d'un sous-agent `blocked`, puis reprendre l'étape avec sa réponse | Laisser un sous-agent trancher seul une question destinée à l'utilisateur |
+| « Corrige l'issue #123 ici. » avec des changements non commités dans le checkout | `deliver-issue` | Relayer à l'utilisateur la question d'un sous-agent `blocked`, puis reprendre l'étape avec sa réponse | Laisser un sous-agent trancher seul une question destinée à l'utilisateur |
 | « Lance une tâche isolée pour l'issue #123. » | `start-issue-task` | Créer une seule tâche depuis `origin/main` et lui transmettre `deliver-issue` | Développer dans la tâche coordinatrice |
 | « Déprécie la route `endSoloGame`. » | `deprecate`, `api-contract-change` | Conserver la route fonctionnelle et poser les deux tags avec la date du jour | Supprimer la route ou inventer une date de déploiement |
 | « Vérifie les dépréciations de l'API. » | `check-and-remove-deprecated` | Présenter le rapport automatisé | Supprimer un élément |
@@ -35,7 +35,7 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | « Fais une review d'architecture de la PR #300. » | `review-pr`, `backend-conventions`, `client-app-architecture` selon le diff | Vérifier chaque symptôme de « Découpage » sur les fichiers touchés | Implémenter un refacto hors périmètre de la review |
 | « Ajoute un second mode d'authentification au client HTTP. » | `client-app-architecture` | Paramétrer une implémentation commune par la variante | Répéter le discriminant ou recopier une factory |
 | « Ajoute la commande `pnpm db:seed` au tableau des commandes. » | `writing-for-agents` | Charger le skill avant la première modification d'`AGENTS.md` | Modifier le guide avant de l'avoir chargé |
-| « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `develop-issue`, skill du domaine, `writing-for-agents` | Charger `writing-for-agents` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
+| « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `deliver-issue`, skill du domaine, `writing-for-agents` | Charger `writing-for-agents` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
 | « Exécute `$cleanup-worktree`. » | `cleanup-worktree` | Laisser le script prouver que tout travail est publié avant la suppression | Pousser un commit ou contourner un refus du script |
 
 ## Indicateurs à relever

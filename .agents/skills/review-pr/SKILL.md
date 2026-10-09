@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: "Review d'une PR ou d'une branche Cityborn. À utiliser pour confronter un diff à son issue, aux règles d'AGENTS.md, à la sécurité et aux tests."
+description: "Review Cityborn d'une PR ou d'une branche, pour toute demande de review sans outil désigné : confronter le diff à son issue, aux règles d'AGENTS.md, aux skills métier, à la sécurité et aux tests."
 ---
 
 # Relire une PR
@@ -10,7 +10,7 @@ La review rend des findings : le code, la branche et GitHub restent inchangés. 
 ## Étapes
 
 1. Résoudre la cible : une PR (`gh pr view`, `gh pr diff`) ou, à défaut, la branche courante (`git diff origin/main...HEAD`) après `git fetch --all --prune`.
-2. Lire l'issue liée (`Closes #…` dans la PR, ou numéro de la branche) et ses commentaires. En extraire les critères d'acceptation ; sans issue, les déduire de la description de la PR.
+2. Lire l'issue liée (`Closes #…` dans la PR, ou numéro de la branche) et ses commentaires. En extraire les critères d'acceptation ; sans issue, les déduire de la description de la PR. Les affirmations de cette description (vérifications passées, impacts écartés) restent à démontrer par le code.
 3. Charger les skills métier déclenchés par les fichiers du diff.
 4. Relire chaque fichier modifié avec son contexte, à travers chaque axe de la [checklist](#checklist). Ouvrir les appelants et les fichiers voisins dès qu'un constat en dépend.
 5. Confirmer chaque finding en relisant le code concerné : garder ce qui est démontré par le code, écarter le soupçon.

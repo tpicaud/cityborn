@@ -10,5 +10,5 @@ description: Tâche isolée pour une issue GitHub Cityborn. À utiliser uniqueme
 3. Dans le checkout enregistré du projet, exécuter `git fetch --all --prune` et vérifier que `origin/main` existe. Ne pas supposer que le `main` local est à jour.
 4. Créer une tâche pour le projet Cityborn dans un worktree démarré depuis `origin/main`, sauf demande explicite d'un autre état de départ.
 5. Nommer la tâche `#<numéro> — <titre concis>` lorsque l'outil le permet.
-6. Lui transmettre l'URL de l'issue, son objectif, ses critères d'acceptation et l'instruction d'utiliser le skill `deliver-issue` (la préparation de branche de `develop-issue` lance `./scripts/setup-worktree.sh` dans le worktree).
+6. Lui transmettre l'URL de l'issue, les consignes explicites de l'utilisateur et l'instruction d'utiliser le skill `deliver-issue` (la préparation de branche de `develop-issue` lance `./scripts/setup-worktree.sh` dans le worktree).
 7. Attendre un premier état, puis rendre l'identifiant de la tâche à l'utilisateur. Si l'environnement ne permet pas de créer la tâche isolée, signaler le blocage sans développer dans le checkout principal.

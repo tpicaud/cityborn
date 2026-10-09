@@ -1,6 +1,6 @@
 ---
 name: deliver-issue
-description: "Issue GitHub Cityborn à développer ou délivrer dans le checkout courant : développement, review puis correctifs, chacun par un sous-agent. Une tâche ou un worktree dédié relève de start-issue-task."
+description: "Issue GitHub Cityborn à développer, corriger ou délivrer dans le checkout courant. Une tâche ou un worktree dédié relève de start-issue-task."
 ---
 
 # Délivrer une issue
@@ -21,7 +21,7 @@ Ces règles valent pour les trois étapes.
 
 ## Étape 1 — Développement
 
-Transmettre au sous-agent l'URL de l'issue et l'instruction d'appliquer `.agents/skills/develop-issue/SKILL.md`. Son rapport donne la branche, l'URL de la PR draft et le compte rendu final prévu par `develop-issue`.
+Transmettre au sous-agent l'URL de l'issue, les consignes explicites de l'utilisateur recopiées telles quelles (checkout à utiliser directement, périmètre, état de départ) et l'instruction d'appliquer `.agents/skills/develop-issue/SKILL.md`. Son rapport donne la branche, l'URL de la PR draft et le compte rendu final prévu par `develop-issue`.
 
 L'étape est terminée quand la branche liée est poussée et que la PR draft existe.
 
@@ -33,16 +33,16 @@ L'étape est terminée quand le rapport liste les findings au format de `review-
 
 ## Étape 3 — Correctifs
 
-Passer directement au compte rendu si aucun finding n'est dans le périmètre de l'issue.
+Si aucun finding n'est dans le périmètre de l'issue, ajouter à la description de la PR une section « Review automatique » qui l'indique, puis passer au compte rendu.
 
-Transmettre au sous-agent l'URL de l'issue, l'URL de la PR et les findings dans le périmètre, recopiés tels quels. Il doit :
+Sinon, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et les findings dans le périmètre, recopiés tels quels. Il doit :
 
 - charger les skills métier déclenchés par les fichiers concernés ;
 - traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
-- exécuter les vérifications ciblées sur les fichiers modifiés ;
-- livrer selon la section « Livrer l'issue » de `.agents/skills/develop-issue/SKILL.md`, en ajoutant à la description de la PR une section « Review automatique » qui liste les findings corrigés et rejetés.
+- exécuter les vérifications ciblées sur les fichiers modifiés, puis relancer les contrôles transverses de l'étape 1 que les correctifs concernent ;
+- livrer selon la section « Livrer l'issue » de `.agents/skills/develop-issue/SKILL.md`, en ajoutant à la description de la PR la section « Review automatique » qui liste les findings corrigés et rejetés.
 
-Son rapport donne le statut de chaque finding et les vérifications exécutées. L'étape est terminée quand chaque finding a un statut et que la branche est poussée.
+Son rapport donne le statut de chaque finding et les vérifications exécutées. L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la PR contient la section « Review automatique ».
 
 ## Compte rendu final
 
