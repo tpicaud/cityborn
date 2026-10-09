@@ -10,7 +10,7 @@ import type {
   WorldLocationSearchResult,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { type RefObject, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import {
@@ -62,7 +62,9 @@ export function useGuessObjectDraft(): GuessObjectDraftEditor {
     useState<boolean>(false);
   const [isLoadingWorldLocation, setIsLoadingWorldLocation] =
     useState<boolean>(false);
-  const shownGuessObjectIdRef = useRef<GuessObjectId | undefined>(undefined);
+  const shownGuessObjectIdRef: RefObject<GuessObjectId | undefined> = useRef<
+    GuessObjectId | undefined
+  >(undefined);
 
   const fetchFullGuessObject = (
     guessObjectId: GuessObjectId,

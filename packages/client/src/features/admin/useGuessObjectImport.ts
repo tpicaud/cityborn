@@ -7,7 +7,7 @@ import {
   type WorldLocation,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { type RefObject, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import {
   guessObjectByExternalIdQueryOptions,
@@ -96,7 +96,7 @@ export function useGuessObjectImport({
   const [importRecap, setImportRecap] =
     useState<GuessObjectImportRecap>(emptyImportRecap);
   const [importTotal, setImportTotal] = useState<number>(0);
-  const isImportStoppedRef = useRef<boolean>(false);
+  const isImportStoppedRef: RefObject<boolean> = useRef<boolean>(false);
 
   const importGuessObject = async ({
     name,
@@ -119,7 +119,7 @@ export function useGuessObjectImport({
       id: _foundGuessObjectId,
       world_location: foundWorldLocation,
       ...guessObjectFields
-    } = foundGuessObject;
+    }: GuessObjectSearchResult = foundGuessObject;
     if (!foundWorldLocation) throw new Error(missingWorldLocationMessage);
 
     const worldLocation: WorldLocation = await registerWorldLocation({
@@ -156,7 +156,8 @@ export function useGuessObjectImport({
   const importRemainingGuessObjects = async (
     remainingGuessObjects: ImportedGuessObject[],
   ): Promise<void> => {
-    const [importedGuessObject, ...nextGuessObjects] = remainingGuessObjects;
+    const [importedGuessObject, ...nextGuessObjects]: ImportedGuessObject[] =
+      remainingGuessObjects;
     if (!importedGuessObject || isImportStoppedRef.current) return;
 
     try {

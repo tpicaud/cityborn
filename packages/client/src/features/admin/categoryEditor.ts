@@ -35,7 +35,7 @@ import {
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraft,
-} from './guessObjectDraft';
+} from './useGuessObjectDraft';
 
 type CategoryEditorLoadOptions = {
   categoryId: CategoryId;
@@ -111,7 +111,7 @@ function saveGuessObject({
     id: guessObjectId,
     world_location: _worldLocation,
     ...guessObjectFields
-  } = guessObjectDraft;
+  }: GuessObjectDraft = guessObjectDraft;
   if (!guessObjectId) {
     return adminApi.createGuessObject({
       ...guessObjectFields,
@@ -221,7 +221,8 @@ export function useCategoryEditor({
   };
 
   const saveGuessObjectDraft = async (): Promise<void> => {
-    const { guessObjectDraft } = guessObjectDraftEditor;
+    const { guessObjectDraft }: GuessObjectDraftEditor =
+      guessObjectDraftEditor;
     if (!guessObjectDraft) {
       invokeError(invalidGuessObjectMessage);
       return;

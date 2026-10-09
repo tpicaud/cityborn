@@ -1,4 +1,5 @@
 import type {
+  AppContract,
   Category,
   CategoryId,
   CreateCategory,
@@ -15,6 +16,7 @@ import type {
   WorldLocationSearchResult,
 } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
+import type { ClientInferResponses } from '@ts-rest/core';
 import type { ContractClient } from '../../../api/contractClient';
 
 type CategoryUpdate = {
@@ -76,7 +78,9 @@ export function createAdminApi(
     },
 
     async getFullCategory(categoryId) {
-      const result = await contractClient.admin.category.getFullCategory({
+      const result: ClientInferResponses<
+        AppContract['admin']['category']['getFullCategory']
+      > = await contractClient.admin.category.getFullCategory({
         params: { id: categoryId },
       });
       if (result.status === 404) return null;
@@ -108,7 +112,9 @@ export function createAdminApi(
     },
 
     async getGuessObject(guessObjectId) {
-      const result = await contractClient.admin.guessObjects.getGuessObject({
+      const result: ClientInferResponses<
+        AppContract['admin']['guessObjects']['getGuessObject']
+      > = await contractClient.admin.guessObjects.getGuessObject({
         params: { id: guessObjectId },
         query: { include: 'world_location_preview' },
       });
@@ -117,9 +123,11 @@ export function createAdminApi(
     },
 
     async getFullGuessObject(guessObjectId) {
-      const result = await contractClient.admin.guessObjects.getFullGuessObject(
-        { params: { id: guessObjectId } },
-      );
+      const result: ClientInferResponses<
+        AppContract['admin']['guessObjects']['getFullGuessObject']
+      > = await contractClient.admin.guessObjects.getFullGuessObject({
+        params: { id: guessObjectId },
+      });
       if (result.status === 404) return null;
       return unwrapApiResponse(result);
     },
