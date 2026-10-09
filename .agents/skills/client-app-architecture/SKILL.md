@@ -78,7 +78,8 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 
 - `api/<domaine>Api.ts` contient le port `XxxApi` et sa factory `createXxxApi`, seul fichier qui appelle `contractClient.<domaine>`.
 - `api/<domaine>Queries.ts` contient les clés, les `queryOptions` et les mises à jour du cache. Chaque query fixe `staleTime` et `retry`, et déclare `meta.reportsError` (voir `client-error-handling`).
-- Chaque hook qui consomme l'API vit dans son fichier `use<Comportement>.ts` et lit ses données par les `queryOptions` du domaine.
+- Un hook porte un seul comportement et lit ses données par les `queryOptions` du domaine : chaque appel crée tout l'état, les effets et les queries qu'il contient.
+- Un fichier regroupe les hooks d'un même flux avec leurs formulaires et helpers privés, et porte le nom du flux (`auth/signIn.ts`, `session/sessionLauncher.ts`) ; un hook seul dans son flux vit dans `use<Comportement>.ts`.
 - Une écriture reste un appel direct au port, et react-hook-form porte son état de soumission.
 
 La logique de présentation suit les conventions React existantes : un hook headless porte le nom `use<Comportement>` (`useSoloSession`, `useGameRound`, `useProfile`) ; une transformation pure porte le nom précis de son résultat (`gameDisplay`, `gameResult`, `sessionState`). Les contrats de vue restent colocalisés dans leur domaine.

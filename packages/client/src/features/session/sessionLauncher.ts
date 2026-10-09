@@ -1,10 +1,31 @@
 'use client';
 
-import { type Session, type SessionId, SessionMode } from '@cityborn/api';
+import {
+  type Session,
+  type SessionId,
+  SessionIdSchema,
+  SessionMode,
+} from '@cityborn/api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type UseFormReturn, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
+
+const JoinSessionSchema = z.object({
+  code: z.string().min(1, 'Veuillez entrer un code').pipe(SessionIdSchema),
+});
+
+type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
+export type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
+
+export type JoinSessionForm = UseFormReturn<
+  JoinSessionFormInput,
+  undefined,
+  JoinSessionFormValues
+>;
 
 export type SessionLauncherOptions = {
   navigation: Navigation;
@@ -15,6 +36,13 @@ export type SessionLauncher = {
   playMulti: () => Promise<void>;
   joinSession: (code: SessionId) => Promise<void>;
 };
+
+export function useJoinSessionForm(): JoinSessionForm {
+  return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
+    resolver: zodResolver(JoinSessionSchema),
+    defaultValues: { code: '' },
+  });
+}
 
 export function useSessionLauncher({
   navigation,

@@ -6,10 +6,12 @@ export {
 export { AuthProvider, useAuth } from './authContext';
 export {
   type IdentityProviderSignIn,
+  type SignInFlow,
+  type SignUpFlow,
   useIdentityProviderSignIn,
-} from './signIn/useIdentityProviderSignIn';
-export { type SignInFlow, useSignIn } from './signIn/useSignIn';
-export { type SignUpFlow, useSignUp } from './signIn/useSignUp';
+  useSignIn,
+  useSignUp,
+} from './signIn';
 export {
   type CurrentUserBootstrap,
   type CurrentUserState,

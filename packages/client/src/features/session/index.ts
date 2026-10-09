@@ -1,15 +1,18 @@
 export {
-  type JoinSessionForm,
-  type JoinSessionFormValues,
-  useJoinSessionForm,
-} from './joinSessionForm';
-export {
   type PlayerNameForm,
   type PlayerNameFormInput,
   type PlayerNameFormValues,
   usePlayerNameForm,
 } from './playerNameForm';
 export * from './sessionContract';
+export {
+  type JoinSessionForm,
+  type JoinSessionFormValues,
+  type SessionLauncher,
+  type SessionLauncherOptions,
+  useJoinSessionForm,
+  useSessionLauncher,
+} from './sessionLauncher';
 export { sessionIdFromMultiSessionPath } from './sessionPath';
 export {
   type PlayerConnectionStatus,
@@ -22,9 +25,4 @@ export {
   useCategorySelection,
 } from './useCategorySelection';
 export * from './useMultiSession';
-export {
-  type SessionLauncher,
-  type SessionLauncherOptions,
-  useSessionLauncher,
-} from './useSessionLauncher';
 export * from './useSoloSession';
