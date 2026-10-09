@@ -1,6 +1,7 @@
 ---
 name: develop-issue
-description: "Issue GitHub Cityborn dans le checkout courant. À utiliser pour implémenter une issue existante ; une tâche ou un worktree dédié relève de start-issue-task."
+description: "Développe une issue dans le checkout courant jusqu'à sa PR draft, sans review : étape de développement de deliver-issue"
+disable-model-invocation: true
 ---
 
 # Développer une issue
