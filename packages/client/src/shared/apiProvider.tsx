@@ -20,6 +20,10 @@ import {
   createCategoryApi,
 } from '../features/category/api/categoryApi';
 import {
+  createHealthApi,
+  type HealthApi,
+} from '../features/health/api/healthApi';
+import {
   createProfileApi,
   type ProfileApi,
 } from '../features/profile/api/profileApi';
@@ -34,6 +38,7 @@ import { createErrorReportingQueryCache } from './queryErrorReporting';
 export type DomainApis = {
   authApi: AuthApi;
   categoryApi: CategoryApi;
+  healthApi: HealthApi;
   profileApi: ProfileApi;
   sessionApi: SessionApi;
 };
@@ -64,6 +69,7 @@ export function ApiProvider({
     () => ({
       authApi,
       categoryApi: createCategoryApi(contractClient),
+      healthApi: createHealthApi(contractClient),
       profileApi: createProfileApi(contractClient),
       sessionApi: createSessionApi(contractClient),
     }),

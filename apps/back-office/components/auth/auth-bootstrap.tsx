@@ -2,16 +2,15 @@
 
 import {
   AuthProvider,
-  type CurrentUserBootstrap,
-  useCurrentUserBootstrap,
+  type CurrentUserLoad,
+  useCurrentUserLoad,
 } from '@cityborn/client/auth';
 import type { ReactNode } from 'react';
 import { Button } from '../ui/Button';
 import Loader from '../ui/Loader';
 
 export function AuthBootstrap({ children }: { children: ReactNode }) {
-  const { currentUserState, retry }: CurrentUserBootstrap =
-    useCurrentUserBootstrap();
+  const { currentUserState, retry }: CurrentUserLoad = useCurrentUserLoad();
 
   if (currentUserState.status === 'loading') {
     return (
@@ -35,7 +34,5 @@ export function AuthBootstrap({ children }: { children: ReactNode }) {
     );
   }
 
-  return (
-    <AuthProvider initialValue={currentUserState.user}>{children}</AuthProvider>
-  );
+  return <AuthProvider user={currentUserState.user}>{children}</AuthProvider>;
 }

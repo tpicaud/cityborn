@@ -28,13 +28,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect } from 'react';
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 export const Profile = ({ user }: { user: User }) => {
-  const { games, loading, refreshGames }: ProfileState = useProfile({
-    localUser: user,
-  });
+  const { games, isLoading }: ProfileState = useProfile();
   const {
     usernameForm,
     isEditingUsername,
@@ -52,10 +49,6 @@ export const Profile = ({ user }: { user: User }) => {
     closeDeleteAccountDialog,
     deleteAccount,
   }: ProfileEditor = useProfileEditor();
-
-  useEffect(() => {
-    refreshGames();
-  }, [refreshGames]);
 
   return (
     <Box
@@ -138,9 +131,9 @@ export const Profile = ({ user }: { user: User }) => {
         </Button>
       </Box>
 
-      <Accordion disabled={loading} sx={{ p: 0, m: 0 }}>
+      <Accordion disabled={isLoading} sx={{ p: 0, m: 0 }}>
         <AccordionSummary
-          expandIcon={!loading ? <ExpandMoreIcon /> : null}
+          expandIcon={!isLoading ? <ExpandMoreIcon /> : null}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -148,7 +141,7 @@ export const Profile = ({ user }: { user: User }) => {
             width: '100%',
           }}
         >
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center w-full h-full ">
               <CircularProgress size={20} />
             </div>
@@ -157,7 +150,7 @@ export const Profile = ({ user }: { user: User }) => {
           )}
         </AccordionSummary>
         <AccordionDetails sx={{ p: 0, m: 0 }}>
-          {loading ? (
+          {isLoading ? (
             <List dense>
               {[1, 2, 3].map((index: number) => (
                 <ListItem key={index} divider>

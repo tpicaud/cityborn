@@ -7,9 +7,7 @@ import {
   useProfileEditor,
 } from '@cityborn/client/profile';
 import { colors } from '@cityborn/design-system';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router/react-navigation';
-import { useCallback } from 'react';
+import { useIsFocused, useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -23,9 +21,8 @@ import TextInput from '@/components/ui/TextInput';
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
-  const { games, loading, refreshGames }: ProfileState = useProfile({
-    localUser: user ?? undefined,
-  });
+  const isScreenFocused: boolean = useIsFocused();
+  const { games, isLoading }: ProfileState = useProfile({ isScreenFocused });
   const {
     usernameForm,
     isEditingUsername,
@@ -45,12 +42,6 @@ export default function Profile() {
   }: ProfileEditor = useProfileEditor({
     onAccountDeleted: () => router.navigate('/'),
   });
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshGames();
-    }, [refreshGames]),
-  );
 
   return (
     <View className="flex-1">
@@ -173,7 +164,7 @@ export default function Profile() {
               Historique des parties
             </Text>
             <View className="flex-1 border-t rounded-xl overflow-y-auto p-0">
-              {loading ? (
+              {isLoading ? (
                 <View className="self-center">
                   <LoaderIcon />
                 </View>

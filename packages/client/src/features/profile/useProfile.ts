@@ -1,44 +1,39 @@
 'use client';
 
-import type { GameRecord, User } from '@cityborn/api';
-import { useCallback, useState } from 'react';
+import type { GameRecord } from '@cityborn/api';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import { useAuth } from '../auth/authContext';
+import { gameRecordsQueryOptions } from './api/profileQueries';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
-export type ProfileOptions = {
-  localUser: Pick<User, 'id' | 'username'> | undefined;
+type ProfileOptions = {
+  isScreenFocused?: boolean;
 };
 
 export type ProfileState = {
   games: ProfileGame[];
-  loading: boolean;
-  refreshGames: () => Promise<void>;
+  isLoading: boolean;
 };
 
-export function useProfile({ localUser }: ProfileOptions): ProfileState {
+const noProfileGames: ProfileGame[] = [];
+
+export function useProfile({
+  isScreenFocused = true,
+}: ProfileOptions = {}): ProfileState {
   const { profileApi }: DomainApis = useDomainApis();
-  const { invokeError } = useError();
-  const [games, setGames] = useState<ProfileGame[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { data: gameRecords, isLoading }: UseQueryResult<GameRecord[]> =
+    useQuery({
+      ...gameRecordsQueryOptions({ profileApi, userId: user?.id ?? null }),
+      subscribed: isScreenFocused,
+    });
 
-  const refreshGames = useCallback(async (): Promise<void> => {
-    if (!localUser) {
-      setGames([]);
-      setLoading(false);
-      return;
-    }
+  const games: ProfileGame[] = useMemo<ProfileGame[]>(() => {
+    if (!user || !gameRecords) return noProfileGames;
+    return createProfileGames(gameRecords, user);
+  }, [gameRecords, user]);
 
-    setLoading(true);
-    try {
-      const gameRecords: GameRecord[] = await profileApi.getGameRecords();
-      setGames(createProfileGames(gameRecords, localUser));
-    } catch (error: unknown) {
-      invokeError(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [invokeError, localUser, profileApi]);
-
-  return { games, loading, refreshGames };
+  return { games, isLoading };
 }

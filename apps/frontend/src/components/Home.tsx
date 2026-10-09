@@ -1,7 +1,6 @@
 'use client';
 
-import { useError } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import { type SignOut, useAuth, useSignOut } from '@cityborn/client/auth';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -9,7 +8,6 @@ import { Box } from '@mui/material';
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { authApi } from '@/lib/api/auth';
 import { SignInForm } from './auth/SignInForm';
 import { SignUpForm } from './auth/SignUpForm';
 import Menu from './menu/Menu';
@@ -27,11 +25,11 @@ const TileLayer = dynamic(
 );
 
 export default function Home() {
-  const { user, setUser } = useAuth();
-  const { invokeError } = useError();
+  const { user } = useAuth();
   const [state, setState] = useState<
     'menu' | 'sign-in' | 'sign-up' | 'profile'
   >('menu');
+  const signOut: SignOut = useSignOut({ onSignedOut: () => setState('menu') });
   const isAuthenticated: boolean = user !== null;
 
   useEffect(() => {
@@ -107,15 +105,7 @@ export default function Home() {
                   <AccountCircleIcon />
                 </IconButton>
                 <LoadingIconButton
-                  onClick={async () => {
-                    try {
-                      await authApi.signOut();
-                      setUser(null);
-                      setState('menu');
-                    } catch (error: unknown) {
-                      invokeError(error, 'Une erreur est survenue');
-                    }
-                  }}
+                  onClick={signOut}
                   sx={{
                     visibility: user ? 'visible' : 'hidden',
                   }}

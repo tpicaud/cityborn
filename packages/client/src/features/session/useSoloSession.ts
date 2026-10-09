@@ -2,11 +2,13 @@
 
 import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { PlayerIdSchema, SessionMode } from '@cityborn/api';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import { useAuth } from '../auth/authContext';
+import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import {
@@ -29,6 +31,7 @@ export function useSoloSession({
 }: SoloSessionOptions): SessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
+  const queryClient: QueryClient = useQueryClient();
   const { invokeError } = useError();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;
   const [session, setSession] = useState<Session>();
@@ -85,6 +88,8 @@ export function useSoloSession({
     if (!isGameOver) return;
 
     await sessionApi.finalizeGame(nextSession);
+    if (!user) return;
+    await invalidateGameRecords({ queryClient, userId: user.id });
   };
 
   const endGame = async () => {
