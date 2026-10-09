@@ -1,6 +1,6 @@
 ---
 name: client-app-architecture
-description: Architecture client Cityborn. À utiliser pour placer ou modifier une feature, un composant, un hook, le routing, un accès API, un port plateforme ou un domaine @cityborn/client dans les apps front et mobile.
+description: Architecture client Cityborn. À utiliser pour placer ou modifier une feature, un composant, un hook, le routing, un accès API, un port plateforme ou un domaine @cityborn/client dans les apps front, mobile et back-office.
 ---
 
 # Architecture client
@@ -34,9 +34,9 @@ Le frontend et le mobile visent le miroir : une capacité présente dans les deu
 
 - **Frontend joueur** → `apps/frontend/src/lib/api/`, exécuté dans le navigateur avec les cookies Nest.
 - **Mobile** → `apps/mobile/lib/api/`, exécuté avec les tokens du stockage sécurisé.
-- **Back-office** → `apps/back-office/lib/api/`, exécuté dans le navigateur avec les cookies Nest ; ses routes `admin` exigent un compte de rôle `admin`.
+- **Back-office** → `apps/back-office/lib/api/`, exécuté dans le navigateur avec les cookies Nest ; ses routes `admin` exigent un compte de rôle `admin` et passent par le domaine `admin` de `@cityborn/client`.
 
-`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Chaque app crée dans son `lib/api/` son `contractClient` et son `authApi`, puis les passe à `ApiProvider` (`@cityborn/client`). Ce provider unique crée le `QueryClient`, construit les autres API de domaine (`createCategoryApi`, `createHealthApi`, `createSessionApi`, `createProfileApi`) et les expose par contexte : un hook lit ses ports par `useDomainApis()`, jamais en paramètre. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
+`ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Chaque app crée dans son `lib/api/` son `contractClient` et son `authApi`, puis les passe à `ApiProvider` (`@cityborn/client`). Ce provider unique crée le `QueryClient`, construit les autres API de domaine (`createAdminApi`, `createCategoryApi`, `createHealthApi`, `createSessionApi`, `createProfileApi`) et les expose par contexte : un hook lit ses ports par `useDomainApis()`, jamais en paramètre. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
 Ordre des providers dans chaque app : `ErrorProvider`, puis `ApiProvider`, puis `AuthProvider`. `ApiProvider` lit `invokeError` pour créer la `QueryCache` qui remonte les erreurs de query.
 
@@ -63,9 +63,9 @@ Pour tout ce qui touche à la gestion / l'affichage des erreurs de ces wrappers,
 
 Le frontend joueur et le back-office sont exportés en statique (`output: 'export'`), sans code serveur Next : chaque page charge ses données dans le navigateur, et un paramètre de requête se lit avec `useSearchParams()` sous une `Suspense`. Une URL à identifiant (`/session/multi/<id>`) sert une page sans segment dynamique, atteinte par une réécriture dans `next.config.ts` (dev) et `vercel.json`. La page lit l'identifiant avec `usePathname()` et le parseur colocalisé avec le constructeur du chemin (`sessionIdFromMultiSessionPath`).
 
-## `@cityborn/client` : logique partagée front + mobile
+## `@cityborn/client` : logique client des apps
 
-Rangé par domaine, en miroir des capacités fonctionnelles des apps. Il n'y a pas de barrel racine : l'`exports` map de `packages/client/package.json` est la surface publique.
+Le package porte l'accès à l'API et l'état serveur des trois apps clientes, y compris un domaine consommé par une seule app (`admin`, back-office). Rangé par domaine, en miroir des capacités fonctionnelles des apps. Il n'y a pas de barrel racine : l'`exports` map de `packages/client/package.json` est la surface publique.
 
 - Un domaine consommé par les apps expose un `index.ts` unique atteint par un sous-chemin ; ce que son `index.ts` n'exporte pas est privé au package.
 - Un domaine consommé seulement à l'intérieur du package (`category`) n'a ni `index.ts` ni sous-chemin : ses consommateurs importent directement ses fichiers.
@@ -73,6 +73,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Il n'y a p
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorProvider` et `ErrorDialogProps`, version d'API minimale supportée, formatage de date. |
+| `@cityborn/client/admin` | `src/features/admin/` | Back-office : liste et création de catégories, chargement et édition d'une catégorie (`useCategoryEditor`, qui compose le brouillon d'objet à deviner de `useGuessObjectDraft`), import CSV d'objets à deviner, recherches avec délai (`useGuessObjectSearch`, `useWorldLocationSearch`). |
 | `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, chargement de l'utilisateur courant, connexion, inscription, déconnexion, vérification et renvoi de l'e-mail de vérification. |
@@ -95,7 +96,7 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 - Un hook porte un seul comportement et lit ses données par les `queryOptions` du domaine : chaque appel crée tout l'état, les effets et les queries qu'il contient.
 - Un écran mobile qui reste monté hors focus (onglet) passe son focus (`useIsFocused` d'`expo-router`) au hook, qui le transmet à l'option `subscribed` de sa query : une query périmée se relance au retour sur l'écran.
 - Un fichier regroupe les hooks d'un même flux avec leurs formulaires et helpers privés, et porte le nom du flux (`auth/signIn.ts`, `session/sessionLauncher.ts`) ; un hook seul dans son flux vit dans `use<Comportement>.ts`.
-- Une écriture reste un appel direct au port, et react-hook-form porte son état de soumission.
+- Une écriture reste un appel direct au port, suivi de la mise à jour du cache par `api/<domaine>Queries.ts`, et react-hook-form porte son état de soumission.
 
 La logique de présentation suit les conventions React existantes : un hook headless porte le nom `use<Comportement>` (`useSoloSession`, `useGameRound`, `useProfile`) ; une transformation pure porte le nom précis de son résultat (`gameDisplay`, `gameResult`, `sessionState`). Les contrats de vue restent colocalisés dans leur domaine.
 

@@ -12,7 +12,7 @@ Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les c
 | `apps/frontend`, `apps/back-office` | Next.js (App Router). |
 | `apps/mobile` | Expo / React Native. |
 | `packages/api` | **Source de vérité des contrats** : ts-rest et WebSocket + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
-| `packages/client` | Code partagé **front + mobile** qui **ne transite pas** par l'API, rangé par domaine et exposé par l'`exports` map de son `package.json`. Agnostique de Next, Expo et du rendu. |
+| `packages/client` | Code des apps clientes (front, mobile, back-office) qui **ne transite pas** par l'API, rangé par domaine et exposé par l'`exports` map de son `package.json`. Porte l'accès à l'API et l'état serveur de toutes ces apps, y compris un domaine propre à une seule app (`admin`). Agnostique de Next, Expo et du rendu. |
 | `packages/core` | Code partagé **backend + client** (front/mobile). Aujourd'hui la logique de jeu (`src/game`) ; a vocation à s'étoffer. Dépend de `@cityborn/api`. |
 | `packages/design-system` | Composants UI partagés. |
 
@@ -20,7 +20,7 @@ Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les c
 
 - transite par l'API → `@cityborn/api`
 - partagé backend + front/mobile → `@cityborn/core`
-- partagé front + mobile uniquement → `@cityborn/client`
+- partagé entre apps clientes, ou accès à l'API d'une app cliente → `@cityborn/client`
 - sinon local à l'app
 
 Ne jamais dupliquer un type qui existe déjà dans un package.
