@@ -6,7 +6,6 @@ export {
 export {
   AuthProvider,
   type CurrentUserLoad,
-  type CurrentUserState,
   useAuth,
   useCurrentUserLoad,
 } from './authContext';

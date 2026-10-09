@@ -1,20 +1,11 @@
 'use client';
 
-import {
-  getFriendlyErrorMessage,
-  parseApiError,
-  resolveErrorMessage,
-  type User,
-} from '@cityborn/api';
+import type { User } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { currentUserQueryOptions } from './api/authQueries';
-
-export type CurrentUserState =
-  | { status: 'loading' }
-  | { status: 'ready'; user: User | null }
-  | { status: 'failed'; errorMessage: string };
+import { type CurrentUserState, toCurrentUserState } from './currentUserState';
 
 export type CurrentUserLoad = {
   currentUserState: CurrentUserState;
@@ -31,24 +22,6 @@ type AuthProviderProps = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-function toCurrentUserState(
-  currentUserQuery: UseQueryResult<User | null>,
-): CurrentUserState {
-  if (currentUserQuery.data !== undefined) {
-    return { status: 'ready', user: currentUserQuery.data };
-  }
-  if (!currentUserQuery.isError || currentUserQuery.isFetching) {
-    return { status: 'loading' };
-  }
-  return {
-    status: 'failed',
-    errorMessage: resolveErrorMessage(
-      currentUserQuery.error,
-      getFriendlyErrorMessage(parseApiError(0, currentUserQuery.error)),
-    ),
-  };
-}
 
 export function useCurrentUserLoad(): CurrentUserLoad {
   const { authApi }: DomainApis = useDomainApis();
