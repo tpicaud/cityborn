@@ -5,6 +5,7 @@ import {
   type CategoryId,
   CategoryIdSchema,
   type FullCategory,
+  type GuessObjectSearchResult,
 } from '@cityborn/api';
 import {
   QueryClient,
@@ -15,11 +16,17 @@ import type { AdminApi } from './adminApi';
 import {
   categoriesQueryOptions,
   fullCategoryQueryOptions,
-  invalidateCategoriesAfterDeletion,
+  guessObjectSearchQueryOptions,
   reloadCategories,
+  removeDeletedCategory,
 } from './adminQueries';
 
-type CategoryReads = Pick<AdminApi, 'getFullCategory' | 'getCategories'>;
+type AdminReads = Partial<
+  Pick<
+    AdminApi,
+    'getFullCategory' | 'getCategories' | 'searchGuessObjectsByName'
+  >
+>;
 
 const deletedCategoryId: CategoryId = CategoryIdSchema.parse('category-1');
 
@@ -30,18 +37,28 @@ const deletedCategory: FullCategory = {
   guessObjects: [],
 };
 
+const keptCategory: Category = {
+  id: CategoryIdSchema.parse('category-2'),
+  name: 'Lyon',
+  isPublished: true,
+};
+
 const categories: Category[] = [
   { id: deletedCategoryId, name: 'Paris', isPublished: false },
+  keptCategory,
 ];
+
+const parisSearchResults: GuessObjectSearchResult[] = [{ name: 'Tour Eiffel' }];
 
 function unexpectedCall(): never {
   throw new Error('unexpected admin call');
 }
 
 function createFakeAdminApi({
-  getFullCategory,
-  getCategories,
-}: CategoryReads): AdminApi {
+  getFullCategory = unexpectedCall,
+  getCategories = unexpectedCall,
+  searchGuessObjectsByName = unexpectedCall,
+}: AdminReads): AdminApi {
   return {
     getCategories,
     getFullCategory,
@@ -52,7 +69,7 @@ function createFakeAdminApi({
     getFullGuessObject: unexpectedCall,
     createGuessObject: unexpectedCall,
     updateGuessObject: unexpectedCall,
-    searchGuessObjectsByName: unexpectedCall,
+    searchGuessObjectsByName,
     findGuessObjectByExternalId: unexpectedCall,
     searchWorldLocationsByName: unexpectedCall,
     findWorldLocationByOsmReference: unexpectedCall,
@@ -72,7 +89,7 @@ function waitForFirstData<TData>(
   });
 }
 
-test('invalidating categories after a deletion marks them stale without refetching the displayed deleted category', async () => {
+test('removing a deleted category drops it from the list and marks categories stale without refetching the displayed deleted category', async () => {
   let fullCategoryRequestCount: number = 0;
   const adminApi: AdminApi = createFakeAdminApi({
     getFullCategory: async () => {
@@ -91,9 +108,13 @@ test('invalidating categories after a deletion marks them stale without refetchi
   const stopObservingFullCategory: () => void =
     await waitForFirstData(fullCategoryObserver);
 
-  await invalidateCategoriesAfterDeletion(queryClient);
+  await removeDeletedCategory({ queryClient, categoryId: deletedCategoryId });
 
   assert.equal(fullCategoryRequestCount, 1);
+  assert.deepEqual(
+    queryClient.getQueryData(categoriesQueryOptions(adminApi).queryKey),
+    [keptCategory],
+  );
   assert.equal(
     queryClient.getQueryState(
       fullCategoryQueryOptions({ adminApi, categoryId: deletedCategoryId })
@@ -115,7 +136,6 @@ test('reloading the categories drops the displayed list until the new response a
     undefined;
   let categoriesResponse: () => Promise<Category[]> = async () => categories;
   const adminApi: AdminApi = createFakeAdminApi({
-    getFullCategory: unexpectedCall,
     getCategories: () => categoriesResponse(),
   });
   const queryClient: QueryClient = new QueryClient();
@@ -139,5 +159,44 @@ test('reloading the categories drops the displayed list until the new response a
   await categoriesReload;
   assert.deepEqual(categoriesObserver.getCurrentResult().data, categories);
   stopObservingCategories();
+  queryClient.clear();
+});
+
+test('a name search typed after clearing the field shows no stale results while pending', async () => {
+  let resolveNextSearch: (searchResults: GuessObjectSearchResult[]) => void =
+    () => undefined;
+  const adminApi: AdminApi = createFakeAdminApi({
+    searchGuessObjectsByName: (searchTerm: string) => {
+      if (searchTerm === 'paris') return Promise.resolve(parisSearchResults);
+      return new Promise<GuessObjectSearchResult[]>(
+        (resolve: (searchResults: GuessObjectSearchResult[]) => void) => {
+          resolveNextSearch = resolve;
+        },
+      );
+    },
+  });
+  const queryClient: QueryClient = new QueryClient();
+  const searchObserver: QueryObserver<GuessObjectSearchResult[]> =
+    new QueryObserver(
+      queryClient,
+      guessObjectSearchQueryOptions({ adminApi, searchTerm: 'paris' }),
+    );
+  const stopObservingSearch: () => void =
+    await waitForFirstData(searchObserver);
+
+  searchObserver.setOptions(
+    guessObjectSearchQueryOptions({ adminApi, searchTerm: '' }),
+  );
+  await queryClient.fetchQuery(
+    guessObjectSearchQueryOptions({ adminApi, searchTerm: '' }),
+  );
+  searchObserver.setOptions(
+    guessObjectSearchQueryOptions({ adminApi, searchTerm: 'l' }),
+  );
+
+  assert.equal(searchObserver.getCurrentResult().isPlaceholderData, true);
+  assert.deepEqual(searchObserver.getCurrentResult().data, []);
+  resolveNextSearch([]);
+  stopObservingSearch();
   queryClient.clear();
 });

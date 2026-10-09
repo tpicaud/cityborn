@@ -24,9 +24,9 @@ import {
   categoriesQueryOptions,
   fullCategoryQueryOptions,
   guessObjectQueryOptions,
-  invalidateCategories,
-  invalidateCategoriesAfterDeletion,
   invalidateGuessObjects,
+  markCategoriesStale,
+  removeDeletedCategory,
 } from './api/adminQueries';
 import {
   type CategoryEditorState,
@@ -165,7 +165,7 @@ export function useCategoryEditor({
       categoryId: categoryUpdate.id,
       category: categoryUpdate,
     });
-    await invalidateCategories(queryClient);
+    await markCategoriesStale(queryClient);
   };
 
   const saveCategoryPublication = async (
@@ -221,8 +221,7 @@ export function useCategoryEditor({
   };
 
   const saveGuessObjectDraft = async (): Promise<void> => {
-    const { guessObjectDraft }: GuessObjectDraftEditor =
-      guessObjectDraftEditor;
+    const { guessObjectDraft }: GuessObjectDraftEditor = guessObjectDraftEditor;
     if (!guessObjectDraft) {
       invokeError(invalidGuessObjectMessage);
       return;
@@ -289,7 +288,7 @@ export function useCategoryEditor({
       setIsSaving(true);
       try {
         await adminApi.deleteCategory(category.id);
-        await invalidateCategoriesAfterDeletion(queryClient);
+        await removeDeletedCategory({ queryClient, categoryId: category.id });
         onCategoryDeleted();
       } catch (error: unknown) {
         invokeError(error, unexpectedErrorMessage);

@@ -1,10 +1,15 @@
-import type { CategoryId, GuessObjectId } from '@cityborn/api';
+import type {
+  Category,
+  CategoryId,
+  GuessObjectId,
+  GuessObjectSearchResult,
+  WorldLocationSearchResult,
+} from '@cityborn/api';
 import {
   keepPreviousData,
   type QueryClient,
   type QueryKey,
   queryOptions,
-  skipToken,
 } from '@tanstack/react-query';
 import type { AdminApi, OsmWorldLocationReference } from './adminApi';
 
@@ -26,6 +31,19 @@ type GuessObjectQuery = {
 type NameSearchQuery = {
   adminApi: AdminApi;
   searchTerm: string;
+};
+
+type NameSearchTarget = 'guessObjects' | 'worldLocations';
+
+type NameSearchDefinition<TSearchResult> = {
+  searchTarget: NameSearchTarget;
+  searchTerm: string;
+  searchByName: (searchTerm: string) => Promise<TSearchResult[]>;
+};
+
+type CategoryDeletion = {
+  queryClient: QueryClient;
+  categoryId: CategoryId;
 };
 
 type GuessObjectExternalIdQuery = {
@@ -115,20 +133,31 @@ export function fullGuessObjectQueryOptions({
   });
 }
 
-export function guessObjectSearchQueryOptions({
-  adminApi,
+function nameSearchQueryOptions<TSearchResult>({
+  searchTarget,
   searchTerm,
-}: NameSearchQuery) {
+  searchByName,
+}: NameSearchDefinition<TSearchResult>) {
   return queryOptions({
-    queryKey: searchQueryKey(['guessObjects', 'name', searchTerm]),
-    queryFn:
-      searchTerm === ''
-        ? skipToken
-        : () => adminApi.searchGuessObjectsByName(searchTerm),
+    queryKey: searchQueryKey([searchTarget, 'name', searchTerm]),
+    queryFn: (): Promise<TSearchResult[]> =>
+      searchTerm === '' ? Promise.resolve([]) : searchByName(searchTerm),
     staleTime: nameSearchStaleTimeMs,
     retry: false,
     placeholderData: keepPreviousData,
     meta: { reportsError: false },
+  });
+}
+
+export function guessObjectSearchQueryOptions({
+  adminApi,
+  searchTerm,
+}: NameSearchQuery) {
+  return nameSearchQueryOptions<GuessObjectSearchResult>({
+    searchTarget: 'guessObjects',
+    searchTerm,
+    searchByName: (guessObjectName: string) =>
+      adminApi.searchGuessObjectsByName(guessObjectName),
   });
 }
 
@@ -149,16 +178,11 @@ export function worldLocationSearchQueryOptions({
   adminApi,
   searchTerm,
 }: NameSearchQuery) {
-  return queryOptions({
-    queryKey: searchQueryKey(['worldLocations', 'name', searchTerm]),
-    queryFn:
-      searchTerm === ''
-        ? skipToken
-        : () => adminApi.searchWorldLocationsByName(searchTerm),
-    staleTime: nameSearchStaleTimeMs,
-    retry: false,
-    placeholderData: keepPreviousData,
-    meta: { reportsError: false },
+  return nameSearchQueryOptions<WorldLocationSearchResult>({
+    searchTarget: 'worldLocations',
+    searchTerm,
+    searchByName: (worldLocationName: string) =>
+      adminApi.searchWorldLocationsByName(worldLocationName),
   });
 }
 
@@ -192,13 +216,23 @@ export function invalidateCategories(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: categoriesQueryKeyRoot });
 }
 
-export function invalidateCategoriesAfterDeletion(
-  queryClient: QueryClient,
-): Promise<void> {
+export function markCategoriesStale(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({
     queryKey: categoriesQueryKeyRoot,
     refetchType: 'none',
   });
+}
+
+export function removeDeletedCategory({
+  queryClient,
+  categoryId,
+}: CategoryDeletion): Promise<void> {
+  queryClient.setQueryData<Category[]>(
+    categoryListQueryKey,
+    (categories: Category[] | undefined) =>
+      categories?.filter((category: Category) => category.id !== categoryId),
+  );
+  return markCategoriesStale(queryClient);
 }
 
 export function invalidateSearches(queryClient: QueryClient): Promise<void> {
