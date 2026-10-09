@@ -9,7 +9,6 @@ import { CategoryModule } from './category/category.module';
 import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
 import { BackendConfigModule } from './config/config.module';
-import { ConnectionRegistryModule } from './connection-registry/connection-registry.module';
 import { EventModule } from './event/event.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
 import { HealthModule } from './health/health.module';
@@ -40,7 +39,6 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
     IdModule,
     RedisModule,
     LockModule,
-    ConnectionRegistryModule,
     AuthModule,
     PrismaModule,
     UserModule,

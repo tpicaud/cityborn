@@ -1,4 +1,6 @@
 import type {
+  PlayerId,
+  SessionId,
   VisitorId,
   WsClientToServerEvents,
   WsServerToClientEvents,
@@ -6,10 +8,16 @@ import type {
 import type { DefaultEventsMap, Server, Socket } from 'socket.io';
 import type { AuthSession } from './auth-session';
 
-export interface AppSocketData {
+export type SocketPlayer = {
+  sessionID: SessionId;
+  playerID: PlayerId;
+};
+
+export type AppSocketData = {
   authSession: AuthSession | null;
   visitorId: VisitorId | undefined;
-}
+  player: SocketPlayer | null;
+};
 
 export type AppSocket = Socket<
   WsClientToServerEvents,

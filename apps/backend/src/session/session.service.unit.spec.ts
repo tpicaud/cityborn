@@ -27,13 +27,13 @@ import {
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { NotFoundException } from '@nestjs/common';
-import type { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
+import { sessionPresenceTiming } from './session-presence-timing';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
   PlayerIdSchema.parse(value);
@@ -60,10 +60,6 @@ function buildSessionService(session: Session | null) {
   const idService: DeepMocked<IdService> = createMock<IdService>();
   const gameService: DeepMocked<GameService> = createMock<GameService>();
   const eventService: DeepMocked<EventService> = createMock<EventService>();
-  const connectionRegistryService: DeepMocked<ConnectionRegistryService> =
-    createMock<ConnectionRegistryService>();
-  connectionRegistryService.register.mockResolvedValue(undefined);
-  connectionRegistryService.hasLiveConnection.mockResolvedValue(false);
 
   const sessionService: SessionService = new SessionService(
     redisService,
@@ -71,7 +67,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
-    connectionRegistryService,
+    sessionPresenceTiming,
   );
 
   return {
@@ -81,7 +77,6 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
-    connectionRegistryService,
   };
 }
 
@@ -307,12 +302,11 @@ describe('SessionService lobby operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const result: JoinedSession = await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('alice'),
+      const result: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('alice'),
         user,
-        socketID: 'socket-1',
-      });
+      );
 
       expect(result.session.hostID).toBe(playerId('alice'));
       expect(result.session.players).toEqual([
@@ -326,48 +320,21 @@ describe('SessionService lobby operations', () => {
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });
 
-    it('registers the socket of the joining player', async () => {
-      const session: Session = buildSession({ players: [] });
-      const {
-        sessionService,
-        connectionRegistryService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-
-      await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('guest'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
-
-      expect(connectionRegistryService.register).toHaveBeenCalledWith({
-        socketID: 'socket-1',
-        connection: {
-          playerID: playerId('guest'),
-          sessionID: session.id,
-          isGuest: true,
-        },
-      });
-    });
-
     it('issues a reconnect token only to a guest player', async () => {
       const session: Session = buildSession({ players: [] });
       const user: User = buildUser({ username: playerId('alice') });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const guestJoin: JoinedSession = await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('guest'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
-      const userJoin: JoinedSession = await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('alice'),
+      const guestJoin: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
+      );
+      const userJoin: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('alice'),
         user,
-        socketID: 'socket-1',
-      });
+      );
 
       expect(guestJoin.reconnectToken).toEqual(expect.any(String));
       expect(userJoin.reconnectToken).toBeUndefined();
@@ -380,12 +347,7 @@ describe('SessionService lobby operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('guest'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
+      await sessionService.join(session.id, playerId('guest'));
 
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
@@ -404,12 +366,7 @@ describe('SessionService lobby operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.join({
-          sessionID: session.id,
-          playerID: playerId('host'),
-          user: undefined,
-          socketID: 'socket-1',
-        }),
+        sessionService.join(session.id, playerId('host')),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS },
       });
@@ -639,74 +596,17 @@ describe('SessionService connection operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const result: Session = await sessionService.reconnectPlayer({
-        sessionID: session.id,
-        playerID: playerId('host'),
-        reconnectToken: undefined,
+      const result: Session = await sessionService.reconnectPlayer(
+        session.id,
+        playerId('host'),
+        undefined,
         user,
-        socketID: 'socket-2',
-      });
+      );
 
       expect(result.hostID).toBe(playerId('host'));
       expect(result.players[0]).toEqual(
         expect.objectContaining({ connected: true }),
       );
-    });
-
-    it('registers the socket of the reconnected player', async () => {
-      const user: User = buildUser({ username: playerId('host') });
-      const session: Session = buildSession({
-        players: [buildPlayer(playerId('host'), false, { id: user.id })],
-      });
-      const {
-        sessionService,
-        connectionRegistryService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-
-      await sessionService.reconnectPlayer({
-        sessionID: session.id,
-        playerID: playerId('host'),
-        reconnectToken: undefined,
-        user,
-        socketID: 'socket-2',
-      });
-
-      expect(connectionRegistryService.register).toHaveBeenCalledWith({
-        socketID: 'socket-2',
-        connection: {
-          playerID: playerId('host'),
-          sessionID: session.id,
-          isGuest: false,
-        },
-      });
-    });
-
-    it('does not register the socket of a rejected reconnection', async () => {
-      const owner: User = buildUser({ username: playerId('host') });
-      const intruder: User = buildUser({
-        id: '00000000-0000-4000-8000-000000000002',
-        username: playerId('intruder'),
-      });
-      const session: Session = buildSession({
-        players: [buildPlayer(playerId('host'), false, { id: owner.id })],
-      });
-      const {
-        sessionService,
-        connectionRegistryService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-
-      await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('host'),
-          reconnectToken: undefined,
-          user: intruder,
-          socketID: 'socket-2',
-        }),
-      ).rejects.toMatchObject({
-        response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
-      });
-      expect(connectionRegistryService.register).not.toHaveBeenCalled();
     });
 
     it('rejects reconnecting a registered player without credentials', async () => {
@@ -717,13 +617,7 @@ describe('SessionService connection operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('host'),
-          reconnectToken: undefined,
-          user: undefined,
-          socketID: 'socket-2',
-        }),
+        sessionService.reconnectPlayer(session.id, playerId('host'), undefined),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
       });
@@ -742,13 +636,12 @@ describe('SessionService connection operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('host'),
-          reconnectToken: undefined,
-          user: intruder,
-          socketID: 'socket-2',
-        }),
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('host'),
+          undefined,
+          intruder,
+        ),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -758,24 +651,16 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      const { reconnectToken }: JoinedSession = await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('guest'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
-      await sessionService.disconnectAbsentPlayer({
-        sessionID: session.id,
-        playerID: playerId('guest'),
-      });
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
+      );
 
-      const result: Session = await sessionService.reconnectPlayer({
-        sessionID: session.id,
-        playerID: playerId('guest'),
+      const result: Session = await sessionService.reconnectPlayer(
+        session.id,
+        playerId('guest'),
         reconnectToken,
-        user: undefined,
-        socketID: 'socket-2',
-      });
+      );
 
       expect(result.players[0]).toEqual(
         expect.objectContaining({
@@ -789,27 +674,18 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('victim'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
-      const { reconnectToken }: JoinedSession = await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('intruder'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
+      await sessionService.join(session.id, playerId('victim'));
+      const { reconnectToken }: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('intruder'),
+      );
 
       await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('victim'),
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
           reconnectToken,
-          user: undefined,
-          socketID: 'socket-2',
-        }),
+        ),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -820,21 +696,15 @@ describe('SessionService connection operations', () => {
       const user: User = buildUser({ username: playerId('intruder') });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('victim'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
+      await sessionService.join(session.id, playerId('victim'));
 
       await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('victim'),
-          reconnectToken: undefined,
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
+          undefined,
           user,
-          socketID: 'socket-2',
-        }),
+        ),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -846,114 +716,134 @@ describe('SessionService connection operations', () => {
         SessionReconnectTokenSchema.parse('forged-token');
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join({
-        sessionID: session.id,
-        playerID: playerId('victim'),
-        user: undefined,
-        socketID: 'socket-1',
-      });
+      await sessionService.join(session.id, playerId('victim'));
 
       await expect(
-        sessionService.reconnectPlayer({
-          sessionID: session.id,
-          playerID: playerId('victim'),
-          reconnectToken: forgedToken,
-          user: undefined,
-          socketID: 'socket-2',
-        }),
+        sessionService.reconnectPlayer(
+          session.id,
+          playerId('victim'),
+          forgedToken,
+        ),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
     });
   });
 
-  describe('disconnectAbsentPlayer', () => {
-    it('disconnects a player without live connection and reassigns the host', async () => {
+  describe('reconcilePlayerPresence', () => {
+    const gracePeriodMs: number = sessionPresenceTiming.disconnectGracePeriodMs;
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now: 0 });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('keeps an absent player connected during the grace period', async () => {
+      const session: Session = buildSession();
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs - 1);
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
+
+      expect(result).toBeNull();
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
+    it('disconnects a player absent for the grace period and reassigns the host', async () => {
       const session: Session = buildSession();
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs);
       const result: Session | null =
-        await sessionService.disconnectAbsentPlayer({
+        await sessionService.reconcilePlayerPresence({
           sessionID: session.id,
-          playerID: playerId('host'),
+          presentPlayerIDs: [playerId('bob')],
         });
 
       expect(result?.hostID).toBe(playerId('bob'));
       expect(result?.players[0]).toEqual(
-        expect.objectContaining({
-          username: playerId('host'),
-          connected: false,
-        }),
+        expect.objectContaining({ connected: false }),
       );
     });
 
-    it('keeps a player who still has a live connection', async () => {
+    it('restarts the grace period of a player who came back in time', async () => {
       const session: Session = buildSession();
-      const {
-        sessionService,
-        connectionRegistryService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      connectionRegistryService.hasLiveConnection.mockResolvedValue(true);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
 
-      const result: Session | null =
-        await sessionService.disconnectAbsentPlayer({
-          sessionID: session.id,
-          playerID: playerId('host'),
-        });
-
-      expect(result).toBeNull();
-      expect(connectionRegistryService.hasLiveConnection).toHaveBeenCalledWith({
+      await sessionService.reconcilePlayerPresence({
         sessionID: session.id,
-        playerID: playerId('host'),
+        presentPlayerIDs: [playerId('bob')],
       });
+      jest.setSystemTime(gracePeriodMs / 2);
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('host'), playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs);
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
+
+      expect(result).toBeNull();
     });
 
-    it('ignores a player already disconnected', async () => {
+    it('marks a present player connected again and gives the host to a connected player', async () => {
       const session: Session = buildSession({
-        hostID: playerId('bob'),
-        players: [buildPlayer(playerId('host'), false), buildPlayer('bob')],
+        hostID: '',
+        players: [
+          buildPlayer(playerId('host'), false),
+          buildPlayer(playerId('bob'), false),
+        ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
       const result: Session | null =
-        await sessionService.disconnectAbsentPlayer({
+        await sessionService.reconcilePlayerPresence({
           sessionID: session.id,
-          playerID: playerId('host'),
+          presentPlayerIDs: [playerId('bob')],
         });
 
-      expect(result).toBeNull();
-    });
-
-    it('ignores a player who left the session', async () => {
-      const session: Session = buildSession();
-      const { sessionService }: ReturnType<typeof buildSessionService> =
-        buildSessionService(session);
-
-      const result: Session | null =
-        await sessionService.disconnectAbsentPlayer({
-          sessionID: session.id,
-          playerID: playerId('kicked'),
-        });
-
-      expect(result).toBeNull();
+      expect(result?.hostID).toBe(playerId('bob'));
+      expect(result?.players).toEqual([
+        expect.objectContaining({ username: 'host', connected: false }),
+        expect.objectContaining({ username: 'bob', connected: true }),
+      ]);
     });
 
     it('ignores an expired session', async () => {
-      const {
-        sessionService,
-        lockService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(null);
 
       const result: Session | null =
-        await sessionService.disconnectAbsentPlayer({
+        await sessionService.reconcilePlayerPresence({
           sessionID: sessionId('expired'),
-          playerID: playerId('host'),
+          presentPlayerIDs: [],
         });
 
       expect(result).toBeNull();
-      expect(lockService.withLock).not.toHaveBeenCalled();
     });
   });
 });

@@ -6,7 +6,6 @@ import {
 import type { Request } from 'express';
 import type { AppSocket } from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
-import { ConnectionRegistryService } from '../connection-registry/connection-registry.service';
 import { RateLimitService } from './rate-limit.service';
 import { resolveClientIpFromHeaders } from './resolve-client-ip';
 
@@ -14,7 +13,6 @@ import { resolveClientIpFromHeaders } from './resolve-client-ip';
 export class RateLimitGuard implements CanActivate {
   constructor(
     private readonly rateLimitService: RateLimitService,
-    private readonly connectionRegistryService: ConnectionRegistryService,
     private readonly wideEventService: WideEventService,
   ) {}
 
@@ -48,11 +46,8 @@ export class RateLimitGuard implements CanActivate {
 
   private async consumeWsMessage(context: ExecutionContext): Promise<void> {
     const client = context.switchToWs().getClient<AppSocket>();
-    const connection = await this.connectionRegistryService.getConnection(
-      client.id,
-    );
     const key =
-      connection?.playerID ??
+      client.data.player?.playerID ??
       resolveClientIpFromHeaders(
         client.handshake.headers,
         client.handshake.address,

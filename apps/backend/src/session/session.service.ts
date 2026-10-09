@@ -21,35 +21,25 @@ import {
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  ConnectionRegistryService,
-  type PlayerPresence,
-} from '../connection-registry/connection-registry.service';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
 import { RedisService } from '../redis/redis.service';
+import {
+  SESSION_PRESENCE_TIMING,
+  type SessionPresenceTiming,
+} from './session-presence-timing';
 
 export type JoinedSession = {
   session: Session;
-  reconnectToken: SessionReconnectToken | undefined;
-};
-
-type SessionJoin = {
-  sessionID: SessionId;
-  playerID: PlayerId;
-  user: User | undefined;
-  socketID: string;
-};
-
-type SessionReconnection = SessionJoin & {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
@@ -58,6 +48,9 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 30 * 60;
   private readonly LOCK_TTL = 2000;
+  private readonly multiSessionExpirationsKey = 'multi-session-expirations';
+  private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
+    new Map();
 
   constructor(
     private readonly redisService: RedisService,
@@ -65,7 +58,8 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
-    private readonly connectionRegistryService: ConnectionRegistryService,
+    @Inject(SESSION_PRESENCE_TIMING)
+    private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
 
   private getKey(id: SessionId): string {
@@ -129,12 +123,11 @@ export class SessionService {
     return await this.requireSession(sessionID);
   }
 
-  async join({
-    sessionID,
-    playerID,
-    user,
-    socketID,
-  }: SessionJoin): Promise<JoinedSession> {
+  async join(
+    sessionID: SessionId,
+    playerID: PlayerId,
+    user?: User,
+  ): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
       if (session.currentGame)
         throw new ForbiddenException({
@@ -167,10 +160,6 @@ export class SessionService {
       const reconnectToken: SessionReconnectToken | undefined = isGuest
         ? await this.issueReconnectToken(sessionID, playerID)
         : undefined;
-      await this.connectionRegistryService.register({
-        socketID,
-        connection: { playerID, sessionID, isGuest },
-      });
       return { session, reconnectToken };
     });
   }
@@ -365,13 +354,12 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer({
-    sessionID,
-    playerID,
-    reconnectToken,
-    user,
-    socketID,
-  }: SessionReconnection): Promise<Session> {
+  async reconnectPlayer(
+    sessionID: SessionId,
+    playerID: PlayerId,
+    reconnectToken: SessionReconnectToken | undefined,
+    user?: User,
+  ): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
       const players = session.players;
 
@@ -391,10 +379,6 @@ export class SessionService {
         user,
       );
 
-      await this.connectionRegistryService.register({
-        socketID,
-        connection: { playerID, sessionID, isGuest: !user },
-      });
       players[playerIndex].connected = true;
 
       if (session.hostID === '') session.hostID = playerID;
@@ -403,29 +387,76 @@ export class SessionService {
     });
   }
 
-  async disconnectAbsentPlayer({
+  async listMultiSessionIDs(): Promise<SessionId[]> {
+    await this.redisService.redisClient.zremrangebyscore(
+      this.multiSessionExpirationsKey,
+      '-inf',
+      Date.now(),
+    );
+    const sessionIDs: string[] = await this.redisService.redisClient.zrange(
+      this.multiSessionExpirationsKey,
+      0,
+      -1,
+    );
+    return sessionIDs.map((sessionID) => SessionIdSchema.parse(sessionID));
+  }
+
+  async reconcilePlayerPresence({
     sessionID,
-    playerID,
-  }: PlayerPresence): Promise<Session | null> {
+    presentPlayerIDs,
+  }: {
+    sessionID: SessionId;
+    presentPlayerIDs: PlayerId[];
+  }): Promise<Session | null> {
     const storedSession: Session | null = await this.getSession(sessionID);
-    if (!storedSession) return null;
+    if (!storedSession) {
+      this.playerAbsenceStarts.delete(sessionID);
+      return null;
+    }
+
+    const now: number = Date.now();
+    const previousAbsenceStarts: Map<PlayerId, number> =
+      this.playerAbsenceStarts.get(sessionID) ?? new Map();
+    const absenceStarts: Map<PlayerId, number> = new Map(
+      storedSession.players
+        .filter(
+          (player) =>
+            player.connected && !presentPlayerIDs.includes(player.username),
+        )
+        .map((player) => [
+          player.username,
+          previousAbsenceStarts.get(player.username) ?? now,
+        ]),
+    );
+    this.playerAbsenceStarts.set(sessionID, absenceStarts);
+
+    const departedPlayerIDs: PlayerId[] = [...absenceStarts]
+      .filter(
+        ([, absenceStart]) =>
+          now - absenceStart >=
+          this.sessionPresenceTiming.disconnectGracePeriodMs,
+      )
+      .map(([playerID]) => playerID);
+    const hasReturnedPlayer: boolean = storedSession.players.some(
+      (player) =>
+        !player.connected && presentPlayerIDs.includes(player.username),
+    );
+    if (departedPlayerIDs.length === 0 && !hasReturnedPlayer) return null;
 
     return await this.updateSession(sessionID, async (session) => {
-      const player: SessionPlayer | undefined = session.players.find(
-        (sessionPlayer) => sessionPlayer.username === playerID,
-      );
-      if (!player || player.connected === false) return null;
+      session.players.forEach((player) => {
+        if (presentPlayerIDs.includes(player.username)) {
+          player.connected = true;
+          return;
+        }
+        if (!departedPlayerIDs.includes(player.username)) return;
 
-      const playerIsPresent: boolean =
-        await this.connectionRegistryService.hasLiveConnection({
-          sessionID,
-          playerID,
-        });
-      if (playerIsPresent) return null;
-
-      player.connected = false;
-      this.reassignHostAfterRemoval(session, playerID);
-
+        player.connected = false;
+        this.reassignHostAfterRemoval(session, player.username);
+      });
+      if (session.hostID === '')
+        session.hostID =
+          session.players.find((player) => player.connected)?.username ?? '';
       return session;
     });
   }
@@ -516,6 +547,11 @@ export class SessionService {
       this.redisService.expire(
         this.getReconnectTokenHashesKey(session.id),
         ttl,
+      ),
+      this.redisService.redisClient.zadd(
+        this.multiSessionExpirationsKey,
+        Date.now() + ttl * 1000,
+        session.id,
       ),
     ]);
   }
