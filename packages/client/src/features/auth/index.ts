@@ -5,16 +5,16 @@ export {
 } from './api/authApi';
 export { AuthProvider, useAuth } from './authContext';
 export {
+  type IdentityProviderSignIn,
+  useIdentityProviderSignIn,
+} from './signIn/useIdentityProviderSignIn';
+export { type SignInFlow, useSignIn } from './signIn/useSignIn';
+export { type SignUpFlow, useSignUp } from './signIn/useSignUp';
+export {
   type CurrentUserBootstrap,
   type CurrentUserState,
   useCurrentUserBootstrap,
 } from './useCurrentUserBootstrap';
-export {
-  type IdentityProviderSignIn,
-  useIdentityProviderSignIn,
-} from './useIdentityProviderSignIn';
-export { type SignInFlow, useSignIn } from './useSignIn';
-export { type SignUpFlow, useSignUp } from './useSignUp';
 export {
   useVerificationEmailResend,
   type VerificationEmailResend,

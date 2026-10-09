@@ -2,7 +2,7 @@
 
 import type { SignInWithApple, SignInWithGoogle } from '@cityborn/api';
 import { useMemo } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../../shared/apiProvider';
 import {
   type SignInFlowOptions,
   useSignInCompletion,

@@ -2,7 +2,7 @@
 
 import type { SignIn } from '@cityborn/api';
 import type { UseFormReturn } from 'react-hook-form';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../../shared/apiProvider';
 import { type FormSubmitHandler, useSignInForm } from './authForms';
 import {
   type SignInFlowOptions,

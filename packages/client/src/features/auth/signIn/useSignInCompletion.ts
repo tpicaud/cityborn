@@ -2,8 +2,8 @@
 
 import type { User } from '@cityborn/api';
 import { useCallback, useRef } from 'react';
-import { useError } from '../../shared/errorContext';
-import { useAuth } from './authContext';
+import { useError } from '../../../shared/errorContext';
+import { useAuth } from '../authContext';
 
 export type SignInFlowOptions = {
   onSignedIn?: () => void;

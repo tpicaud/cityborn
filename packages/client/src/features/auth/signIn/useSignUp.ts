@@ -1,13 +1,13 @@
 'use client';
 
 import type { UseFormReturn } from 'react-hook-form';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { type FormSubmitHandler, useSignUpForm } from './authForms';
+import { type DomainApis, useDomainApis } from '../../../shared/apiProvider';
 import {
   type SignUpFormInput,
   type SignUpFormValues,
   toCreateUser,
-} from './authSchema';
+} from '../authSchema';
+import { type FormSubmitHandler, useSignUpForm } from './authForms';
 import {
   type SignInFlowOptions,
   useSignInCompletion,

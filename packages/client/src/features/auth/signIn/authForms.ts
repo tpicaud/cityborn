@@ -9,7 +9,7 @@ import {
   type SignUpFormInput,
   SignUpFormSchema,
   type SignUpFormValues,
-} from './authSchema';
+} from '../authSchema';
 
 export type FormSubmitHandler = (event?: BaseSyntheticEvent) => Promise<void>;
 
