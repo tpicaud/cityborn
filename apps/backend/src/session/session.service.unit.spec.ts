@@ -26,13 +26,13 @@ import {
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import { NotFoundException } from '@nestjs/common';
 import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
+import { sessionPresenceTiming } from './session-presence-timing';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
   PlayerIdSchema.parse(value);
@@ -66,6 +66,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
+    sessionPresenceTiming,
   );
 
   return {
@@ -78,122 +79,6 @@ function buildSessionService(session: Session | null) {
   };
 }
 
-describe('SessionService.kickPlayer', () => {
-  it('removes the kicked player and persists the session', async () => {
-    const session: Session = buildSession();
-    const {
-      sessionService,
-      redisService,
-    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('bob'),
-    );
-
-    expect(result.players.map((p) => p.username)).toEqual([playerId('host')]);
-    expect(redisService.setJSON).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejects when the requester is not the host', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(buildSession());
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('bob'),
-        sessionId('s1'),
-        playerId('host'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_FORBIDDEN_HOST },
-    });
-  });
-
-  it('rejects when the session has no such player', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(buildSession());
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('unknown'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
-    });
-  });
-
-  it('rejects once a game is in progress', async () => {
-    const session: Session = buildSession({ currentGame: buildGame() });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('bob'),
-      ),
-    ).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_ALREADY_IN_GAME },
-    });
-  });
-
-  it('rejects when the session does not exist', async () => {
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(null);
-
-    await expect(
-      sessionService.kickPlayer(
-        playerId('host'),
-        sessionId('s1'),
-        playerId('bob'),
-      ),
-    ).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('reassigns the host to another connected player when the host kicks itself', async () => {
-    const session: Session = buildSession({
-      players: [
-        buildPlayer(playerId('host')),
-        buildPlayer(playerId('bob')),
-        buildPlayer(playerId('carol'), false),
-      ],
-    });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('host'),
-    );
-
-    expect(result.hostID).toBe(playerId('bob'));
-  });
-
-  it('clears the host when no connected player remains after the kick', async () => {
-    const session: Session = buildSession({
-      players: [
-        buildPlayer(playerId('host')),
-        buildPlayer(playerId('bob'), false),
-      ],
-    });
-    const { sessionService }: ReturnType<typeof buildSessionService> =
-      buildSessionService(session);
-
-    const result: Session = await sessionService.kickPlayer(
-      playerId('host'),
-      sessionId('s1'),
-      playerId('host'),
-    );
-
-    expect(result.hostID).toBe('');
-  });
-});
 describe('SessionService.create', () => {
   it('creates and persists a multiplayer session', async () => {
     const {
@@ -653,7 +538,6 @@ describe('SessionService connection operations', () => {
         session.id,
         playerId('guest'),
       );
-      await sessionService.disconnectPlayer(playerId('guest'), session.id);
 
       const result: Session = await sessionService.reconnectPlayer(
         session.id,
@@ -729,21 +613,120 @@ describe('SessionService connection operations', () => {
     });
   });
 
-  describe('disconnectPlayer', () => {
-    it('disconnects a player and reassigns the host', async () => {
+  describe('reconcilePlayerPresence', () => {
+    const gracePeriodMs: number = sessionPresenceTiming.disconnectGracePeriodMs;
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now: 0 });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('keeps an absent player connected during the grace period', async () => {
+      const session: Session = buildSession();
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs - 1);
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
+
+      expect(result).toBeNull();
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
+    it('disconnects a player absent for the grace period and reassigns the host', async () => {
       const session: Session = buildSession();
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const result: Session = await sessionService.disconnectPlayer(
-        playerId('host'),
-        session.id,
-      );
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs);
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
 
-      expect(result.hostID).toBe(playerId('bob'));
-      expect(result.players[0]).toEqual(
+      expect(result?.hostID).toBe(playerId('bob'));
+      expect(result?.players[0]).toEqual(
         expect.objectContaining({ connected: false }),
       );
+    });
+
+    it('restarts the grace period of a player who came back in time', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs / 2);
+      await sessionService.reconcilePlayerPresence({
+        sessionID: session.id,
+        presentPlayerIDs: [playerId('host'), playerId('bob')],
+      });
+      jest.setSystemTime(gracePeriodMs);
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
+
+      expect(result).toBeNull();
+    });
+
+    it('marks a present player connected again and gives the host to a connected player', async () => {
+      const session: Session = buildSession({
+        hostID: '',
+        players: [
+          buildPlayer(playerId('host'), false),
+          buildPlayer(playerId('bob'), false),
+        ],
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: session.id,
+          presentPlayerIDs: [playerId('bob')],
+        });
+
+      expect(result?.hostID).toBe(playerId('bob'));
+      expect(result?.players).toEqual([
+        expect.objectContaining({ username: 'host', connected: false }),
+        expect.objectContaining({ username: 'bob', connected: true }),
+      ]);
+    });
+
+    it('ignores an expired session', async () => {
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(null);
+
+      const result: Session | null =
+        await sessionService.reconcilePlayerPresence({
+          sessionID: sessionId('expired'),
+          presentPlayerIDs: [],
+        });
+
+      expect(result).toBeNull();
     });
   });
 });

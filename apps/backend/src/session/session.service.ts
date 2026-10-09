@@ -21,6 +21,7 @@ import {
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -32,6 +33,10 @@ import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
 import { RedisService } from '../redis/redis.service';
+import {
+  SESSION_PRESENCE_TIMING,
+  type SessionPresenceTiming,
+} from './session-presence-timing';
 
 export type JoinedSession = {
   session: Session;
@@ -43,6 +48,9 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 30 * 60;
   private readonly LOCK_TTL = 2000;
+  private readonly multiSessionExpirationsKey = 'multi-session-expirations';
+  private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
+    new Map();
 
   constructor(
     private readonly redisService: RedisService,
@@ -50,6 +58,8 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
+    @Inject(SESSION_PRESENCE_TIMING)
+    private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
 
   private getKey(id: SessionId): string {
@@ -377,59 +387,76 @@ export class SessionService {
     });
   }
 
-  async disconnectPlayer(
-    playerID: PlayerId,
-    sessionID: SessionId,
-  ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
-      const playerIndex = session.players.findIndex(
-        (player) => player.username === playerID,
-      );
-      if (playerIndex === -1)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
-        });
-
-      session.players[playerIndex].connected = false;
-
-      this.reassignHostAfterRemoval(session, playerID);
-
-      return session;
-    });
+  async listMultiSessionIDs(): Promise<SessionId[]> {
+    await this.redisService.redisClient.zremrangebyscore(
+      this.multiSessionExpirationsKey,
+      '-inf',
+      Date.now(),
+    );
+    const sessionIDs: string[] = await this.redisService.redisClient.zrange(
+      this.multiSessionExpirationsKey,
+      0,
+      -1,
+    );
+    return sessionIDs.map((sessionID) => SessionIdSchema.parse(sessionID));
   }
 
-  async kickPlayer(
-    playerID: PlayerId,
-    sessionID: SessionId,
-    playerToKick: PlayerId,
-  ): Promise<Session> {
+  async reconcilePlayerPresence({
+    sessionID,
+    presentPlayerIDs,
+  }: {
+    sessionID: SessionId;
+    presentPlayerIDs: PlayerId[];
+  }): Promise<Session | null> {
+    const storedSession: Session | null = await this.getSession(sessionID);
+    if (!storedSession) {
+      this.playerAbsenceStarts.delete(sessionID);
+      return null;
+    }
+
+    const now: number = Date.now();
+    const previousAbsenceStarts: Map<PlayerId, number> =
+      this.playerAbsenceStarts.get(sessionID) ?? new Map();
+    const absenceStarts: Map<PlayerId, number> = new Map(
+      storedSession.players
+        .filter(
+          (player) =>
+            player.connected && !presentPlayerIDs.includes(player.username),
+        )
+        .map((player) => [
+          player.username,
+          previousAbsenceStarts.get(player.username) ?? now,
+        ]),
+    );
+    this.playerAbsenceStarts.set(sessionID, absenceStarts);
+
+    const departedPlayerIDs: PlayerId[] = [...absenceStarts]
+      .filter(
+        ([, absenceStart]) =>
+          now - absenceStart >=
+          this.sessionPresenceTiming.disconnectGracePeriodMs,
+      )
+      .map(([playerID]) => playerID);
+    const hasReturnedPlayer: boolean = storedSession.players.some(
+      (player) =>
+        !player.connected && presentPlayerIDs.includes(player.username),
+    );
+    if (departedPlayerIDs.length === 0 && !hasReturnedPlayer) return null;
+
     return await this.updateSession(sessionID, async (session) => {
-      if (session.hostID !== playerID)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_FORBIDDEN_HOST,
-          message: `Player is not the host`,
-        });
+      session.players.forEach((player) => {
+        if (presentPlayerIDs.includes(player.username)) {
+          player.connected = true;
+          return;
+        }
+        if (!departedPlayerIDs.includes(player.username)) return;
 
-      if (session.currentGame)
-        throw new ForbiddenException({
-          code: ErrorCode.SESSION_ALREADY_IN_GAME,
-          message: `Session already in game`,
-        });
-
-      const playerIndex = session.players.findIndex(
-        (player) => player.username === playerToKick,
-      );
-      if (playerIndex === -1)
-        throw new NotFoundException({
-          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-          message: `Player not found in session`,
-        });
-
-      session.players.splice(playerIndex, 1);
-
-      this.reassignHostAfterRemoval(session, playerToKick);
-
+        player.connected = false;
+        this.reassignHostAfterRemoval(session, player.username);
+      });
+      if (session.hostID === '')
+        session.hostID =
+          session.players.find((player) => player.connected)?.username ?? '';
       return session;
     });
   }
@@ -485,6 +512,11 @@ export class SessionService {
       this.redisService.expire(
         this.getReconnectTokenHashesKey(session.id),
         ttl,
+      ),
+      this.redisService.redisClient.zadd(
+        this.multiSessionExpirationsKey,
+        Date.now() + ttl * 1000,
+        session.id,
       ),
     ]);
   }

@@ -59,6 +59,7 @@ export class WsHandshakeMiddleware {
     socket.data = {
       authSession: null,
       visitorId: parseVisitorId(socket.handshake.query['x-visitor-id']),
+      player: null,
     };
 
     this.wsWideEventLifecycle

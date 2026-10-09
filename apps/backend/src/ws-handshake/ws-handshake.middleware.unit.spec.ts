@@ -175,6 +175,7 @@ describe('WsHandshakeMiddleware', () => {
       expect(socket.data).toEqual({
         authSession: null,
         visitorId: undefined,
+        player: null,
       });
       expect(jwtService.verifyAsync).not.toHaveBeenCalled();
     });

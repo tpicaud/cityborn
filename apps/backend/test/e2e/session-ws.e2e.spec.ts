@@ -18,11 +18,14 @@ import {
   type Socket,
   type SocketOptions,
 } from 'socket.io-client';
-import { ConnectionRegistryService } from '../../src/connection-registry/connection-registry.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
 import { SessionGateway } from '../../src/session/session.gateway';
+import {
+  SESSION_PRESENCE_TIMING,
+  type SessionPresenceTiming,
+} from '../../src/session/session-presence-timing';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
 
@@ -57,30 +60,42 @@ describe('Session gateway over a real socket', () => {
     return client;
   }
 
+  async function waitForSocketRemoval({
+    socketID,
+    remainingAttempts,
+  }: {
+    socketID: string;
+    remainingAttempts: number;
+  }): Promise<void> {
+    if (!app.get(SessionGateway).io.sockets.sockets.has(socketID)) return;
+    if (remainingAttempts === 0)
+      throw new Error(`Socket ${socketID} did not disconnect cleanly`);
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await waitForSocketRemoval({
+      socketID,
+      remainingAttempts: remainingAttempts - 1,
+    });
+  }
+
   async function disconnectClient(client: Socket): Promise<void> {
     const socketID: string | undefined = client.id;
     client.disconnect();
     if (!socketID) return;
 
-    const connectionRegistryService: ConnectionRegistryService = app.get(
-      ConnectionRegistryService,
-    );
-    const sessionGateway: SessionGateway = app.get(SessionGateway);
-    for (let attempt: number = 0; attempt < 100; attempt += 1) {
-      const socketIsConnected: boolean =
-        sessionGateway.io.sockets.sockets.has(socketID);
-      const connectionExists: boolean =
-        (await connectionRegistryService.getConnection(socketID)) !== null;
-      if (!socketIsConnected && !connectionExists) return;
-
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
-    }
-
-    throw new Error(`Socket ${socketID} did not disconnect cleanly`);
+    await waitForSocketRemoval({ socketID, remainingAttempts: 100 });
   }
 
   beforeAll(async () => {
-    app = await createTestApp();
+    const testSessionPresenceTiming: SessionPresenceTiming = {
+      disconnectGracePeriodMs: 100,
+      reconciliationIntervalMs: 50,
+    };
+    app = await createTestApp((builder) =>
+      builder
+        .overrideProvider(SESSION_PRESENCE_TIMING)
+        .useValue(testSessionPresenceTiming),
+    );
     await app.listen(0);
     appUrl = await app.getUrl();
   });
@@ -155,7 +170,7 @@ describe('Session gateway over a real socket', () => {
     ]);
   });
 
-  it('authenticates a reconnect and broadcasts the explicit disconnection cleanup', async () => {
+  it('authenticates a reconnect and broadcasts the disconnection with a new host after the grace period', async () => {
     const user: User = buildUser();
     const prismaService: PrismaService = app.get(PrismaService);
     await prismaService.user.create({
@@ -169,6 +184,7 @@ describe('Session gateway over a real socket', () => {
     });
     const accessToken: string = await createAccessToken(app, user.id);
     const session: Session = buildSession({
+      hostID: user.username,
       players: [
         buildPlayer(user.username, false, {
           id: user.id,
@@ -212,10 +228,6 @@ describe('Session gateway over a real socket', () => {
         connected: true,
       }),
     );
-    const authenticatedSocketID: string | undefined = authenticatedClient.id;
-    if (!authenticatedSocketID) {
-      throw new Error('Authenticated socket has no identifier');
-    }
     const disconnectBroadcast: Promise<unknown> = nextEvent(
       observer,
       sessionWsServerEvent.update,
@@ -223,20 +235,17 @@ describe('Session gateway over a real socket', () => {
 
     authenticatedClient.disconnect();
 
-    expect(
-      SessionSchema.parse(await disconnectBroadcast).players,
-    ).toContainEqual(
+    const disconnectedSession: Session = SessionSchema.parse(
+      await disconnectBroadcast,
+    );
+    expect(disconnectedSession.hostID).toBe(observerID);
+    expect(disconnectedSession.players).toContainEqual(
       expect.objectContaining({
         username: user.username,
         isGuest: false,
         connected: false,
       }),
     );
-    expect(
-      await app
-        .get(ConnectionRegistryService)
-        .getConnection(authenticatedSocketID),
-    ).toBeNull();
   });
 
   it('restores a guest player only for the client holding its reconnect token', async () => {

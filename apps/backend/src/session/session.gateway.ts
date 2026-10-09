@@ -1,6 +1,8 @@
 import {
   ErrorCode,
+  type PlayerId,
   type Session,
+  type SessionId,
   type SessionJoinAck,
   sessionWsChannel,
   sessionWsServerEvent,
@@ -9,11 +11,17 @@ import {
   type WsPayload,
   wsLifecycleEventName,
 } from '@cityborn/api';
-import { NotFoundException, UseFilters } from '@nestjs/common';
+import {
+  Inject,
+  NotFoundException,
+  type OnModuleDestroy,
+  UseFilters,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
   type OnGatewayDisconnect,
+  type OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -21,43 +29,73 @@ import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
-import type { AppServer, AppSocket } from '../common/types/app-socket';
+import type {
+  AppServer,
+  AppSocket,
+  SocketPlayer,
+} from '../common/types/app-socket';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
-import {
-  type ConnectionInfo,
-  ConnectionRegistryService,
-} from '../connection-registry/connection-registry.service';
 import { type JoinedSession, SessionService } from './session.service';
+import {
+  SESSION_PRESENCE_TIMING,
+  type SessionPresenceTiming,
+} from './session-presence-timing';
 
 @WebSocketGateway()
 @UseFilters(DefaultExceptionFilter)
-export class SessionGateway implements OnGatewayDisconnect {
+export class SessionGateway
+  implements OnGatewayInit, OnGatewayDisconnect, OnModuleDestroy
+{
+  private presenceReconciliationTimer: NodeJS.Timeout | undefined;
+
   constructor(
     private readonly sessionService: SessionService,
-    private readonly connectionRegistryService: ConnectionRegistryService,
     private readonly wideEventService: WideEventService,
     private readonly wsWideEventLifecycle: WsWideEventLifecycle,
+    @Inject(SESSION_PRESENCE_TIMING)
+    private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
 
   @WebSocketServer()
   io!: AppServer;
 
-  private async resolveConnection(socketID: string): Promise<ConnectionInfo> {
-    const connection =
-      await this.connectionRegistryService.getConnection(socketID);
-    if (!connection)
+  afterInit(): void {
+    this.schedulePresenceReconciliation();
+  }
+
+  onModuleDestroy(): void {
+    clearTimeout(this.presenceReconciliationTimer);
+    this.presenceReconciliationTimer = undefined;
+  }
+
+  private resolvePlayer(socket: AppSocket): SocketPlayer {
+    const { player } = socket.data;
+    if (!player)
       throw new NotFoundException({
         code: ErrorCode.CONNECTION_NOT_FOUND,
         message: 'No connection associated with this socket',
       });
 
     this.wideEventService.enrichBusinessContext({
-      sessionId: connection.sessionID,
-      playerId: connection.playerID,
+      sessionId: player.sessionID,
+      playerId: player.playerID,
     });
 
-    return connection;
+    return player;
+  }
+
+  private async attachPlayer({
+    socket,
+    sessionID,
+    playerID,
+  }: {
+    socket: AppSocket;
+    sessionID: SessionId;
+    playerID: PlayerId;
+  }): Promise<void> {
+    socket.data.player = { sessionID, playerID };
+    await socket.join(sessionID);
   }
 
   private broadcastSession(session: Session): void {
@@ -92,14 +130,7 @@ export class SessionGateway implements OnGatewayDisconnect {
 
     const { session, reconnectToken }: JoinedSession =
       await this.sessionService.join(sessionID, playerID, user);
-    await this.connectionRegistryService.register(
-      socket.id,
-      playerID,
-      sessionID,
-      !user,
-    );
-
-    await socket.join(session.id);
+    await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);
     return { reconnectToken };
   }
@@ -111,7 +142,7 @@ export class SessionGateway implements OnGatewayDisconnect {
       newHostID,
     }: WsPayload<typeof sessionWsChannel, 'updateHost'>,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.updateHost(
       playerID,
       sessionID,
@@ -127,40 +158,12 @@ export class SessionGateway implements OnGatewayDisconnect {
       gameConfig,
     }: WsPayload<typeof sessionWsChannel, 'updateGameConfig'>,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.updateGameConfig(
       playerID,
       sessionID,
       gameConfig,
     );
-    this.broadcastSession(session);
-  }
-
-  @WsMessage(sessionWsChannel, 'kickPlayer')
-  async kickPlayer(
-    @ConnectedSocket() socket: AppSocket,
-    @MessageBody() {
-      playerToKick,
-    }: WsPayload<typeof sessionWsChannel, 'kickPlayer'>,
-  ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
-    const session = await this.sessionService.kickPlayer(
-      playerID,
-      sessionID,
-      playerToKick,
-    );
-
-    const socketsInRoom = await this.io.in(sessionID).fetchSockets();
-    for (const remoteSocket of socketsInRoom) {
-      const connection = await this.connectionRegistryService.getConnection(
-        remoteSocket.id,
-      );
-      if (connection?.playerID === playerToKick) {
-        remoteSocket.leave(sessionID);
-        await this.connectionRegistryService.unregister(remoteSocket.id);
-      }
-    }
-
     this.broadcastSession(session);
   }
 
@@ -173,7 +176,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.startGame(
       playerID,
       sessionID,
@@ -188,7 +191,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AppSocket,
     @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'guess'>,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.handleGuess(
       playerID,
       sessionID,
@@ -203,7 +206,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.handleNextRound(
       playerID,
       sessionID,
@@ -218,7 +221,7 @@ export class SessionGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AppSocket,
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
-    const { playerID, sessionID } = await this.resolveConnection(socket.id);
+    const { playerID, sessionID } = this.resolvePlayer(socket);
     const session = await this.sessionService.startGame(
       playerID,
       sessionID,
@@ -254,48 +257,76 @@ export class SessionGateway implements OnGatewayDisconnect {
       user,
     );
     this.enrichGame(session);
-    await this.connectionRegistryService.register(
-      socket.id,
-      playerID,
-      sessionID,
-      !user,
-    );
-
-    await socket.join(sessionID);
+    await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);
   }
 
-  private async disconnect(socket: AppSocket): Promise<void> {
+  private schedulePresenceReconciliation(): void {
+    this.presenceReconciliationTimer = setTimeout(async () => {
+      await this.reconcilePlayerPresence();
+      if (this.presenceReconciliationTimer)
+        this.schedulePresenceReconciliation();
+    }, this.sessionPresenceTiming.reconciliationIntervalMs);
+  }
+
+  private async reconcilePlayerPresence(): Promise<void> {
     try {
-      const connection = await this.connectionRegistryService.getConnection(
-        socket.id,
+      const presentPlayers: SocketPlayer[] = (
+        await this.io.fetchSockets()
+      ).flatMap(({ data }) => (data.player ? [data.player] : []));
+      const sessionIDs: SessionId[] =
+        await this.sessionService.listMultiSessionIDs();
+      await Promise.all(
+        sessionIDs.map((sessionID) =>
+          this.reconcileSessionPresence({ sessionID, presentPlayers }),
+        ),
       );
-      if (!connection) return;
-
-      this.wideEventService.enrichBusinessContext({
-        sessionId: connection.sessionID,
-        playerId: connection.playerID,
-      });
-
-      const session = await this.sessionService.disconnectPlayer(
-        connection.playerID,
-        connection.sessionID,
-      );
-      await this.connectionRegistryService.unregister(socket.id);
-
-      await socket.leave(session.id);
-      this.broadcastSession(session);
-      this.enrichGame(session);
     } catch (error) {
-      this.wideEventService.recordError(error, 'ws.disconnect');
+      this.recordPresenceReconciliationError(error);
     }
+  }
+
+  private async reconcileSessionPresence({
+    sessionID,
+    presentPlayers,
+  }: {
+    sessionID: SessionId;
+    presentPlayers: SocketPlayer[];
+  }): Promise<void> {
+    try {
+      const session: Session | null =
+        await this.sessionService.reconcilePlayerPresence({
+          sessionID,
+          presentPlayerIDs: presentPlayers
+            .filter((player) => player.sessionID === sessionID)
+            .map((player) => player.playerID),
+        });
+      if (session) this.broadcastSession(session);
+    } catch (error) {
+      this.recordPresenceReconciliationError(error);
+    }
+  }
+
+  private recordPresenceReconciliationError(error: unknown): void {
+    this.wideEventService.recordOperationError(error, {
+      domain: 'session',
+      operation: 'session.presence-reconciliation',
+    });
   }
 
   async handleDisconnect(@ConnectedSocket() socket: AppSocket): Promise<void> {
     await this.wsWideEventLifecycle.runDisconnection(
       socket,
       wsLifecycleEventName(sessionWsChannel, 'disconnect'),
-      () => this.disconnect(socket),
+      async () => {
+        const { player } = socket.data;
+        if (!player) return;
+
+        this.wideEventService.enrichBusinessContext({
+          sessionId: player.sessionID,
+          playerId: player.playerID,
+        });
+      },
     );
   }
 }
