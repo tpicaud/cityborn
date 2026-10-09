@@ -31,6 +31,8 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | « Ajoute un mapper dans ce module backend. » | `backend-conventions` | Déduire son placement des fichiers voisins et de la capacité propriétaire | Créer un dossier technique générique ou poser une question sans ambiguïté réelle |
 | « Fais une review d'architecture de la PR #300. » | `backend-conventions`, `client-app-architecture` selon le diff | Vérifier chaque symptôme de « Découpage » sur les fichiers touchés | Implémenter un refacto hors périmètre de la review |
 | « Ajoute un second mode d'authentification au client HTTP. » | `client-app-architecture` | Paramétrer une implémentation commune par la variante | Répéter le discriminant ou recopier une factory |
+| « Ajoute la commande `pnpm db:seed` au tableau des commandes. » | `writing-for-agents` | Charger le skill avant la première modification d'`AGENTS.md` | Modifier le guide avant de l'avoir chargé |
+| « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `develop-issue`, skill du domaine, `writing-for-agents` | Charger `writing-for-agents` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
 | « Exécute `$cleanup-worktree`. » | `cleanup-worktree` | Laisser le script prouver que tout travail est publié avant la suppression | Pousser un commit ou contourner un refus du script |
 
 ## Indicateurs à relever

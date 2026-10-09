@@ -128,6 +128,6 @@ Les conventions propres à un domaine sont découvertes automatiquement depuis l
 
 Tout changement qui modifie une convention ou une décision d'archi doit mettre à jour, **dans le même lot**, soit ce fichier (si transverse), soit le `SKILL.md` concerné (si propre à un domaine) — jamais les deux, jamais en double. Le guide reflète l'état réel du code.
 
-Après une modification d'`AGENTS.md` ou d'un skill, lancer `pnpm check:agent-docs`, puis vérifier dans `.agents/evals/skill-cases.md` les cas du skill touché, ses non-déclenchements et ses chevauchements.
+Avant toute modification d'`AGENTS.md` ou d'un fichier de `.agents/skills/` (références comprises), y compris une retouche en cours d'issue ou de review, charger le skill `writing-for-agents`. Après la modification, lancer `pnpm check:agent-docs`, puis vérifier dans `.agents/evals/skill-cases.md` les cas du skill touché, ses non-déclenchements et ses chevauchements.
 
 Tout changement qui affecte le démarrage local, ses prérequis, les variables d'environnement, les ports, les commandes `dev:web` / `dev:mobile` ou l'arborescence présentée dans le `README.md` racine doit mettre à jour ce README dans le même lot. Vérifier en fin de tâche qu'il reste cohérent avec les scripts, les `.env.example` et la structure du monorepo.
