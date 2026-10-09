@@ -21,9 +21,14 @@ Pour le frontend, les composants métier et services encore placés hors de `src
 
 Le back-office ne possède pas de dossier `features/`. Regrouper son UI métier dans `components/<capacité>/` jusqu'à une migration explicitement demandée, sans introduire seul un nouvel arbre parallèle.
 
-Un composant présent dans le frontend et le mobile porte le même nom de fichier dans les deux apps, celui de son concept sans suffixe `Component` (`Map.tsx`, `SignInForm.tsx`) ; aligner ce nom quand la tâche modifie le composant.
-
 Avant de créer un fichier, inspecter les voisins dans l'arborescence de l'app concernée. Préférer étendre un fichier existant si sa responsabilité reste cohérente. Demander seulement si plusieurs emplacements impliquent des responsabilités architecturales différentes.
+
+### Miroir frontend / mobile
+
+Le frontend et le mobile visent le miroir : une capacité présente dans les deux apps y a le même découpage (composants, hooks de `@cityborn/client`, providers, enchaînement des écrans), et un changement destiné aux deux y est fait de la même façon. L'implémentation propre à la plateforme (rendu, navigation, stockage, ports de `@cityborn/client/platform`) diffère naturellement.
+
+- Un composant présent dans les deux apps porte le même nom de fichier, celui de son concept sans suffixe `Component` (`Map.tsx`, `SignInForm.tsx`) ; aligner ce nom quand la tâche modifie le composant.
+- Le miroir est la cible, pas un absolu. Quand la techno ou la plateforme rend l'implémentation miroir moins bonne pour une app (API native, cycle de vie, ergonomie), choisir pour chaque app l'implémentation adaptée, garder dans `@cityborn/client` ce qui reste commun, et nommer l'écart avec sa raison dans la PR.
 
 ## Accès à l'API
 
