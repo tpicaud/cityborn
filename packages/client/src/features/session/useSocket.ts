@@ -1,6 +1,7 @@
 'use client';
 
 import { WS_ERROR_EVENT } from '@cityborn/api';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   type RefObject,
   useCallback,
@@ -9,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
 import type {
   SocketConnection,
@@ -22,7 +24,7 @@ import {
   type WsConnectionStatus,
 } from '../../ws/wsConnection';
 import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
-import { useAuth } from '../auth';
+import { refreshCurrentUser } from '../auth/api/authQueries';
 
 type SessionSocketOptions = {
   createSocket: SocketFactory;
@@ -63,19 +65,24 @@ export function useSocket({
   );
 
   const { invokeError } = useError();
-  const { refreshUser } = useAuth();
+  const { authApi }: DomainApis = useDomainApis();
+  const queryClient: QueryClient = useQueryClient();
+
+  const refreshAuthentication = async (): Promise<void> => {
+    await refreshCurrentUser({ queryClient, authApi });
+  };
 
   const callbacks: RefObject<SessionSocketCallbacks> =
     useRef<SessionSocketCallbacks>({
       restoreSession,
-      refreshAuthentication: refreshUser,
+      refreshAuthentication,
       invokeError,
     });
 
   useEffect(() => {
     callbacks.current = {
       restoreSession,
-      refreshAuthentication: refreshUser,
+      refreshAuthentication,
       invokeError,
     };
   });

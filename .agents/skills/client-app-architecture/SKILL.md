@@ -40,7 +40,14 @@ Le frontend et le mobile visent le miroir : une capacité présente dans les deu
 
 Ordre des providers dans chaque app : `ErrorProvider`, puis `ApiProvider`, puis `AuthProvider`. `ApiProvider` lit `invokeError` pour créer la `QueryCache` qui remonte les erreurs de query.
 
-L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées. Le bootstrap (`useCurrentUserBootstrap`) expose une erreur réessayable ; un rafraîchissement technique en échec conserve l'utilisateur courant.
+L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées.
+
+L'utilisateur courant a une seule source : la query de `auth/api/authQueries.ts`.
+
+- L'écran de garde de chaque app (`AuthBootstrap` front, `auth-bootstrap` back-office, `app/_layout.tsx` mobile) lit son statut par `useCurrentUserLoad` : chargement, échec avec « Réessayer », ou utilisateur prêt passé à `AuthProvider`. Sous la garde, `useAuth()` expose `User | null`.
+- Une écriture met la query à jour : `setCurrentUser` après une connexion ou une modification du compte, `invalidateCurrentUser` après la vérification de l'e-mail, `refreshCurrentUser` pour forcer l'appel réseau (rafraîchissement d'auth du WS).
+- La déconnexion passe par `useSignOut` : elle retire les données du compte du cache puis met l'utilisateur à `null`, sans repasser par l'écran de chargement.
+- Un rafraîchissement en échec conserve l'utilisateur courant.
 
 Un hook de domaine signale lui-même les erreurs de ses actions via `invokeError` : l'app branche ses actions directement sur la vue, et seule la vue reste dans l'app.
 
@@ -68,7 +75,7 @@ Rangé par domaine, en miroir des capacités fonctionnelles des apps. Il n'y a p
 | `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorProvider` et `ErrorDialogProps`, version d'API minimale supportée, formatage de date. |
 | `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
-| `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, bootstrap de l'utilisateur, connexion, inscription et renvoi de l'email de vérification. |
+| `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, chargement de l'utilisateur courant, connexion, inscription, déconnexion, vérification et renvoi de l'e-mail de vérification. |
 | `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController` (joueur local compris), hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection` lit les arbres de catégories par la query de `src/features/category/`, domaine privé sans sous-chemin ; `usePlayerNameForm`, `sortPlayersConnectedFirst`) et création / jonction (`useSessionLauncher`). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultat de round, timer et compte à rebours, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
 | `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
@@ -83,6 +90,7 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 
 - `api/<domaine>Api.ts` contient le port `XxxApi` et sa factory `createXxxApi`, seul fichier qui appelle `contractClient.<domaine>`.
 - `api/<domaine>Queries.ts` contient les clés, les `queryOptions` et les mises à jour du cache. Chaque query fixe `staleTime` et `retry`, et déclare `meta.reportsError` (voir `client-error-handling`).
+- Une donnée propre au compte connecté a une clé sous `accountQueryKey(userId)` (`auth/api/authQueries.ts`), que la déconnexion retire du cache.
 - Un hook porte un seul comportement et lit ses données par les `queryOptions` du domaine : chaque appel crée tout l'état, les effets et les queries qu'il contient.
 - Un fichier regroupe les hooks d'un même flux avec leurs formulaires et helpers privés, et porte le nom du flux (`auth/signIn.ts`, `session/sessionLauncher.ts`) ; un hook seul dans son flux vit dans `use<Comportement>.ts`.
 - Une écriture reste un appel direct au port, et react-hook-form porte son état de soumission.

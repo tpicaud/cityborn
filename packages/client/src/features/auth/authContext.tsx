@@ -1,50 +1,74 @@
 'use client';
 
-import type { User } from '@cityborn/api';
 import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useState,
-} from 'react';
+  getFriendlyErrorMessage,
+  parseApiError,
+  resolveErrorMessage,
+  type User,
+} from '@cityborn/api';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
+import { createContext, type ReactNode, useContext } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import { currentUserQueryOptions } from './api/authQueries';
+
+export type CurrentUserState =
+  | { status: 'loading' }
+  | { status: 'ready'; user: User | null }
+  | { status: 'failed'; errorMessage: string };
+
+export type CurrentUserLoad = {
+  currentUserState: CurrentUserState;
+  retry: () => void;
+};
 
 type AuthContextType = {
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  refreshUser: () => Promise<void>;
+};
+
+type AuthProviderProps = {
+  user: User | null;
+  children: ReactNode;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({
-  initialValue,
-  children,
-}: {
-  initialValue: User | null;
-  children: ReactNode;
-}) => {
-  const [user, setUser] = useState<User | null>(initialValue);
+function toCurrentUserState(
+  currentUserQuery: UseQueryResult<User | null>,
+): CurrentUserState {
+  if (currentUserQuery.data !== undefined) {
+    return { status: 'ready', user: currentUserQuery.data };
+  }
+  if (!currentUserQuery.isError || currentUserQuery.isFetching) {
+    return { status: 'loading' };
+  }
+  return {
+    status: 'failed',
+    errorMessage: resolveErrorMessage(
+      currentUserQuery.error,
+      getFriendlyErrorMessage(parseApiError(0, currentUserQuery.error)),
+    ),
+  };
+}
+
+export function useCurrentUserLoad(): CurrentUserLoad {
   const { authApi }: DomainApis = useDomainApis();
-  const { invokeError } = useError();
-
-  const refreshUser = useCallback(async (): Promise<void> => {
-    try {
-      const currentUser: User | null = await authApi.getCurrentUser();
-      setUser(currentUser);
-    } catch (error: unknown) {
-      invokeError(error);
-    }
-  }, [authApi, invokeError]);
-
-  return (
-    <AuthContext.Provider value={{ user, setUser, refreshUser }}>
-      {children}
-    </AuthContext.Provider>
+  const currentUserQuery: UseQueryResult<User | null> = useQuery(
+    currentUserQueryOptions(authApi),
   );
-};
+
+  return {
+    currentUserState: toCurrentUserState(currentUserQuery),
+    retry: () => {
+      currentUserQuery.refetch();
+    },
+  };
+}
+
+export function AuthProvider({ user, children }: AuthProviderProps) {
+  return (
+    <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+  );
+}
 
 export function useAuth(): AuthContextType {
   const context: AuthContextType | undefined = useContext(AuthContext);

@@ -1,13 +1,15 @@
 'use client';
 
-import { useAuth } from '@cityborn/client/auth';
+import {
+  type EmailVerification,
+  useEmailVerification,
+} from '@cityborn/client/auth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { type ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { authApi } from '@/lib/api/auth';
 import Button from '../ui/buttons/Button';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
@@ -16,7 +18,7 @@ export function VerifyEmail() {
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
   const verificationToken: string =
     searchParams.get('verification_token') ?? searchParams.get('token') ?? '';
-  const { refreshUser } = useAuth();
+  const verifyEmail: EmailVerification = useEmailVerification();
   const hasVerified = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [message, setMessage] = useState(
@@ -42,8 +44,7 @@ export function VerifyEmail() {
       };
 
       try {
-        await authApi.verifyEmail({ verification_token: verificationToken });
-        await refreshUser();
+        await verifyEmail({ verification_token: verificationToken });
         setStatus('success');
         setMessage('Votre adresse e-mail est maintenant vérifiée.');
       } catch {
@@ -52,7 +53,7 @@ export function VerifyEmail() {
     };
 
     handleVerifyEmail();
-  }, [refreshUser, verificationToken]);
+  }, [verifyEmail, verificationToken]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-100 px-4">

@@ -15,8 +15,8 @@ import {
 } from '@cityborn/client';
 import {
   AuthProvider,
-  type CurrentUserBootstrap,
-  useCurrentUserBootstrap,
+  type CurrentUserLoad,
+  useCurrentUserLoad,
 } from '@cityborn/client/auth';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useCallback, useEffect, useState } from 'react';
@@ -29,7 +29,6 @@ import ErrorDialog from '@/components/ui/ErrorDialog';
 import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { ForegroundUserRefresh } from '@/features/auth/ForegroundUserRefresh';
 import { authApi } from '@/lib/api/auth';
 import { contractClient } from '@/lib/api/contractClient';
 import { checkHealth } from '@/lib/api/health';
@@ -54,10 +53,8 @@ export default function RootLayout() {
 }
 
 function RootLayoutContent() {
-  const {
-    currentUserState,
-    retry: retryCurrentUserLoad,
-  }: CurrentUserBootstrap = useCurrentUserBootstrap();
+  const { currentUserState, retry: retryCurrentUserLoad }: CurrentUserLoad =
+    useCurrentUserLoad();
   const [isBackendUnreachable, setIsBackendUnreachable] =
     useState<boolean>(false);
   const minSupportedApiVersion = useMinSupportedApiVersion();
@@ -118,8 +115,7 @@ function RootLayoutContent() {
       {currentUserState.status === 'ready' && (
         <SafeAreaProvider>
           <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-            <AuthProvider initialValue={currentUserState.user}>
-              <ForegroundUserRefresh />
+            <AuthProvider user={currentUserState.user}>
               <StatusBar hidden={true} />
               <Stack
                 screenOptions={{

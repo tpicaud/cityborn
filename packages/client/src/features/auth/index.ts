@@ -3,7 +3,13 @@ export {
   createAuthApi,
   createCookieAuthApi,
 } from './api/authApi';
-export { AuthProvider, useAuth } from './authContext';
+export {
+  AuthProvider,
+  type CurrentUserLoad,
+  type CurrentUserState,
+  useAuth,
+  useCurrentUserLoad,
+} from './authContext';
 export {
   type IdentityProviderSignIn,
   type SignInFlow,
@@ -13,10 +19,10 @@ export {
   useSignUp,
 } from './signIn';
 export {
-  type CurrentUserBootstrap,
-  type CurrentUserState,
-  useCurrentUserBootstrap,
-} from './useCurrentUserBootstrap';
+  type EmailVerification,
+  useEmailVerification,
+} from './useEmailVerification';
+export { type SignOut, useSignOut } from './useSignOut';
 export {
   useVerificationEmailResend,
   type VerificationEmailResend,

@@ -1,5 +1,7 @@
 import {
+  type SignOut,
   useAuth,
+  useSignOut,
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
@@ -8,12 +10,12 @@ import { Image, Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
-import { authApi } from '@/lib/api/auth';
 import { cn } from '@/lib/classNames';
 
 export default function Home() {
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const signOut: SignOut = useSignOut();
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
 
@@ -71,14 +73,7 @@ export default function Home() {
                 size="large"
                 onPress={() => router.navigate('/(tabs)/play')}
               />
-              <Button
-                variant="default"
-                label="Déconnexion"
-                onPress={async () => {
-                  await authApi.signOut();
-                  setUser(null);
-                }}
-              />
+              <Button variant="default" label="Déconnexion" onPress={signOut} />
             </View>
           </View>
         ) : (

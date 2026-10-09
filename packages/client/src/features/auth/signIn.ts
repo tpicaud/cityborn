@@ -8,11 +8,12 @@ import {
   type User,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type BaseSyntheticEvent, useCallback, useMemo, useRef } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
-import { useAuth } from './authContext';
+import { setCurrentUser } from './api/authQueries';
 import {
   type SignUpFormInput,
   SignUpFormSchema,
@@ -53,7 +54,7 @@ const signUpFormDefaultValues: SignUpFormInput = {
 function useSignInCompletion({
   onSignedIn,
 }: SignInFlowOptions): (signInRequest: Promise<User>) => Promise<void> {
-  const { setUser } = useAuth();
+  const queryClient: QueryClient = useQueryClient();
   const { invokeError } = useError();
   const onSignedInRef = useRef<(() => void) | undefined>(onSignedIn);
   onSignedInRef.current = onSignedIn;
@@ -62,13 +63,13 @@ function useSignInCompletion({
     async (signInRequest: Promise<User>): Promise<void> => {
       try {
         const signedInUser: User = await signInRequest;
-        setUser(signedInUser);
+        await setCurrentUser({ queryClient, user: signedInUser });
         onSignedInRef.current?.();
       } catch (error: unknown) {
         invokeError(error);
       }
     },
-    [setUser, invokeError],
+    [queryClient, invokeError],
   );
 }
 

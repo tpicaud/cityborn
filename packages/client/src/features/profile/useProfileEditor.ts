@@ -1,10 +1,13 @@
 'use client';
 
 import type { User } from '@cityborn/api';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
+import { setCurrentUser } from '../auth/api/authQueries';
 import { useAuth } from '../auth/authContext';
+import { type SignOut, useSignOut } from '../auth/useSignOut';
 import {
   type ChangePasswordForm,
   type ProfileFormSubmitHandler,
@@ -40,7 +43,8 @@ export function useProfileEditor({
   onAccountDeleted,
 }: ProfileEditorOptions = {}): ProfileEditor {
   const { authApi, profileApi }: DomainApis = useDomainApis();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const queryClient: QueryClient = useQueryClient();
   const { invokeError } = useError();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
   const passwordForm: ChangePasswordForm = useChangePasswordForm();
@@ -50,12 +54,18 @@ export function useProfileEditor({
   const [isPasswordUpdated, setIsPasswordUpdated] = useState<boolean>(false);
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] =
     useState<boolean>(false);
+  const signOutDeletedAccount: SignOut = useSignOut({
+    onSignedOut: () => {
+      setIsDeleteAccountDialogOpen(false);
+      onAccountDeleted?.();
+    },
+  });
 
   const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
       try {
         const updatedUser: User = await profileApi.updateUsername(data);
-        setUser(updatedUser);
+        await setCurrentUser({ queryClient, user: updatedUser });
         usernameForm.reset({ username: updatedUser.username });
         setIsEditingUsername(false);
       } catch (error: unknown) {
@@ -81,7 +91,7 @@ export function useProfileEditor({
         const updatedUser: User = await authApi.updatePassword(
           toUpdatePassword(values),
         );
-        setUser(updatedUser);
+        await setCurrentUser({ queryClient, user: updatedUser });
         passwordForm.reset();
         setIsPasswordUpdated(true);
       } catch (error: unknown) {
@@ -93,13 +103,11 @@ export function useProfileEditor({
   const deleteAccount = async (): Promise<void> => {
     try {
       await authApi.deleteUser();
-      await authApi.signOut();
-      setUser(null);
-      setIsDeleteAccountDialogOpen(false);
-      onAccountDeleted?.();
     } catch (error: unknown) {
       invokeError(error);
+      return;
     }
+    await signOutDeletedAccount();
   };
 
   return {
