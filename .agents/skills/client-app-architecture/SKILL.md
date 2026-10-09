@@ -93,6 +93,7 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 - `api/<domaine>Queries.ts` contient les clés, les `queryOptions` et les mises à jour du cache. Chaque query fixe `staleTime` et `retry`, et déclare `meta.reportsError` (voir `client-error-handling`).
 - Une donnée propre au compte connecté a une clé sous `accountQueryKey(userId)` (`auth/api/authQueries.ts`), que la déconnexion retire du cache.
 - Un hook porte un seul comportement et lit ses données par les `queryOptions` du domaine : chaque appel crée tout l'état, les effets et les queries qu'il contient.
+- Un écran mobile qui reste monté hors focus (onglet) passe son focus (`useIsFocused` d'`expo-router`) au hook, qui le transmet à l'option `subscribed` de sa query : une query périmée se relance au retour sur l'écran.
 - Un fichier regroupe les hooks d'un même flux avec leurs formulaires et helpers privés, et porte le nom du flux (`auth/signIn.ts`, `session/sessionLauncher.ts`) ; un hook seul dans son flux vit dans `use<Comportement>.ts`.
 - Une écriture reste un appel direct au port, et react-hook-form porte son état de soumission.
 

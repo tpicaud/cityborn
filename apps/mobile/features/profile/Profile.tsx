@@ -7,7 +7,7 @@ import {
   useProfileEditor,
 } from '@cityborn/client/profile';
 import { colors } from '@cityborn/design-system';
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -21,7 +21,8 @@ import TextInput from '@/components/ui/TextInput';
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
-  const { games, isLoading }: ProfileState = useProfile();
+  const isScreenFocused: boolean = useIsFocused();
+  const { games, isLoading }: ProfileState = useProfile({ isScreenFocused });
   const {
     usernameForm,
     isEditingUsername,

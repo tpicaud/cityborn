@@ -8,6 +8,10 @@ import { useAuth } from '../auth/authContext';
 import { gameRecordsQueryOptions } from './api/profileQueries';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
+type ProfileOptions = {
+  isScreenFocused?: boolean;
+};
+
 export type ProfileState = {
   games: ProfileGame[];
   isLoading: boolean;
@@ -15,11 +19,16 @@ export type ProfileState = {
 
 const noProfileGames: ProfileGame[] = [];
 
-export function useProfile(): ProfileState {
+export function useProfile({
+  isScreenFocused = true,
+}: ProfileOptions = {}): ProfileState {
   const { profileApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const { data: gameRecords, isLoading }: UseQueryResult<GameRecord[]> =
-    useQuery(gameRecordsQueryOptions({ profileApi, userId: user?.id ?? null }));
+    useQuery({
+      ...gameRecordsQueryOptions({ profileApi, userId: user?.id ?? null }),
+      subscribed: isScreenFocused,
+    });
 
   const games: ProfileGame[] = useMemo<ProfileGame[]>(() => {
     if (!user || !gameRecords) return noProfileGames;
