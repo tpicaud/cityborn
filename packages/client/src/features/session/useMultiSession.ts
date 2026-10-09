@@ -7,13 +7,16 @@ import type {
   Session,
   SessionId,
   SessionReconnectToken,
+  UserId,
   WsAckSuccessOf,
 } from '@cityborn/api';
 import {
+  GameStatus,
   SessionStatus,
   sessionWsEvent,
   sessionWsServerEvent,
 } from '@cityborn/api';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   type RefObject,
   useCallback,
@@ -28,6 +31,7 @@ import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
 import { useAuth } from '../auth/authContext';
+import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
@@ -59,6 +63,7 @@ export function useMultiSession({
 }: MultiSessionOptions): MultiSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
+  const queryClient: QueryClient = useQueryClient();
   const { invokeError } = useError();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
     user?.username,
@@ -97,6 +102,14 @@ export function useMultiSession({
     };
     loadSession();
   }, [sessionID, sessionApi, navigation, invokeError]);
+
+  const gameStatus: GameStatus | undefined = session?.currentGame?.status;
+  const userId: UserId | undefined = user?.id;
+
+  useEffect(() => {
+    if (gameStatus !== GameStatus.IN_RESULTS || !userId) return;
+    invalidateGameRecords({ queryClient, userId });
+  }, [gameStatus, userId, queryClient]);
 
   useEffect(() => {
     const handleSessionUpdate = (incoming: Session) => {
