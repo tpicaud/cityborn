@@ -1,5 +1,7 @@
 import type { User, UserId } from '@cityborn/api';
 import {
+  hashKey,
+  type Query,
   type QueryClient,
   type QueryKey,
   queryOptions,
@@ -9,6 +11,8 @@ import type { AuthApi } from './authApi';
 const currentUserStaleTimeMs: number = 30 * 1000;
 
 const currentUserQueryKey: QueryKey = ['currentUser'];
+
+const currentUserQueryHash: string = hashKey(currentUserQueryKey);
 
 const accountQueryKeyRoot: QueryKey = ['account'];
 
@@ -44,11 +48,14 @@ export async function setCurrentUser({
   queryClient.setQueryData<User | null>(currentUserQueryKey, user);
 }
 
-export async function clearCurrentUser(
+export async function clearCacheAfterSignOut(
   queryClient: QueryClient,
 ): Promise<void> {
   await queryClient.cancelQueries({ queryKey: currentUserQueryKey });
-  queryClient.removeQueries({ queryKey: accountQueryKeyRoot });
+  queryClient.removeQueries({
+    predicate: (query: Query): boolean =>
+      query.queryHash !== currentUserQueryHash,
+  });
   queryClient.setQueryData<User | null>(currentUserQueryKey, null);
 }
 
