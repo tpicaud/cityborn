@@ -28,41 +28,7 @@ export type PlayerPresence = z.infer<typeof PlayerPresenceSchema>;
 
 export type ConnectionInfo = z.infer<typeof ConnectionInfoSchema>;
 
-type ConnectionRegistration = {
-  socketID: string;
-  connection: ConnectionInfo;
-};
-
 type PresenceExpiryHandler = (presence: PlayerPresence) => Promise<void>;
-
-type RedisCommandResults = [error: Error | null, result: unknown][] | null;
-
-type ObservedTask = {
-  operation: string;
-  task: () => Promise<unknown>;
-};
-
-type RepeatedTask = ObservedTask & {
-  intervalMs: number;
-};
-
-type ClaimedPresenceChecks = {
-  presenceChecks: string[];
-  claimedUntil: number;
-  presenceExpiryHandler: PresenceExpiryHandler;
-};
-
-type ClaimedPresenceCheck = {
-  presenceCheck: string;
-  claimedUntil: number;
-  presenceExpiryHandler: PresenceExpiryHandler;
-};
-
-type PresenceRelease = {
-  commands: ChainableCommander;
-  socketID: string;
-  connection: ConnectionInfo;
-};
 
 const PRESENCE_CHECKS_KEY = 'connection-presence-checks';
 const PRESENCE_CHECK_BATCH_SIZE = 100;
@@ -90,13 +56,9 @@ return redis.call('ZREM', KEYS[1], ARGV[1])
 export class ConnectionRegistryService
   implements OnModuleInit, OnModuleDestroy
 {
-  private readonly localConnections: Map<string, ConnectionInfo> = new Map<
-    string,
-    ConnectionInfo
-  >();
-  private readonly scheduledTimers: Set<NodeJS.Timeout> =
-    new Set<NodeJS.Timeout>();
-  private readonly runningTasks: Set<Promise<void>> = new Set<Promise<void>>();
+  private readonly localConnections: Map<string, ConnectionInfo> = new Map();
+  private readonly scheduledTimers: Set<NodeJS.Timeout> = new Set();
+  private readonly runningTasks: Set<Promise<void>> = new Set();
   private presenceExpiryHandler: PresenceExpiryHandler | null = null;
   private stopped: boolean = false;
 
@@ -123,13 +85,13 @@ export class ConnectionRegistryService
 
   async onModuleDestroy(): Promise<void> {
     this.stopped = true;
-    this.scheduledTimers.forEach((timer: NodeJS.Timeout) => {
+    this.scheduledTimers.forEach((timer) => {
       clearTimeout(timer);
     });
     this.scheduledTimers.clear();
     await Promise.all(this.runningTasks);
     await Promise.all(
-      [...this.localConnections.keys()].map((socketID: string) =>
+      [...this.localConnections.keys()].map((socketID) =>
         this.runObserved({
           operation: 'connection-registry.shutdown-release',
           task: () => this.release(socketID),
@@ -145,7 +107,10 @@ export class ConnectionRegistryService
   async register({
     socketID,
     connection,
-  }: ConnectionRegistration): Promise<void> {
+  }: {
+    socketID: string;
+    connection: ConnectionInfo;
+  }): Promise<void> {
     const leaseDeadline: number = Date.now() + this.timing.leaseMs;
     const presenceKey: string = this.getPresenceKey(connection);
     const registration: ChainableCommander = this.redisClient.multi();
@@ -230,7 +195,11 @@ export class ConnectionRegistryService
     commands,
     socketID,
     connection,
-  }: PresenceRelease): void {
+  }: {
+    commands: ChainableCommander;
+    socketID: string;
+    connection: ConnectionInfo;
+  }): void {
     commands
       .zrem(this.getPresenceKey(connection), socketID)
       .zadd(
@@ -247,7 +216,7 @@ export class ConnectionRegistryService
     if (localConnectionEntries.length === 0) return;
 
     const connectionRenewal: ChainableCommander = this.redisClient.pipeline();
-    localConnectionEntries.forEach(([socketID]: [string, ConnectionInfo]) => {
+    localConnectionEntries.forEach(([socketID]) => {
       connectionRenewal.pexpire(
         this.getConnectionKey(socketID),
         this.timing.leaseMs,
@@ -256,36 +225,25 @@ export class ConnectionRegistryService
     const renewalResults: unknown[] = this.assertExecuted(
       await connectionRenewal.exec(),
     );
-    const renewedConnections: [string, ConnectionInfo][] =
-      localConnectionEntries.filter(
-        (_entry: [string, ConnectionInfo], index: number) =>
-          renewalResults[index] === 1,
-      );
-    localConnectionEntries
-      .filter(
-        (_entry: [string, ConnectionInfo], index: number) =>
-          renewalResults[index] === 0,
-      )
-      .forEach(([socketID]: [string, ConnectionInfo]) => {
-        this.localConnections.delete(socketID);
-      });
 
     const leaseDeadline: number = Date.now() + this.timing.leaseMs;
     const presenceRenewal: ChainableCommander = this.redisClient.pipeline();
-    renewedConnections.forEach(
-      ([socketID, connection]: [string, ConnectionInfo]) => {
-        const presenceKey: string = this.getPresenceKey(connection);
-        presenceRenewal
-          .zadd(presenceKey, 'XX', leaseDeadline, socketID)
-          .pexpire(presenceKey, this.timing.leaseMs)
-          .zadd(
-            PRESENCE_CHECKS_KEY,
-            'GT',
-            leaseDeadline,
-            this.getPresenceCheck(connection),
-          );
-      },
-    );
+    localConnectionEntries.forEach(([socketID, connection], index) => {
+      if (renewalResults[index] !== 1) {
+        this.localConnections.delete(socketID);
+        return;
+      }
+      const presenceKey: string = this.getPresenceKey(connection);
+      presenceRenewal
+        .zadd(presenceKey, 'XX', leaseDeadline, socketID)
+        .pexpire(presenceKey, this.timing.leaseMs)
+        .zadd(
+          PRESENCE_CHECKS_KEY,
+          'GT',
+          leaseDeadline,
+          this.getPresenceCheck(connection),
+        );
+    });
     this.assertExecuted(await presenceRenewal.exec());
   }
 
@@ -307,59 +265,58 @@ export class ConnectionRegistryService
       ),
     );
 
-    await this.processClaimedPresenceChecks({
+    await this.expireClaimedPresences({
       presenceChecks: claimedPresenceChecks,
       claimedUntil,
       presenceExpiryHandler,
     });
   }
 
-  private async processClaimedPresenceChecks({
-    presenceChecks,
+  private async expireClaimedPresences({
+    presenceChecks: [presenceCheck, ...remainingPresenceChecks],
     claimedUntil,
     presenceExpiryHandler,
-  }: ClaimedPresenceChecks): Promise<void> {
-    const [presenceCheck, ...remainingPresenceChecks]: string[] =
-      presenceChecks;
+  }: {
+    presenceChecks: string[];
+    claimedUntil: number;
+    presenceExpiryHandler: PresenceExpiryHandler;
+  }): Promise<void> {
     if (presenceCheck === undefined) return;
 
     await this.runObserved({
       operation: 'connection-registry.presence-expiry',
-      task: () =>
-        this.processClaimedPresenceCheck({
+      task: async () => {
+        const presence: PlayerPresence = PlayerPresenceSchema.parse(
+          JSON.parse(presenceCheck),
+        );
+        await presenceExpiryHandler(presence);
+        await this.redisClient.eval(
+          COMPLETE_CLAIMED_PRESENCE_CHECK_SCRIPT,
+          2,
+          PRESENCE_CHECKS_KEY,
+          this.getPresenceKey(presence),
           presenceCheck,
-          claimedUntil,
-          presenceExpiryHandler,
-        }),
+          String(claimedUntil),
+          Date.now(),
+        );
+      },
     });
-    await this.processClaimedPresenceChecks({
+    await this.expireClaimedPresences({
       presenceChecks: remainingPresenceChecks,
       claimedUntil,
       presenceExpiryHandler,
     });
   }
 
-  private async processClaimedPresenceCheck({
-    presenceCheck,
-    claimedUntil,
-    presenceExpiryHandler,
-  }: ClaimedPresenceCheck): Promise<void> {
-    const presence: PlayerPresence = PlayerPresenceSchema.parse(
-      JSON.parse(presenceCheck),
-    );
-    await presenceExpiryHandler(presence);
-    await this.redisClient.eval(
-      COMPLETE_CLAIMED_PRESENCE_CHECK_SCRIPT,
-      2,
-      PRESENCE_CHECKS_KEY,
-      this.getPresenceKey(presence),
-      presenceCheck,
-      String(claimedUntil),
-      Date.now(),
-    );
-  }
-
-  private repeat({ operation, intervalMs, task }: RepeatedTask): void {
+  private repeat({
+    operation,
+    intervalMs,
+    task,
+  }: {
+    operation: string;
+    intervalMs: number;
+    task: () => Promise<unknown>;
+  }): void {
     if (this.stopped) return;
 
     const timer: NodeJS.Timeout = setTimeout(() => {
@@ -376,7 +333,13 @@ export class ConnectionRegistryService
     this.scheduledTimers.add(timer);
   }
 
-  private async runObserved({ operation, task }: ObservedTask): Promise<void> {
+  private async runObserved({
+    operation,
+    task,
+  }: {
+    operation: string;
+    task: () => Promise<unknown>;
+  }): Promise<void> {
     try {
       await task();
     } catch (error: unknown) {
@@ -387,15 +350,15 @@ export class ConnectionRegistryService
     }
   }
 
-  private assertExecuted(results: RedisCommandResults): unknown[] {
+  private assertExecuted(results: [Error | null, unknown][] | null): unknown[] {
     if (!results) throw new Error('Redis transaction was aborted');
 
     const failedCommand: [Error | null, unknown] | undefined = results.find(
-      ([error]: [Error | null, unknown]) => error !== null,
+      ([error]) => error !== null,
     );
     if (failedCommand?.[0]) throw failedCommand[0];
 
-    return results.map(([, result]: [Error | null, unknown]) => result);
+    return results.map(([, result]) => result);
   }
 
   private getConnectionKey(socketID: string): string {
