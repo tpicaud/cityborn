@@ -27,6 +27,7 @@
     "@mui/x-date-pickers": "^9.0.2",
     "@mui/x-date-pickers-pro": "^9.0.2",
     "@tailwindcss/postcss": "^4.2.4",
+    "@tanstack/react-query": "^5.104.1",
     "@types/google.maps": "^3.64.0",
     "@types/leaflet": "^1.9.21",
     "@types/react-leaflet": "^3.0.0",
