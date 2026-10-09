@@ -254,7 +254,7 @@ export class SessionGateway implements OnGatewayInit, OnGatewayDisconnect {
       playerId: playerID,
     });
 
-    const session = await this.sessionService.reconnectPlayer({
+    const session: Session = await this.sessionService.reconnectPlayer({
       sessionID,
       playerID,
       reconnectToken,
