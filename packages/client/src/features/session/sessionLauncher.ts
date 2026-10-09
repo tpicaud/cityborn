@@ -7,11 +7,13 @@ import {
   SessionMode,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import { useError } from '../../shared/errorContext';
+import { sessionQueryOptions } from './api/sessionQueries';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
 
 const JoinSessionSchema = z.object({
@@ -48,6 +50,7 @@ export function useSessionLauncher({
   navigation,
 }: SessionLauncherOptions): SessionLauncher {
   const { sessionApi }: DomainApis = useDomainApis();
+  const queryClient: QueryClient = useQueryClient();
   const { invokeError } = useError();
 
   return {
@@ -66,7 +69,9 @@ export function useSessionLauncher({
 
     joinSession: async (code: SessionId) => {
       try {
-        await sessionApi.fetchSession(code);
+        await queryClient.fetchQuery(
+          sessionQueryOptions({ sessionApi, sessionId: code }),
+        );
         navigation.push(multiSessionPath(code));
       } catch (error: unknown) {
         invokeError(error);
