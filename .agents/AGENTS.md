@@ -15,7 +15,9 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 - Chaque package ou app suit l'axe d'organisation que lui attribue la [vue d'ensemble](#vue-densemble).
 - Un domaine métier porte le même nom dans chaque package ou app organisé par domaine métier.
 - Une feature compose un ou plusieurs domaines et n'existe que dans les packages et apps organisés par feature.
-- Le socle technique d'un package ou d'une app ne dépend d'aucun de ses domaines ni de ses features.
+- Les dépendances vont toujours du spécifique vers le partagé, sans cycle :
+  - app → package
+  - feature → domaine métier → socle technique
 - Une architecture défaillante dans le périmètre touché est signalée en fin de réponse avec une piste, sans implémenter le refacto.
 
 ## Vue d'ensemble
@@ -36,13 +38,6 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 | domaine métier | Une notion métier avec ses règles et ses données. | `user`, `category`, `session` |
 | feature | Un parcours produit, composé de domaines. | `play`, `profile`, `admin` |
 | socle technique | Ce qui ne connaît aucun domaine ni feature. | protocole HTTP, persistance, ports plateforme |
-
-Dépendances autorisées entre packages :
-
-- `core` → `api`
-- `backend` → `api`, `core`
-- `client` → `api`, `core`
-- apps clientes → `api`, `core`, `client`, `design-system`
 
 ## Découpage
 
