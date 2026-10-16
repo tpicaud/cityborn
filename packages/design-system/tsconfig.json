@@ -1,12 +1,5 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "composite": true,
-    "outDir": "dist",
-    "module": "ESNext",
-    "target": "ESNext"
-  },
+  "extends": "../../tsconfig.package.json",
   "include": ["src", "index.ts"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["node_modules"]
 }

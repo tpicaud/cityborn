@@ -19,7 +19,6 @@
     "check-env:build": "node config/build.js",
     "check-env:client:development": "dotenv -c development -- pnpm check-env:client",
     "check-env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
-    "postinstall": "cd ../.. && pnpm packages:build",
     "format": "biome check --write .",
     "check": "biome check .",
     "fullcheck": "pnpm typecheck && pnpm check"

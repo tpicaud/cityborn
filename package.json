@@ -15,7 +15,6 @@
     "typecheck": "turbo run typecheck",
     "dev:mobile": "turbo run dev --filter=cityborn-mobile... --filter=cityborn-back-office... --filter=cityborn-backend...",
     "dev:web": "turbo run dev --filter=cityborn-frontend... --filter=cityborn-back-office... --filter=cityborn-backend...",
-    "packages:build": "turbo run build --filter=./packages/*",
     "backend": "pnpm --dir apps/backend",
     "backend:build": "turbo run build --filter=cityborn-backend",
     "backend:dev": "turbo run dev --filter=cityborn-backend...",

@@ -122,7 +122,7 @@ pnpm db:start
 pnpm dev:mobile
 ```
 
-`dev:mobile` lance Expo, le back-office, le backend et le design-system en mode watch. Pour utiliser les raccourcis clavier d'Expo, sélectionner sa tâche dans l'interface de turbo puis appuyer sur `i` (`Ctrl+Z` pour en sortir). Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo (ou choisir le serveur détecté sur le réseau local).
+`dev:mobile` lance Expo, le back-office et le backend. Pour utiliser les raccourcis clavier d'Expo, sélectionner sa tâche dans l'interface de turbo puis appuyer sur `i` (`Ctrl+Z` pour en sortir). Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo (ou choisir le serveur détecté sur le réseau local).
 
 En cas d'échec de connexion : vérifier que le téléphone et la machine sont sur le même réseau et que les ports `8081` (Metro) et `4000` (backend) sont accessibles (pare-feu, WSL).
 

@@ -2,26 +2,15 @@
   "name": "@cityborn/design-system",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "index.ts",
+  "types": "index.ts",
   "scripts": {
-    "dev": "tsc --build --watch",
-    "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check ."
   },
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.33.2",
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
-    "postcss": "^8.5.10",
-    "postcss-cli": "^11.0.1",
-    "tailwindcss": "^4.2.4"
-  },
   "devDependencies": {
     "typescript": "^6.0.3"
   }

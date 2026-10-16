@@ -7,7 +7,6 @@
       "outputs": ["dist/**", ".next/**"]
     },
     "dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
@@ -28,7 +27,6 @@
       "outputs": ["coverage/**"]
     },
     "cityborn-backend#dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -86,7 +84,6 @@
       ]
     },
     "cityborn-frontend#dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -103,7 +100,6 @@
       "env": ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_REST_BACKEND_URL"]
     },
     "cityborn-back-office#dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -113,7 +109,6 @@
       ]
     },
     "cityborn-mobile#dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "interactive": true,
@@ -126,11 +121,6 @@
         "EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID",
         "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
       ]
-    },
-    "@cityborn/design-system#dev": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "persistent": true
     },
     "@cityborn/api#generate:openapi:draft": {
       "cache": false,
