@@ -1,5 +1,5 @@
 ---
-name: environment-config
+name: conventions-environment
 description: "Configuration d'environnement Cityborn. À utiliser pour ajouter, renommer, supprimer ou lire une variable d'environnement, ou modifier le schéma de configuration d'une app."
 ---
 
@@ -18,8 +18,7 @@ description: "Configuration d'environnement Cityborn. À utiliser pour ajouter, 
 |---|---|
 | Backend NestJS | démarrage |
 | Prisma | lancement de la commande |
-| Variables publiques Next.js | développement et build |
-| Variables privées Next.js | démarrage du serveur |
+| Variables Next.js, toutes publiques | développement et build |
 | Configuration native Expo | prébuild |
 | Configuration client Expo | Metro ou EAS |
 
