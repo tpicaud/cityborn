@@ -1,6 +1,7 @@
 import type { Coord, FullGuessObject, Guess } from '@cityborn/api';
-import { booleanPointInPolygon, distance, point } from '@turf/turf';
-import type { MultiPolygon, Polygon, Position } from 'geojson';
+import { booleanPointInPolygon, distance } from '@turf/turf';
+import type { Feature, MultiPolygon, Point, Polygon, Position } from 'geojson';
+import { coordPoint } from './coordPoint';
 import { calculatePoints } from './utils';
 
 export type GuessObjectArea = Polygon | MultiPolygon;
@@ -59,14 +60,14 @@ export function createGuess(
   guessObject: FullGuessObject,
   coordinates: Coord,
 ): Guess {
-  const guessedPoint = point([coordinates.lng, coordinates.lat]);
+  const guessedPoint: Feature<Point> = coordPoint(coordinates);
   const area: GuessObjectArea | undefined = guessObjectArea(guessObject);
   const win: boolean =
     area !== undefined && booleanPointInPolygon(guessedPoint, area);
   const center: Coord = guessObjectCenter(guessObject);
   const distanceInKm: number = win
     ? 0
-    : distance(guessedPoint, point([center.lng, center.lat]), {
+    : distance(guessedPoint, coordPoint(center), {
         units: 'kilometers',
       });
 

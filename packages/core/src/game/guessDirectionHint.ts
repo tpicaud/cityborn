@@ -1,5 +1,6 @@
 import type { Coord } from '@cityborn/api';
-import { bearing, point } from '@turf/turf';
+import { bearing } from '@turf/turf';
+import { coordPoint } from './coordPoint';
 
 export type CardinalDirection =
   | 'N'
@@ -32,8 +33,8 @@ export function guessDirectionHint({
   targetCoordinates: Coord;
 }): CardinalDirection {
   const bearingInDegrees: number = bearing(
-    point([guessCoordinates.lng, guessCoordinates.lat]),
-    point([targetCoordinates.lng, targetCoordinates.lat]),
+    coordPoint(guessCoordinates),
+    coordPoint(targetCoordinates),
   );
   const clockwiseBearingInDegrees: number = (bearingInDegrees + 360) % 360;
   const sectorIndex: number =
