@@ -85,7 +85,7 @@ Ces règles valent en développement comme en revue : chaque **symptôme** cité
 | `pnpm format` / `pnpm format:check` | Biome (lint + format) |
 | `pnpm check:agent-docs` | structure, liens, routage et couverture des instructions agents |
 | `pnpm check:api-compat` | rétrocompat des contrats API (CI) |
-| `pnpm dev:web` / `pnpm dev:mobile` | stack web / mobile + backend + packages |
+| `pnpm dev:web` / `pnpm dev:mobile` | frontend / mobile + back-office + backend |
 | `pnpm --dir apps/backend test` | tests backend unitaires (Jest) |
 | `pnpm db:test:start` / `pnpm db:test:stop` | démarrer (et attendre les healthchecks) / arrêter uniquement Postgres + Redis du profil `test` |
 | `pnpm test:int` / `pnpm test:e2e` | tests backend d'intégration / e2e sur la stack dédiée ; après `pnpm install` puis `pnpm db:test:start` |

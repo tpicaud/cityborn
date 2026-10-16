@@ -6,6 +6,7 @@
       "outputs": ["dist/**", ".next/**"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
@@ -30,6 +31,7 @@
       "cache": false
     },
     "cityborn-backend#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -87,6 +89,7 @@
       ]
     },
     "cityborn-frontend#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -103,6 +106,7 @@
       "env": ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_REST_BACKEND_URL"]
     },
     "cityborn-back-office#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -112,8 +116,10 @@
       ]
     },
     "cityborn-mobile#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
+      "interactive": true,
       "passThroughEnv": [
         "APP_VARIANT",
         "GOOGLE_MAPS_ANDROID_API_KEY",
