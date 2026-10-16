@@ -81,5 +81,6 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 ## Maintenir ce guide
 
+- La doc agents porte des règles réutilisables, jamais l'implémentation d'un changement : une règle n'entre que si elle s'applique à du code que le changement ne touche pas.
 - Une convention modifiée met à jour, dans le même lot, ce fichier si elle est transverse, sinon le skill concerné ; jamais les deux.
 - Le `README.md` racine reste à jour, dans le même lot, de tout changement de ce qu'il décrit.

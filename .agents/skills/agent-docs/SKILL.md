@@ -8,9 +8,10 @@ description: "Docs agents Cityborn. À utiliser avant de créer ou modifier AGEN
 ## Étapes
 
 1. Charger le skill `writing-for-agents`, qui porte la méthode générique.
-2. Rédiger selon les [conventions Cityborn](#conventions-cityborn).
-3. Lancer `pnpm check:agent-docs` et corriger chaque erreur.
-4. Dans `.agents/evals/skill-cases.md`, mettre à jour les cas de chaque skill touché, ses non-déclenchements et ses chevauchements.
+2. Avant d'ajouter une règle, vérifier qu'elle s'applique au-delà des fichiers du changement, qu'elle change le comportement par défaut de l'agent et qu'aucune règle existante ne la couvre ; sinon modifier ou supprimer la règle existante plutôt qu'en ajouter une.
+3. Rédiger selon les [conventions Cityborn](#conventions-cityborn).
+4. Lancer `pnpm check:agent-docs` et corriger chaque erreur.
+5. Dans `.agents/evals/skill-cases.md`, mettre à jour les cas de chaque skill touché, ses non-déclenchements et ses chevauchements.
 
 Terminé quand le check passe et que les cas de chaque skill touché sont à jour.
 

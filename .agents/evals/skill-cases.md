@@ -42,6 +42,7 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | « Réécris la section Style de code d'`AGENTS.md`. » | `agent-docs`, puis `writing-for-agents` | Découper chaque obligation en bullet, lancer `pnpm check:agent-docs` et relire les cas concernés | Modifier `writing-for-agents` pour y ajouter une convention Cityborn |
 | « Ajoute la variable `SENTRY_DSN` au backend. » | `environment-config` | Mettre à jour dans le même lot le schéma, ses consommateurs, le `.env.example` et la configuration Turbo | Lire `process.env` hors du module de configuration |
 | « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `deliver-issue`, skill du domaine, `agent-docs` | Charger `agent-docs` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
+| « Corrige l'issue #123 ici. » quand le correctif déplace un provider dans un sous-dossier | `deliver-issue`, skill du domaine | Laisser la doc agents inchangée : la règle Rangement couvre déjà le déplacement | Ajouter le chemin du fichier ou le détail du correctif à un skill |
 | « Exécute `$cleanup-worktree`. » | `cleanup-worktree` | Laisser le script prouver que tout travail est publié avant la suppression | Pousser un commit ou contourner un refus du script |
 
 ## Indicateurs à relever

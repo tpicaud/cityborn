@@ -26,7 +26,7 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 - **Skills métier** : chaque règle des skills chargés à l'étape 3.
 - **Contrat API** : rétrocompatibilité et conventions de `api-contract-change` pour tout changement dans `packages/api`.
 - **Tests** : chaque comportement ou invariant significatif est testé au bon tier ; aucun test ne recopie l'implémentation.
-- **Documentation** : `AGENTS.md`, le skill concerné ou le `README.md` suivent toute convention ou commande modifiée.
+- **Documentation** : une convention modifiée est reflétée dans `AGENTS.md` ou le skill concerné ; aucun ajout ne décrit l'implémentation du diff (noms de fichiers, comportement d'un cas particulier).
 
 ## Format des findings
 
