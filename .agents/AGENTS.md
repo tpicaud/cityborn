@@ -75,7 +75,6 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 ## Garde-fous
 
-- Demander avant d'ajouter une dépendance npm.
 - Créer une nouvelle migration Prisma (`pnpm db:migrate`) plutôt que modifier une migration appliquée ou mergée.
 - Laisser intacts les `overrides` de `pnpm-workspace.yaml` : la plupart corrigent des CVE.
 - Demander un test manuel de l'UI plutôt que lancer le front ou le mobile.
@@ -83,4 +82,4 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 ## Maintenir ce guide
 
 - Une convention modifiée met à jour, dans le même lot, ce fichier si elle est transverse, sinon le skill concerné ; jamais les deux.
-- Le `README.md` racine suit, dans le même lot, tout changement du démarrage local, de ses prérequis, des variables d'environnement, des ports, des commandes `dev:web` / `dev:mobile` ou de l'arborescence qu'il présente.
+- Le `README.md` racine reste à jour, dans le même lot, de tout changement de ce qu'il décrit.
