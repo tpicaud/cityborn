@@ -17,7 +17,7 @@ import {
 } from '@cityborn/api';
 import type { SocketConnection } from './socketConnection';
 
-export const WS_ACK_TIMEOUT_MS = 10_000;
+const WS_ACK_TIMEOUT_MS = 10_000;
 
 const WS_TRANSPORT_STATUS = 503;
 const WS_TIMEOUT_STATUS = 504;

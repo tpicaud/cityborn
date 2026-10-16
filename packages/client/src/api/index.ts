@@ -1,3 +1,6 @@
-export * from './authFetch';
-export * from './contractClient';
-export * from './visitorId';
+export {
+  type ContractClient,
+  createBearerContractClient,
+  createCookieContractClient,
+} from './contractClient';
+export { createVisitorIdProvider, type VisitorIdProvider } from './visitorId';
