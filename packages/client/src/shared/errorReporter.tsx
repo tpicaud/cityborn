@@ -1,6 +1,12 @@
 'use client';
 
-import { resolveErrorMessage } from '@cityborn/api';
+import {
+  type ApiError,
+  ApiResponseError,
+  ErrorCode,
+  isApiError,
+  resolveErrorMessage,
+} from '@cityborn/api';
 import {
   createContext,
   type ReactNode,
@@ -8,7 +14,19 @@ import {
   useContext,
   useState,
 } from 'react';
-import { isExpectedApiError } from './expectedApiError';
+
+function toApiError(error: unknown): ApiError | null {
+  if (error instanceof ApiResponseError) return error.apiError;
+  if (isApiError(error)) return error;
+  return null;
+}
+
+export function isExpectedApiError(error: unknown): boolean {
+  const apiError: ApiError | null = toApiError(error);
+  if (!apiError) return false;
+  if (apiError.code === ErrorCode.BAD_REQUEST) return false;
+  return apiError.statusCode >= 400 && apiError.statusCode < 500;
+}
 
 export type ReportError = (error: unknown, fallbackMessage?: string) => void;
 
