@@ -6,7 +6,7 @@ import {
   readFileSync,
   readlinkSync,
 } from 'node:fs';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 
 type Skill = {
   implicitInvocation: boolean;
@@ -68,6 +68,13 @@ const listMarkdownFiles = (directoryPath: string): string[] => {
   });
 };
 
+const externalSkillRoots: string[] = [join(skillsRoot, 'writing-for-agents')];
+
+const isExternalSkillDocument = (markdownPath: string): boolean =>
+  externalSkillRoots.some((externalSkillRoot: string): boolean =>
+    markdownPath.startsWith(`${externalSkillRoot}${sep}`),
+  );
+
 const skillDirectoryEntries: Dirent[] = readdirSync(skillsRoot, {
   withFileTypes: true,
 });
@@ -115,13 +122,13 @@ const skills: Skill[] = skillDirectoryEntries
     if (!description) {
       errors.push(`${repositoryPath(skillPath)}: description manquante`);
     }
-    if (description && wordCount(description) > 50) {
+    if (description && wordCount(description) > 40) {
       warnings.push(
-        `${repositoryPath(skillPath)}: description de plus de 50 mots`,
+        `${repositoryPath(skillPath)}: description de plus de 40 mots`,
       );
     }
-    if (wordCount(content) > 1_200) {
-      warnings.push(`${repositoryPath(skillPath)}: plus de 1 200 mots`);
+    if (!isExternalSkillDocument(skillPath) && wordCount(content) > 1_000) {
+      warnings.push(`${repositoryPath(skillPath)}: plus de 1 000 mots`);
     }
 
     return [
@@ -168,9 +175,14 @@ markdownFiles.forEach((markdownPath: string): void => {
     }
   });
 
+  const externalSkillDocument: boolean = isExternalSkillDocument(markdownPath);
+
   content
     .split(/\r?\n/u)
-    .filter((line: string): boolean => /\bskills?\b/iu.test(line))
+    .filter(
+      (line: string): boolean =>
+        !externalSkillDocument && /\bskills?\b/iu.test(line),
+    )
     .flatMap((line: string): string[] =>
       Array.from(
         line.matchAll(/`([a-z0-9]+(?:-[a-z0-9]+)+)`/gu),
@@ -239,9 +251,9 @@ symlinkExpectations.forEach((expectation: SymlinkExpectation): void => {
 
 const agentsGuidePath: string = join(agentsRoot, 'AGENTS.md');
 const agentsGuideWordCount: number = wordCount(readText(agentsGuidePath));
-if (agentsGuideWordCount > 2_500) {
+if (agentsGuideWordCount > 1_200) {
   warnings.push(
-    `${repositoryPath(agentsGuidePath)}: plus de 2 500 mots (${agentsGuideWordCount})`,
+    `${repositoryPath(agentsGuidePath)}: plus de 1 200 mots (${agentsGuideWordCount})`,
   );
 }
 
