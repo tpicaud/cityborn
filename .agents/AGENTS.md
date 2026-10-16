@@ -13,7 +13,7 @@ Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les c
 | `apps/mobile` | Expo / React Native. |
 | `packages/api` | **Source de vérité des contrats** : ts-rest et WebSocket + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
 | `packages/client` | Code des apps clientes (front, mobile, back-office) qui **ne transite pas** par l'API, rangé par domaine et exposé par l'`exports` map de son `package.json`. Porte l'accès à l'API et l'état serveur de toutes ces apps, y compris un domaine propre à une seule app (`admin`). Agnostique de Next, Expo et du rendu. |
-| `packages/core` | Code pur partagé **backend + client** (front/mobile) : logique de jeu (`src/game`) et mise en forme des dates (`src/date`). Dépend de `@cityborn/api`. |
+| `packages/core` | Code partagé **backend + client** (front/mobile). Aujourd'hui la logique de jeu (`src/game`) ; a vocation à s'étoffer. Dépend de `@cityborn/api`. |
 | `packages/design-system` | Composants UI partagés. |
 
 **Où mettre du code / un type partagé** :
