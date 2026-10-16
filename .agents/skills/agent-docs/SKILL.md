@@ -21,6 +21,7 @@ Terminé quand le check passe et que les cas de chaque skill touché sont à jou
 - Bullets et tableaux plutôt que paragraphes ; une obligation par bullet.
 - Nommer le concept plutôt que le symbole qui l'implémente, sauf si la règle porte sur ce symbole.
 - Une règle d'architecture renvoie aux axes d'organisation d'`AGENTS.md`, sans lister les packages ou apps visés.
+- Une règle décrit la cible : un écart du code existant se traite par une issue, jamais par une phrase de transition.
 - Renvois :
   - un renvoi vers un autre skill sert une étape ou délègue une notion qu'il possède ;
   - il nomme le skill, jamais ses fichiers de référence ;
@@ -32,4 +33,5 @@ Terminé quand le check passe et que les cas de chaque skill touché sont à jou
 
 - Un skill de conventions couvre le périmètre d'un package ou d'une app de la vue d'ensemble d'`AGENTS.md`, ou une préoccupation transverse ; un skill de workflow couvre une tâche du début à la fin.
 - Un skill pose des règles et des décisions ; l'état du code (listes de fichiers, de hooks, de domaines) reste dans le code.
+- Un document lu seulement par un autre skill est une référence de ce skill, pas un skill.
 - Un skill de conventions se nomme `conventions-<périmètre>` ; un skill de workflow `<verbe>-<objet>`.
