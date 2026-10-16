@@ -6,7 +6,10 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import { useAuth } from '../auth/authContext';
 import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
@@ -32,7 +35,7 @@ export function useSoloSession({
   const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;
   const [session, setSession] = useState<Session>();
   const sessionRef = useRef<Session | undefined>(undefined);

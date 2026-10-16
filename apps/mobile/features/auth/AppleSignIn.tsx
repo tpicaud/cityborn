@@ -1,4 +1,4 @@
-import { useError } from '@cityborn/client';
+import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
@@ -12,7 +12,7 @@ import { View } from 'react-native';
 import { cn } from '@/lib/classNames';
 
 export const SignInWithAppleButton = () => {
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const router = useRouter();
   const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
     {

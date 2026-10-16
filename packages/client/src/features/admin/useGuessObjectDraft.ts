@@ -12,7 +12,10 @@ import type {
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import {
   fullGuessObjectQueryOptions,
   guessObjectByExternalIdQueryOptions,
@@ -54,7 +57,7 @@ const worldLocationLoadFailureMessage: string =
 export function useGuessObjectDraft(): GuessObjectDraftEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const [guessObjectDraft, setGuessObjectDraft] = useState<
     GuessObjectDraft | undefined
   >(undefined);

@@ -1,4 +1,4 @@
-import { useError } from '@cityborn/client';
+import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
@@ -19,7 +19,7 @@ GoogleSignin.configure({
 });
 
 export const SignInWithGoogleButton = () => {
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const router = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn({

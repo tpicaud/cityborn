@@ -33,7 +33,7 @@ import {
   type SessionApi,
 } from '../features/session/api/sessionApi';
 import type { AppFocus } from '../platform/appFocus';
-import { useError } from './errorContext';
+import { type ErrorReporter, useErrorReporter } from './errorReporter';
 import { createErrorReportingQueryCache } from './queryErrorReporting';
 
 export type DomainApis = {
@@ -60,7 +60,7 @@ export function ApiProvider({
   appFocus,
   children,
 }: ApiProviderProps) {
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const [queryClient] = useState<QueryClient>(
     () =>
       new QueryClient({

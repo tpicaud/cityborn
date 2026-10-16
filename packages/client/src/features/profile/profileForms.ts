@@ -7,7 +7,6 @@ import {
   UpdateUsernameSchema,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { BaseSyntheticEvent } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -42,10 +41,6 @@ export type ChangePasswordForm = UseFormReturn<
   undefined,
   ChangePasswordFormValues
 >;
-
-export type ProfileFormSubmitHandler = (
-  event?: BaseSyntheticEvent,
-) => Promise<void>;
 
 export function useUsernameForm(username: string): UsernameForm {
   return useForm<UsernameFormInput, undefined, UpdateUsername>({

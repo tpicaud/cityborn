@@ -4,13 +4,16 @@ import type { User } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { setCurrentUser } from '../auth/api/authQueries';
 import { useAuth } from '../auth/authContext';
 import { type SignOut, useSignOut } from '../auth/useSignOut';
 import {
   type ChangePasswordForm,
-  type ProfileFormSubmitHandler,
   toUpdatePassword,
   type UsernameForm,
   useChangePasswordForm,
@@ -26,13 +29,13 @@ export type ProfileEditor = {
   isEditingUsername: boolean;
   startUsernameEdit: () => void;
   cancelUsernameEdit: () => void;
-  submitUsername: ProfileFormSubmitHandler;
+  submitUsername: FormSubmitHandler;
   passwordForm: ChangePasswordForm;
   isPasswordDialogOpen: boolean;
   isPasswordUpdated: boolean;
   openPasswordDialog: () => void;
   closePasswordDialog: () => void;
-  submitPassword: ProfileFormSubmitHandler;
+  submitPassword: FormSubmitHandler;
   isDeleteAccountDialogOpen: boolean;
   openDeleteAccountDialog: () => void;
   closeDeleteAccountDialog: () => void;
@@ -45,7 +48,7 @@ export function useProfileEditor({
   const { authApi, profileApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
   const passwordForm: ChangePasswordForm = useChangePasswordForm();
   const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
@@ -61,7 +64,7 @@ export function useProfileEditor({
     },
   });
 
-  const submitUsername: ProfileFormSubmitHandler = usernameForm.handleSubmit(
+  const submitUsername: FormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
       try {
         const updatedUser: User = await profileApi.updateUsername(data);
@@ -85,7 +88,7 @@ export function useProfileEditor({
     setIsPasswordDialogOpen(false);
   };
 
-  const submitPassword: ProfileFormSubmitHandler = passwordForm.handleSubmit(
+  const submitPassword: FormSubmitHandler = passwordForm.handleSubmit(
     async (values) => {
       try {
         const updatedUser: User = await authApi.updatePassword(

@@ -9,11 +9,13 @@ import {
   useState,
 } from 'react';
 
-type ErrorContextType = {
+export type ErrorReporter = {
   invokeError: (error: unknown, fallbackMessage?: string) => void;
 };
 
-const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
+const ErrorReporterContext = createContext<ErrorReporter | undefined>(
+  undefined,
+);
 
 export type ErrorDialogProps = {
   errorMessage: string;
@@ -44,7 +46,7 @@ export const ErrorProvider = ({
   );
 
   return (
-    <ErrorContext.Provider value={{ invokeError }}>
+    <ErrorReporterContext.Provider value={{ invokeError }}>
       {children}
       {ErrorDialogComponent && (
         <ErrorDialogComponent
@@ -54,16 +56,15 @@ export const ErrorProvider = ({
           onExited={() => setErrorMessage('')}
         />
       )}
-    </ErrorContext.Provider>
+    </ErrorReporterContext.Provider>
   );
 };
 
-export const useError = (): ErrorContextType => {
-  const context: ErrorContextType | undefined = useContext(ErrorContext);
-  if (!context) {
-    throw new Error('useError must be used within an ErrorProvider');
+export const useErrorReporter = (): ErrorReporter => {
+  const errorReporter: ErrorReporter | undefined =
+    useContext(ErrorReporterContext);
+  if (!errorReporter) {
+    throw new Error('useErrorReporter must be used within an ErrorProvider');
   }
-  return context;
+  return errorReporter;
 };
-
-export default ErrorProvider;

@@ -12,7 +12,10 @@ import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import { sessionQueryOptions } from './api/sessionQueries';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
 
@@ -51,7 +54,7 @@ export function useSessionLauncher({
 }: SessionLauncherOptions): SessionLauncher {
   const { sessionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
 
   return {
     playSolo: () => navigation.push(soloSessionPath),

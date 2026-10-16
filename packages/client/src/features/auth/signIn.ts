@@ -9,10 +9,14 @@ import {
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { type BaseSyntheticEvent, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { setCurrentUser } from './api/authQueries';
 import {
   type SignUpFormInput,
@@ -24,8 +28,6 @@ import {
 type SignInFlowOptions = {
   onSignedIn?: () => void;
 };
-
-type FormSubmitHandler = (event?: BaseSyntheticEvent) => Promise<void>;
 
 export type SignInFlow = {
   form: UseFormReturn<SignIn>;
@@ -55,7 +57,7 @@ function useSignInCompletion({
   onSignedIn,
 }: SignInFlowOptions): (signInRequest: Promise<User>) => Promise<void> {
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const onSignedInRef = useRef<(() => void) | undefined>(onSignedIn);
   onSignedInRef.current = onSignedIn;
 

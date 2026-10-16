@@ -11,7 +11,10 @@ import {
   useState,
 } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import type {
   SocketConnection,
   SocketListenEvent,
@@ -64,7 +67,7 @@ export function useSocket({
     () => {},
   );
 
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const { authApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
 

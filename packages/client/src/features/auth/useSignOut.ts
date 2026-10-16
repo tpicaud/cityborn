@@ -3,7 +3,10 @@
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import { clearCacheAfterSignOut } from './api/authQueries';
 
 type SignOutOptions = {
@@ -15,7 +18,7 @@ export type SignOut = () => Promise<void>;
 export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
   const { authApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const onSignedOutRef = useRef<(() => void) | undefined>(onSignedOut);
   onSignedOutRef.current = onSignedOut;
 

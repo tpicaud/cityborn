@@ -26,7 +26,10 @@ import {
 } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
@@ -63,7 +66,7 @@ export function useMultiSession({
   const { sessionApi }: DomainApis = useDomainApis();
   const { user } = useAuth();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
     user?.username,
   );

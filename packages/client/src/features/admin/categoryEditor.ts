@@ -18,7 +18,10 @@ import {
 } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import type { AdminApi } from './api/adminApi';
 import {
   categoriesQueryOptions,
@@ -153,7 +156,7 @@ export function useCategoryEditor({
 }: CategoryEditorOptions): CategoryEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { invokeError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor = useGuessObjectDraft();
   const [category, setCategory] = useState<FullCategory>(editedCategory);
   const [isSaving, setIsSaving] = useState<boolean>(false);
