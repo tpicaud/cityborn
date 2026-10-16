@@ -1,29 +1,39 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { describe, it } from 'node:test';
 import { type SessionId, SessionIdSchema } from '@cityborn/api';
 import { multiSessionPath, sessionIdFromMultiSessionPath } from './sessionPath';
 
 const sessionId: SessionId = SessionIdSchema.parse('brave-golden-lynx');
 
-test('sessionIdFromMultiSessionPath reads the session of a multi session path', () => {
-  assert.equal(
-    sessionIdFromMultiSessionPath(multiSessionPath(sessionId)),
-    sessionId,
-  );
-});
+describe('sessionIdFromMultiSessionPath', () => {
+  it('reads the session of a multi session path', () => {
+    const path: string = multiSessionPath(sessionId);
 
-test('sessionIdFromMultiSessionPath rejects a path without session', () => {
-  assert.equal(sessionIdFromMultiSessionPath('/session/multi'), null);
-  assert.equal(sessionIdFromMultiSessionPath('/session/multi/'), null);
-});
+    const readSessionId: SessionId | null = sessionIdFromMultiSessionPath(path);
 
-test('sessionIdFromMultiSessionPath rejects a path outside multi sessions', () => {
-  assert.equal(
-    sessionIdFromMultiSessionPath(`/session/solo/${sessionId}`),
-    null,
-  );
-  assert.equal(
-    sessionIdFromMultiSessionPath(`/session/multi/${sessionId}/results`),
-    null,
-  );
+    assert.equal(readSessionId, 'brave-golden-lynx');
+  });
+
+  it('rejects a path without session', () => {
+    const paths: string[] = ['/session/multi', '/session/multi/'];
+
+    const readSessionIds: (SessionId | null)[] = paths.map(
+      sessionIdFromMultiSessionPath,
+    );
+
+    assert.deepEqual(readSessionIds, [null, null]);
+  });
+
+  it('rejects a path outside multi sessions', () => {
+    const paths: string[] = [
+      `/session/solo/${sessionId}`,
+      `/session/multi/${sessionId}/results`,
+    ];
+
+    const readSessionIds: (SessionId | null)[] = paths.map(
+      sessionIdFromMultiSessionPath,
+    );
+
+    assert.deepEqual(readSessionIds, [null, null]);
+  });
 });

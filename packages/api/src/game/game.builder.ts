@@ -8,6 +8,8 @@ import {
   type GameState,
   GameStateSchema,
   GameStatus,
+  type Guess,
+  GuessSchema,
   type Round,
   RoundSchema,
   RoundStatus,
@@ -27,6 +29,18 @@ export function buildGame(
     config: buildGameConfig(),
     status: GameStatus.IN_GAME,
     state: { guessObjectsIds: [], results: {} },
+    ...overrides,
+  });
+}
+
+export function buildGuess(
+  overrides: Partial<z.input<typeof GuessSchema>> = {},
+): Guess {
+  return GuessSchema.parse({
+    coordinates: { lat: 48.85, lng: 2.35 },
+    distance: 120,
+    points: 887,
+    win: false,
     ...overrides,
   });
 }

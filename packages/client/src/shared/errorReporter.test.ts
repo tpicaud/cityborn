@@ -9,39 +9,52 @@ const sessionNotFoundApiError: ApiError = {
   message: 'Session not found',
 };
 
-const badRequestApiError: ApiError = {
-  statusCode: 400,
-  code: ErrorCode.BAD_REQUEST,
-  message: 'gameConfig.timer: Expected number',
-};
-
-const internalServerApiError: ApiError = {
-  statusCode: 500,
-  code: ErrorCode.UNKNOWN_ERROR,
-  message: 'Internal server error',
-};
-
 describe('isExpectedApiError', () => {
   it('treats a client API error with a business error code as expected', () => {
-    assert.equal(isExpectedApiError(sessionNotFoundApiError), true);
-    assert.equal(
-      isExpectedApiError(new ApiResponseError(sessionNotFoundApiError)),
-      true,
+    const isExpected: boolean = isExpectedApiError(sessionNotFoundApiError);
+
+    assert.equal(isExpected, true);
+  });
+
+  it('treats an API response error with a business error code as expected', () => {
+    const apiResponseError: ApiResponseError = new ApiResponseError(
+      sessionNotFoundApiError,
     );
+
+    const isExpected: boolean = isExpectedApiError(apiResponseError);
+
+    assert.equal(isExpected, true);
   });
 
   it('treats a bad request as unexpected', () => {
-    assert.equal(isExpectedApiError(badRequestApiError), false);
+    const badRequestApiError: ApiError = {
+      statusCode: 400,
+      code: ErrorCode.BAD_REQUEST,
+      message: 'gameConfig.timer: Expected number',
+    };
+
+    const isExpected: boolean = isExpectedApiError(badRequestApiError);
+
+    assert.equal(isExpected, false);
   });
 
   it('treats a server API error as unexpected', () => {
-    assert.equal(
-      isExpectedApiError(new ApiResponseError(internalServerApiError)),
-      false,
-    );
+    const internalServerError: ApiResponseError = new ApiResponseError({
+      statusCode: 500,
+      code: ErrorCode.UNKNOWN_ERROR,
+      message: 'Internal server error',
+    });
+
+    const isExpected: boolean = isExpectedApiError(internalServerError);
+
+    assert.equal(isExpected, false);
   });
 
   it('treats an error that is not an API error as unexpected', () => {
-    assert.equal(isExpectedApiError(new Error('Failed to fetch')), false);
+    const isExpected: boolean = isExpectedApiError(
+      new Error('Failed to fetch'),
+    );
+
+    assert.equal(isExpected, false);
   });
 });
