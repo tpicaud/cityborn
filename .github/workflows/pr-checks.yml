@@ -112,9 +112,6 @@ jobs:
       - name: Install oasdiff
         run: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | version=1.26.1 sh
 
-      - name: Test compat module
-        run: pnpm --dir packages/api test
-
       - name: Check API compatibility
         run: pnpm check:api-compat
 
@@ -217,8 +214,8 @@ jobs:
       - name: Build static back-office
         run: pnpm back-office:build
 
-  backend-unit:
-    name: Backend unit tests
+  unit-tests:
+    name: Unit tests
     needs: detect-changes
     if: github.event.pull_request.draft == false && needs.detect-changes.outputs.backendHasChanged == 'true'
     runs-on: ubuntu-latest
@@ -243,8 +240,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run backend unit tests
-        run: pnpm --dir apps/backend test
+      - name: Run unit tests
+        run: pnpm test
 
   backend-integration:
     name: Backend integration tests
@@ -300,7 +297,7 @@ jobs:
         run: pnpm install
 
       - name: Deploy database migrations
-        run: pnpm --dir apps/backend migrate
+        run: pnpm --dir apps/backend db:up
 
       - name: Run backend integration tests
         run: pnpm --dir apps/backend test:int
@@ -359,7 +356,7 @@ jobs:
         run: pnpm install
 
       - name: Deploy database migrations
-        run: pnpm --dir apps/backend migrate
+        run: pnpm --dir apps/backend db:up
 
       - name: Run backend e2e tests
         run: pnpm --dir apps/backend test:e2e

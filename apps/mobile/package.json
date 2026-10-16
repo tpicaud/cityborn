@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "pnpm check-env:client:development && expo start",
-    "start": "pnpm check-env:client:development && expo start",
     "prebuild": "dotenv -c development -- expo prebuild --clean",
     "build-android:local": "pnpm check-env:all && eas build --platform android --local --clear-cache",
     "build-android-development": "dotenv -c development -- pnpm run build-android:local --profile development --output app-builds/cityborn-development-preview.apk",
@@ -13,14 +12,12 @@
     "android": "pnpm check-env:client:development && expo run:android",
     "ios": "pnpm check-env:client:development && expo run:ios",
     "web": "pnpm check-env:client:development && expo start --web",
-    "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "check-env": "dotenv -c development -- pnpm check-env:all",
     "check-env:all": "pnpm check-env:build && pnpm check-env:client",
     "check-env:build": "node config/build.js",
     "check-env:client:development": "dotenv -c development -- pnpm check-env:client",
     "check-env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
-    "postinstall": "cd ../.. && pnpm packages:build",
     "format": "biome check --write .",
     "check": "biome check .",
     "fullcheck": "pnpm typecheck && pnpm check"
@@ -89,8 +86,6 @@
     "@types/geojson": "^7946.0.16",
     "@types/react": "~19.2.14",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^10.2.1",
-    "eslint-config-expo": "~57.0.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
     "typescript": "~6.0.3"

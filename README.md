@@ -31,11 +31,16 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
    pnpm db:up
    ```
 
-2. Lancer la stack web (frontend, back-office, backend et packages) :
+2. Lancer la stack web (frontend, back-office et backend) :
 
    ```bash
    pnpm dev:web
    ```
+
+   `pnpm dev` lance toutes les applications, mobile compris. Pour une seule
+   application, utiliser `pnpm <app>:dev` (`backend`, `frontend`, `back-office`
+   ou `mobile`). Chaque commande lance aussi les packages dont dépendent les
+   applications visées, après avoir compilé ceux qui en ont besoin.
 
    Le frontend est disponible sur `http://localhost:3000` et le back-office sur
    `http://localhost:3001`. Ces ports viennent de la variable `PORT` du `.env`
@@ -117,7 +122,7 @@ pnpm db:start
 pnpm dev:mobile
 ```
 
-`dev:mobile` lance Expo, le back-office, le backend et les packages. Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo (ou choisir le serveur détecté sur le réseau local).
+`dev:mobile` lance Expo, le back-office et le backend. Pour utiliser les raccourcis clavier d'Expo, sélectionner sa tâche dans l'interface de turbo puis appuyer sur `i` (`Ctrl+Z` pour en sortir). Ouvrir `Cityborn (Dev)` sur le téléphone puis scanner le QR code affiché par Expo (ou choisir le serveur détecté sur le réseau local).
 
 En cas d'échec de connexion : vérifier que le téléphone et la machine sont sur le même réseau et que les ports `8081` (Metro) et `4000` (backend) sont accessibles (pare-feu, WSL).
 
