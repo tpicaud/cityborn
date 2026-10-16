@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "pnpm check-env:client:development && expo start",
-    "start": "pnpm check-env:client:development && expo start",
     "prebuild": "dotenv -c development -- expo prebuild --clean",
     "build-android:local": "pnpm check-env:all && eas build --platform android --local --clear-cache",
     "build-android-development": "dotenv -c development -- pnpm run build-android:local --profile development --output app-builds/cityborn-development-preview.apk",

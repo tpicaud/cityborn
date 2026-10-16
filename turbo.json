@@ -130,19 +130,6 @@
         "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
       ]
     },
-    "cityborn-mobile#start": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "passThroughEnv": [
-        "APP_VARIANT",
-        "GOOGLE_MAPS_ANDROID_API_KEY",
-        "GOOGLE_MAPS_IOS_API_KEY",
-        "EXPO_PUBLIC_REST_BACKEND_URL",
-        "EXPO_PUBLIC_WEBSOCKET_BACKEND_URL",
-        "EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
-      ]
-    },
     "@cityborn/api#generate:openapi:draft": {
       "cache": false,
       "passThroughEnv": ["GITHUB_OUTPUT"]

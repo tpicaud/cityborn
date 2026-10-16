@@ -12,7 +12,6 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "start": "turbo run start",
     "typecheck": "turbo run typecheck",
     "dev:mobile": "turbo run dev --filter=cityborn-mobile... --filter=cityborn-back-office... --filter=cityborn-backend...",
     "dev:web": "turbo run dev --filter=cityborn-frontend... --filter=cityborn-back-office... --filter=cityborn-backend...",
@@ -38,7 +37,6 @@
     "mobile:build-android": "pnpm mobile android",
     "mobile:build-ios": "pnpm mobile ios",
     "mobile:dev": "turbo run dev --filter=cityborn-mobile...",
-    "mobile:start": "pnpm mobile start",
     "mobile:format": "pnpm --dir apps/mobile format",
     "mobile:check": "pnpm --dir apps/mobile check",
     "db:start": "cd apps/backend && pnpm db:start && cd ../..",
