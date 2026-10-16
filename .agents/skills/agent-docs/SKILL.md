@@ -32,3 +32,4 @@ Terminé quand le check passe et que les cas de chaque skill touché sont à jou
 
 - Un skill de conventions couvre le périmètre d'un package ou d'une app de la vue d'ensemble d'`AGENTS.md`, ou une préoccupation transverse ; un skill de workflow couvre une tâche du début à la fin.
 - Un skill pose des règles et des décisions ; l'état du code (listes de fichiers, de hooks, de domaines) reste dans le code.
+- Un skill de conventions se nomme `conventions-<périmètre>`.

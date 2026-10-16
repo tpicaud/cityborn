@@ -1,5 +1,5 @@
 ---
-name: backend-conventions
+name: conventions-backend
 description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou relire la structure d'un module, la gestion des erreurs ou l'observabilité dans apps/backend.
 ---
 

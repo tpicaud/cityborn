@@ -1,6 +1,6 @@
 # Observabilité — drain Axiom
 
-Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours sur stdout — donc dans Railway, qui reste le filet — et vers Axiom quand il est configuré. Construction des events : [référence d'observabilité](../../.agents/skills/backend-conventions/references/observability.md).
+Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours sur stdout — donc dans Railway, qui reste le filet — et vers Axiom quand il est configuré. Construction des events : [référence d'observabilité](../../.agents/skills/conventions-backend/references/observability.md).
 
 ## Configuration
 

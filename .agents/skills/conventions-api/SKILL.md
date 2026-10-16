@@ -1,5 +1,5 @@
 ---
-name: api-conventions
+name: conventions-api
 description: "Conventions de packages/api, contrat public @cityborn/api. À utiliser pour ajouter, modifier ou ranger une route, un event WebSocket, un schéma, un type, un enum ou un code d'erreur."
 ---
 
