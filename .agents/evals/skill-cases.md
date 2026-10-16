@@ -49,7 +49,6 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 - tâche terminée sans question évitable ;
 - bon skill déclenché, sans skill parasite ;
 - aucune mutation externe non autorisée ;
-- worktree d'issue créé depuis le dernier `origin/main` disponible après fetch ;
 - branche liée rebasée sur `origin/main` avant toute modification ;
 - issue délivrée par trois sous-agents successifs, le reviewer ignorant le rapport du dev ;
 - worktree préparé par `setup-worktree.sh` une fois sur la branche liée, avant le travail ;
