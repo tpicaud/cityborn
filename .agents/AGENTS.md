@@ -18,21 +18,24 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 - Les dépendances vont toujours du spécifique vers le partagé, sans cycle :
   - app → package
   - feature → domaine métier → socle technique
-- Une architecture défaillante dans le périmètre touché est signalée en fin de réponse avec une piste, sans implémenter le refacto.
+- Un écart à ces règles est corrigé dans le périmètre de la tâche ; hors périmètre, il est signalé en fin de réponse avec une piste, sans refacto.
 
 #### Découpage
 
-Chaque symptôme est à corriger dans le périmètre de la tâche, sinon à signaler, en développement comme en revue.
+S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle technique.
 
-- **Module profond** : une capacité entière derrière une surface publique courte ; ses étapes, dépendances et configuration restent privées.
+- **Module profond** : un module (service, hook, sous-dossier) couvre une responsabilité entière derrière une surface publique courte ; ses étapes, dépendances et configuration restent privées.
   - Symptôme : l'appelant transmet un secret, un client d'infrastructure ou une option interne.
-- **Surface minimale** : un symbole n'est exporté que pour un consommateur réel hors de son fichier.
-  - Symptôme : un export que seul son propre module lit.
-- **Variantes** : dès la deuxième variante, un seul module porte le comportement commun et reçoit la partie variable (port, stratégie, fonction injectée).
+  - Symptôme : un export que seul son propre fichier lit.
+- **Variantes** : quand une même responsabilité a deux implémentations ou plus, un seul module porte le commun et reçoit la partie variable (port, stratégie, fonction injectée).
   - Symptômes : le même discriminant testé à plusieurs endroits ; des classes sœurs qui ne diffèrent que d'une méthode ; des factories recopiées.
-- **Cohésion** : une notion a une seule maison ; un fragment dupliqué se factorise au troisième usage réel.
+- **Cohésion** : une notion a une seule maison, dans le domaine, la feature ou le socle qui la possède.
   - Symptôme : modifier une notion oblige à toucher plusieurs fichiers qui n'en portent chacun qu'un morceau.
-- **Rangement** : dès le deuxième fichier, une capacité a son sous-dossier nommé d'après elle ; sinon un fichier va chez son unique consommateur, sinon à la racine de son propriétaire. Un dossier ou un fichier nomme une capacité, jamais une forme technique.
+- **Duplication** : un fragment identique entre responsabilités distinctes se factorise au troisième usage réel.
+- **Rangement** :
+  - dès deux fichiers, une responsabilité a son sous-dossier nommé d'après elle ;
+  - un fichier seul va chez son unique consommateur, sinon à la racine de son propriétaire ;
+  - un dossier ou un fichier nomme une responsabilité, jamais une forme technique.
   - Symptômes : un fichier à la racine utilisé par un seul dossier ; deux fichiers jumeaux pour des fournisseurs différents rangés séparément ; un dossier `utils`, `helpers` ou `constants`.
 
 ## Vue d'ensemble
