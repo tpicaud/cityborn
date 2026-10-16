@@ -8,7 +8,7 @@ description: "Issues GitHub Cityborn. À utiliser pour rédiger, publier, modifi
 ## Étapes
 
 1. Partir du template de `.github/ISSUE_TEMPLATE/` adapté au besoin ; sans template adapté, reprendre la structure de l'issue récente la plus proche et le signaler.
-2. Rédiger en français, en 60 lignes au plus, avec les labels adaptés.
+2. Rédiger en français, aussi court que le besoin le permet et en 60 lignes au plus, avec les labels adaptés.
 3. « Rédige », « reformule », « prépare » : présenter le brouillon et s'arrêter. « Crée », « publie » ou une confirmation après relecture : continuer sans redemander.
 4. Résoudre le Sprint avant toute création : la valeur par défaut du champ n'est pas le sprint courant. Sans Sprint donné par l'utilisateur, lui présenter les sprints (`gh project field-list 1 --owner tpicaud --format json`) et attendre son choix.
 5. Créer l'issue, puis l'ajouter au project Cityborn (n° 1) avec :
