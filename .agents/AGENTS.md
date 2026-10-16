@@ -9,7 +9,6 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 - Aucun `any`.
 - Corriger un type en amont (narrowing, generics, schéma zod), sans cast `as`, `@ts-ignore` ni `biome-ignore`.
 - Identifiants métier : types brandés de `@cityborn/api`, validés une fois à l'entrée du domaine puis propagés.
-- Un appel de route tire son chemin et sa méthode du contrat, jamais d'un littéral.
 
 ### Architecture
 
