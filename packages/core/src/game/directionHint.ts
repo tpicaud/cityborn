@@ -1,17 +1,7 @@
 import type { Coord } from '@cityborn/api';
-import { bearing, point } from '@turf/turf';
+import { point, rhumbBearing } from '@turf/turf';
 
-export type CardinalDirection =
-  | 'N'
-  | 'NE'
-  | 'E'
-  | 'SE'
-  | 'S'
-  | 'SW'
-  | 'W'
-  | 'NW';
-
-const cardinalDirections: CardinalDirection[] = [
+const cardinalDirections = [
   'N',
   'NE',
   'E',
@@ -20,7 +10,9 @@ const cardinalDirections: CardinalDirection[] = [
   'SW',
   'W',
   'NW',
-];
+] as const;
+
+export type CardinalDirection = (typeof cardinalDirections)[number];
 
 const sectorAngleInDegrees: number = 360 / cardinalDirections.length;
 
@@ -31,7 +23,7 @@ export function guessDirectionHint({
   guessCoordinates: Coord;
   targetCoordinates: Coord;
 }): CardinalDirection {
-  const bearingInDegrees: number = bearing(
+  const bearingInDegrees: number = rhumbBearing(
     point([guessCoordinates.lng, guessCoordinates.lat]),
     point([targetCoordinates.lng, targetCoordinates.lat]),
   );
