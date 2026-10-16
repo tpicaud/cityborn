@@ -3,7 +3,7 @@
 import type { PlayerId } from '@cityborn/api';
 import {
   type GameComponentProps,
-  type GameRoundController,
+  type GameRound,
   useGameRound,
 } from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
@@ -24,7 +24,7 @@ export default function Guess({
   game,
   handleGuess,
 }: GuessProps) {
-  const gameRound: GameRoundController = useGameRound({
+  const gameRound: GameRound = useGameRound({
     game,
     localPlayerID,
     handleGuess,

@@ -15,6 +15,10 @@ Deux contrats y cohabitent : les routes ts-rest (`src/contract/`) et les channel
   - Créer le remplaçant **à côté** de l'ancien, sans toucher à l'ancien.
   - Déprécier l'ancien via le skill `deprecate` (il sera supprimé plus tard par `check-and-remove-deprecated`, une fois la fenêtre de compat passée).
 
+## Dates
+
+Une date-heure du contrat est validée par `IsoDateTimeSchema` (`src/schemas/common.schema.ts`) et produite côté backend par `toISOString()`, sans troncature.
+
 ## Contrat WebSocket
 
 Un channel est déclaré dans `src/ws/<domaine>.channel.ts`, rattaché au registre `wsChannels` (`src/ws/registry.ts`) sous une clé `ApiDomain`. Les noms de fil sont dérivés du domaine et de la clé de l'event : ne jamais écrire `session:guess` ailleurs que dans `sessionWsEvent` / `sessionWsServerEvent`.

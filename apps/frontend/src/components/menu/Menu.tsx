@@ -3,14 +3,20 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
 import {
-  useAuth,
+  type CurrentUser,
+  useCurrentUser,
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
-import { usePlay } from '@cityborn/client/play';
+import {
+  formatSessionCodeInput,
+  type SessionLauncher,
+  useSessionLauncher,
+} from '@cityborn/client/session';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
+import { Controller } from 'react-hook-form';
 import { useNavigation } from '@/lib/navigation';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -23,13 +29,13 @@ export default function Menu({
     SetStateAction<'menu' | 'sign-in' | 'sign-up' | 'profile'>
   >;
 }) {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const navigation = useNavigation();
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
   const {
     joinSessionForm: {
-      register,
+      control,
       formState: { errors },
     },
     playSolo,
@@ -37,7 +43,7 @@ export default function Menu({
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlay({ navigation });
+  }: SessionLauncher = useSessionLauncher({ navigation });
 
   return (
     <div className="flex flex-col items-center gap-5">
@@ -114,11 +120,25 @@ export default function Menu({
         </div>
         <form onSubmit={joinSession} className="flex flex-col gap-1 w-full">
           <div className="flex flex-row gap-2 items-center justify-center w-full">
-            <input
-              type="text"
-              placeholder="Code"
-              className="border border-gray-300 rounded px-4 py-2 w-full"
-              {...register('code')}
+            <Controller
+              control={control}
+              name="code"
+              render={({ field: { name, onChange, onBlur, ref, value } }) => (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Code"
+                  className="border border-gray-300 rounded px-4 py-2 w-full"
+                  name={name}
+                  ref={ref}
+                  value={value}
+                  onChange={(event) =>
+                    onChange(formatSessionCodeInput(event.target.value))
+                  }
+                  onBlur={onBlur}
+                />
+              )}
             />
             <LoadingButton
               type="button"

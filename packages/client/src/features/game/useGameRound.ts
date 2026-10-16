@@ -13,7 +13,13 @@ import type { MapProps } from './viewContracts';
 const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
 const DEFAULT_MAP_ZOOM = 2;
 
-export type GameRoundController = {
+export type GameRoundOptions = {
+  game: Game;
+  localPlayerID: PlayerId;
+  handleGuess: (guess: Guess) => void;
+};
+
+export type GameRound = {
   mapProps: MapProps;
   preGuess: Guess | undefined;
   showCountdown: boolean;
@@ -44,11 +50,7 @@ export function useGameRound({
   game,
   localPlayerID,
   handleGuess,
-}: {
-  game: Game;
-  localPlayerID: PlayerId;
-  handleGuess: (guess: Guess) => void;
-}): GameRoundController {
+}: GameRoundOptions): GameRound {
   const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
     useGuess(handleGuess);
   const [state, setState] = useState<RoundDisplayState>('countdown');

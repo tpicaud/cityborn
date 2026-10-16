@@ -11,6 +11,7 @@ export * from './src/contract/api-domain';
 export * from './src/contract/contract';
 export * from './src/errors/error-codes';
 export * from './src/errors/error-handler';
+export * from './src/errors/user-facing-error';
 export * from './src/errors/zod-error-map';
 export * from './src/protocol/api-response';
 export * from './src/protocol/api-version';

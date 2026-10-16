@@ -1,4 +1,4 @@
-import { type SignUpFlow, useSignUp } from '@cityborn/client/auth';
+import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
 import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
@@ -17,7 +17,7 @@ export const SignUpForm = () => {
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignUpFlow = useSignUp({
+  }: SignUpFlow = useSignUpFlow({
     onSignedIn: () => router.dismissTo('/'),
   });
 

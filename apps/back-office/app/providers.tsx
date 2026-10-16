@@ -1,7 +1,7 @@
 'use client';
 
 import { installFrenchZodErrorMap } from '@cityborn/api';
-import { ApiProvider, ErrorProvider } from '@cityborn/client';
+import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import type { ReactNode } from 'react';
 import { AuthBootstrap } from '@/components/auth/auth-bootstrap';
 import { ErrorDialog } from '@/components/ui/ErrorDialog';
@@ -12,10 +12,10 @@ installFrenchZodErrorMap();
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+    <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
       <ApiProvider contractClient={contractClient} authApi={authApi}>
         <AuthBootstrap>{children}</AuthBootstrap>
       </ApiProvider>
-    </ErrorProvider>
+    </ErrorReporterProvider>
   );
 }

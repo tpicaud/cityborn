@@ -18,7 +18,7 @@ export function VerifyEmail() {
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
   const verificationToken: string =
     searchParams.get('verification_token') ?? searchParams.get('token') ?? '';
-  const verifyEmail: EmailVerification = useEmailVerification();
+  const { verifyEmail }: EmailVerification = useEmailVerification();
   const hasVerified = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [message, setMessage] = useState(

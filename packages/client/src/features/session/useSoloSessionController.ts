@@ -6,8 +6,11 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
-import { useAuth } from '../auth/authContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
@@ -22,17 +25,19 @@ import {
 
 const guestPlayerID: PlayerId = PlayerIdSchema.parse('guest');
 
-export type SoloSessionOptions = {
+export type SoloSessionControllerOptions = {
   navigation: Navigation;
 };
 
-export function useSoloSession({
+export type SoloSessionController = SessionController;
+
+export function useSoloSessionController({
   navigation,
-}: SoloSessionOptions): SessionController {
+}: SoloSessionControllerOptions): SoloSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;
   const [session, setSession] = useState<Session>();
   const sessionRef = useRef<Session | undefined>(undefined);
@@ -49,8 +54,8 @@ export function useSoloSession({
       });
       updateSession(withHost(createdSession, localPlayerID));
     };
-    initSession().catch(invokeError);
-  }, [localPlayerID, sessionApi, invokeError, updateSession]);
+    initSession().catch(reportError);
+  }, [localPlayerID, sessionApi, reportError, updateSession]);
 
   const requireSession = (action: string): Session => {
     const current = sessionRef.current;
@@ -113,12 +118,15 @@ export function useSoloSession({
     session,
     localPlayerID,
     isHost: true,
-    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
-    startGame: reportActionErrors(startGame, invokeError),
-    guess: reportActionErrors(guess, invokeError),
-    nextRound: reportActionErrors(nextRound, invokeError),
-    endGame: reportActionErrors(endGame, invokeError),
-    playAgain: reportActionErrors(playAgain, invokeError),
-    exitGame: reportActionErrors(exitGame, invokeError),
+    updateGameConfig: reportActionErrors({
+      action: updateGameConfig,
+      reportError,
+    }),
+    startGame: reportActionErrors({ action: startGame, reportError }),
+    guess: reportActionErrors({ action: guess, reportError }),
+    nextRound: reportActionErrors({ action: nextRound, reportError }),
+    endGame: reportActionErrors({ action: endGame, reportError }),
+    playAgain: reportActionErrors({ action: playAgain, reportError }),
+    exitGame: reportActionErrors({ action: exitGame, reportError }),
   };
 }

@@ -1,29 +1,44 @@
 'use client';
 
-import {
-  type Session,
-  type SessionId,
-  SessionIdSchema,
-  SessionMode,
-} from '@cityborn/api';
+import { type Session, SessionIdSchema, SessionMode } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { sessionQueryOptions } from './api/sessionQueries';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
 
+const sessionCodeLength: number = 6;
+const sessionCodePattern: RegExp = new RegExp(`^\\d{${sessionCodeLength}}$`);
+
 const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code').pipe(SessionIdSchema),
+  code: z
+    .string()
+    .min(1, 'Veuillez entrer un code')
+    .regex(
+      sessionCodePattern,
+      `Le code doit contenir ${sessionCodeLength} chiffres`,
+    )
+    .pipe(SessionIdSchema),
 });
 
-type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
-export type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
+export function formatSessionCodeInput(sessionCodeInput: string): string {
+  return sessionCodeInput.replace(/\D/g, '').slice(0, sessionCodeLength);
+}
 
-export type JoinSessionForm = UseFormReturn<
+type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
+type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;
+
+type JoinSessionForm = UseFormReturn<
   JoinSessionFormInput,
   undefined,
   JoinSessionFormValues
@@ -34,48 +49,69 @@ export type SessionLauncherOptions = {
 };
 
 export type SessionLauncher = {
+  joinSessionForm: JoinSessionForm;
   playSolo: () => void;
   playMulti: () => Promise<void>;
-  joinSession: (code: SessionId) => Promise<void>;
+  joinSession: FormSubmitHandler;
+  authenticationRequired: boolean;
+  dismissAuthenticationRequired: () => void;
 };
 
-export function useJoinSessionForm(): JoinSessionForm {
-  return useForm<JoinSessionFormInput, undefined, JoinSessionFormValues>({
-    resolver: zodResolver(JoinSessionSchema),
-    defaultValues: { code: '' },
-  });
-}
+const joinSessionFormDefaultValues: JoinSessionFormInput = { code: '' };
 
 export function useSessionLauncher({
   navigation,
 }: SessionLauncherOptions): SessionLauncher {
   const { sessionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
+  const { user }: CurrentUser = useCurrentUser();
+  const [authenticationRequired, setAuthenticationRequired] =
+    useState<boolean>(false);
+  const joinSessionForm: JoinSessionForm = useForm<
+    JoinSessionFormInput,
+    undefined,
+    JoinSessionFormValues
+  >({
+    resolver: zodResolver(JoinSessionSchema),
+    defaultValues: joinSessionFormDefaultValues,
+  });
+
+  const playMulti: () => Promise<void> = async (): Promise<void> => {
+    if (!user) {
+      setAuthenticationRequired(true);
+      return;
+    }
+
+    try {
+      const session: Session = await sessionApi.createSession({
+        mode: SessionMode.MULTI,
+      });
+      navigation.push(multiSessionPath(session.id));
+    } catch (error: unknown) {
+      reportError(error);
+    }
+  };
+
+  const joinSession: (values: JoinSessionFormValues) => Promise<void> = async ({
+    code,
+  }: JoinSessionFormValues): Promise<void> => {
+    try {
+      await queryClient.fetchQuery(
+        sessionQueryOptions({ sessionApi, sessionId: code }),
+      );
+      navigation.push(multiSessionPath(code));
+    } catch (error: unknown) {
+      reportError(error);
+    }
+  };
 
   return {
+    joinSessionForm,
     playSolo: () => navigation.push(soloSessionPath),
-
-    playMulti: async () => {
-      try {
-        const session: Session = await sessionApi.createSession({
-          mode: SessionMode.MULTI,
-        });
-        navigation.push(multiSessionPath(session.id));
-      } catch (error: unknown) {
-        invokeError(error);
-      }
-    },
-
-    joinSession: async (code: SessionId) => {
-      try {
-        await queryClient.fetchQuery(
-          sessionQueryOptions({ sessionApi, sessionId: code }),
-        );
-        navigation.push(multiSessionPath(code));
-      } catch (error: unknown) {
-        invokeError(error);
-      }
-    },
+    playMulti,
+    joinSession: joinSessionForm.handleSubmit(joinSession),
+    authenticationRequired,
+    dismissAuthenticationRequired: () => setAuthenticationRequired(false),
   };
 }

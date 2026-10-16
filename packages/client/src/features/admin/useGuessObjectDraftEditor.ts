@@ -12,7 +12,10 @@ import type {
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import {
   fullGuessObjectQueryOptions,
   guessObjectByExternalIdQueryOptions,
@@ -51,10 +54,10 @@ const guessObjectLoadFailureMessage: string =
 const worldLocationLoadFailureMessage: string =
   'Erreur lors de la récupération de la localisation';
 
-export function useGuessObjectDraft(): GuessObjectDraftEditor {
+export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [guessObjectDraft, setGuessObjectDraft] = useState<
     GuessObjectDraft | undefined
   >(undefined);
@@ -90,7 +93,7 @@ export function useGuessObjectDraft(): GuessObjectDraftEditor {
       if (shownGuessObjectIdRef.current !== guessObjectId) return;
       setGuessObjectDraft(fullGuessObject);
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     }
   };
 
@@ -190,7 +193,7 @@ export function useGuessObjectDraft(): GuessObjectDraftEditor {
       try {
         await openGuessObjectSearchResult(searchResult);
       } catch (error: unknown) {
-        invokeError(error, guessObjectLoadFailureMessage);
+        reportError(error, guessObjectLoadFailureMessage);
       } finally {
         setIsLoadingGuessObject(false);
       }
@@ -202,7 +205,7 @@ export function useGuessObjectDraft(): GuessObjectDraftEditor {
       try {
         await attachWorldLocationSearchResult(searchResult);
       } catch (error: unknown) {
-        invokeError(error, worldLocationLoadFailureMessage);
+        reportError(error, worldLocationLoadFailureMessage);
       } finally {
         setIsLoadingWorldLocation(false);
       }

@@ -9,10 +9,14 @@ import {
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { type BaseSyntheticEvent, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { setCurrentUser } from './api/authQueries';
 import {
   type SignUpFormInput,
@@ -21,11 +25,17 @@ import {
   toCreateUser,
 } from './authSchema';
 
-type SignInFlowOptions = {
+type SignInCompletionOptions = {
   onSignedIn?: () => void;
 };
 
-type FormSubmitHandler = (event?: BaseSyntheticEvent) => Promise<void>;
+type SignInCompletion = (signInRequest: Promise<User>) => Promise<void>;
+
+export type SignInFlowOptions = SignInCompletionOptions;
+
+export type SignUpFlowOptions = SignInCompletionOptions;
+
+export type IdentityProviderSignInOptions = SignInCompletionOptions;
 
 export type SignInFlow = {
   form: UseFormReturn<SignIn>;
@@ -53,9 +63,9 @@ const signUpFormDefaultValues: SignUpFormInput = {
 
 function useSignInCompletion({
   onSignedIn,
-}: SignInFlowOptions): (signInRequest: Promise<User>) => Promise<void> {
+}: SignInCompletionOptions): SignInCompletion {
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const onSignedInRef = useRef<(() => void) | undefined>(onSignedIn);
   onSignedInRef.current = onSignedIn;
 
@@ -66,16 +76,18 @@ function useSignInCompletion({
         await setCurrentUser({ queryClient, user: signedInUser });
         onSignedInRef.current?.();
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     },
-    [queryClient, invokeError],
+    [queryClient, reportError],
   );
 }
 
-export function useSignIn({ onSignedIn }: SignInFlowOptions = {}): SignInFlow {
+export function useSignInFlow({
+  onSignedIn,
+}: SignInFlowOptions = {}): SignInFlow {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
   const form: UseFormReturn<SignIn> = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
     defaultValues: signInFormDefaultValues,
@@ -89,9 +101,11 @@ export function useSignIn({ onSignedIn }: SignInFlowOptions = {}): SignInFlow {
   };
 }
 
-export function useSignUp({ onSignedIn }: SignInFlowOptions = {}): SignUpFlow {
+export function useSignUpFlow({
+  onSignedIn,
+}: SignUpFlowOptions = {}): SignUpFlow {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
   const form: UseFormReturn<SignUpFormInput, undefined, SignUpFormValues> =
     useForm<SignUpFormInput, undefined, SignUpFormValues>({
       resolver: zodResolver(SignUpFormSchema),
@@ -108,9 +122,9 @@ export function useSignUp({ onSignedIn }: SignInFlowOptions = {}): SignUpFlow {
 
 export function useIdentityProviderSignIn({
   onSignedIn,
-}: SignInFlowOptions = {}): IdentityProviderSignIn {
+}: IdentityProviderSignInOptions = {}): IdentityProviderSignIn {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
 
   return useMemo(
     () => ({

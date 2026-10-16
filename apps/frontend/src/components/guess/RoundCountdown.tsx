@@ -1,10 +1,14 @@
 'use client';
 
-import { type CountdownOptions, useCountdown } from '@cityborn/client/game';
+import {
+  type Countdown,
+  type CountdownOptions,
+  useCountdown,
+} from '@cityborn/client/game';
 import { Backdrop, Typography } from '@mui/material';
 
 export default function RoundCountdown(countdownOptions: CountdownOptions) {
-  const count: number = useCountdown(countdownOptions);
+  const { count }: Countdown = useCountdown(countdownOptions);
 
   return (
     <Backdrop

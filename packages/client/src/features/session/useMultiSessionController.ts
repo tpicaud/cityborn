@@ -26,18 +26,21 @@ import {
 } from 'react';
 import type { Navigation } from '../../platform/navigation';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
-import { useAuth } from '../auth/authContext';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
 
-export type MultiSessionOptions = {
+export type MultiSessionControllerOptions = {
   sessionID: SessionId;
   navigation: Navigation;
   createSocket: SocketFactory;
@@ -55,15 +58,15 @@ type JoinedPlayer = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
-export function useMultiSession({
+export function useMultiSessionController({
   sessionID,
   navigation,
   createSocket,
-}: MultiSessionOptions): MultiSessionController {
+}: MultiSessionControllerOptions): MultiSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
     user?.username,
   );
@@ -95,12 +98,12 @@ export function useMultiSession({
       try {
         setSession(await sessionApi.fetchSession(sessionID));
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
         navigation.returnTo('/');
       }
     };
     loadSession();
-  }, [sessionID, sessionApi, navigation, invokeError]);
+  }, [sessionID, sessionApi, navigation, reportError]);
 
   const gameStatus: GameStatus | undefined = session?.currentGame?.status;
   const userId: UserId | undefined = user?.id;
@@ -149,8 +152,8 @@ export function useMultiSession({
     )
       return;
 
-    join(localPlayerID).catch(invokeError);
-  }, [connectionStatus, session, localPlayerID, join, invokeError]);
+    join(localPlayerID).catch(reportError);
+  }, [connectionStatus, session, localPlayerID, join, reportError]);
 
   const requireSession = (action: string): Session => {
     if (!session) throw new Error(`${action} failed: session not initialized`);
@@ -211,14 +214,17 @@ export function useMultiSession({
     isHost: isHostOf(session, localPlayerID),
     connectionStatus,
     retryConnection,
-    join: reportActionErrors(join, invokeError),
-    updateHost: reportActionErrors(updateHost, invokeError),
-    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
-    startGame: reportActionErrors(startGame, invokeError),
-    guess: reportActionErrors(guess, invokeError),
-    nextRound: reportActionErrors(nextRound, invokeError),
-    endGame: reportActionErrors(endGame, invokeError),
-    playAgain: reportActionErrors(playAgain, invokeError),
-    exitGame: reportActionErrors(exitGame, invokeError),
+    join: reportActionErrors({ action: join, reportError }),
+    updateHost: reportActionErrors({ action: updateHost, reportError }),
+    updateGameConfig: reportActionErrors({
+      action: updateGameConfig,
+      reportError,
+    }),
+    startGame: reportActionErrors({ action: startGame, reportError }),
+    guess: reportActionErrors({ action: guess, reportError }),
+    nextRound: reportActionErrors({ action: nextRound, reportError }),
+    endGame: reportActionErrors({ action: endGame, reportError }),
+    playAgain: reportActionErrors({ action: playAgain, reportError }),
+    exitGame: reportActionErrors({ action: exitGame, reportError }),
   };
 }

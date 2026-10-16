@@ -13,17 +13,20 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import type { BaseSyntheticEvent } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import {
   categoriesQueryOptions,
   invalidateCategories,
   reloadCategories,
 } from './api/adminQueries';
 
-type CategoryCreationOptions = {
+export type CategoryCreationOptions = {
   onCategoryCreated: (category: Category) => void;
 };
 
@@ -35,7 +38,7 @@ export type CategoryCatalog = {
 
 export type CategoryCreation = {
   form: UseFormReturn<CreateCategoryInput, undefined, CreateCategory>;
-  submit: (event?: BaseSyntheticEvent) => Promise<void>;
+  submit: FormSubmitHandler;
 };
 
 const noCategories: Category[] = [];
@@ -66,7 +69,7 @@ export function useCategoryCreation({
 }: CategoryCreationOptions): CategoryCreation {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const form: UseFormReturn<CreateCategoryInput, undefined, CreateCategory> =
     useForm<CreateCategoryInput, undefined, CreateCategory>({
       resolver: zodResolver(CreateCategorySchema),
@@ -83,7 +86,7 @@ export function useCategoryCreation({
         form.reset();
         onCategoryCreated(createdCategory);
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     }),
   };

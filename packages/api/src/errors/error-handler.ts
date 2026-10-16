@@ -1,6 +1,7 @@
 import { ApiResponseError } from '../protocol/api-response';
 import { type ApiError, isApiError } from '../schemas/api-error.schema';
 import { ErrorCode } from './error-codes';
+import { UserFacingError } from './user-facing-error';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // User
@@ -113,31 +114,20 @@ export const getFriendlyErrorMessage = (error: ApiError): string => {
   return ERROR_MESSAGES[error.code];
 };
 
-function resolveApiErrorMessage(error: ApiError): string {
-  if (error.code === ErrorCode.BAD_REQUEST && error.message) {
-    return error.message;
-  }
-  return getFriendlyErrorMessage(error);
-}
+const genericErrorMessage: string = "Quelque chose s'est mal passé.";
 
 export function resolveErrorMessage(
   error: unknown,
   fallbackMessage?: string,
 ): string {
-  if (typeof error === 'string') {
-    return error;
-  }
-  if (error instanceof ApiResponseError) {
-    return resolveApiErrorMessage(error.apiError);
-  }
-  if (isApiError(error)) {
-    return resolveApiErrorMessage(error);
-  }
-  if (fallbackMessage) {
-    return fallbackMessage;
-  }
-  if (error instanceof Error && error.message) {
+  if (error instanceof UserFacingError) {
     return error.message;
   }
-  return "Quelque chose s'est mal passé.";
+  if (error instanceof ApiResponseError) {
+    return getFriendlyErrorMessage(error.apiError);
+  }
+  if (isApiError(error)) {
+    return getFriendlyErrorMessage(error);
+  }
+  return fallbackMessage ?? genericErrorMessage;
 }

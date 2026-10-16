@@ -40,10 +40,16 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-export function useMinSupportedApiVersion(): number | null {
-  return useSyncExternalStore(
-    subscribe,
-    getMinSupportedApiVersion,
-    getMinSupportedApiVersion,
-  );
+export type ApiVersionSupport = {
+  minSupportedApiVersion: number | null;
+};
+
+export function useApiVersionSupport(): ApiVersionSupport {
+  return {
+    minSupportedApiVersion: useSyncExternalStore(
+      subscribe,
+      getMinSupportedApiVersion,
+      getMinSupportedApiVersion,
+    ),
+  };
 }

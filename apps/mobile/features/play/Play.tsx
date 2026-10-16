@@ -1,4 +1,8 @@
-import { usePlay } from '@cityborn/client/play';
+import {
+  formatSessionCodeInput,
+  type SessionLauncher,
+  useSessionLauncher,
+} from '@cityborn/client/session';
 import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
@@ -21,7 +25,7 @@ export default function Play() {
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlay({ navigation });
+  }: SessionLauncher = useSessionLauncher({ navigation });
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -37,11 +41,12 @@ export default function Play() {
                   <TextInput
                     value={value}
                     placeholder="Entrez le code"
-                    onChangeText={onChange}
+                    onChangeText={(sessionCodeInput: string) =>
+                      onChange(formatSessionCodeInput(sessionCodeInput))
+                    }
                     onBlur={onBlur}
                     className="flex-1 rounded-r-none pl-3 h-full border"
-                    keyboardType="numeric"
-                    maxLength={6}
+                    keyboardType="number-pad"
                     error={!!errors.code}
                   />
                 )}

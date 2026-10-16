@@ -1,4 +1,12 @@
 export { ApiProvider } from './apiProvider';
-export * from './date';
-export * from './errorContext';
-export * from './minSupportedApiVersionStore';
+export {
+  type ApiVersionSupport,
+  recordMinSupportedApiVersion,
+  useApiVersionSupport,
+} from './apiVersionSupport';
+export {
+  type ErrorDialogProps,
+  type ErrorReporter,
+  ErrorReporterProvider,
+  useErrorReporter,
+} from './errorReporter';

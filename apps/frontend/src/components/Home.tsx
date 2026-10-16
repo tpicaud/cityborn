@@ -1,6 +1,11 @@
 'use client';
 
-import { type SignOut, useAuth, useSignOut } from '@cityborn/client/auth';
+import {
+  type CurrentUser,
+  type SignOut,
+  useCurrentUser,
+  useSignOut,
+} from '@cityborn/client/auth';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -25,11 +30,13 @@ const TileLayer = dynamic(
 );
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const [state, setState] = useState<
     'menu' | 'sign-in' | 'sign-up' | 'profile'
   >('menu');
-  const signOut: SignOut = useSignOut({ onSignedOut: () => setState('menu') });
+  const { signOut }: SignOut = useSignOut({
+    onSignedOut: () => setState('menu'),
+  });
   const isAuthenticated: boolean = user !== null;
 
   useEffect(() => {

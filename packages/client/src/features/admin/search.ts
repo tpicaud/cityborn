@@ -20,10 +20,22 @@ import {
   worldLocationSearchQueryOptions,
 } from './api/adminQueries';
 
-export type NameSearch<TSearchResult> = {
+type NameSearch<TSearchResult> = {
   searchResults: TSearchResult[];
   searchErrorMessage: string | null;
 };
+
+export type GuessObjectSearchOptions = {
+  searchTerm: string;
+};
+
+export type GuessObjectSearch = NameSearch<GuessObjectSearchResult>;
+
+export type WorldLocationSearchOptions = {
+  searchTerm: string;
+};
+
+export type WorldLocationSearch = NameSearch<WorldLocationSearchResult>;
 
 type DebouncedSearchOptions<TSearchResult> = {
   searchTerm: string;
@@ -81,9 +93,9 @@ function useDebouncedSearch<TSearchResult>({
   };
 }
 
-export function useGuessObjectSearch(
-  searchTerm: string,
-): NameSearch<GuessObjectSearchResult> {
+export function useGuessObjectSearch({
+  searchTerm,
+}: GuessObjectSearchOptions): GuessObjectSearch {
   const { adminApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,
@@ -95,9 +107,9 @@ export function useGuessObjectSearch(
   });
 }
 
-export function useWorldLocationSearch(
-  searchTerm: string,
-): NameSearch<WorldLocationSearchResult> {
+export function useWorldLocationSearch({
+  searchTerm,
+}: WorldLocationSearchOptions): WorldLocationSearch {
   const { adminApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,

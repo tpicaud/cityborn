@@ -1,6 +1,6 @@
 import {
-  type SessionController,
-  useSoloSession,
+  type SoloSessionController,
+  useSoloSessionController,
 } from '@cityborn/client/session';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { View } from '@/components/ui/native/NativeComponents';
@@ -10,7 +10,9 @@ import { SoloLobby } from './SoloLobby';
 
 export default function SoloSession() {
   const navigation = useNavigation();
-  const soloSession: SessionController = useSoloSession({ navigation });
+  const soloSession: SoloSessionController = useSoloSessionController({
+    navigation,
+  });
 
   if (!soloSession.session)
     return (

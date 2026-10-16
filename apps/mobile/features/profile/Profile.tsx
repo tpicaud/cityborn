@@ -1,11 +1,11 @@
-import { isoToLocalDate } from '@cityborn/client';
-import { useAuth } from '@cityborn/client/auth';
+import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import {
   type ProfileEditor,
-  type ProfileState,
-  useProfile,
+  type ProfileGames,
   useProfileEditor,
+  useProfileGames,
 } from '@cityborn/client/profile';
+import { formatDate } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useIsFocused, useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
@@ -19,10 +19,12 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const router = useRouter();
   const isScreenFocused: boolean = useIsFocused();
-  const { games, isLoading }: ProfileState = useProfile({ isScreenFocused });
+  const { games, isLoading }: ProfileGames = useProfileGames({
+    isScreenFocused,
+  });
   const {
     usernameForm,
     isEditingUsername,
@@ -184,7 +186,7 @@ export default function Profile() {
                     >
                       <View className="flex flex-col justify-between items-start">
                         <Text>{gameRecord.mode}</Text>
-                        <Text>{isoToLocalDate(gameRecord.createdAt)}</Text>
+                        <Text>{formatDate(gameRecord.createdAt)}</Text>
                       </View>
                       <View className="flex flex-col justify-between items-center">
                         <Text className="font-bold">{localPlayerPoints}</Text>

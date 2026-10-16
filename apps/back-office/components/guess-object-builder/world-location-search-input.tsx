@@ -1,8 +1,8 @@
 import * as Ariakit from '@ariakit/react';
 import type { WorldLocationSearchResult } from '@cityborn/api';
 import {
-  type NameSearch,
   useWorldLocationSearch,
+  type WorldLocationSearch,
 } from '@cityborn/client/admin';
 import { type ChangeEventHandler, startTransition, useState } from 'react';
 
@@ -30,11 +30,8 @@ export function WorldLocationSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const {
-    searchResults: matches,
-    searchErrorMessage,
-  }: NameSearch<WorldLocationSearchResult> =
-    useWorldLocationSearch(searchValue);
+  const { searchResults: matches, searchErrorMessage }: WorldLocationSearch =
+    useWorldLocationSearch({ searchTerm: searchValue });
 
   return (
     <Ariakit.ComboboxProvider

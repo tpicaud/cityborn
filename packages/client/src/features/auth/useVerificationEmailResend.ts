@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 
 export type VerificationEmailResend = {
   isSending: boolean;
@@ -12,7 +15,7 @@ export type VerificationEmailResend = {
 
 export function useVerificationEmailResend(): VerificationEmailResend {
   const { authApi }: DomainApis = useDomainApis();
-  const { invokeError } = useError();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isSent, setIsSent] = useState<boolean>(false);
 
@@ -22,7 +25,7 @@ export function useVerificationEmailResend(): VerificationEmailResend {
       await authApi.resendVerificationEmail();
       setIsSent(true);
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     } finally {
       setIsSending(false);
     }

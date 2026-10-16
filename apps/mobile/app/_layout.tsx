@@ -9,8 +9,9 @@ import {
 } from '@cityborn/api';
 import {
   ApiProvider,
-  ErrorProvider,
-  useMinSupportedApiVersion,
+  type ApiVersionSupport,
+  ErrorReporterProvider,
+  useApiVersionSupport,
 } from '@cityborn/client';
 import {
   AuthProvider,
@@ -42,7 +43,7 @@ const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   return (
-    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+    <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
       <ApiProvider
         contractClient={contractClient}
         authApi={authApi}
@@ -50,7 +51,7 @@ export default function RootLayout() {
       >
         <RootLayoutContent />
       </ApiProvider>
-    </ErrorProvider>
+    </ErrorReporterProvider>
   );
 }
 
@@ -59,7 +60,7 @@ function RootLayoutContent() {
     useCurrentUserLoad();
   const { isServerUnreachable, recheckServerReachability }: ServerReachability =
     useServerReachability();
-  const minSupportedApiVersion = useMinSupportedApiVersion();
+  const { minSupportedApiVersion }: ApiVersionSupport = useApiVersionSupport();
   const isForceUpdateRequired =
     minSupportedApiVersion !== null &&
     isApiVersionOutdated(

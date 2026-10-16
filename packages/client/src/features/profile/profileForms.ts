@@ -7,7 +7,6 @@ import {
   UpdateUsernameSchema,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { BaseSyntheticEvent } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -18,7 +17,7 @@ export const ChangePasswordFormSchema = UpdatePasswordSchema.extend({
   path: ['confirmPassword'],
 });
 
-export type ChangePasswordFormInput = z.input<typeof ChangePasswordFormSchema>;
+type ChangePasswordFormInput = z.input<typeof ChangePasswordFormSchema>;
 export type ChangePasswordFormValues = z.output<
   typeof ChangePasswordFormSchema
 >;
@@ -29,7 +28,7 @@ const changePasswordDefaultValues: ChangePasswordFormInput = {
   confirmPassword: '',
 };
 
-export type UsernameFormInput = z.input<typeof UpdateUsernameSchema>;
+type UsernameFormInput = z.input<typeof UpdateUsernameSchema>;
 
 export type UsernameForm = UseFormReturn<
   UsernameFormInput,
@@ -42,10 +41,6 @@ export type ChangePasswordForm = UseFormReturn<
   undefined,
   ChangePasswordFormValues
 >;
-
-export type ProfileFormSubmitHandler = (
-  event?: BaseSyntheticEvent,
-) => Promise<void>;
 
 export function useUsernameForm(username: string): UsernameForm {
   return useForm<UsernameFormInput, undefined, UpdateUsername>({

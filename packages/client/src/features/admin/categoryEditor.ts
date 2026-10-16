@@ -1,14 +1,15 @@
 'use client';
 
-import type {
-  Category,
-  CategoryId,
-  FullCategory,
-  GuessObject,
-  GuessObjectDraft,
-  GuessObjectId,
-  UpdateCategory,
-  WorldLocationId,
+import {
+  type Category,
+  type CategoryId,
+  type FullCategory,
+  type GuessObject,
+  type GuessObjectDraft,
+  type GuessObjectId,
+  type UpdateCategory,
+  UserFacingError,
+  type WorldLocationId,
 } from '@cityborn/api';
 import {
   type QueryClient,
@@ -18,7 +19,10 @@ import {
 } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { useError } from '../../shared/errorContext';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
 import type { AdminApi } from './api/adminApi';
 import {
   categoriesQueryOptions,
@@ -34,10 +38,10 @@ import {
 } from './categoryEditorState';
 import {
   type GuessObjectDraftEditor,
-  useGuessObjectDraft,
-} from './useGuessObjectDraft';
+  useGuessObjectDraftEditor,
+} from './useGuessObjectDraftEditor';
 
-type CategoryEditorLoadOptions = {
+export type CategoryEditorLoadOptions = {
   categoryId: CategoryId;
 };
 
@@ -46,7 +50,7 @@ export type CategoryEditorLoad = {
   retry: () => void;
 };
 
-type CategoryEditorOptions = {
+export type CategoryEditorOptions = {
   editedCategory: FullCategory;
   onCategoryDeleted: () => void;
 };
@@ -153,8 +157,9 @@ export function useCategoryEditor({
 }: CategoryEditorOptions): CategoryEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError } = useError();
-  const guessObjectDraftEditor: GuessObjectDraftEditor = useGuessObjectDraft();
+  const { reportError }: ErrorReporter = useErrorReporter();
+  const guessObjectDraftEditor: GuessObjectDraftEditor =
+    useGuessObjectDraftEditor();
   const [category, setCategory] = useState<FullCategory>(editedCategory);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
@@ -185,7 +190,7 @@ export function useCategoryEditor({
         isPublished,
       }));
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -215,7 +220,7 @@ export function useCategoryEditor({
       }));
       return guessObject;
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
       return null;
     }
   };
@@ -223,13 +228,13 @@ export function useCategoryEditor({
   const saveGuessObjectDraft = async (): Promise<void> => {
     const { guessObjectDraft }: GuessObjectDraftEditor = guessObjectDraftEditor;
     if (!guessObjectDraft) {
-      invokeError(invalidGuessObjectMessage);
+      reportError(new UserFacingError(invalidGuessObjectMessage));
       return;
     }
     const worldLocationId: WorldLocationId | undefined =
       guessObjectDraft.world_location?.id;
     if (!worldLocationId) {
-      invokeError(invalidWorldLocationMessage);
+      reportError(new UserFacingError(invalidWorldLocationMessage));
       return;
     }
 
@@ -243,7 +248,7 @@ export function useCategoryEditor({
       await connectGuessObject(savedGuessObjectId);
       guessObjectDraftEditor.startGuessObjectCreation();
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     }
   };
 
@@ -270,7 +275,7 @@ export function useCategoryEditor({
       });
       guessObjectDraftEditor.showGuessObjectDraft(undefined);
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     }
   };
 
@@ -291,7 +296,7 @@ export function useCategoryEditor({
         await removeDeletedCategory({ queryClient, categoryId: category.id });
         onCategoryDeleted();
       } catch (error: unknown) {
-        invokeError(error, unexpectedErrorMessage);
+        reportError(error, unexpectedErrorMessage);
       } finally {
         setIsSaving(false);
       }

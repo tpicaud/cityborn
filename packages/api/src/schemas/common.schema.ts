@@ -25,6 +25,7 @@ export const GuessObjectIdParamSchema = z.object({ id: GuessObjectIdSchema });
 export const SessionIdParamSchema = z.object({ id: SessionIdSchema });
 
 export const IdSchema = z.string().uuid();
+export const IsoDateTimeSchema = z.string().datetime({ offset: true });
 export const emptyRequestBodySchema = z.object({});
 export const emptyResponseSchema = z.object({});
 export const requestErrorSchema = z.object({
@@ -45,3 +46,4 @@ export type GameId = z.infer<typeof GameIdSchema>;
 export type Username = z.infer<typeof UsernameSchema>;
 export type PlayerId = z.infer<typeof PlayerIdSchema>;
 export type VisitorId = z.infer<typeof VisitorIdSchema>;
+export type IsoDateTime = z.infer<typeof IsoDateTimeSchema>;

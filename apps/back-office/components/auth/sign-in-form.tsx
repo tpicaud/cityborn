@@ -1,6 +1,6 @@
 'use client';
 
-import { type SignInFlow, useSignIn } from '@cityborn/client/auth';
+import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/Button';
 
@@ -15,7 +15,7 @@ export function SignInForm() {
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignIn({
+  }: SignInFlow = useSignInFlow({
     onSignedIn: () => router.replace('/dashboard'),
   });
 

@@ -3,7 +3,7 @@
 import { type SessionId, SessionStatus } from '@cityborn/api';
 import {
   type MultiSessionController,
-  useMultiSession,
+  useMultiSessionController,
 } from '@cityborn/client/session';
 import { ConnectionLostDialog } from '@/components/Session/ConnectionLostDialog';
 import { Game } from '@/components/Session/Game';
@@ -18,7 +18,7 @@ type MultiSessionProps = {
 
 export default function MultiSession({ sessionID }: MultiSessionProps) {
   const navigation = useNavigation();
-  const multiSession: MultiSessionController = useMultiSession({
+  const multiSession: MultiSessionController = useMultiSessionController({
     sessionID,
     navigation,
     createSocket: createSocketConnection,

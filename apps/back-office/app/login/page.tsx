@@ -1,12 +1,12 @@
 'use client';
 
-import { useAuth } from '@cityborn/client/auth';
+import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { SignInForm } from '@/components/auth/sign-in-form';
 
 export default function LoginPage() {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const router = useRouter();
 
   useEffect(() => {

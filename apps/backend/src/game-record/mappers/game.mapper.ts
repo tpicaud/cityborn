@@ -10,7 +10,7 @@ export const GameMapper = {
         players: record.players,
         guessObjectsIds: record.guessObjectsIds,
         results: record.results,
-        createdAt: record.createdAt.toISOString().split('T')[0],
+        createdAt: record.createdAt.toISOString(),
       }),
     );
   },

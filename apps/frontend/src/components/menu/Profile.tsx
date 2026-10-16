@@ -1,10 +1,11 @@
 import type { User } from '@cityborn/api';
 import {
   type ProfileEditor,
-  type ProfileState,
-  useProfile,
+  type ProfileGames,
   useProfileEditor,
+  useProfileGames,
 } from '@cityborn/client/profile';
+import { formatDate } from '@cityborn/core';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,7 +32,7 @@ import {
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 export const Profile = ({ user }: { user: User }) => {
-  const { games, isLoading }: ProfileState = useProfile();
+  const { games, isLoading }: ProfileGames = useProfileGames();
   const {
     usernameForm,
     isEditingUsername,
@@ -179,7 +180,8 @@ export const Profile = ({ user }: { user: User }) => {
                     <AccordionSummary>
                       <div className="flex flex-col w-full">
                         <Typography variant="subtitle2">
-                          Partie #{gameRecord.id} - {gameRecord.createdAt}
+                          Partie #{gameRecord.id} -{' '}
+                          {formatDate(gameRecord.createdAt)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {gameRecord.mode.toUpperCase()} • {localPlayerPoints}

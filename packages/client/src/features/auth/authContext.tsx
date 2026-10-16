@@ -12,7 +12,7 @@ export type CurrentUserLoad = {
   retry: () => void;
 };
 
-type AuthContextType = {
+export type CurrentUser = {
   user: User | null;
 };
 
@@ -21,7 +21,7 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const CurrentUserContext = createContext<CurrentUser | undefined>(undefined);
 
 export function useCurrentUserLoad(): CurrentUserLoad {
   const { authApi }: DomainApis = useDomainApis();
@@ -39,14 +39,16 @@ export function useCurrentUserLoad(): CurrentUserLoad {
 
 export function AuthProvider({ user, children }: AuthProviderProps) {
   return (
-    <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+    <CurrentUserContext.Provider value={{ user }}>
+      {children}
+    </CurrentUserContext.Provider>
   );
 }
 
-export function useAuth(): AuthContextType {
-  const context: AuthContextType | undefined = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+export function useCurrentUser(): CurrentUser {
+  const currentUser: CurrentUser | undefined = useContext(CurrentUserContext);
+  if (!currentUser) {
+    throw new Error('useCurrentUser must be used within an AuthProvider');
   }
-  return context;
+  return currentUser;
 }
