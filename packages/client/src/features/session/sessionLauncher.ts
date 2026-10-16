@@ -63,7 +63,7 @@ export function useSessionLauncher({
     defaultValues: joinSessionFormDefaultValues,
   });
 
-  const playMulti = async (): Promise<void> => {
+  const playMulti: () => Promise<void> = async (): Promise<void> => {
     if (!user) {
       setAuthenticationRequired(true);
       return;
@@ -79,7 +79,7 @@ export function useSessionLauncher({
     }
   };
 
-  const joinSession = async ({
+  const joinSession: (values: JoinSessionFormValues) => Promise<void> = async ({
     code,
   }: JoinSessionFormValues): Promise<void> => {
     try {

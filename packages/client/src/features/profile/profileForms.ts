@@ -17,7 +17,7 @@ export const ChangePasswordFormSchema = UpdatePasswordSchema.extend({
   path: ['confirmPassword'],
 });
 
-export type ChangePasswordFormInput = z.input<typeof ChangePasswordFormSchema>;
+type ChangePasswordFormInput = z.input<typeof ChangePasswordFormSchema>;
 export type ChangePasswordFormValues = z.output<
   typeof ChangePasswordFormSchema
 >;
@@ -28,7 +28,7 @@ const changePasswordDefaultValues: ChangePasswordFormInput = {
   confirmPassword: '',
 };
 
-export type UsernameFormInput = z.input<typeof UpdateUsernameSchema>;
+type UsernameFormInput = z.input<typeof UpdateUsernameSchema>;
 
 export type UsernameForm = UseFormReturn<
   UsernameFormInput,
