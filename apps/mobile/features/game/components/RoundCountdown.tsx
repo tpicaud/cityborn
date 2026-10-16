@@ -1,10 +1,14 @@
-import { type CountdownOptions, useCountdown } from '@cityborn/client/game';
+import {
+  type Countdown,
+  type CountdownOptions,
+  useCountdown,
+} from '@cityborn/client/game';
 import { View } from 'react-native';
 import Dialog from '@/components/ui/Dialog';
 import { Text } from '@/components/ui/native/NativeComponents';
 
 export default function RoundCountdown(countdownOptions: CountdownOptions) {
-  const count: number = useCountdown(countdownOptions);
+  const { count }: Countdown = useCountdown(countdownOptions);
 
   return (
     <View>

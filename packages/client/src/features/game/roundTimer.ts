@@ -67,10 +67,14 @@ export type CountdownOptions = {
   onCountdownEnd: () => void;
 };
 
+export type Countdown = {
+  count: number;
+};
+
 export function useCountdown({
   initialCount = 3,
   onCountdownEnd,
-}: CountdownOptions): number {
+}: CountdownOptions): Countdown {
   const [count, setCount] = useState<number>(initialCount);
 
   useEffect(() => {
@@ -86,5 +90,5 @@ export function useCountdown({
     return () => clearTimeout(timeoutId);
   }, [count, onCountdownEnd]);
 
-  return count;
+  return { count };
 }

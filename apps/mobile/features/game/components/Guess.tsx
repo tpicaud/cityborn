@@ -1,5 +1,9 @@
 import type { PlayerId } from '@cityborn/api';
-import { type GameComponentProps, useGameRound } from '@cityborn/client/game';
+import {
+  type GameComponentProps,
+  type GameRound,
+  useGameRound,
+} from '@cityborn/client/game';
 import { View } from 'react-native';
 import GameMap from './Map';
 import Overlay from './Overlay';
@@ -19,7 +23,11 @@ const Guess: React.FC<GuessProps> = ({
   handleGuess,
   handleNextRound,
 }) => {
-  const gameRound = useGameRound({ game, localPlayerID, handleGuess });
+  const gameRound: GameRound = useGameRound({
+    game,
+    localPlayerID,
+    handleGuess,
+  });
 
   return (
     <View className="flex-1">
