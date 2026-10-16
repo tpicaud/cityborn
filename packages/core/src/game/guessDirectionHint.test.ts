@@ -61,6 +61,17 @@ describe('guessDirectionHint', () => {
     assert.equal(directionAfterBoundary, 'NE');
   });
 
+  it('returns S when the target lies exactly on the 157.5° boundary between SE and S', () => {
+    const targetCoordinates: Coord = targetAtBearing(157.5);
+
+    const direction: CardinalDirection = guessDirectionHint({
+      guessCoordinates,
+      targetCoordinates,
+    });
+
+    assert.equal(direction, 'S');
+  });
+
   it('switches from NW to N at the -22.5° sector boundary', () => {
     const insideNorth: Coord = targetAtBearing(-22.4);
     const insideNorthWest: Coord = targetAtBearing(-22.6);
