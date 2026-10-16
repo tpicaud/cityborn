@@ -22,19 +22,20 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 
 | Package / app | Rôle | Organisé par |
 |---|---|---|
-| `apps/backend` | API NestJS + Prisma qui implémente les contrats de `packages/api`. | domaine métier |
-| `packages/api` | Source de vérité des contrats : routes ts-rest, events WebSocket, schémas zod, `ErrorCode`. | domaine métier |
-| `packages/core` | Logique métier pure partagée par le backend et les clients. | domaine métier |
+| `apps/backend` | Serveur NestJS + Prisma : implémente les contrats HTTP et WebSocket, porte les règles métier et la persistance. | domaine métier |
+| `packages/api` | Source de vérité des contrats entre le backend et les clients : routes ts-rest, events WebSocket, schémas zod, codes d'erreur. | domaine métier |
+| `packages/core` | Logique métier pure, sans I/O ni framework, partagée par le backend et les clients. | domaine métier |
 | `packages/client` | Accès à l'API, état serveur et comportement headless des apps clientes ; agnostique de Next, Expo et du rendu. | feature |
-| `apps/frontend`, `apps/back-office` | Next.js (App Router). | feature |
-| `apps/mobile` | Expo / React Native. | feature |
-| `packages/design-system` | Composants et tokens UI, sans notion métier. | préoccupation technique |
+| `apps/frontend` | App web joueur, Next.js (App Router) : routing, rendu, implémentation des ports plateforme. | feature |
+| `apps/mobile` | App mobile joueur, Expo / React Native : routing, rendu, implémentation des ports plateforme. | feature |
+| `apps/back-office` | App web d'administration du contenu, Next.js (App Router) : routing, rendu, implémentation des ports plateforme. | feature |
+| `packages/design-system` | Tokens et composants UI des apps clientes. | socle technique |
 
 | Axe | Définition | Exemples |
 |---|---|---|
 | domaine métier | Une notion métier avec ses règles et ses données. | `user`, `category`, `session` |
 | feature | Un parcours produit, composé de domaines. | `play`, `profile`, `admin` |
-| socle technique | Ce qui ne connaît aucun domaine ni feature. | `api/protocol`, modules `prisma` et `redis` du backend, `client/platform` |
+| socle technique | Ce qui ne connaît aucun domaine ni feature. | protocole HTTP, persistance, ports plateforme |
 
 Dépendances autorisées entre packages :
 
