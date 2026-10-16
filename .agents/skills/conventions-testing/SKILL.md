@@ -10,10 +10,11 @@ description: "Conventions de tests Cityborn. À utiliser pour écrire, modifier 
 - Un comportement est testé une seule fois, au niveau le plus bas qui permet de l'observer.
 - Pour un test de `apps/backend`, lire [la référence backend](references/backend.md) : niveaux unitaire, intégration et e2e, doubles et infrastructure de test.
 
-## Nommage et structure
+## Structure et nommage
 
-- Un test décrit en anglais un comportement au présent (`rejects when the requester is not the host`), sans `should`.
-- Un test couvre un seul comportement ; plusieurs assertions sont permises si elles caractérisent ce même résultat.
+- Un `describe` par fonction ou méthode testée, à son nom ; sans `describe` parent qui nomme la classe, il se nomme `Classe.méthode`.
+- Un `it` par comportement, décrit en anglais au présent (`rejects when the requester is not the host`), sans `should`.
+- Plusieurs assertions dans un `it` sont permises si elles caractérisent ce même comportement.
 - Arrange, Act et Assert sont séparés par une ligne vide.
 
 ## Builders

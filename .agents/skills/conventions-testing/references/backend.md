@@ -10,9 +10,8 @@
 
 - Un e2e se justifie seulement pour une route, un event ou un guard qui active un pipeline distinct ; il couvre un chemin nominal et un rejet représentatif.
 
-## Unitaire
+## Doubles
 
-- Un `describe` par méthode testée ; sans `describe` parent qui nomme la classe, il se nomme `Classe.méthode`.
 - Les doubles typés viennent de `createMock<T>()` (`@golevelup/ts-jest`), avec les seuls retours utiles au scénario.
 
 ## Intégration
