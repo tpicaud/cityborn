@@ -5,6 +5,7 @@ import {
   useProfile,
   useProfileEditor,
 } from '@cityborn/client/profile';
+import { formatDate } from '@cityborn/core';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
@@ -179,7 +180,8 @@ export const Profile = ({ user }: { user: User }) => {
                     <AccordionSummary>
                       <div className="flex flex-col w-full">
                         <Typography variant="subtitle2">
-                          Partie #{gameRecord.id} - {gameRecord.createdAt}
+                          Partie #{gameRecord.id} -{' '}
+                          {formatDate(gameRecord.createdAt)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {gameRecord.mode.toUpperCase()} • {localPlayerPoints}
