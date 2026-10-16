@@ -12,7 +12,6 @@
     "android": "pnpm check-env:client:development && expo run:android",
     "ios": "pnpm check-env:client:development && expo run:ios",
     "web": "pnpm check-env:client:development && expo start --web",
-    "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "check-env": "dotenv -c development -- pnpm check-env:all",
     "check-env:all": "pnpm check-env:build && pnpm check-env:client",
@@ -87,8 +86,6 @@
     "@types/geojson": "^7946.0.16",
     "@types/react": "~19.2.14",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^10.2.1",
-    "eslint-config-expo": "~57.0.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
     "typescript": "~6.0.3"

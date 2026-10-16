@@ -10,20 +10,10 @@
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "outputs": []
-    },
     "typecheck": {
       "outputs": []
     },
     "test": {
-      "inputs": [
-        "src/**",
-        "test/**",
-        "jest.config.ts",
-        "tsconfig.json",
-        "package.json"
-      ],
       "outputs": ["coverage/**"]
     },
     "cityborn-backend#dev": {
