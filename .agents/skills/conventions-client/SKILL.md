@@ -22,7 +22,7 @@ description: "Conventions de packages/client (@cityborn/client). À utiliser pou
 
 | Famille | Contrat |
 |---|---|
-| Comportement | `use<Nom>(options: <Nom>Options): <Nom>` ; le retour est un objet nommé ; hook, options et retour sont exportés ensemble |
+| Comportement | `use<Nom>(options: <Nom>Options): <Nom>`, `options?` seulement si chaque option est facultative ; le retour est un objet nommé ; hook, options et retour sont exportés ensemble |
 | Formulaire | `use<Nom>Form(): <Nom>Form`, valeurs `<Nom>FormInput` / `<Nom>FormValues` ; une soumission se type par `FormSubmitHandler` |
 | Transformation pure | nommée par son résultat : `create<Nom>`, `format<Nom>`, prédicat ou sélecteur |
 | Contrat de vue | `<Composant>Props` |

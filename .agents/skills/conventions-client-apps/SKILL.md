@@ -18,12 +18,8 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 
 ## Câblage
 
-- Le socle de l'app crée le `contractClient` et l'`authApi` : cookies dans le navigateur, bearer et stockage sécurisé sur mobile.
-- Le socle de l'app implémente les ports plateforme de `@cityborn/client`.
-- Ordre des providers : `ErrorReporterProvider`, puis `ApiProvider`, puis `AuthProvider`.
-- `installFrenchZodErrorMap()` est appelé explicitement au démarrage de l'app.
-- L'écran de garde lit `useCurrentUserLoad` (chargement, échec avec « Réessayer », utilisateur prêt passé à `AuthProvider`) ; sous la garde, `useCurrentUser()` donne l'utilisateur.
-- Le back-office réserve ses pages au rôle `admin` et redirige vers `/login` sans utilisateur.
+- Le socle de l'app crée le `contractClient` et l'`authApi` (cookies dans le navigateur, bearer et stockage sécurisé sur mobile) et implémente les ports plateforme de `@cityborn/client`.
+- Toute page du back-office, sauf la connexion, est réservée au rôle `admin`.
 - Un écran mobile qui reste monté hors focus (onglet) passe `useIsFocused()` au hook de sa feature.
 - Une page du frontend ou du back-office : lire [la référence Next](references/next.md).
 
