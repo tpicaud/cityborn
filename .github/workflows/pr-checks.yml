@@ -112,9 +112,6 @@ jobs:
       - name: Install oasdiff
         run: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | version=1.26.1 sh
 
-      - name: Test compat module
-        run: pnpm --dir packages/api test
-
       - name: Check API compatibility
         run: pnpm check:api-compat
 
@@ -243,8 +240,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run backend unit tests
-        run: pnpm --dir apps/backend test
+      - name: Run unit tests
+        run: pnpm test
 
   backend-integration:
     name: Backend integration tests
