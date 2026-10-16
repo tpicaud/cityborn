@@ -24,7 +24,7 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 - **Sécurité** : authentification et autorisation de chaque route ou event touché, validation zod des entrées, secrets absents du code, des logs et des réponses, données exposées au strict nécessaire, injections.
 - **Règles d'`AGENTS.md`** : type-safe, architecture et chaque symptôme de « Découpage », style de code, garde-fous.
 - **Skills métier** : chaque règle des skills chargés à l'étape 3.
-- **Contrat API** : rétrocompatibilité et conventions de `api-contract-change` pour tout changement dans `packages/api`.
+- **Contrat API** : rétrocompatibilité et conventions de `api-conventions` pour tout changement dans `packages/api`.
 - **Tests** : chaque comportement ou invariant significatif est testé au bon tier ; aucun test ne recopie l'implémentation.
 - **Documentation** : une convention modifiée est reflétée dans `AGENTS.md` ou le skill concerné ; aucun ajout ne décrit l'implémentation du diff (noms de fichiers, comportement d'un cas particulier).
 
