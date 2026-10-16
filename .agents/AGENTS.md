@@ -60,17 +60,13 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 ## Style de code
 
-- **Commentaires** : l'intention passe par le naming, les types et le découpage. Un *pourquoi* que le code ne peut pas porter va dans le commit, la PR ou `docs/`. Seul commentaire admis : le bloc posé par le skill `deprecate`.
-- **Naming exact** : chaque nom dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Un nom générique, redondant ou en collision avec un autre domaine est renommé.
-- **Langue** : code, noms de tests, logs et erreurs techniques en anglais ; le français est réservé aux textes vus par l'utilisateur final.
-- **Objets typés** : `const objet: Type = { … }` quand un type nommé existe ; `satisfies` seulement pour conserver le type inféré.
-- **Variables locales** : chaque `const` et `let` est annoté dès qu'un type pertinent peut être nommé, données de test comprises.
-- **Paramètre objet** : dès deux valeurs, une fonction les reçoit dans un seul objet déstructuré dans la signature.
-  - Son type s'écrit en ligne, et devient un type nommé seulement s'il est exporté ou partagé.
-  - Exception : les signatures imposées par un framework ou une bibliothèque.
-- **`type` par défaut** : `interface` est réservée aux contrats à plusieurs implémentations (port, stratégie, repository, double de test) et à l'augmentation de déclarations. Une `interface` de données touchée devient un `type`.
-- **Itération** : méthodes de tableau et `Promise.all` ; un traitement asynchrone séquentiel passe par une fonction récursive ; aucune boucle `for`, tests compris.
-- **Tests** : un test vérifie un comportement ou un invariant significatif, jamais une copie de l'implémentation.
+- **Langue** : code en anglais, sauf les textes vus par l'utilisateur final, en français.
+- **Commentaires** : aucun, JSDoc compris, sauf le bloc posé par le skill `deprecate` ; un *pourquoi* va dans le commit, la PR ou `docs/`.
+- **Naming exact** : chaque nom dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine et sans collision avec un autre domaine.
+- **Annotations** : chaque `const` et `let` est annoté dès qu'un type pertinent peut être nommé, tests compris ; `satisfies` seulement pour conserver le type inféré.
+- **`type` par défaut** : `interface` seulement pour un contrat à plusieurs implémentations ou une augmentation de déclaration.
+- **Paramètre objet** : dès deux valeurs, un seul objet déstructuré dans la signature, typé en ligne sauf s'il est exporté ou partagé ; une signature imposée par un framework reste positionnelle.
+- **Itération** : méthodes de tableau et `Promise.all`, récursion pour l'asynchrone séquentiel.
 
 ## Commits & PR
 
