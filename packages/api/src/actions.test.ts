@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   type HttpAction,
+  type HttpActionRoute,
   httpActionRoutes,
   resolveHttpAction,
   resolveWsAction,
+  type WsAction,
+  type WsLifecycleAction,
   wsLifecycleEventName,
 } from './actions';
 import { wsChannels } from './ws/registry';
@@ -21,95 +24,11 @@ function matchesRoute(pattern: string, path: string): boolean {
   );
 }
 
-describe('resolveHttpAction', () => {
-  it('resolves every contract route after Nest slash normalization', () => {
-    assert.equal(httpActionRoutes.length, 49);
-    for (const route of httpActionRoutes) {
-      assert.equal(resolveHttpAction(route.method, route.path), route.action);
-    }
-    assert.equal(
-      resolveHttpAction('POST', '/session/'),
-      'session.createSession',
-    );
-    assert.equal(
-      resolveHttpAction('GET', '/admin/category/tree'),
-      'admin.category.getCategoryTrees',
-    );
-    assert.equal(resolveHttpAction('GET', '/'), undefined);
-  });
-
-  it('prefixes nested router keys below the domain', () => {
-    const cookieSignInAction: HttpAction = 'auth.cookie.signIn';
-
-    assert.equal(
-      resolveHttpAction('POST', '/auth/cookie/sign-in'),
-      cookieSignInAction,
-    );
-  });
-
-  it('has unique actions', () => {
-    const actions: string[] = httpActionRoutes.map(({ action }) => action);
-
-    assert.equal(new Set(actions).size, actions.length);
-  });
-
-  it('has unique method and path pairs', () => {
-    const pairs: string[] = httpActionRoutes.map(
-      ({ method, path }) => `${method} ${path}`,
-    );
-
-    assert.equal(new Set(pairs).size, pairs.length);
-  });
-
-  it('has no earlier route that shadows a later route', () => {
-    for (const [index, route] of httpActionRoutes.entries()) {
-      const representativePath: string = route.path.replace(/:[^/]+/g, 'value');
-      const earlierMatch = httpActionRoutes
-        .slice(0, index)
-        .find(
-          (earlier) =>
-            earlier.method === route.method &&
-            matchesRoute(earlier.path, representativePath),
-        );
-      assert.equal(earlierMatch, undefined, `${route.method} ${route.path}`);
-    }
-  });
-});
-
-describe('resolveWsAction', () => {
-  it('resolves every client event and lifecycle event from the channels', () => {
-    for (const channel of Object.values(wsChannels)) {
-      for (const event of Object.keys(channel.clientToServer)) {
-        assert.equal(
-          resolveWsAction(`${channel.domain}:${event}`),
-          `${channel.domain}.${event}`,
-        );
-      }
-      assert.equal(
-        resolveWsAction(wsLifecycleEventName(channel, 'connect')),
-        `${channel.domain}.connect`,
-      );
-      assert.equal(
-        resolveWsAction(wsLifecycleEventName(channel, 'disconnect')),
-        `${channel.domain}.disconnect`,
-      );
-    }
-    assert.equal(resolveWsAction('session:unknown'), undefined);
-  });
-});
-
-describe('contract actions', () => {
-  it('keeps the action vocabulary visible when contract keys change', () => {
-    const actions: string[] = [
-      ...httpActionRoutes.map(({ action }) => action),
-      ...Object.values(wsChannels).flatMap((channel) => [
-        ...Object.keys(channel.clientToServer).map(
-          (event: string) => `${channel.domain}.${event}`,
-        ),
-        `${channel.domain}.connect`,
-        `${channel.domain}.disconnect`,
-      ]),
-    ].sort();
+describe('httpActionRoutes', () => {
+  it('lists the action of every contract route', () => {
+    const actions: string[] = httpActionRoutes
+      .map(({ action }: HttpActionRoute): string => action)
+      .sort();
 
     assert.deepEqual(actions, [
       'admin.category.createCategory',
@@ -153,24 +72,134 @@ describe('contract actions', () => {
       'guess-object.getGuessObjects',
       'health.check',
       'sentence.getSentence',
-      'session.connect',
       'session.createGame',
       'session.createSession',
-      'session.disconnect',
       'session.endSoloGame',
       'session.finalizeGame',
       'session.getSession',
-      'session.guess',
-      'session.join',
-      'session.nextRound',
-      'session.playAgain',
-      'session.reconnect',
-      'session.startGame',
-      'session.updateGameConfig',
-      'session.updateHost',
       'user.getGameRecords',
       'user.saveSoloGameRecord',
       'user.updateUsername',
     ]);
+  });
+
+  it('has unique actions', () => {
+    const actions: string[] = httpActionRoutes.map(
+      ({ action }: HttpActionRoute): string => action,
+    );
+
+    assert.equal(new Set(actions).size, actions.length);
+  });
+
+  it('has unique method and path pairs', () => {
+    const pairs: string[] = httpActionRoutes.map(
+      ({ method, path }: HttpActionRoute): string => `${method} ${path}`,
+    );
+
+    assert.equal(new Set(pairs).size, pairs.length);
+  });
+
+  it('has no earlier route that shadows a later route', () => {
+    const shadowedRoutes: string[] = httpActionRoutes
+      .filter((route: HttpActionRoute, index: number): boolean => {
+        const representativePath: string = route.path.replace(
+          /:[^/]+/g,
+          'value',
+        );
+        return httpActionRoutes
+          .slice(0, index)
+          .some(
+            (earlier: HttpActionRoute): boolean =>
+              earlier.method === route.method &&
+              matchesRoute(earlier.path, representativePath),
+          );
+      })
+      .map(({ method, path }: HttpActionRoute): string => `${method} ${path}`);
+
+    assert.deepEqual(shadowedRoutes, []);
+  });
+});
+
+describe('resolveHttpAction', () => {
+  it('resolves the action of every contract route', () => {
+    const resolvedActions: (HttpAction | undefined)[] = httpActionRoutes.map(
+      ({ method, path }: HttpActionRoute): HttpAction | undefined =>
+        resolveHttpAction(method, path),
+    );
+
+    assert.deepEqual(
+      resolvedActions,
+      httpActionRoutes.map(({ action }: HttpActionRoute): string => action),
+    );
+  });
+
+  it('resolves a path with the trailing slash that Nest normalizes', () => {
+    const action: HttpAction | undefined = resolveHttpAction(
+      'POST',
+      '/session/',
+    );
+
+    assert.equal(action, 'session.createSession');
+  });
+
+  it('resolves a static path that a parameterized route could match', () => {
+    const action: HttpAction | undefined = resolveHttpAction(
+      'GET',
+      '/admin/category/tree',
+    );
+
+    assert.equal(action, 'admin.category.getCategoryTrees');
+  });
+
+  it('prefixes nested router keys below the domain', () => {
+    const action: HttpAction | undefined = resolveHttpAction(
+      'POST',
+      '/auth/cookie/sign-in',
+    );
+
+    assert.equal(action, 'auth.cookie.signIn');
+  });
+
+  it('resolves no action for a path outside the contract', () => {
+    const action: HttpAction | undefined = resolveHttpAction('GET', '/');
+
+    assert.equal(action, undefined);
+  });
+});
+
+describe('resolveWsAction', () => {
+  it('resolves the client and lifecycle events of every channel', () => {
+    const eventNames: string[] = Object.values(wsChannels).flatMap(
+      (channel): string[] => [
+        ...Object.keys(channel.clientToServer).map(
+          (event: string): string => `${channel.domain}:${event}`,
+        ),
+        wsLifecycleEventName(channel, 'connect'),
+        wsLifecycleEventName(channel, 'disconnect'),
+      ],
+    );
+
+    const actions: (WsAction | WsLifecycleAction | undefined)[] =
+      eventNames.map(resolveWsAction);
+
+    assert.deepEqual(actions, [
+      'session.join',
+      'session.reconnect',
+      'session.updateHost',
+      'session.updateGameConfig',
+      'session.startGame',
+      'session.guess',
+      'session.nextRound',
+      'session.playAgain',
+      'session.connect',
+      'session.disconnect',
+    ]);
+  });
+
+  it('resolves no action for an event outside the channels', () => {
+    const action: WsAction | WsLifecycleAction | undefined =
+      resolveWsAction('session:unknown');
+
+    assert.equal(action, undefined);
   });
 });
