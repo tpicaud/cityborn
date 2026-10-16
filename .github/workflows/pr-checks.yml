@@ -300,7 +300,7 @@ jobs:
         run: pnpm install
 
       - name: Deploy database migrations
-        run: pnpm --dir apps/backend migrate
+        run: pnpm --dir apps/backend db:up
 
       - name: Run backend integration tests
         run: pnpm --dir apps/backend test:int
@@ -359,7 +359,7 @@ jobs:
         run: pnpm install
 
       - name: Deploy database migrations
-        run: pnpm --dir apps/backend migrate
+        run: pnpm --dir apps/backend db:up
 
       - name: Run backend e2e tests
         run: pnpm --dir apps/backend test:e2e
