@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { describe, it } from 'node:test';
 import type { KeyValueStorage } from '../platform/keyValueStorage';
 import { createVisitorIdProvider, type VisitorIdProvider } from './visitorId';
 
@@ -21,29 +21,33 @@ class InMemoryKeyValueStorage implements KeyValueStorage {
 
 const storedVisitorId: string = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
-test('the stored visitor id is reused', async () => {
-  const keyValueStorage: InMemoryKeyValueStorage =
-    new InMemoryKeyValueStorage();
-  keyValueStorage.values.set('visitor_id', storedVisitorId);
-  const getVisitorId: VisitorIdProvider =
-    createVisitorIdProvider(keyValueStorage);
+describe('createVisitorIdProvider', () => {
+  it('reuses the stored visitor id', async () => {
+    const keyValueStorage: InMemoryKeyValueStorage =
+      new InMemoryKeyValueStorage();
+    keyValueStorage.values.set('visitor_id', storedVisitorId);
+    const getVisitorId: VisitorIdProvider =
+      createVisitorIdProvider(keyValueStorage);
 
-  assert.equal(await getVisitorId(), storedVisitorId);
-});
+    const visitorId: string = await getVisitorId();
 
-test('a visitor id is created once and stored when none is valid', async () => {
-  const keyValueStorage: InMemoryKeyValueStorage =
-    new InMemoryKeyValueStorage();
-  keyValueStorage.values.set('visitor_id', `"${storedVisitorId}"`);
-  const getVisitorId: VisitorIdProvider =
-    createVisitorIdProvider(keyValueStorage);
+    assert.equal(visitorId, '0f8fad5b-d9cb-469f-a165-70867728950e');
+  });
 
-  const [firstVisitorId, secondVisitorId]: string[] = await Promise.all([
-    getVisitorId(),
-    getVisitorId(),
-  ]);
+  it('creates and stores a visitor id once when none is valid', async () => {
+    const keyValueStorage: InMemoryKeyValueStorage =
+      new InMemoryKeyValueStorage();
+    keyValueStorage.values.set('visitor_id', `"${storedVisitorId}"`);
+    const getVisitorId: VisitorIdProvider =
+      createVisitorIdProvider(keyValueStorage);
 
-  assert.notEqual(firstVisitorId, `"${storedVisitorId}"`);
-  assert.equal(firstVisitorId, secondVisitorId);
-  assert.equal(keyValueStorage.values.get('visitor_id'), firstVisitorId);
+    const [firstVisitorId, secondVisitorId]: string[] = await Promise.all([
+      getVisitorId(),
+      getVisitorId(),
+    ]);
+
+    assert.notEqual(firstVisitorId, `"${storedVisitorId}"`);
+    assert.equal(firstVisitorId, secondVisitorId);
+    assert.equal(keyValueStorage.values.get('visitor_id'), firstVisitorId);
+  });
 });
