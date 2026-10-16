@@ -1,3 +1,4 @@
+import { AuthErrorCode } from '../auth/auth.error-codes';
 import { CategoryErrorCode } from '../category/category.error-codes';
 import { GameErrorCode } from '../game/game.error-codes';
 import { GuessObjectErrorCode } from '../guess-object/guess-object.error-codes';
@@ -26,6 +27,7 @@ enum TechnicalErrorCode {
 
 export const ErrorCode = Object.freeze({
   ...UserErrorCode,
+  ...AuthErrorCode,
   ...PlayerErrorCode,
   ...SessionErrorCode,
   ...SentenceErrorCode,
