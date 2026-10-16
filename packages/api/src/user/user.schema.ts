@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { GameRecordSchema } from '../game-record/game-record.schema';
 import { UserIdSchema, UsernameSchema } from './user.id';
 
 export const AccountTypeSchema = z.enum(['email', 'google', 'apple']);
@@ -18,11 +17,6 @@ export const UserSchema = PublicUserSchema.extend({
   isVerified: z.boolean(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
-  relations: z
-    .object({
-      games: z.array(GameRecordSchema).optional(),
-    })
-    .optional(),
 });
 
 export const UsernameInputSchema = z
