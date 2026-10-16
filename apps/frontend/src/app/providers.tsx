@@ -1,7 +1,7 @@
 'use client';
 
 import { installFrenchZodErrorMap } from '@cityborn/api';
-import { ApiProvider, ErrorProvider } from '@cityborn/client';
+import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { ReactNode } from 'react';
 import { ErrorDialog } from '@/components/ui/dialogs/ErrorDialog';
@@ -18,11 +18,11 @@ type AppProvidersProps = {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-      <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+      <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
         <ApiProvider contractClient={contractClient} authApi={authApi}>
           <AuthBootstrap>{children}</AuthBootstrap>
         </ApiProvider>
-      </ErrorProvider>
+      </ErrorReporterProvider>
     </AppRouterCacheProvider>
   );
 }

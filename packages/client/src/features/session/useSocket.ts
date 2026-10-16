@@ -37,7 +37,7 @@ type SessionSocketOptions = {
 type SessionSocketCallbacks = {
   restoreSession: (emit: WsEmit) => Promise<void>;
   refreshAuthentication: () => Promise<void>;
-  invokeError: (error: unknown, fallbackMessage?: string) => void;
+  reportError: (error: unknown, fallbackMessage?: string) => void;
 };
 
 export type SessionSocket = {
@@ -67,7 +67,7 @@ export function useSocket({
     () => {},
   );
 
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const { authApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
 
@@ -79,14 +79,14 @@ export function useSocket({
     useRef<SessionSocketCallbacks>({
       restoreSession,
       refreshAuthentication,
-      invokeError,
+      reportError,
     });
 
   useEffect(() => {
     callbacks.current = {
       restoreSession,
       refreshAuthentication,
-      invokeError,
+      reportError,
     };
   });
 
@@ -98,7 +98,7 @@ export function useSocket({
     const handleWsError: SocketListenEvents[typeof WS_ERROR_EVENT] = (
       error,
     ) => {
-      callbacks.current.invokeError(error, 'Une erreur est survenue');
+      callbacks.current.reportError(error, 'Une erreur est survenue');
     };
 
     const openSocket = (): void => {
@@ -119,7 +119,7 @@ export function useSocket({
                 callbacks.current.refreshAuthentication(),
               onStatusChange: setConnectionStatus,
               onFailure: (error) =>
-                callbacks.current.invokeError(error, CONNECTION_FAILED_MESSAGE),
+                callbacks.current.reportError(error, CONNECTION_FAILED_MESSAGE),
             },
           );
 
@@ -131,7 +131,7 @@ export function useSocket({
           if (!mounted) return;
           retryConnectionRef.current = openSocket;
           setConnectionStatus('closed');
-          callbacks.current.invokeError(error, CONNECTION_FAILED_MESSAGE);
+          callbacks.current.reportError(error, CONNECTION_FAILED_MESSAGE);
         });
     };
 

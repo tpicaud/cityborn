@@ -65,7 +65,7 @@ function useSignInCompletion({
   onSignedIn,
 }: SignInCompletionOptions): SignInCompletion {
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const onSignedInRef = useRef<(() => void) | undefined>(onSignedIn);
   onSignedInRef.current = onSignedIn;
 
@@ -76,10 +76,10 @@ function useSignInCompletion({
         await setCurrentUser({ queryClient, user: signedInUser });
         onSignedInRef.current?.();
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     },
-    [queryClient, invokeError],
+    [queryClient, reportError],
   );
 }
 

@@ -6,7 +6,7 @@ export {
 } from './apiVersionSupport';
 export {
   type ErrorDialogProps,
-  ErrorProvider,
   type ErrorReporter,
+  ErrorReporterProvider,
   useErrorReporter,
 } from './errorReporter';

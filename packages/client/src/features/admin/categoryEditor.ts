@@ -1,14 +1,15 @@
 'use client';
 
-import type {
-  Category,
-  CategoryId,
-  FullCategory,
-  GuessObject,
-  GuessObjectDraft,
-  GuessObjectId,
-  UpdateCategory,
-  WorldLocationId,
+import {
+  type Category,
+  type CategoryId,
+  type FullCategory,
+  type GuessObject,
+  type GuessObjectDraft,
+  type GuessObjectId,
+  type UpdateCategory,
+  UserFacingError,
+  type WorldLocationId,
 } from '@cityborn/api';
 import {
   type QueryClient,
@@ -156,7 +157,7 @@ export function useCategoryEditor({
 }: CategoryEditorOptions): CategoryEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
   const [category, setCategory] = useState<FullCategory>(editedCategory);
@@ -189,7 +190,7 @@ export function useCategoryEditor({
         isPublished,
       }));
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -219,7 +220,7 @@ export function useCategoryEditor({
       }));
       return guessObject;
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
       return null;
     }
   };
@@ -227,13 +228,13 @@ export function useCategoryEditor({
   const saveGuessObjectDraft = async (): Promise<void> => {
     const { guessObjectDraft }: GuessObjectDraftEditor = guessObjectDraftEditor;
     if (!guessObjectDraft) {
-      invokeError(invalidGuessObjectMessage);
+      reportError(new UserFacingError(invalidGuessObjectMessage));
       return;
     }
     const worldLocationId: WorldLocationId | undefined =
       guessObjectDraft.world_location?.id;
     if (!worldLocationId) {
-      invokeError(invalidWorldLocationMessage);
+      reportError(new UserFacingError(invalidWorldLocationMessage));
       return;
     }
 
@@ -247,7 +248,7 @@ export function useCategoryEditor({
       await connectGuessObject(savedGuessObjectId);
       guessObjectDraftEditor.startGuessObjectCreation();
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     }
   };
 
@@ -274,7 +275,7 @@ export function useCategoryEditor({
       });
       guessObjectDraftEditor.showGuessObjectDraft(undefined);
     } catch (error: unknown) {
-      invokeError(error, unexpectedErrorMessage);
+      reportError(error, unexpectedErrorMessage);
     }
   };
 
@@ -295,7 +296,7 @@ export function useCategoryEditor({
         await removeDeletedCategory({ queryClient, categoryId: category.id });
         onCategoryDeleted();
       } catch (error: unknown) {
-        invokeError(error, unexpectedErrorMessage);
+        reportError(error, unexpectedErrorMessage);
       } finally {
         setIsSaving(false);
       }

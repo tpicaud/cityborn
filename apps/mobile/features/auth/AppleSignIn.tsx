@@ -1,3 +1,4 @@
+import { UserFacingError } from '@cityborn/api';
 import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import {
   type IdentityProviderSignIn,
@@ -12,7 +13,7 @@ import { View } from 'react-native';
 import { cn } from '@/lib/classNames';
 
 export const SignInWithAppleButton = () => {
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const router = useRouter();
   const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
     {
@@ -31,7 +32,9 @@ export const SignInWithAppleButton = () => {
       });
 
       if (!credential.identityToken) {
-        invokeError("Apple n'a pas fourni de jeton d'identité.");
+        reportError(
+          new UserFacingError("Apple n'a pas fourni de jeton d'identité."),
+        );
         return;
       }
 
@@ -68,7 +71,7 @@ export const SignInWithAppleButton = () => {
       throw error;
     }
 
-    invokeError(error, 'La connexion avec Apple a échoué.');
+    reportError(error, 'La connexion avec Apple a échoué.');
   }
 
   type AppleUserDetails = {

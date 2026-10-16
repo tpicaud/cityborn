@@ -9,8 +9,10 @@ import {
   useState,
 } from 'react';
 
+export type ReportError = (error: unknown, fallbackMessage?: string) => void;
+
 export type ErrorReporter = {
-  invokeError: (error: unknown, fallbackMessage?: string) => void;
+  reportError: ReportError;
 };
 
 const ErrorReporterContext = createContext<ErrorReporter | undefined>(
@@ -24,19 +26,19 @@ export type ErrorDialogProps = {
   onExited?: () => void;
 };
 
-type ErrorProviderProps = {
+type ErrorReporterProviderProps = {
   children: ReactNode;
-  ErrorDialogComponent?: React.ComponentType<ErrorDialogProps>;
+  ErrorDialogComponent: React.ComponentType<ErrorDialogProps>;
 };
 
-export const ErrorProvider = ({
+export const ErrorReporterProvider = ({
   children,
   ErrorDialogComponent,
-}: ErrorProviderProps) => {
+}: ErrorReporterProviderProps) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const invokeError = useCallback(
+  const reportError: ReportError = useCallback(
     (error: unknown, fallbackMessage?: string): void => {
       setErrorMessage(resolveErrorMessage(error, fallbackMessage));
       console.error(error);
@@ -46,16 +48,14 @@ export const ErrorProvider = ({
   );
 
   return (
-    <ErrorReporterContext.Provider value={{ invokeError }}>
+    <ErrorReporterContext.Provider value={{ reportError }}>
       {children}
-      {ErrorDialogComponent && (
-        <ErrorDialogComponent
-          errorMessage={errorMessage}
-          open={openDialog}
-          setOpen={setOpenDialog}
-          onExited={() => setErrorMessage('')}
-        />
-      )}
+      <ErrorDialogComponent
+        errorMessage={errorMessage}
+        open={openDialog}
+        setOpen={setOpenDialog}
+        onExited={() => setErrorMessage('')}
+      />
     </ErrorReporterContext.Provider>
   );
 };
@@ -64,7 +64,9 @@ export const useErrorReporter = (): ErrorReporter => {
   const errorReporter: ErrorReporter | undefined =
     useContext(ErrorReporterContext);
   if (!errorReporter) {
-    throw new Error('useErrorReporter must be used within an ErrorProvider');
+    throw new Error(
+      'useErrorReporter must be used within an ErrorReporterProvider',
+    );
   }
   return errorReporter;
 };

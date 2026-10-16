@@ -20,7 +20,7 @@ export type SignOut = {
 export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
   const { authApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const onSignedOutRef = useRef<(() => void) | undefined>(onSignedOut);
   onSignedOutRef.current = onSignedOut;
 
@@ -30,9 +30,9 @@ export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
       await clearCacheAfterSignOut(queryClient);
       onSignedOutRef.current?.();
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     }
-  }, [authApi, queryClient, invokeError]);
+  }, [authApi, queryClient, reportError]);
 
   return { signOut };
 }

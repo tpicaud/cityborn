@@ -66,7 +66,7 @@ export function useMultiSessionController({
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
     user?.username,
   );
@@ -98,12 +98,12 @@ export function useMultiSessionController({
       try {
         setSession(await sessionApi.fetchSession(sessionID));
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
         navigation.returnTo('/');
       }
     };
     loadSession();
-  }, [sessionID, sessionApi, navigation, invokeError]);
+  }, [sessionID, sessionApi, navigation, reportError]);
 
   const gameStatus: GameStatus | undefined = session?.currentGame?.status;
   const userId: UserId | undefined = user?.id;
@@ -152,8 +152,8 @@ export function useMultiSessionController({
     )
       return;
 
-    join(localPlayerID).catch(invokeError);
-  }, [connectionStatus, session, localPlayerID, join, invokeError]);
+    join(localPlayerID).catch(reportError);
+  }, [connectionStatus, session, localPlayerID, join, reportError]);
 
   const requireSession = (action: string): Session => {
     if (!session) throw new Error(`${action} failed: session not initialized`);
@@ -214,14 +214,17 @@ export function useMultiSessionController({
     isHost: isHostOf(session, localPlayerID),
     connectionStatus,
     retryConnection,
-    join: reportActionErrors(join, invokeError),
-    updateHost: reportActionErrors(updateHost, invokeError),
-    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
-    startGame: reportActionErrors(startGame, invokeError),
-    guess: reportActionErrors(guess, invokeError),
-    nextRound: reportActionErrors(nextRound, invokeError),
-    endGame: reportActionErrors(endGame, invokeError),
-    playAgain: reportActionErrors(playAgain, invokeError),
-    exitGame: reportActionErrors(exitGame, invokeError),
+    join: reportActionErrors({ action: join, reportError }),
+    updateHost: reportActionErrors({ action: updateHost, reportError }),
+    updateGameConfig: reportActionErrors({
+      action: updateGameConfig,
+      reportError,
+    }),
+    startGame: reportActionErrors({ action: startGame, reportError }),
+    guess: reportActionErrors({ action: guess, reportError }),
+    nextRound: reportActionErrors({ action: nextRound, reportError }),
+    endGame: reportActionErrors({ action: endGame, reportError }),
+    playAgain: reportActionErrors({ action: playAgain, reportError }),
+    exitGame: reportActionErrors({ action: exitGame, reportError }),
   };
 }

@@ -37,7 +37,7 @@ export function useSoloSessionController({
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;
   const [session, setSession] = useState<Session>();
   const sessionRef = useRef<Session | undefined>(undefined);
@@ -54,8 +54,8 @@ export function useSoloSessionController({
       });
       updateSession(withHost(createdSession, localPlayerID));
     };
-    initSession().catch(invokeError);
-  }, [localPlayerID, sessionApi, invokeError, updateSession]);
+    initSession().catch(reportError);
+  }, [localPlayerID, sessionApi, reportError, updateSession]);
 
   const requireSession = (action: string): Session => {
     const current = sessionRef.current;
@@ -118,12 +118,15 @@ export function useSoloSessionController({
     session,
     localPlayerID,
     isHost: true,
-    updateGameConfig: reportActionErrors(updateGameConfig, invokeError),
-    startGame: reportActionErrors(startGame, invokeError),
-    guess: reportActionErrors(guess, invokeError),
-    nextRound: reportActionErrors(nextRound, invokeError),
-    endGame: reportActionErrors(endGame, invokeError),
-    playAgain: reportActionErrors(playAgain, invokeError),
-    exitGame: reportActionErrors(exitGame, invokeError),
+    updateGameConfig: reportActionErrors({
+      action: updateGameConfig,
+      reportError,
+    }),
+    startGame: reportActionErrors({ action: startGame, reportError }),
+    guess: reportActionErrors({ action: guess, reportError }),
+    nextRound: reportActionErrors({ action: nextRound, reportError }),
+    endGame: reportActionErrors({ action: endGame, reportError }),
+    playAgain: reportActionErrors({ action: playAgain, reportError }),
+    exitGame: reportActionErrors({ action: exitGame, reportError }),
   };
 }

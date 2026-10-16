@@ -50,7 +50,7 @@ export function useSessionLauncher({
 }: SessionLauncherOptions): SessionLauncher {
   const { sessionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const { user }: CurrentUser = useCurrentUser();
   const [authenticationRequired, setAuthenticationRequired] =
     useState<boolean>(false);
@@ -75,7 +75,7 @@ export function useSessionLauncher({
       });
       navigation.push(multiSessionPath(session.id));
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     }
   };
 
@@ -88,7 +88,7 @@ export function useSessionLauncher({
       );
       navigation.push(multiSessionPath(code));
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     }
   };
 

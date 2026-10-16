@@ -1,4 +1,5 @@
 import { type Query, QueryCache } from '@tanstack/react-query';
+import type { ReportError } from './errorReporter';
 
 type QueryErrorReportingMeta = {
   reportsError: boolean;
@@ -10,8 +11,6 @@ declare module '@tanstack/react-query' {
   }
 }
 
-type InvokeError = (error: unknown) => void;
-
 function shouldReportQueryError(
   query: Query<unknown, unknown, unknown>,
 ): boolean {
@@ -21,12 +20,12 @@ function shouldReportQueryError(
 }
 
 export function createErrorReportingQueryCache(
-  invokeError: InvokeError,
+  reportError: ReportError,
 ): QueryCache {
   return new QueryCache({
     onError: (error, query) => {
       if (!shouldReportQueryError(query)) return;
-      invokeError(error);
+      reportError(error);
     },
   });
 }

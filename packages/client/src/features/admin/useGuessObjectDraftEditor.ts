@@ -57,7 +57,7 @@ const worldLocationLoadFailureMessage: string =
 export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [guessObjectDraft, setGuessObjectDraft] = useState<
     GuessObjectDraft | undefined
   >(undefined);
@@ -93,7 +93,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
       if (shownGuessObjectIdRef.current !== guessObjectId) return;
       setGuessObjectDraft(fullGuessObject);
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
     }
   };
 
@@ -193,7 +193,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
       try {
         await openGuessObjectSearchResult(searchResult);
       } catch (error: unknown) {
-        invokeError(error, guessObjectLoadFailureMessage);
+        reportError(error, guessObjectLoadFailureMessage);
       } finally {
         setIsLoadingGuessObject(false);
       }
@@ -205,7 +205,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
       try {
         await attachWorldLocationSearchResult(searchResult);
       } catch (error: unknown) {
-        invokeError(error, worldLocationLoadFailureMessage);
+        reportError(error, worldLocationLoadFailureMessage);
       } finally {
         setIsLoadingWorldLocation(false);
       }

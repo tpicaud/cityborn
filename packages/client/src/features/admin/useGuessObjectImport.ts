@@ -4,6 +4,7 @@ import {
   type GuessObjectId,
   type GuessObjectSearchResult,
   resolveErrorMessage,
+  UserFacingError,
   type WorldLocation,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -108,19 +109,20 @@ export function useGuessObjectImport({
       );
     const externalId: string | undefined =
       searchResults.at(0)?.source?.external_id;
-    if (!externalId) throw new Error(missingExternalIdMessage);
+    if (!externalId) throw new UserFacingError(missingExternalIdMessage);
 
     const foundGuessObject: GuessObjectSearchResult | null =
       await queryClient.fetchQuery(
         guessObjectByExternalIdQueryOptions({ adminApi, externalId }),
       );
-    if (!foundGuessObject) throw new Error(missingGuessObjectMessage);
+    if (!foundGuessObject) throw new UserFacingError(missingGuessObjectMessage);
     const {
       id: _foundGuessObjectId,
       world_location: foundWorldLocation,
       ...guessObjectFields
     }: GuessObjectSearchResult = foundGuessObject;
-    if (!foundWorldLocation) throw new Error(missingWorldLocationMessage);
+    if (!foundWorldLocation)
+      throw new UserFacingError(missingWorldLocationMessage);
 
     const worldLocation: WorldLocation = await registerWorldLocation({
       adminApi,

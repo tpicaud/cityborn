@@ -69,7 +69,7 @@ export function useCategoryCreation({
 }: CategoryCreationOptions): CategoryCreation {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const form: UseFormReturn<CreateCategoryInput, undefined, CreateCategory> =
     useForm<CreateCategoryInput, undefined, CreateCategory>({
       resolver: zodResolver(CreateCategorySchema),
@@ -86,7 +86,7 @@ export function useCategoryCreation({
         form.reset();
         onCategoryCreated(createdCategory);
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     }),
   };

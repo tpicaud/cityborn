@@ -38,7 +38,7 @@ Le frontend et le mobile visent le miroir : une capacité présente dans les deu
 
 `ContractClient` est le client HTTP ts-rest construit depuis le contrat complet : `createBearerContractClient` utilise un `TokenStorage`, `createCookieContractClient` utilise les cookies Nest. Chaque app crée dans son `lib/api/` son `contractClient` et son `authApi`, puis les passe à `ApiProvider` (`@cityborn/client`). Ce provider unique crée le `QueryClient`, construit les autres API de domaine (`createAdminApi`, `createCategoryApi`, `createHealthApi`, `createSessionApi`, `createProfileApi`) et les expose par contexte : un hook lit ses ports par `useDomainApis()`, jamais en paramètre. Créer un port pour une capacité partagée ou une transformation métier, pas automatiquement pour chaque controller Nest.
 
-Ordre des providers dans chaque app : `ErrorProvider`, puis `ApiProvider`, puis `AuthProvider`. `ApiProvider` lit `invokeError` pour créer la `QueryCache` qui remonte les erreurs de query.
+Ordre des providers dans chaque app : `ErrorReporterProvider`, puis `ApiProvider`, puis `AuthProvider`. `ApiProvider` lit `reportError` pour créer la `QueryCache` qui remonte les erreurs de query.
 
 L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile instancie `createAuthApi(contractClient, tokenStorage)`, le navigateur `createCookieAuthApi(contractClient)`. Ajouter un appel d'auth dans ce port. `getCurrentUser()` renvoie `null` en l'absence de session ou après un refus 401 ; les erreurs techniques sont propagées.
 
@@ -49,7 +49,7 @@ L'utilisateur courant a une seule source : la query de `auth/api/authQueries.ts`
 - La déconnexion passe par `useSignOut` : elle retire les données du compte du cache puis met l'utilisateur à `null`, sans repasser par l'écran de chargement.
 - Un rafraîchissement en échec conserve l'utilisateur courant.
 
-Un hook de domaine signale lui-même les erreurs de ses actions via `invokeError` : l'app branche ses actions directement sur la vue, et seule la vue reste dans l'app.
+Un hook de domaine signale lui-même les erreurs de ses actions via `reportError` : l'app branche ses actions directement sur la vue, et seule la vue reste dans l'app.
 
 Le back-office instancie aussi `createCookieAuthApi` ; `AdminAccessGuard` (`components/auth/`) redirige vers `/login` sans utilisateur et réserve ses pages au rôle `admin`.
 
@@ -72,7 +72,7 @@ Le package porte l'accès à l'API et l'état serveur des trois apps clientes, y
 
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
-| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorProvider` et `ErrorDialogProps`, `useErrorReporter`, version d'API minimale supportée (`useApiVersionSupport`). `FormSubmitHandler` y vit, hors de l'index. |
+| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorReporterProvider` et `ErrorDialogProps`, `useErrorReporter`, version d'API minimale supportée (`useApiVersionSupport`). `FormSubmitHandler` y vit, hors de l'index. |
 | `@cityborn/client/admin` | `src/features/admin/` | Back-office : liste et création de catégories, chargement et édition d'une catégorie (`useCategoryEditor`, qui compose le brouillon d'objet à deviner de `useGuessObjectDraftEditor`), import CSV d'objets à deviner, recherches avec délai (`useGuessObjectSearch`, `useWorldLocationSearch`). |
 | `@cityborn/client/api` | `src/api/` | Transport HTTP : `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies) sur l'`AuthFetch` privé, `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
 | `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, privé au package, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |

@@ -10,7 +10,7 @@ import {
 import {
   ApiProvider,
   type ApiVersionSupport,
-  ErrorProvider,
+  ErrorReporterProvider,
   useApiVersionSupport,
 } from '@cityborn/client';
 import {
@@ -43,7 +43,7 @@ const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   return (
-    <ErrorProvider ErrorDialogComponent={ErrorDialog}>
+    <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
       <ApiProvider
         contractClient={contractClient}
         authApi={authApi}
@@ -51,7 +51,7 @@ export default function RootLayout() {
       >
         <RootLayoutContent />
       </ApiProvider>
-    </ErrorProvider>
+    </ErrorReporterProvider>
   );
 }
 

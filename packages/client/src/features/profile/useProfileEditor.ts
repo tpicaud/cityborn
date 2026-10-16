@@ -48,7 +48,7 @@ export function useProfileEditor({
   const { authApi, profileApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
   const passwordForm: ChangePasswordForm = useChangePasswordForm();
   const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
@@ -72,7 +72,7 @@ export function useProfileEditor({
         usernameForm.reset({ username: updatedUser.username });
         setIsEditingUsername(false);
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     },
   );
@@ -98,7 +98,7 @@ export function useProfileEditor({
         passwordForm.reset();
         setIsPasswordUpdated(true);
       } catch (error: unknown) {
-        invokeError(error);
+        reportError(error);
       }
     },
   );
@@ -107,7 +107,7 @@ export function useProfileEditor({
     try {
       await authApi.deleteUser();
     } catch (error: unknown) {
-      invokeError(error);
+      reportError(error);
       return;
     }
     await signOutDeletedAccount();

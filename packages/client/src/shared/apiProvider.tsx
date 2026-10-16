@@ -60,11 +60,11 @@ export function ApiProvider({
   appFocus,
   children,
 }: ApiProviderProps) {
-  const { invokeError }: ErrorReporter = useErrorReporter();
+  const { reportError }: ErrorReporter = useErrorReporter();
   const [queryClient] = useState<QueryClient>(
     () =>
       new QueryClient({
-        queryCache: createErrorReportingQueryCache(invokeError),
+        queryCache: createErrorReportingQueryCache(reportError),
       }),
   );
   const domainApis: DomainApis = useMemo<DomainApis>(
