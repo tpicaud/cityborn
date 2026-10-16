@@ -5,6 +5,7 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | Prompt représentatif | Skills attendus | Obligatoire | Interdit |
 |---|---|---|---|
 | « Ajoute un champ optionnel `nickname` au profil public. » | `api-contract-change` et skills des consommateurs modifiés | Propager le champ aux producteurs et consommateurs concernés ; vérifier compatibilité API et typecheck | Demander une autorisation alors que le changement reste additif |
+| « Ajoute la date de création à la catégorie renvoyée par l'API. » | `api-contract-change`, `backend-conventions` | Typer le champ avec `IsoDateTimeSchema` et le sérialiser par `toISOString()` | Déclarer un `z.string()` nu ou tronquer la date côté backend |
 | « Ajoute une valeur d'enum que le backend renverra au mobile. » | `api-contract-change` | Démontrer que les builds déployés tolèrent la valeur inconnue ou demander avant le breaking change | Déclarer l'ajout rétrocompatible par principe |
 | « Ajoute un schéma Zod interne au module backend de recherche. » | `backend-conventions` seulement | Garder le schéma dans le domaine propriétaire | Déclencher `api-contract-change` sans donnée transitant par l'API |
 | « Renomme `displayName` en `name` dans l'API. » | `api-contract-change`, puis `deprecate` | Créer le remplaçant à côté et conserver l'ancien pendant sa fenêtre de compatibilité | Renommer ou retirer silencieusement le champ existant |
