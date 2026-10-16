@@ -28,7 +28,6 @@ Chaque symptôme est à corriger dans le périmètre de la tâche, sinon à sign
   - Symptôme : l'appelant transmet un secret, un client d'infrastructure ou une option interne.
 - **Surface minimale** : un symbole n'est exporté que pour un consommateur réel hors de son fichier.
   - Symptôme : un export que seul son propre module lit.
-- **Raison de changer** : une nouvelle frontière isole un acteur aux règles distinctes, une dépendance d'infrastructure ou de plateforme, un cycle de vie propre, ou sert plusieurs consommateurs réels. Une étape d'un même flux reste une fonction de son module.
 - **Variantes** : dès la deuxième variante, un seul module porte le comportement commun et reçoit la partie variable (port, stratégie, fonction injectée).
   - Symptômes : le même discriminant testé à plusieurs endroits ; des classes sœurs qui ne diffèrent que d'une méthode ; des factories recopiées.
 - **Cohésion** : une notion a une seule maison ; un fragment dupliqué se factorise au troisième usage réel.
@@ -60,7 +59,6 @@ Chaque symptôme est à corriger dans le périmètre de la tâche, sinon à sign
 
 - **Commentaires** : l'intention passe par le naming, les types et le découpage. Un *pourquoi* que le code ne peut pas porter va dans le commit, la PR ou `docs/`. Seul commentaire admis : le bloc posé par le skill `deprecate`.
 - **Naming exact** : chaque nom dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine. Un nom générique, redondant ou en collision avec un autre domaine est renommé.
-- **Fichier** : il porte le nom du concept unique qu'il contient.
 - **Langue** : code, noms de tests, logs et erreurs techniques en anglais ; le français est réservé aux textes vus par l'utilisateur final.
 - **Objets typés** : `const objet: Type = { … }` quand un type nommé existe ; `satisfies` seulement pour conserver le type inféré.
 - **Variables locales** : chaque `const` et `let` est annoté dès qu'un type pertinent peut être nommé, données de test comprises.
@@ -68,20 +66,8 @@ Chaque symptôme est à corriger dans le périmètre de la tâche, sinon à sign
   - Son type s'écrit en ligne, et devient un type nommé seulement s'il est exporté ou partagé.
   - Exception : les signatures imposées par un framework ou une bibliothèque.
 - **`type` par défaut** : `interface` est réservée aux contrats à plusieurs implémentations (port, stratégie, repository, double de test) et à l'augmentation de déclarations. Une `interface` de données touchée devient un `type`.
-- **Flux** : early return plutôt que `else`.
 - **Itération** : méthodes de tableau et `Promise.all` ; un traitement asynchrone séquentiel passe par une fonction récursive ; aucune boucle `for`, tests compris.
-
-## Vérifications
-
-| Commande | Usage |
-|---|---|
-| `pnpm typecheck` | Typecheck du monorepo, doit toujours passer. |
-| `pnpm format` / `pnpm format:check` | Lint et format Biome. |
-
-- Vérifier d'abord de façon ciblée sur les packages modifiés.
-- Lancer les contrôles transverses requis par un skill une seule fois, avant le compte rendu final.
-- Relancer un contrôle réussi seulement après un changement qui le concerne.
-- Tester les comportements et invariants significatifs ; un test qui recopie l'implémentation n'apporte rien.
+- **Tests** : un test vérifie un comportement ou un invariant significatif, jamais une copie de l'implémentation.
 
 ## Commits & PR
 
