@@ -4,11 +4,11 @@ export const PASSWORD_RESET_REPOSITORY = Symbol('PASSWORD_RESET_REPOSITORY');
 
 export interface PasswordResetRepository {
   findEligibleUser(email: string): Promise<User | null>;
-  replaceToken(
-    userId: UserId,
-    tokenHash: string,
-    expiresAt: Date,
-  ): Promise<void>;
-  findTokenUser(tokenHash: string, now: Date): Promise<UserId | null>;
-  consumeToken(tokenHash: string, now: Date): Promise<UserId | null>;
+  replaceToken(data: {
+    userId: UserId;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<void>;
+  findTokenUser(data: { tokenHash: string; now: Date }): Promise<UserId | null>;
+  consumeToken(data: { tokenHash: string; now: Date }): Promise<UserId | null>;
 }

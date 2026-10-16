@@ -17,6 +17,7 @@ import type TestAgent from 'supertest/lib/agent';
 import { MailService } from '../../src/mail/mail.service';
 import type { SendMailOptions } from '../../src/mail/providers/mail.provider';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { SessionGateway } from '../../src/session/session.gateway';
 import { createTestApp } from '../support/createTestApp';
 
@@ -26,17 +27,23 @@ describe('Password reset over HTTP and WebSocket', () => {
   let connectedSocketId: string | undefined;
   const mailService: DeepMocked<MailService> = createMock<MailService>();
 
-  async function waitForServerDisconnection(
-    socketId: string,
-    remainingAttempts: number,
-  ): Promise<void> {
+  async function waitForServerDisconnection({
+    socketId,
+    remainingAttempts,
+  }: {
+    socketId: string;
+    remainingAttempts: number;
+  }): Promise<void> {
     const sessionGateway: SessionGateway = app.get(SessionGateway);
     if (!sessionGateway.io.sockets.sockets.has(socketId)) return;
     if (remainingAttempts === 0) {
       throw new Error(`Socket ${socketId} did not disconnect cleanly`);
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 10));
-    await waitForServerDisconnection(socketId, remainingAttempts - 1);
+    await waitForServerDisconnection({
+      socketId,
+      remainingAttempts: remainingAttempts - 1,
+    });
   }
 
   beforeAll(async () => {
@@ -50,7 +57,10 @@ describe('Password reset over HTTP and WebSocket', () => {
     client?.disconnect();
     try {
       if (connectedSocketId)
-        await waitForServerDisconnection(connectedSocketId, 100);
+        await waitForServerDisconnection({
+          socketId: connectedSocketId,
+          remainingAttempts: 100,
+        });
     } finally {
       client = undefined;
       connectedSocketId = undefined;
@@ -99,6 +109,16 @@ describe('Password reset over HTTP and WebSocket', () => {
       });
       socket.once('connect_error', reject);
     });
+    const rateLimitService: RateLimitService = app.get(RateLimitService);
+    await Promise.all(
+      Array.from({ length: 10 }, () =>
+        rateLimitService.recordFailedSignIn(user.id),
+      ),
+    );
+    await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password: 'OldPass1' })
+      .expect(429);
     const mail: Promise<SendMailOptions> = new Promise((resolve) => {
       mailService.sendMail.mockImplementationOnce(
         async (options: SendMailOptions) => {

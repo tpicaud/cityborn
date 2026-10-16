@@ -14,6 +14,7 @@ import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
+import { MailDeliveryError } from '../../mail/providers/mail.provider';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type { UserCredentials } from '../../user/repositories/user.repository';
 import { UserService } from '../../user/user.service';
@@ -38,7 +39,7 @@ export class PasswordResetService {
     @Inject(HTTP_CONFIG) private readonly httpConfig: HttpConfig,
   ) {}
 
-  async request(email: string, ip: string): Promise<void> {
+  async request({ email, ip }: { email: string; ip: string }): Promise<void> {
     this.wideEventService.enrichRateLimit({
       rateLimitBucket: 'rl:password-reset:ip',
       rateLimitStatus: 'pending',
@@ -55,63 +56,75 @@ export class PasswordResetService {
         this.hash(email.toLowerCase()),
       );
     if (!accepted) return;
-    void this.sendResetEmail(email).catch(() => {
-      this.wideEventService.recordOperationError(
-        new Error('Password reset delivery failed'),
-        {
-          domain: 'auth',
-          operation: 'send_password_reset_email',
-        },
-      );
+    void this.sendResetEmail(email).catch((error: unknown) => {
+      this.recordBackgroundFailure({
+        error,
+        operation: 'send_password_reset_email',
+      });
     });
   }
 
   async validateToken(token: string): Promise<void> {
     const userId: UserId | null =
-      await this.passwordResetRepository.findTokenUser(
-        this.hash(token),
-        new Date(),
-      );
+      await this.passwordResetRepository.findTokenUser({
+        tokenHash: this.hash(token),
+        now: new Date(),
+      });
     if (!userId) this.rejectToken();
   }
 
-  async reset(data: ResetPassword): Promise<void> {
-    await this.validateToken(data.token);
-    const passwordHash: string = await bcrypt.hash(data.password, 10);
-    const authSession: AuthSession = await this.completeReset(
-      this.hash(data.token),
+  async reset(resetPassword: ResetPassword): Promise<void> {
+    await this.validateToken(resetPassword.token);
+    const passwordHash: string = await bcrypt.hash(resetPassword.password, 10);
+    const authSession: AuthSession = await this.completeReset({
+      tokenHash: this.hash(resetPassword.token),
       passwordHash,
-    );
+    });
+    try {
+      await this.rateLimitService.clearFailedSignIns(authSession.user.id);
+    } catch (error: unknown) {
+      this.recordBackgroundFailure({
+        error,
+        operation: 'clear_password_reset_failed_sign_ins',
+        userId: authSession.user.id,
+      });
+    }
     this.authenticatedSocketService.disconnectOlderSessions(
       authSession.user.id,
       authSession.authVersion,
     );
     void this.mailService
       .sendMail(
-        buildMailOptions('password-changed', {
-          email: authSession.user.email,
-          username: authSession.user.username,
+        buildMailOptions({
+          templateName: 'password-changed',
+          templateParams: {
+            email: authSession.user.email,
+            username: authSession.user.username,
+          },
         }),
       )
-      .catch(() => {
-        this.wideEventService.recordOperationError(
-          new Error('Password change confirmation delivery failed'),
-          {
-            domain: 'auth',
-            operation: 'send_password_changed_email',
-            userId: authSession.user.id,
-          },
-        );
+      .catch((error: unknown) => {
+        this.recordBackgroundFailure({
+          error,
+          operation: 'send_password_changed_email',
+          userId: authSession.user.id,
+        });
       });
   }
 
   @Transactional()
-  async completeReset(
-    tokenHash: string,
-    passwordHash: string,
-  ): Promise<AuthSession> {
+  private async completeReset({
+    tokenHash,
+    passwordHash,
+  }: {
+    tokenHash: string;
+    passwordHash: string;
+  }): Promise<AuthSession> {
     const userId: UserId | null =
-      await this.passwordResetRepository.consumeToken(tokenHash, new Date());
+      await this.passwordResetRepository.consumeToken({
+        tokenHash,
+        now: new Date(),
+      });
     if (!userId) this.rejectToken();
     const credentials: UserCredentials | null =
       await this.userService.findCredentialsById(userId);
@@ -128,24 +141,85 @@ export class PasswordResetService {
       await this.passwordResetRepository.findEligibleUser(email);
     if (!user) return;
     const token: string = randomBytes(32).toString('hex');
-    await this.passwordResetRepository.replaceToken(
-      user.id,
-      this.hash(token),
-      new Date(Date.now() + PASSWORD_RESET_TOKEN_VALIDITY_MINUTES * 60 * 1000),
-    );
+    await this.passwordResetRepository.replaceToken({
+      userId: user.id,
+      tokenHash: this.hash(token),
+      expiresAt: new Date(
+        Date.now() + PASSWORD_RESET_TOKEN_VALIDITY_MINUTES * 60 * 1000,
+      ),
+    });
     await this.mailService.sendMail(
-      buildMailOptions('password-reset', {
-        email: user.email,
-        username: user.username,
-        token,
-        frontendUrl: this.httpConfig.frontendUrl,
-        validityDurationMinutes: PASSWORD_RESET_TOKEN_VALIDITY_MINUTES,
+      buildMailOptions({
+        templateName: 'password-reset',
+        templateParams: {
+          email: user.email,
+          username: user.username,
+          token,
+          frontendUrl: this.httpConfig.frontendUrl,
+          validityDurationMinutes: PASSWORD_RESET_TOKEN_VALIDITY_MINUTES,
+        },
       }),
     );
   }
 
   private hash(value: string): string {
     return createHash('sha256').update(value).digest('hex');
+  }
+
+  private recordBackgroundFailure({
+    error,
+    operation,
+    userId,
+  }: {
+    error: unknown;
+    operation:
+      | 'send_password_reset_email'
+      | 'send_password_changed_email'
+      | 'clear_password_reset_failed_sign_ins';
+    userId?: UserId;
+  }): void {
+    const cause: Error =
+      error instanceof MailDeliveryError
+        ? error
+        : this.safeFailureCause({ error, remainingDepth: 3 });
+    this.wideEventService.recordOperationError(
+      new Error('Password reset background operation failed', { cause }),
+      { domain: 'auth', operation, ...(userId ? { userId } : {}) },
+    );
+  }
+
+  private safeFailureCause({
+    error,
+    remainingDepth,
+  }: {
+    error: unknown;
+    remainingDepth: number;
+  }): Error {
+    if (typeof error !== 'object' || error === null || remainingDepth === 0) {
+      return new Error('Password reset failure (category=unexpected)');
+    }
+    const code: unknown = 'code' in error ? error.code : undefined;
+    if (typeof code === 'string' && /^P\d{4}$/.test(code)) {
+      return new Error(
+        `Password reset failure (category=database; code=${code})`,
+      );
+    }
+    const networkCodes: string[] = [
+      'ECONNREFUSED',
+      'ECONNRESET',
+      'ENOTFOUND',
+      'EAI_AGAIN',
+      'ETIMEDOUT',
+    ];
+    if (typeof code === 'string' && networkCodes.includes(code)) {
+      return new Error(
+        `Password reset failure (category=network; code=${code})`,
+      );
+    }
+    return this.safeFailureCause({
+      error: 'cause' in error ? error.cause : undefined,
+      remainingDepth: remainingDepth - 1,
+    });
   }
 
   private rejectToken(): never {

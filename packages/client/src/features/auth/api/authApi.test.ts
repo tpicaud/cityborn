@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import {
   ApiResponseError,
   ErrorCode,
+  PASSWORD_RESET_REQUEST_MESSAGE,
+  type PasswordResetRequestResponse,
   type User,
   UserIdSchema,
   UsernameSchema,
@@ -428,8 +430,8 @@ test('cookie signOut clears the server session through the shared route', async 
 });
 
 test('resetPassword does not create an authenticated session', async () => {
-  const { state, tokenStorage } = createFakeTokenStorage();
-  const authApi = createAuthApi(
+  const { state, tokenStorage }: FakeTokenStorage = createFakeTokenStorage();
+  const authApi: AuthApi = createAuthApi(
     createFakeClient({
       resetPassword: async () => ({
         status: 200,
@@ -440,12 +442,121 @@ test('resetPassword does not create an authenticated session', async () => {
     tokenStorage,
   );
 
-  const result = await authApi.resetPassword({
+  await authApi.resetPassword({
     token: 'a'.repeat(64),
     password: 'NewPass1',
     confirmPassword: 'NewPass1',
   });
 
-  assert.deepEqual(result, { ok: true, data: undefined });
   assert.equal(state.tokens, null);
+});
+
+authApiFactories.forEach(({ name, create }: AuthApiFactory) => {
+  test(`${name} password reset returns the generic message and unwraps successful responses`, async () => {
+    const token: string = 'a'.repeat(64);
+    const authApi: AuthApi = create(
+      createFakeClient({
+        requestPasswordReset: async ({ body }) => {
+          assert.deepEqual(body, { email: 'citizen@cityborn.fr' });
+          return {
+            status: 200,
+            body: { message: PASSWORD_RESET_REQUEST_MESSAGE },
+            headers: new Headers(),
+          };
+        },
+        validatePasswordResetToken: async ({ body }) => {
+          assert.deepEqual(body, { token });
+          return { status: 200, body: {}, headers: new Headers() };
+        },
+        resetPassword: async ({ body }) => {
+          assert.deepEqual(body, {
+            token,
+            password: 'NewPass1',
+            confirmPassword: 'NewPass1',
+          });
+          return { status: 200, body: {}, headers: new Headers() };
+        },
+      }),
+    );
+
+    const response: PasswordResetRequestResponse =
+      await authApi.requestPasswordReset({
+        email: 'citizen@cityborn.fr',
+      });
+
+    assert.deepEqual(response, { message: PASSWORD_RESET_REQUEST_MESSAGE });
+    assert.equal(
+      await authApi.validatePasswordResetToken({ token }),
+      undefined,
+    );
+    assert.equal(
+      await authApi.resetPassword({
+        token,
+        password: 'NewPass1',
+        confirmPassword: 'NewPass1',
+      }),
+      undefined,
+    );
+  });
+
+  test(`${name} password reset preserves API errors`, async () => {
+    const authApi: AuthApi = create(
+      createFakeClient({
+        requestPasswordReset: async () => ({
+          status: 429,
+          body: {
+            code: ErrorCode.RATE_LIMIT_EXCEEDED,
+            message: 'Rate limit exceeded',
+            statusCode: 429,
+          },
+          headers: new Headers(),
+        }),
+        validatePasswordResetToken: async () => ({
+          status: 401,
+          body: {
+            code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+            message: 'Invalid reset token',
+            statusCode: 401,
+          },
+          headers: new Headers(),
+        }),
+        resetPassword: async () => ({
+          status: 401,
+          body: {
+            code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+            message: 'Invalid reset token',
+            statusCode: 401,
+          },
+          headers: new Headers(),
+        }),
+      }),
+    );
+
+    await assert.rejects(
+      authApi.requestPasswordReset({ email: 'citizen@cityborn.fr' }),
+      (error: unknown): boolean =>
+        error instanceof ApiResponseError &&
+        error.statusCode === 429 &&
+        error.code === ErrorCode.RATE_LIMIT_EXCEEDED,
+    );
+    await Promise.all(
+      [
+        authApi.validatePasswordResetToken({ token: 'a'.repeat(64) }),
+        authApi.resetPassword({
+          token: 'a'.repeat(64),
+          password: 'NewPass1',
+          confirmPassword: 'NewPass1',
+        }),
+      ].map(
+        (request: Promise<void>): Promise<void> =>
+          assert.rejects(
+            request,
+            (error: unknown): boolean =>
+              error instanceof ApiResponseError &&
+              error.statusCode === 401 &&
+              error.code === ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+          ),
+      ),
+    );
+  });
 });

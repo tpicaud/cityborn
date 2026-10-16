@@ -49,10 +49,10 @@ export class AuthController {
   async handler(@Req() request: Request, @VisitorId() visitorId?: string) {
     return tsRestHandler(publicAuthRoutes, {
       requestPasswordReset: async ({ body }) => {
-        await this.passwordResetService.request(
-          body.email,
-          request.ip ?? request.socket.remoteAddress ?? 'unknown',
-        );
+        await this.passwordResetService.request({
+          email: body.email,
+          ip: request.ip ?? request.socket.remoteAddress ?? 'unknown',
+        });
         return {
           status: 200 as const,
           body: { message: PASSWORD_RESET_REQUEST_MESSAGE },

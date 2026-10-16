@@ -1,6 +1,7 @@
-import type { ApiResult, PasswordResetRequestResponse } from '@cityborn/api';
-import { useError } from '@cityborn/client';
-import { useRequestPasswordResetForm } from '@cityborn/client/auth';
+import {
+  type PasswordResetRequestFlow,
+  usePasswordResetRequestFlow,
+} from '@cityborn/client/auth';
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { ScrollView } from 'react-native';
@@ -8,28 +9,18 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
-import { authApi } from '@/lib/api/auth';
 
 export function RequestPasswordResetDialog() {
   const [open, setOpen] = useState<boolean>(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const { invokeError } = useError();
   const {
-    control,
-    handleSubmit,
+    form: {
+      control,
+      formState: { errors, isSubmitting },
+    },
+    message,
     reset,
-    formState: { errors, isSubmitting },
-  } = useRequestPasswordResetForm();
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      const result: ApiResult<PasswordResetRequestResponse> =
-        await authApi.requestPasswordReset(values);
-      if (!result.ok) return invokeError(result.error);
-      setMessage(result.data.message);
-    } catch (error) {
-      invokeError(error);
-    }
-  });
+    submit,
+  }: PasswordResetRequestFlow = usePasswordResetRequestFlow();
 
   return (
     <>
@@ -38,7 +29,6 @@ export function RequestPasswordResetDialog() {
         label="Mot de passe oublié ?"
         onPress={() => {
           reset();
-          setMessage(null);
           setOpen(true);
         }}
       />
@@ -88,7 +78,7 @@ export function RequestPasswordResetDialog() {
                   label="Envoyer le lien de réinitialisation"
                   className="w-full h-auto min-h-14 py-3"
                   disabled={isSubmitting}
-                  onPress={() => onSubmit()}
+                  onPress={submit}
                 />
               </>
             )}

@@ -1,9 +1,9 @@
 'use client';
 
-import type { ApiResult, PasswordResetRequestResponse } from '@cityborn/api';
-
-import { useError } from '@cityborn/client';
-import { useRequestPasswordResetForm } from '@cityborn/client/auth';
+import {
+  type PasswordResetRequestFlow,
+  usePasswordResetRequestFlow,
+} from '@cityborn/client/auth';
 import {
   Dialog,
   DialogActions,
@@ -14,28 +14,18 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import Button from '@/components/ui/buttons/Button';
-import { requestPasswordReset } from '@/server/use-server/auth';
 
 export function RequestPasswordResetDialog() {
   const [open, setOpen] = useState<boolean>(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const { invokeError } = useError();
   const {
-    register,
-    handleSubmit,
+    form: {
+      register,
+      formState: { errors, isSubmitting },
+    },
+    message,
     reset,
-    formState: { errors, isSubmitting },
-  } = useRequestPasswordResetForm();
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      const result: ApiResult<PasswordResetRequestResponse> =
-        await requestPasswordReset(values);
-      if (!result.ok) return invokeError(result.error);
-      setMessage(result.data.message);
-    } catch (error) {
-      invokeError(error);
-    }
-  });
+    submit,
+  }: PasswordResetRequestFlow = usePasswordResetRequestFlow();
 
   return (
     <>
@@ -43,7 +33,6 @@ export function RequestPasswordResetDialog() {
         type="button"
         onClick={() => {
           reset();
-          setMessage(null);
           setOpen(true);
         }}
       >
@@ -65,7 +54,7 @@ export function RequestPasswordResetDialog() {
               event.preventDefault();
               return;
             }
-            void onSubmit(event);
+            void submit(event);
           }}
         >
           <DialogContent>

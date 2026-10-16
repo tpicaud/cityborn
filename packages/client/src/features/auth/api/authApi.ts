@@ -2,7 +2,11 @@ import type {
   AppContract,
   AuthResponse,
   CreateUser,
+  PasswordResetRequestResponse,
+  PasswordResetToken,
   PublicUser,
+  RequestPasswordReset,
+  ResetPassword,
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
@@ -17,6 +21,11 @@ import type { TokenStorage } from '../../../platform/tokenStorage';
 
 export interface AuthApi {
   getCurrentUser(): Promise<User | null>;
+  requestPasswordReset(
+    data: RequestPasswordReset,
+  ): Promise<PasswordResetRequestResponse>;
+  validatePasswordResetToken(data: PasswordResetToken): Promise<void>;
+  resetPassword(data: ResetPassword): Promise<void>;
   signIn(data: SignIn): Promise<User>;
   signUp(data: CreateUser): Promise<User>;
   signInWithGoogle(data: SignInWithGoogle): Promise<User>;
@@ -67,6 +76,24 @@ function buildAuthApi(
     signInWithApple: credentialsStrategy.signInWithApple,
     signOut: credentialsStrategy.signOut,
     updatePassword: credentialsStrategy.updatePassword,
+
+    async requestPasswordReset(data) {
+      return unwrapApiResponse(
+        await contractClient.auth.requestPasswordReset({ body: data }),
+      );
+    },
+
+    async validatePasswordResetToken(data) {
+      unwrapApiResponse(
+        await contractClient.auth.validatePasswordResetToken({ body: data }),
+      );
+    },
+
+    async resetPassword(data) {
+      unwrapApiResponse(
+        await contractClient.auth.resetPassword({ body: data }),
+      );
+    },
 
     async deleteUser() {
       unwrapApiResponse(await contractClient.auth.deleteUser({ body: {} }));

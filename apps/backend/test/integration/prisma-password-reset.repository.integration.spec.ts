@@ -83,23 +83,29 @@ describe('PrismaPasswordResetRepository', () => {
           password: 'hash',
         },
       });
-      await passwordResetRepository.replaceToken(
-        user.id,
-        'old-hash',
-        new Date('2099-01-01'),
-      );
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'old-hash',
+        expiresAt: new Date('2099-01-01'),
+      });
 
-      await passwordResetRepository.replaceToken(
-        user.id,
-        'new-hash',
-        new Date('2099-01-02'),
-      );
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'new-hash',
+        expiresAt: new Date('2099-01-02'),
+      });
 
       expect(
-        await passwordResetRepository.findTokenUser('old-hash', new Date()),
+        await passwordResetRepository.findTokenUser({
+          tokenHash: 'old-hash',
+          now: new Date(),
+        }),
       ).toBeNull();
       expect(
-        await passwordResetRepository.findTokenUser('new-hash', new Date()),
+        await passwordResetRepository.findTokenUser({
+          tokenHash: 'new-hash',
+          now: new Date(),
+        }),
       ).toBe(user.id);
       expect(await prisma.passwordResetToken.count()).toBe(1);
       expect(
@@ -128,14 +134,24 @@ describe('PrismaPasswordResetRepository', () => {
           password: 'hash',
         },
       });
-      await passwordResetRepository.replaceToken(user.id, 'hash', expiresAt);
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'hash',
+        expiresAt: expiresAt,
+      });
 
       const tokenUserId: UserId | null =
-        await passwordResetRepository.findTokenUser('hash', beforeExpiration);
+        await passwordResetRepository.findTokenUser({
+          tokenHash: 'hash',
+          now: beforeExpiration,
+        });
 
       expect(tokenUserId).toBe(user.id);
       expect(
-        await passwordResetRepository.consumeToken('hash', beforeExpiration),
+        await passwordResetRepository.consumeToken({
+          tokenHash: 'hash',
+          now: beforeExpiration,
+        }),
       ).toBe(user.id);
     });
 
@@ -152,10 +168,17 @@ describe('PrismaPasswordResetRepository', () => {
           password: 'hash',
         },
       });
-      await passwordResetRepository.replaceToken(user.id, 'hash', expiresAt);
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'hash',
+        expiresAt: expiresAt,
+      });
 
       expect(
-        await passwordResetRepository.findTokenUser('hash', expiresAt),
+        await passwordResetRepository.findTokenUser({
+          tokenHash: 'hash',
+          now: expiresAt,
+        }),
       ).toBeNull();
     });
   });
@@ -173,20 +196,29 @@ describe('PrismaPasswordResetRepository', () => {
           password: 'hash',
         },
       });
-      await passwordResetRepository.replaceToken(
-        user.id,
-        'hash',
-        new Date('2099-01-01'),
-      );
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'hash',
+        expiresAt: new Date('2099-01-01'),
+      });
 
       const results: (UserId | null)[] = await Promise.all([
-        passwordResetRepository.consumeToken('hash', new Date()),
-        passwordResetRepository.consumeToken('hash', new Date()),
+        passwordResetRepository.consumeToken({
+          tokenHash: 'hash',
+          now: new Date(),
+        }),
+        passwordResetRepository.consumeToken({
+          tokenHash: 'hash',
+          now: new Date(),
+        }),
       ]);
 
       expect(results.filter(Boolean)).toEqual([user.id]);
       expect(
-        await passwordResetRepository.consumeToken('hash', new Date()),
+        await passwordResetRepository.consumeToken({
+          tokenHash: 'hash',
+          now: new Date(),
+        }),
       ).toBeNull();
     });
 
@@ -203,10 +235,17 @@ describe('PrismaPasswordResetRepository', () => {
           password: 'hash',
         },
       });
-      await passwordResetRepository.replaceToken(user.id, 'hash', expiration);
+      await passwordResetRepository.replaceToken({
+        userId: user.id,
+        tokenHash: 'hash',
+        expiresAt: expiration,
+      });
 
       expect(
-        await passwordResetRepository.consumeToken('hash', expiration),
+        await passwordResetRepository.consumeToken({
+          tokenHash: 'hash',
+          now: expiration,
+        }),
       ).toBeNull();
     });
   });

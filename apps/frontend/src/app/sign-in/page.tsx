@@ -1,15 +1,16 @@
-import type { User } from '@cityborn/api';
-import { redirect } from 'next/navigation';
-import { SignInComponent } from '@/components/auth/SignInComponent';
-import { getCurrentUser } from '@/server/server-only/auth';
+'use client';
 
-export default async function SignInPage() {
-  const user: User | null = await getCurrentUser();
+import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
+import { redirect } from 'next/navigation';
+import { SignInForm } from '@/components/auth/SignInForm';
+
+export default function SignInPage() {
+  const { user }: CurrentUser = useCurrentUser();
   if (user) redirect('/');
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <SignInComponent />
+      <SignInForm />
     </div>
   );
 }

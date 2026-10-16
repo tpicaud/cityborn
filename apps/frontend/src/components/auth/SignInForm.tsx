@@ -2,6 +2,7 @@
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
+import { RequestPasswordResetDialog } from '@/features/auth/RequestPasswordResetDialog';
 import Button from '../ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -18,7 +19,13 @@ export const SignInForm = () => {
     <Box
       component="form"
       onSubmit={submit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        width: '100%',
+        maxWidth: 300,
+      }}
     >
       <Typography variant="h5" align="center">
         Connexion
@@ -42,6 +49,8 @@ export const SignInForm = () => {
           helperText={errors.password?.message}
         />
       </FormControl>
+
+      <RequestPasswordResetDialog />
 
       <Button variant="contained" type="submit" loading={isSubmitting}>
         Se connecter

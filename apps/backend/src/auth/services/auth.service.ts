@@ -355,11 +355,14 @@ export class AuthService {
         resendCooldownMs,
       );
     await this.mailService.sendMail(
-      buildMailOptions('verification-email', {
-        email: user.email,
-        frontendUrl: this.httpConfig.frontendUrl,
-        verificationToken,
-        username: user.username,
+      buildMailOptions({
+        templateName: 'verification-email',
+        templateParams: {
+          email: user.email,
+          frontendUrl: this.httpConfig.frontendUrl,
+          verificationToken,
+          username: user.username,
+        },
       }),
     );
   }

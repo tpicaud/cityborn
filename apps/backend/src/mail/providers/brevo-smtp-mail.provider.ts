@@ -1,16 +1,20 @@
 import { readFile } from 'node:fs/promises';
 import { Inject, Injectable } from '@nestjs/common';
 import { MAIL_CONFIG, type MailConfig } from '../../config/config.module';
-import type { MailProvider, SendMailOptions } from './mail.provider';
+import {
+  MailDeliveryError,
+  type MailProvider,
+  type SendMailOptions,
+} from './mail.provider';
 
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_URL: string = 'https://api.brevo.com/v3/smtp/email';
 
 @Injectable()
 export class BrevoSmtpMailProvider implements MailProvider {
   constructor(@Inject(MAIL_CONFIG) private readonly mailConfig: MailConfig) {}
 
   async sendMail(options: SendMailOptions): Promise<void> {
-    const to = Array.isArray(options.to) ? options.to : [options.to];
+    const to: string[] = Array.isArray(options.to) ? options.to : [options.to];
 
     const payload: Record<string, unknown> = {
       sender: {
@@ -28,29 +32,48 @@ export class BrevoSmtpMailProvider implements MailProvider {
     }
 
     if (options.attachments?.length) {
-      payload.attachment = await Promise.all(
-        options.attachments.map(async (attachment) => ({
-          name: attachment.filename,
-          content: (await readFile(attachment.path)).toString('base64'),
-        })),
-      );
+      try {
+        payload.attachment = await Promise.all(
+          options.attachments.map(async (attachment) => ({
+            name: attachment.filename,
+            content: (await readFile(attachment.path)).toString('base64'),
+          })),
+        );
+      } catch (error: unknown) {
+        throw new MailDeliveryError({
+          category: 'attachment',
+          provider: 'brevo',
+          cause: error,
+        });
+      }
     }
 
-    const response = await fetch(BREVO_API_URL, {
-      method: 'POST',
-      headers: {
-        'api-key': this.mailConfig.apiKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    let response: Response;
+    try {
+      response = await fetch(BREVO_API_URL, {
+        method: 'POST',
+        headers: {
+          'api-key': this.mailConfig.apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (error: unknown) {
+      throw new MailDeliveryError({
+        category: 'network',
+        provider: 'brevo',
+        cause: error,
+      });
+    }
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `Brevo API request failed (${response.status}): ${errorBody}`,
-      );
+      await response.body?.cancel().catch(() => undefined);
+      throw new MailDeliveryError({
+        category: 'http',
+        provider: 'brevo',
+        statusCode: response.status,
+      });
     }
   }
 }

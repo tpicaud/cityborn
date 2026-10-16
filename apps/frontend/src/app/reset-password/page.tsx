@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ResetPasswordComponent } from '@/features/auth/ResetPasswordComponent';
+import { ResetPasswordForm } from '@/features/auth/ResetPasswordForm';
 
 export const metadata: Metadata = {
   title: 'Réinitialiser son mot de passe | Cityborn',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <ResetPasswordComponent />
+      <ResetPasswordForm />
     </div>
   );
 }

@@ -109,23 +109,24 @@ type MailTemplateParams = {
   'password-changed': { email: string; username: string };
 };
 
-type BuildMailOptionsArgs = {
-  [TemplateName in keyof MailTemplateParams]: [
-    templateName: TemplateName,
-    templateParams: MailTemplateParams[TemplateName],
-  ];
+type MailTemplate = {
+  [TemplateName in keyof MailTemplateParams]: {
+    templateName: TemplateName;
+    templateParams: MailTemplateParams[TemplateName];
+  };
 }[keyof MailTemplateParams];
 
-export function buildMailOptions(
-  ...args: BuildMailOptionsArgs
-): SendMailOptions {
-  switch (args[0]) {
+export function buildMailOptions({
+  templateName,
+  templateParams,
+}: MailTemplate): SendMailOptions {
+  switch (templateName) {
     case 'password-reset':
-      return buildPasswordResetEmail(args[1]);
+      return buildPasswordResetEmail(templateParams);
     case 'password-changed':
-      return buildPasswordChangedEmail(args[1]);
+      return buildPasswordChangedEmail(templateParams);
     case 'verification-email':
-      return buildVerificationEmail(args[1]);
+      return buildVerificationEmail(templateParams);
   }
 }
 

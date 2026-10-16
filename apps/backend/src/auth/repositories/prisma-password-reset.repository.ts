@@ -23,11 +23,15 @@ export class PrismaPasswordResetRepository implements PasswordResetRepository {
     return user?.password ? UserMapper.toUser(user) : null;
   }
 
-  async replaceToken(
-    userId: UserId,
-    tokenHash: string,
-    expiresAt: Date,
-  ): Promise<void> {
+  async replaceToken({
+    userId,
+    tokenHash,
+    expiresAt,
+  }: {
+    userId: UserId;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<void> {
     await this.txHost.tx.passwordResetToken.upsert({
       where: { userId },
       create: { userId, tokenHash, expiresAt },
@@ -35,7 +39,13 @@ export class PrismaPasswordResetRepository implements PasswordResetRepository {
     });
   }
 
-  async findTokenUser(tokenHash: string, now: Date): Promise<UserId | null> {
+  async findTokenUser({
+    tokenHash,
+    now,
+  }: {
+    tokenHash: string;
+    now: Date;
+  }): Promise<UserId | null> {
     const token: PasswordResetToken | null =
       await this.txHost.tx.passwordResetToken.findFirst({
         where: { tokenHash, expiresAt: { gt: now } },
@@ -43,8 +53,14 @@ export class PrismaPasswordResetRepository implements PasswordResetRepository {
     return token ? UserIdSchema.parse(token.userId) : null;
   }
 
-  async consumeToken(tokenHash: string, now: Date): Promise<UserId | null> {
-    const userId: UserId | null = await this.findTokenUser(tokenHash, now);
+  async consumeToken({
+    tokenHash,
+    now,
+  }: {
+    tokenHash: string;
+    now: Date;
+  }): Promise<UserId | null> {
+    const userId: UserId | null = await this.findTokenUser({ tokenHash, now });
     if (!userId) return null;
     const result: Prisma.BatchPayload =
       await this.txHost.tx.passwordResetToken.deleteMany({

@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MAIL_PROVIDER } from './mail.constants';
-import type { MailProvider, SendMailOptions } from './providers/mail.provider';
+import {
+  MailDeliveryError,
+  type MailProvider,
+  type SendMailOptions,
+} from './providers/mail.provider';
 
 @Injectable()
 export class MailService {
@@ -9,6 +13,11 @@ export class MailService {
   ) {}
 
   async sendMail(options: SendMailOptions): Promise<void> {
-    await this.mailProvider.sendMail(options);
+    try {
+      await this.mailProvider.sendMail(options);
+    } catch (error: unknown) {
+      if (error instanceof MailDeliveryError) throw error;
+      throw new MailDeliveryError({ category: 'provider', cause: error });
+    }
   }
 }
