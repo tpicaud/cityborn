@@ -68,6 +68,13 @@ const listMarkdownFiles = (directoryPath: string): string[] => {
   });
 };
 
+const externalSkillRoots: string[] = [join(skillsRoot, 'writing-for-agents')];
+
+const isExternalSkillDocument = (markdownPath: string): boolean =>
+  externalSkillRoots.some((externalSkillRoot: string): boolean =>
+    markdownPath.startsWith(`${externalSkillRoot}${sep}`),
+  );
+
 const skillDirectoryEntries: Dirent[] = readdirSync(skillsRoot, {
   withFileTypes: true,
 });
@@ -115,13 +122,13 @@ const skills: Skill[] = skillDirectoryEntries
     if (!description) {
       errors.push(`${repositoryPath(skillPath)}: description manquante`);
     }
-    if (description && wordCount(description) > 50) {
+    if (description && wordCount(description) > 40) {
       warnings.push(
-        `${repositoryPath(skillPath)}: description de plus de 50 mots`,
+        `${repositoryPath(skillPath)}: description de plus de 40 mots`,
       );
     }
-    if (wordCount(content) > 1_200) {
-      warnings.push(`${repositoryPath(skillPath)}: plus de 1 200 mots`);
+    if (!isExternalSkillDocument(skillPath) && wordCount(content) > 1_000) {
+      warnings.push(`${repositoryPath(skillPath)}: plus de 1 000 mots`);
     }
 
     return [
@@ -136,12 +143,6 @@ const skillNames: Set<string> = new Set(
   skills.map((skill: Skill): string => skill.name),
 );
 const markdownFiles: string[] = listMarkdownFiles(agentsRoot);
-const externalSkillRoots: string[] = [join(skillsRoot, 'writing-for-agents')];
-
-const isExternalSkillDocument = (markdownPath: string): boolean =>
-  externalSkillRoots.some((externalSkillRoot: string): boolean =>
-    markdownPath.startsWith(`${externalSkillRoot}${sep}`),
-  );
 
 markdownFiles.forEach((markdownPath: string): void => {
   const content: string = readText(markdownPath);
@@ -250,9 +251,9 @@ symlinkExpectations.forEach((expectation: SymlinkExpectation): void => {
 
 const agentsGuidePath: string = join(agentsRoot, 'AGENTS.md');
 const agentsGuideWordCount: number = wordCount(readText(agentsGuidePath));
-if (agentsGuideWordCount > 2_500) {
+if (agentsGuideWordCount > 1_200) {
   warnings.push(
-    `${repositoryPath(agentsGuidePath)}: plus de 2 500 mots (${agentsGuideWordCount})`,
+    `${repositoryPath(agentsGuidePath)}: plus de 1 200 mots (${agentsGuideWordCount})`,
   );
 }
 
