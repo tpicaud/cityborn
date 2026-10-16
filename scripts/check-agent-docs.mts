@@ -6,7 +6,7 @@ import {
   readFileSync,
   readlinkSync,
 } from 'node:fs';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 
 type Skill = {
   implicitInvocation: boolean;
@@ -136,6 +136,12 @@ const skillNames: Set<string> = new Set(
   skills.map((skill: Skill): string => skill.name),
 );
 const markdownFiles: string[] = listMarkdownFiles(agentsRoot);
+const externalSkillRoots: string[] = [join(skillsRoot, 'writing-for-agents')];
+
+const isExternalSkillDocument = (markdownPath: string): boolean =>
+  externalSkillRoots.some((externalSkillRoot: string): boolean =>
+    markdownPath.startsWith(`${externalSkillRoot}${sep}`),
+  );
 
 markdownFiles.forEach((markdownPath: string): void => {
   const content: string = readText(markdownPath);
@@ -168,9 +174,14 @@ markdownFiles.forEach((markdownPath: string): void => {
     }
   });
 
+  const externalSkillDocument: boolean = isExternalSkillDocument(markdownPath);
+
   content
     .split(/\r?\n/u)
-    .filter((line: string): boolean => /\bskills?\b/iu.test(line))
+    .filter(
+      (line: string): boolean =>
+        !externalSkillDocument && /\bskills?\b/iu.test(line),
+    )
     .flatMap((line: string): string[] =>
       Array.from(
         line.matchAll(/`([a-z0-9]+(?:-[a-z0-9]+)+)`/gu),

@@ -1,6 +1,6 @@
 ---
 name: writing-for-agents
-description: "Documents lus par les agents. À utiliser avant de créer ou modifier un skill (SKILL.md ou fichier de référence), AGENTS.md ou CLAUDE.md, y compris pour une retouche faite en cours d'issue."
+description: Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.
 ---
 
 Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
@@ -41,17 +41,6 @@ Push too little down and the top bloats; push too much and you hide material the
 **Co-location** is the within-file companion: where the ladder decides _how far down_ a piece sits, co-location decides _what sits beside it_ once there. Keep a concept's definition, rules, and caveats under one heading rather than scattered, so reading one part brings its neighbours with it. The test: the document should read like documentation written for the agent. Grouped material reads that way; scattered material does not. (Distinct from duplication: that repeats one meaning in two places; scattering fragments one meaning across many.)
 
 **Sprawl** is the failure mode here: a document simply too long, even when every line is live and unique. Attention thins across the excess, and every extra line is one more to keep relevant. The cure is the ladder: disclose reference behind pointers, and split by branch or sequence so each path carries only what it needs.
-
-## Representation
-
-Choose the Markdown structure that exposes the relationship between instructions:
-
-- Use a short paragraph for one indivisible claim whose rule, reason, and caveat must be read together.
-- Use bullets for peer rules, independent obligations, or completion checks.
-- Use a numbered list only when order matters.
-- Use a table for exact mappings or comparisons whose rows share the same schema and whose cells stay short.
-
-Split a sentence that carries three or more independently checkable obligations, especially when they are joined by _and_. Keep each obligation and its qualifier in one bullet. Replace a table with headings or bullets when its cells need multiple sentences, nested lists, or exceptions. Never repeat the same meaning in prose and in a list or table.
 
 ## Steps and completion criteria
 
