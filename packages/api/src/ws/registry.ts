@@ -1,7 +1,7 @@
 import type { ApiDomain } from '../contract/api-domain';
-import { ApiErrorSchema } from '../schemas/api-error.schema';
+import { ApiErrorSchema } from '../errors/api-error.schema';
+import { sessionWsChannel } from '../session/session.channel';
 import type { WsChannel, WsServerEvent } from './channel';
-import { sessionWsChannel } from './session.channel';
 
 export type WsChannels = {
   readonly [Domain in ApiDomain]?: WsChannel<Domain>;

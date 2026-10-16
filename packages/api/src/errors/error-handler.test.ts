@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { ApiResponseError } from '../protocol/api-response';
-import type { ApiError } from '../schemas/api-error.schema';
+import type { ApiError } from './api-error.schema';
 import { ErrorCode } from './error-codes';
 import { getFriendlyErrorMessage, resolveErrorMessage } from './error-handler';
 import { UserFacingError } from './user-facing-error';

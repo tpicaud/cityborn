@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ApiErrorSchema } from '../schemas/api-error.schema';
+import { ApiErrorSchema } from '../errors/api-error.schema';
 
 export const WsAckFailureSchema = z.object({
   success: z.literal(false),

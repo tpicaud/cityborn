@@ -1,15 +1,15 @@
 import { initContract } from '@ts-rest/core';
-import { authContract } from './auth.contract';
-import { categoryAdminContract } from './category.admin.contract';
-import { categoryContract } from './category.contract';
-import { guessObjectAdminContract } from './guess-object.admin.contract';
-import { guessObjectContract } from './guess-object.contract';
-import { healthContract } from './health.contract';
-import { searchAdminContract } from './search.admin.contract';
-import { sentenceContract } from './sentence.contract';
-import { sessionContract } from './session.contract';
-import { userContract } from './user.contract';
-import { worldLocationAdminContract } from './world-location.admin.contract';
+import { authContract } from '../auth/auth.contract';
+import { categoryAdminContract } from '../category/category.admin.contract';
+import { categoryContract } from '../category/category.contract';
+import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
+import { guessObjectContract } from '../guess-object/guess-object.contract';
+import { healthContract } from '../health/health.contract';
+import { searchAdminContract } from '../search/search.admin.contract';
+import { sentenceContract } from '../sentence/sentence.contract';
+import { sessionContract } from '../session/session.contract';
+import { userContract } from '../user/user.contract';
+import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
 
 const c = initContract();
 

@@ -1,4 +1,4 @@
-import { type ApiError, parseApiError } from '../schemas/api-error.schema';
+import { type ApiError, parseApiError } from '../errors/api-error.schema';
 import type { HttpSuccessStatus } from './http-status';
 
 /**
