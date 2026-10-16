@@ -8,6 +8,7 @@ import {
   useContext,
   useState,
 } from 'react';
+import { isExpectedApiError } from './expectedApiError';
 
 export type ReportError = (error: unknown, fallbackMessage?: string) => void;
 
@@ -41,7 +42,7 @@ export const ErrorReporterProvider = ({
   const reportError: ReportError = useCallback(
     (error: unknown, fallbackMessage?: string): void => {
       setErrorMessage(resolveErrorMessage(error, fallbackMessage));
-      console.error(error);
+      if (!isExpectedApiError(error)) console.error(error);
       setOpenDialog(true);
     },
     [],
