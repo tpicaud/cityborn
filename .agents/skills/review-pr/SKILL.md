@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: "Review Cityborn d'une PR ou d'une branche, pour toute demande de review sans outil désigné : confronter le diff à son issue, aux règles d'AGENTS.md, aux skills métier, à la sécurité et aux tests."
+description: "Review Cityborn d'une PR ou d'une branche, pour toute demande de review sans outil désigné : confronter le diff à son issue, aux règles d'AGENTS.md, aux skills de conventions, à la sécurité et aux tests."
 ---
 
 # Relire une PR
@@ -11,7 +11,7 @@ La review rend des findings : le code, la branche et GitHub restent inchangés. 
 
 1. Résoudre la cible : une PR (`gh pr view`, `gh pr diff`) ou, à défaut, la branche courante (`git diff origin/main...HEAD`) après `git fetch --all --prune`.
 2. Lire l'issue liée (`Closes #…` dans la PR, ou numéro de la branche) et ses commentaires. En extraire les critères d'acceptation ; sans issue, les déduire de la description de la PR. Les affirmations de cette description (vérifications passées, impacts écartés) restent à démontrer par le code.
-3. Charger les skills métier déclenchés par les fichiers du diff.
+3. Charger les skills de conventions des périmètres du diff.
 4. Relire chaque fichier modifié avec son contexte, à travers chaque axe de la [checklist](#checklist). Ouvrir les appelants et les fichiers voisins dès qu'un constat en dépend.
 5. Confirmer chaque finding en relisant le code concerné : garder ce qui est démontré par le code, écarter le soupçon.
 
@@ -22,10 +22,9 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 - **Issue** : chaque critère d'acceptation est satisfait ; le diff reste dans le périmètre demandé.
 - **Correction** : logique, cas limites, erreurs propagées, concurrence, états partiels.
 - **Sécurité** : authentification et autorisation de chaque route ou event touché, validation zod des entrées, secrets absents du code, des logs et des réponses, données exposées au strict nécessaire, injections.
-- **Règles d'`AGENTS.md`** : type-safe, architecture et chaque symptôme de « Découpage », style de code, garde-fous.
-- **Skills métier** : chaque règle des skills chargés à l'étape 3.
-- **Contrat API** : rétrocompatibilité et conventions de `conventions-api` pour tout changement dans `packages/api`.
-- **Tests** : chaque comportement ou invariant significatif est testé au bon tier ; aucun test ne recopie l'implémentation.
+- **Règles d'`AGENTS.md`** : chaque règle, dont chaque symptôme de « Découpage ».
+- **Skills de conventions** : chaque règle des skills chargés à l'étape 3.
+- **Tests** : chaque comportement ajouté ou modifié est couvert par un test.
 - **Documentation** : une convention modifiée est reflétée dans `AGENTS.md` ou le skill concerné ; aucun ajout ne décrit l'implémentation du diff (noms de fichiers, comportement d'un cas particulier).
 
 ## Format des findings
