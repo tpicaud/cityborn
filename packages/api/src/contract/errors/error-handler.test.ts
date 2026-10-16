@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { ApiResponseError } from '../protocol/api-response';
+import { UserFacingError } from '../../errors/user-facing-error';
+import { ApiResponseError } from '../api-response';
 import type { ApiError } from './api-error.schema';
 import { ErrorCode } from './error-codes';
 import { getFriendlyErrorMessage, resolveErrorMessage } from './error-handler';
-import { UserFacingError } from './user-facing-error';
 
 const genericErrorMessage: string = "Quelque chose s'est mal passé.";
 

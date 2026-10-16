@@ -1,5 +1,4 @@
 import type { AnyZodObject, z } from 'zod';
-import type { WsAck } from './ack.schema';
 import type {
   WsChannel,
   WsChannelClientEvent,
@@ -7,7 +6,8 @@ import type {
   WsChannelServerEvent,
   WsClientEvent,
   WsServerEvent,
-} from './channel';
+} from '../../ws/channel';
+import type { WsAck } from './ack.schema';
 import { wsChannels, wsSharedServerEvents } from './registry';
 
 type WsChannelsMap = typeof wsChannels;

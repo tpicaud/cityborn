@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../contract/api-domain';
-import { commonErrorResponses } from '../errors/api-error.schema';
+import type { ApiDomain } from '../protocol/api-domain';
 import { IncludeQuerySchema } from '../protocol/payload.schema';
 import { GuessObjectIdParamSchema } from './guess-object.id';
 import { GuessObjectSchema, GuessObjectsSchema } from './guess-object.schema';
@@ -14,14 +13,14 @@ export const guessObjectContract = c.router(
       method: 'GET',
       path: '/',
       query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectsSchema },
     },
     getGuessObject: {
       method: 'GET',
       path: '/:id',
       pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
-      responses: { 200: GuessObjectSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectSchema },
     },
   },
   { pathPrefix: '/guess-object' satisfies `/${ApiDomain}` },

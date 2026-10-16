@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../contract/api-domain';
-import { commonErrorResponses } from '../errors/api-error.schema';
+import type { ApiDomain } from '../protocol/api-domain';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -28,46 +27,46 @@ export const guessObjectAdminContract = c.router(
       method: 'GET',
       path: '/full',
       query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: FullGuessObjectsSchema, ...commonErrorResponses },
+      responses: { 200: FullGuessObjectsSchema },
     },
     getFullGuessObject: {
       method: 'GET',
       path: '/:id/full',
       pathParams: GuessObjectIdParamSchema,
-      responses: { 200: FullGuessObjectSchema, ...commonErrorResponses },
+      responses: { 200: FullGuessObjectSchema },
     },
     getGuessObject: {
       method: 'GET',
       path: '/:id',
       pathParams: GuessObjectIdParamSchema,
       query: IncludeQuerySchema,
-      responses: { 200: GuessObjectSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectSchema },
     },
     getGuessObjects: {
       method: 'GET',
       path: '/',
       query: z.object({ guessObjectsIds: z.string() }),
-      responses: { 200: GuessObjectsSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectsSchema },
     },
     createGuessObject: {
       method: 'POST',
       path: '/',
       body: CreateGuessObjectSchema,
-      responses: { 201: GuessObjectUuidIdSchema, ...commonErrorResponses },
+      responses: { 201: GuessObjectUuidIdSchema },
     },
     updateGuessObject: {
       method: 'PATCH',
       path: '/:id',
       pathParams: GuessObjectIdParamSchema,
       body: PatchGuessObjectSchema,
-      responses: { 200: GuessObjectUuidIdSchema, ...commonErrorResponses },
+      responses: { 200: GuessObjectUuidIdSchema },
     },
     deleteGuessObject: {
       method: 'DELETE',
       path: '/:id',
       pathParams: GuessObjectIdParamSchema,
       body: emptyRequestBodySchema,
-      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+      responses: { 200: emptyResponseSchema },
     },
   },
   { pathPrefix: '/guess-object' satisfies `/${ApiDomain}` },

@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { AuthErrorCode } from '../auth/auth.error-codes';
-import { CategoryErrorCode } from '../category/category.error-codes';
-import { GameErrorCode } from '../game/game.error-codes';
-import { GuessObjectErrorCode } from '../guess-object/guess-object.error-codes';
-import { PlayerErrorCode } from '../player/player.error-codes';
-import { SentenceErrorCode } from '../sentence/sentence.error-codes';
-import { SessionErrorCode } from '../session/session.error-codes';
-import { UserErrorCode } from '../user/user.error-codes';
-import { WorldLocationErrorCode } from '../world-location/world-location.error-codes';
+import { AuthErrorCode } from '../../auth/auth.error-codes';
+import { CategoryErrorCode } from '../../category/category.error-codes';
+import { TechnicalErrorCode } from '../../errors/technical.error-codes';
+import { GameErrorCode } from '../../game/game.error-codes';
+import { GuessObjectErrorCode } from '../../guess-object/guess-object.error-codes';
+import { PlayerErrorCode } from '../../player/player.error-codes';
+import { SentenceErrorCode } from '../../sentence/sentence.error-codes';
+import { SessionErrorCode } from '../../session/session.error-codes';
+import { UserErrorCode } from '../../user/user.error-codes';
+import { WorldLocationErrorCode } from '../../world-location/world-location.error-codes';
 import { ErrorCode } from './error-codes';
-import { TechnicalErrorCode } from './technical.error-codes';
 
 const errorCodeEnums: Record<string, string>[] = [
   UserErrorCode,

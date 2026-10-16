@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../contract/api-domain';
-import { commonErrorResponses } from '../errors/api-error.schema';
+import type { ApiDomain } from '../protocol/api-domain';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -23,45 +22,45 @@ export const categoryAdminContract = c.router(
     getCategoryTrees: {
       method: 'GET',
       path: '/tree',
-      responses: { 200: CategoryTreesSchema, ...commonErrorResponses },
+      responses: { 200: CategoryTreesSchema },
     },
     getAllCategories: {
       method: 'GET',
       path: '/',
       query: IncludeQuerySchema,
-      responses: { 200: CategoriesSchema, ...commonErrorResponses },
+      responses: { 200: CategoriesSchema },
     },
     getCategory: {
       method: 'GET',
       path: '/:id',
       pathParams: CategoryIdParamSchema,
-      responses: { 200: CategorySchema, ...commonErrorResponses },
+      responses: { 200: CategorySchema },
     },
     getFullCategory: {
       method: 'GET',
       path: '/:id/full',
       pathParams: CategoryIdParamSchema,
-      responses: { 200: FullCategorySchema, ...commonErrorResponses },
+      responses: { 200: FullCategorySchema },
     },
     createCategory: {
       method: 'POST',
       path: '/',
       body: CreateCategorySchema,
-      responses: { 201: CategorySchema, ...commonErrorResponses },
+      responses: { 201: CategorySchema },
     },
     updateCategory: {
       method: 'PUT',
       path: '/:id',
       pathParams: CategoryIdParamSchema,
       body: UpdateCategorySchema,
-      responses: { 200: CategorySchema, ...commonErrorResponses },
+      responses: { 200: CategorySchema },
     },
     deleteCategory: {
       method: 'DELETE',
       path: '/:id',
       pathParams: CategoryIdParamSchema,
       body: emptyRequestBodySchema,
-      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+      responses: { 200: emptyResponseSchema },
     },
   },
   { pathPrefix: '/category' satisfies `/${ApiDomain}` },

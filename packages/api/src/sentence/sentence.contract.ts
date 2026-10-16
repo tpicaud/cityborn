@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../contract/api-domain';
-import { commonErrorResponses } from '../errors/api-error.schema';
+import type { ApiDomain } from '../protocol/api-domain';
 import { ScoreTypeSchema, SentenceSchema } from './sentence.schema';
 
 const c = initContract();
@@ -12,7 +11,7 @@ export const sentenceContract = c.router(
       method: 'GET',
       path: '/',
       query: z.object({ score_type: ScoreTypeSchema }),
-      responses: { 200: SentenceSchema, ...commonErrorResponses },
+      responses: { 200: SentenceSchema },
     },
   },
   { pathPrefix: '/sentence' satisfies `/${ApiDomain}` },

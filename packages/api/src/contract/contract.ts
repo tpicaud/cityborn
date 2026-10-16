@@ -10,26 +10,30 @@ import { sentenceContract } from '../sentence/sentence.contract';
 import { sessionContract } from '../session/session.contract';
 import { userContract } from '../user/user.contract';
 import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
+import { commonErrorResponses } from './errors/api-error.schema';
 
 const c = initContract();
 
-export const contract = c.router({
-  auth: authContract,
-  health: healthContract,
-  user: userContract,
-  session: sessionContract,
-  category: categoryContract,
-  guessObjects: guessObjectContract,
-  sentence: sentenceContract,
-  admin: c.router(
-    {
-      category: categoryAdminContract,
-      guessObjects: guessObjectAdminContract,
-      search: searchAdminContract,
-      worldLocation: worldLocationAdminContract,
-    },
-    { pathPrefix: '/admin' },
-  ),
-});
+export const contract = c.router(
+  {
+    auth: authContract,
+    health: healthContract,
+    user: userContract,
+    session: sessionContract,
+    category: categoryContract,
+    guessObjects: guessObjectContract,
+    sentence: sentenceContract,
+    admin: c.router(
+      {
+        category: categoryAdminContract,
+        guessObjects: guessObjectAdminContract,
+        search: searchAdminContract,
+        worldLocation: worldLocationAdminContract,
+      },
+      { pathPrefix: '/admin' },
+    ),
+  },
+  { commonResponses: { ...commonErrorResponses } },
+);
 
 export type AppContract = typeof contract;

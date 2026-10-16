@@ -1,5 +1,5 @@
 import type { AnyZodObject } from 'zod';
-import type { ApiDomain } from '../contract/api-domain';
+import type { ApiDomain } from '../protocol/api-domain';
 
 export interface WsClientEvent {
   readonly payload?: AnyZodObject;

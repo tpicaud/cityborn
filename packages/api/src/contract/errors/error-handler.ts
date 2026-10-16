@@ -1,7 +1,7 @@
-import { ApiResponseError } from '../protocol/api-response';
+import { UserFacingError } from '../../errors/user-facing-error';
+import { ApiResponseError } from '../api-response';
 import { type ApiError, isApiError } from './api-error.schema';
 import { ErrorCode } from './error-codes';
-import { UserFacingError } from './user-facing-error';
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // User

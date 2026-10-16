@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../contract/api-domain';
-import { commonErrorResponses } from '../errors/api-error.schema';
 import { GameSchema, GameStateSchema } from '../game/game.schema';
+import type { ApiDomain } from '../protocol/api-domain';
 import { emptyResponseSchema } from '../protocol/payload.schema';
 import { SessionIdParamSchema } from './session.id';
 import { CreateSessionSchema, SessionSchema } from './session.schema';
@@ -20,25 +19,25 @@ export const sessionContract = c.router(
       method: 'POST',
       path: '/',
       body: CreateSessionSchema,
-      responses: { 201: SessionSchema, ...commonErrorResponses },
+      responses: { 201: SessionSchema },
     },
     getSession: {
       method: 'GET',
       path: '/:id',
       pathParams: SessionIdParamSchema,
-      responses: { 200: SessionSchema, ...commonErrorResponses },
+      responses: { 200: SessionSchema },
     },
     createGame: {
       method: 'POST',
       path: '/create-game',
       body: SessionSchema,
-      responses: { 200: GameSchema, ...commonErrorResponses },
+      responses: { 200: GameSchema },
     },
     finalizeGame: {
       method: 'POST',
       path: '/finalize-game',
       body: finalizeGameBodySchema,
-      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+      responses: { 200: emptyResponseSchema },
     },
     /**
      * @deprecated Use `finalizeGame` instead. Kept so mobile builds
@@ -50,7 +49,7 @@ export const sessionContract = c.router(
       method: 'POST',
       path: '/end-solo-game',
       body: finalizeGameBodySchema,
-      responses: { 200: emptyResponseSchema, ...commonErrorResponses },
+      responses: { 200: emptyResponseSchema },
     },
   },
   { pathPrefix: '/session' satisfies `/${ApiDomain}` },

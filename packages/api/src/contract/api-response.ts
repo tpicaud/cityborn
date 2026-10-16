@@ -1,5 +1,5 @@
-import { type ApiError, parseApiError } from '../errors/api-error.schema';
-import type { HttpSuccessStatus } from './http-status';
+import type { HttpSuccessStatus } from '../protocol/http-status';
+import { type ApiError, parseApiError } from './errors/api-error.schema';
 
 /**
  * @deprecated Utiliser `unwrapApiResponse` et propager l'`ApiResponseError`

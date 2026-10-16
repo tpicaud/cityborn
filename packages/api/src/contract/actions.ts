@@ -1,6 +1,6 @@
 import { type AppRoute, type AppRouter, isAppRoute } from '@ts-rest/core';
-import { contract } from './contract/contract';
-import type { WsChannel } from './ws/channel';
+import type { WsChannel } from '../ws/channel';
+import { contract } from './contract';
 import { wsChannels } from './ws/registry';
 import type { WsClientEventName } from './ws/socket-events';
 
