@@ -7,9 +7,13 @@ import {
   type Game,
   type GameConfig,
   GameConfigSchema,
+  type GameRecord,
+  GameRecordSchema,
   GameSchema,
   type GameState,
   GameStateSchema,
+  type Guess,
+  GuessSchema,
   type Round,
   RoundSchema,
 } from '../schemas/game.schema';
@@ -44,6 +48,29 @@ export function buildCreateGameRecord(
     players: [player],
     guessObjectsIds: [],
     results: { [player.username]: { results: [] } },
+    ...overrides,
+  });
+}
+
+export function buildGameRecord(
+  overrides: Partial<z.input<typeof GameRecordSchema>> = {},
+): GameRecord {
+  return GameRecordSchema.parse({
+    id: 'game-record-1',
+    createdAt: '2026-09-13T10:00:00.000Z',
+    ...buildCreateGameRecord(),
+    ...overrides,
+  });
+}
+
+export function buildGuess(
+  overrides: Partial<z.input<typeof GuessSchema>> = {},
+): Guess {
+  return GuessSchema.parse({
+    coordinates: { lat: 48.85, lng: 2.35 },
+    distance: 120,
+    points: 887,
+    win: false,
     ...overrides,
   });
 }

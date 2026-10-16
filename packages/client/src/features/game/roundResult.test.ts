@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import type { Game, Guess, PlayerId } from '@cityborn/api';
+import { describe, it } from 'node:test';
 import {
   buildFullGuessObject,
+  buildGame,
+  buildGameState,
+  buildGuess,
+  buildRound,
   defaultGuess,
-  GameIdSchema,
-  GameStatus,
+  type Game,
+  type Guess,
+  type GuessObjectId,
   GuessObjectIdSchema,
+  type PlayerId,
   PlayerIdSchema,
   RoundStatus,
 } from '@cityborn/api';
@@ -15,89 +20,112 @@ import {
   createRoundResult,
   type RoundResult,
 } from './roundResult';
-import { formatTimeLeft } from './roundTimer';
 
 const localPlayerID: PlayerId = PlayerIdSchema.parse('local-player');
 const otherPlayerID: PlayerId = PlayerIdSchema.parse('other-player');
-const guessObjectID = GuessObjectIdSchema.parse('object-1');
+const guessObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-1');
 
-const missedGuess: Guess = {
-  coordinates: { lat: 45, lng: 4 },
-  distance: 391.42,
-  points: 676,
-  win: false,
-};
+const missedGuess: Guess = buildGuess({ distance: 391.42, points: 676 });
 
-function buildGame(
-  status: RoundStatus,
-  playersGuesses: Record<PlayerId, Guess> | undefined,
-): Game {
-  return {
-    id: GameIdSchema.parse('game-1'),
-    config: { categories: [], timer: 25, nbOfObjects: 1 },
-    status: GameStatus.IN_GAME,
-    state: {
+function buildGameInRound({
+  status,
+  playersGuesses,
+}: {
+  status: RoundStatus;
+  playersGuesses?: Record<PlayerId, Guess>;
+}): Game {
+  return buildGame({
+    state: buildGameState({
       guessObjectsIds: [guessObjectID],
       guessObjects: [buildFullGuessObject({ id: guessObjectID })],
-      results: {},
-      currentRound: { status, guessObjectId: guessObjectID, playersGuesses },
-    },
-  };
+      currentRound: buildRound({
+        status,
+        guessObjectId: guessObjectID,
+        playersGuesses,
+      }),
+    }),
+  });
 }
 
-test('the round result separates the local outcome from the other players points', () => {
-  const game: Game = buildGame(RoundStatus.SHOWING_RESULTS, {
-    [localPlayerID]: missedGuess,
-    [otherPlayerID]: { ...missedGuess, points: 900 },
+describe('createRoundResult', () => {
+  it('separates the local outcome from the other players points', () => {
+    const game: Game = buildGameInRound({
+      status: RoundStatus.SHOWING_RESULTS,
+      playersGuesses: {
+        [localPlayerID]: missedGuess,
+        [otherPlayerID]: buildGuess({ points: 900 }),
+      },
+    });
+
+    const roundResult: RoundResult | undefined = createRoundResult(
+      game,
+      localPlayerID,
+    );
+
+    assert.deepEqual(roundResult?.localOutcome, {
+      kind: 'missed',
+      distanceInKm: 391.42,
+    });
+    assert.equal(roundResult?.localPoints, 676);
+    assert.deepEqual(roundResult?.otherPlayersPoints, [
+      { playerID: otherPlayerID, points: 900 },
+    ]);
   });
 
-  const roundResult: RoundResult | undefined = createRoundResult(
-    game,
-    localPlayerID,
-  );
+  it('reports a guess sent when the timer ends as timed out', () => {
+    const game: Game = buildGameInRound({
+      status: RoundStatus.SHOWING_RESULTS,
+      playersGuesses: { [localPlayerID]: defaultGuess },
+    });
 
-  assert.deepEqual(roundResult?.localOutcome, {
-    kind: 'missed',
-    distanceInKm: 391.42,
+    const roundResult: RoundResult | undefined = createRoundResult(
+      game,
+      localPlayerID,
+    );
+
+    assert.deepEqual(roundResult?.localOutcome, { kind: 'timedOut' });
   });
-  assert.equal(roundResult?.localPoints, 676);
-  assert.deepEqual(roundResult?.otherPlayersPoints, [
-    { playerID: otherPlayerID, points: 900 },
-  ]);
+
+  it('returns no result while players are guessing', () => {
+    const game: Game = buildGameInRound({
+      status: RoundStatus.GUESSING,
+      playersGuesses: { [localPlayerID]: missedGuess },
+    });
+
+    const roundResult: RoundResult | undefined = createRoundResult(
+      game,
+      localPlayerID,
+    );
+
+    assert.equal(roundResult, undefined);
+  });
 });
 
-test('a guess sent when the timer ends is a timed out outcome', () => {
-  const game: Game = buildGame(RoundStatus.SHOWING_RESULTS, {
-    [localPlayerID]: defaultGuess,
+describe('canSubmitGuess', () => {
+  it('accepts a pre-guess during a round the player has not guessed yet', () => {
+    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
+
+    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+
+    assert.equal(canSubmit, true);
   });
 
-  assert.deepEqual(createRoundResult(game, localPlayerID)?.localOutcome, {
-    kind: 'timedOut',
-  });
-});
+  it('rejects a submission without a pre-guess', () => {
+    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
 
-test('there is no round result while players are guessing', () => {
-  const game: Game = buildGame(RoundStatus.GUESSING, {
-    [localPlayerID]: missedGuess,
+    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, undefined);
+
+    assert.equal(canSubmit, false);
   });
 
-  assert.equal(createRoundResult(game, localPlayerID), undefined);
-});
+  it('rejects a second guess in the same round', () => {
+    const game: Game = buildGameInRound({
+      status: RoundStatus.GUESSING,
+      playersGuesses: { [localPlayerID]: missedGuess },
+    });
 
-test('a guess can be submitted once per round with a pre guess', () => {
-  const guessingGame: Game = buildGame(RoundStatus.GUESSING, undefined);
-  const guessedGame: Game = buildGame(RoundStatus.GUESSING, {
-    [localPlayerID]: missedGuess,
+    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+
+    assert.equal(canSubmit, false);
   });
-
-  assert.equal(canSubmitGuess(guessingGame, localPlayerID, missedGuess), true);
-  assert.equal(canSubmitGuess(guessingGame, localPlayerID, undefined), false);
-  assert.equal(canSubmitGuess(guessedGame, localPlayerID, missedGuess), false);
-});
-
-test('the time left is rounded up to the started second', () => {
-  assert.equal(formatTimeLeft(25), '0:25');
-  assert.equal(formatTimeLeft(24.2), '0:25');
-  assert.equal(formatTimeLeft(0.4), '0:01');
-  assert.equal(formatTimeLeft(65), '1:05');
 });

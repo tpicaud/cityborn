@@ -4,10 +4,14 @@ import { formatSessionCodeInput } from './sessionLauncher';
 
 describe('formatSessionCodeInput', () => {
   it('keeps only digits', () => {
-    assert.equal(formatSessionCodeInput('12a-3 4.5'), '12345');
+    const sessionCode: string = formatSessionCodeInput('12a-3 4.5');
+
+    assert.equal(sessionCode, '12345');
   });
 
   it('keeps at most six digits', () => {
-    assert.equal(formatSessionCodeInput('12345678'), '123456');
+    const sessionCode: string = formatSessionCodeInput('12345678');
+
+    assert.equal(sessionCode, '123456');
   });
 });

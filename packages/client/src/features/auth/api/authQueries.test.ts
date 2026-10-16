@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import {
-  type GameRecord,
-  type User,
-  UserIdSchema,
-  UsernameSchema,
-} from '@cityborn/api';
+import { describe, it, type TestContext } from 'node:test';
+import { buildUser, type GameRecord, type User } from '@cityborn/api';
 import { type Query, QueryClient, type QueryKey } from '@tanstack/react-query';
 import type { AuthApi } from './authApi';
 import {
@@ -14,14 +9,7 @@ import {
   currentUserQueryOptions,
 } from './authQueries';
 
-const signedInUser: User = {
-  id: UserIdSchema.parse('user-1'),
-  username: UsernameSchema.parse('citizen'),
-  email: 'citizen@cityborn.fr',
-  type: 'email',
-  role: 'player',
-  isVerified: true,
-};
+const signedInUser: User = buildUser();
 
 const signedInUserGameRecordsQueryKey: QueryKey = [
   ...accountQueryKey(signedInUser.id),
@@ -51,50 +39,52 @@ function createFakeAuthApi(getCurrentUser: AuthApi['getCurrentUser']): AuthApi {
   };
 }
 
-test('clearCacheAfterSignOut signs the user out and drops every other cached query', async () => {
-  const authApi: AuthApi = createFakeAuthApi(async () => signedInUser);
-  const queryClient: QueryClient = new QueryClient();
-  await queryClient.fetchQuery(currentUserQueryOptions(authApi));
-  queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
-  queryClient.setQueryData<string[]>(categoryTreesQueryKey, ['cities']);
-  queryClient.setQueryData<string[]>(adminCategoryListQueryKey, ['draft']);
+describe('clearCacheAfterSignOut', () => {
+  it('signs the user out and drops every other cached query', async (context: TestContext) => {
+    const authApi: AuthApi = createFakeAuthApi(async () => signedInUser);
+    const queryClient: QueryClient = new QueryClient();
+    context.after(() => queryClient.clear());
+    await queryClient.fetchQuery(currentUserQueryOptions(authApi));
+    queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
+    queryClient.setQueryData<string[]>(categoryTreesQueryKey, ['cities']);
+    queryClient.setQueryData<string[]>(adminCategoryListQueryKey, ['draft']);
 
-  await clearCacheAfterSignOut(queryClient);
+    await clearCacheAfterSignOut(queryClient);
 
-  assert.equal(
-    queryClient.getQueryData(currentUserQueryOptions(authApi).queryKey),
-    null,
-  );
-  assert.deepEqual(
-    queryClient
-      .getQueryCache()
-      .getAll()
-      .map((query: Query) => query.queryKey),
-    [currentUserQueryOptions(authApi).queryKey],
-  );
-  queryClient.clear();
-});
+    assert.equal(
+      queryClient.getQueryData(currentUserQueryOptions(authApi).queryKey),
+      null,
+    );
+    assert.deepEqual(
+      queryClient
+        .getQueryCache()
+        .getAll()
+        .map((query: Query) => query.queryKey),
+      [currentUserQueryOptions(authApi).queryKey],
+    );
+  });
 
-test('clearCacheAfterSignOut keeps the user signed out when a current user fetch was in flight', async () => {
-  let resolveCurrentUser: (user: User) => void = () => undefined;
-  const authApi: AuthApi = createFakeAuthApi(
-    () =>
-      new Promise<User>((resolve: (user: User) => void) => {
-        resolveCurrentUser = resolve;
-      }),
-  );
-  const queryClient: QueryClient = new QueryClient();
-  const currentUserFetch: Promise<User | null> = queryClient
-    .fetchQuery(currentUserQueryOptions(authApi))
-    .catch(() => null);
+  it('keeps the user signed out when a current user fetch was in flight', async (context: TestContext) => {
+    let resolveCurrentUser: (user: User) => void = () => undefined;
+    const authApi: AuthApi = createFakeAuthApi(
+      () =>
+        new Promise<User>((resolve: (user: User) => void) => {
+          resolveCurrentUser = resolve;
+        }),
+    );
+    const queryClient: QueryClient = new QueryClient();
+    context.after(() => queryClient.clear());
+    const currentUserFetch: Promise<User | null> = queryClient
+      .fetchQuery(currentUserQueryOptions(authApi))
+      .catch(() => null);
 
-  await clearCacheAfterSignOut(queryClient);
-  resolveCurrentUser(signedInUser);
-  await currentUserFetch;
+    await clearCacheAfterSignOut(queryClient);
+    resolveCurrentUser(signedInUser);
+    await currentUserFetch;
 
-  assert.equal(
-    queryClient.getQueryData(currentUserQueryOptions(authApi).queryKey),
-    null,
-  );
-  queryClient.clear();
+    assert.equal(
+      queryClient.getQueryData(currentUserQueryOptions(authApi).queryKey),
+      null,
+    );
+  });
 });

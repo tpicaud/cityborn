@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { describe, it, type TestContext } from 'node:test';
 import type { TokenStorage } from '../platform/tokenStorage';
 import type { SocketConnection } from './socketConnection';
 import {
@@ -9,7 +9,7 @@ import {
   type SocketFactoryOptions,
 } from './socketFactory';
 
-const unreachableWebsocketUrl = 'ws://127.0.0.1:9';
+const unreachableWebsocketUrl: string = 'ws://127.0.0.1:9';
 
 const socketFactoryOptions: SocketFactoryOptions = {
   getVisitorId: async () => 'visitor-id',
@@ -22,41 +22,45 @@ const tokenStorage: TokenStorage = {
   clearTokens: async () => {},
 };
 
-const socketFactories: [string, SocketFactory][] = [
-  [
-    'cookie',
-    createCookieSocketFactory(unreachableWebsocketUrl, socketFactoryOptions),
-  ],
-  [
-    'bearer',
-    createBearerSocketFactory(
+describe('createCookieSocketFactory', () => {
+  it('returns a disconnected socket', async () => {
+    const createSocket: SocketFactory = createCookieSocketFactory(
       unreachableWebsocketUrl,
-      tokenStorage,
       socketFactoryOptions,
-    ),
-  ],
-];
+    );
 
-socketFactories.forEach(([authenticationMode, createSocket]) => {
-  test(`${authenticationMode} socket factory returns a disconnected socket`, async () => {
     const connection: SocketConnection = await createSocket();
 
     assert.equal(connection.connected, false);
     assert.equal(connection.active, false);
   });
+
+  it('creates its own socket on each call', async (context: TestContext) => {
+    const createSocket: SocketFactory = createCookieSocketFactory(
+      unreachableWebsocketUrl,
+      socketFactoryOptions,
+    );
+    const firstConnection: SocketConnection = await createSocket();
+    const secondConnection: SocketConnection = await createSocket();
+    context.after(() => firstConnection.disconnect());
+
+    firstConnection.connect();
+
+    assert.equal(secondConnection.active, false);
+  });
 });
 
-test('each socket factory call creates its own socket', async () => {
-  const createSocket: SocketFactory = createCookieSocketFactory(
-    unreachableWebsocketUrl,
-    socketFactoryOptions,
-  );
-  const firstConnection: SocketConnection = await createSocket();
-  const secondConnection: SocketConnection = await createSocket();
+describe('createBearerSocketFactory', () => {
+  it('returns a disconnected socket', async () => {
+    const createSocket: SocketFactory = createBearerSocketFactory(
+      unreachableWebsocketUrl,
+      tokenStorage,
+      socketFactoryOptions,
+    );
 
-  firstConnection.connect();
-  const secondConnectionActive: boolean = secondConnection.active;
-  firstConnection.disconnect();
+    const connection: SocketConnection = await createSocket();
 
-  assert.equal(secondConnectionActive, false);
+    assert.equal(connection.connected, false);
+    assert.equal(connection.active, false);
+  });
 });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { describe, it } from 'node:test';
 import type { ApiError } from '@cityborn/api';
 import { ErrorCode } from '@cityborn/api';
 import type { SocketConnectError, SocketConnection } from './socketConnection';
@@ -62,8 +62,8 @@ function settle(): Promise<void> {
 function createFakeSocket(): FakeSocket {
   const listeners: Map<string, unknown[]> = new Map();
   const state: FakeSocket['state'] = { connected: false, active: false };
-  let connectCalls = 0;
-  let disconnectCalls = 0;
+  let connectCalls: number = 0;
+  let disconnectCalls: number = 0;
 
   const add = (event: string, listener: unknown): void => {
     listeners.set(event, [...(listeners.get(event) ?? []), listener]);
@@ -123,8 +123,8 @@ function supervise(
 ): Supervision {
   const statuses: WsConnectionStatus[] = [];
   const failures: unknown[] = [];
-  let restorationCalls = 0;
-  let refreshCalls = 0;
+  let restorationCalls: number = 0;
+  let refreshCalls: number = 0;
 
   const connection: WsConnection = superviseWsConnection(fake.socket, {
     restoreChannels: async () => {
@@ -165,150 +165,159 @@ function rejectHandshake(fake: FakeSocket, data?: ApiError): void {
   fake.fire('connect_error', connectError(data));
 }
 
-test('opens the connection and becomes connected once channels are restored', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
+describe('superviseWsConnection', () => {
+  it('opens the connection and becomes connected once channels are restored', async () => {
+    const fake: FakeSocket = createFakeSocket();
 
-  assert.equal(fake.connectCalls(), 1);
-  await connect(fake);
+    const supervision: Supervision = supervise(fake);
+    await connect(fake);
 
-  assert.deepEqual(supervision.statuses, ['connecting', 'connected']);
-  assert.equal(supervision.restorationCalls(), 1);
-});
-
-test('restores channels on every new connection, even after an intermediate failure', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-  await connect(fake);
-
-  dropConnection(fake, 'transport close');
-  fake.fire('connect_error', connectError());
-  fake.fire('reconnect_attempt');
-  await connect(fake);
-
-  assert.deepEqual(supervision.statuses, [
-    'connecting',
-    'connected',
-    'reconnecting',
-    'reconnecting',
-    'connected',
-  ]);
-  assert.equal(supervision.restorationCalls(), 2);
-  assert.deepEqual(supervision.failures, []);
-});
-
-test('reconnects explicitly after a server-side disconnection', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-  await connect(fake);
-
-  fake.state.active = false;
-  dropConnection(fake, 'io server disconnect');
-
-  assert.equal(fake.connectCalls(), 2);
-  assert.equal(supervision.statuses.at(-1), 'reconnecting');
-});
-
-test('closes the connection with a single error when the server rejects the handshake', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-
-  rejectHandshake(fake, rateLimitError);
-
-  assert.equal(supervision.statuses.at(-1), 'closed');
-  assert.deepEqual(supervision.failures, [rateLimitError]);
-});
-
-test('reports a single error for an abandoned reconnection sequence', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-  await connect(fake);
-  dropConnection(fake, 'transport close');
-
-  const lastError: SocketConnectError = connectError();
-  fake.fire('connect_error', connectError());
-  fake.fire('connect_error', lastError);
-  fake.fire('reconnect_failed');
-
-  assert.equal(supervision.statuses.at(-1), 'closed');
-  assert.deepEqual(supervision.failures, [lastError]);
-});
-
-test('refreshes authentication then reconnects when the token is rejected', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-
-  rejectHandshake(fake, expiredTokenError);
-  await settle();
-
-  assert.equal(supervision.refreshCalls(), 1);
-  assert.equal(fake.connectCalls(), 2);
-  assert.deepEqual(supervision.failures, []);
-
-  rejectHandshake(fake, expiredTokenError);
-
-  assert.equal(supervision.refreshCalls(), 1);
-  assert.equal(supervision.statuses.at(-1), 'closed');
-  assert.deepEqual(supervision.failures, [expiredTokenError]);
-});
-
-test('ignores the restoration of an already lost connection', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  let resolveRestore: () => void = () => {};
-  const supervision: Supervision = supervise(fake, {
-    restoreChannels: () =>
-      new Promise<void>((resolve) => {
-        resolveRestore = resolve;
-      }),
+    assert.equal(fake.connectCalls(), 1);
+    assert.deepEqual(supervision.statuses, ['connecting', 'connected']);
+    assert.equal(supervision.restorationCalls(), 1);
   });
 
-  fake.state.connected = true;
-  fake.fire('connect');
-  dropConnection(fake, 'transport close');
-  resolveRestore();
-  await settle();
+  it('restores channels on every new connection, even after an intermediate failure', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+    await connect(fake);
 
-  assert.deepEqual(supervision.statuses, ['connecting', 'reconnecting']);
-});
+    dropConnection(fake, 'transport close');
+    fake.fire('connect_error', connectError());
+    fake.fire('reconnect_attempt');
+    await connect(fake);
 
-test('closes the connection when channel restoration fails', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake, {
-    restoreChannels: () => Promise.reject(rateLimitError),
+    assert.deepEqual(supervision.statuses, [
+      'connecting',
+      'connected',
+      'reconnecting',
+      'reconnecting',
+      'connected',
+    ]);
+    assert.equal(supervision.restorationCalls(), 2);
+    assert.deepEqual(supervision.failures, []);
   });
 
-  await connect(fake);
+  it('reconnects explicitly after a server-side disconnection', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+    await connect(fake);
 
-  assert.equal(supervision.statuses.at(-1), 'closed');
-  assert.deepEqual(supervision.failures, [rateLimitError]);
-});
+    fake.state.active = false;
+    dropConnection(fake, 'io server disconnect');
 
-test('retries the restoration on a connection that is still open', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  let shouldFail = true;
-  const supervision: Supervision = supervise(fake, {
-    restoreChannels: () =>
-      shouldFail ? Promise.reject(rateLimitError) : Promise.resolve(),
+    assert.equal(fake.connectCalls(), 2);
+    assert.equal(supervision.statuses.at(-1), 'reconnecting');
   });
-  await connect(fake);
 
-  shouldFail = false;
-  supervision.connection.retry();
-  await settle();
+  it('closes the connection with a single error when the server rejects the handshake', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
 
-  assert.equal(supervision.restorationCalls(), 2);
-  assert.equal(supervision.statuses.at(-1), 'connected');
-});
+    rejectHandshake(fake, rateLimitError);
 
-test('detaches from the socket when closed', async () => {
-  const fake: FakeSocket = createFakeSocket();
-  const supervision: Supervision = supervise(fake);
-  await connect(fake);
+    assert.equal(supervision.statuses.at(-1), 'closed');
+    assert.deepEqual(supervision.failures, [rateLimitError]);
+  });
 
-  supervision.connection.close();
-  fake.fire('disconnect', 'io client disconnect');
+  it('reports a single error for an abandoned reconnection sequence', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+    await connect(fake);
+    dropConnection(fake, 'transport close');
+    const lastError: SocketConnectError = connectError();
 
-  assert.equal(fake.disconnectCalls(), 1);
-  assert.equal(fake.listenerCount(), 0);
-  assert.equal(supervision.statuses.at(-1), 'connected');
+    fake.fire('connect_error', connectError());
+    fake.fire('connect_error', lastError);
+    fake.fire('reconnect_failed');
+
+    assert.equal(supervision.statuses.at(-1), 'closed');
+    assert.deepEqual(supervision.failures, [lastError]);
+  });
+
+  it('refreshes authentication then reconnects when the token is rejected', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+
+    rejectHandshake(fake, expiredTokenError);
+    await settle();
+
+    assert.equal(supervision.refreshCalls(), 1);
+    assert.equal(fake.connectCalls(), 2);
+    assert.deepEqual(supervision.failures, []);
+  });
+
+  it('closes the connection when the token is rejected again after a refresh', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+    rejectHandshake(fake, expiredTokenError);
+    await settle();
+
+    rejectHandshake(fake, expiredTokenError);
+
+    assert.equal(supervision.refreshCalls(), 1);
+    assert.equal(supervision.statuses.at(-1), 'closed');
+    assert.deepEqual(supervision.failures, [expiredTokenError]);
+  });
+
+  it('ignores the restoration of an already lost connection', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    let resolveRestore: () => void = () => {};
+    const supervision: Supervision = supervise(fake, {
+      restoreChannels: () =>
+        new Promise<void>((resolve) => {
+          resolveRestore = resolve;
+        }),
+    });
+
+    fake.state.connected = true;
+    fake.fire('connect');
+    dropConnection(fake, 'transport close');
+    resolveRestore();
+    await settle();
+
+    assert.deepEqual(supervision.statuses, ['connecting', 'reconnecting']);
+  });
+
+  it('closes the connection when channel restoration fails', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake, {
+      restoreChannels: () => Promise.reject(rateLimitError),
+    });
+
+    await connect(fake);
+
+    assert.equal(supervision.statuses.at(-1), 'closed');
+    assert.deepEqual(supervision.failures, [rateLimitError]);
+  });
+
+  it('retries the restoration on a connection that is still open', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    let shouldFail: boolean = true;
+    const supervision: Supervision = supervise(fake, {
+      restoreChannels: () =>
+        shouldFail ? Promise.reject(rateLimitError) : Promise.resolve(),
+    });
+    await connect(fake);
+    shouldFail = false;
+
+    supervision.connection.retry();
+    await settle();
+
+    assert.equal(supervision.restorationCalls(), 2);
+    assert.equal(supervision.statuses.at(-1), 'connected');
+  });
+
+  it('detaches from the socket when closed', async () => {
+    const fake: FakeSocket = createFakeSocket();
+    const supervision: Supervision = supervise(fake);
+    await connect(fake);
+
+    supervision.connection.close();
+    fake.fire('disconnect', 'io client disconnect');
+
+    assert.equal(fake.disconnectCalls(), 1);
+    assert.equal(fake.listenerCount(), 0);
+    assert.equal(supervision.statuses.at(-1), 'connected');
+  });
 });

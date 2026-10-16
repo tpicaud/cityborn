@@ -4,6 +4,8 @@ import {
   CategorySchema,
   type CreateCategory,
   CreateCategorySchema,
+  type FullCategory,
+  FullCategorySchema,
   type UpdateCategory,
   UpdateCategorySchema,
 } from '../schemas/category.schema';
@@ -15,6 +17,16 @@ export function buildCategory(
     id: '00000000-0000-4000-8000-000000000010',
     name: 'Monuments',
     isPublished: true,
+    ...overrides,
+  });
+}
+
+export function buildFullCategory(
+  overrides: Partial<z.input<typeof FullCategorySchema>> = {},
+): FullCategory {
+  return FullCategorySchema.parse({
+    ...buildCategory(),
+    guessObjects: [],
     ...overrides,
   });
 }
