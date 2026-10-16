@@ -37,10 +37,10 @@ import {
 } from './categoryEditorState';
 import {
   type GuessObjectDraftEditor,
-  useGuessObjectDraft,
-} from './useGuessObjectDraft';
+  useGuessObjectDraftEditor,
+} from './useGuessObjectDraftEditor';
 
-type CategoryEditorLoadOptions = {
+export type CategoryEditorLoadOptions = {
   categoryId: CategoryId;
 };
 
@@ -49,7 +49,7 @@ export type CategoryEditorLoad = {
   retry: () => void;
 };
 
-type CategoryEditorOptions = {
+export type CategoryEditorOptions = {
   editedCategory: FullCategory;
   onCategoryDeleted: () => void;
 };
@@ -157,7 +157,8 @@ export function useCategoryEditor({
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();
-  const guessObjectDraftEditor: GuessObjectDraftEditor = useGuessObjectDraft();
+  const guessObjectDraftEditor: GuessObjectDraftEditor =
+    useGuessObjectDraftEditor();
   const [category, setCategory] = useState<FullCategory>(editedCategory);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 

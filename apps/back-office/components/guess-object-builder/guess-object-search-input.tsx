@@ -1,6 +1,9 @@
 import * as Ariakit from '@ariakit/react';
 import type { GuessObjectSearchResult } from '@cityborn/api';
-import { type NameSearch, useGuessObjectSearch } from '@cityborn/client/admin';
+import {
+  type GuessObjectSearch,
+  useGuessObjectSearch,
+} from '@cityborn/client/admin';
 import { type ChangeEventHandler, startTransition, useState } from 'react';
 
 export function GuessObjectSearchInput({
@@ -27,10 +30,8 @@ export function GuessObjectSearchInput({
   popoverClassName?: string;
 }) {
   const [searchValue, setSearchValue] = useState('');
-  const {
-    searchResults: matches,
-    searchErrorMessage,
-  }: NameSearch<GuessObjectSearchResult> = useGuessObjectSearch(searchValue);
+  const { searchResults: matches, searchErrorMessage }: GuessObjectSearch =
+    useGuessObjectSearch({ searchTerm: searchValue });
 
   return (
     <Ariakit.ComboboxProvider

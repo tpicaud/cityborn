@@ -26,7 +26,7 @@ import {
   reloadCategories,
 } from './api/adminQueries';
 
-type CategoryCreationOptions = {
+export type CategoryCreationOptions = {
   onCategoryCreated: (category: Category) => void;
 };
 

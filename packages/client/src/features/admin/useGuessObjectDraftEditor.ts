@@ -54,7 +54,7 @@ const guessObjectLoadFailureMessage: string =
 const worldLocationLoadFailureMessage: string =
   'Erreur lors de la récupération de la localisation';
 
-export function useGuessObjectDraft(): GuessObjectDraftEditor {
+export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
   const { adminApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();

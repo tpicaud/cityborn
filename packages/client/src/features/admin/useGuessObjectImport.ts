@@ -32,7 +32,7 @@ type GuessObjectImportRecap = {
 
 type GuessObjectImportStatus = 'idle' | 'importing' | 'finished';
 
-type GuessObjectImportOptions = {
+export type GuessObjectImportOptions = {
   onGuessObjectImported: (guessObjectId: GuessObjectId) => Promise<void>;
 };
 
