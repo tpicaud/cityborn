@@ -11,9 +11,9 @@ description: "Docs agents Cityborn. À utiliser avant de créer ou modifier AGEN
 2. Avant d'ajouter une règle, vérifier qu'elle s'applique au-delà des fichiers du changement, qu'elle change le comportement par défaut de l'agent et qu'aucune règle existante ne la couvre ; sinon modifier ou supprimer la règle existante plutôt qu'en ajouter une.
 3. Rédiger selon les [conventions Cityborn](#conventions-cityborn).
 4. Lancer `pnpm check:agent-docs` et corriger chaque erreur.
-5. Dans `.agents/evals/skill-cases.md`, mettre à jour les cas de chaque skill touché, ses non-déclenchements et ses chevauchements.
+5. Quand la description d'un skill change, mettre à jour ses cas dans `.agents/evals/skill-cases.md` : déclenchements, non-déclenchements et chevauchements.
 
-Terminé quand le check passe et que les cas de chaque skill touché sont à jour.
+Terminé quand le check passe et que les cas des descriptions modifiées sont à jour.
 
 ## Conventions Cityborn
 
