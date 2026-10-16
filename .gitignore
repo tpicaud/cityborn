@@ -12,3 +12,4 @@ redis-data
 /.restore-sessions/
 /.restore-safety/
 /backups/
+/.claude/worktrees/
