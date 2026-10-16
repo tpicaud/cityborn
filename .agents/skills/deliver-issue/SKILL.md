@@ -1,6 +1,6 @@
 ---
 name: deliver-issue
-description: "Issue GitHub Cityborn à développer, corriger ou délivrer dans le checkout courant. Une tâche ou un worktree dédié relève de start-issue-task."
+description: "Issue GitHub Cityborn à développer, corriger ou délivrer dans le checkout courant."
 ---
 
 # Délivrer une issue
