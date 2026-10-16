@@ -1,5 +1,4 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../protocol/api-domain';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -63,5 +62,5 @@ export const categoryAdminContract = c.router(
       responses: { 200: emptyResponseSchema },
     },
   },
-  { pathPrefix: '/category' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/category' },
 );

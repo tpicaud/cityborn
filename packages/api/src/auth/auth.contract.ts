@@ -1,5 +1,4 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../protocol/api-domain';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -128,5 +127,5 @@ export const authContract = c.router(
     },
     cookie: cookieAuthContract,
   },
-  { pathPrefix: '/auth' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/auth' },
 );

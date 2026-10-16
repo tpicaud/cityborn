@@ -1,6 +1,6 @@
-import type { ApiDomain } from '../../protocol/api-domain';
 import { sessionWsChannel } from '../../session/session.channel';
 import type { WsChannel, WsServerEvent } from '../../ws/channel';
+import type { ApiDomain } from '../api-domain';
 import { ApiErrorSchema } from '../errors/api-error.schema';
 
 export type WsChannels = {

@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
 import { GameSchema, GameStateSchema } from '../game/game.schema';
-import type { ApiDomain } from '../protocol/api-domain';
 import { emptyResponseSchema } from '../protocol/payload.schema';
 import { SessionIdParamSchema } from './session.id';
 import { CreateSessionSchema, SessionSchema } from './session.schema';
@@ -51,5 +50,5 @@ export const sessionContract = c.router(
       responses: { 200: emptyResponseSchema },
     },
   },
-  { pathPrefix: '/session' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/session' },
 );

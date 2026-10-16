@@ -1,5 +1,4 @@
 import type { AnyZodObject } from 'zod';
-import type { ApiDomain } from '../protocol/api-domain';
 
 export interface WsClientEvent {
   readonly payload?: AnyZodObject;
@@ -10,7 +9,7 @@ export interface WsServerEvent {
   readonly payload?: AnyZodObject;
 }
 
-export interface WsChannel<Domain extends ApiDomain = ApiDomain> {
+export interface WsChannel<Domain extends string = string> {
   readonly domain: Domain;
   readonly clientToServer: Readonly<Record<string, WsClientEvent>>;
   readonly serverToClient: Readonly<Record<string, WsServerEvent>>;

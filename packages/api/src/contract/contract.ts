@@ -11,28 +11,40 @@ import { sentenceContract } from '../sentence/sentence.contract';
 import { sessionContract } from '../session/session.contract';
 import { userContract } from '../user/user.contract';
 import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
+import type { ApiDomain } from './api-domain';
 import { commonErrorResponses } from './errors/api-error.schema';
+
+type ApiDomainPath = `/${ApiDomain}` | `/${ApiDomain}/${string}`;
+
+type ApiDomainRouter = {
+  readonly [name: string]: { readonly path: ApiDomainPath } | ApiDomainRouter;
+};
+
+type ApiDomainRouters = Readonly<Record<string, ApiDomainRouter>>;
 
 const c = initContract();
 
+const publicRouters = {
+  auth: authContract,
+  health: healthContract,
+  user: { ...gameRecordContract, ...userContract },
+  session: sessionContract,
+  category: categoryContract,
+  guessObjects: guessObjectContract,
+  sentence: sentenceContract,
+} satisfies ApiDomainRouters;
+
+const adminRouters = {
+  category: categoryAdminContract,
+  guessObjects: guessObjectAdminContract,
+  search: searchAdminContract,
+  worldLocation: worldLocationAdminContract,
+} satisfies ApiDomainRouters;
+
 export const contract = c.router(
   {
-    auth: authContract,
-    health: healthContract,
-    user: { ...gameRecordContract, ...userContract },
-    session: sessionContract,
-    category: categoryContract,
-    guessObjects: guessObjectContract,
-    sentence: sentenceContract,
-    admin: c.router(
-      {
-        category: categoryAdminContract,
-        guessObjects: guessObjectAdminContract,
-        search: searchAdminContract,
-        worldLocation: worldLocationAdminContract,
-      },
-      { pathPrefix: '/admin' },
-    ),
+    ...publicRouters,
+    admin: c.router(adminRouters, { pathPrefix: '/admin' }),
   },
   { commonResponses: { ...commonErrorResponses } },
 );

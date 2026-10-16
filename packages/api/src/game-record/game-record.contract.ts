@@ -1,5 +1,4 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../protocol/api-domain';
 import { emptyResponseSchema } from '../protocol/payload.schema';
 import {
   CreateGameRecordSchema,
@@ -22,5 +21,5 @@ export const gameRecordContract = c.router(
       responses: { 200: emptyResponseSchema },
     },
   },
-  { pathPrefix: '/user' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/user' },
 );

@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../protocol/api-domain';
 import { ScoreTypeSchema, SentenceSchema } from './sentence.schema';
 
 const c = initContract();
@@ -14,5 +13,5 @@ export const sentenceContract = c.router(
       responses: { 200: SentenceSchema },
     },
   },
-  { pathPrefix: '/sentence' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/sentence' },
 );

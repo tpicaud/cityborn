@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../protocol/api-domain';
 import {
   emptyRequestBodySchema,
   emptyResponseSchema,
@@ -69,5 +68,5 @@ export const guessObjectAdminContract = c.router(
       responses: { 200: emptyResponseSchema },
     },
   },
-  { pathPrefix: '/guess-object' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/guess-object' },
 );

@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { GuessObjectSearchResultsSchema } from '../guess-object/guess-object.schema';
-import type { ApiDomain } from '../protocol/api-domain';
 import { WorldLocationSearchResultsSchema } from '../world-location/world-location.schema';
 
 const c = initContract();
@@ -28,5 +27,5 @@ export const searchAdminContract = c.router(
       responses: { 200: WorldLocationSearchResultsSchema },
     },
   },
-  { pathPrefix: '/search' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/search' },
 );

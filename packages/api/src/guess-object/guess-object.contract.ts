@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import type { ApiDomain } from '../protocol/api-domain';
 import { IncludeQuerySchema } from '../protocol/payload.schema';
 import { GuessObjectIdParamSchema } from './guess-object.id';
 import { GuessObjectSchema, GuessObjectsSchema } from './guess-object.schema';
@@ -23,5 +22,5 @@ export const guessObjectContract = c.router(
       responses: { 200: GuessObjectSchema },
     },
   },
-  { pathPrefix: '/guess-object' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/guess-object' },
 );

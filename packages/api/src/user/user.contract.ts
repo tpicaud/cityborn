@@ -1,5 +1,4 @@
 import { initContract } from '@ts-rest/core';
-import type { ApiDomain } from '../protocol/api-domain';
 import { UpdateUsernameSchema, UserSchema } from './user.schema';
 
 const c = initContract();
@@ -13,5 +12,5 @@ export const userContract = c.router(
       responses: { 200: UserSchema },
     },
   },
-  { pathPrefix: '/user' satisfies `/${ApiDomain}` },
+  { pathPrefix: '/user' },
 );
