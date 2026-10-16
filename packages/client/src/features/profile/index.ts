@@ -1,4 +1,10 @@
-export * from './profileForms';
-export * from './profileGame';
-export * from './useProfile';
-export * from './useProfileEditor';
+export {
+  type ProfileEditor,
+  type ProfileEditorOptions,
+  useProfileEditor,
+} from './useProfileEditor';
+export {
+  type ProfileGames,
+  type ProfileGamesOptions,
+  useProfileGames,
+} from './useProfileGames';

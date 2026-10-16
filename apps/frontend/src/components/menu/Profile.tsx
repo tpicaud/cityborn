@@ -1,9 +1,9 @@
 import type { User } from '@cityborn/api';
 import {
   type ProfileEditor,
-  type ProfileState,
-  useProfile,
+  type ProfileGames,
   useProfileEditor,
+  useProfileGames,
 } from '@cityborn/client/profile';
 import { formatDate } from '@cityborn/core';
 import CheckIcon from '@mui/icons-material/Check';
@@ -32,7 +32,7 @@ import {
 import LoadingButton from '../ui/buttons/LoadingButton';
 
 export const Profile = ({ user }: { user: User }) => {
-  const { games, isLoading }: ProfileState = useProfile();
+  const { games, isLoading }: ProfileGames = useProfileGames();
   const {
     usernameForm,
     isEditingUsername,

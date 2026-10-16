@@ -1,9 +1,9 @@
 import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import {
   type ProfileEditor,
-  type ProfileState,
-  useProfile,
+  type ProfileGames,
   useProfileEditor,
+  useProfileGames,
 } from '@cityborn/client/profile';
 import { formatDate } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
@@ -22,7 +22,9 @@ export default function Profile() {
   const { user }: CurrentUser = useCurrentUser();
   const router = useRouter();
   const isScreenFocused: boolean = useIsFocused();
-  const { games, isLoading }: ProfileState = useProfile({ isScreenFocused });
+  const { games, isLoading }: ProfileGames = useProfileGames({
+    isScreenFocused,
+  });
   const {
     usernameForm,
     isEditingUsername,
