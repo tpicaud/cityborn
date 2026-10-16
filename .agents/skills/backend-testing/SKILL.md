@@ -44,6 +44,15 @@ Réserver un nouvel e2e à une route, un événement ou un guard qui active un p
 
 Pour écrire, modifier ou exécuter un test d'intégration ou e2e, lire [la référence du harnais partagé](references/integration-e2e.md). Elle porte les invariants d'infrastructure, le bootstrap de production, les transports HTTP/WS et le teardown sans fuite.
 
+## Commandes
+
+| Commande | Usage |
+|---|---|
+| `pnpm --dir apps/backend test` | Tests unitaires. |
+| `pnpm db:test:start` / `pnpm db:test:stop` | Démarre, en attendant les healthchecks, ou arrête PostgreSQL et Redis du profil `test`. |
+| `pnpm test:int` / `pnpm test:e2e` | Tests d'intégration ou e2e, après `pnpm install` puis `pnpm db:test:start`. |
+| `pnpm --dir apps/backend test:all` / `test:cov` | Tous les projets Jest, ou avec couverture. |
+
 ## Critère de fin
 
 - Chaque comportement significatif est couvert une seule fois, au tier le plus bas qui permet de l'observer.

@@ -22,7 +22,7 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 - **Issue** : chaque critère d'acceptation est satisfait ; le diff reste dans le périmètre demandé.
 - **Correction** : logique, cas limites, erreurs propagées, concurrence, états partiels.
 - **Sécurité** : authentification et autorisation de chaque route ou event touché, validation zod des entrées, secrets absents du code, des logs et des réponses, données exposées au strict nécessaire, injections.
-- **Règles d'`AGENTS.md`** : principes, chaque symptôme de « Découpage », style de code, frontières du monorepo, configuration d'environnement, garde-fous.
+- **Règles d'`AGENTS.md`** : type-safe, architecture et chaque symptôme de « Découpage », style de code, garde-fous.
 - **Skills métier** : chaque règle des skills chargés à l'étape 3.
 - **Contrat API** : rétrocompatibilité et conventions de `api-contract-change` pour tout changement dans `packages/api`.
 - **Tests** : chaque comportement ou invariant significatif est testé au bon tier ; aucun test ne recopie l'implémentation.

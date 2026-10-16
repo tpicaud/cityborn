@@ -24,4 +24,4 @@
 - Fermer tous les clients avant `await app.close()` dans `afterAll`. Ce séquencement laisse les callbacks de déconnexion terminer avec Redis disponible, puis ferme Prisma et l'adaptateur Redis WebSocket.
 - Un test est terminé lorsque ses clients, l'application et les clients d'infrastructure qu'il a créés lui-même sont fermés sans handle ouvert ni erreur de teardown.
 
-Les commandes et coordonnées d'infrastructure sont définies dans `AGENTS.md` et `test/support/setupEnvironment.ts`.
+Les commandes sont listées dans [le skill](../SKILL.md#commandes) ; les coordonnées d'infrastructure dans `test/support/setupEnvironment.ts`.

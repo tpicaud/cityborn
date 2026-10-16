@@ -55,6 +55,10 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 3. Arrêter les ressources locales avec `pnpm db:stop`.
 
+`pnpm db:start` expose Redis sur `localhost:6379` et RedisInsight sur
+`http://localhost:5540`. `pnpm db:migrate <nom>` crée une migration Prisma et
+`pnpm db:reset` réinitialise la base locale.
+
 ## Accès au back-office
 
 Le back-office se connecte avec un compte Cityborn de rôle `admin`. Un compte est

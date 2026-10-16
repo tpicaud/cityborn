@@ -48,8 +48,8 @@ Pendant l'implémentation, lancer les tests ciblés du contrat modifié. Avant l
 
 ## Breaking change assumé
 
-Un vrai breaking change = **bump de version d'API**, jamais une modif silencieuse. **Demander à l'utilisateur avant** (garde-fou `AGENTS.md`).
+Un vrai breaking change = **bump de version d'API**, jamais une modif silencieuse. **Demander à l'utilisateur avant.**
 
 ## Bypass ponctuel de `check:api-compat`
 
-Une ligne `<METHOD> <path> <texte exact>` dans `packages/api/tools/compat/err-ignore.txt`. **Demander à l'utilisateur avant d'ajouter cette ligne** (garde-fou `AGENTS.md`).
+Une ligne `<METHOD> <path> <texte exact>` dans `packages/api/tools/compat/err-ignore.txt`. **Demander à l'utilisateur avant d'ajouter cette ligne.**

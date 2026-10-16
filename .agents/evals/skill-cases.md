@@ -38,8 +38,10 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 | « Fais la review de la PR #300. » | `review-pr` et skills métier du diff | Confronter chaque fichier du diff à chaque axe de la checklist et rendre des findings confirmés par le code | Modifier le code ou publier sur GitHub sans demande |
 | « Fais une review d'architecture de la PR #300. » | `review-pr`, `backend-conventions`, `client-app-architecture` selon le diff | Vérifier chaque symptôme de « Découpage » sur les fichiers touchés | Implémenter un refacto hors périmètre de la review |
 | « Ajoute un second mode d'authentification au client HTTP. » | `client-app-architecture` | Paramétrer une implémentation commune par la variante | Répéter le discriminant ou recopier une factory |
-| « Ajoute la commande `pnpm db:seed` au tableau des commandes. » | `writing-for-agents` | Charger le skill avant la première modification d'`AGENTS.md` | Modifier le guide avant de l'avoir chargé |
-| « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `deliver-issue`, skill du domaine, `writing-for-agents` | Charger `writing-for-agents` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
+| « Documente la nouvelle commande `pnpm db:seed`. » | `agent-docs`, puis `writing-for-agents` | Charger les deux skills avant la première modification, puis placer la commande dans le `README.md` selon le placement | Ajouter la commande à `AGENTS.md` |
+| « Réécris la section Style de code d'`AGENTS.md`. » | `agent-docs`, puis `writing-for-agents` | Découper chaque obligation en bullet, lancer `pnpm check:agent-docs` et relire les cas concernés | Modifier `writing-for-agents` pour y ajouter une convention Cityborn |
+| « Ajoute la variable `SENTRY_DSN` au backend. » | `environment-config` | Mettre à jour dans le même lot le schéma, ses consommateurs, le `.env.example` et la configuration Turbo | Lire `process.env` hors du module de configuration |
+| « Corrige l'issue #123 ici. » quand le correctif change une règle documentée dans un fichier de référence d'un skill | `deliver-issue`, skill du domaine, `agent-docs` | Charger `agent-docs` avant de retoucher le skill ou sa référence | Mettre à jour la doc agent par une retouche `sed` ou un script sans l'avoir chargé |
 | « Exécute `$cleanup-worktree`. » | `cleanup-worktree` | Laisser le script prouver que tout travail est publié avant la suppression | Pousser un commit ou contourner un refus du script |
 
 ## Indicateurs à relever
@@ -53,5 +55,5 @@ Utiliser ces cas après une modification d'`AGENTS.md` ou d'un skill. Pour chaqu
 - worktree préparé par `setup-worktree.sh` une fois sur la branche liée, avant le travail ;
 - vérifications ciblées avant les contrôles transverses ;
 - aucun contrôle réussi répété sans changement ;
-- placement conforme aux frontières `api` / `core` / `client` / app locale ;
+- placement conforme aux axes d'organisation et au sens des dépendances d'`AGENTS.md` ;
 - compte rendu indiquant les vérifications réellement exécutées et les risques résiduels.
