@@ -1,14 +1,18 @@
 import { z } from 'zod';
 import { GuessObjectIdSchema } from '../guess-object/guess-object.id';
 import { GuessObjectSchema } from '../guess-object/guess-object.schema';
-import { type CategoryId, CategoryIdSchema } from './category.id';
+import {
+  type CategoryId,
+  CategoryIdSchema,
+  CategoryUuidIdSchema,
+} from './category.id';
 
 export const CategorySchema = z.object({
   id: CategoryIdSchema,
   name: z.string(),
   isPublished: z.boolean(),
   description: z.string().optional(),
-  parentId: z.string().uuid().brand<'CategoryId'>().nullable().optional(),
+  parentId: CategoryUuidIdSchema.nullable().optional(),
 });
 
 export const FullCategorySchema = CategorySchema.extend({
@@ -54,7 +58,7 @@ export const CategoryTreeSchema: z.ZodType<
     name: z.string(),
     isPublished: z.boolean(),
     description: z.string().optional(),
-    parentId: z.string().uuid().brand<'CategoryId'>().nullable().optional(),
+    parentId: CategoryUuidIdSchema.nullable().optional(),
     children: z.array(CategoryTreeSchema),
   }),
 );
