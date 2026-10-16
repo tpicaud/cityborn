@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  type SessionController,
-  useSoloSession,
+  type SoloSessionController,
+  useSoloSessionController,
 } from '@cityborn/client/session';
 import { Game } from '@/components/Session/Game';
 import { Lobby } from '@/components/Session/Lobby';
@@ -11,7 +11,9 @@ import { useNavigation } from '@/lib/navigation';
 
 export default function SoloSession() {
   const navigation = useNavigation();
-  const soloSession: SessionController = useSoloSession({ navigation });
+  const soloSession: SoloSessionController = useSoloSessionController({
+    navigation,
+  });
 
   if (!soloSession.session)
     return <LoadingDialog message="Chargement de la session" />;

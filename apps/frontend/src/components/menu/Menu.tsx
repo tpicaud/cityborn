@@ -8,7 +8,10 @@ import {
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
-import { usePlay } from '@cityborn/client/play';
+import {
+  type SessionLauncher,
+  useSessionLauncher,
+} from '@cityborn/client/session';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
@@ -38,7 +41,7 @@ export default function Menu({
     joinSession,
     authenticationRequired,
     dismissAuthenticationRequired,
-  } = usePlay({ navigation });
+  }: SessionLauncher = useSessionLauncher({ navigation });
 
   return (
     <div className="flex flex-col items-center gap-5">

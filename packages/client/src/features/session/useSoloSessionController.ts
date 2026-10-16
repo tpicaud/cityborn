@@ -25,13 +25,15 @@ import {
 
 const guestPlayerID: PlayerId = PlayerIdSchema.parse('guest');
 
-export type SoloSessionOptions = {
+export type SoloSessionControllerOptions = {
   navigation: Navigation;
 };
 
-export function useSoloSession({
+export type SoloSessionController = SessionController;
+
+export function useSoloSessionController({
   navigation,
-}: SoloSessionOptions): SessionController {
+}: SoloSessionControllerOptions): SoloSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();

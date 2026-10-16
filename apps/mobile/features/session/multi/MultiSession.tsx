@@ -1,7 +1,7 @@
 import { type SessionId, SessionStatus } from '@cityborn/api';
 import {
   type MultiSessionController,
-  useMultiSession,
+  useMultiSessionController,
 } from '@cityborn/client/session';
 import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
@@ -17,7 +17,7 @@ type MultiSessionProps = {
 
 export default function MultiSession({ sessionID }: MultiSessionProps) {
   const navigation = useNavigation();
-  const multiSession: MultiSessionController = useMultiSession({
+  const multiSession: MultiSessionController = useMultiSessionController({
     sessionID,
     navigation,
     createSocket: createSocketConnection,

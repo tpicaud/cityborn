@@ -40,7 +40,7 @@ import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 import { useSocket } from './useSocket';
 
-export type MultiSessionOptions = {
+export type MultiSessionControllerOptions = {
   sessionID: SessionId;
   navigation: Navigation;
   createSocket: SocketFactory;
@@ -58,11 +58,11 @@ type JoinedPlayer = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
-export function useMultiSession({
+export function useMultiSessionController({
   sessionID,
   navigation,
   createSocket,
-}: MultiSessionOptions): MultiSessionController {
+}: MultiSessionControllerOptions): MultiSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();

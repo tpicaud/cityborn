@@ -10,7 +10,6 @@
     "./health": "./src/features/health/index.ts",
     "./session": "./src/features/session/index.ts",
     "./game": "./src/features/game/index.ts",
-    "./play": "./src/features/play/index.ts",
     "./profile": "./src/features/profile/index.ts",
     "./platform": "./src/platform/index.ts",
     "./ws": "./src/ws/index.ts"
