@@ -25,9 +25,17 @@ import {
   toCreateUser,
 } from './authSchema';
 
-type SignInFlowOptions = {
+type SignInCompletionOptions = {
   onSignedIn?: () => void;
 };
+
+type SignInCompletion = (signInRequest: Promise<User>) => Promise<void>;
+
+export type SignInFlowOptions = SignInCompletionOptions;
+
+export type SignUpFlowOptions = SignInCompletionOptions;
+
+export type IdentityProviderSignInOptions = SignInCompletionOptions;
 
 export type SignInFlow = {
   form: UseFormReturn<SignIn>;
@@ -55,7 +63,7 @@ const signUpFormDefaultValues: SignUpFormInput = {
 
 function useSignInCompletion({
   onSignedIn,
-}: SignInFlowOptions): (signInRequest: Promise<User>) => Promise<void> {
+}: SignInCompletionOptions): SignInCompletion {
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();
   const onSignedInRef = useRef<(() => void) | undefined>(onSignedIn);
@@ -75,9 +83,11 @@ function useSignInCompletion({
   );
 }
 
-export function useSignIn({ onSignedIn }: SignInFlowOptions = {}): SignInFlow {
+export function useSignInFlow({
+  onSignedIn,
+}: SignInFlowOptions = {}): SignInFlow {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
   const form: UseFormReturn<SignIn> = useForm<SignIn>({
     resolver: zodResolver(SignInSchema),
     defaultValues: signInFormDefaultValues,
@@ -91,9 +101,11 @@ export function useSignIn({ onSignedIn }: SignInFlowOptions = {}): SignInFlow {
   };
 }
 
-export function useSignUp({ onSignedIn }: SignInFlowOptions = {}): SignUpFlow {
+export function useSignUpFlow({
+  onSignedIn,
+}: SignUpFlowOptions = {}): SignUpFlow {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
   const form: UseFormReturn<SignUpFormInput, undefined, SignUpFormValues> =
     useForm<SignUpFormInput, undefined, SignUpFormValues>({
       resolver: zodResolver(SignUpFormSchema),
@@ -110,9 +122,9 @@ export function useSignUp({ onSignedIn }: SignInFlowOptions = {}): SignUpFlow {
 
 export function useIdentityProviderSignIn({
   onSignedIn,
-}: SignInFlowOptions = {}): IdentityProviderSignIn {
+}: IdentityProviderSignInOptions = {}): IdentityProviderSignIn {
   const { authApi }: DomainApis = useDomainApis();
-  const completeSignIn = useSignInCompletion({ onSignedIn });
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
 
   return useMemo(
     () => ({

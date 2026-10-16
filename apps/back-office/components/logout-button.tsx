@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from './ui/Button';
 
 export default function LogoutButton() {
-  const signOut: SignOut = useSignOut();
+  const { signOut }: SignOut = useSignOut();
 
   return (
     <Button variant="outline" onClick={signOut}>

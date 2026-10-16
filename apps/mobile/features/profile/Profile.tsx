@@ -1,4 +1,4 @@
-import { useAuth } from '@cityborn/client/auth';
+import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import {
   type ProfileEditor,
   type ProfileState,
@@ -19,7 +19,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const router = useRouter();
   const isScreenFocused: boolean = useIsFocused();
   const { games, isLoading }: ProfileState = useProfile({ isScreenFocused });

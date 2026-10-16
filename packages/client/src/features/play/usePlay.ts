@@ -2,7 +2,7 @@
 
 import { type BaseSyntheticEvent, useState } from 'react';
 import type { Navigation } from '../../platform/navigation';
-import { useAuth } from '../auth/authContext';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import {
   type JoinSessionForm,
   type SessionLauncher,
@@ -24,7 +24,7 @@ export type Play = {
 };
 
 export function usePlay({ navigation }: PlayOptions): Play {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const [authenticationRequired, setAuthenticationRequired] =
     useState<boolean>(false);
   const joinSessionForm: JoinSessionForm = useJoinSessionForm();

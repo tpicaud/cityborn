@@ -5,7 +5,7 @@ import {
   ErrorCode,
   getFriendlyErrorMessage,
 } from '@cityborn/api';
-import { useAuth } from '@cityborn/client/auth';
+import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
 import LogoutButton from '../logout-button';
@@ -18,7 +18,7 @@ const adminAccessDeniedError: ApiError = {
 };
 
 export function AdminAccessGuard({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const router = useRouter();
 
   useEffect(() => {

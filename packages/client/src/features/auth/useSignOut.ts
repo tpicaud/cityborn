@@ -9,11 +9,13 @@ import {
 } from '../../shared/errorReporter';
 import { clearCacheAfterSignOut } from './api/authQueries';
 
-type SignOutOptions = {
+export type SignOutOptions = {
   onSignedOut?: () => void;
 };
 
-export type SignOut = () => Promise<void>;
+export type SignOut = {
+  signOut: () => Promise<void>;
+};
 
 export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
   const { authApi }: DomainApis = useDomainApis();
@@ -22,7 +24,7 @@ export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
   const onSignedOutRef = useRef<(() => void) | undefined>(onSignedOut);
   onSignedOutRef.current = onSignedOut;
 
-  return useCallback(async (): Promise<void> => {
+  const signOut: () => Promise<void> = useCallback(async (): Promise<void> => {
     try {
       await authApi.signOut();
       await clearCacheAfterSignOut(queryClient);
@@ -31,4 +33,6 @@ export function useSignOut({ onSignedOut }: SignOutOptions = {}): SignOut {
       invokeError(error);
     }
   }, [authApi, queryClient, invokeError]);
+
+  return { signOut };
 }

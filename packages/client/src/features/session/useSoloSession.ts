@@ -10,7 +10,7 @@ import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import { useAuth } from '../auth/authContext';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
@@ -33,7 +33,7 @@ export function useSoloSession({
   navigation,
 }: SoloSessionOptions): SessionController {
   const { sessionApi }: DomainApis = useDomainApis();
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();
   const localPlayerID: PlayerId = user?.username ?? guestPlayerID;

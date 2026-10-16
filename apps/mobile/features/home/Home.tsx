@@ -1,6 +1,7 @@
 import {
+  type CurrentUser,
   type SignOut,
-  useAuth,
+  useCurrentUser,
   useSignOut,
   useVerificationEmailResend,
   type VerificationEmailResend,
@@ -14,8 +15,8 @@ import { cn } from '@/lib/classNames';
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useAuth();
-  const signOut: SignOut = useSignOut();
+  const { user }: CurrentUser = useCurrentUser();
+  const { signOut }: SignOut = useSignOut();
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
 

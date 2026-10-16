@@ -5,23 +5,27 @@ export {
 } from './api/authApi';
 export {
   AuthProvider,
+  type CurrentUser,
   type CurrentUserLoad,
-  useAuth,
+  useCurrentUser,
   useCurrentUserLoad,
 } from './authContext';
 export {
   type IdentityProviderSignIn,
+  type IdentityProviderSignInOptions,
   type SignInFlow,
+  type SignInFlowOptions,
   type SignUpFlow,
+  type SignUpFlowOptions,
   useIdentityProviderSignIn,
-  useSignIn,
-  useSignUp,
+  useSignInFlow,
+  useSignUpFlow,
 } from './signIn';
 export {
   type EmailVerification,
   useEmailVerification,
 } from './useEmailVerification';
-export { type SignOut, useSignOut } from './useSignOut';
+export { type SignOut, type SignOutOptions, useSignOut } from './useSignOut';
 export {
   useVerificationEmailResend,
   type VerificationEmailResend,

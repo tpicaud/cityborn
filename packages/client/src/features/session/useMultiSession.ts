@@ -33,7 +33,7 @@ import {
 import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
-import { useAuth } from '../auth/authContext';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
@@ -64,7 +64,7 @@ export function useMultiSession({
   createSocket,
 }: MultiSessionOptions): MultiSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();
   const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(

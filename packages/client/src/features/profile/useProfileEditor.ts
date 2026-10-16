@@ -10,7 +10,7 @@ import {
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { setCurrentUser } from '../auth/api/authQueries';
-import { useAuth } from '../auth/authContext';
+import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { type SignOut, useSignOut } from '../auth/useSignOut';
 import {
   type ChangePasswordForm,
@@ -46,7 +46,7 @@ export function useProfileEditor({
   onAccountDeleted,
 }: ProfileEditorOptions = {}): ProfileEditor {
   const { authApi, profileApi }: DomainApis = useDomainApis();
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { invokeError }: ErrorReporter = useErrorReporter();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
@@ -57,7 +57,7 @@ export function useProfileEditor({
   const [isPasswordUpdated, setIsPasswordUpdated] = useState<boolean>(false);
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] =
     useState<boolean>(false);
-  const signOutDeletedAccount: SignOut = useSignOut({
+  const { signOut: signOutDeletedAccount }: SignOut = useSignOut({
     onSignedOut: () => {
       setIsDeleteAccountDialogOpen(false);
       onAccountDeleted?.();

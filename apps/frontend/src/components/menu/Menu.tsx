@@ -3,7 +3,8 @@
 import { DialogContent, DialogTitle, Typography } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
 import {
-  useAuth,
+  type CurrentUser,
+  useCurrentUser,
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
@@ -23,7 +24,7 @@ export default function Menu({
     SetStateAction<'menu' | 'sign-in' | 'sign-up' | 'profile'>
   >;
 }) {
-  const { user } = useAuth();
+  const { user }: CurrentUser = useCurrentUser();
   const navigation = useNavigation();
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();

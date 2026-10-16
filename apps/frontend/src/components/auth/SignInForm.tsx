@@ -1,6 +1,6 @@
 'use client';
 
-import { type SignInFlow, useSignIn } from '@cityborn/client/auth';
+import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import Button from '../ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
@@ -12,7 +12,7 @@ export const SignInForm = () => {
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignIn();
+  }: SignInFlow = useSignInFlow();
 
   return (
     <Box
