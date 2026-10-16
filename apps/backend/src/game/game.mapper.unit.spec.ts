@@ -31,7 +31,7 @@ describe('GameMapper.toGameRecord', () => {
     expect(() => GameRecordSchema.parse(records[0])).not.toThrow();
     expect(records[0]).toMatchObject({
       mode: SessionMode.MULTI,
-      createdAt: '2026-01-01',
+      createdAt: '2026-01-01T00:00:00.000Z',
     });
   });
 

@@ -4,6 +4,7 @@ import {
   GameIdSchema,
   GameRecordIdSchema,
   GuessObjectIdSchema,
+  IsoDateTimeSchema,
   PlayerIdSchema,
 } from './common.schema';
 import {
@@ -72,7 +73,7 @@ export const GameRecordSchema = z.object({
   players: z.array(PlayerSchema),
   guessObjectsIds: z.array(GuessObjectIdSchema),
   results: PlayerResultsByIdSchema,
-  createdAt: z.string(),
+  createdAt: IsoDateTimeSchema,
 });
 
 export const GameRecordsSchema = z.array(GameRecordSchema);

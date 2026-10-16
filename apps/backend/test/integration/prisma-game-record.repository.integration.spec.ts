@@ -124,7 +124,7 @@ describe('PrismaGameRecordRepository', () => {
       expect(records?.map(({ id }) => id)).toEqual(
         recordIds.slice(1).reverse(),
       );
-      expect(records?.[0]?.createdAt).toBe('2026-01-06');
+      expect(records?.[0]?.createdAt).toBe('2026-01-06T00:00:00.000Z');
       expect(others).toEqual([]);
     });
 
