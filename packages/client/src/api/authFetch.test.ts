@@ -24,7 +24,7 @@ type FetchCall = {
 };
 
 type RefreshFailureCase = {
-  name: string;
+  behavior: string;
   response: () => Promise<Response>;
   isExpectedError: (error: unknown) => boolean;
   endsTheSession: boolean;
@@ -36,7 +36,7 @@ type SessionEnding = {
 };
 
 type FailingRefreshScenario = {
-  currentUserRequest: Promise<unknown>;
+  contractClient: ContractClient;
   sessionEnding: SessionEnding;
 };
 
@@ -54,7 +54,13 @@ const backendUnavailableError: ApiError = {
   statusCode: 503,
 };
 
-function jsonResponse(body: unknown, status = 200): Response {
+function jsonResponse({
+  body,
+  status = 200,
+}: {
+  body: unknown;
+  status?: number;
+}): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -84,7 +90,8 @@ function isApiResponseErrorWithStatus(
 
 const refreshFailureCases: RefreshFailureCase[] = [
   {
-    name: 'network failure',
+    behavior:
+      'propagates a network failure of the refresh and keeps the session',
     response: async () => {
       throw new TypeError('Failed to fetch');
     },
@@ -92,28 +99,30 @@ const refreshFailureCases: RefreshFailureCase[] = [
     endsTheSession: false,
   },
   {
-    name: 'server failure',
-    response: async () => jsonResponse(backendUnavailableError, 503),
+    behavior:
+      'propagates a server failure of the refresh and keeps the session',
+    response: async () =>
+      jsonResponse({ body: backendUnavailableError, status: 503 }),
     isExpectedError: isApiResponseErrorWithStatus(503),
     endsTheSession: false,
   },
   {
-    name: 'refused refresh token',
+    behavior: 'rejects and ends the session when the refresh token is refused',
     response: async () =>
-      jsonResponse(
-        {
+      jsonResponse({
+        body: {
           code: ErrorCode.USER_INVALID_TOKEN,
           message: 'Invalid refresh token',
           statusCode: 401,
         },
-        401,
-      ),
+        status: 401,
+      }),
     isExpectedError: isApiResponseErrorWithStatus(401),
     endsTheSession: true,
   },
 ];
 
-function requestCurrentUserWithFailingRefresh({
+function createClientWithFailingRefresh({
   context,
   createContractClient,
   refreshResponse,
@@ -139,18 +148,18 @@ function requestCurrentUserWithFailingRefresh({
     respond: async (input: RequestInfo | URL): Promise<Response> => {
       const url: URL = new URL(String(input));
       if (url.pathname === contract.auth.me.path) {
-        return jsonResponse(expiredTokenError, 401);
+        return jsonResponse({ body: expiredTokenError, status: 401 });
       }
       if (url.pathname === contract.auth.signOut.path) {
         sessionEnding.hasSignedOut = true;
-        return jsonResponse({});
+        return jsonResponse({ body: {} });
       }
       return refreshResponse();
     },
   });
   const contractClient: ContractClient = createContractClient(tokenStorage);
 
-  return { currentUserRequest: contractClient.auth.me(), sessionEnding };
+  return { contractClient, sessionEnding };
 }
 
 describe('createCookieContractClient', () => {
@@ -164,8 +173,10 @@ describe('createCookieContractClient', () => {
         init?: RequestInit,
       ): Promise<Response> => {
         calls.push({ url: String(input), init });
-        if (calls.length === 1) return jsonResponse(expiredTokenError, 401);
-        return jsonResponse(user);
+        if (calls.length === 1) {
+          return jsonResponse({ body: expiredTokenError, status: 401 });
+        }
+        return jsonResponse({ body: user });
       },
     });
     const contractClient: ContractClient = createCookieContractClient(
@@ -211,7 +222,7 @@ describe('createCookieContractClient', () => {
       respond: async (input: RequestInfo | URL): Promise<Response> => {
         const url: URL = new URL(String(input));
         if (url.pathname === contract.auth.me.path) {
-          return jsonResponse(expiredTokenError, 401);
+          return jsonResponse({ body: expiredTokenError, status: 401 });
         }
         if (url.pathname === contract.auth.cookie.refresh.path) {
           refreshCount += 1;
@@ -236,7 +247,9 @@ describe('createCookieContractClient', () => {
       isServerFailure,
     );
     await setImmediate();
-    refreshResponse.resolve(jsonResponse(backendUnavailableError, 503));
+    refreshResponse.resolve(
+      jsonResponse({ body: backendUnavailableError, status: 503 }),
+    );
     await Promise.all([firstRequest, secondRequest]);
 
     assert.equal(refreshCount, 1);
@@ -244,21 +257,24 @@ describe('createCookieContractClient', () => {
 
   refreshFailureCases.forEach(
     ({
-      name,
+      behavior,
       response,
       isExpectedError,
       endsTheSession,
     }: RefreshFailureCase) => {
-      it(`handles a ${name} on refresh without treating a technical error as a logout`, async (context: TestContext) => {
-        const { currentUserRequest, sessionEnding }: FailingRefreshScenario =
-          requestCurrentUserWithFailingRefresh({
+      it(behavior, async (context: TestContext) => {
+        const { contractClient, sessionEnding }: FailingRefreshScenario =
+          createClientWithFailingRefresh({
             context,
             createContractClient: () => createCookieContractClient(apiBaseUrl),
             refreshResponse: response,
           });
 
-        await assert.rejects(currentUserRequest, isExpectedError);
+        const currentUserRequest: Promise<
+          ClientInferResponses<AppContract['auth']['me']>
+        > = contractClient.auth.me();
 
+        await assert.rejects(currentUserRequest, isExpectedError);
         assert.deepEqual(sessionEnding, {
           hasClearedTokens: false,
           hasSignedOut: endsTheSession,
@@ -299,15 +315,19 @@ describe('createBearerContractClient', () => {
         init?: RequestInit,
       ): Promise<Response> => {
         calls.push({ url: String(input), init });
-        if (calls.length === 1) return jsonResponse(expiredTokenError, 401);
+        if (calls.length === 1) {
+          return jsonResponse({ body: expiredTokenError, status: 401 });
+        }
         if (calls.length === 2) {
           return jsonResponse({
-            access_token: 'new-access',
-            refresh_token: 'new-refresh',
-            user,
+            body: {
+              access_token: 'new-access',
+              refresh_token: 'new-refresh',
+              user,
+            },
           });
         }
-        return jsonResponse(user);
+        return jsonResponse({ body: user });
       },
     });
     const contractClient: ContractClient = createBearerContractClient(
@@ -359,7 +379,7 @@ describe('createBearerContractClient', () => {
         init?: RequestInit,
       ): Promise<Response> => {
         calls.push({ url: String(input), init });
-        return jsonResponse({});
+        return jsonResponse({ body: {} });
       },
     });
     const contractClient: ContractClient = createBearerContractClient(
@@ -382,22 +402,25 @@ describe('createBearerContractClient', () => {
 
   refreshFailureCases.forEach(
     ({
-      name,
+      behavior,
       response,
       isExpectedError,
       endsTheSession,
     }: RefreshFailureCase) => {
-      it(`handles a ${name} on refresh without treating a technical error as a logout`, async (context: TestContext) => {
-        const { currentUserRequest, sessionEnding }: FailingRefreshScenario =
-          requestCurrentUserWithFailingRefresh({
+      it(behavior, async (context: TestContext) => {
+        const { contractClient, sessionEnding }: FailingRefreshScenario =
+          createClientWithFailingRefresh({
             context,
             createContractClient: (tokenStorage: TokenStorage) =>
               createBearerContractClient(apiBaseUrl, tokenStorage),
             refreshResponse: response,
           });
 
-        await assert.rejects(currentUserRequest, isExpectedError);
+        const currentUserRequest: Promise<
+          ClientInferResponses<AppContract['auth']['me']>
+        > = contractClient.auth.me();
 
+        await assert.rejects(currentUserRequest, isExpectedError);
         assert.deepEqual(sessionEnding, {
           hasClearedTokens: endsTheSession,
           hasSignedOut: false,
