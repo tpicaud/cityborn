@@ -17,7 +17,10 @@ export function buildSession(
     mode: SessionMode.MULTI,
     status: SessionStatus.IN_LOBBY,
     gameConfig: buildGameConfig(),
-    players: [buildPlayer('host'), buildPlayer('bob')],
+    players: [
+      buildPlayer({ username: 'host' }),
+      buildPlayer({ username: 'bob' }),
+    ],
     ...overrides,
   });
 }

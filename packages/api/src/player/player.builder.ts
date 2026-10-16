@@ -2,14 +2,12 @@ import type { z } from 'zod';
 import { type OnlinePlayer, OnlinePlayerSchema } from './player.schema';
 
 export function buildPlayer(
-  username = 'host',
-  connected = true,
   overrides: Partial<z.input<typeof OnlinePlayerSchema>> = {},
 ): OnlinePlayer {
   return OnlinePlayerSchema.parse({
-    username,
+    username: 'host',
     isGuest: false,
-    connected,
+    connected: true,
     ...overrides,
   });
 }
