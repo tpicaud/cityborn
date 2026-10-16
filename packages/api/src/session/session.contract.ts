@@ -40,9 +40,8 @@ export const sessionContract = c.router(
       responses: { 200: emptyResponseSchema },
     },
     /**
-     * @deprecated Use `finalizeGame` instead. Kept so mobile builds
-     * published before this rename keep working — safe to remove once
-     * their adoption of a newer build is high enough.
+     * @deprecated Utiliser `finalizeGame` à la place. Conservé pour les
+     * builds mobile publiées avant ce renommage.
      * @deprecatedSince 2026-08-21
      */
     endSoloGame: {
