@@ -45,7 +45,7 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 | `apps/backend` | Serveur NestJS + Prisma : implémente les contrats HTTP et WebSocket, porte les règles métier et la persistance. | domaine métier |
 | `packages/api` | Source de vérité des contrats entre le backend et les clients : routes ts-rest, events WebSocket, schémas zod, codes d'erreur. | domaine métier |
 | `packages/core` | Logique métier pure, sans I/O ni framework, partagée par le backend et les clients. | domaine métier |
-| `packages/client` | Accès à l'API, état serveur et comportement headless des apps clientes ; agnostique de Next, Expo et du rendu. | feature |
+| `packages/client` | Accès à l'API, état serveur et comportement headless des apps clientes ; agnostique de Next, Expo et du rendu. | feature, sur une couche domaine |
 | `apps/frontend` | App web joueur, Next.js (App Router) : routing, rendu, implémentation des ports plateforme. | feature |
 | `apps/mobile` | App mobile joueur, Expo / React Native : routing, rendu, implémentation des ports plateforme. | feature |
 | `apps/back-office` | App web d'administration du contenu, Next.js (App Router) : routing, rendu, implémentation des ports plateforme. | feature |
