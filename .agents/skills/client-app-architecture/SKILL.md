@@ -44,7 +44,7 @@ L'authentification vit dans `AuthApi` (`@cityborn/client/auth`) : le mobile inst
 
 L'utilisateur courant a une seule source : la query de `auth/api/authQueries.ts`.
 
-- L'écran de garde de chaque app (`AuthBootstrap` front, `auth-bootstrap` back-office, `app/_layout.tsx` mobile) lit son statut par `useCurrentUserLoad` : chargement, échec avec « Réessayer », ou utilisateur prêt passé à `AuthProvider`. Sous la garde, `useAuth()` expose `User | null`.
+- L'écran de garde de chaque app (`AuthBootstrap` front, `auth-bootstrap` back-office, `app/_layout.tsx` mobile) lit son statut par `useCurrentUserLoad` : chargement, échec avec « Réessayer », ou utilisateur prêt passé à `AuthProvider`. Sous la garde, `useCurrentUser()` expose `{ user }` (`User | null`).
 - Une écriture met la query à jour : `setCurrentUser` après une connexion ou une modification du compte, `invalidateCurrentUser` après la vérification de l'e-mail, `refreshCurrentUser` pour forcer l'appel réseau (rafraîchissement d'auth du WS).
 - La déconnexion passe par `useSignOut` : elle retire les données du compte du cache puis met l'utilisateur à `null`, sans repasser par l'écran de chargement.
 - Un rafraîchissement en échec conserve l'utilisateur courant.
@@ -72,19 +72,32 @@ Le package porte l'accès à l'API et l'état serveur des trois apps clientes, y
 
 | Sous-chemin | Dossier | Contenu |
 |---|---|---|
-| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorProvider` et `ErrorDialogProps`, version d'API minimale supportée, formatage de date. |
-| `@cityborn/client/admin` | `src/features/admin/` | Back-office : liste et création de catégories, chargement et édition d'une catégorie (`useCategoryEditor`, qui compose le brouillon d'objet à deviner de `useGuessObjectDraft`), import CSV d'objets à deviner, recherches avec délai (`useGuessObjectSearch`, `useWorldLocationSearch`). |
-| `@cityborn/client/api` | `src/api/` | Transport HTTP : `AuthFetch`, `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies), `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
-| `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
+| `@cityborn/client` | `src/shared/` | Le réellement transverse : `ApiProvider`, `ErrorProvider` et `ErrorDialogProps`, `useErrorReporter`, version d'API minimale supportée (`useApiVersionSupport`). `FormSubmitHandler` y vit, hors de l'index. |
+| `@cityborn/client/admin` | `src/features/admin/` | Back-office : liste et création de catégories, chargement et édition d'une catégorie (`useCategoryEditor`, qui compose le brouillon d'objet à deviner de `useGuessObjectDraftEditor`), import CSV d'objets à deviner, recherches avec délai (`useGuessObjectSearch`, `useWorldLocationSearch`). |
+| `@cityborn/client/api` | `src/api/` | Transport HTTP : `createBearerContractClient` (bearer) / `createCookieContractClient` (cookies) sur l'`AuthFetch` privé, `createVisitorIdProvider` sur le `KeyValueStorage` de l'app. Sans React. |
+| `@cityborn/client/ws` | `src/ws/` | Transport WS : `createBearerSocketFactory` / `createCookieSocketFactory`, seul adaptateur `socket.io-client` ; l'app ne fournit que l'URL, son `TokenStorage` et son visitorId. Chaque appel rend une `SocketConnection` neuve et non connectée, possédée par `useSocket` : seuls `useSocket` et `superviseWsConnection` appellent `connect` / `disconnect`. `createWsEmit`, privé au package, qui valide le corps sortant et l'enveloppe d'ack du contrat `@cityborn/api`, résout avec les données d'ack typées (`WsAckSuccessOf`) et rejette à l'expiration du délai d'accusé ; `superviseWsConnection`, privé au package, qui porte le cycle de vie de la connexion indépendamment des features (statut `connecting | connected | reconnecting | closed`, reconnexion après une déconnexion serveur, rafraîchissement d'auth sur rejet du handshake, une seule erreur par séquence ratée) et rejoue à chaque `connect` la restauration fournie par la feature. Sans React. |
 | `@cityborn/client/auth` | `src/features/auth/` | Flow d'authentification complet : `createAuthApi`, `AuthProvider`, chargement de l'utilisateur courant, connexion, inscription, déconnexion, vérification et renvoi de l'e-mail de vérification. |
-| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : contrat `SessionController` (joueur local compris), hooks `useSoloSession` / `useMultiSession`, lobby (`useCategorySelection` lit les arbres de catégories par la query de `src/features/category/`, domaine privé sans sous-chemin ; `usePlayerNameForm`, `sortPlayersConnectedFirst`) et création / jonction (`useSessionLauncher`). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
+| `@cityborn/client/session` | `src/features/session/` | Sessions solo et multi : `useSoloSessionController` / `useMultiSessionController`, qui partagent le contrat privé `SessionController` (joueur local compris), lobby (`useCategorySelection` lit les arbres de catégories par la query de `src/features/category/`, domaine privé sans sous-chemin ; `usePlayerNameForm`, `sortPlayersConnectedFirst`) et `useSessionLauncher` (lancement solo / multi, formulaire de jonction, garde d'authentification). La liaison React du socket (`useSocket`, qui restaure la session à chaque `connect`) et les transitions (`sessionState`) restent privées au domaine. |
 | `@cityborn/client/game` | `src/features/game/` | État d'affichage de la partie, flow de round, résultat de round, timer et compte à rebours, hook `useGameRound` et contrats de props (`MapProps`, `GameComponentProps`). |
-| `@cityborn/client/play` | `src/features/play/` | Hook `usePlay` : formulaire de jonction, lancement solo / multi et garde d'authentification. |
 | `@cityborn/client/health` | `src/features/health/` | Joignabilité du serveur (`useServerReachability`) : une `ApiResponseError` du healthcheck signifie « joignable », toute autre erreur « injoignable ». |
-| `@cityborn/client/profile` | `src/features/profile/` | Projection des parties du profil, hooks `useProfile` et `useProfileEditor` (pseudo, mot de passe, suppression du compte). |
+| `@cityborn/client/profile` | `src/features/profile/` | Parties du profil (`useProfileGames`) et `useProfileEditor` (pseudo, mot de passe, suppression du compte). |
 | `@cityborn/client/platform` | `src/platform/` | Ports plateforme (ci-dessous). |
 
 Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<domaine>/index.ts` **et** son entrée dans l'`exports` map. Un type ou un helper vit dans son domaine ; `src/shared/` ne reçoit que ce qui sert à plusieurs domaines.
+
+### Surface publique d'un domaine
+
+Chaque `index.ts` du package (domaines, `shared`, `api`, `platform`, `ws`) liste ses exports un à un, sans `export *`, et n'exporte que ce qu'une app importe. Un symbole lu seulement par un autre fichier du package reste exporté par son fichier, hors de l'index. Biome ordonne l'index par fichier source. Chaque symbole exporté appartient à une famille :
+
+| Famille | Contrat |
+|---|---|
+| Comportement | `use<Nom>(options: <Nom>Options): <Nom>`, options facultatives (`options?`) seulement si chacune l'est ; le retour est un objet nommé ; hook, options et retour sont exportés ensemble |
+| Formulaire | `use<Nom>Form(): <Nom>Form`, valeurs `<Nom>FormInput` / `<Nom>FormValues` ; une soumission se type par `FormSubmitHandler` |
+| Transformation pure | nommée par son résultat : `create<Nom>(…): <Nom>`, `format<Nom>(…): string`, prédicat ou sélecteur (`canSubmitGuess`, `currentGuessObject`) |
+| Contrat de vue | `<Composant>Props` |
+| Branchement | `<Domaine>Api`, `create<Domaine>Api`, `<Domaine>Provider`, quand l'app les branche elle-même |
+
+Quand `<Nom>` désigne déjà un DTO de `@cityborn/api` ou un composant d'app, le hook prend un nom plus précis (`useSignInFlow`, `useSoloSessionController`). Un fichier de transformation pure porte le nom de son résultat (`gameDisplay`, `gameResult`, `sessionState`), et les contrats de vue restent colocalisés dans leur domaine.
 
 ### État serveur
 
@@ -97,8 +110,6 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 - Un écran mobile qui reste monté hors focus (onglet) passe son focus (`useIsFocused` d'`expo-router`) au hook, qui le transmet à l'option `subscribed` de sa query : une query périmée se relance au retour sur l'écran.
 - Un fichier regroupe les hooks d'un même flux avec leurs formulaires et helpers privés, et porte le nom du flux (`auth/signIn.ts`, `session/sessionLauncher.ts`) ; un hook seul dans son flux vit dans `use<Comportement>.ts`.
 - Une écriture reste un appel direct au port, suivi de la mise à jour du cache par `api/<domaine>Queries.ts`, et react-hook-form porte son état de soumission.
-
-La logique de présentation suit les conventions React existantes : un hook headless porte le nom `use<Comportement>` (`useSoloSession`, `useGameRound`, `useProfile`) ; une transformation pure porte le nom précis de son résultat (`gameDisplay`, `gameResult`, `sessionState`). Les contrats de vue restent colocalisés dans leur domaine.
 
 ### Ports plateforme
 
@@ -122,10 +133,13 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 | dépend de React, pas de la plateforme | `@cityborn/client`, dans son domaine |
 | dépend de `next`, `expo`, `react-native`, `react-dom` ou du rendu | l'app, derrière un port `@cityborn/client/platform` |
 
+Une date affichée passe par `formatDate` de `@cityborn/core` (`16/10/2026`) : une date seule `YYYY-MM-DD` y reste le même jour dans tout fuseau, une date-heure ISO s'affiche dans le fuseau local.
+
 ## Critère de fin
 
 - Chaque nouveau fichier appartient à un domaine et respecte l'arborescence de son app.
 - Le code partagé suit la frontière `api` / `core` / `client` / app.
 - `@cityborn/client` reste agnostique des plateformes.
 - Tout nouveau sous-chemin public figure dans l'`exports` map.
+- Chaque `index.ts` touché suit la surface publique : liste explicite, symboles importés par une app, noms de leur famille.
 - Les déplacements architecturaux restent limités à la capacité réellement touchée.
