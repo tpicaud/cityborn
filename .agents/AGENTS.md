@@ -1,39 +1,49 @@
 # Cityborn — guide pour agents
 
-Monorepo pnpm/turbo, TypeScript partout. Trois règles au-dessus de tout : **type-safe** (jamais `any`, jamais affaiblir un type pour le compilateur), **naming exact** (voir [Style de code](#style-de-code)) et **bonnes pratiques d'architecture**.
+Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte transverse au monorepo ; les conventions propres à un domaine vivent dans les [skills](#skills).
 
-Ce fichier ne contient que le **contexte transverse à tout le monorepo**. Les conventions propres à un domaine vivent dans des skills chargés à la demande — voir [Skills](#skills).
+## Règles prioritaires
+
+### Type-safe
+
+- Aucun `any`.
+- Corriger un type en amont (narrowing, generics, schéma zod) plutôt que l'affaiblir pour le compilateur.
+- Identifiants métier : types brandés de `@cityborn/api`, validés une fois à l'entrée du domaine puis propagés.
+
+### Architecture
+
+- Chaque package suit l'axe d'organisation de la [vue d'ensemble](#vue-densemble).
+- Un domaine métier porte le même nom dans `api`, `core` et `backend`.
+- Une feature compose un ou plusieurs domaines et n'existe que dans `client` et les apps clientes.
+- Le socle technique d'un package ne dépend d'aucun de ses domaines ni de ses features.
+- Une architecture défaillante dans le périmètre touché est signalée en fin de réponse avec une piste, sans implémenter le refacto.
 
 ## Vue d'ensemble
 
-| Package / app | Rôle |
-|---|---|
-| `apps/backend` | NestJS + Prisma. API exposée via contrats ts-rest. |
-| `apps/frontend`, `apps/back-office` | Next.js (App Router). |
-| `apps/mobile` | Expo / React Native. |
-| `packages/api` | **Source de vérité des contrats** : ts-rest et WebSocket + schémas zod, types qui transitent par l'API, `ErrorCode` + messages FR, map zod FR. |
-| `packages/client` | Code des apps clientes (front, mobile, back-office) qui **ne transite pas** par l'API, rangé par domaine et exposé par l'`exports` map de son `package.json`. Porte l'accès à l'API et l'état serveur de toutes ces apps, y compris un domaine propre à une seule app (`admin`). Agnostique de Next, Expo et du rendu. |
-| `packages/core` | Code partagé **backend + client** (front/mobile). Aujourd'hui la logique de jeu (`src/game`) ; a vocation à s'étoffer. Dépend de `@cityborn/api`. |
-| `packages/design-system` | Composants UI partagés. |
+| Package / app | Rôle | Organisé par |
+|---|---|---|
+| `apps/backend` | API NestJS + Prisma qui implémente les contrats de `packages/api`. | domaine métier |
+| `packages/api` | Source de vérité des contrats : routes ts-rest, events WebSocket, schémas zod, `ErrorCode`. | domaine métier |
+| `packages/core` | Logique métier pure partagée par le backend et les clients. | domaine métier |
+| `packages/client` | Accès à l'API, état serveur et comportement headless des apps clientes ; agnostique de Next, Expo et du rendu. | feature |
+| `apps/frontend`, `apps/back-office` | Next.js (App Router). | feature |
+| `apps/mobile` | Expo / React Native. | feature |
+| `packages/design-system` | Composants et tokens UI, sans notion métier. | préoccupation technique |
 
-**Où mettre du code / un type partagé** :
+| Axe | Définition | Exemples |
+|---|---|---|
+| domaine métier | Une notion métier avec ses règles et ses données. | `user`, `category`, `session` |
+| feature | Un parcours produit, composé de domaines. | `play`, `profile`, `admin` |
+| socle technique | Ce qui ne connaît aucun domaine ni feature. | `api/protocol`, modules `prisma` et `redis` du backend, `client/platform` |
 
-- transite par l'API → `@cityborn/api`
-- partagé backend + front/mobile → `@cityborn/core`
-- partagé entre apps clientes, ou accès à l'API d'une app cliente → `@cityborn/client`
-- sinon local à l'app
+Dépendances autorisées entre packages :
 
-Ne jamais dupliquer un type qui existe déjà dans un package.
+- `core` → `api`
+- `backend` → `api`, `core`
+- `client` → `api`, `core`
+- apps clientes → `api`, `core`, `client`, `design-system`
 
-## Principes
-
-- Le typage prime : un typage clair est une part majeure de la DX. Corriger en amont (narrowing, generics, zod) plutôt qu'un cast.
-- **Identifiants métier** : utiliser les types brandés de `@cityborn/api`. Valider une fois à l'entrée du domaine puis propager le type brandé ; réserver `unknown` aux sources réellement non typées et les schémas UUID aux identifiants dont ce format est garanti. Le branding conserve un format JSON/OpenAPI `string`.
-- Si l'architecture touchée par une tâche est mauvaise : le **signaler en fin de réponse** avec une piste, sans implémenter le refacto ni dévier de la tâche demandée.
-- Les instructions explicites de l'utilisateur priment sur les préférences de workflow de ce guide et des skills, sans lever les garde-fous de sécurité ni élargir le périmètre demandé.
-- Avancer de façon autonome pour les actions réversibles et dans le périmètre demandé. Poser une question uniquement si une information manquante change matériellement le résultat ou si une autorisation listée ci-dessous est nécessaire.
-
-### Découpage
+## Découpage
 
 Ces règles valent en développement comme en revue : chaque **symptôme** cité est un constat à corriger dans le périmètre de la tâche, ou à signaler sinon.
 
