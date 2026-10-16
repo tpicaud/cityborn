@@ -87,7 +87,7 @@ Un nouveau domaine consommé par les apps se crée en ajoutant `src/features/<do
 
 ### Surface publique d'un domaine
 
-Chaque `index.ts` du package (domaines, `shared`, `api`, `platform`, `ws`) liste ses exports un à un, sans `export *`, et n'exporte que ce qu'une app importe. Un symbole lu seulement par un autre fichier du package reste exporté par son fichier, hors de l'index. Biome ordonne l'index par fichier source. Chaque symbole exporté appartient à une famille :
+Chaque `index.ts` du package (domaines, `shared`, `api`, `platform`, `ws`) liste ses exports un à un, sans `export *`, et n'exporte que ce qu'une app importe, plus les options et le retour de chaque hook exporté. Un symbole lu seulement par un autre fichier du package reste exporté par son fichier, hors de l'index. Biome ordonne l'index par fichier source. Chaque symbole exporté appartient à une famille :
 
 | Famille | Contrat |
 |---|---|
@@ -133,7 +133,7 @@ Le package reste agnostique de Next, Expo, React Native et du rendu. Chaque beso
 | dépend de React, pas de la plateforme | `@cityborn/client`, dans son domaine |
 | dépend de `next`, `expo`, `react-native`, `react-dom` ou du rendu | l'app, derrière un port `@cityborn/client/platform` |
 
-Une date affichée passe par `formatDate` de `@cityborn/core` (`16/10/2026`) : une date seule `YYYY-MM-DD` y reste le même jour dans tout fuseau, une date-heure ISO s'affiche dans le fuseau local.
+La mise en forme d'une date est une logique pure commune au backend et aux clients : toute date affichée passe par `formatDate` de `@cityborn/core` (`16/10/2026`). Une date seule `YYYY-MM-DD` y reste le même jour dans tout fuseau ; une date-heure ISO s'affiche dans le fuseau local.
 
 ## Critère de fin
 
@@ -141,5 +141,5 @@ Une date affichée passe par `formatDate` de `@cityborn/core` (`16/10/2026`) : u
 - Le code partagé suit la frontière `api` / `core` / `client` / app.
 - `@cityborn/client` reste agnostique des plateformes.
 - Tout nouveau sous-chemin public figure dans l'`exports` map.
-- Chaque `index.ts` touché suit la surface publique : liste explicite, symboles importés par une app, noms de leur famille.
+- Chaque `index.ts` touché suit la surface publique : liste explicite, symboles importés par une app plus options et retour de leurs hooks, noms de leur famille.
 - Les déplacements architecturaux restent limités à la capacité réellement touchée.
