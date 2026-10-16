@@ -12,10 +12,10 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 
 ### Architecture
 
-- Chaque package suit l'axe d'organisation de la [vue d'ensemble](#vue-densemble).
-- Un domaine métier porte le même nom dans `api`, `core` et `backend`.
-- Une feature compose un ou plusieurs domaines et n'existe que dans `client` et les apps clientes.
-- Le socle technique d'un package ne dépend d'aucun de ses domaines ni de ses features.
+- Chaque package ou app suit l'axe d'organisation que lui attribue la [vue d'ensemble](#vue-densemble).
+- Un domaine métier porte le même nom dans chaque package ou app organisé par domaine métier.
+- Une feature compose un ou plusieurs domaines et n'existe que dans les packages et apps organisés par feature.
+- Le socle technique d'un package ou d'une app ne dépend d'aucun de ses domaines ni de ses features.
 - Une architecture défaillante dans le périmètre touché est signalée en fin de réponse avec une piste, sans implémenter le refacto.
 
 ## Vue d'ensemble
