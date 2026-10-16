@@ -34,7 +34,7 @@ Une demande d'implémenter une issue inclut sa livraison sur GitHub :
 
 1. Créer un commit dès qu'une étape cohérente est complète et vérifiée. Garder séparées les étapes indépendantes et respecter les conventions de commit d'`AGENTS.md`.
 2. Après les vérifications finales, pousser la branche liée à l'issue.
-3. Créer une PR draft si la branche n'en possède pas, sinon mettre à jour la PR existante. Respecter les conventions de PR d'`AGENTS.md` et inclure dans sa description le résultat, les vérifications exécutées et la fermeture automatique de l'issue.
+3. Créer une PR draft si la branche n'en possède pas, sinon mettre à jour la PR existante. Respecter les conventions de PR d'`AGENTS.md` et inclure dans sa description le résultat, les vérifications exécutées et la fermeture automatique de l'issue. Assigner la PR au compte GitHub authentifié (`@me`).
 4. Réserver le passage de la PR en ready, le merge, la modification de l'issue et les changements de statut de projet à une demande explicite de l'utilisateur.
 
 ## Compte rendu final
