@@ -17,9 +17,23 @@ import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { sessionQueryOptions } from './api/sessionQueries';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
 
+const sessionCodeLength: number = 6;
+const sessionCodePattern: RegExp = new RegExp(`^\\d{${sessionCodeLength}}$`);
+
 const JoinSessionSchema = z.object({
-  code: z.string().min(1, 'Veuillez entrer un code').pipe(SessionIdSchema),
+  code: z
+    .string()
+    .min(1, 'Veuillez entrer un code')
+    .regex(
+      sessionCodePattern,
+      `Le code doit contenir ${sessionCodeLength} chiffres`,
+    )
+    .pipe(SessionIdSchema),
 });
+
+export function formatSessionCodeInput(sessionCodeInput: string): string {
+  return sessionCodeInput.replace(/\D/g, '').slice(0, sessionCodeLength);
+}
 
 type JoinSessionFormInput = z.input<typeof JoinSessionSchema>;
 type JoinSessionFormValues = z.output<typeof JoinSessionSchema>;

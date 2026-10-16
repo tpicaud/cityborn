@@ -1,5 +1,6 @@
 export { type PlayerNameForm, usePlayerNameForm } from './playerNameForm';
 export {
+  formatSessionCodeInput,
   type SessionLauncher,
   type SessionLauncherOptions,
   useSessionLauncher,

@@ -9,12 +9,14 @@ import {
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
 import {
+  formatSessionCodeInput,
   type SessionLauncher,
   useSessionLauncher,
 } from '@cityborn/client/session';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
+import { Controller } from 'react-hook-form';
 import { useNavigation } from '@/lib/navigation';
 import Button from '../ui/buttons/Button';
 import LoadingButton from '../ui/buttons/LoadingButton';
@@ -33,7 +35,7 @@ export default function Menu({
     useVerificationEmailResend();
   const {
     joinSessionForm: {
-      register,
+      control,
       formState: { errors },
     },
     playSolo,
@@ -118,11 +120,25 @@ export default function Menu({
         </div>
         <form onSubmit={joinSession} className="flex flex-col gap-1 w-full">
           <div className="flex flex-row gap-2 items-center justify-center w-full">
-            <input
-              type="text"
-              placeholder="Code"
-              className="border border-gray-300 rounded px-4 py-2 w-full"
-              {...register('code')}
+            <Controller
+              control={control}
+              name="code"
+              render={({ field: { name, onChange, onBlur, ref, value } }) => (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Code"
+                  className="border border-gray-300 rounded px-4 py-2 w-full"
+                  name={name}
+                  ref={ref}
+                  value={value}
+                  onChange={(event) =>
+                    onChange(formatSessionCodeInput(event.target.value))
+                  }
+                  onBlur={onBlur}
+                />
+              )}
             />
             <LoadingButton
               type="button"
