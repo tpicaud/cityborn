@@ -27,3 +27,8 @@ Terminé quand le check passe et que les cas de chaque skill touché sont à jou
   - il va du spécifique vers le générique, sans cycle ;
   - `AGENTS.md` renvoie vers un skill seulement pour une étape ou un garde-fou incontournable.
 - `writing-for-agents` reste identique à sa source (`mattpocock/skills`) ; toute adaptation Cityborn vit dans ce skill.
+
+## Skills
+
+- Un skill de conventions couvre le périmètre d'un package ou d'une app de la vue d'ensemble d'`AGENTS.md`, ou une préoccupation transverse ; un skill de workflow couvre une tâche du début à la fin.
+- Un skill pose des règles et des décisions ; l'état du code (listes de fichiers, de hooks, de domaines) reste dans le code.
