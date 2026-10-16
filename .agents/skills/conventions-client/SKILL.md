@@ -12,7 +12,7 @@ description: "Conventions de packages/client (@cityborn/client). À utiliser pou
   - `<domaine>Queries.ts` : les clés, les `queryOptions` et les mises à jour du cache.
 - `features/<feature>/` porte le comportement d'une feature des apps : hooks, formulaires, transformations pures, contrats de vue. Une feature compose des domaines.
 - Le socle technique porte le transport HTTP, le transport WebSocket, les ports plateforme et les providers transverses.
-- Une feature ne connecte ni ne déconnecte un socket : `useSocket` possède la connexion et rejoue la restauration de la feature à chaque connexion.
+- La connexion WebSocket appartient au socle : une feature fournit seulement sa restauration, rejouée à chaque connexion.
 
 ## Surface publique
 
@@ -33,12 +33,11 @@ description: "Conventions de packages/client (@cityborn/client). À utiliser pou
 
 ## État serveur
 
-- Le package porte seul l'état serveur, avec TanStack Query.
 - Un hook lit les ports par `useDomainApis()`, jamais en paramètre, et ses données par les `queryOptions` du domaine.
 - Chaque query fixe `staleTime`, `retry` et `meta.reportsError`.
 - Une donnée propre au compte connecté a une clé sous `accountQueryKey(userId)`.
 - Une écriture appelle directement le port, puis met à jour le cache par les queries du domaine ; react-hook-form porte l'état de soumission.
-- Un hook porte un seul comportement. Celui d'un écran qui peut rester monté hors focus reçoit ce focus et le transmet à l'option `subscribed` de sa query.
+- Le hook d'un écran qui peut rester monté hors focus reçoit ce focus et le transmet à l'option `subscribed` de sa query.
 - Une erreur ou un formulaire : lire [la référence erreurs](references/errors.md).
 
 ## Ports plateforme
