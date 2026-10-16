@@ -1,55 +1,70 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import type { Game } from '@cityborn/api';
+import { describe, it } from 'node:test';
 import {
-  GameIdSchema,
+  buildGame,
+  buildGameConfig,
+  buildGameState,
+  buildRound,
+  type Game,
   GameStatus,
+  type GuessObjectId,
   GuessObjectIdSchema,
+  type PlayerId,
   PlayerIdSchema,
   RoundStatus,
 } from '@cityborn/api';
-import { createGameDisplay } from './gameDisplay';
+import { createGameDisplay, type GameDisplay } from './gameDisplay';
 
-const localPlayerID = PlayerIdSchema.parse('local-player');
-const firstObjectID = GuessObjectIdSchema.parse('object-1');
-const secondObjectID = GuessObjectIdSchema.parse('object-2');
+const localPlayerID: PlayerId = PlayerIdSchema.parse('local-player');
+const firstObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-1');
+const secondObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-2');
 
-function createGame(): Game {
-  return {
-    id: GameIdSchema.parse('game-1'),
-    config: { categories: [], timer: 25, nbOfObjects: 2 },
-    status: GameStatus.IN_RESULTS,
-    state: {
-      guessObjectsIds: [firstObjectID, secondObjectID],
-      results: {},
-      currentRound: {
-        status: RoundStatus.SHOWING_RESULTS,
-        guessObjectId: secondObjectID,
-      },
-    },
-  };
-}
-
-test('createGameDisplay exposes the game state and progress', () => {
-  const display = createGameDisplay(createGame(), localPlayerID);
-
-  assert.deepEqual(display, {
-    state: 'playing',
-    localPlayerID,
-    showNextRound: true,
-    showResults: true,
-    roundNumber: 2,
-    roundCount: 2,
-  });
+const gameShowingLastRoundResults: Game = buildGame({
+  config: buildGameConfig({ nbOfObjects: 2 }),
+  status: GameStatus.IN_RESULTS,
+  state: buildGameState({
+    guessObjectsIds: [firstObjectID, secondObjectID],
+    currentRound: buildRound({
+      status: RoundStatus.SHOWING_RESULTS,
+      guessObjectId: secondObjectID,
+    }),
+  }),
 });
 
-test('createGameDisplay distinguishes loading from a missing player', () => {
-  const game = createGame();
+describe('createGameDisplay', () => {
+  it('exposes the game state and progress', () => {
+    const display: GameDisplay = createGameDisplay(
+      gameShowingLastRoundResults,
+      localPlayerID,
+    );
 
-  assert.equal(
-    createGameDisplay({ ...game, status: GameStatus.STARTING }, localPlayerID)
-      .state,
-    'loading',
-  );
-  assert.equal(createGameDisplay(game, undefined).state, 'unavailable');
+    assert.deepEqual(display, {
+      state: 'playing',
+      localPlayerID,
+      showNextRound: true,
+      showResults: true,
+      roundNumber: 2,
+      roundCount: 2,
+    });
+  });
+
+  it('reports a starting game as loading', () => {
+    const startingGame: Game = {
+      ...gameShowingLastRoundResults,
+      status: GameStatus.STARTING,
+    };
+
+    const display: GameDisplay = createGameDisplay(startingGame, localPlayerID);
+
+    assert.equal(display.state, 'loading');
+  });
+
+  it('reports a game without local player as unavailable', () => {
+    const display: GameDisplay = createGameDisplay(
+      gameShowingLastRoundResults,
+      undefined,
+    );
+
+    assert.equal(display.state, 'unavailable');
+  });
 });

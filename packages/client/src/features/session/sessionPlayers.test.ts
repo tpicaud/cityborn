@@ -1,37 +1,36 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import { PlayerIdSchema, type SessionPlayer } from '@cityborn/api';
+import { describe, it } from 'node:test';
+import { buildPlayer, type SessionPlayer } from '@cityborn/api';
 import { sortPlayersConnectedFirst } from './sessionPlayers';
 
-function buildPlayer(username: string, connected?: boolean): SessionPlayer {
-  return { username: PlayerIdSchema.parse(username), isGuest: true, connected };
-}
+describe('sortPlayersConnectedFirst', () => {
+  it('lists disconnected players after the other players', () => {
+    const players: SessionPlayer[] = [
+      buildPlayer('alice', false),
+      buildPlayer('bob', true),
+      { ...buildPlayer('carol'), connected: undefined },
+      buildPlayer('dave', false),
+    ];
 
-test('disconnected players are listed after the other players', () => {
-  const players: SessionPlayer[] = [
-    buildPlayer('alice', false),
-    buildPlayer('bob', true),
-    buildPlayer('carol'),
-    buildPlayer('dave', false),
-  ];
+    const sortedPlayers: SessionPlayer[] = sortPlayersConnectedFirst(players);
 
-  const sortedUsernames: string[] = sortPlayersConnectedFirst(players).map(
-    ({ username }) => username,
-  );
+    assert.deepEqual(
+      sortedPlayers.map(({ username }: SessionPlayer): string => username),
+      ['bob', 'carol', 'alice', 'dave'],
+    );
+  });
 
-  assert.deepEqual(sortedUsernames, ['bob', 'carol', 'alice', 'dave']);
-});
+  it('leaves the given players untouched', () => {
+    const players: SessionPlayer[] = [
+      buildPlayer('alice', false),
+      buildPlayer('bob', true),
+    ];
 
-test('sorting players leaves the session players untouched', () => {
-  const players: SessionPlayer[] = [
-    buildPlayer('alice', false),
-    buildPlayer('bob', true),
-  ];
+    sortPlayersConnectedFirst(players);
 
-  sortPlayersConnectedFirst(players);
-
-  assert.deepEqual(
-    players.map(({ username }) => username),
-    ['alice', 'bob'],
-  );
+    assert.deepEqual(
+      players.map(({ username }: SessionPlayer): string => username),
+      ['alice', 'bob'],
+    );
+  });
 });
