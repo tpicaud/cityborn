@@ -1,6 +1,6 @@
 ---
 name: conventions-api
-description: "Conventions de packages/api, contrat public @cityborn/api. À utiliser pour ajouter, modifier ou ranger une route, un event WebSocket, un schéma, un type, un enum ou un code d'erreur."
+description: "Conventions de packages/api, contrat public @cityborn/api. À utiliser pour ajouter, modifier, déprécier ou ranger une route, un event WebSocket, un schéma, un type, un enum ou un code d'erreur."
 ---
 
 # Conventions `@cityborn/api`
@@ -20,7 +20,7 @@ Les règles valent pour les routes HTTP comme pour les events WebSocket.
 - Une valeur d'enum ajoutée :
   - acceptée seulement en entrée : additive ;
   - émise par l'API : breaking change, sauf si les clients déjà déployés tolèrent une valeur inconnue.
-- Pour remplacer un élément, créer le remplaçant à côté de l'ancien, puis déprécier l'ancien avec le skill `deprecate`.
+- Pour remplacer un élément, créer le remplaçant à côté de l'ancien, puis déprécier l'ancien avec [le marqueur de dépréciation](references/deprecation.md).
 
 ## Garde-fous
 

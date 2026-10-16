@@ -61,7 +61,7 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 ## Style de code
 
 - **Langue** : code en anglais, sauf les textes vus par l'utilisateur final, en français.
-- **Commentaires** : aucun, JSDoc compris, sauf le bloc posé par le skill `deprecate` ; un *pourquoi* va dans le commit, la PR ou `docs/`.
+- **Commentaires** : aucun, JSDoc compris, sauf le marqueur de dépréciation de `conventions-api` ; un *pourquoi* va dans le commit, la PR ou `docs/`.
 - **Naming exact** : chaque nom dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine et sans collision avec un autre domaine.
 - **Annotations** : chaque `const` et `let` est annoté dès qu'un type pertinent peut être nommé, tests compris ; `satisfies` seulement pour conserver le type inféré.
 - **`type` par défaut** : `interface` seulement pour un contrat à plusieurs implémentations ou une augmentation de déclaration.
