@@ -2,6 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { authContract } from '../auth/auth.contract';
 import { categoryAdminContract } from '../category/category.admin.contract';
 import { categoryContract } from '../category/category.contract';
+import { gameRecordContract } from '../game-record/game-record.contract';
 import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
 import { guessObjectContract } from '../guess-object/guess-object.contract';
 import { healthContract } from '../health/health.contract';
@@ -18,7 +19,7 @@ export const contract = c.router(
   {
     auth: authContract,
     health: healthContract,
-    user: userContract,
+    user: { ...gameRecordContract, ...userContract },
     session: sessionContract,
     category: categoryContract,
     guessObjects: guessObjectContract,
