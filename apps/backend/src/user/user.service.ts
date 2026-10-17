@@ -1,9 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import {
-  type CreateGameRecord,
   ErrorCode,
-  type GameRecord,
-  SessionMode,
   type User,
   type UserId,
   type Username,
@@ -17,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { AuthSession, AuthVersion } from '../common/types/auth-session';
-import { GameRecordService } from '../game-record/game-record.service';
 import {
   EMAIL_VERIFICATION_TOKEN_REPOSITORY,
   type EmailVerificationTokenRepository,
@@ -37,7 +33,6 @@ export class UserService {
     private readonly userRepository: UserRepository,
     @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
     private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
-    private readonly gameRecordService: GameRecordService,
   ) {}
 
   async createUser(data: CreateUserData): Promise<User> {
@@ -191,33 +186,6 @@ export class UserService {
     }
 
     return this.completeEmailVerification(token.userId);
-  }
-
-  async getGameRecords(user_id: UserId): Promise<GameRecord[]> {
-    const gameRecords =
-      await this.gameRecordService.findRecentByUserId(user_id);
-
-    if (!gameRecords)
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_INVALID_CREDENTIALS,
-        message: `Invalid credentials`,
-      });
-
-    return gameRecords;
-  }
-
-  async saveSoloGameRecord(
-    user_id: UserId,
-    createGameRecord: CreateGameRecord,
-  ): Promise<void> {
-    if (createGameRecord.mode !== SessionMode.SOLO) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: 'Cannot save game with this gameMode',
-      });
-    }
-
-    await this.gameRecordService.create(createGameRecord, [{ id: user_id }]);
   }
 
   @Transactional()
