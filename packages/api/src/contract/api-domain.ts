@@ -1,6 +1,7 @@
 export const API_DOMAINS = [
   'auth',
   'category',
+  'game-record',
   'guess-object',
   'health',
   'search',

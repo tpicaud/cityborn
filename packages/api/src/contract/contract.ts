@@ -3,6 +3,7 @@ import { authContract } from '../auth/auth.contract';
 import { categoryAdminContract } from '../category/category.admin.contract';
 import { categoryContract } from '../category/category.contract';
 import { gameRecordContract } from '../game-record/game-record.contract';
+import { deprecatedUserGameRecordContract } from '../game-record/game-record.deprecated.contract';
 import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
 import { guessObjectContract } from '../guess-object/guess-object.contract';
 import { healthContract } from '../health/health.contract';
@@ -27,7 +28,8 @@ const c = initContract();
 const publicRouters = {
   auth: authContract,
   health: healthContract,
-  user: { ...gameRecordContract, ...userContract },
+  user: { ...deprecatedUserGameRecordContract, ...userContract },
+  gameRecord: gameRecordContract,
   session: sessionContract,
   category: categoryContract,
   guessObjects: guessObjectContract,

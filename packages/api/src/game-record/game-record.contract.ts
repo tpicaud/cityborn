@@ -11,15 +11,15 @@ export const gameRecordContract = c.router(
   {
     getGameRecords: {
       method: 'GET',
-      path: '/game-records',
+      path: '/',
       responses: { 200: GameRecordsSchema },
     },
     saveSoloGameRecord: {
       method: 'POST',
-      path: '/game-records',
+      path: '/',
       body: CreateGameRecordSchema,
       responses: { 200: emptyResponseSchema },
     },
   },
-  { pathPrefix: '/user' },
+  { pathPrefix: '/game-record' },
 );

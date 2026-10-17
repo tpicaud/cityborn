@@ -68,6 +68,8 @@ describe('httpActionRoutes', () => {
       'category.getCategories',
       'category.getCategory',
       'category.getCategoryTrees',
+      'game-record.getGameRecords',
+      'game-record.saveSoloGameRecord',
       'guess-object.getGuessObject',
       'guess-object.getGuessObjects',
       'health.check',
