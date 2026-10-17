@@ -10,6 +10,7 @@ import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
 import { BackendConfigModule } from './config/config.module';
 import { EventModule } from './event/event.module';
+import { GameRecordModule } from './game-record/game-record.module';
 import { GuessObjectModule } from './guess-object/guess-object.module';
 import { HealthModule } from './health/health.module';
 import { IdModule } from './id/id.module';
@@ -42,6 +43,7 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
     AuthModule,
     PrismaModule,
     UserModule,
+    GameRecordModule,
     EventModule,
     WikidataModule,
     NominatimModule,

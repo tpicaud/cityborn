@@ -8,11 +8,13 @@ export interface ProfileApi {
 }
 
 export function createProfileApi(
-  contractClient: Pick<ContractClient, 'user'>,
+  contractClient: Pick<ContractClient, 'gameRecord' | 'user'>,
 ): ProfileApi {
   return {
     async getGameRecords() {
-      return unwrapApiResponse(await contractClient.user.getGameRecords());
+      return unwrapApiResponse(
+        await contractClient.gameRecord.getGameRecords(),
+      );
     },
 
     async updateUsername(data) {

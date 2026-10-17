@@ -6,10 +6,10 @@ import { sortPlayersConnectedFirst } from './sessionPlayers';
 describe('sortPlayersConnectedFirst', () => {
   it('lists disconnected players after the other players', () => {
     const players: SessionPlayer[] = [
-      buildPlayer('alice', false),
-      buildPlayer('bob', true),
-      { ...buildPlayer('carol'), connected: undefined },
-      buildPlayer('dave', false),
+      buildPlayer({ username: 'alice', connected: false }),
+      buildPlayer({ username: 'bob', connected: true }),
+      { ...buildPlayer({ username: 'carol' }), connected: undefined },
+      buildPlayer({ username: 'dave', connected: false }),
     ];
 
     const sortedPlayers: SessionPlayer[] = sortPlayersConnectedFirst(players);
@@ -22,8 +22,8 @@ describe('sortPlayersConnectedFirst', () => {
 
   it('leaves the given players untouched', () => {
     const players: SessionPlayer[] = [
-      buildPlayer('alice', false),
-      buildPlayer('bob', true),
+      buildPlayer({ username: 'alice', connected: false }),
+      buildPlayer({ username: 'bob', connected: true }),
     ];
 
     sortPlayersConnectedFirst(players);

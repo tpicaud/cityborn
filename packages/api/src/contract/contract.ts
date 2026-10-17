@@ -1,35 +1,54 @@
 import { initContract } from '@ts-rest/core';
-import { authContract } from './auth.contract';
-import { categoryAdminContract } from './category.admin.contract';
-import { categoryContract } from './category.contract';
-import { guessObjectAdminContract } from './guess-object.admin.contract';
-import { guessObjectContract } from './guess-object.contract';
-import { healthContract } from './health.contract';
-import { searchAdminContract } from './search.admin.contract';
-import { sentenceContract } from './sentence.contract';
-import { sessionContract } from './session.contract';
-import { userContract } from './user.contract';
-import { worldLocationAdminContract } from './world-location.admin.contract';
+import { authContract } from '../auth/auth.contract';
+import { categoryAdminContract } from '../category/category.admin.contract';
+import { categoryContract } from '../category/category.contract';
+import { gameRecordContract } from '../game-record/game-record.contract';
+import { deprecatedUserGameRecordContract } from '../game-record/game-record.deprecated.contract';
+import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
+import { guessObjectContract } from '../guess-object/guess-object.contract';
+import { healthContract } from '../health/health.contract';
+import { searchAdminContract } from '../search/search.admin.contract';
+import { sentenceContract } from '../sentence/sentence.contract';
+import { sessionContract } from '../session/session.contract';
+import { userContract } from '../user/user.contract';
+import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
+import type { ApiDomain } from './api-domain';
+import { commonErrorResponses } from './errors/api-error.schema';
+
+type ApiDomainPath = `/${ApiDomain}` | `/${ApiDomain}/${string}`;
+
+type ApiDomainRouter = {
+  readonly [name: string]: { readonly path: ApiDomainPath } | ApiDomainRouter;
+};
+
+type ApiDomainRouters = Readonly<Record<string, ApiDomainRouter>>;
 
 const c = initContract();
 
-export const contract = c.router({
+const publicRouters = {
   auth: authContract,
   health: healthContract,
-  user: userContract,
+  user: { ...deprecatedUserGameRecordContract, ...userContract },
+  gameRecord: gameRecordContract,
   session: sessionContract,
   category: categoryContract,
   guessObjects: guessObjectContract,
   sentence: sentenceContract,
-  admin: c.router(
-    {
-      category: categoryAdminContract,
-      guessObjects: guessObjectAdminContract,
-      search: searchAdminContract,
-      worldLocation: worldLocationAdminContract,
-    },
-    { pathPrefix: '/admin' },
-  ),
-});
+} satisfies ApiDomainRouters;
+
+const adminRouters = {
+  category: categoryAdminContract,
+  guessObjects: guessObjectAdminContract,
+  search: searchAdminContract,
+  worldLocation: worldLocationAdminContract,
+} satisfies ApiDomainRouters;
+
+export const contract = c.router(
+  {
+    ...publicRouters,
+    admin: c.router(adminRouters, { pathPrefix: '/admin' }),
+  },
+  { commonResponses: { ...commonErrorResponses } },
+);
 
 export type AppContract = typeof contract;

@@ -55,8 +55,8 @@ describe('GameService.createGame', () => {
     }: ReturnType<typeof buildGameService> = buildGameService();
     const guessObject: FullGuessObject = buildFullGuessObject();
     const players: OnlinePlayer[] = [
-      buildPlayer('host'),
-      buildPlayer('bob', false),
+      buildPlayer({ username: 'host' }),
+      buildPlayer({ username: 'bob', connected: false }),
     ];
     const gameConfig: GameConfig = buildGameConfig();
     const createGameData: CreateGameParams = {
@@ -137,8 +137,8 @@ describe('GameService.endGame', () => {
       },
     });
     const players: OnlinePlayer[] = [
-      buildPlayer('host', true, { id: 'user-1' }),
-      buildPlayer('guest', true, { isGuest: true }),
+      buildPlayer({ username: 'host', id: 'user-1' }),
+      buildPlayer({ username: 'guest', isGuest: true }),
     ];
     gameRecordService.create.mockResolvedValue({
       id: GameRecordIdSchema.parse('game-record-1'),

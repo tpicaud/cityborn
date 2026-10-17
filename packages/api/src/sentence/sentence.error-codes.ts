@@ -1,0 +1,3 @@
+export enum SentenceErrorCode {
+  GAME_END_SENTENCE_NOT_FOUND = 'GAME_END_SENTENCE_NOT_FOUND',
+}

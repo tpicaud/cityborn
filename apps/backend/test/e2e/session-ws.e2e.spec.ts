@@ -186,7 +186,9 @@ describe('Session gateway over a real socket', () => {
     const session: Session = buildSession({
       hostID: user.username,
       players: [
-        buildPlayer(user.username, false, {
+        buildPlayer({
+          username: user.username,
+          connected: false,
           id: user.id,
           isGuest: false,
         }),
@@ -303,7 +305,12 @@ describe('Session gateway over a real socket', () => {
     );
     const session: Session = buildSession({
       players: [
-        buildPlayer(owner.username, false, { id: owner.id, isGuest: false }),
+        buildPlayer({
+          username: owner.username,
+          connected: false,
+          id: owner.id,
+          isGuest: false,
+        }),
       ],
     });
     await app.get(RedisService).setJSON(`session:${session.id}`, session);

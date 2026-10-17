@@ -1,5 +1,4 @@
 import { Global, Module } from '@nestjs/common';
-import { GameRecordModule } from '../game-record/game-record.module';
 import { PrismaClsModule } from '../prisma/prisma-cls.module';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from './repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from './repositories/prisma-email-verification-token.repository';
@@ -10,7 +9,7 @@ import { UserService } from './user.service';
 
 @Global()
 @Module({
-  imports: [PrismaClsModule, GameRecordModule],
+  imports: [PrismaClsModule],
   providers: [
     UserService,
     {

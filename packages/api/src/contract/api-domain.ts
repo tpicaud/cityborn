@@ -1,11 +1,7 @@
-/**
- * Vocabulaire des domaines métier exposés par l'API : chaque `pathPrefix` de
- * contrat ts-rest en est un, et l'observabilité backend en dérive son champ
- * `domain`.
- */
 export const API_DOMAINS = [
   'auth',
   'category',
+  'game-record',
   'guess-object',
   'health',
   'search',
