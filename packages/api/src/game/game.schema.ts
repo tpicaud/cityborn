@@ -1,10 +1,14 @@
 import { z } from 'zod';
 import { CategorySchema } from '../category/category.schema';
-import { GuessObjectIdSchema } from '../guess-object/guess-object.id';
-import { FullGuessObjectSchema } from '../guess-object/guess-object.schema';
-import { PlayerIdSchema } from '../player/player.id';
-import { PlayerResultsSchema } from '../player/player.schema';
-import { GameIdSchema } from './game.id';
+import {
+  FullGuessObjectSchema,
+  GuessObjectIdSchema,
+} from '../guess-object/guess-object.schema';
+import { PlayerIdSchema, PlayerResultsSchema } from '../player/player.schema';
+
+export const GameIdSchema = z.string().brand<'GameId'>();
+
+export type GameId = z.infer<typeof GameIdSchema>;
 
 export enum GameStatus {
   STARTING = 'STARTING',

@@ -1,6 +1,8 @@
 import { initContract } from '@ts-rest/core';
-import { WorldLocationUuidIdSchema } from './world-location.id';
-import { CreateWorldLocationSchema } from './world-location.schema';
+import {
+  CreateWorldLocationSchema,
+  WorldLocationUuidIdSchema,
+} from './world-location.schema';
 
 const c = initContract();
 

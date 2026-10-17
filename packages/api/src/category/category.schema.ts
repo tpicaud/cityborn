@@ -1,11 +1,14 @@
 import { z } from 'zod';
-import { GuessObjectIdSchema } from '../guess-object/guess-object.id';
-import { GuessObjectSchema } from '../guess-object/guess-object.schema';
 import {
-  type CategoryId,
-  CategoryIdSchema,
-  CategoryUuidIdSchema,
-} from './category.id';
+  GuessObjectIdSchema,
+  GuessObjectSchema,
+} from '../guess-object/guess-object.schema';
+
+export const CategoryIdSchema = z.string().brand<'CategoryId'>();
+export const CategoryUuidIdSchema = z.string().uuid().brand<'CategoryId'>();
+export const CategoryIdParamSchema = z.object({ id: CategoryIdSchema });
+
+export type CategoryId = z.infer<typeof CategoryIdSchema>;
 
 export const CategorySchema = z.object({
   id: CategoryIdSchema,

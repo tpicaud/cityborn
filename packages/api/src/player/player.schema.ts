@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { GuessObjectIdSchema } from '../guess-object/guess-object.id';
-import { UserIdSchema } from '../user/user.id';
-import { PlayerIdSchema } from './player.id';
+import { GuessObjectIdSchema } from '../guess-object/guess-object.schema';
+import { UserIdSchema } from '../user/user.schema';
+
+export const PlayerIdSchema = z.string().brand<'PlayerId'>();
+
+export type PlayerId = z.infer<typeof PlayerIdSchema>;
 
 export const PlayerSchema = z.object({
   username: PlayerIdSchema,

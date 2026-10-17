@@ -1,8 +1,15 @@
 import { z } from 'zod';
 import { GameConfigSchema, GameSchema } from '../game/game.schema';
-import { type PlayerId, PlayerIdSchema } from '../player/player.id';
-import { SessionPlayerSchema } from '../player/player.schema';
-import { SessionIdSchema } from './session.id';
+import {
+  type PlayerId,
+  PlayerIdSchema,
+  SessionPlayerSchema,
+} from '../player/player.schema';
+
+export const SessionIdSchema = z.string().brand<'SessionId'>();
+export const SessionIdParamSchema = z.object({ id: SessionIdSchema });
+
+export type SessionId = z.infer<typeof SessionIdSchema>;
 
 export enum SessionMode {
   SOLO = 'solo',

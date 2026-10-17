@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { UserIdSchema, UsernameSchema } from './user.id';
+
+export const UserIdSchema = z.string().brand<'UserId'>();
+export const UsernameSchema = z
+  .string()
+  .brand<'PlayerId'>()
+  .brand<'Username'>();
+
+export type UserId = z.infer<typeof UserIdSchema>;
+export type Username = z.infer<typeof UsernameSchema>;
 
 export const AccountTypeSchema = z.enum(['email', 'google', 'apple']);
 

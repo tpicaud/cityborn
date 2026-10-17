@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { SentenceIdSchema } from './sentence.id';
+
+export const SentenceIdSchema = z.string().brand<'SentenceId'>();
+
+export type SentenceId = z.infer<typeof SentenceIdSchema>;
 
 export enum ScoreType {
   GOOD = 'GOOD',

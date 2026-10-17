@@ -4,9 +4,9 @@ import {
   emptyResponseSchema,
   IncludeQuerySchema,
 } from '../protocol/payload.schema';
-import { CategoryIdParamSchema } from './category.id';
 import {
   CategoriesSchema,
+  CategoryIdParamSchema,
   CategorySchema,
   CategoryTreesSchema,
   CreateCategorySchema,

@@ -1,8 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { GameSchema, GameStateSchema } from '../game/game.schema';
 import { emptyResponseSchema } from '../protocol/payload.schema';
-import { SessionIdParamSchema } from './session.id';
-import { CreateSessionSchema, SessionSchema } from './session.schema';
+import {
+  CreateSessionSchema,
+  SessionIdParamSchema,
+  SessionSchema,
+} from './session.schema';
 
 const c = initContract();
 

@@ -1,11 +1,19 @@
 import { z } from 'zod';
-import { WorldLocationIdSchema } from '../world-location/world-location.id';
 import {
+  WorldLocationIdSchema,
   WorldLocationPreviewSchema,
   WorldLocationSchema,
   WorldLocationSearchResultSchema,
 } from '../world-location/world-location.schema';
-import { GuessObjectIdSchema } from './guess-object.id';
+
+export const GuessObjectIdSchema = z.string().brand<'GuessObjectId'>();
+export const GuessObjectUuidIdSchema = z
+  .string()
+  .uuid()
+  .brand<'GuessObjectId'>();
+export const GuessObjectIdParamSchema = z.object({ id: GuessObjectIdSchema });
+
+export type GuessObjectId = z.infer<typeof GuessObjectIdSchema>;
 
 export const BaseGuessObjectSchema = z.object({
   id: GuessObjectIdSchema,

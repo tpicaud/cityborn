@@ -1,14 +1,17 @@
 import { z } from 'zod';
 import { GameConfigSchema, GuessSchema } from '../game/game.schema';
-import { PlayerIdSchema } from '../player/player.id';
+import { PlayerIdSchema } from '../player/player.schema';
 import {
   type WsChannel,
   type WsClientEventNames,
   type WsServerEventNames,
   wsEventName,
 } from '../ws/channel';
-import { SessionIdSchema } from './session.id';
-import { SessionReconnectTokenSchema, SessionSchema } from './session.schema';
+import {
+  SessionIdSchema,
+  SessionReconnectTokenSchema,
+  SessionSchema,
+} from './session.schema';
 
 const SessionMembershipSchema = z.object({
   sessionID: SessionIdSchema,

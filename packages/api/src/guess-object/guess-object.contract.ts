@@ -1,8 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { IncludeQuerySchema } from '../protocol/payload.schema';
-import { GuessObjectIdParamSchema } from './guess-object.id';
-import { GuessObjectSchema, GuessObjectsSchema } from './guess-object.schema';
+import {
+  GuessObjectIdParamSchema,
+  GuessObjectSchema,
+  GuessObjectsSchema,
+} from './guess-object.schema';
 
 const c = initContract();
 

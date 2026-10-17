@@ -1,10 +1,13 @@
 import { z } from 'zod';
 import { GameConfigSchema, GameStateSchema } from '../game/game.schema';
-import { GuessObjectIdSchema } from '../guess-object/guess-object.id';
+import { GuessObjectIdSchema } from '../guess-object/guess-object.schema';
 import { PlayerSchema } from '../player/player.schema';
 import { IsoDateTimeSchema } from '../protocol/payload.schema';
 import { SessionModeSchema } from '../session/session.schema';
-import { GameRecordIdSchema } from './game-record.id';
+
+export const GameRecordIdSchema = z.string().brand<'GameRecordId'>();
+
+export type GameRecordId = z.infer<typeof GameRecordIdSchema>;
 
 export const GameRecordSchema = z.object({
   id: GameRecordIdSchema,

@@ -6,15 +6,13 @@ import {
   IncludeQuerySchema,
 } from '../protocol/payload.schema';
 import {
-  GuessObjectIdParamSchema,
-  GuessObjectUuidIdSchema,
-} from './guess-object.id';
-import {
   CreateGuessObjectSchema,
   FullGuessObjectSchema,
   FullGuessObjectsSchema,
+  GuessObjectIdParamSchema,
   GuessObjectSchema,
   GuessObjectsSchema,
+  GuessObjectUuidIdSchema,
   PatchGuessObjectSchema,
 } from './guess-object.schema';
 

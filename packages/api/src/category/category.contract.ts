@@ -1,8 +1,8 @@
 import { initContract } from '@ts-rest/core';
 import { IncludeQuerySchema } from '../protocol/payload.schema';
-import { CategoryIdParamSchema } from './category.id';
 import {
   CategoriesSchema,
+  CategoryIdParamSchema,
   CategorySchema,
   CategoryTreesSchema,
 } from './category.schema';

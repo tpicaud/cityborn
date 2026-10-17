@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { WorldLocationIdSchema } from './world-location.id';
+
+export const WorldLocationIdSchema = z.string().brand<'WorldLocationId'>();
+export const WorldLocationUuidIdSchema = z
+  .string()
+  .uuid()
+  .brand<'WorldLocationId'>();
+
+export type WorldLocationId = z.infer<typeof WorldLocationIdSchema>;
 
 const WorldLocationSourceSchema = z.object({
   provider: z.string(),
