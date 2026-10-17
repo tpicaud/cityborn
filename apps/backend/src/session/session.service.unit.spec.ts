@@ -274,8 +274,8 @@ describe('SessionService lobby operations', () => {
     it('rejects transferring the host role to a disconnected player', async () => {
       const session: Session = buildSession({
         players: [
-          buildPlayer(playerId('host')),
-          buildPlayer(playerId('bob'), false),
+          buildPlayer({ username: playerId('host') }),
+          buildPlayer({ username: playerId('bob'), connected: false }),
         ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
@@ -411,7 +411,9 @@ describe('SessionService game operations', () => {
       });
       const session: Session = buildSession({
         currentGame: game,
-        players: [buildPlayer(playerId('host'), false)],
+        players: [
+          buildPlayer({ username: playerId('host'), connected: false }),
+        ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
@@ -474,7 +476,13 @@ describe('SessionService connection operations', () => {
       const user: User = buildUser({ username: playerId('host') });
       const session: Session = buildSession({
         hostID: '',
-        players: [buildPlayer(playerId('host'), false, { id: user.id })],
+        players: [
+          buildPlayer({
+            username: playerId('host'),
+            connected: false,
+            id: user.id,
+          }),
+        ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
@@ -494,7 +502,13 @@ describe('SessionService connection operations', () => {
 
     it('rejects reconnecting a registered player without credentials', async () => {
       const session: Session = buildSession({
-        players: [buildPlayer(playerId('host'), false, { isGuest: false })],
+        players: [
+          buildPlayer({
+            username: playerId('host'),
+            connected: false,
+            isGuest: false,
+          }),
+        ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
@@ -513,7 +527,13 @@ describe('SessionService connection operations', () => {
         username: playerId('intruder'),
       });
       const session: Session = buildSession({
-        players: [buildPlayer(playerId('host'), false, { id: owner.id })],
+        players: [
+          buildPlayer({
+            username: playerId('host'),
+            connected: false,
+            id: owner.id,
+          }),
+        ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
@@ -696,8 +716,8 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession({
         hostID: '',
         players: [
-          buildPlayer(playerId('host'), false),
-          buildPlayer(playerId('bob'), false),
+          buildPlayer({ username: playerId('host'), connected: false }),
+          buildPlayer({ username: playerId('bob'), connected: false }),
         ],
       });
       const { sessionService }: ReturnType<typeof buildSessionService> =

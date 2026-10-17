@@ -16,12 +16,10 @@ import {
   buildWorldLocation,
   CreateWorldLocationSchema,
 } from '@cityborn/api';
-import { createMock } from '@golevelup/ts-jest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { CATEGORY_REPOSITORY } from '../../src/category/repositories/category.repository';
 import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
 import { CategoryService } from '../../src/category/services/category.service';
-import { GameRecordService } from '../../src/game-record/game-record.service';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
@@ -57,10 +55,6 @@ describe('Prisma transactions', () => {
         GuessObjectService,
         WorldLocationService,
         UserService,
-        {
-          provide: GameRecordService,
-          useValue: createMock<GameRecordService>(),
-        },
         { provide: CATEGORY_REPOSITORY, useClass: PrismaCategoryRepository },
         {
           provide: GUESS_OBJECT_REPOSITORY,

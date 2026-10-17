@@ -9,7 +9,8 @@ description: "Conventions de packages/api, contrat public @cityborn/api. À util
 
 - Un domaine métier regroupe tout ce qu'il expose : routes HTTP, events WebSocket, schémas et types, identifiants brandés, enums, codes d'erreur, builders de test.
 - Les routes réservées à un acteur distinct (admin) sont séparées des routes publiques, dans le même domaine.
-- Le socle technique porte ce qu'aucun domaine ne possède : protocole et versions, mécanisme des channels WebSocket, format et traduction des erreurs, assemblage du contrat complet.
+- Le socle technique porte le mécanisme qu'aucun domaine ne possède : protocole et versions, mécanisme des channels WebSocket, codes d'erreur techniques, erreur affichable et traduction des erreurs de validation.
+- L'assemblage compose les domaines, au-dessus d'eux : contrat HTTP complet, qui ajoute à chaque route les réponses d'erreur communes, registre des channels WebSocket, union des codes d'erreur, format d'erreur typé par ces codes et ses messages.
 
 ## Rétrocompatibilité
 
@@ -29,6 +30,6 @@ Les règles valent pour les routes HTTP comme pour les events WebSocket.
 
 ## Critère de fin
 
-- Chaque élément ajouté vit dans son domaine, ou dans le socle s'il n'appartient à aucun.
+- Chaque élément ajouté vit dans son domaine, dans le socle s'il n'appartient à aucun, ou dans l'assemblage s'il compose les domaines.
 - `pnpm check:api-compat` passe ; un breaking change signalé et non voulu ramène à l'approche additive.
 - `check:api-compat` ignore le WebSocket : un changement d'event est vérifié par `pnpm --dir apps/backend test`, et aucun outil ne signale ses breaking changes.

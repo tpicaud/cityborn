@@ -8,22 +8,12 @@ import { UserService } from './user.service';
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @TsRestHandler(contract.user)
+  @TsRestHandler(contract.user.updateUsername)
   @UseGuards(AuthGuard)
   async handler(@CurrentUser() user: User) {
-    return tsRestHandler(contract.user, {
-      getGameRecords: async () => ({
-        status: 200 as const,
-        body: await this.userService.getGameRecords(user.id),
-      }),
-      saveSoloGameRecord: async ({ body }) => {
-        await this.userService.saveSoloGameRecord(user.id, body);
-        return { status: 200 as const, body: {} };
-      },
-      updateUsername: async ({ body }) => ({
-        status: 200 as const,
-        body: await this.userService.updateUsername(user, body.username),
-      }),
-    });
+    return tsRestHandler(contract.user.updateUsername, async ({ body }) => ({
+      status: 200 as const,
+      body: await this.userService.updateUsername(user, body.username),
+    }));
   }
 }

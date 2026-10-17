@@ -1,0 +1,74 @@
+import type { HttpSuccessStatus } from '../protocol/http-status';
+import { type ApiError, parseApiError } from './errors/api-error.schema';
+
+/**
+ * @deprecated Utiliser `unwrapApiResponse` et propager l'`ApiResponseError`
+ * levée. Conservé pour les consommateurs publiés avant la migration du
+ * back-office en export statique.
+ * @deprecatedSince 2026-10-03
+ */
+export type ApiResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: ApiError };
+
+type SuccessBody<T extends { status: number; body: unknown }> = Extract<
+  T,
+  { status: HttpSuccessStatus }
+>['body'];
+
+export class ApiResponseError extends Error {
+  readonly apiError: ApiError;
+
+  constructor(apiError: ApiError) {
+    super(apiError.message);
+    this.name = 'ApiResponseError';
+    this.apiError = apiError;
+  }
+
+  get code(): ApiError['code'] {
+    return this.apiError.code;
+  }
+
+  get statusCode(): number {
+    return this.apiError.statusCode;
+  }
+
+  get fieldErrors(): ApiError['fieldErrors'] {
+    return this.apiError.fieldErrors;
+  }
+}
+
+function isSuccessStatus(status: number): boolean {
+  return status >= 200 && status < 300;
+}
+
+function assertSuccess<T extends { status: number; body: unknown }>(
+  result: T,
+): asserts result is Extract<T, { status: HttpSuccessStatus }> {
+  if (!isSuccessStatus(result.status)) {
+    throw new ApiResponseError(parseApiError(result.status, result.body));
+  }
+}
+
+/**
+ * @deprecated Utiliser `unwrapApiResponse` et propager l'`ApiResponseError`
+ * levée. Conservé pour les consommateurs publiés avant la migration du
+ * back-office en export statique.
+ * @deprecatedSince 2026-10-03
+ */
+export function toApiResult<T extends { status: number; body: unknown }>(
+  result: T,
+): ApiResult<SuccessBody<T>> {
+  if (!isSuccessStatus(result.status)) {
+    return { ok: false, error: parseApiError(result.status, result.body) };
+  }
+  assertSuccess(result);
+  return { ok: true, data: result.body };
+}
+
+export function unwrapApiResponse<T extends { status: number; body: unknown }>(
+  result: T,
+): SuccessBody<T> {
+  assertSuccess(result);
+  return result.body;
+}

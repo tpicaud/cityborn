@@ -1,15 +1,12 @@
-import type { CreateGameRecord, User, UserId, Username } from '@cityborn/api';
+import type { User, UserId, Username } from '@cityborn/api';
 import {
-  buildCreateGameRecord,
   buildUser,
   ErrorCode,
-  SessionMode,
   UserIdSchema,
   UsernameSchema,
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import type { GameRecordService } from '../game-record/game-record.service';
 import type {
   EmailVerificationToken,
   EmailVerificationTokenRepository,
@@ -41,17 +38,13 @@ function buildUserService() {
     createMock<UserRepository>();
   const emailVerificationTokenRepository: DeepMocked<EmailVerificationTokenRepository> =
     createMock<EmailVerificationTokenRepository>();
-  const gameRecordService: DeepMocked<GameRecordService> =
-    createMock<GameRecordService>();
   const userService: UserService = new UserService(
     userRepository,
     emailVerificationTokenRepository,
-    gameRecordService,
   );
 
   return {
     emailVerificationTokenRepository,
-    gameRecordService,
     userRepository,
     userService,
   };
@@ -312,52 +305,6 @@ describe('UserService verification tokens', () => {
       expect(
         emailVerificationTokenRepository.deleteVerificationTokensByUserId,
       ).toHaveBeenCalledWith(verificationToken.userId);
-    });
-  });
-});
-
-describe('UserService game records', () => {
-  describe('getGameRecords', () => {
-    it('rejects an unknown user', async () => {
-      const {
-        gameRecordService,
-        userService,
-      }: ReturnType<typeof buildUserService> = buildUserService();
-      gameRecordService.findRecentByUserId.mockResolvedValue(null);
-
-      await expect(
-        userService.getGameRecords(userId('missing')),
-      ).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
-      });
-    });
-  });
-
-  describe('saveSoloGameRecord', () => {
-    it('persists a solo record for the user', async () => {
-      const {
-        gameRecordService,
-        userService,
-      }: ReturnType<typeof buildUserService> = buildUserService();
-      const record: CreateGameRecord = buildCreateGameRecord();
-
-      await userService.saveSoloGameRecord(userId('user-1'), record);
-
-      expect(gameRecordService.create).toHaveBeenCalledWith(record, [
-        { id: userId('user-1') },
-      ]);
-    });
-
-    it('rejects a multiplayer record', async () => {
-      const { userService }: ReturnType<typeof buildUserService> =
-        buildUserService();
-      const record: CreateGameRecord = buildCreateGameRecord({
-        mode: SessionMode.MULTI,
-      });
-
-      await expect(
-        userService.saveSoloGameRecord(userId('user-1'), record),
-      ).rejects.toMatchObject({ response: { code: ErrorCode.BAD_REQUEST } });
     });
   });
 });
