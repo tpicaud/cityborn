@@ -1,12 +1,12 @@
-export { ApiProvider } from '../domains/apiProvider';
+export { ApiProvider } from './domains/apiProvider';
 export {
   type ApiVersionSupport,
   recordMinSupportedApiVersion,
   useApiVersionSupport,
-} from './apiVersionSupport';
+} from './shared/apiVersionSupport';
 export {
   type ErrorDialogProps,
   type ErrorReporter,
   ErrorReporterProvider,
   useErrorReporter,
-} from './errorReporter';
+} from './shared/errorReporter';

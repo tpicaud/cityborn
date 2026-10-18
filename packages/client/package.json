@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/shared/index.ts",
+    ".": "./src/index.ts",
     "./admin": "./src/features/admin/index.ts",
     "./api": "./src/api/index.ts",
     "./auth": "./src/features/auth/index.ts",

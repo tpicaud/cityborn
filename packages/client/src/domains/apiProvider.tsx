@@ -1,22 +1,9 @@
 'use client';
 
-import {
-  focusManager,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query';
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import type { ContractClient } from '../api/contractClient';
 import type { AppFocus } from '../platform/appFocus';
-import { type ErrorReporter, useErrorReporter } from '../shared/errorReporter';
-import { createErrorReportingQueryCache } from '../shared/queryErrorReporting';
+import { ServerStateProvider } from '../shared/serverStateProvider';
 import type { AuthApi } from './auth/authApi';
 import { type CategoryApi, createCategoryApi } from './category/categoryApi';
 import {
@@ -63,13 +50,6 @@ export function ApiProvider({
   appFocus,
   children,
 }: ApiProviderProps) {
-  const { reportError }: ErrorReporter = useErrorReporter();
-  const [queryClient] = useState<QueryClient>(
-    () =>
-      new QueryClient({
-        queryCache: createErrorReportingQueryCache(reportError),
-      }),
-  );
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
       authApi,
@@ -85,19 +65,12 @@ export function ApiProvider({
     [contractClient, authApi],
   );
 
-  useEffect(() => {
-    if (!appFocus) return;
-    focusManager.setEventListener((setFocused) =>
-      appFocus.subscribe(setFocused),
-    );
-  }, [appFocus]);
-
   return (
-    <QueryClientProvider client={queryClient}>
+    <ServerStateProvider appFocus={appFocus}>
       <DomainApisContext.Provider value={domainApis}>
         {children}
       </DomainApisContext.Provider>
-    </QueryClientProvider>
+    </ServerStateProvider>
   );
 }
 
