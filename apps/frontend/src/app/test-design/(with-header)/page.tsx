@@ -1,4 +1,4 @@
-import { MenuView } from '@/components/redesign/MenuView';
+import { MenuView } from './MenuView';
 
 export default function Home() {
   return (

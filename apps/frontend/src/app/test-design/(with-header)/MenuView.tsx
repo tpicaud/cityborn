@@ -6,7 +6,7 @@ import { useState } from 'react';
 import Button from '@/components/ui/buttons/NewButton';
 import Card from '@/components/ui/cards/Card';
 import Input from '@/components/ui/inputs/TextInput';
-import { WordCarousel } from './WordCarousel';
+import { WordCarousel } from '@/components/ui/WordCarousel';
 
 export const MenuView = () => {
   const [view, setView] = useState<'home' | 'play'>('home');
