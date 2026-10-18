@@ -25,12 +25,7 @@ import {
   markCategoriesStale,
   removeDeletedCategory,
 } from '../../domains/category/categoryQueries';
-import type { GuessObjectApi } from '../../domains/guess-object/guessObjectApi';
-import {
-  guessObjectQueryOptions,
-  invalidateGuessObjects,
-} from '../../domains/guess-object/guessObjectQueries';
-import { invalidateSearches } from '../../domains/search/searchQueries';
+import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -39,6 +34,7 @@ import {
   type CategoryEditorState,
   toCategoryEditorState,
 } from './categoryEditorState';
+import { saveGuessObject } from './guessObjectSave';
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraftEditor,
@@ -80,12 +76,6 @@ type GuessObjectUpsert = {
   guessObject: GuessObject;
 };
 
-type GuessObjectDraftSave = {
-  guessObjectApi: GuessObjectApi;
-  guessObjectDraft: GuessObjectDraft;
-  worldLocationId: WorldLocationId;
-};
-
 const unexpectedErrorMessage: string = 'Erreur inattendue';
 
 const invalidGuessObjectMessage: string = 'Objet non valide';
@@ -107,28 +97,6 @@ function upsertGuessObject({
       ? guessObject
       : categoryGuessObject,
   );
-}
-
-function saveGuessObject({
-  guessObjectApi,
-  guessObjectDraft,
-  worldLocationId,
-}: GuessObjectDraftSave): Promise<GuessObjectId> {
-  const {
-    id: guessObjectId,
-    world_location: _worldLocation,
-    ...guessObjectFields
-  }: GuessObjectDraft = guessObjectDraft;
-  if (!guessObjectId) {
-    return guessObjectApi.createGuessObject({
-      ...guessObjectFields,
-      world_location_id: worldLocationId,
-    });
-  }
-  return guessObjectApi.updateGuessObject({
-    guessObjectId,
-    guessObject: { ...guessObjectFields, world_location_id: worldLocationId },
-  });
 }
 
 export function useCategoryEditorLoad({
@@ -242,15 +210,20 @@ export function useCategoryEditor({
     }
 
     try {
+      const {
+        id: guessObjectId,
+        world_location: _worldLocation,
+        ...guessObjectFields
+      }: GuessObjectDraft = guessObjectDraft;
       const savedGuessObjectId: GuessObjectId = await saveGuessObject({
         guessObjectApi,
-        guessObjectDraft,
-        worldLocationId,
+        queryClient,
+        guessObjectId,
+        guessObject: {
+          ...guessObjectFields,
+          world_location_id: worldLocationId,
+        },
       });
-      await Promise.all([
-        invalidateGuessObjects(queryClient),
-        invalidateSearches(queryClient),
-      ]);
       await connectGuessObject(savedGuessObjectId);
       guessObjectDraftEditor.startGuessObjectCreation();
     } catch (error: unknown) {

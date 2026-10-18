@@ -10,12 +10,11 @@ import {
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
-import { invalidateGuessObjects } from '../../domains/guess-object/guessObjectQueries';
 import {
   guessObjectByExternalIdQueryOptions,
   guessObjectSearchQueryOptions,
-  invalidateSearches,
 } from '../../domains/search/searchQueries';
+import { saveGuessObject } from './guessObjectSave';
 import { registerWorldLocation } from './worldLocationRegistration';
 
 export type ImportedGuessObject = {
@@ -131,17 +130,15 @@ export function useGuessObjectImport({
       queryClient,
       worldLocation: foundWorldLocation,
     });
-    const guessObjectId: GuessObjectId = await guessObjectApi.createGuessObject(
-      {
+    const guessObjectId: GuessObjectId = await saveGuessObject({
+      guessObjectApi,
+      queryClient,
+      guessObject: {
         ...guessObjectFields,
         short_description: description || guessObjectFields.short_description,
         world_location_id: worldLocation.id,
       },
-    );
-    await Promise.all([
-      invalidateGuessObjects(queryClient),
-      invalidateSearches(queryClient),
-    ]);
+    });
     await onGuessObjectImported(guessObjectId);
   };
 
