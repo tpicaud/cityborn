@@ -1,8 +1,4 @@
 import {
-  type CurrentUserLoad,
-  useCurrentUserLoad,
-} from '@cityborn/client/auth';
-import {
   type ServerReachability,
   useServerReachability,
 } from '@cityborn/client/health';
@@ -15,7 +11,6 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 function BackendUnreachableDialog() {
   const { isServerUnreachable, recheckServerReachability }: ServerReachability =
     useServerReachability();
-  const { retry: retryCurrentUserLoad }: CurrentUserLoad = useCurrentUserLoad();
 
   return (
     <Dialog
@@ -29,13 +24,7 @@ function BackendUnreachableDialog() {
           Connexion au serveur impossible. Vérifie ta connexion internet et
           réessaie.
         </Text>
-        <Button
-          label="Réessayer"
-          onPress={async () => {
-            await recheckServerReachability();
-            retryCurrentUserLoad();
-          }}
-        />
+        <Button label="Réessayer" onPress={recheckServerReachability} />
       </View>
     </Dialog>
   );
