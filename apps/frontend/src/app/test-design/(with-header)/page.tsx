@@ -1,5 +1,9 @@
-import { Menu } from '@/features/menu/menu';
+import { MenuView } from '@/components/redesign/MenuView';
 
 export default function Home() {
-  return <Menu />;
+  return (
+    <section className="h-full flex flex-col">
+      <MenuView />
+    </section>
+  );
 }
