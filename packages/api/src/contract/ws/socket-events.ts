@@ -63,6 +63,16 @@ type WsServerEventDefinitions = {
 export type WsClientEventName = keyof WsClientEventDefinitions & string;
 export type WsServerEventName = keyof WsServerEventDefinitions & string;
 
+export type WsChannelClientEventName<Channel extends WsChannel> = Extract<
+  WsClientEventName,
+  WsChannelEventName<Channel, WsChannelClientEvent<Channel>>
+>;
+
+export type WsChannelServerEventName<Channel extends WsChannel> = Extract<
+  WsServerEventName,
+  WsChannelEventName<Channel, WsChannelServerEvent<Channel>>
+>;
+
 type PayloadArgs<Definition> = Definition extends {
   payload: infer Payload extends AnyZodObject;
 }
