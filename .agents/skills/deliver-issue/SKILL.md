@@ -45,6 +45,8 @@ L'étape est terminée quand le rapport liste les findings au format de `review-
 
 ## Étape 3 — Correctifs
 
+Ajouter les findings hors périmètre à la section « Hors périmètre » de la description de la PR.
+
 Si aucun finding n'est dans le périmètre de l'issue, ajouter à la description de la PR une section « Review automatique » qui l'indique, puis passer au compte rendu.
 
 Sinon, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et les findings dans le périmètre, recopiés tels quels. Il doit :
@@ -52,7 +54,12 @@ Sinon, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et les finding
 - charger les skills de conventions des périmètres touchés ;
 - traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
 - vérifier chaque correctif ;
-- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en ajoutant à la description de la PR la section « Review automatique » qui liste les findings corrigés et rejetés.
+- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en ajoutant à la description de la PR la section « Review automatique », un tableau d'une ligne par finding traité :
+
+| ID | Gravité | Statut | Résumé |
+|---|---|---|---|
+| `F1` | 🟠 majeur | ✅ corrigé | le correctif en une phrase |
+| `F2` | 🟡 mineur | ❌ rejeté | la raison du rejet en une phrase |
 
 Son rapport donne le statut de chaque finding et les vérifications exécutées. L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la PR contient la section « Review automatique ».
 
@@ -61,7 +68,7 @@ Son rapport donne le statut de chaque finding et les vérifications exécutées.
 Indiquer :
 
 - l'issue traitée, le lien de la PR, le chemin du worktree et le résultat obtenu ;
-- les findings corrigés, rejetés avec leur raison, et hors périmètre signalés ;
+- le tableau de la section « Review automatique », puis les findings hors périmètre signalés ;
 - les vérifications exécutées au développement et aux correctifs, avec leur résultat, puis celles non exécutées et leur raison ;
 - les tests manuels attendus, risques résiduels ou problèmes d'architecture constatés ;
 - le cas échéant, que les étapes ont tourné sans sous-agent.

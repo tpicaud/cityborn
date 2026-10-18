@@ -29,12 +29,19 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 
 ## Format des findings
 
-Rendre les findings du plus grave au moins grave, chacun avec :
+Rendre les findings du plus grave au moins grave, d'abord dans un tableau récapitulatif, une ligne par finding :
 
-- `id` : `F1`, `F2`… ;
-- `gravité` : `bloquant` (bug, faille, critère non satisfait), `majeur` (règle d'`AGENTS.md` ou d'un skill violée) ou `mineur` ;
-- `périmètre` : `issue` (à corriger dans la PR) ou `hors périmètre` (architecture préexistante, à signaler seulement) ;
-- `emplacement` : `chemin:ligne` ;
+| ID | Gravité | Périmètre | Emplacement | Résumé |
+|---|---|---|---|---|
+| `F1` | 🔴 bloquant | issue | `chemin:ligne` | le constat en une phrase |
+
+- `ID` : `F1`, `F2`… ;
+- `Gravité` : 🔴 `bloquant` (bug, faille, critère non satisfait), 🟠 `majeur` (règle d'`AGENTS.md` ou d'un skill violée) ou 🟡 `mineur` ;
+- `Périmètre` : `issue` (à corriger dans la PR) ou `hors périmètre` (architecture préexistante, à signaler seulement) ;
+- `Emplacement` : `chemin:ligne`.
+
+Puis, sous le tableau, une section par finding titrée `<ID> <emoji de gravité> <résumé>`, avec :
+
 - `règle` : l'axe de la checklist ou la règle précise enfreinte ;
 - `constat` : ce qui ne va pas, démontré par le code ;
 - `correctif` : le changement attendu.
