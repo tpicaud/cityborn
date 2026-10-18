@@ -94,11 +94,13 @@ export function createBearerSocketFactory({
   });
 }
 
-export function createCookieSocketFactory(
-  options: SocketFactoryOptions,
-): SocketFactory {
+export function createCookieSocketFactory({
+  websocketUrl,
+  getVisitorId,
+}: SocketFactoryOptions): SocketFactory {
   return createSocketFactory({
-    ...options,
+    websocketUrl,
+    getVisitorId,
     authenticationOptions: { withCredentials: true },
   });
 }
