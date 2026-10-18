@@ -1,0 +1,9 @@
+language js
+
+or {
+  JsForStatement(),
+  JsForInStatement(),
+  JsForOfStatement()
+} as $loop where {
+  register_diagnostic(span=$loop, message="Boucle for interdite : utiliser une méthode de tableau, Promise.all ou une fonction récursive.")
+}

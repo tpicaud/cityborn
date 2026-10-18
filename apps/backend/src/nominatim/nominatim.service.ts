@@ -63,12 +63,12 @@ export class NominatimService {
     const data: NominatimRawItem[] = await response.json();
 
     const grouped: Record<string, NominatimRawItem> = {};
-    for (const item of data) {
+    data.forEach((item) => {
       const key = item.display_name;
       if (!grouped[key] || item.place_rank > grouped[key].place_rank) {
         grouped[key] = item;
       }
-    }
+    });
 
     const results: NominatimItemResponse[] = Object.values(grouped).map(
       (item) => ({

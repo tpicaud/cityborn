@@ -142,5 +142,6 @@ cityborn/
 │   └── design-system/   # Composants UI partagés
 ├── docs/                # Documentation technique
 ├── infra/               # Infrastructure
+├── lint-rules/          # Règles Biome du monorepo (plugins GritQL)
 └── scripts/             # Scripts du monorepo
 ```

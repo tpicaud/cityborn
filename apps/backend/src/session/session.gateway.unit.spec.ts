@@ -7,21 +7,19 @@ import {
 import { SessionGateway } from './session.gateway';
 
 function subscribedEventNames(gateway: typeof SessionGateway): string[] {
-  const names: string[] = [];
+  return Object.getOwnPropertyNames(gateway.prototype).flatMap(
+    (property): string[] => {
+      const handler: unknown = Object.getOwnPropertyDescriptor(
+        gateway.prototype,
+        property,
+      )?.value;
+      if (typeof handler !== 'function') return [];
+      if (!Reflect.getMetadata(MESSAGE_MAPPING_METADATA, handler)) return [];
 
-  for (const property of Object.getOwnPropertyNames(gateway.prototype)) {
-    const handler: unknown = Object.getOwnPropertyDescriptor(
-      gateway.prototype,
-      property,
-    )?.value;
-    if (typeof handler !== 'function') continue;
-    if (!Reflect.getMetadata(MESSAGE_MAPPING_METADATA, handler)) continue;
-
-    const eventName: unknown = Reflect.getMetadata(MESSAGE_METADATA, handler);
-    if (typeof eventName === 'string') names.push(eventName);
-  }
-
-  return names;
+      const eventName: unknown = Reflect.getMetadata(MESSAGE_METADATA, handler);
+      return typeof eventName === 'string' ? [eventName] : [];
+    },
+  );
 }
 
 describe('SessionGateway message mapping', () => {

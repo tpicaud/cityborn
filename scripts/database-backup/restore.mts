@@ -1,13 +1,15 @@
 import { execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, type Hash, randomUUID } from 'node:crypto';
 import {
   appendFileSync,
   closeSync,
   copyFileSync,
   createReadStream,
+  createWriteStream,
   mkdirSync,
   mkdtempSync,
   openSync,
+  type ReadStream,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -15,6 +17,8 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
+import { Transform } from 'node:stream';
+import { finished, pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 
 type Files = { input?: string; output?: string };
@@ -125,16 +129,17 @@ export function prepareReplacement(
     '-c',
     `SELECT name FROM (${objectsSql}) o WHERE kind = 'TABLE' ORDER BY name`,
   ]).split('\n');
-  let assertions = '';
-  for (const table of tables) {
-    const count = database('psql', [
-      ...psqlArgs,
-      '-c',
-      `SELECT count(*) FROM ${table}`,
-    ]);
-    say(`${table} : ${count}`);
-    assertions += `IF (SELECT count(*) FROM ${table}) <> ${count} THEN RAISE EXCEPTION 'Comptage incorrect : %', ${literal(table)}; END IF;\n`;
-  }
+  const assertions: string = tables
+    .map((table) => {
+      const count: string = database('psql', [
+        ...psqlArgs,
+        '-c',
+        `SELECT count(*) FROM ${table}`,
+      ]);
+      say(`${table} : ${count}`);
+      return `IF (SELECT count(*) FROM ${table}) <> ${count} THEN RAISE EXCEPTION 'Comptage incorrect : %', ${literal(table)}; END IF;\n`;
+    })
+    .join('');
   const dump = join(directory, 'application.dump');
   database(
     'pg_dump',
@@ -224,47 +229,116 @@ export function replaceDatabase(database: Database, replacement: string): void {
 }
 
 async function checksum(path: string): Promise<string> {
-  const hash = createHash('sha256');
-  for await (const chunk of createReadStream(path)) hash.update(chunk);
+  const hash: Hash = createHash('sha256');
+  const stream: ReadStream = createReadStream(path);
+  stream.on('data', (chunk) => hash.update(chunk));
+  await finished(stream);
   return hash.digest('hex');
 }
 
+type AdaptedSql = { sql: string; platformCopy: boolean };
+
+function adaptSqlLine({
+  line,
+  platformCopy,
+}: {
+  line: string;
+  platformCopy: boolean;
+}): AdaptedSql {
+  if (/^COPY "?(auth|storage)"?\./.test(line)) {
+    return { sql: '', platformCopy: true };
+  }
+  if (platformCopy && line === '\\.') return { sql: '', platformCopy: false };
+  if (platformCopy)
+    throw new Error(
+      'Données Auth/Storage non vides : restauration applicative impossible',
+    );
+  if (
+    /^SET transaction_timeout/.test(line) ||
+    /^SELECT pg_catalog\.setval.*"?(auth|storage)"?\./.test(line) ||
+    /^CREATE EXTENSION IF NOT EXISTS "supabase_vault" /.test(line) ||
+    /^ALTER PUBLICATION "supabase_realtime" OWNER/.test(line)
+  )
+    return { sql: '', platformCopy };
+  return {
+    sql: `${line.replace(/^CREATE SCHEMA ("?public"?);$/, 'CREATE SCHEMA IF NOT EXISTS $1;')}\n`,
+    platformCopy,
+  };
+}
+
 async function adaptSql(source: string, output: string): Promise<void> {
-  const lines = createInterface({
-    input: createReadStream(source),
-    crlfDelay: Infinity,
-  });
-  const descriptor = openSync(output, 'w', 0o600);
-  let platformCopy = false;
+  let pendingLine: string = '';
+  let platformCopy: boolean = false;
+  const adapt = (lines: string[]): string => {
+    const adapted: AdaptedSql = lines.reduce<AdaptedSql>(
+      (adaptedLines, line) => {
+        const adaptedLine: AdaptedSql = adaptSqlLine({
+          line,
+          platformCopy: adaptedLines.platformCopy,
+        });
+        return {
+          sql: `${adaptedLines.sql}${adaptedLine.sql}`,
+          platformCopy: adaptedLine.platformCopy,
+        };
+      },
+      { sql: '', platformCopy },
+    );
+    platformCopy = adapted.platformCopy;
+    return adapted.sql;
+  };
+  const toError = (error: unknown): Error =>
+    error instanceof Error ? error : new Error(String(error));
+  await pipeline(
+    createReadStream(source, { encoding: 'utf8' }),
+    new Transform({
+      decodeStrings: false,
+      transform(chunk: string, _encoding, callback) {
+        const lines: string[] = `${pendingLine}${chunk}`.split(/\r?\n/);
+        pendingLine = lines.pop() ?? '';
+        try {
+          callback(null, adapt(lines));
+        } catch (error) {
+          callback(toError(error));
+        }
+      },
+      flush(callback) {
+        try {
+          callback(null, pendingLine ? adapt([pendingLine]) : '');
+        } catch (error) {
+          callback(toError(error));
+        }
+      },
+    }),
+    createWriteStream(output, { mode: 0o600 }),
+  );
+}
+
+async function waitForPostgres({
+  container,
+  remainingAttempts,
+}: {
+  container: string;
+  remainingAttempts: number;
+}): Promise<void> {
+  if (remainingAttempts === 0) {
+    throw new Error('PostgreSQL jetable indisponible');
+  }
   try {
-    for await (const line of lines) {
-      if (/^COPY "?(auth|storage)"?\./.test(line)) {
-        platformCopy = true;
-        continue;
-      }
-      if (platformCopy && line === '\\.') {
-        platformCopy = false;
-        continue;
-      }
-      if (platformCopy)
-        throw new Error(
-          'Données Auth/Storage non vides : restauration applicative impossible',
-        );
-      if (
-        /^SET transaction_timeout/.test(line) ||
-        /^SELECT pg_catalog\.setval.*"?(auth|storage)"?\./.test(line) ||
-        /^CREATE EXTENSION IF NOT EXISTS "supabase_vault" /.test(line) ||
-        /^ALTER PUBLICATION "supabase_realtime" OWNER/.test(line)
-      )
-        continue;
-      appendFileSync(
-        descriptor,
-        `${line.replace(/^CREATE SCHEMA ("?public"?);$/, 'CREATE SCHEMA IF NOT EXISTS $1;')}\n`,
-      );
-    }
-  } finally {
-    closeSync(descriptor);
-    lines.close();
+    command('docker', [
+      'exec',
+      container,
+      'pg_isready',
+      '-h',
+      '127.0.0.1',
+      '-U',
+      'postgres',
+    ]);
+  } catch {
+    await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+    await waitForPostgres({
+      container,
+      remainingAttempts: remainingAttempts - 1,
+    });
   }
 }
 
@@ -328,25 +402,7 @@ export async function restore(args: string[], root: string): Promise<void> {
       'POSTGRES_HOST_AUTH_METHOD=trust',
       localImage,
     ]);
-    let ready = false;
-    for (let attempt = 0; attempt < 60; attempt++) {
-      try {
-        command('docker', [
-          'exec',
-          container,
-          'pg_isready',
-          '-h',
-          '127.0.0.1',
-          '-U',
-          'postgres',
-        ]);
-        ready = true;
-        break;
-      } catch {
-        await new Promise((resolveWait) => setTimeout(resolveWait, 500));
-      }
-    }
-    if (!ready) throw new Error('PostgreSQL jetable indisponible');
+    await waitForPostgres({ container, remainingAttempts: 60 });
     command('docker', [
       'exec',
       container,

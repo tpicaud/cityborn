@@ -159,6 +159,18 @@ export class AuthService {
 
     let user = await this.userService.findByIdentifier(email);
 
+    if (user && visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_in',
+          visitorId,
+          properties: {
+            method: 'google',
+          },
+        }),
+      );
+    }
+
     if (!user) {
       const uniqueUsername = await this.generateUniqueUsername(name);
 
@@ -173,18 +185,6 @@ export class AuthService {
         await this.eventService.trackEvent(
           createEvent({
             name: 'user_signed_up',
-            visitorId,
-            properties: {
-              method: 'google',
-            },
-          }),
-        );
-      }
-    } else {
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'user_signed_in',
             visitorId,
             properties: {
               method: 'google',
@@ -211,6 +211,18 @@ export class AuthService {
       await this.identityTokenService.verifyAppleIdToken(identity_token);
 
     let user = await this.userService.findByAppleId(appleUserId);
+
+    if (user && visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_in',
+          visitorId,
+          properties: {
+            method: 'apple',
+          },
+        }),
+      );
+    }
 
     if (!user) {
       if (!details || !verifiedEmail) {
@@ -245,18 +257,6 @@ export class AuthService {
             }),
           );
         }
-      }
-    } else {
-      if (visitorId) {
-        await this.eventService.trackEvent(
-          createEvent({
-            name: 'user_signed_in',
-            visitorId,
-            properties: {
-              method: 'apple',
-            },
-          }),
-        );
       }
     }
 

@@ -21,10 +21,10 @@ export class RateLimitGuard implements CanActivate {
 
     if (contextType === 'ws') {
       await this.consumeWsMessage(context);
-    } else {
-      await this.consumeHttp(context);
+      return true;
     }
 
+    await this.consumeHttp(context);
     return true;
   }
 

@@ -104,17 +104,18 @@ describe('PrismaGameRecordRepository', () => {
           },
         ],
       });
-      const recordIds: GameRecordId[] = [];
-      for (let index: number = 0; index < 6; index++) {
-        const recordData: CreateGameRecord = buildCreateGameRecord();
-        const record: Pick<GameRecord, 'id'> =
-          await gameRecordRepository.create(recordData, [{ id: user.id }]);
-        recordIds.push(record.id);
-        await prisma.gameRecord.update({
-          where: { id: record.id },
-          data: { createdAt: new Date(Date.UTC(2026, 0, index + 1)) },
-        });
-      }
+      const recordIds: GameRecordId[] = await Promise.all(
+        Array.from({ length: 6 }, async (_, index: number) => {
+          const recordData: CreateGameRecord = buildCreateGameRecord();
+          const record: Pick<GameRecord, 'id'> =
+            await gameRecordRepository.create(recordData, [{ id: user.id }]);
+          await prisma.gameRecord.update({
+            where: { id: record.id },
+            data: { createdAt: new Date(Date.UTC(2026, 0, index + 1)) },
+          });
+          return record.id;
+        }),
+      );
 
       const records: GameRecord[] | null =
         await gameRecordRepository.findRecentByUserId(user.id);

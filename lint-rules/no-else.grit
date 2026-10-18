@@ -1,0 +1,5 @@
+language js
+
+JsElseClause() as $else where {
+  register_diagnostic(span=$else, message="else interdit : sortir tôt de la fonction (early return) plutôt que d'ajouter une branche else.")
+}

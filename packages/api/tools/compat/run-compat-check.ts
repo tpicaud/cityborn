@@ -7,6 +7,7 @@ import {
 import type {
   CompatPolicy,
   Manifest,
+  ManifestEntry,
 } from '../../src/protocol/version-manifest.schema';
 import {
   CompatPolicySchema,
@@ -46,6 +47,29 @@ export interface RunCompatCheckOptions {
   now?: Date;
 }
 
+function checkUntilBreaking({
+  entries,
+  options,
+}: {
+  entries: ManifestEntry[];
+  options: RunCompatCheckOptions;
+}): VersionCheckResult[] {
+  const [entry, ...remainingEntries] = entries;
+  if (entry === undefined) return [];
+
+  const { breaking, changes } = diffBreaking(
+    `${options.versionsDir}/${entry.file}`,
+    options.currentSpecFile,
+    options.errIgnoreFile,
+  );
+  const result: VersionCheckResult = { entry, breaking, changes };
+  if (breaking) return [result];
+  return [
+    result,
+    ...checkUntilBreaking({ entries: remainingEntries, options }),
+  ];
+}
+
 export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
   assertOasdiffAvailable();
 
@@ -57,24 +81,13 @@ export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
     options.now ?? new Date(),
   );
 
-  const checked: VersionCheckResult[] = [];
-  let brokenAt: VersionCheckResult | undefined;
-
-  for (const entry of toCheck) {
-    const versionFile = `${options.versionsDir}/${entry.file}`;
-    const { breaking, changes } = diffBreaking(
-      versionFile,
-      options.currentSpecFile,
-      options.errIgnoreFile,
-    );
-    const result: VersionCheckResult = { entry, breaking, changes };
-    checked.push(result);
-
-    if (breaking) {
-      brokenAt = result;
-      break;
-    }
-  }
+  const checked: VersionCheckResult[] = checkUntilBreaking({
+    entries: toCheck,
+    options,
+  });
+  const brokenAt: VersionCheckResult | undefined = checked.find(
+    (result) => result.breaking,
+  );
 
   const floor = deprecationFloor(manifest.versions);
   const skippedDeprecated = manifest.versions

@@ -45,6 +45,22 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+const moveOrDeleteDirectory = async ({ dir, userInput }) => {
+  const oldDirPath = path.join(root, dir);
+  if (!fs.existsSync(oldDirPath)) {
+    console.log(`➡️ /${dir} does not exist, skipping.`);
+    return;
+  }
+  if (userInput === 'y') {
+    const newDirPath = path.join(root, exampleDir, dir);
+    await fs.promises.rename(oldDirPath, newDirPath);
+    console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
+    return;
+  }
+  await fs.promises.rm(oldDirPath, { recursive: true, force: true });
+  console.log(`❌ /${dir} deleted.`);
+};
+
 const moveDirectories = async (userInput) => {
   try {
     if (userInput === 'y') {
@@ -54,21 +70,9 @@ const moveDirectories = async (userInput) => {
     }
 
     // Move old directories to new app-example directory or delete them
-    for (const dir of oldDirs) {
-      const oldDirPath = path.join(root, dir);
-      if (fs.existsSync(oldDirPath)) {
-        if (userInput === 'y') {
-          const newDirPath = path.join(root, exampleDir, dir);
-          await fs.promises.rename(oldDirPath, newDirPath);
-          console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
-        } else {
-          await fs.promises.rm(oldDirPath, { recursive: true, force: true });
-          console.log(`❌ /${dir} deleted.`);
-        }
-      } else {
-        console.log(`➡️ /${dir} does not exist, skipping.`);
-      }
-    }
+    await Promise.all(
+      oldDirs.map((dir) => moveOrDeleteDirectory({ dir, userInput })),
+    );
 
     // Create new /app directory
     const newAppDirPath = path.join(root, newAppDir);
@@ -104,9 +108,9 @@ rl.question(
     const userInput = answer.trim().toLowerCase() || 'y';
     if (userInput === 'y' || userInput === 'n') {
       moveDirectories(userInput).finally(() => rl.close());
-    } else {
-      console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
-      rl.close();
+      return;
     }
+    console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
+    rl.close();
   },
 );

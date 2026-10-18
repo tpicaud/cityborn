@@ -72,18 +72,19 @@ const WorldLocationDisplay: React.FC<{
     if (isPoint) {
       map.panTo({ lat: point[0], lng: point[1] });
       map.setZoom(12);
-    } else {
-      const bounds = new google.maps.LatLngBounds();
-      const coords =
-        geojson.type === 'FeatureCollection'
-          ? geojson.features.flatMap((f) => getCoordinates(f.geometry))
-          : getCoordinates(geojson.geometry);
-
-      coords.forEach(([lng, lat]) => {
-        bounds.extend({ lat, lng });
-      });
-      map.fitBounds(bounds);
+      return;
     }
+
+    const bounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+    const coords: [number, number][] =
+      geojson.type === 'FeatureCollection'
+        ? geojson.features.flatMap((f) => getCoordinates(f.geometry))
+        : getCoordinates(geojson.geometry);
+
+    coords.forEach(([lng, lat]) => {
+      bounds.extend({ lat, lng });
+    });
+    map.fitBounds(bounds);
   }, [map, world_location]);
 
   if (!map || !world_location) return;

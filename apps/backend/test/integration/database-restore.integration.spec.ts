@@ -1,4 +1,8 @@
-import { execFileSync } from 'node:child_process';
+import {
+  execFileSync,
+  type SpawnSyncReturns,
+  spawnSync,
+} from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   appendFileSync,
@@ -8,7 +12,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 jest.setTimeout(120_000);
@@ -72,28 +76,35 @@ describe('Database backup restoration', () => {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, RESTORE_PRODUCTION_DB_URL: 'invalid' },
     });
-  const createArchive = (filename: string) => {
+  const dumpSource = (section: '--schema-only' | '--data-only'): string =>
+    docker(
+      'exec',
+      container,
+      'pg_dump',
+      '-U',
+      'postgres',
+      '-d',
+      'source',
+      section,
+      '--schema=public',
+    );
+  const createArchive = ({
+    filename,
+    dataPrefix = '',
+  }: {
+    filename: string;
+    dataPrefix?: string;
+  }): string => {
     writeFileSync(join(workingDirectory, 'roles.sql'), 'SELECT 1;\n');
-    for (const [file, section] of [
-      ['schema.sql', '--schema-only'],
-      ['data.sql', '--data-only'],
-    ]) {
-      writeFileSync(
-        join(workingDirectory, file),
-        docker(
-          'exec',
-          container,
-          'pg_dump',
-          '-U',
-          'postgres',
-          '-d',
-          'source',
-          section,
-          '--schema=public',
-        ),
-      );
-    }
-    const archive = join(workingDirectory, filename);
+    writeFileSync(
+      join(workingDirectory, 'schema.sql'),
+      dumpSource('--schema-only'),
+    );
+    writeFileSync(
+      join(workingDirectory, 'data.sql'),
+      `${dataPrefix}${dumpSource('--data-only')}`,
+    );
+    const archive: string = join(workingDirectory, filename);
     execFileSync('tar', [
       '-czf',
       archive,
@@ -108,6 +119,39 @@ describe('Database backup restoration', () => {
       `${createHash('sha256').update(readFileSync(archive)).digest('hex')}  ${basename(archive)}\n`,
     );
     return archive;
+  };
+  const readRestoreFailure = (archive: string): string => {
+    const result: SpawnSyncReturns<string> = spawnSync(
+      process.execPath,
+      [restoreScript, archive],
+      { cwd: repositoryRoot, encoding: 'utf8' },
+    );
+    const errorLog: string | undefined = result.stderr.match(
+      /détails locaux dans (\S+error\.log)/,
+    )?.[1];
+    if (!errorLog) throw new Error(`Restore did not fail: ${result.stderr}`);
+    const message: string = readFileSync(errorLog, 'utf8');
+    rmSync(dirname(errorLog), { recursive: true, force: true });
+    return message;
+  };
+  const waitForPostgres = async (remainingAttempts: number): Promise<void> => {
+    if (remainingAttempts === 0) {
+      throw new Error('Disposable PostgreSQL unavailable');
+    }
+    try {
+      docker(
+        'exec',
+        container,
+        'pg_isready',
+        '-h',
+        '127.0.0.1',
+        '-U',
+        'test_admin',
+      );
+    } catch {
+      await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+      await waitForPostgres(remainingAttempts - 1);
+    }
   };
   const fixtureSql = `
     CREATE TYPE public.mood AS ENUM ('happy', 'sad');
@@ -137,25 +181,7 @@ describe('Database backup restoration', () => {
       'POSTGRES_USER=test_admin',
       'postgis/postgis:16-3.4',
     );
-    let ready = false;
-    for (let attempt = 0; attempt < 60; attempt++) {
-      try {
-        docker(
-          'exec',
-          container,
-          'pg_isready',
-          '-h',
-          '127.0.0.1',
-          '-U',
-          'test_admin',
-        );
-        ready = true;
-        break;
-      } catch {
-        await new Promise((resolveWait) => setTimeout(resolveWait, 500));
-      }
-    }
-    if (!ready) throw new Error('Disposable PostgreSQL unavailable');
+    await waitForPostgres(60);
     docker(
       'exec',
       container,
@@ -319,9 +345,9 @@ describe('Database backup restoration', () => {
   });
 
   it('validates a local archive without loading a remote configuration', () => {
-    const archive = createArchive('valid-backup.tar.gz');
+    const archive: string = createArchive({ filename: 'valid-backup.tar.gz' });
 
-    const output = runRestoreCli(archive);
+    const output: string = runRestoreCli(archive);
 
     expect(output).toContain(
       'Contrôle à blanc réussi. Aucune connexion distante.',
@@ -330,7 +356,9 @@ describe('Database backup restoration', () => {
   });
 
   it('rejects an archive when its checksum does not match', () => {
-    const archive = createArchive('invalid-checksum.tar.gz');
+    const archive: string = createArchive({
+      filename: 'invalid-checksum.tar.gz',
+    });
     writeFileSync(
       `${archive}.sha256`,
       `${'0'.repeat(64)}  ${basename(archive)}\n`,
@@ -339,5 +367,32 @@ describe('Database backup restoration', () => {
     expect(() => runRestoreCli(archive)).toThrow(/Checksum invalide/);
 
     expect(queryTarget('SELECT name FROM public."User"')).toBe('before');
+  });
+
+  it('validates an archive whose data spans several read chunks and holds an empty Auth copy', () => {
+    const archive: string = createArchive({
+      filename: 'large-backup.tar.gz',
+      dataPrefix: `${'-- chunk boundary padding line\n'.repeat(3000)}COPY auth.users (id) FROM stdin;\n\\.\n`,
+    });
+
+    const output: string = runRestoreCli(archive);
+
+    expect(output).toContain('public."User" : 1');
+    expect(output).toContain(
+      'Contrôle à blanc réussi. Aucune connexion distante.',
+    );
+  });
+
+  it('rejects an archive whose Auth data is not empty', () => {
+    const archive: string = createArchive({
+      filename: 'auth-data-backup.tar.gz',
+      dataPrefix: `COPY auth.users (id) FROM stdin;\n${randomUUID()}\n\\.\n`,
+    });
+
+    const errorLog: string = readRestoreFailure(archive);
+
+    expect(errorLog).toBe(
+      'Données Auth/Storage non vides : restauration applicative impossible',
+    );
   });
 });

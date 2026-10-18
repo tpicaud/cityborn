@@ -8,9 +8,9 @@ module.exports = function withGradlePropertiesModification(config) {
       const existingProperty = properties.find((p) => p.key === key);
       if (existingProperty) {
         existingProperty.value = value;
-      } else {
-        properties.push({ type: 'property', key, value });
+        return;
       }
+      properties.push({ type: 'property', key, value });
     };
 
     setProperty('org.gradle.jvmargs', '-Xmx4096m -XX:MaxMetaspaceSize=1024m');
