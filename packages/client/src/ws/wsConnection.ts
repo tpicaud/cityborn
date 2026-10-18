@@ -7,14 +7,7 @@ export type WsConnectionStatus =
   | 'reconnecting'
   | 'closed';
 
-export type WsConnectionOptions = {
-  restoreChannels: () => Promise<void>;
-  refreshAuthentication: () => Promise<void>;
-  onStatusChange: (status: WsConnectionStatus) => void;
-  onFailure: (error: unknown) => void;
-};
-
-export type WsConnection = {
+export type WsConnectionSupervision = {
   retry: () => void;
   close: () => void;
 };
@@ -34,10 +27,16 @@ function isAuthenticationRejection(error: SocketConnectError): boolean {
   );
 }
 
-export function superviseWsConnection(
-  socket: SocketConnection,
-  options: WsConnectionOptions,
-): WsConnection {
+export function superviseWsConnection({
+  socket,
+  ...options
+}: {
+  socket: SocketConnection;
+  restoreChannels: () => Promise<void>;
+  refreshAuthentication: () => Promise<void>;
+  onStatusChange: (status: WsConnectionStatus) => void;
+  onFailure: (error: unknown) => void;
+}): WsConnectionSupervision {
   let hasConnected = false;
   let authenticationRefreshed = false;
   let connectionGeneration = 0;

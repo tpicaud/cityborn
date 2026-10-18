@@ -10,7 +10,6 @@ import { Game } from '@/components/Session/Game';
 import { Lobby } from '@/components/Session/Lobby';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
-import { createSocketConnection } from '@/lib/socket';
 
 type MultiSessionProps = {
   sessionID: SessionId;
@@ -21,7 +20,6 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
   const multiSession: MultiSessionController = useMultiSessionController({
     sessionID,
     navigation,
-    createSocket: createSocketConnection,
   });
 
   if (!multiSession.session)

@@ -1,7 +1,6 @@
 'use client';
 
-import { WS_ERROR_EVENT } from '@cityborn/api';
-import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import { WS_ERROR_EVENT, type WsChannel } from '@cityborn/api';
 import {
   type RefObject,
   useCallback,
@@ -9,47 +8,49 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
-import { refreshCurrentUser } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
+  type ReportError,
   useErrorReporter,
-} from '../../shared/errorReporter';
-import type {
-  SocketConnection,
-  SocketListenEvents,
-} from '../../ws/socketConnection';
-import type { SocketFactory } from '../../ws/socketFactory';
+} from '../shared/errorReporter';
+import type { SocketConnection, SocketListenEvents } from './socketConnection';
+import type { SocketFactory } from './socketFactory';
+import {
+  toWsChannelConnection,
+  type WsChannelConnection,
+} from './wsChannelConnection';
 import {
   superviseWsConnection,
-  type WsConnection,
   type WsConnectionStatus,
-} from '../../ws/wsConnection';
+  type WsConnectionSupervision,
+} from './wsConnection';
+import { useSocketFactory } from './wsProvider';
 
-type SessionSocketOptions = {
-  createSocket: SocketFactory;
-  restoreSession: (socket: SocketConnection) => Promise<void>;
-};
-
-type SessionSocketCallbacks = {
-  restoreSession: (socket: SocketConnection) => Promise<void>;
-  refreshAuthentication: () => Promise<void>;
-  reportError: (error: unknown, fallbackMessage?: string) => void;
-};
-
-export type SessionSocket = {
+export type WsChannelState<Channel> = {
+  channel: Channel | null;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
-  socket: SocketConnection | null;
+};
+
+type WsChannelOptions<Channel> = {
+  createChannel: (connection: WsChannelConnection<WsChannel>) => Channel;
+  restoreChannel: (channel: Channel) => Promise<void>;
+  refreshAuthentication: () => Promise<void>;
+};
+
+type WsChannelCallbacks<Channel> = WsChannelOptions<Channel> & {
+  reportError: ReportError;
 };
 
 const CONNECTION_FAILED_MESSAGE = 'La connexion au serveur a échoué';
 
-export function useSocket({
-  createSocket,
-  restoreSession,
-}: SessionSocketOptions): SessionSocket {
-  const [socket, setSocket] = useState<SocketConnection | null>(null);
+export function useWsChannel<Channel>({
+  createChannel,
+  restoreChannel,
+  refreshAuthentication,
+}: WsChannelOptions<Channel>): WsChannelState<Channel> {
+  const createSocket: SocketFactory = useSocketFactory();
+  const [channel, setChannel] = useState<Channel | null>(null);
   const [connectionStatus, setConnectionStatus] =
     useState<WsConnectionStatus>('connecting');
   const retryConnectionRef: RefObject<() => void> = useRef<() => void>(
@@ -57,23 +58,15 @@ export function useSocket({
   );
 
   const { reportError }: ErrorReporter = useErrorReporter();
-  const { authApi }: DomainApis = useDomainApis();
-  const queryClient: QueryClient = useQueryClient();
 
-  const refreshAuthentication = async (): Promise<void> => {
-    await refreshCurrentUser({ queryClient, authApi });
-  };
-
-  const callbacks: RefObject<SessionSocketCallbacks> =
-    useRef<SessionSocketCallbacks>({
-      restoreSession,
-      refreshAuthentication,
-      reportError,
-    });
+  const callbacks: RefObject<WsChannelCallbacks<Channel>> = useRef<
+    WsChannelCallbacks<Channel>
+  >({ createChannel, restoreChannel, refreshAuthentication, reportError });
 
   useEffect(() => {
     callbacks.current = {
-      restoreSession,
+      createChannel,
+      restoreChannel,
       refreshAuthentication,
       reportError,
     };
@@ -82,7 +75,7 @@ export function useSocket({
   useEffect(() => {
     let mounted = true;
     let openedSocket: SocketConnection | null = null;
-    let wsConnection: WsConnection | null = null;
+    let supervision: WsConnectionSupervision | null = null;
 
     const handleWsError: SocketListenEvents[typeof WS_ERROR_EVENT] = (
       error,
@@ -100,22 +93,25 @@ export function useSocket({
           openedSocket = createdSocket;
           createdSocket.on(WS_ERROR_EVENT, handleWsError);
 
-          const supervisedConnection: WsConnection = superviseWsConnection(
-            createdSocket,
-            {
+          const openedChannel: Channel = callbacks.current.createChannel(
+            toWsChannelConnection(createdSocket),
+          );
+
+          const createdSupervision: WsConnectionSupervision =
+            superviseWsConnection({
+              socket: createdSocket,
               restoreChannels: () =>
-                callbacks.current.restoreSession(createdSocket),
+                callbacks.current.restoreChannel(openedChannel),
               refreshAuthentication: () =>
                 callbacks.current.refreshAuthentication(),
               onStatusChange: setConnectionStatus,
               onFailure: (error) =>
                 callbacks.current.reportError(error, CONNECTION_FAILED_MESSAGE),
-            },
-          );
+            });
 
-          wsConnection = supervisedConnection;
-          retryConnectionRef.current = supervisedConnection.retry;
-          setSocket(createdSocket);
+          supervision = createdSupervision;
+          retryConnectionRef.current = createdSupervision.retry;
+          setChannel(() => openedChannel);
         })
         .catch((error: unknown) => {
           if (!mounted) return;
@@ -132,9 +128,9 @@ export function useSocket({
       retryConnectionRef.current = () => {};
 
       openedSocket?.off(WS_ERROR_EVENT, handleWsError);
-      wsConnection?.close();
+      supervision?.close();
 
-      setSocket(null);
+      setChannel(null);
     };
   }, [createSocket]);
 
@@ -142,5 +138,5 @@ export function useSocket({
     retryConnectionRef.current();
   }, []);
 
-  return { connectionStatus, retryConnection, socket };
+  return { channel, connectionStatus, retryConnection };
 }

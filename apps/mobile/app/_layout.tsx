@@ -22,6 +22,7 @@ import {
   type ServerReachability,
   useServerReachability,
 } from '@cityborn/client/health';
+import { WsProvider } from '@cityborn/client/ws';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
@@ -36,6 +37,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import { authApi } from '@/lib/api/auth';
 import { contractClient } from '@/lib/api/contractClient';
 import { appFocus } from '@/lib/appFocus';
+import { createSocketConnection } from '@/lib/socket';
 
 installFrenchZodErrorMap();
 
@@ -49,7 +51,9 @@ export default function RootLayout() {
         authApi={authApi}
         appFocus={appFocus}
       >
-        <RootLayoutContent />
+        <WsProvider createSocket={createSocketConnection}>
+          <RootLayoutContent />
+        </WsProvider>
       </ApiProvider>
     </ErrorReporterProvider>
   );

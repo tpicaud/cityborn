@@ -59,7 +59,7 @@ describe('createWsEmit', () => {
     const { connection, calls }: FakeConnection = createConnection({
       success: true,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     await emit(sessionWsEvent.join, { sessionID, playerID });
 
@@ -76,7 +76,7 @@ describe('createWsEmit', () => {
       success: true,
       reconnectToken,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     const joinAck: WsAckSuccessOf<typeof sessionWsEvent.join> = await emit(
       sessionWsEvent.join,
@@ -94,7 +94,7 @@ describe('createWsEmit', () => {
       success: true,
       reconnectToken: '',
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.join>> = emit(
       sessionWsEvent.join,
@@ -111,7 +111,7 @@ describe('createWsEmit', () => {
     const { connection, calls }: FakeConnection = createConnection({
       success: true,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     await emit(sessionWsEvent.startGame);
 
@@ -131,7 +131,7 @@ describe('createWsEmit', () => {
       success: false,
       error,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.startGame>> =
       emit(sessionWsEvent.startGame);
@@ -147,7 +147,7 @@ describe('createWsEmit', () => {
     const { connection }: FakeConnection = createConnection({
       success: false,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.nextRound>> =
       emit(sessionWsEvent.nextRound);
@@ -160,7 +160,7 @@ describe('createWsEmit', () => {
 
   it('normalizes an ack outside the contract envelope', async () => {
     const { connection }: FakeConnection = createConnection({ done: true });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
 
     const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.nextRound>> =
       emit(sessionWsEvent.nextRound);
@@ -172,7 +172,7 @@ describe('createWsEmit', () => {
     const { connection, calls }: FakeConnection = createConnection({
       success: true,
     });
-    const emit: WsEmit = createWsEmit(connection);
+    const emit: WsEmit = createWsEmit({ connection });
     const gameConfig: GameConfig = JSON.parse('{"timer":"fast"}');
 
     const emission: Promise<
@@ -188,23 +188,9 @@ describe('createWsEmit', () => {
     assert.deepEqual(calls, []);
   });
 
-  it('rejects when the socket is unavailable', async () => {
-    const emit: WsEmit = createWsEmit(null);
-
-    const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.join>> = emit(
-      sessionWsEvent.join,
-      {
-        sessionID,
-        playerID,
-      },
-    );
-
-    await assert.rejects(emission, { code: ErrorCode.WS_NOT_CONNECTED });
-  });
-
   it('rejects when the server never acknowledges', async () => {
     const { connection }: FakeConnection = createConnection();
-    const emit: WsEmit = createWsEmit(connection, 5);
+    const emit: WsEmit = createWsEmit({ connection, ackTimeoutMs: 5 });
 
     const emission: Promise<WsAckSuccessOf<typeof sessionWsEvent.startGame>> =
       emit(sessionWsEvent.startGame);

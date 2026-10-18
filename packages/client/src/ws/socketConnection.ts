@@ -16,7 +16,7 @@ export type SocketListenEvents = WsServerToClientEvents & SocketLifecycleEvents;
 
 export type SocketListenEvent = keyof SocketListenEvents;
 
-export type SocketReconnectionEvent = 'reconnect_attempt' | 'reconnect_failed';
+type SocketReconnectionEvent = 'reconnect_attempt' | 'reconnect_failed';
 
 export interface SocketConnection {
   readonly connected: boolean;

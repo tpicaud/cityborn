@@ -16,34 +16,29 @@ import {
   type RefObject,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { invalidateGameRecords } from '../../domains/game-record/gameRecordQueries';
-import {
-  createSessionChannel,
-  type SessionChannel,
-} from '../../domains/session/sessionApi';
+import type { SessionChannel } from '../../domains/session/sessionApi';
+import { useSessionChannel } from '../../domains/session/useSessionChannel';
 import type { Navigation } from '../../platform/navigation';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import type { SocketConnection } from '../../ws/socketConnection';
-import type { SocketFactory } from '../../ws/socketFactory';
+import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
-import { useSocket } from './useSocket';
 
 export type MultiSessionControllerOptions = {
   sessionID: SessionId;
   navigation: Navigation;
-  createSocket: SocketFactory;
 };
 
 export type MultiSessionController = SessionController & {
@@ -61,7 +56,6 @@ type JoinedPlayer = {
 export function useMultiSessionController({
   sessionID,
   navigation,
-  createSocket,
 }: MultiSessionControllerOptions): MultiSessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
@@ -76,10 +70,10 @@ export function useMultiSessionController({
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
 
   const restoreSession = useCallback(
-    async (socket: SocketConnection) => {
+    async (restoredChannel: SessionChannel) => {
       const player: JoinedPlayer | null = joinedPlayer.current;
       if (!player) return;
-      await createSessionChannel(socket).reconnect({
+      await restoredChannel.reconnect({
         sessionID,
         playerID: player.playerID,
         reconnectToken: player.reconnectToken,
@@ -88,14 +82,11 @@ export function useMultiSessionController({
     [sessionID],
   );
 
-  const { connectionStatus, retryConnection, socket } = useSocket({
-    createSocket,
-    restoreSession,
-  });
-  const sessionChannel: SessionChannel = useMemo<SessionChannel>(
-    () => createSessionChannel(socket),
-    [socket],
-  );
+  const {
+    channel: sessionChannel,
+    connectionStatus,
+    retryConnection,
+  }: WsChannelState<SessionChannel> = useSessionChannel({ restoreSession });
 
   useEffect(() => {
     const loadSession = async (): Promise<void> => {
@@ -119,7 +110,7 @@ export function useMultiSessionController({
 
   useEffect(
     () =>
-      sessionChannel.onSessionUpdate((incoming: Session) => {
+      sessionChannel?.onSessionUpdate((incoming: Session) => {
         setSession((previous) => mergeSessionUpdate(previous, incoming));
       }),
     [sessionChannel],
@@ -131,9 +122,13 @@ export function useMultiSessionController({
         throw new Error(
           'Joining session failed: session or player not initialized',
         );
+      const openedChannel: SessionChannel = requireOpenedSessionChannel({
+        sessionChannel,
+        action: 'Joining session',
+      });
 
       joinAttempted.current = true;
-      const joinAck: SessionJoinAck = await sessionChannel.join({
+      const joinAck: SessionJoinAck = await openedChannel.join({
         sessionID: session.id,
         playerID,
       });
@@ -172,12 +167,18 @@ export function useMultiSessionController({
 
   const updateHost = async (newHostID: PlayerId) => {
     requireSession('Updating host');
-    await sessionChannel.updateHost(newHostID);
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Updating host',
+    }).updateHost(newHostID);
   };
 
   const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
     const current = requireSession('Updating game config');
-    await sessionChannel.updateGameConfig({
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Updating game config',
+    }).updateGameConfig({
       ...current.gameConfig,
       ...partialGameConfig,
     });
@@ -185,17 +186,26 @@ export function useMultiSessionController({
 
   const startGame = async () => {
     requireSession('Starting game');
-    await sessionChannel.startGame();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Starting game',
+    }).startGame();
   };
 
   const guess = async (playerGuess: Guess) => {
     requireGame('Guess');
-    await sessionChannel.guess(playerGuess);
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Guess',
+    }).guess(playerGuess);
   };
 
   const nextRound = async () => {
     requireGame('Next round');
-    await sessionChannel.nextRound();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Next round',
+    }).nextRound();
   };
 
   const endGame = async () => {
@@ -206,7 +216,10 @@ export function useMultiSessionController({
   const playAgain = async () => {
     const current = requireGame('Playing again');
     if (!isHostOf(current, localPlayerID)) return;
-    await sessionChannel.playAgain();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Playing again',
+    }).playAgain();
   };
 
   const exitGame = async () => {
