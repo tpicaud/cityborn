@@ -6,8 +6,8 @@ import { mobileClientConfig } from '@/config/client';
 import { tokenStorage } from './tokenStorage';
 import { getOrCreateVisitorId } from './visitorId';
 
-export const createSocketConnection: SocketFactory = createBearerSocketFactory(
-  mobileClientConfig.websocketBackendUrl,
+export const createSocketConnection: SocketFactory = createBearerSocketFactory({
+  websocketUrl: mobileClientConfig.websocketBackendUrl,
   tokenStorage,
-  { getVisitorId: getOrCreateVisitorId },
-);
+  getVisitorId: getOrCreateVisitorId,
+});

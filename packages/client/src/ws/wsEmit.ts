@@ -19,7 +19,6 @@ import type { SocketConnection } from './socketConnection';
 
 const WS_ACK_TIMEOUT_MS = 10_000;
 
-const WS_TRANSPORT_STATUS = 503;
 const WS_TIMEOUT_STATUS = 504;
 const WS_UNEXPECTED_ACK_STATUS = 500;
 
@@ -50,24 +49,18 @@ function invalidPayloadError(event: string, reason: string): ApiError {
   };
 }
 
-export function createWsEmit(
-  connection: SocketConnection | null,
-  ackTimeoutMs: number = WS_ACK_TIMEOUT_MS,
-): WsEmit {
+export function createWsEmit({
+  connection,
+  ackTimeoutMs = WS_ACK_TIMEOUT_MS,
+}: {
+  connection: SocketConnection;
+  ackTimeoutMs?: number;
+}): WsEmit {
   return <Name extends WsClientEventName>(
     event: Name,
     ...payload: WsPayloadArgs<Name>
   ): Promise<WsAckSuccessOf<Name>> =>
     new Promise<WsAckSuccessOf<Name>>((resolve, reject) => {
-      if (!connection)
-        return reject(
-          transportError(
-            ErrorCode.WS_NOT_CONNECTED,
-            WS_TRANSPORT_STATUS,
-            `${event}: socket unavailable`,
-          ),
-        );
-
       const definition: WsClientEvent | undefined =
         wsClientEventDefinitions[event];
 

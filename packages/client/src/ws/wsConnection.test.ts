@@ -5,8 +5,8 @@ import { ErrorCode } from '@cityborn/api';
 import type { SocketConnectError, SocketConnection } from './socketConnection';
 import {
   superviseWsConnection,
-  type WsConnection,
   type WsConnectionStatus,
+  type WsConnectionSupervision,
 } from './wsConnection';
 
 type Listener = (...args: unknown[]) => void;
@@ -21,7 +21,7 @@ type FakeSocket = {
 };
 
 type Supervision = {
-  connection: WsConnection;
+  connection: WsConnectionSupervision;
   statuses: WsConnectionStatus[];
   failures: unknown[];
   restorationCalls: () => number;
@@ -126,7 +126,8 @@ function supervise(
   let restorationCalls: number = 0;
   let refreshCalls: number = 0;
 
-  const connection: WsConnection = superviseWsConnection(fake.socket, {
+  const connection: WsConnectionSupervision = superviseWsConnection({
+    socket: fake.socket,
     restoreChannels: async () => {
       restorationCalls += 1;
       await options.restoreChannels?.();

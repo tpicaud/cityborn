@@ -3,3 +3,4 @@ export {
   createCookieSocketFactory,
   type SocketFactory,
 } from './socketFactory';
+export { WsProvider } from './wsProvider';

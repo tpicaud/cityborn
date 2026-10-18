@@ -10,14 +10,14 @@ import type {
   SessionReconnectToken,
 } from '@cityborn/api';
 import {
+  type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
   unwrapApiResponse,
 } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
 import type { ContractClient } from '../../api/contractClient';
-import type { SocketConnection } from '../../ws/socketConnection';
-import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
+import type { WsChannelConnection } from '../../ws/wsChannelConnection';
 
 type SessionMembership = {
   sessionID: SessionId;
@@ -89,46 +89,44 @@ export type SessionChannel = {
 };
 
 export function createSessionChannel(
-  socket: SocketConnection | null,
+  connection: WsChannelConnection<typeof sessionWsChannel>,
 ): SessionChannel {
-  const emit: WsEmit = createWsEmit(socket);
-
   return {
     join(membership) {
-      return emit(sessionWsEvent.join, membership);
+      return connection.emit(sessionWsEvent.join, membership);
     },
 
     async reconnect(reconnection) {
-      await emit(sessionWsEvent.reconnect, reconnection);
+      await connection.emit(sessionWsEvent.reconnect, reconnection);
     },
 
     async updateHost(newHostID) {
-      await emit(sessionWsEvent.updateHost, { newHostID });
+      await connection.emit(sessionWsEvent.updateHost, { newHostID });
     },
 
     async updateGameConfig(gameConfig) {
-      await emit(sessionWsEvent.updateGameConfig, { gameConfig });
+      await connection.emit(sessionWsEvent.updateGameConfig, { gameConfig });
     },
 
     async startGame() {
-      await emit(sessionWsEvent.startGame);
+      await connection.emit(sessionWsEvent.startGame);
     },
 
     async guess(guess) {
-      await emit(sessionWsEvent.guess, { guess });
+      await connection.emit(sessionWsEvent.guess, { guess });
     },
 
     async nextRound() {
-      await emit(sessionWsEvent.nextRound);
+      await connection.emit(sessionWsEvent.nextRound);
     },
 
     async playAgain() {
-      await emit(sessionWsEvent.playAgain);
+      await connection.emit(sessionWsEvent.playAgain);
     },
 
     onSessionUpdate(listener) {
-      socket?.on(sessionWsServerEvent.update, listener);
-      return () => socket?.off(sessionWsServerEvent.update, listener);
+      connection.on(sessionWsServerEvent.update, listener);
+      return () => connection.off(sessionWsServerEvent.update, listener);
     },
   };
 }

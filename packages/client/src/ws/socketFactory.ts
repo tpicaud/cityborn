@@ -9,7 +9,8 @@ import type { SocketConnection, SocketListenEvent } from './socketConnection';
 
 export type SocketFactory = () => Promise<SocketConnection>;
 
-export type SocketFactoryOptions = {
+type SocketFactoryOptions = {
+  websocketUrl: string;
   getVisitorId: () => string | Promise<string>;
 };
 
@@ -56,13 +57,15 @@ function toSocketConnection(socket: Socket): SocketConnection {
   };
 }
 
-function createSocketFactory(
-  websocketUrl: string,
-  authenticationOptions: SocketAuthenticationOptions,
-  options: SocketFactoryOptions,
-): SocketFactory {
+function createSocketFactory({
+  websocketUrl,
+  getVisitorId,
+  authenticationOptions,
+}: SocketFactoryOptions & {
+  authenticationOptions: SocketAuthenticationOptions;
+}): SocketFactory {
   return async () => {
-    const visitorId: string = await options.getVisitorId();
+    const visitorId: string = await getVisitorId();
     const socket: Socket = io(websocketUrl, {
       ...authenticationOptions,
       autoConnect: false,
@@ -73,14 +76,13 @@ function createSocketFactory(
   };
 }
 
-export function createBearerSocketFactory(
-  websocketUrl: string,
-  tokenStorage: TokenStorage,
-  options: SocketFactoryOptions,
-): SocketFactory {
-  return createSocketFactory(
-    websocketUrl,
-    {
+export function createBearerSocketFactory({
+  tokenStorage,
+  ...options
+}: SocketFactoryOptions & { tokenStorage: TokenStorage }): SocketFactory {
+  return createSocketFactory({
+    ...options,
+    authenticationOptions: {
       auth: (provide: (handshakeAuth: HandshakeAuth) => void) => {
         tokenStorage.getAccessToken().then(
           (accessToken: string | null) =>
@@ -89,13 +91,14 @@ export function createBearerSocketFactory(
         );
       },
     },
-    options,
-  );
+  });
 }
 
 export function createCookieSocketFactory(
-  websocketUrl: string,
   options: SocketFactoryOptions,
 ): SocketFactory {
-  return createSocketFactory(websocketUrl, { withCredentials: true }, options);
+  return createSocketFactory({
+    ...options,
+    authenticationOptions: { withCredentials: true },
+  });
 }

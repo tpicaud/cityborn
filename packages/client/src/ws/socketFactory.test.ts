@@ -6,14 +6,11 @@ import {
   createBearerSocketFactory,
   createCookieSocketFactory,
   type SocketFactory,
-  type SocketFactoryOptions,
 } from './socketFactory';
 
 const unreachableWebsocketUrl: string = 'ws://127.0.0.1:9';
 
-const socketFactoryOptions: SocketFactoryOptions = {
-  getVisitorId: async () => 'visitor-id',
-};
+const getVisitorId: () => Promise<string> = async () => 'visitor-id';
 
 const tokenStorage: TokenStorage = {
   getAccessToken: async () => 'access-token',
@@ -24,10 +21,10 @@ const tokenStorage: TokenStorage = {
 
 describe('createCookieSocketFactory', () => {
   it('returns a disconnected socket', async () => {
-    const createSocket: SocketFactory = createCookieSocketFactory(
-      unreachableWebsocketUrl,
-      socketFactoryOptions,
-    );
+    const createSocket: SocketFactory = createCookieSocketFactory({
+      websocketUrl: unreachableWebsocketUrl,
+      getVisitorId,
+    });
 
     const connection: SocketConnection = await createSocket();
 
@@ -36,10 +33,10 @@ describe('createCookieSocketFactory', () => {
   });
 
   it('creates its own socket on each call', async (context: TestContext) => {
-    const createSocket: SocketFactory = createCookieSocketFactory(
-      unreachableWebsocketUrl,
-      socketFactoryOptions,
-    );
+    const createSocket: SocketFactory = createCookieSocketFactory({
+      websocketUrl: unreachableWebsocketUrl,
+      getVisitorId,
+    });
     const firstConnection: SocketConnection = await createSocket();
     const secondConnection: SocketConnection = await createSocket();
     context.after(() => firstConnection.disconnect());
@@ -52,11 +49,11 @@ describe('createCookieSocketFactory', () => {
 
 describe('createBearerSocketFactory', () => {
   it('returns a disconnected socket', async () => {
-    const createSocket: SocketFactory = createBearerSocketFactory(
-      unreachableWebsocketUrl,
+    const createSocket: SocketFactory = createBearerSocketFactory({
+      websocketUrl: unreachableWebsocketUrl,
       tokenStorage,
-      socketFactoryOptions,
-    );
+      getVisitorId,
+    });
 
     const connection: SocketConnection = await createSocket();
 

@@ -5,7 +5,7 @@ import {
 import { frontendClientConfig } from '@/config/client';
 import { getOrCreateVisitorId } from './visitorId';
 
-export const createSocketConnection: SocketFactory = createCookieSocketFactory(
-  frontendClientConfig.websocketBackendUrl,
-  { getVisitorId: getOrCreateVisitorId },
-);
+export const createSocketConnection: SocketFactory = createCookieSocketFactory({
+  websocketUrl: frontendClientConfig.websocketBackendUrl,
+  getVisitorId: getOrCreateVisitorId,
+});
