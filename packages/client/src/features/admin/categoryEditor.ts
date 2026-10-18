@@ -18,20 +18,23 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import {
+  categoriesQueryOptions,
+  fullCategoryQueryOptions,
+  markCategoriesStale,
+  removeDeletedCategory,
+} from '../../domains/category/categoryQueries';
+import type { GuessObjectApi } from '../../domains/guess-object/guessObjectApi';
+import {
+  guessObjectQueryOptions,
+  invalidateGuessObjects,
+} from '../../domains/guess-object/guessObjectQueries';
+import { invalidateSearches } from '../../domains/search/searchQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import type { AdminApi } from './api/adminApi';
-import {
-  categoriesQueryOptions,
-  fullCategoryQueryOptions,
-  guessObjectQueryOptions,
-  invalidateGuessObjects,
-  markCategoriesStale,
-  removeDeletedCategory,
-} from './api/adminQueries';
 import {
   type CategoryEditorState,
   toCategoryEditorState,
@@ -78,7 +81,7 @@ type GuessObjectUpsert = {
 };
 
 type GuessObjectDraftSave = {
-  adminApi: AdminApi;
+  guessObjectApi: GuessObjectApi;
   guessObjectDraft: GuessObjectDraft;
   worldLocationId: WorldLocationId;
 };
@@ -107,7 +110,7 @@ function upsertGuessObject({
 }
 
 function saveGuessObject({
-  adminApi,
+  guessObjectApi,
   guessObjectDraft,
   worldLocationId,
 }: GuessObjectDraftSave): Promise<GuessObjectId> {
@@ -117,12 +120,12 @@ function saveGuessObject({
     ...guessObjectFields
   }: GuessObjectDraft = guessObjectDraft;
   if (!guessObjectId) {
-    return adminApi.createGuessObject({
+    return guessObjectApi.createGuessObject({
       ...guessObjectFields,
       world_location_id: worldLocationId,
     });
   }
-  return adminApi.updateGuessObject({
+  return guessObjectApi.updateGuessObject({
     guessObjectId,
     guessObject: { ...guessObjectFields, world_location_id: worldLocationId },
   });
@@ -131,12 +134,12 @@ function saveGuessObject({
 export function useCategoryEditorLoad({
   categoryId,
 }: CategoryEditorLoadOptions): CategoryEditorLoad {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi }: DomainApis = useDomainApis();
   const fullCategoryQuery: UseQueryResult<FullCategory | null> = useQuery(
-    fullCategoryQueryOptions({ adminApi, categoryId }),
+    fullCategoryQueryOptions({ categoryApi, categoryId }),
   );
   const categoriesQuery: UseQueryResult<Category[]> = useQuery(
-    categoriesQueryOptions(adminApi),
+    categoriesQueryOptions(categoryApi),
   );
 
   return {
@@ -155,7 +158,7 @@ export function useCategoryEditor({
   editedCategory,
   onCategoryDeleted,
 }: CategoryEditorOptions): CategoryEditor {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi, guessObjectApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
@@ -166,7 +169,7 @@ export function useCategoryEditor({
   const sendCategoryUpdate = async (
     categoryUpdate: UpdateCategory,
   ): Promise<void> => {
-    await adminApi.updateCategory({
+    await categoryApi.updateCategory({
       categoryId: categoryUpdate.id,
       category: categoryUpdate,
     });
@@ -201,7 +204,7 @@ export function useCategoryEditor({
   ): Promise<GuessObject | null> => {
     try {
       const guessObject: GuessObject | null = await queryClient.fetchQuery(
-        guessObjectQueryOptions({ adminApi, guessObjectId }),
+        guessObjectQueryOptions({ guessObjectApi, guessObjectId }),
       );
       if (!guessObject) return null;
 
@@ -240,11 +243,14 @@ export function useCategoryEditor({
 
     try {
       const savedGuessObjectId: GuessObjectId = await saveGuessObject({
-        adminApi,
+        guessObjectApi,
         guessObjectDraft,
         worldLocationId,
       });
-      await invalidateGuessObjects(queryClient);
+      await Promise.all([
+        invalidateGuessObjects(queryClient),
+        invalidateSearches(queryClient),
+      ]);
       await connectGuessObject(savedGuessObjectId);
       guessObjectDraftEditor.startGuessObjectCreation();
     } catch (error: unknown) {
@@ -292,7 +298,7 @@ export function useCategoryEditor({
     deleteCategory: async () => {
       setIsSaving(true);
       try {
-        await adminApi.deleteCategory(category.id);
+        await categoryApi.deleteCategory(category.id);
         await removeDeletedCategory({ queryClient, categoryId: category.id });
         onCategoryDeleted();
       } catch (error: unknown) {

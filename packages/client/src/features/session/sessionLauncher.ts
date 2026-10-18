@@ -6,15 +6,15 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { sessionQueryOptions } from '../../domains/session/sessionQueries';
 import type { Navigation } from '../../platform/navigation';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { sessionQueryOptions } from './api/sessionQueries';
 import { multiSessionPath, soloSessionPath } from './sessionPath';
 
 const sessionCodeLength: number = 6;

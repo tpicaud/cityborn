@@ -3,8 +3,8 @@
 import type { VerifyEmailData } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { invalidateCurrentUser } from './api/authQueries';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { invalidateCurrentUser } from '../../domains/auth/authQueries';
 
 export type EmailVerification = {
   verifyEmail: (data: VerifyEmailData) => Promise<void>;

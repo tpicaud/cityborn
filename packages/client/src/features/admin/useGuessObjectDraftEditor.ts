@@ -11,16 +11,16 @@ import type {
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useRef, useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { fullGuessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
+import {
+  guessObjectByExternalIdQueryOptions,
+  worldLocationByOsmReferenceQueryOptions,
+} from '../../domains/search/searchQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import {
-  fullGuessObjectQueryOptions,
-  guessObjectByExternalIdQueryOptions,
-  worldLocationByOsmReferenceQueryOptions,
-} from './api/adminQueries';
 import { registerWorldLocation } from './worldLocationRegistration';
 
 type GuessObjectDraftFields = Partial<
@@ -55,7 +55,8 @@ const worldLocationLoadFailureMessage: string =
   'Erreur lors de la récupération de la localisation';
 
 export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { guessObjectApi, searchApi, worldLocationApi }: DomainApis =
+    useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const [guessObjectDraft, setGuessObjectDraft] = useState<
@@ -73,7 +74,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
     guessObjectId: GuessObjectId,
   ): Promise<FullGuessObject | null> =>
     queryClient.fetchQuery(
-      fullGuessObjectQueryOptions({ adminApi, guessObjectId }),
+      fullGuessObjectQueryOptions({ guessObjectApi, guessObjectId }),
     );
 
   const displayGuessObjectDraft = (
@@ -130,14 +131,14 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
     if (!externalId) return;
     const foundGuessObject: GuessObjectSearchResult | null =
       await queryClient.fetchQuery(
-        guessObjectByExternalIdQueryOptions({ adminApi, externalId }),
+        guessObjectByExternalIdQueryOptions({ searchApi, externalId }),
       );
     if (!foundGuessObject) return;
 
     const worldLocation: WorldLocation | undefined =
       foundGuessObject.world_location &&
       (await registerWorldLocation({
-        adminApi,
+        worldLocationApi,
         queryClient,
         worldLocation: foundGuessObject.world_location,
       }));
@@ -155,7 +156,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
     const foundWorldLocation: WorldLocationSearchResult | null =
       await queryClient.fetchQuery(
         worldLocationByOsmReferenceQueryOptions({
-          adminApi,
+          searchApi,
           osmWorldLocationReference: {
             osmId: searchResult.id,
             osmType: searchResult.osm_type,
@@ -165,7 +166,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
     if (!foundWorldLocation) return;
 
     const worldLocation: WorldLocation = await registerWorldLocation({
-      adminApi,
+      worldLocationApi,
       queryClient,
       worldLocation: foundWorldLocation,
     });

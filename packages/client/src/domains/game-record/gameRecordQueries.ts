@@ -5,11 +5,11 @@ import {
   queryOptions,
   skipToken,
 } from '@tanstack/react-query';
-import { accountQueryKey } from '../../auth/api/authQueries';
-import type { ProfileApi } from './profileApi';
+import { accountQueryKey } from '../auth/authQueries';
+import type { GameRecordApi } from './gameRecordApi';
 
 type GameRecordsQuery = {
-  profileApi: ProfileApi;
+  gameRecordApi: GameRecordApi;
   userId: UserId | null;
 };
 
@@ -23,12 +23,12 @@ function gameRecordsQueryKey(userId: UserId | null): QueryKey {
 }
 
 export function gameRecordsQueryOptions({
-  profileApi,
+  gameRecordApi,
   userId,
 }: GameRecordsQuery) {
   return queryOptions({
     queryKey: gameRecordsQueryKey(userId),
-    queryFn: userId === null ? skipToken : () => profileApi.getGameRecords(),
+    queryFn: userId === null ? skipToken : () => gameRecordApi.getGameRecords(),
     staleTime: 0,
     retry: false,
     meta: { reportsError: true },

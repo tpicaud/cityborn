@@ -3,13 +3,13 @@
 import type { User } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { setCurrentUser } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import { setCurrentUser } from '../auth/api/authQueries';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { type SignOut, useSignOut } from '../auth/useSignOut';
 import {
@@ -45,7 +45,7 @@ export type ProfileEditor = {
 export function useProfileEditor({
   onAccountDeleted,
 }: ProfileEditorOptions = {}): ProfileEditor {
-  const { authApi, profileApi }: DomainApis = useDomainApis();
+  const { authApi, userApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
@@ -67,7 +67,7 @@ export function useProfileEditor({
   const submitUsername: FormSubmitHandler = usernameForm.handleSubmit(
     async (data) => {
       try {
-        const updatedUser: User = await profileApi.updateUsername(data);
+        const updatedUser: User = await userApi.updateUsername(data);
         await setCurrentUser({ queryClient, user: updatedUser });
         usernameForm.reset({ username: updatedUser.username });
         setIsEditingUsername(false);

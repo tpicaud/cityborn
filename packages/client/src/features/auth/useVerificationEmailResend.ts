@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import {
   type ErrorReporter,
   useErrorReporter,

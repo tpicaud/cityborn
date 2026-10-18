@@ -1,4 +1,4 @@
-export { ApiProvider } from './apiProvider';
+export { ApiProvider } from '../domains/apiProvider';
 export {
   type ApiVersionSupport,
   recordMinSupportedApiVersion,

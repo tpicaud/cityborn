@@ -14,35 +14,38 @@ import {
   useState,
 } from 'react';
 import type { ContractClient } from '../api/contractClient';
-import { type AdminApi, createAdminApi } from '../features/admin/api/adminApi';
-import type { AuthApi } from '../features/auth/api/authApi';
-import {
-  type CategoryApi,
-  createCategoryApi,
-} from '../features/category/api/categoryApi';
-import {
-  createHealthApi,
-  type HealthApi,
-} from '../features/health/api/healthApi';
-import {
-  createProfileApi,
-  type ProfileApi,
-} from '../features/profile/api/profileApi';
-import {
-  createSessionApi,
-  type SessionApi,
-} from '../features/session/api/sessionApi';
 import type { AppFocus } from '../platform/appFocus';
-import { type ErrorReporter, useErrorReporter } from './errorReporter';
-import { createErrorReportingQueryCache } from './queryErrorReporting';
+import { type ErrorReporter, useErrorReporter } from '../shared/errorReporter';
+import { createErrorReportingQueryCache } from '../shared/queryErrorReporting';
+import type { AuthApi } from './auth/authApi';
+import { type CategoryApi, createCategoryApi } from './category/categoryApi';
+import {
+  createGameRecordApi,
+  type GameRecordApi,
+} from './game-record/gameRecordApi';
+import {
+  createGuessObjectApi,
+  type GuessObjectApi,
+} from './guess-object/guessObjectApi';
+import { createHealthApi, type HealthApi } from './health/healthApi';
+import { createSearchApi, type SearchApi } from './search/searchApi';
+import { createSessionApi, type SessionApi } from './session/sessionApi';
+import { createUserApi, type UserApi } from './user/userApi';
+import {
+  createWorldLocationApi,
+  type WorldLocationApi,
+} from './world-location/worldLocationApi';
 
 export type DomainApis = {
-  adminApi: AdminApi;
   authApi: AuthApi;
   categoryApi: CategoryApi;
+  gameRecordApi: GameRecordApi;
+  guessObjectApi: GuessObjectApi;
   healthApi: HealthApi;
-  profileApi: ProfileApi;
+  searchApi: SearchApi;
   sessionApi: SessionApi;
+  userApi: UserApi;
+  worldLocationApi: WorldLocationApi;
 };
 
 type ApiProviderProps = {
@@ -69,12 +72,15 @@ export function ApiProvider({
   );
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
-      adminApi: createAdminApi(contractClient),
       authApi,
       categoryApi: createCategoryApi(contractClient),
+      gameRecordApi: createGameRecordApi(contractClient),
+      guessObjectApi: createGuessObjectApi(contractClient),
       healthApi: createHealthApi(contractClient),
-      profileApi: createProfileApi(contractClient),
+      searchApi: createSearchApi(contractClient),
       sessionApi: createSessionApi(contractClient),
+      userApi: createUserApi(contractClient),
+      worldLocationApi: createWorldLocationApi(contractClient),
     }),
     [contractClient, authApi],
   );

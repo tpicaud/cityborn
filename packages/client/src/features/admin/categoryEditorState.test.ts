@@ -13,21 +13,21 @@ import {
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
-import type { AdminApi } from './api/adminApi';
+import type { CategoryApi } from '../../domains/category/categoryApi';
 import {
   categoriesQueryOptions,
   fullCategoryQueryOptions,
-} from './api/adminQueries';
+} from '../../domains/category/categoryQueries';
 import {
   type CategoryEditorState,
   toCategoryEditorState,
 } from './categoryEditorState';
 
-type CategoryReads = Pick<AdminApi, 'getFullCategory' | 'getCategories'>;
+type CategoryReads = Pick<CategoryApi, 'getFullCategory' | 'getCategories'>;
 
 type CategoryEditorObservation = {
   queryClient: QueryClient;
-  adminApi: AdminApi;
+  categoryApi: CategoryApi;
 };
 
 type CategoryEditorObservers = {
@@ -50,60 +50,55 @@ const categories: Category[] = [
 const networkError: TypeError = new TypeError('Network request failed');
 
 function unexpectedCall(): never {
-  throw new Error('unexpected admin call');
+  throw new Error('unexpected category call');
 }
 
-function createFakeAdminApi({
+function createFakeCategoryApi({
   getFullCategory,
   getCategories,
-}: CategoryReads): AdminApi {
+}: CategoryReads): CategoryApi {
   return {
+    getCategoryTrees: unexpectedCall,
     getCategories,
     getFullCategory,
     createCategory: unexpectedCall,
     updateCategory: unexpectedCall,
     deleteCategory: unexpectedCall,
-    getGuessObject: unexpectedCall,
-    getFullGuessObject: unexpectedCall,
-    createGuessObject: unexpectedCall,
-    updateGuessObject: unexpectedCall,
-    searchGuessObjectsByName: unexpectedCall,
-    findGuessObjectByExternalId: unexpectedCall,
-    searchWorldLocationsByName: unexpectedCall,
-    findWorldLocationByOsmReference: unexpectedCall,
-    createWorldLocation: unexpectedCall,
   };
 }
 
 async function loadCategoryEditorIgnoringFailure({
   queryClient,
-  adminApi,
+  categoryApi,
 }: CategoryEditorObservation): Promise<void> {
   await Promise.all([
     queryClient
       .fetchQuery({
-        ...fullCategoryQueryOptions({ adminApi, categoryId: editedCategoryId }),
+        ...fullCategoryQueryOptions({
+          categoryApi,
+          categoryId: editedCategoryId,
+        }),
         staleTime: 0,
       })
       .catch(() => null),
     queryClient
-      .fetchQuery({ ...categoriesQueryOptions(adminApi), staleTime: 0 })
+      .fetchQuery({ ...categoriesQueryOptions(categoryApi), staleTime: 0 })
       .catch(() => null),
   ]);
 }
 
 function createCategoryEditorObservers({
   queryClient,
-  adminApi,
+  categoryApi,
 }: CategoryEditorObservation): CategoryEditorObservers {
   return {
     fullCategoryObserver: new QueryObserver(
       queryClient,
-      fullCategoryQueryOptions({ adminApi, categoryId: editedCategoryId }),
+      fullCategoryQueryOptions({ categoryApi, categoryId: editedCategoryId }),
     ),
     categoriesObserver: new QueryObserver(
       queryClient,
-      categoriesQueryOptions(adminApi),
+      categoriesQueryOptions(categoryApi),
     ),
   };
 }
@@ -120,23 +115,23 @@ function readCategoryEditorState({
 
 describe('toCategoryEditorState', () => {
   it('reports a category answered as not found as missing', async (context: TestContext) => {
-    const adminApi: AdminApi = createFakeAdminApi({
+    const categoryApi: CategoryApi = createFakeCategoryApi({
       getFullCategory: async () => null,
       getCategories: async () => categories,
     });
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
-    await loadCategoryEditorIgnoringFailure({ queryClient, adminApi });
+    await loadCategoryEditorIgnoringFailure({ queryClient, categoryApi });
 
     const categoryEditorState: CategoryEditorState = readCategoryEditorState(
-      createCategoryEditorObservers({ queryClient, adminApi }),
+      createCategoryEditorObservers({ queryClient, categoryApi }),
     );
 
     assert.deepEqual(categoryEditorState, { status: 'missing' });
   });
 
   it('reports a failed first load of the category list as failed', async (context: TestContext) => {
-    const adminApi: AdminApi = createFakeAdminApi({
+    const categoryApi: CategoryApi = createFakeCategoryApi({
       getFullCategory: async () => editedCategory,
       getCategories: async () => {
         throw networkError;
@@ -144,10 +139,10 @@ describe('toCategoryEditorState', () => {
     });
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
-    await loadCategoryEditorIgnoringFailure({ queryClient, adminApi });
+    await loadCategoryEditorIgnoringFailure({ queryClient, categoryApi });
 
     const categoryEditorState: CategoryEditorState = readCategoryEditorState(
-      createCategoryEditorObservers({ queryClient, adminApi }),
+      createCategoryEditorObservers({ queryClient, categoryApi }),
     );
 
     assert.deepEqual(categoryEditorState, { status: 'failed' });
@@ -156,20 +151,20 @@ describe('toCategoryEditorState', () => {
   it('keeps the loaded category after a failed refresh', async (context: TestContext) => {
     let fullCategoryResponse: () => Promise<FullCategory | null> = async () =>
       editedCategory;
-    const adminApi: AdminApi = createFakeAdminApi({
+    const categoryApi: CategoryApi = createFakeCategoryApi({
       getFullCategory: () => fullCategoryResponse(),
       getCategories: async () => categories,
     });
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
-    await loadCategoryEditorIgnoringFailure({ queryClient, adminApi });
+    await loadCategoryEditorIgnoringFailure({ queryClient, categoryApi });
     fullCategoryResponse = async () => {
       throw networkError;
     };
-    await loadCategoryEditorIgnoringFailure({ queryClient, adminApi });
+    await loadCategoryEditorIgnoringFailure({ queryClient, categoryApi });
 
     const categoryEditorState: CategoryEditorState = readCategoryEditorState(
-      createCategoryEditorObservers({ queryClient, adminApi }),
+      createCategoryEditorObservers({ queryClient, categoryApi }),
     );
 
     assert.deepEqual(categoryEditorState, {
@@ -184,14 +179,14 @@ describe('toCategoryEditorState', () => {
     let fullCategoryResponse: () => Promise<FullCategory | null> = async () => {
       throw networkError;
     };
-    const adminApi: AdminApi = createFakeAdminApi({
+    const categoryApi: CategoryApi = createFakeCategoryApi({
       getFullCategory: () => fullCategoryResponse(),
       getCategories: async () => categories,
     });
     const queryClient: QueryClient = new QueryClient();
-    await loadCategoryEditorIgnoringFailure({ queryClient, adminApi });
+    await loadCategoryEditorIgnoringFailure({ queryClient, categoryApi });
     const categoryEditorObservers: CategoryEditorObservers =
-      createCategoryEditorObservers({ queryClient, adminApi });
+      createCategoryEditorObservers({ queryClient, categoryApi });
     let stopObservingFullCategory: () => void = () => undefined;
     const settledFailure: Promise<void> = new Promise<void>(
       (resolve: () => void) => {

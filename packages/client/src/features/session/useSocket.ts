@@ -10,7 +10,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { refreshCurrentUser } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -27,7 +28,6 @@ import {
   type WsConnectionStatus,
 } from '../../ws/wsConnection';
 import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
-import { refreshCurrentUser } from '../auth/api/authQueries';
 
 type SessionSocketOptions = {
   createSocket: SocketFactory;

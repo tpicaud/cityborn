@@ -24,8 +24,9 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { invalidateGameRecords } from '../../domains/game-record/gameRecordQueries';
 import type { Navigation } from '../../platform/navigation';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -34,7 +35,6 @@ import type { SocketFactory } from '../../ws/socketFactory';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import type { WsEmit } from '../../ws/wsEmit';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';

@@ -2,12 +2,12 @@
 
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { clearCacheAfterSignOut } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import { clearCacheAfterSignOut } from './api/authQueries';
 
 export type SignOutOptions = {
   onSignedOut?: () => void;

@@ -1,15 +1,13 @@
 import type { CreateSession, Game, Session, SessionId } from '@cityborn/api';
 import { unwrapApiResponse } from '@cityborn/api';
 import { toLightGame } from '@cityborn/core';
-import type { ContractClient } from '../../../api/contractClient';
+import type { ContractClient } from '../../api/contractClient';
 
 type FinalizedSession = Session & {
   currentGame: NonNullable<Session['currentGame']>;
 };
 
-export function buildFinalizeGameBody(
-  session: Session,
-): FinalizedSession | null {
+function buildFinalizeGameBody(session: Session): FinalizedSession | null {
   if (!session.currentGame) return null;
   return { ...session, currentGame: toLightGame(session.currentGame) };
 }

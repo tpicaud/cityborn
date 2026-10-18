@@ -2,7 +2,7 @@ export {
   type AuthApi,
   createAuthApi,
   createCookieAuthApi,
-} from './api/authApi';
+} from '../../domains/auth/authApi';
 export {
   AuthProvider,
   type CurrentUser,

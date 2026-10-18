@@ -3,8 +3,8 @@
 import type { User } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { currentUserQueryOptions } from './api/authQueries';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { currentUserQueryOptions } from '../../domains/auth/authQueries';
 import { type CurrentUserState, toCurrentUserState } from './currentUserState';
 
 export type CurrentUserLoad = {

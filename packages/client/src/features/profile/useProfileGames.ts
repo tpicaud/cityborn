@@ -3,9 +3,9 @@
 import type { GameRecord } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { gameRecordsQueryOptions } from '../../domains/game-record/gameRecordQueries';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { gameRecordsQueryOptions } from './api/profileQueries';
 import { createProfileGames, type ProfileGame } from './profileGame';
 
 export type ProfileGamesOptions = {
@@ -22,11 +22,11 @@ const noProfileGames: ProfileGame[] = [];
 export function useProfileGames({
   isScreenFocused = true,
 }: ProfileGamesOptions = {}): ProfileGames {
-  const { profileApi }: DomainApis = useDomainApis();
+  const { gameRecordApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const { data: gameRecords, isLoading }: UseQueryResult<GameRecord[]> =
     useQuery({
-      ...gameRecordsQueryOptions({ profileApi, userId: user?.id ?? null }),
+      ...gameRecordsQueryOptions({ gameRecordApi, userId: user?.id ?? null }),
       subscribed: isScreenFocused,
     });
 

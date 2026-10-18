@@ -9,12 +9,13 @@ import {
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useRef, useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { invalidateGuessObjects } from '../../domains/guess-object/guessObjectQueries';
 import {
   guessObjectByExternalIdQueryOptions,
   guessObjectSearchQueryOptions,
-  invalidateGuessObjects,
-} from './api/adminQueries';
+  invalidateSearches,
+} from '../../domains/search/searchQueries';
 import { registerWorldLocation } from './worldLocationRegistration';
 
 export type ImportedGuessObject = {
@@ -90,7 +91,8 @@ function toProgressPercent({
 export function useGuessObjectImport({
   onGuessObjectImported,
 }: GuessObjectImportOptions): GuessObjectImport {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { guessObjectApi, searchApi, worldLocationApi }: DomainApis =
+    useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const [importStatus, setImportStatus] =
     useState<GuessObjectImportStatus>('idle');
@@ -105,7 +107,7 @@ export function useGuessObjectImport({
   }: ImportedGuessObject): Promise<void> => {
     const searchResults: GuessObjectSearchResult[] =
       await queryClient.fetchQuery(
-        guessObjectSearchQueryOptions({ adminApi, searchTerm: name }),
+        guessObjectSearchQueryOptions({ searchApi, searchTerm: name }),
       );
     const externalId: string | undefined =
       searchResults.at(0)?.source?.external_id;
@@ -113,7 +115,7 @@ export function useGuessObjectImport({
 
     const foundGuessObject: GuessObjectSearchResult | null =
       await queryClient.fetchQuery(
-        guessObjectByExternalIdQueryOptions({ adminApi, externalId }),
+        guessObjectByExternalIdQueryOptions({ searchApi, externalId }),
       );
     if (!foundGuessObject) throw new UserFacingError(missingGuessObjectMessage);
     const {
@@ -125,16 +127,21 @@ export function useGuessObjectImport({
       throw new UserFacingError(missingWorldLocationMessage);
 
     const worldLocation: WorldLocation = await registerWorldLocation({
-      adminApi,
+      worldLocationApi,
       queryClient,
       worldLocation: foundWorldLocation,
     });
-    const guessObjectId: GuessObjectId = await adminApi.createGuessObject({
-      ...guessObjectFields,
-      short_description: description || guessObjectFields.short_description,
-      world_location_id: worldLocation.id,
-    });
-    await invalidateGuessObjects(queryClient);
+    const guessObjectId: GuessObjectId = await guessObjectApi.createGuessObject(
+      {
+        ...guessObjectFields,
+        short_description: description || guessObjectFields.short_description,
+        world_location_id: worldLocation.id,
+      },
+    );
+    await Promise.all([
+      invalidateGuessObjects(queryClient),
+      invalidateSearches(queryClient),
+    ]);
     await onGuessObjectImported(guessObjectId);
   };
 
