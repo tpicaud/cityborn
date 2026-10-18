@@ -12,7 +12,7 @@ description: "Conventions de packages/client (@cityborn/client). À utiliser pou
   - `<domaine>Queries.ts` : les clés, les `queryOptions` et les mises à jour du cache.
 - `features/<feature>/` porte le comportement d'une feature des apps : hooks, formulaires, transformations pures, contrats de vue. Une feature compose des domaines.
 - Le socle technique porte le transport HTTP, le transport WebSocket, les ports plateforme et les providers transverses.
-- La connexion WebSocket appartient au socle : une feature fournit seulement sa restauration, rejouée à chaque connexion.
+- La connexion WebSocket appartient au socle : une feature obtient le port WebSocket d'un domaine par le hook `use<Domaine>Channel` de ce domaine, qui ouvre la connexion le temps de l'écran et rejoue à chaque connexion la restauration fournie par la feature.
 
 ## Surface publique
 
