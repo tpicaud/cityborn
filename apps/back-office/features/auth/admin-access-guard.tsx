@@ -8,8 +8,8 @@ import {
 import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
-import LogoutButton from '../logout-button';
-import Loader from '../ui/Loader';
+import Loader from '@/components/ui/Loader';
+import LogoutButton from './logout-button';
 
 const adminAccessDeniedError: ApiError = {
   code: ErrorCode.USER_NOT_ADMIN,

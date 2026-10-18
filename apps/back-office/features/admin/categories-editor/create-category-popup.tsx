@@ -5,7 +5,7 @@ import {
   useCategoryCreation,
 } from '@cityborn/client/admin';
 import { Plus } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/Button';
 
 export function CreateCategoryDialog({
   onCategoryCreated,

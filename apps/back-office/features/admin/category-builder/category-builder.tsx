@@ -13,9 +13,9 @@ import {
 } from '@cityborn/client/admin';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import Loader from '@/components/ui/Loader';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
 import { DeleteCategoryPopup } from './delete-category-popup';
 import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';

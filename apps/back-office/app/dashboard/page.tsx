@@ -1,4 +1,4 @@
-import { CategoriesEditor } from '@/components/categories-editor/categories-editor';
+import { CategoriesEditor } from '@/features/admin/categories-editor/categories-editor';
 
 export default function Dashboard() {
   return <CategoriesEditor />;

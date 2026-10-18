@@ -1,5 +1,5 @@
 import type { GuessObject, GuessObjectId } from '@cityborn/api';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/Button';
 
 export function GuessObjectsList({
   guessObjects,

@@ -3,7 +3,7 @@
 import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { SignInForm } from '@/components/auth/sign-in-form';
+import { SignInForm } from '@/features/auth/sign-in-form';
 
 export default function LoginPage() {
   const { user }: CurrentUser = useCurrentUser();

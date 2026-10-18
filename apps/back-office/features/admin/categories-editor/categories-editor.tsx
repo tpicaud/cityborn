@@ -8,8 +8,8 @@ import {
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
+import { Button } from '@/components/ui/Button';
+import Loader from '@/components/ui/Loader';
 import { CategoriesList } from './categories-list';
 import { CreateCategoryDialog } from './create-category-popup';
 

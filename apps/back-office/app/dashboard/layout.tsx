@@ -1,7 +1,7 @@
-import { AdminAccessGuard } from '@/components/auth/admin-access-guard';
 import HomeButton from '@/components/home-button';
-import LogoutButton from '@/components/logout-button';
-import SwaggerButton from '@/components/swagger-button';
+import SwaggerButton from '@/components/swagger/swagger-button';
+import { AdminAccessGuard } from '@/features/auth/admin-access-guard';
+import LogoutButton from '@/features/auth/logout-button';
 
 export default function DashboardLayout({
   children,

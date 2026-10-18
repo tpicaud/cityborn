@@ -2,7 +2,7 @@
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { useRouter } from 'next/navigation';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/Button';
 
 const inputClassName: string =
   'w-full px-3 py-2 bg-zinc-700/90 backdrop-blur-sm border border-zinc-600 rounded-md text-zinc-50 focus:outline-none focus:ring-1 focus:ring-primary';

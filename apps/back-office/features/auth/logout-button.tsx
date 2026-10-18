@@ -2,7 +2,7 @@
 
 import { type SignOut, useSignOut } from '@cityborn/client/auth';
 import { LogOut } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from '@/components/ui/Button';
 
 export default function LogoutButton() {
   const { signOut }: SignOut = useSignOut();

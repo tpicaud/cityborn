@@ -6,8 +6,8 @@ import {
   useCategoryEditorLoad,
 } from '@cityborn/client/admin';
 import { notFound } from 'next/navigation';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
+import { Button } from '@/components/ui/Button';
+import Loader from '@/components/ui/Loader';
 import { CategoryBuilder } from './category-builder';
 
 export function CategoryBuilderLoader({

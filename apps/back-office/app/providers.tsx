@@ -3,8 +3,8 @@
 import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import type { ReactNode } from 'react';
-import { AuthBootstrap } from '@/components/auth/auth-bootstrap';
 import { ErrorDialog } from '@/components/ui/ErrorDialog';
+import { AuthBootstrap } from '@/features/auth/auth-bootstrap';
 import { authApi } from '@/lib/api/auth';
 import { contractClient } from '@/lib/api/contract-client';
 

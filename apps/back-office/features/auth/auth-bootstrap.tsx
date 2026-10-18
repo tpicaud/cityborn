@@ -6,8 +6,8 @@ import {
   useCurrentUserLoad,
 } from '@cityborn/client/auth';
 import type { ReactNode } from 'react';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
+import { Button } from '@/components/ui/Button';
+import Loader from '@/components/ui/Loader';
 
 export function AuthBootstrap({ children }: { children: ReactNode }) {
   const { currentUserState, retry }: CurrentUserLoad = useCurrentUserLoad();

@@ -7,8 +7,8 @@ import {
 } from '@cityborn/client/admin';
 import Papa from 'papaparse';
 import { useState } from 'react';
-import { Button } from '../ui/Button';
-import Loader from '../ui/Loader';
+import { Button } from '@/components/ui/Button';
+import Loader from '@/components/ui/Loader';
 
 function parseGuessObjectsFromCSV(csv: string): ImportedGuessObject[] {
   const result: Papa.ParseResult<Record<string, string>> = Papa.parse<
