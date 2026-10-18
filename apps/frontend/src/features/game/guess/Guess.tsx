@@ -7,11 +7,11 @@ import {
   useGameRound,
 } from '@cityborn/client/game';
 import dynamic from 'next/dynamic';
-import Overlay from '@/components/guess/Overlay';
 import { frontendClientConfig } from '@/config/client';
+import Overlay from '@/features/game/guess/Overlay';
 import RoundCountdown from './RoundCountdown';
 
-const GameMap = dynamic(() => import('@/components/guess/Map'), {
+const GameMap = dynamic(() => import('@/features/game/guess/Map'), {
   ssr: false,
 });
 

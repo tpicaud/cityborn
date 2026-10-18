@@ -29,7 +29,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import LoadingButton from '../ui/buttons/LoadingButton';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
 
 export const Profile = ({ user }: { user: User }) => {
   const { games, isLoading }: ProfileGames = useProfileGames();

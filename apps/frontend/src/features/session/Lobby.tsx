@@ -32,10 +32,10 @@ import {
 } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import IconButton from '@/components/ui/buttons/IconButton';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
+import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
-import IconButton from '../ui/buttons/IconButton';
-import LoadingButton from '../ui/buttons/LoadingButton';
-import LoadingDialog from '../ui/loaders/LoadingDialog';
 
 type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;

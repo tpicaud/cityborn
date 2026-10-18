@@ -16,8 +16,8 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import LoadingButton from '../ui/buttons/LoadingButton';
-import LoadingDialog from '../ui/loaders/LoadingDialog';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
+import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 
 const Results = ({
   game,

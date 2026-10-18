@@ -2,7 +2,7 @@
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
-import Button from '../ui/buttons/Button';
+import Button from '@/components/ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export const SignInForm = () => {

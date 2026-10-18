@@ -7,9 +7,9 @@ import {
 } from '@cityborn/client/game';
 import { ArrowForward } from '@mui/icons-material';
 import { Backdrop } from '@mui/material';
-import Guess from '@/components/guess/Guess';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import LoadingButton from '../ui/buttons/LoadingButton';
+import Guess from '@/features/game/guess/Guess';
 import Results from './Results';
 
 export const Game = ({

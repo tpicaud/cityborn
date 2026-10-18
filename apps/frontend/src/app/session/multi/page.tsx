@@ -5,8 +5,8 @@ import type { Navigation } from '@cityborn/client/platform';
 import { sessionIdFromMultiSessionPath } from '@cityborn/client/session';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import MultiSession from '@/components/Session/MultiSession';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
+import MultiSession from '@/features/session/multi/MultiSession';
 import { useNavigation } from '@/lib/navigation';
 
 export default function MultiSessionPage() {

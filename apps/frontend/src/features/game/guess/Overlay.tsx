@@ -16,7 +16,7 @@ import {
   type RoundResult,
 } from '@cityborn/client/game';
 import { Box } from '@mui/material';
-import LoadingButton from '../ui/buttons/LoadingButton';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import GuessObjectCard from './GuessObjectCard';
 import Timer from './Timer';
 

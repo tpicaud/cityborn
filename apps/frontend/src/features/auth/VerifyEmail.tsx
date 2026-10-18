@@ -10,7 +10,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { type ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import Button from '../ui/buttons/Button';
+import Button from '@/components/ui/buttons/Button';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
 

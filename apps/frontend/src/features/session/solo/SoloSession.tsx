@@ -4,9 +4,9 @@ import {
   type SoloSessionController,
   useSoloSessionController,
 } from '@cityborn/client/session';
-import { Game } from '@/components/Session/Game';
-import { Lobby } from '@/components/Session/Lobby';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
+import { Game } from '@/features/game/Game';
+import { Lobby } from '@/features/session/Lobby';
 import { useNavigation } from '@/lib/navigation';
 
 export default function SoloSession() {

@@ -5,20 +5,26 @@ import {
   type SignOut,
   useCurrentUser,
   useSignOut,
+  useVerificationEmailResend,
+  type VerificationEmailResend,
 } from '@cityborn/client/auth';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import 'leaflet/dist/leaflet.css';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { SignInForm } from './auth/SignInForm';
-import { SignUpForm } from './auth/SignUpForm';
-import Menu from './menu/Menu';
-import { Profile } from './menu/Profile';
-import IconButton from './ui/buttons/IconButton';
-import LoadingIconButton from './ui/buttons/LoadingIconButton';
+import Button from '@/components/ui/buttons/Button';
+import IconButton from '@/components/ui/buttons/IconButton';
+import LoadingButton from '@/components/ui/buttons/LoadingButton';
+import LoadingIconButton from '@/components/ui/buttons/LoadingIconButton';
+import { Profile } from '@/features/profile/Profile';
+import Play from '@/features/session/Play';
+import { SignInForm } from './SignInForm';
+import { SignUpForm } from './SignUpForm';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -37,6 +43,8 @@ export default function Home() {
   const { signOut }: SignOut = useSignOut({
     onSignedOut: () => setState('menu'),
   });
+  const verificationEmailResend: VerificationEmailResend =
+    useVerificationEmailResend();
   const isAuthenticated: boolean = user !== null;
 
   useEffect(() => {
@@ -44,6 +52,75 @@ export default function Home() {
       setState('menu');
     }
   }, [isAuthenticated]);
+
+  const menu: ReactNode = (
+    <div className="flex flex-col items-center gap-5">
+      <div className="relative flex flex-col gap-1 items-center w-full">
+        <Image
+          src="/logo.png"
+          alt="Logo"
+          width={200}
+          height={200}
+          style={{ objectFit: 'contain' }}
+          className="object-contain w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl"
+          priority
+        />
+        <p className="text-base md:text-lg text-center ">
+          Trouve le lieu de naissance des personnalités
+        </p>
+      </div>
+
+      {user ? (
+        <div className="flex flex-col items-center justify-center gap-2 w-full">
+          <Typography variant="h5" className="text-center">
+            Bienvenue <b>{user.username}</b> !
+          </Typography>
+          {user.isVerified === false && (
+            <div className="flex flex-col items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-center w-full max-w-xs">
+              <p className="text-sm font-medium text-amber-900">
+                Votre adresse e-mail n'est pas vérifiée
+              </p>
+              <LoadingButton
+                variant="text"
+                color="warning"
+                size="small"
+                className="normal-case underline"
+                onClick={verificationEmailResend.resend}
+                disabled={verificationEmailResend.isSent}
+              >
+                {verificationEmailResend.isSent
+                  ? 'E-mail de vérification envoyé'
+                  : 'Renvoyer un e-mail de vérification'}
+              </LoadingButton>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-row gap-2 items-center justify-center w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            className="text-white px-6 w-full rounded"
+            onClick={() => setState('sign-in')}
+          >
+            <p className="px-3">Connexion</p>
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            className="text-white px-6 w-full rounded"
+            onClick={() => setState('sign-up')}
+          >
+            <p className="px-3">Inscription</p>
+          </Button>
+        </div>
+      )}
+      <Play
+        openSignIn={() => setState('sign-in')}
+        openSignUp={() => setState('sign-up')}
+      />
+    </div>
+  );
 
   let content: ReactNode;
 
@@ -57,15 +134,15 @@ export default function Home() {
       break;
 
     case 'menu':
-      content = <Menu setState={setState} />;
+      content = menu;
       break;
 
     case 'profile':
-      content = user ? <Profile user={user} /> : <Menu setState={setState} />;
+      content = user ? <Profile user={user} /> : menu;
       break;
 
     default:
-      content = <Menu setState={setState} />;
+      content = menu;
   }
 
   return (
