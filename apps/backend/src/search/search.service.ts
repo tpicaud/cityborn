@@ -62,11 +62,12 @@ export class SearchService {
     const drafts_from_db =
       await this.guessObjectService.searchDraftByName(query);
 
-    const dbByExternalId = new Map<string, GuessObjectSearchResult>();
-    for (const draft of drafts_from_db) {
-      const externalId = draft.source?.external_id;
-      if (externalId) dbByExternalId.set(externalId, draft);
-    }
+    const dbByExternalId: Map<string, GuessObjectSearchResult> = new Map(
+      drafts_from_db.flatMap((draft): [string, GuessObjectSearchResult][] => {
+        const externalId = draft.source?.external_id;
+        return externalId ? [[externalId, draft]] : [];
+      }),
+    );
 
     const matchedExternalIds = new Set<string>();
     const merged_drafts = drafts_from_wikidata.map((wikiDraft) => {

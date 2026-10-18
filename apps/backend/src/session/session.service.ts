@@ -608,20 +608,21 @@ export class SessionService {
       connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
   }
 
-  private async generateUniqueSessionID(): Promise<SessionId> {
-    const MAX_ATTEMPTS = 3;
-
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const candidateId = SessionIdSchema.parse(
-        this.idService.generateNanoId(),
-      );
-      if (!(await this.getSession(candidateId))) return candidateId;
+  private async generateUniqueSessionID(
+    remainingAttempts: number = 3,
+  ): Promise<SessionId> {
+    if (remainingAttempts === 0) {
+      throw new InternalServerErrorException({
+        code: ErrorCode.SESSION_CREATION_FAILED,
+        message: 'Max id generation attempt reached',
+      });
     }
 
-    throw new InternalServerErrorException({
-      code: ErrorCode.SESSION_CREATION_FAILED,
-      message: 'Max id generation attempt reached',
-    });
+    const candidateId: SessionId = SessionIdSchema.parse(
+      this.idService.generateNanoId(),
+    );
+    if (!(await this.getSession(candidateId))) return candidateId;
+    return this.generateUniqueSessionID(remainingAttempts - 1);
   }
 
   private getLightSession(session: Session): Session {

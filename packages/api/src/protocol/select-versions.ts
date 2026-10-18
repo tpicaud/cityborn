@@ -38,13 +38,10 @@ export function selectVersionsToCheck(
 
   const mostRecent = sortedDesc.slice(0, policy.min_num_of_version_supported);
 
-  const seen = new Set<string>();
-  const union: ManifestEntry[] = [];
-  for (const entry of [...withinWindow, ...mostRecent]) {
-    if (seen.has(entry.file)) continue;
-    seen.add(entry.file);
-    union.push(entry);
-  }
+  const union: ManifestEntry[] = [...withinWindow, ...mostRecent].filter(
+    (entry, index, entries) =>
+      entries.findIndex((candidate) => candidate.file === entry.file) === index,
+  );
 
   return union.sort((a, b) => b.versionNumber - a.versionNumber);
 }

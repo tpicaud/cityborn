@@ -7,23 +7,26 @@ function formatChange(change: VersionCheckResult['changes'][number]): string {
   return `    - [${change.id}]${location ? ` ${location}:` : ''} ${change.text}`;
 }
 
+function changeKey(change: VersionCheckResult['changes'][number]): string {
+  return `${change.id}|${change.operation ?? ''}|${change.path ?? ''}`;
+}
+
 function formatNonBreaking(report: CompatReport): string[] {
-  const uniqueChanges = new Map<
-    string,
-    VersionCheckResult['changes'][number]
-  >();
-  for (const result of report.checked) {
-    for (const change of result.changes) {
-      const key = `${change.id}|${change.operation ?? ''}|${change.path ?? ''}`;
-      if (!uniqueChanges.has(key)) uniqueChanges.set(key, change);
-    }
-  }
-  if (uniqueChanges.size === 0) return [];
+  const changes: VersionCheckResult['changes'] = report.checked.flatMap(
+    (result) => result.changes,
+  );
+  const uniqueChanges: VersionCheckResult['changes'] = changes.filter(
+    (change, index) =>
+      changes.findIndex(
+        (candidate) => changeKey(candidate) === changeKey(change),
+      ) === index,
+  );
+  if (uniqueChanges.length === 0) return [];
 
   return [
     '',
-    `Non-breaking changes worth reviewing (${uniqueChanges.size}):`,
-    ...[...uniqueChanges.values()].map(formatChange),
+    `Non-breaking changes worth reviewing (${uniqueChanges.length}):`,
+    ...uniqueChanges.map(formatChange),
   ];
 }
 
@@ -42,18 +45,14 @@ function formatDeprecated(report: CompatReport): string[] {
 }
 
 export function formatHumanSummary(report: CompatReport): string {
-  const lines: string[] = [];
-
-  for (const result of report.checked) {
-    if (result.breaking) {
-      lines.push(`  ❌ ${result.entry.file}: BROKEN`);
-      for (const change of result.changes) {
-        lines.push(formatChange(change));
-      }
-    } else {
-      lines.push(`  ✅ ${result.entry.file}: OK`);
-    }
-  }
+  const lines: string[] = report.checked.flatMap((result) =>
+    result.breaking
+      ? [
+          `  ❌ ${result.entry.file}: BROKEN`,
+          ...result.changes.map(formatChange),
+        ]
+      : [`  ✅ ${result.entry.file}: OK`],
+  );
 
   lines.push(...formatNonBreaking(report));
   lines.push(...formatDeprecated(report));

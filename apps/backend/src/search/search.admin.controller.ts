@@ -22,17 +22,17 @@ export class AdminSearchController {
               ),
             ],
           };
-        } else if (query.q) {
+        }
+        if (query.q) {
           return {
             status: 200 as const,
             body: await this.searchService.searchGuessObjectByName(query.q),
           };
-        } else {
-          throw new BadRequestException({
-            code: ErrorCode.BAD_REQUEST,
-            message: `Either 'q' or 'source_id' must be provided`,
-          });
         }
+        throw new BadRequestException({
+          code: ErrorCode.BAD_REQUEST,
+          message: `Either 'q' or 'source_id' must be provided`,
+        });
       },
       searchWorldLocation: async ({ query }) => {
         if (query.id && query.osm_type) {
@@ -45,17 +45,17 @@ export class AdminSearchController {
               ),
             ],
           };
-        } else if (query.q) {
+        }
+        if (query.q) {
           return {
             status: 200 as const,
             body: await this.searchService.searchWorldLocationByName(query.q),
           };
-        } else {
-          throw new BadRequestException({
-            code: ErrorCode.BAD_REQUEST,
-            message: `Either 'q' or 'id' must be provided`,
-          });
         }
+        throw new BadRequestException({
+          code: ErrorCode.BAD_REQUEST,
+          message: `Either 'q' or 'id' must be provided`,
+        });
       },
     });
   }

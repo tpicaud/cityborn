@@ -114,45 +114,50 @@ const targetVersion =
     : (latestEntry?.versionNumber ?? 0) + 1;
 document.info.version = `v${targetVersion}`;
 
-if (mode === 'draft') {
-  if (isDraftAtTop && latestEntry) {
-    const previousDocument = readVersionDocument(latestEntry.file);
-    if (!hasDocumentChanged(previousDocument, document)) skip();
+function createVersion(draft: boolean): void {
+  const previousDocument = latestEntry
+    ? readVersionDocument(latestEntry.file)
+    : undefined;
+  if (!hasDocumentChanged(previousDocument, document)) skip();
 
-    writeVersionDocument(latestEntry.file, document);
-    latestEntry.releasedAt = new Date().toISOString();
-    writeManifest(manifest);
-    console.log(`Updated draft ${latestEntry.file}`);
-    writeOutputs(true, latestEntry.file);
-  } else {
-    const previousDocument = latestEntry
-      ? readVersionDocument(latestEntry.file)
-      : undefined;
-    if (!hasDocumentChanged(previousDocument, document)) skip();
-
-    const filename = insertNewVersion(manifest, document, targetVersion, true);
-    console.log(`Created draft ${filename}`);
-    writeOutputs(true, filename);
-  }
-} else {
-  if (isDraftAtTop && latestEntry) {
-    const previousDocument = readVersionDocument(latestEntry.file);
-    if (hasDocumentChanged(previousDocument, document)) {
-      writeVersionDocument(latestEntry.file, document);
-    }
-    latestEntry.releasedAt = new Date().toISOString();
-    latestEntry.draft = undefined;
-    writeManifest(manifest);
-    console.log(`Released ${latestEntry.file}`);
-    writeOutputs(true, latestEntry.file);
-  } else {
-    const previousDocument = latestEntry
-      ? readVersionDocument(latestEntry.file)
-      : undefined;
-    if (!hasDocumentChanged(previousDocument, document)) skip();
-
-    const filename = insertNewVersion(manifest, document, targetVersion, false);
-    console.log(`Created ${filename}`);
-    writeOutputs(true, filename);
-  }
+  const filename = insertNewVersion(manifest, document, targetVersion, draft);
+  console.log(`${draft ? 'Created draft' : 'Created'} ${filename}`);
+  writeOutputs(true, filename);
 }
+
+function updateDraft(draftEntry: ManifestEntry): void {
+  const previousDocument = readVersionDocument(draftEntry.file);
+  if (!hasDocumentChanged(previousDocument, document)) skip();
+
+  writeVersionDocument(draftEntry.file, document);
+  draftEntry.releasedAt = new Date().toISOString();
+  writeManifest(manifest);
+  console.log(`Updated draft ${draftEntry.file}`);
+  writeOutputs(true, draftEntry.file);
+}
+
+function releaseDraft(draftEntry: ManifestEntry): void {
+  const previousDocument = readVersionDocument(draftEntry.file);
+  if (hasDocumentChanged(previousDocument, document)) {
+    writeVersionDocument(draftEntry.file, document);
+  }
+  draftEntry.releasedAt = new Date().toISOString();
+  draftEntry.draft = undefined;
+  writeManifest(manifest);
+  console.log(`Released ${draftEntry.file}`);
+  writeOutputs(true, draftEntry.file);
+}
+
+function publishVersion(draft: boolean): void {
+  if (!isDraftAtTop || !latestEntry) {
+    createVersion(draft);
+    return;
+  }
+  if (draft) {
+    updateDraft(latestEntry);
+    return;
+  }
+  releaseDraft(latestEntry);
+}
+
+publishVersion(mode === 'draft');

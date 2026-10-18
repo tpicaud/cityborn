@@ -101,9 +101,7 @@ describe('Session gateway over a real socket', () => {
   });
 
   afterEach(async () => {
-    for (const client of clients) {
-      await disconnectClient(client);
-    }
+    await Promise.all(clients.map(disconnectClient));
     clients.length = 0;
   });
 
@@ -114,9 +112,11 @@ describe('Session gateway over a real socket', () => {
   it('rejects a rate limited handshake with a typed connect error', async () => {
     const clientIp: string = '203.0.113.7';
     const rateLimitService: RateLimitService = app.get(RateLimitService);
-    for (let attempt: number = 0; attempt < 20; attempt += 1) {
-      await rateLimitService.consumeWsConnection(clientIp);
-    }
+    await Promise.all(
+      Array.from({ length: 20 }, () =>
+        rateLimitService.consumeWsConnection(clientIp),
+      ),
+    );
     const client: Socket = io(appUrl, {
       transports: ['websocket'],
       extraHeaders: { 'x-forwarded-for': clientIp },

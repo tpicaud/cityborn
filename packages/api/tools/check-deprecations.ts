@@ -1,6 +1,7 @@
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  type DeprecationStatus,
   findDeprecatedItems,
   resolveDeprecationStatus,
 } from './compat/find-deprecations';
@@ -8,6 +9,19 @@ import { loadManifest, loadPolicy } from './compat/run-compat-check';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');
+
+function formatStatus(status: DeprecationStatus): string {
+  if (status.kind === 'not-shipped') return '  status: ❓ not yet released';
+  if (status.kind === 'eligible') {
+    return `  status: ✅ eligible for removal (shipped in ${status.originVersion.file})`;
+  }
+
+  const extra =
+    status.versionsStillNeeded > 0
+      ? `, needs ${status.versionsStillNeeded} more version(s) released`
+      : '';
+  return `  status: ⏳ not yet eligible (shipped in ${status.originVersion.file}) — day window expires ${status.dayWindowExpiresAt}${extra}`;
+}
 
 function main() {
   const manifest = loadManifest(
@@ -23,8 +37,8 @@ function main() {
 
   const now = new Date();
 
-  for (const item of items) {
-    const status = resolveDeprecationStatus(
+  items.forEach((item) => {
+    const status: DeprecationStatus = resolveDeprecationStatus(
       item.deprecatedSince,
       manifest,
       policy,
@@ -35,23 +49,8 @@ function main() {
     console.log(`\n${item.symbol}  (${location})`);
     console.log(`  deprecated since: ${item.deprecatedSince}`);
     console.log(`  reason: ${item.reason}`);
-
-    if (status.kind === 'not-shipped') {
-      console.log('  status: ❓ not yet released');
-    } else if (status.kind === 'eligible') {
-      console.log(
-        `  status: ✅ eligible for removal (shipped in ${status.originVersion.file})`,
-      );
-    } else {
-      const extra =
-        status.versionsStillNeeded > 0
-          ? `, needs ${status.versionsStillNeeded} more version(s) released`
-          : '';
-      console.log(
-        `  status: ⏳ not yet eligible (shipped in ${status.originVersion.file}) — day window expires ${status.dayWindowExpiresAt}${extra}`,
-      );
-    }
-  }
+    console.log(formatStatus(status));
+  });
 }
 
 main();

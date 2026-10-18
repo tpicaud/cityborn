@@ -74,10 +74,10 @@ describe('Database backup restoration', () => {
     });
   const createArchive = (filename: string) => {
     writeFileSync(join(workingDirectory, 'roles.sql'), 'SELECT 1;\n');
-    for (const [file, section] of [
+    [
       ['schema.sql', '--schema-only'],
       ['data.sql', '--data-only'],
-    ]) {
+    ].forEach(([file, section]) => {
       writeFileSync(
         join(workingDirectory, file),
         docker(
@@ -92,7 +92,7 @@ describe('Database backup restoration', () => {
           '--schema=public',
         ),
       );
-    }
+    });
     const archive = join(workingDirectory, filename);
     execFileSync('tar', [
       '-czf',
@@ -108,6 +108,25 @@ describe('Database backup restoration', () => {
       `${createHash('sha256').update(readFileSync(archive)).digest('hex')}  ${basename(archive)}\n`,
     );
     return archive;
+  };
+  const waitForPostgres = async (remainingAttempts: number): Promise<void> => {
+    if (remainingAttempts === 0) {
+      throw new Error('Disposable PostgreSQL unavailable');
+    }
+    try {
+      docker(
+        'exec',
+        container,
+        'pg_isready',
+        '-h',
+        '127.0.0.1',
+        '-U',
+        'test_admin',
+      );
+    } catch {
+      await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+      await waitForPostgres(remainingAttempts - 1);
+    }
   };
   const fixtureSql = `
     CREATE TYPE public.mood AS ENUM ('happy', 'sad');
@@ -137,25 +156,7 @@ describe('Database backup restoration', () => {
       'POSTGRES_USER=test_admin',
       'postgis/postgis:16-3.4',
     );
-    let ready = false;
-    for (let attempt = 0; attempt < 60; attempt++) {
-      try {
-        docker(
-          'exec',
-          container,
-          'pg_isready',
-          '-h',
-          '127.0.0.1',
-          '-U',
-          'test_admin',
-        );
-        ready = true;
-        break;
-      } catch {
-        await new Promise((resolveWait) => setTimeout(resolveWait, 500));
-      }
-    }
-    if (!ready) throw new Error('Disposable PostgreSQL unavailable');
+    await waitForPostgres(60);
     docker(
       'exec',
       container,

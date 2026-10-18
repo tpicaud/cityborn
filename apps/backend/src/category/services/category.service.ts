@@ -72,10 +72,7 @@ export class CategoryService {
       categoryId,
       data,
     );
-    for (const id of disconnectIds) {
-      const count = await this.categoryRepository.countByGuessObjectId(id);
-      if (count === 0) await this.guessObjectService.delete(id);
-    }
+    await this.deleteOrphanGuessObjects(disconnectIds);
     return updated_category;
   }
 
@@ -99,11 +96,20 @@ export class CategoryService {
     }
 
     await this.categoryRepository.delete(id);
-    for (const guessObject of category.guessObjects) {
-      const count = await this.categoryRepository.countByGuessObjectId(
-        guessObject.id,
-      );
-      if (count === 0) await this.guessObjectService.delete(guessObject.id);
-    }
+    await this.deleteOrphanGuessObjects(
+      category.guessObjects.map((guessObject) => guessObject.id),
+    );
+  }
+
+  private async deleteOrphanGuessObjects(
+    guessObjectIds: GuessObjectId[],
+  ): Promise<void> {
+    const [guessObjectId, ...remainingGuessObjectIds] = guessObjectIds;
+    if (guessObjectId === undefined) return;
+
+    const count: number =
+      await this.categoryRepository.countByGuessObjectId(guessObjectId);
+    if (count === 0) await this.guessObjectService.delete(guessObjectId);
+    await this.deleteOrphanGuessObjects(remainingGuessObjectIds);
   }
 }
