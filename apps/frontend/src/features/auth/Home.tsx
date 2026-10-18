@@ -2,59 +2,28 @@
 
 import {
   type CurrentUser,
-  type SignOut,
   useCurrentUser,
-  useSignOut,
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { Box, Typography } from '@mui/material';
-import 'leaflet/dist/leaflet.css';
-import dynamic from 'next/dynamic';
+import { Typography } from '@mui/material';
 import Image from 'next/image';
-import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
 import Button from '@/components/ui/buttons/Button';
-import IconButton from '@/components/ui/buttons/IconButton';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
-import LoadingIconButton from '@/components/ui/buttons/LoadingIconButton';
-import { Profile } from '@/features/profile/Profile';
-import Play from '@/features/session/Play';
-import { SignInForm } from './SignInForm';
-import { SignUpForm } from './SignUpForm';
 
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false },
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false },
-);
-
-export default function Home() {
+export default function Home({
+  openSignIn,
+  openSignUp,
+}: {
+  openSignIn: () => void;
+  openSignUp: () => void;
+}) {
   const { user }: CurrentUser = useCurrentUser();
-  const [state, setState] = useState<
-    'menu' | 'sign-in' | 'sign-up' | 'profile'
-  >('menu');
-  const { signOut }: SignOut = useSignOut({
-    onSignedOut: () => setState('menu'),
-  });
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
-  const isAuthenticated: boolean = user !== null;
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      setState('menu');
-    }
-  }, [isAuthenticated]);
-
-  const menu: ReactNode = (
-    <div className="flex flex-col items-center gap-5">
+  return (
+    <>
       <div className="relative flex flex-col gap-1 items-center w-full">
         <Image
           src="/logo.png"
@@ -101,7 +70,7 @@ export default function Home() {
             variant="contained"
             color="primary"
             className="text-white px-6 w-full rounded"
-            onClick={() => setState('sign-in')}
+            onClick={openSignIn}
           >
             <p className="px-3">Connexion</p>
           </Button>
@@ -109,100 +78,12 @@ export default function Home() {
             variant="contained"
             color="primary"
             className="text-white px-6 w-full rounded"
-            onClick={() => setState('sign-up')}
+            onClick={openSignUp}
           >
             <p className="px-3">Inscription</p>
           </Button>
         </div>
       )}
-      <Play
-        openSignIn={() => setState('sign-in')}
-        openSignUp={() => setState('sign-up')}
-      />
-    </div>
-  );
-
-  let content: ReactNode;
-
-  switch (state) {
-    case 'sign-in':
-      content = <SignInForm />;
-      break;
-
-    case 'sign-up':
-      content = <SignUpForm />;
-      break;
-
-    case 'menu':
-      content = menu;
-      break;
-
-    case 'profile':
-      content = user ? <Profile user={user} /> : menu;
-      break;
-
-    default:
-      content = menu;
-  }
-
-  return (
-    <div className="relative h-screen">
-      <div className="absolute inset-0">
-        <MapContainer
-          center={[0, 0]}
-          zoom={3}
-          zoomControl={false}
-          className="h-full w-full z-0"
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-        </MapContainer>
-        <div className="absolute inset-0 bg-black opacity-60 z-10 pointer-events-none"></div>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center justify-center h-full p-4 bg-transparent pointer-events-none">
-        <Box className="relative flex flex-col p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[85%] pointer-events-auto">
-          <div className="absolute self-center top-2 flex flex-col h-[15%] w-[95%]">
-            <div className="flex flex-row items-start justify-between w-full">
-              <IconButton
-                onClick={() => setState('menu')}
-                sx={{
-                  visibility: state === 'menu' ? 'hidden' : 'visible',
-                }}
-                className="z-10"
-              >
-                <ArrowBackIcon />
-              </IconButton>
-
-              <div className="flex flex-row justify-end">
-                <IconButton
-                  onClick={async () => {
-                    setState('profile');
-                  }}
-                  sx={{
-                    visibility: user && state === 'menu' ? 'visible' : 'hidden',
-                  }}
-                  className="z-10"
-                >
-                  <AccountCircleIcon />
-                </IconButton>
-                <LoadingIconButton
-                  onClick={signOut}
-                  sx={{
-                    visibility: user ? 'visible' : 'hidden',
-                  }}
-                  className="z-10"
-                >
-                  <LogoutIcon />
-                </LoadingIconButton>
-              </div>
-            </div>
-          </div>
-          {content}
-        </Box>
-      </div>
-    </div>
+    </>
   );
 }
