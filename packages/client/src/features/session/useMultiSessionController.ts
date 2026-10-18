@@ -31,6 +31,7 @@ import {
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
@@ -121,11 +122,13 @@ export function useMultiSessionController({
         throw new Error(
           'Joining session failed: session or player not initialized',
         );
-      if (!sessionChannel)
-        throw new Error('Joining session failed: connection not opened');
+      const openedChannel: SessionChannel = requireOpenedSessionChannel({
+        sessionChannel,
+        action: 'Joining session',
+      });
 
       joinAttempted.current = true;
-      const joinAck: SessionJoinAck = await sessionChannel.join({
+      const joinAck: SessionJoinAck = await openedChannel.join({
         sessionID: session.id,
         playerID,
       });
@@ -155,12 +158,6 @@ export function useMultiSessionController({
     return session;
   };
 
-  const requireSessionChannel = (action: string): SessionChannel => {
-    if (!sessionChannel)
-      throw new Error(`${action} failed: connection not opened`);
-    return sessionChannel;
-  };
-
   const requireGame = (action: string): Session => {
     const current = requireSession(action);
     if (!current.currentGame)
@@ -170,12 +167,18 @@ export function useMultiSessionController({
 
   const updateHost = async (newHostID: PlayerId) => {
     requireSession('Updating host');
-    await requireSessionChannel('Updating host').updateHost(newHostID);
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Updating host',
+    }).updateHost(newHostID);
   };
 
   const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
     const current = requireSession('Updating game config');
-    await requireSessionChannel('Updating game config').updateGameConfig({
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Updating game config',
+    }).updateGameConfig({
       ...current.gameConfig,
       ...partialGameConfig,
     });
@@ -183,17 +186,26 @@ export function useMultiSessionController({
 
   const startGame = async () => {
     requireSession('Starting game');
-    await requireSessionChannel('Starting game').startGame();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Starting game',
+    }).startGame();
   };
 
   const guess = async (playerGuess: Guess) => {
     requireGame('Guess');
-    await requireSessionChannel('Guess').guess(playerGuess);
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Guess',
+    }).guess(playerGuess);
   };
 
   const nextRound = async () => {
     requireGame('Next round');
-    await requireSessionChannel('Next round').nextRound();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Next round',
+    }).nextRound();
   };
 
   const endGame = async () => {
@@ -204,7 +216,10 @@ export function useMultiSessionController({
   const playAgain = async () => {
     const current = requireGame('Playing again');
     if (!isHostOf(current, localPlayerID)) return;
-    await requireSessionChannel('Playing again').playAgain();
+    await requireOpenedSessionChannel({
+      sessionChannel,
+      action: 'Playing again',
+    }).playAgain();
   };
 
   const exitGame = async () => {
