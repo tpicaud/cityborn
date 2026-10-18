@@ -12,8 +12,8 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text } from '@/components/ui/native/NativeComponents';
-import Guess from './components/Guess';
-import Results from './components/Results';
+import Guess from './guess/Guess';
+import Results from './Results';
 
 export const Game = ({
   localPlayerID,

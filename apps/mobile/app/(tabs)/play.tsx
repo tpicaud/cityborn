@@ -1,5 +1,5 @@
 import ScreenLayout from '@/components/ScreenLayout';
-import Play from '@/features/play/Play';
+import Play from '@/features/session/Play';
 
 export default function PlayScreen() {
   return (

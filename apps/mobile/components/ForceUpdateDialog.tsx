@@ -1,14 +1,18 @@
+import {
+  type ApiVersionInfo,
+  getApiVersionInfo,
+  isApiVersionOutdated,
+} from '@cityborn/api';
+import { type ApiVersionSupport, useApiVersionSupport } from '@cityborn/client';
 import { colors } from '@cityborn/design-system';
 import Constants from 'expo-constants';
 import { Linking, Platform } from 'react-native';
-import Button from './Button';
-import Dialog from './Dialog';
-import { Icon } from './Icon';
-import { Text, View } from './native/NativeComponents';
+import Button from '@/components/ui/Button';
+import Dialog from '@/components/ui/Dialog';
+import { Icon } from '@/components/ui/Icon';
+import { Text, View } from '@/components/ui/native/NativeComponents';
 
-type ForceUpdateDialogProps = {
-  visible: boolean;
-};
+const localApiVersionInfo: ApiVersionInfo = getApiVersionInfo();
 
 function getStoreUrl(): string {
   const storeUrls = Constants.expoConfig?.extra?.storeUrls;
@@ -19,9 +23,21 @@ function getStoreUrl(): string {
   return storeUrl;
 }
 
-function ForceUpdateDialog({ visible }: ForceUpdateDialogProps) {
+function ForceUpdateDialog() {
+  const { minSupportedApiVersion }: ApiVersionSupport = useApiVersionSupport();
+  const isForceUpdateRequired: boolean =
+    minSupportedApiVersion !== null &&
+    isApiVersionOutdated(
+      localApiVersionInfo.currentVersion,
+      minSupportedApiVersion,
+    );
+
   return (
-    <Dialog visible={visible} onClose={() => {}} className="h-auto py-8 px-6">
+    <Dialog
+      visible={isForceUpdateRequired}
+      onClose={() => {}}
+      className="h-auto py-8 px-6"
+    >
       <View className="flex justify-center items-center gap-4">
         <Icon name="alert_fill" size={40} color={colors.destructive[500]} />
         <Text className="text-lg text-center">
