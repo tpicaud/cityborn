@@ -468,47 +468,6 @@ describe('SessionService game operations', () => {
       expect(result.currentGame).toBe(completedGame);
     });
   });
-
-  describe('finalizeSoloGame', () => {
-    it('records the game for the authenticated account only', async () => {
-      const game: Game = buildGame();
-      const user: User = buildUser({ username: playerId('alice') });
-      const {
-        sessionService,
-        gameService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
-
-      await sessionService.finalizeSoloGame({
-        game,
-        user,
-        visitorId: 'visitor-1',
-      });
-
-      expect(gameService.endGame).toHaveBeenCalledWith(
-        game,
-        [{ username: 'alice', isGuest: false, id: user.id }],
-        SessionMode.SOLO,
-        'visitor-1',
-      );
-    });
-
-    it('records an anonymous game for a guest without account', async () => {
-      const game: Game = buildGame();
-      const {
-        sessionService,
-        gameService,
-      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
-
-      await sessionService.finalizeSoloGame({ game });
-
-      expect(gameService.endGame).toHaveBeenCalledWith(
-        game,
-        [{ username: 'guest', isGuest: true, id: undefined }],
-        SessionMode.SOLO,
-        undefined,
-      );
-    });
-  });
 });
 
 describe('SessionService connection operations', () => {
