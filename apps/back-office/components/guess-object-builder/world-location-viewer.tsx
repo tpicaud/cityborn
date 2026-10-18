@@ -75,8 +75,8 @@ const WorldLocationDisplay: React.FC<{
       return;
     }
 
-    const bounds = new google.maps.LatLngBounds();
-    const coords =
+    const bounds: google.maps.LatLngBounds = new google.maps.LatLngBounds();
+    const coords: [number, number][] =
       geojson.type === 'FeatureCollection'
         ? geojson.features.flatMap((f) => getCoordinates(f.geometry))
         : getCoordinates(geojson.geometry);

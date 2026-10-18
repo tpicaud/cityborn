@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, type Hash, randomUUID } from 'node:crypto';
 import {
   appendFileSync,
   closeSync,
@@ -9,6 +9,7 @@ import {
   mkdirSync,
   mkdtempSync,
   openSync,
+  type ReadStream,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -130,7 +131,7 @@ export function prepareReplacement(
   ]).split('\n');
   const assertions: string = tables
     .map((table) => {
-      const count = database('psql', [
+      const count: string = database('psql', [
         ...psqlArgs,
         '-c',
         `SELECT count(*) FROM ${table}`,
@@ -228,8 +229,8 @@ export function replaceDatabase(database: Database, replacement: string): void {
 }
 
 async function checksum(path: string): Promise<string> {
-  const hash = createHash('sha256');
-  const stream = createReadStream(path);
+  const hash: Hash = createHash('sha256');
+  const stream: ReadStream = createReadStream(path);
   stream.on('data', (chunk) => hash.update(chunk));
   await finished(stream);
   return hash.digest('hex');
@@ -266,8 +267,8 @@ function adaptSqlLine({
 }
 
 async function adaptSql(source: string, output: string): Promise<void> {
-  let pendingLine = '';
-  let platformCopy = false;
+  let pendingLine: string = '';
+  let platformCopy: boolean = false;
   const adapt = (lines: string[]): string => {
     const adapted: AdaptedSql = lines.reduce<AdaptedSql>(
       (adaptedLines, line) => {

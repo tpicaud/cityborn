@@ -16,7 +16,7 @@ function formatStatus(status: DeprecationStatus): string {
     return `  status: ✅ eligible for removal (shipped in ${status.originVersion.file})`;
   }
 
-  const extra =
+  const extra: string =
     status.versionsStillNeeded > 0
       ? `, needs ${status.versionsStillNeeded} more version(s) released`
       : '';

@@ -64,7 +64,7 @@ export class SearchService {
 
     const dbByExternalId: Map<string, GuessObjectSearchResult> = new Map(
       drafts_from_db.flatMap((draft): [string, GuessObjectSearchResult][] => {
-        const externalId = draft.source?.external_id;
+        const externalId: string | undefined = draft.source?.external_id;
         return externalId ? [[externalId, draft]] : [];
       }),
     );

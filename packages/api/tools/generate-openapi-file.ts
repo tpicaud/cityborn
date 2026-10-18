@@ -115,18 +115,25 @@ const targetVersion =
 document.info.version = `v${targetVersion}`;
 
 function createVersion(draft: boolean): void {
-  const previousDocument = latestEntry
+  const previousDocument: Record<string, unknown> | undefined = latestEntry
     ? readVersionDocument(latestEntry.file)
     : undefined;
   if (!hasDocumentChanged(previousDocument, document)) skip();
 
-  const filename = insertNewVersion(manifest, document, targetVersion, draft);
+  const filename: string = insertNewVersion(
+    manifest,
+    document,
+    targetVersion,
+    draft,
+  );
   console.log(`${draft ? 'Created draft' : 'Created'} ${filename}`);
   writeOutputs(true, filename);
 }
 
 function updateDraft(draftEntry: ManifestEntry): void {
-  const previousDocument = readVersionDocument(draftEntry.file);
+  const previousDocument: Record<string, unknown> = readVersionDocument(
+    draftEntry.file,
+  );
   if (!hasDocumentChanged(previousDocument, document)) skip();
 
   writeVersionDocument(draftEntry.file, document);
@@ -137,7 +144,9 @@ function updateDraft(draftEntry: ManifestEntry): void {
 }
 
 function releaseDraft(draftEntry: ManifestEntry): void {
-  const previousDocument = readVersionDocument(draftEntry.file);
+  const previousDocument: Record<string, unknown> = readVersionDocument(
+    draftEntry.file,
+  );
   if (hasDocumentChanged(previousDocument, document)) {
     writeVersionDocument(draftEntry.file, document);
   }
