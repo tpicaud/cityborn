@@ -1,5 +1,5 @@
 import { unwrapApiResponse } from '@cityborn/api';
-import type { ContractClient } from '../../../api/contractClient';
+import type { ContractClient } from '../../api/contractClient';
 
 export interface HealthApi {
   checkHealth(): Promise<void>;

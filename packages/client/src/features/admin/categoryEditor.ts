@@ -18,24 +18,23 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import {
+  categoriesQueryOptions,
+  fullCategoryQueryOptions,
+  markCategoriesStale,
+  removeDeletedCategory,
+} from '../../domains/category/categoryQueries';
+import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import type { AdminApi } from './api/adminApi';
-import {
-  categoriesQueryOptions,
-  fullCategoryQueryOptions,
-  guessObjectQueryOptions,
-  invalidateGuessObjects,
-  markCategoriesStale,
-  removeDeletedCategory,
-} from './api/adminQueries';
 import {
   type CategoryEditorState,
   toCategoryEditorState,
 } from './categoryEditorState';
+import { saveGuessObject } from './guessObjectSave';
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraftEditor,
@@ -77,12 +76,6 @@ type GuessObjectUpsert = {
   guessObject: GuessObject;
 };
 
-type GuessObjectDraftSave = {
-  adminApi: AdminApi;
-  guessObjectDraft: GuessObjectDraft;
-  worldLocationId: WorldLocationId;
-};
-
 const unexpectedErrorMessage: string = 'Erreur inattendue';
 
 const invalidGuessObjectMessage: string = 'Objet non valide';
@@ -106,37 +99,15 @@ function upsertGuessObject({
   );
 }
 
-function saveGuessObject({
-  adminApi,
-  guessObjectDraft,
-  worldLocationId,
-}: GuessObjectDraftSave): Promise<GuessObjectId> {
-  const {
-    id: guessObjectId,
-    world_location: _worldLocation,
-    ...guessObjectFields
-  }: GuessObjectDraft = guessObjectDraft;
-  if (!guessObjectId) {
-    return adminApi.createGuessObject({
-      ...guessObjectFields,
-      world_location_id: worldLocationId,
-    });
-  }
-  return adminApi.updateGuessObject({
-    guessObjectId,
-    guessObject: { ...guessObjectFields, world_location_id: worldLocationId },
-  });
-}
-
 export function useCategoryEditorLoad({
   categoryId,
 }: CategoryEditorLoadOptions): CategoryEditorLoad {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi }: DomainApis = useDomainApis();
   const fullCategoryQuery: UseQueryResult<FullCategory | null> = useQuery(
-    fullCategoryQueryOptions({ adminApi, categoryId }),
+    fullCategoryQueryOptions({ categoryApi, categoryId }),
   );
   const categoriesQuery: UseQueryResult<Category[]> = useQuery(
-    categoriesQueryOptions(adminApi),
+    categoriesQueryOptions(categoryApi),
   );
 
   return {
@@ -155,7 +126,7 @@ export function useCategoryEditor({
   editedCategory,
   onCategoryDeleted,
 }: CategoryEditorOptions): CategoryEditor {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi, guessObjectApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
@@ -166,7 +137,7 @@ export function useCategoryEditor({
   const sendCategoryUpdate = async (
     categoryUpdate: UpdateCategory,
   ): Promise<void> => {
-    await adminApi.updateCategory({
+    await categoryApi.updateCategory({
       categoryId: categoryUpdate.id,
       category: categoryUpdate,
     });
@@ -201,7 +172,7 @@ export function useCategoryEditor({
   ): Promise<GuessObject | null> => {
     try {
       const guessObject: GuessObject | null = await queryClient.fetchQuery(
-        guessObjectQueryOptions({ adminApi, guessObjectId }),
+        guessObjectQueryOptions({ guessObjectApi, guessObjectId }),
       );
       if (!guessObject) return null;
 
@@ -239,12 +210,20 @@ export function useCategoryEditor({
     }
 
     try {
+      const {
+        id: guessObjectId,
+        world_location: _worldLocation,
+        ...guessObjectFields
+      }: GuessObjectDraft = guessObjectDraft;
       const savedGuessObjectId: GuessObjectId = await saveGuessObject({
-        adminApi,
-        guessObjectDraft,
-        worldLocationId,
+        guessObjectApi,
+        queryClient,
+        guessObjectId,
+        guessObject: {
+          ...guessObjectFields,
+          world_location_id: worldLocationId,
+        },
       });
-      await invalidateGuessObjects(queryClient);
       await connectGuessObject(savedGuessObjectId);
       guessObjectDraftEditor.startGuessObjectCreation();
     } catch (error: unknown) {
@@ -292,7 +271,7 @@ export function useCategoryEditor({
     deleteCategory: async () => {
       setIsSaving(true);
       try {
-        await adminApi.deleteCategory(category.id);
+        await categoryApi.deleteCategory(category.id);
         await removeDeletedCategory({ queryClient, categoryId: category.id });
         onCategoryDeleted();
       } catch (error: unknown) {

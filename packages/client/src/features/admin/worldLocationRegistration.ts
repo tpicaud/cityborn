@@ -4,22 +4,22 @@ import type {
   WorldLocationId,
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
-import type { AdminApi } from './api/adminApi';
-import { invalidateSearches } from './api/adminQueries';
+import { invalidateSearches } from '../../domains/search/searchQueries';
+import type { WorldLocationApi } from '../../domains/world-location/worldLocationApi';
 
 type WorldLocationRegistration = {
-  adminApi: AdminApi;
+  worldLocationApi: WorldLocationApi;
   queryClient: QueryClient;
   worldLocation: CreateWorldLocation;
 };
 
 export async function registerWorldLocation({
-  adminApi,
+  worldLocationApi,
   queryClient,
   worldLocation,
 }: WorldLocationRegistration): Promise<WorldLocation> {
   const worldLocationId: WorldLocationId =
-    await adminApi.createWorldLocation(worldLocation);
+    await worldLocationApi.createWorldLocation(worldLocation);
   await invalidateSearches(queryClient);
   return { ...worldLocation, id: worldLocationId };
 }

@@ -14,11 +14,11 @@ import {
   useQuery,
 } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import {
   guessObjectSearchQueryOptions,
   worldLocationSearchQueryOptions,
-} from './api/adminQueries';
+} from '../../domains/search/searchQueries';
 
 type NameSearch<TSearchResult> = {
   searchResults: TSearchResult[];
@@ -96,12 +96,12 @@ function useDebouncedSearch<TSearchResult>({
 export function useGuessObjectSearch({
   searchTerm,
 }: GuessObjectSearchOptions): GuessObjectSearch {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { searchApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,
     toSearchQueryOptions: (debouncedSearchTerm: string) =>
       guessObjectSearchQueryOptions({
-        adminApi,
+        searchApi,
         searchTerm: debouncedSearchTerm,
       }),
   });
@@ -110,12 +110,12 @@ export function useGuessObjectSearch({
 export function useWorldLocationSearch({
   searchTerm,
 }: WorldLocationSearchOptions): WorldLocationSearch {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { searchApi }: DomainApis = useDomainApis();
   return useDebouncedSearch({
     searchTerm,
     toSearchQueryOptions: (debouncedSearchTerm: string) =>
       worldLocationSearchQueryOptions({
-        adminApi,
+        searchApi,
         searchTerm: debouncedSearchTerm,
       }),
   });

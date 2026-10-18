@@ -8,8 +8,8 @@ import type {
 } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { categoryTreesQueryOptions } from '../category/api/categoryQueries';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { categoryTreesQueryOptions } from '../../domains/category/categoryQueries';
 
 const noCategoryTrees: CategoryTree[] = [];
 

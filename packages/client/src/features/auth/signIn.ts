@@ -11,13 +11,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { setCurrentUser } from '../../domains/auth/authQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import { setCurrentUser } from './api/authQueries';
 import {
   type SignUpFormInput,
   SignUpFormSchema,

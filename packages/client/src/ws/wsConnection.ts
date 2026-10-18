@@ -1,6 +1,5 @@
 import { ErrorCode, isApiError } from '@cityborn/api';
 import type { SocketConnectError, SocketConnection } from './socketConnection';
-import { createWsEmit, type WsEmit } from './wsEmit';
 
 export type WsConnectionStatus =
   | 'connecting'
@@ -9,7 +8,7 @@ export type WsConnectionStatus =
   | 'closed';
 
 export type WsConnectionOptions = {
-  restoreChannels: (emit: WsEmit) => Promise<void>;
+  restoreChannels: () => Promise<void>;
   refreshAuthentication: () => Promise<void>;
   onStatusChange: (status: WsConnectionStatus) => void;
   onFailure: (error: unknown) => void;
@@ -39,7 +38,6 @@ export function superviseWsConnection(
   socket: SocketConnection,
   options: WsConnectionOptions,
 ): WsConnection {
-  const emit: WsEmit = createWsEmit(socket);
   let hasConnected = false;
   let authenticationRefreshed = false;
   let connectionGeneration = 0;
@@ -62,7 +60,7 @@ export function superviseWsConnection(
     const isCurrentConnection = (): boolean =>
       !stopped && generation === connectionGeneration;
 
-    options.restoreChannels(emit).then(
+    options.restoreChannels().then(
       () => {
         if (!isCurrentConnection()) return;
         authenticationRefreshed = false;

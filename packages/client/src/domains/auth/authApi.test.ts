@@ -6,8 +6,8 @@ import {
   ErrorCode,
   type User,
 } from '@cityborn/api';
-import type { ContractClient } from '../../../api/contractClient';
-import type { TokenStorage } from '../../../platform/tokenStorage';
+import type { ContractClient } from '../../api/contractClient';
+import type { TokenStorage } from '../../platform/tokenStorage';
 import { type AuthApi, createAuthApi, createCookieAuthApi } from './authApi';
 
 type FakeTokenStorageState = {

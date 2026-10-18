@@ -1,8 +1,8 @@
 'use client';
 
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
-import { serverReachabilityQueryOptions } from './api/healthQueries';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { serverReachabilityQueryOptions } from '../../domains/health/healthQueries';
 
 export type ServerReachability = {
   isServerUnreachable: boolean;

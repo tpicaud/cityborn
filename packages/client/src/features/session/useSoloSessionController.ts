@@ -4,14 +4,14 @@ import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
 import { PlayerIdSchema, SessionMode } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import { invalidateGameRecords } from '../../domains/game-record/gameRecordQueries';
 import type { Navigation } from '../../platform/navigation';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { invalidateGameRecords } from '../profile/api/profileQueries';
 import { reportActionErrors } from './reportedAction';
 import type { SessionController } from './sessionContract';
 import {

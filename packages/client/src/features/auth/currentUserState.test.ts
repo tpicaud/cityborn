@@ -6,8 +6,8 @@ import {
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
-import type { AuthApi } from './api/authApi';
-import { currentUserQueryOptions } from './api/authQueries';
+import type { AuthApi } from '../../domains/auth/authApi';
+import { currentUserQueryOptions } from '../../domains/auth/authQueries';
 import { type CurrentUserState, toCurrentUserState } from './currentUserState';
 
 const signedInUser: User = buildUser();

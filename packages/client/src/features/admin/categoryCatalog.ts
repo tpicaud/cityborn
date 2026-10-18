@@ -14,17 +14,17 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { type UseFormReturn, useForm } from 'react-hook-form';
-import { type DomainApis, useDomainApis } from '../../shared/apiProvider';
+import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
+import {
+  categoriesQueryOptions,
+  invalidateCategories,
+  reloadCategories,
+} from '../../domains/category/categoryQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import {
-  categoriesQueryOptions,
-  invalidateCategories,
-  reloadCategories,
-} from './api/adminQueries';
 
 export type CategoryCreationOptions = {
   onCategoryCreated: (category: Category) => void;
@@ -50,12 +50,12 @@ const categoryCreationDefaultValues: CreateCategoryInput = {
 };
 
 export function useCategoryCatalog(): CategoryCatalog {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const {
     data: categories = noCategories,
     isPending: isLoading,
-  }: UseQueryResult<Category[]> = useQuery(categoriesQueryOptions(adminApi));
+  }: UseQueryResult<Category[]> = useQuery(categoriesQueryOptions(categoryApi));
 
   return {
     categories,
@@ -67,7 +67,7 @@ export function useCategoryCatalog(): CategoryCatalog {
 export function useCategoryCreation({
   onCategoryCreated,
 }: CategoryCreationOptions): CategoryCreation {
-  const { adminApi }: DomainApis = useDomainApis();
+  const { categoryApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const form: UseFormReturn<CreateCategoryInput, undefined, CreateCategory> =
@@ -81,7 +81,7 @@ export function useCategoryCreation({
     submit: form.handleSubmit(async (category: CreateCategory) => {
       try {
         const createdCategory: Category =
-          await adminApi.createCategory(category);
+          await categoryApi.createCategory(category);
         await invalidateCategories(queryClient);
         form.reset();
         onCategoryCreated(createdCategory);
