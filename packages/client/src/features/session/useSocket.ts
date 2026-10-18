@@ -6,7 +6,6 @@ import {
   type RefObject,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -18,7 +17,6 @@ import {
 } from '../../shared/errorReporter';
 import type {
   SocketConnection,
-  SocketListenEvent,
   SocketListenEvents,
 } from '../../ws/socketConnection';
 import type { SocketFactory } from '../../ws/socketFactory';
@@ -27,15 +25,14 @@ import {
   type WsConnection,
   type WsConnectionStatus,
 } from '../../ws/wsConnection';
-import { createWsEmit, type WsEmit } from '../../ws/wsEmit';
 
 type SessionSocketOptions = {
   createSocket: SocketFactory;
-  restoreSession: (emit: WsEmit) => Promise<void>;
+  restoreSession: (socket: SocketConnection) => Promise<void>;
 };
 
 type SessionSocketCallbacks = {
-  restoreSession: (emit: WsEmit) => Promise<void>;
+  restoreSession: (socket: SocketConnection) => Promise<void>;
   refreshAuthentication: () => Promise<void>;
   reportError: (error: unknown, fallbackMessage?: string) => void;
 };
@@ -43,15 +40,7 @@ type SessionSocketCallbacks = {
 export type SessionSocket = {
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
-  emit: WsEmit;
-  on: <Name extends SocketListenEvent>(
-    event: Name,
-    listener: SocketListenEvents[Name],
-  ) => void;
-  off: <Name extends SocketListenEvent>(
-    event: Name,
-    listener: SocketListenEvents[Name],
-  ) => void;
+  socket: SocketConnection | null;
 };
 
 const CONNECTION_FAILED_MESSAGE = 'La connexion au serveur a échoué';
@@ -114,7 +103,8 @@ export function useSocket({
           const supervisedConnection: WsConnection = superviseWsConnection(
             createdSocket,
             {
-              restoreChannels: (emit) => callbacks.current.restoreSession(emit),
+              restoreChannels: () =>
+                callbacks.current.restoreSession(createdSocket),
               refreshAuthentication: () =>
                 callbacks.current.refreshAuthentication(),
               onStatusChange: setConnectionStatus,
@@ -152,27 +142,5 @@ export function useSocket({
     retryConnectionRef.current();
   }, []);
 
-  const emit: WsEmit = useMemo(() => createWsEmit(socket), [socket]);
-
-  const on = useCallback(
-    <Name extends SocketListenEvent>(
-      event: Name,
-      listener: SocketListenEvents[Name],
-    ) => {
-      socket?.on(event, listener);
-    },
-    [socket],
-  );
-
-  const off = useCallback(
-    <Name extends SocketListenEvent>(
-      event: Name,
-      listener: SocketListenEvents[Name],
-    ) => {
-      socket?.off(event, listener);
-    },
-    [socket],
-  );
-
-  return { connectionStatus, retryConnection, emit, on, off };
+  return { connectionStatus, retryConnection, socket };
 }
