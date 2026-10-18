@@ -74,30 +74,34 @@ export class SessionController {
         return { status: 200 as const, body: game };
       },
       finalizeGame: async ({ body: session }) => {
-        await this.finalizeGame(session, visitorId);
+        await this.finalizeSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };
       },
       // @deprecated kept for older mobile builds still calling this route; use finalizeGame.
       endSoloGame: async ({ body: session }) => {
-        await this.finalizeGame(session, visitorId);
+        await this.finalizeSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };
       },
     });
   }
 
-  private async finalizeGame(
-    session: Session & { currentGame: NonNullable<Session['currentGame']> },
-    visitorId?: string,
-  ): Promise<void> {
+  private async finalizeSoloGame({
+    session,
+    user,
+    visitorId,
+  }: {
+    session: Session & { currentGame: NonNullable<Session['currentGame']> };
+    user?: User;
+    visitorId?: string;
+  }): Promise<void> {
     this.wideEventService.enrichBusinessContext({
       sessionId: session.id,
       gameId: session.currentGame.id,
     });
-    await this.gameService.endGame(
-      session.currentGame,
-      session.players,
-      session.mode,
+    await this.sessionService.finalizeSoloGame({
+      game: session.currentGame,
+      user,
       visitorId,
-    );
+    });
   }
 }
