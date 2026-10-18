@@ -1,5 +1,6 @@
 'use client';
 
+import type { Navigation } from '@cityborn/client/platform';
 import {
   formatSessionCodeInput,
   type SessionLauncher,
@@ -21,7 +22,7 @@ export default function Play({
   openSignIn: () => void;
   openSignUp: () => void;
 }) {
-  const navigation = useNavigation();
+  const navigation: Navigation = useNavigation();
   const {
     joinSessionForm: {
       control,
