@@ -14,7 +14,6 @@ import {
   useSessionLauncher,
 } from '@cityborn/client/session';
 import Image from 'next/image';
-import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
 import { Controller } from 'react-hook-form';
 import { useNavigation } from '@/lib/navigation';
@@ -174,14 +173,6 @@ export default function Menu({
             <b>MULTI</b>
           </LoadingButton>
         </div>
-        <p className="w-full text-center">
-          <Link
-            href="/terms-and-policies"
-            className="text-sm text-gray-600 hover:underline text-center"
-          >
-            Politique de confidentialité
-          </Link>
-        </p>{' '}
       </div>
 
       <Dialog
