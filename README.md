@@ -95,6 +95,10 @@ Le backend applique le changement de rôle dès la requête suivante ; recharger
 back-office suffit à mettre à jour l'interface. Un compte `player` connecté au
 back-office voit un message d'accès refusé.
 
+Le dashboard propose les sections Packs et Thèmes. Les administrateurs peuvent
+créer et renommer les thèmes, consulter leur nombre de packs et supprimer les
+thèmes inutilisés ; le thème par défaut reste protégé même après renommage.
+
 ## Mobile
 
 L'application utilise des modules natifs : elle ne tourne pas dans Expo Go et nécessite un **dev build** (application `Cityborn (Dev)`) installé sur le téléphone. Le dev build n'est à réinstaller que lorsque le code natif ou les dépendances natives changent.

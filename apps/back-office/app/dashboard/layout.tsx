@@ -1,5 +1,5 @@
-import HomeButton from '@/components/home-button';
 import SwaggerButton from '@/components/swagger/swagger-button';
+import { DashboardNavigation } from '@/features/admin/dashboard-navigation';
 import { AdminAccessGuard } from '@/features/auth/admin-access-guard';
 import LogoutButton from '@/features/auth/logout-button';
 
@@ -15,7 +15,7 @@ export default function DashboardLayout({
           <div className="w-full mx-auto flex justify-between items-center h-6">
             <div className="flex items-center gap-6">
               <h1 className="text-2xl font-bold hidden sm:block">Admin</h1>
-              <HomeButton />
+              <DashboardNavigation />
             </div>
             <div className="flex items-center gap-2">
               <SwaggerButton />

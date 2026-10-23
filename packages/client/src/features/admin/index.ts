@@ -22,6 +22,10 @@ export {
   type WorldLocationSearchOptions,
 } from './search';
 export { findThemeName } from './themeName';
+export {
+  type ThemesEditor,
+  useThemesEditor,
+} from './themes-editor/useThemesEditor';
 export type { GuessObjectDraftEditor } from './useGuessObjectDraftEditor';
 export {
   type GuessObjectImport,

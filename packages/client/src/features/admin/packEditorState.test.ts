@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it, type TestContext } from 'node:test';
 import {
+  type AdminTheme,
+  buildAdminTheme,
   buildFullPack,
   buildPack,
-  buildTheme,
   type FullPack,
   type Pack,
   type PackId,
   PackIdSchema,
-  type Theme,
 } from '@cityborn/api';
 import {
   QueryClient,
@@ -35,7 +35,7 @@ type PackEditorObservation = {
 type PackEditorObservers = {
   fullPackObserver: QueryObserver<FullPack | null>;
   packsObserver: QueryObserver<Pack[]>;
-  themesObserver: QueryObserver<Theme[]>;
+  themesObserver: QueryObserver<AdminTheme[]>;
 };
 
 const editedPackId: PackId = PackIdSchema.parse('pack-1');
@@ -50,11 +50,16 @@ const packs: Pack[] = [
   buildPack({ id: editedPackId, name: 'Paris', isPublished: false }),
 ];
 
-const themes: Theme[] = [buildTheme()];
+const themes: AdminTheme[] = [buildAdminTheme()];
 
 const networkError: TypeError = new TypeError('Network request failed');
 
-const loadedThemeApi: ThemeApi = { getThemes: async () => themes };
+const loadedThemeApi: ThemeApi = {
+  getThemes: async () => themes,
+  createTheme: unexpectedCall,
+  updateTheme: unexpectedCall,
+  deleteTheme: unexpectedCall,
+};
 
 function unexpectedCall(): never {
   throw new Error('unexpected pack call');
@@ -166,6 +171,7 @@ describe('toPackEditorState', () => {
       getPacks: async () => packs,
     });
     const themeApi: ThemeApi = {
+      ...loadedThemeApi,
       getThemes: async () => {
         throw networkError;
       },
