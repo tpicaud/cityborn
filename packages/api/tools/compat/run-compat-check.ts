@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   deprecationFloor,
   isDeprecated,
@@ -13,8 +14,12 @@ import {
   CompatPolicySchema,
   ManifestSchema,
 } from '../../src/protocol/version-manifest.schema';
-import { assertOasdiffAvailable, diffBreaking } from './oasdiff-runner';
-import type { CompatReport, VersionCheckResult } from './types';
+import {
+  assertOasdiffAvailable,
+  type DiffResult,
+  diffBreaking,
+} from './oasdiff-runner';
+import type { CompatReport, ProtocolChange, VersionCheckResult } from './types';
 
 export function loadPolicy(policyFile: string): CompatPolicy {
   const raw = JSON.parse(readFileSync(policyFile, 'utf-8'));
@@ -38,14 +43,15 @@ export function loadManifest(manifestFile: string): Manifest {
   return result.data;
 }
 
-export interface RunCompatCheckOptions {
+export type RunCompatCheckOptions = {
   policyFile: string;
   manifestFile: string;
   versionsDir: string;
   currentSpecFile: string;
+  currentWsSpecFile: string;
   errIgnoreFile?: string;
   now?: Date;
-}
+};
 
 function checkUntilBreaking({
   entries,
@@ -57,13 +63,35 @@ function checkUntilBreaking({
   const [entry, ...remainingEntries] = entries;
   if (entry === undefined) return [];
 
-  const { breaking, changes } = diffBreaking(
-    `${options.versionsDir}/${entry.file}`,
-    options.currentSpecFile,
-    options.errIgnoreFile,
+  const http: DiffResult = diffBreaking({
+    baseFile: join(options.versionsDir, entry.file),
+    revisionFile: options.currentSpecFile,
+    errIgnoreFile: options.errIgnoreFile,
+  });
+  const wsFile: string = join(
+    options.versionsDir,
+    `ws-v${entry.versionNumber}.json`,
   );
-  const result: VersionCheckResult = { entry, breaking, changes };
-  if (breaking) return [result];
+  const ws: DiffResult = existsSync(wsFile)
+    ? diffBreaking({
+        baseFile: wsFile,
+        revisionFile: options.currentWsSpecFile,
+        errIgnoreFile: options.errIgnoreFile,
+      })
+    : { breaking: false, changes: [] };
+  const result: VersionCheckResult = {
+    entry,
+    breaking: http.breaking || ws.breaking,
+    changes: [
+      ...http.changes.map(
+        (change): ProtocolChange => ({ ...change, protocol: 'HTTP' }),
+      ),
+      ...ws.changes.map(
+        (change): ProtocolChange => ({ ...change, protocol: 'WS' }),
+      ),
+    ],
+  };
+  if (result.breaking) return [result];
   return [
     result,
     ...checkUntilBreaking({ entries: remainingEntries, options }),
@@ -94,5 +122,10 @@ export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
     .filter((entry) => isDeprecated(entry, floor))
     .sort((a, b) => b.versionNumber - a.versionNumber);
 
-  return { checked, brokenAt, skippedDeprecated };
+  const uncoveredWs: ManifestEntry[] = toCheck.filter(
+    (entry) =>
+      !existsSync(join(options.versionsDir, `ws-v${entry.versionNumber}.json`)),
+  );
+
+  return { checked, brokenAt, skippedDeprecated, uncoveredWs };
 }

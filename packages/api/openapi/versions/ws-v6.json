@@ -1,0 +1,1927 @@
+{
+  "openapi": "3.0.2",
+  "paths": {
+    "/ws/session/join": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "playerID": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "playerID"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reconnectToken": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/reconnect": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "playerID": {
+                    "type": "string"
+                  },
+                  "reconnectToken": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "playerID"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/updateHost": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newHostID": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "newHostID"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/updateGameConfig": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gameConfig": {
+                    "type": "object",
+                    "properties": {
+                      "packs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "isPublished": {
+                              "type": "boolean"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "parentId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "isPublished"
+                          ]
+                        }
+                      },
+                      "categories": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "isPublished": {
+                              "type": "boolean"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "parentId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "isPublished"
+                          ]
+                        }
+                      },
+                      "timer": {
+                        "type": "number"
+                      },
+                      "nbOfObjects": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "timer",
+                      "nbOfObjects",
+                      "categories"
+                    ]
+                  }
+                },
+                "required": [
+                  "gameConfig"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/startGame": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/guess": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "guess": {
+                    "type": "object",
+                    "properties": {
+                      "coordinates": {
+                        "type": "object",
+                        "properties": {
+                          "lat": {
+                            "type": "number"
+                          },
+                          "lng": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "lat",
+                          "lng"
+                        ]
+                      },
+                      "distance": {
+                        "type": "number"
+                      },
+                      "points": {
+                        "type": "number"
+                      },
+                      "win": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "coordinates",
+                      "distance",
+                      "points",
+                      "win"
+                    ]
+                  }
+                },
+                "required": [
+                  "guess"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/nextRound": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/playAgain": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_NOT_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_HAS_CHILDREN",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/session/update": {
+      "get": {
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "hostID": {
+                      "type": "string"
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "solo",
+                        "multi"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "IN_LOBBY",
+                        "IN_GAME",
+                        "FINISHED"
+                      ]
+                    },
+                    "gameConfig": {
+                      "type": "object",
+                      "properties": {
+                        "packs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "isPublished": {
+                                "type": "boolean"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "parentId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "isPublished"
+                            ]
+                          }
+                        },
+                        "categories": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "isPublished": {
+                                "type": "boolean"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "parentId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "isPublished"
+                            ]
+                          }
+                        },
+                        "timer": {
+                          "type": "number"
+                        },
+                        "nbOfObjects": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "timer",
+                        "nbOfObjects",
+                        "categories"
+                      ]
+                    },
+                    "players": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "username": {
+                            "type": "string"
+                          },
+                          "isGuest": {
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "connected": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "username",
+                          "isGuest"
+                        ]
+                      }
+                    },
+                    "currentGame": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "config": {
+                          "type": "object",
+                          "properties": {
+                            "packs": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "isPublished": {
+                                    "type": "boolean"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "parentId": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "isPublished"
+                                ]
+                              }
+                            },
+                            "categories": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "isPublished": {
+                                    "type": "boolean"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "parentId": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "isPublished"
+                                ]
+                              }
+                            },
+                            "timer": {
+                              "type": "number"
+                            },
+                            "nbOfObjects": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "timer",
+                            "nbOfObjects",
+                            "categories"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "STARTING",
+                            "IN_GAME",
+                            "IN_RESULTS",
+                            "FINISHED"
+                          ]
+                        },
+                        "state": {
+                          "type": "object",
+                          "properties": {
+                            "guessObjectsIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "results": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "results": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "guessObjectId": {
+                                          "type": "string"
+                                        },
+                                        "distance": {
+                                          "type": "number"
+                                        },
+                                        "points": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "guessObjectId",
+                                        "distance",
+                                        "points"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "results"
+                                ]
+                              }
+                            },
+                            "currentRound": {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "GUESSING",
+                                    "SHOWING_RESULTS"
+                                  ]
+                                },
+                                "guessObjectId": {
+                                  "type": "string"
+                                },
+                                "playersGuesses": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                      "coordinates": {
+                                        "type": "object",
+                                        "properties": {
+                                          "lat": {
+                                            "type": "number"
+                                          },
+                                          "lng": {
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "lat",
+                                          "lng"
+                                        ]
+                                      },
+                                      "distance": {
+                                        "type": "number"
+                                      },
+                                      "points": {
+                                        "type": "number"
+                                      },
+                                      "win": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "coordinates",
+                                      "distance",
+                                      "points",
+                                      "win"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "guessObjectId"
+                              ]
+                            },
+                            "guessObjects": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "short_description": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "object",
+                                    "properties": {
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "external_id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "provider",
+                                      "external_id"
+                                    ]
+                                  },
+                                  "world_location": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "osm_type": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "display_name": {
+                                        "type": "string"
+                                      },
+                                      "addresstype": {
+                                        "type": "string"
+                                      },
+                                      "centroid": {},
+                                      "source": {
+                                        "type": "object",
+                                        "properties": {
+                                          "provider": {
+                                            "type": "string"
+                                          },
+                                          "external_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                          }
+                                        },
+                                        "required": [
+                                          "provider"
+                                        ]
+                                      },
+                                      "geometry": {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "Point",
+                                              "Polygon",
+                                              "MultiPolygon"
+                                            ]
+                                          },
+                                          "coordinates": {
+                                            "type": "array",
+                                            "items": {
+                                              "nullable": true
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "coordinates"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "osm_type",
+                                      "name",
+                                      "display_name",
+                                      "centroid",
+                                      "source",
+                                      "geometry"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "world_location"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "guessObjectsIds",
+                            "results"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "config",
+                        "status",
+                        "state"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "hostID",
+                    "mode",
+                    "status",
+                    "gameConfig",
+                    "players"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/error": {
+      "get": {
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "USER_NOT_FOUND",
+                        "USER_USERNAME_ALREADY_EXISTS",
+                        "USER_EMAIL_ALREADY_TAKEN",
+                        "USER_NOT_VERIFIED",
+                        "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                        "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                        "USER_NO_ACCOUNT_OR_NOT_VERIFIED",
+                        "USER_INVALID_CREDENTIALS",
+                        "USER_CURRENT_PASSWORD_INCORRECT",
+                        "USER_NOT_VANILLA_ACCOUNT",
+                        "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                        "USER_REFRESH_FAILED",
+                        "USER_TOKEN_MISSING",
+                        "USER_INVALID_TOKEN",
+                        "USER_NOT_ADMIN",
+                        "PLAYER_NOT_FOUND",
+                        "CONNECTION_NOT_FOUND",
+                        "SESSION_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_FOUND",
+                        "SESSION_PLAYER_NOT_CONNECTED",
+                        "SESSION_PLAYER_ALREADY_EXISTS",
+                        "SESSION_CREATION_FAILED",
+                        "SESSION_FORBIDDEN_HOST",
+                        "SESSION_NO_CURRENT_GAME",
+                        "SESSION_ALREADY_IN_GAME",
+                        "SESSION_RECONNECT_FORBIDDEN",
+                        "GAME_END_SENTENCE_NOT_FOUND",
+                        "GAME_NO_ACTIVE_ROUND",
+                        "GAME_CREATION_FAILED",
+                        "GUESS_OBJECTS_NOT_FOUND",
+                        "GUESS_OBJECTS_GET_FAILED",
+                        "GUESS_OBJECTS_SEARCH_FAILED",
+                        "WORLD_LOCATION_SEARCH_FAILED",
+                        "WORLD_LOCATION_NOT_FOUND",
+                        "PACK_NOT_FOUND",
+                        "PACK_HAS_CHILDREN",
+                        "CATEGORY_NOT_FOUND",
+                        "THEME_NOT_FOUND",
+                        "RATE_LIMIT_EXCEEDED",
+                        "REDIS_GET_FAILED",
+                        "REDIS_SET_FAILED",
+                        "REDIS_DELETE_FAILED",
+                        "REDIS_EXPIRE_FAILED",
+                        "EMAIL_SEND_FAILED",
+                        "RESOURCE_ALREADY_EXISTS",
+                        "RESOURCE_NOT_FOUND",
+                        "BAD_REQUEST",
+                        "TOKEN_EXPIRED",
+                        "CSRF_ORIGIN_FORBIDDEN",
+                        "WS_NOT_CONNECTED",
+                        "WS_ACK_TIMEOUT",
+                        "UNKNOWN_ERROR"
+                      ]
+                    },
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "fieldErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "Cityborn WebSocket API",
+    "version": "v6"
+  }
+}

@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { z } from 'zod';
 import type { OasdiffChange } from './types';
 
 const INSTALL_HINT =
@@ -20,16 +21,31 @@ export function assertOasdiffAvailable(): void {
   }
 }
 
-export interface DiffResult {
+export type DiffResult = {
   breaking: boolean;
   changes: OasdiffChange[];
-}
+};
 
-export function diffBreaking(
-  baseFile: string,
-  revisionFile: string,
-  errIgnoreFile?: string,
-): DiffResult {
+const OasdiffChangesSchema = z.array(
+  z.object({
+    id: z.string(),
+    text: z.string(),
+    level: z.number(),
+    operation: z.string().optional(),
+    path: z.string().optional(),
+    source: z.string().optional(),
+  }),
+);
+
+export function diffBreaking({
+  baseFile,
+  revisionFile,
+  errIgnoreFile,
+}: {
+  baseFile: string;
+  revisionFile: string;
+  errIgnoreFile?: string;
+}): DiffResult {
   const result = spawnSync(
     'oasdiff',
     [
@@ -56,6 +72,8 @@ export function diffBreaking(
   }
 
   const stdout = result.stdout.trim();
-  const changes = stdout ? (JSON.parse(stdout) as OasdiffChange[]) : [];
+  const changes: OasdiffChange[] = stdout
+    ? OasdiffChangesSchema.parse(JSON.parse(stdout))
+    : [];
   return { breaking: result.status === 1, changes };
 }

@@ -32,4 +32,4 @@ Les règles valent pour les routes HTTP comme pour les events WebSocket.
 
 - Chaque élément ajouté vit dans son domaine, dans le socle s'il n'appartient à aucun, ou dans l'assemblage s'il compose les domaines.
 - `pnpm check:api-compat` passe ; un breaking change signalé et non voulu ramène à l'approche additive.
-- `check:api-compat` ignore le WebSocket : un changement d'event est vérifié par `pnpm --dir apps/backend test`, et aucun outil ne signale ses breaking changes.
+- `check:api-compat` couvre les contrats HTTP et WebSocket ; les versions sans capture WebSocket sont signalées comme non couvertes pour ce protocole.

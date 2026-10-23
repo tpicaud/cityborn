@@ -4,11 +4,11 @@ function formatChange(change: VersionCheckResult['changes'][number]): string {
   const location = change.path
     ? `${change.operation ?? ''} ${change.path}`.trim()
     : '';
-  return `    - [${change.id}]${location ? ` ${location}:` : ''} ${change.text}`;
+  return `    - [${change.protocol}] [${change.id}]${location ? ` ${location}:` : ''} ${change.text}`;
 }
 
 function changeKey(change: VersionCheckResult['changes'][number]): string {
-  return `${change.id}|${change.operation ?? ''}|${change.path ?? ''}`;
+  return `${change.protocol}|${change.id}|${change.operation ?? ''}|${change.path ?? ''}`;
 }
 
 function formatNonBreaking(report: CompatReport): string[] {
@@ -56,6 +56,13 @@ export function formatHumanSummary(report: CompatReport): string {
 
   lines.push(...formatNonBreaking(report));
   lines.push(...formatDeprecated(report));
+  if (report.uncoveredWs.length > 0) {
+    lines.push(
+      '',
+      `WS not covered (${report.uncoveredWs.length} version(s) without a WS snapshot):`,
+      ...report.uncoveredWs.map((entry) => `  - ${entry.file}`),
+    );
+  }
 
   lines.push('');
   lines.push(
