@@ -1,9 +1,10 @@
+import { extendApi } from '@anatine/zod-openapi';
 import { z } from 'zod';
-import { CategorySchema } from '../category/category.schema';
 import {
   FullGuessObjectSchema,
   GuessObjectIdSchema,
 } from '../guess-object/guess-object.schema';
+import { type Pack, PackSchema } from '../pack/pack.schema';
 import { PlayerIdSchema, PlayerResultsSchema } from '../player/player.schema';
 
 export const GameIdSchema = z.string().brand<'GameId'>();
@@ -51,11 +52,37 @@ const PlayerResultsByIdSchema = z
   .record(PlayerIdSchema, PlayerResultsSchema)
   .refine(isCompleteRecord);
 
-export const GameConfigSchema = z.object({
-  categories: z.array(CategorySchema),
+const GameConfigInputSchema = z.object({
+  packs: z.array(PackSchema).optional(),
+  /**
+   * @deprecated Utiliser `packs` à la place. Accepté et émis pour les builds
+   * mobile publiées avant le renommage de Category en Pack ; prioritaire sur
+   * `packs`, que ces builds renvoient tel qu'elles l'ont reçu.
+   * @deprecatedSince 2026-10-23
+   */
+  categories: z.array(PackSchema).optional(),
   timer: z.number(),
   nbOfObjects: z.number(),
 });
+
+export const GameConfigSchema = extendApi(
+  GameConfigInputSchema.transform(
+    ({ packs, categories, ...settings }, context) => {
+      const selectedPacks: Pack[] | undefined = categories ?? packs;
+      if (selectedPacks === undefined) {
+        context.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: z.ZodParsedType.array,
+          received: z.ZodParsedType.undefined,
+          path: ['packs'],
+        });
+        return z.NEVER;
+      }
+      return { ...settings, packs: selectedPacks, categories: selectedPacks };
+    },
+  ),
+  { required: ['categories'] },
+);
 
 export const RoundSchema = z.object({
   status: RoundStatusSchema,
@@ -85,6 +112,7 @@ export const defaultGuess: Readonly<Guess> = {
 };
 
 export const defaultGameConfig: Readonly<GameConfig> = {
+  packs: [],
   categories: [],
   timer: 25,
   nbOfObjects: 6,
@@ -93,6 +121,18 @@ export const defaultGameConfig: Readonly<GameConfig> = {
 export type Coord = z.infer<typeof CoordSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
+export type GameConfigChanges = Partial<Omit<GameConfig, 'categories'>>;
 export type Round = z.infer<typeof RoundSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;
 export type Game = z.infer<typeof GameSchema>;
+
+export function applyGameConfigChanges({
+  gameConfig,
+  changes,
+}: {
+  gameConfig: GameConfig;
+  changes: GameConfigChanges;
+}): GameConfig {
+  const packs: Pack[] = changes.packs ?? gameConfig.packs;
+  return { ...gameConfig, ...changes, packs, categories: packs };
+}

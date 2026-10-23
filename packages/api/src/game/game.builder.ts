@@ -18,7 +18,8 @@ import {
 export function buildGameConfig(
   overrides: Partial<z.input<typeof GameConfigSchema>> = {},
 ): GameConfig {
-  return GameConfigSchema.parse({ ...defaultGameConfig, ...overrides });
+  const { packs, timer, nbOfObjects }: GameConfig = defaultGameConfig;
+  return GameConfigSchema.parse({ packs, timer, nbOfObjects, ...overrides });
 }
 
 export function buildGame(

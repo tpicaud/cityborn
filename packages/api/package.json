@@ -16,6 +16,7 @@
     "test": "tsx --test 'tools/compat/**/*.test.ts' 'src/**/*.test.ts'"
   },
   "dependencies": {
+    "@anatine/zod-openapi": "^1.14.2",
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
     "openapi3-ts": "^2.0.2",

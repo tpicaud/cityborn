@@ -71,11 +71,12 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.WORLD_LOCATION_NOT_FOUND]:
     'Aucun lieu trouvé pour cet identifiant.',
 
-  // Category
+  // Pack
+  [ErrorCode.PACK_NOT_FOUND]: 'Aucun pack trouvé pour cet identifiant.',
+  [ErrorCode.PACK_HAS_CHILDREN]:
+    'Ce pack contient des sous-packs et ne peut pas être supprimé.',
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
-  [ErrorCode.CATEGORY_HAS_CHILDREN]:
-    'Cette catégorie contient des sous-catégories et ne peut pas être supprimée.',
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

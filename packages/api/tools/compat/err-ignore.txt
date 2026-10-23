@@ -17,3 +17,14 @@ POST /auth/sign-up added the pattern `^(?=.*[A-Z])(?=.*\d).+$` to the request pr
 # no client can have consumed a response these routes never produced.
 GET /guess-object/ removed the required property `items/world_location` from the response with the `200` status
 GET /guess-object/{id} removed the required property `world_location` from the response with the `200` status
+
+# 2026-10-23 — /admin/category routes renamed to /admin/pack (issue #364).
+# Only the back-office calls them, and it is deployed together with the backend: no published
+# mobile build depends on them.
+GET /admin/category/ api path removed without deprecation
+POST /admin/category/ api path removed without deprecation
+GET /admin/category/tree api path removed without deprecation
+DELETE /admin/category/{id} api path removed without deprecation
+GET /admin/category/{id} api path removed without deprecation
+PUT /admin/category/{id} api path removed without deprecation
+GET /admin/category/{id}/full api path removed without deprecation

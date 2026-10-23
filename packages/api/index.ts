@@ -1,7 +1,5 @@
 export * from './openapi/generate-openapi';
 export * from './src/auth/auth.schema';
-export * from './src/category/category.builder';
-export * from './src/category/category.schema';
 export * from './src/contract/actions';
 export * from './src/contract/api-domain';
 export * from './src/contract/api-response';
@@ -20,6 +18,8 @@ export * from './src/game-record/game-record.builder';
 export * from './src/game-record/game-record.schema';
 export * from './src/guess-object/guess-object.builder';
 export * from './src/guess-object/guess-object.schema';
+export * from './src/pack/pack.builder';
+export * from './src/pack/pack.schema';
 export * from './src/player/player.builder';
 export * from './src/player/player.schema';
 export * from './src/protocol/api-version';
