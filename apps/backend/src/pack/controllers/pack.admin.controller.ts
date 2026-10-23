@@ -1,65 +1,49 @@
-import { contract, ErrorCode } from '@cityborn/api';
-import { Controller, NotFoundException, UseGuards } from '@nestjs/common';
+import { contract } from '@cityborn/api';
+import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { AdminGuard } from '../../auth/guards/access-token.guard';
-import { AdminPackService } from '../services/pack.admin.service';
+import { PackService } from '../pack.service';
 
 @UseGuards(AdminGuard)
 @Controller()
 export class AdminPackController {
-  constructor(private readonly adminPackService: AdminPackService) {}
+  constructor(private readonly packService: PackService) {}
 
   @TsRestHandler(contract.admin.pack)
   async handler() {
     return tsRestHandler(contract.admin.pack, {
       getPackTrees: async () => ({
         status: 200 as const,
-        body: await this.adminPackService.getTrees(),
+        body: await this.packService.findTrees(),
       }),
 
-      getAllPacks: async () => {
-        return {
-          status: 200 as const,
-          body: await this.adminPackService.findAll(),
-        };
-      },
+      getAllPacks: async () => ({
+        status: 200 as const,
+        body: await this.packService.findAll(),
+      }),
 
-      getPack: async ({ params }) => {
-        const [pack] = await this.adminPackService.findBy({
-          ids: [params.id],
-        });
-        if (!pack) {
-          throw new NotFoundException({
-            code: ErrorCode.PACK_NOT_FOUND,
-            message: 'Pack not found',
-          });
-        }
-        return { status: 200 as const, body: pack };
-      },
+      getPack: async ({ params }) => ({
+        status: 200 as const,
+        body: await this.packService.findById(params.id),
+      }),
 
-      getFullPack: async ({ params }) => {
-        return {
-          status: 200 as const,
-          body: await this.adminPackService.findFullBy(params.id),
-        };
-      },
+      getFullPack: async ({ params }) => ({
+        status: 200 as const,
+        body: await this.packService.findFullById(params.id),
+      }),
 
-      createPack: async ({ body }) => {
-        return {
-          status: 201 as const,
-          body: await this.adminPackService.create(body),
-        };
-      },
+      createPack: async ({ body }) => ({
+        status: 201 as const,
+        body: await this.packService.create(body),
+      }),
 
-      updatePack: async ({ params, body }) => {
-        return {
-          status: 200 as const,
-          body: await this.adminPackService.update(params.id, body),
-        };
-      },
+      updatePack: async ({ params, body }) => ({
+        status: 200 as const,
+        body: await this.packService.update(params.id, body),
+      }),
 
       deletePack: async ({ params }) => {
-        await this.adminPackService.delete(params.id);
+        await this.packService.delete(params.id);
         return { status: 200 as const, body: {} };
       },
     });

@@ -1,13 +1,16 @@
 import type {
   CreatePack,
+  FullPack,
   GuessObject,
   GuessObjectId,
   Pack,
   PackId,
+  PackTree,
   UpdatePack,
 } from '@cityborn/api';
 import {
   buildCreatePack,
+  buildFullPack,
   buildGuessObject,
   buildPack,
   buildUpdatePack,
@@ -17,12 +20,9 @@ import {
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import type { GuessObjectService } from '../../guess-object/guess-object.service';
-import type {
-  PackFilter,
-  PackRepository,
-} from '../repositories/pack.repository';
+import type { GuessObjectService } from '../guess-object/guess-object.service';
 import { PackService } from './pack.service';
+import type { PackRepository } from './repositories/pack.repository';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -53,72 +53,138 @@ function buildPackService() {
   return { packRepository, packService, guessObjectService };
 }
 
-describe('PackService queries', () => {
-  describe('findTree', () => {
-    it('delegates tree filters', async () => {
-      const {
-        packRepository,
-        packService,
-      }: ReturnType<typeof buildPackService> = buildPackService();
-      const filter: PackFilter = { isPublished: false };
-      packRepository.findTree.mockResolvedValue([]);
+describe('PackService.findTrees', () => {
+  it('loads every pack tree', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const tree: PackTree = { ...buildPack(), children: [] };
+    packRepository.findTree.mockResolvedValue([tree]);
 
-      await packService.findTree(filter);
+    const trees: PackTree[] = await packService.findTrees();
 
-      expect(packRepository.findTree).toHaveBeenCalledWith({
-        isPublished: false,
-      });
+    expect(packRepository.findTree).toHaveBeenCalledWith({});
+    expect(trees).toEqual([tree]);
+  });
+});
+
+describe('PackService.findPublishedTrees', () => {
+  it('loads only the published pack trees', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const tree: PackTree = { ...buildPack(), children: [] };
+    packRepository.findTree.mockResolvedValue([tree]);
+
+    const trees: PackTree[] = await packService.findPublishedTrees();
+
+    expect(packRepository.findTree).toHaveBeenCalledWith({
+      isPublished: true,
     });
+    expect(trees).toEqual([tree]);
+  });
+});
+
+describe('PackService.findAll', () => {
+  it('loads every pack', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const pack: Pack = buildPack();
+    packRepository.findBy.mockResolvedValue([pack]);
+
+    const packs: Pack[] = await packService.findAll();
+
+    expect(packRepository.findBy).toHaveBeenCalledWith({});
+    expect(packs).toEqual([pack]);
+  });
+});
+
+describe('PackService.findPublished', () => {
+  it('loads only the published packs', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const pack: Pack = buildPack();
+    packRepository.findBy.mockResolvedValue([pack]);
+
+    const packs: Pack[] = await packService.findPublished();
+
+    expect(packRepository.findBy).toHaveBeenCalledWith({ isPublished: true });
+    expect(packs).toEqual([pack]);
+  });
+});
+
+describe('PackService.findById', () => {
+  it('returns the pack with this id', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const pack: Pack = buildPack();
+    packRepository.findBy.mockResolvedValue([pack]);
+
+    const foundPack: Pack = await packService.findById(pack.id);
+
+    expect(packRepository.findBy).toHaveBeenCalledWith({
+      ids: [pack.id],
+    });
+    expect(foundPack).toEqual(pack);
   });
 
-  describe('findAll', () => {
-    it('loads every pack', async () => {
-      const {
-        packRepository,
-        packService,
-      }: ReturnType<typeof buildPackService> = buildPackService();
-      const pack: Pack = buildPack();
-      packRepository.findBy.mockResolvedValue([pack]);
+  it('rejects when the pack does not exist', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    packRepository.findBy.mockResolvedValue([]);
 
-      await expect(packService.findAll()).resolves.toEqual([pack]);
-      expect(packRepository.findBy).toHaveBeenCalledWith({});
+    await expect(packService.findById(packId('missing'))).rejects.toMatchObject(
+      { response: { code: ErrorCode.PACK_NOT_FOUND } },
+    );
+  });
+});
+
+describe('PackService.findPublishedById', () => {
+  it('looks the pack up among the published packs', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const pack: Pack = buildPack();
+    packRepository.findBy.mockResolvedValue([pack]);
+
+    const foundPack: Pack = await packService.findPublishedById(pack.id);
+
+    expect(packRepository.findBy).toHaveBeenCalledWith({
+      ids: [pack.id],
+      isPublished: true,
     });
+    expect(foundPack).toEqual(pack);
   });
 
-  describe('findBy', () => {
-    it('delegates filtered queries', async () => {
-      const {
-        packRepository,
-        packService,
-      }: ReturnType<typeof buildPackService> = buildPackService();
-      const filter: PackFilter = {
-        ids: [packId('pack-1')],
-        isPublished: true,
-      };
-      packRepository.findBy.mockResolvedValue([]);
+  it('rejects when no published pack has this id', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    packRepository.findBy.mockResolvedValue([]);
 
-      await packService.findBy(filter);
+    await expect(
+      packService.findPublishedById(packId('unpublished')),
+    ).rejects.toMatchObject({ response: { code: ErrorCode.PACK_NOT_FOUND } });
+  });
+});
 
-      expect(packRepository.findBy).toHaveBeenCalledWith(filter);
-    });
+describe('PackService.findFullById', () => {
+  it('returns the pack with its guess objects', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const pack: FullPack = buildFullPack();
+    packRepository.findFullBy.mockResolvedValue([pack]);
+
+    const foundPack: FullPack = await packService.findFullById(pack.id);
+
+    expect(packRepository.findFullBy).toHaveBeenCalledWith({ ids: [pack.id] });
+    expect(foundPack).toEqual(pack);
   });
 
-  describe('findFullBy', () => {
-    it('delegates full queries', async () => {
-      const {
-        packRepository,
-        packService,
-      }: ReturnType<typeof buildPackService> = buildPackService();
-      const filter: PackFilter = {
-        ids: [packId('pack-1')],
-        isPublished: true,
-      };
-      packRepository.findFullBy.mockResolvedValue([]);
+  it('rejects when the pack does not exist', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    packRepository.findFullBy.mockResolvedValue([]);
 
-      await packService.findFullBy(filter);
-
-      expect(packRepository.findFullBy).toHaveBeenCalledWith(filter);
-    });
+    await expect(
+      packService.findFullById(packId('missing')),
+    ).rejects.toMatchObject({ response: { code: ErrorCode.PACK_NOT_FOUND } });
   });
 });
 

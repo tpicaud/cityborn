@@ -15,12 +15,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { GuessObjectService } from '../../guess-object/guess-object.service';
+import { GuessObjectService } from '../guess-object/guess-object.service';
 import {
   PACK_REPOSITORY,
-  type PackFilter,
   type PackRepository,
-} from '../repositories/pack.repository';
+} from './repositories/pack.repository';
 
 @Injectable()
 export class PackService {
@@ -30,20 +29,41 @@ export class PackService {
     private readonly guessObjectService: GuessObjectService,
   ) {}
 
-  async findTree(filter: Pick<PackFilter, 'isPublished'>): Promise<PackTree[]> {
-    return this.packRepository.findTree(filter);
+  async findTrees(): Promise<PackTree[]> {
+    return this.packRepository.findTree({});
+  }
+
+  async findPublishedTrees(): Promise<PackTree[]> {
+    return this.packRepository.findTree({ isPublished: true });
   }
 
   async findAll(): Promise<Pack[]> {
     return this.packRepository.findBy({});
   }
 
-  async findBy(filter: PackFilter): Promise<Pack[]> {
-    return this.packRepository.findBy(filter);
+  async findPublished(): Promise<Pack[]> {
+    return this.packRepository.findBy({ isPublished: true });
   }
 
-  async findFullBy(filter: PackFilter): Promise<FullPack[]> {
-    return this.packRepository.findFullBy(filter);
+  async findById(id: PackId): Promise<Pack> {
+    return this.findOne({ id });
+  }
+
+  async findPublishedById(id: PackId): Promise<Pack> {
+    return this.findOne({ id, isPublished: true });
+  }
+
+  async findFullById(id: PackId): Promise<FullPack> {
+    const [pack]: FullPack[] = await this.packRepository.findFullBy({
+      ids: [id],
+    });
+    if (!pack) {
+      throw new NotFoundException({
+        code: ErrorCode.PACK_NOT_FOUND,
+        message: `Pack with id ${id} not found`,
+      });
+    }
+    return pack;
   }
 
   async create(data: CreatePack): Promise<Pack> {
@@ -63,23 +83,16 @@ export class PackService {
     data: UpdatePack,
     disconnectIds: GuessObjectId[],
   ): Promise<Pack> {
-    const updated_pack = await this.packRepository.update(packId, data);
+    const updatedPack: Pack = await this.packRepository.update(packId, data);
     await this.deleteOrphanGuessObjects(disconnectIds);
-    return updated_pack;
+    return updatedPack;
   }
 
   @Transactional()
   async delete(id: PackId): Promise<void> {
-    const [pack] = await this.findFullBy({ ids: [id] });
+    const pack: FullPack = await this.findFullById(id);
 
-    if (!pack) {
-      throw new NotFoundException({
-        code: ErrorCode.PACK_NOT_FOUND,
-        message: `Pack with id ${id} not found`,
-      });
-    }
-
-    const childrenCount = await this.packRepository.countChildren(id);
+    const childrenCount: number = await this.packRepository.countChildren(id);
     if (childrenCount > 0) {
       throw new BadRequestException({
         code: ErrorCode.PACK_HAS_CHILDREN,
@@ -91,6 +104,26 @@ export class PackService {
     await this.deleteOrphanGuessObjects(
       pack.guessObjects.map((guessObject) => guessObject.id),
     );
+  }
+
+  private async findOne({
+    id,
+    isPublished,
+  }: {
+    id: PackId;
+    isPublished?: boolean;
+  }): Promise<Pack> {
+    const [pack]: Pack[] = await this.packRepository.findBy({
+      ids: [id],
+      isPublished,
+    });
+    if (!pack) {
+      throw new NotFoundException({
+        code: ErrorCode.PACK_NOT_FOUND,
+        message: `Pack with id ${id} not found`,
+      });
+    }
+    return pack;
   }
 
   private async deleteOrphanGuessObjects(
