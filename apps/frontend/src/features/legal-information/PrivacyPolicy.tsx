@@ -1,4 +1,4 @@
-import ContactEmail from './contact-email';
+import ContactEmail from './ContactEmail';
 
 export default function PrivacyPolicy() {
   return (

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import LegalInformation from '@/features/legal-information/legal-information';
+import LegalInformation from '@/features/legal-information/LegalInformation';
 
 export const metadata: Metadata = {
   title: 'Politiques et conditions | Cityborn',

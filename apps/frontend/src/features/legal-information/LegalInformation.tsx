@@ -1,7 +1,7 @@
 import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 import Link from 'next/link';
-import PrivacyPolicy from './privacy-policy';
-import TermsOfUse from './terms-of-use';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfUse from './TermsOfUse';
 
 export default function LegalInformation() {
   return (
