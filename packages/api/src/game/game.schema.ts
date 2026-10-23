@@ -55,9 +55,8 @@ const PlayerResultsByIdSchema = z
 const GameConfigInputSchema = z.object({
   packs: z.array(PackSchema).optional(),
   /**
-   * @deprecated Utiliser `packs` à la place. Accepté et émis pour les builds
-   * mobile publiées avant le renommage de Category en Pack ; prioritaire sur
-   * `packs`, que ces builds renvoient tel qu'elles l'ont reçu.
+   * @deprecated Utiliser `packs` à la place. Conservé pour les builds mobile
+   * publiées avant le renommage de Category en Pack.
    * @deprecatedSince 2026-10-23
    */
   categories: z.array(PackSchema).optional(),
