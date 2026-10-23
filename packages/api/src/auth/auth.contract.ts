@@ -150,6 +150,12 @@ export const authContract = c.router(
       body: UpdatePasswordSchema,
       responses: { 200: AuthResponseSchema },
     },
+    updateEmail: {
+      method: 'PATCH',
+      path: '/email',
+      body: UpdateEmailSchema,
+      responses: { 200: UserSchema },
+    },
     signOut: {
       method: 'POST',
       path: '/sign-out',

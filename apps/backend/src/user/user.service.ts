@@ -8,6 +8,7 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -111,6 +112,34 @@ export class UserService {
     await this.assertUsernameAvailable(username);
 
     return this.userRepository.updateUsername(user.id, username);
+  }
+
+  @Transactional()
+  async updateEmail(user: User, email: string): Promise<User> {
+    if (user.isVerified)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
+        message: 'A verified email cannot be changed',
+      });
+
+    if (user.email === email) return user;
+
+    const emailOwner: User | null =
+      await this.userRepository.findByEmail(email);
+    if (emailOwner)
+      throw new ConflictException({
+        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        message: 'Email already taken',
+      });
+
+    const updatedUser: User = await this.userRepository.updateEmail(
+      user.id,
+      email,
+    );
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      user.id,
+    );
+    return updatedUser;
   }
 
   @Transactional()

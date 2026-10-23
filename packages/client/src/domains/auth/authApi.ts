@@ -33,6 +33,7 @@ export interface AuthApi {
   updatePassword(data: UpdatePassword): Promise<User>;
   resendVerificationEmail(): Promise<void>;
   verifyEmail(data: VerifyEmailData): Promise<PublicUser>;
+  updateEmail(data: UpdateEmail): Promise<User>;
 }
 
 interface AuthCredentialsStrategy
@@ -100,6 +101,11 @@ function buildAuthApi(
     async verifyEmail(data) {
       return unwrapApiResponse(
         await contractClient.auth.verifyEmail({ body: data }),
+      );
+    },
+    async updateEmail(data) {
+      return unwrapApiResponse(
+        await contractClient.auth.updateEmail({ body: data }),
       );
     },
   };

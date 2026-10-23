@@ -6,6 +6,7 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdateEmail,
   type UpdatePassword,
   type User,
   type UserId,
@@ -328,6 +329,20 @@ export class AuthService {
   async resendVerificationEmail(user: User): Promise<void> {
     if (user.isVerified) return;
     await this.sendVerificationEmail(user, verificationEmailCooldown);
+  }
+
+  async updateEmail(user: User, { email }: UpdateEmail): Promise<User> {
+    const updatedUser: User = await this.userService.updateEmail(user, email);
+    if (updatedUser.email !== user.email) {
+      void this.sendVerificationEmail(updatedUser).catch((error: unknown) => {
+        this.wideEventService.recordOperationError(error, {
+          domain: 'auth',
+          operation: 'send_verification_email',
+          userId: updatedUser.id,
+        });
+      });
+    }
+    return updatedUser;
   }
 
   async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {

@@ -149,6 +149,72 @@ describe('UserService.updateUsername', () => {
   });
 });
 
+describe('UserService.updateEmail', () => {
+  it('rejects a verified account', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: true });
+
+    await expect(
+      userService.updateEmail(user, 'other@cityborn.test'),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED },
+    });
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects an address used by another account', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    userRepository.findByEmail.mockResolvedValue(
+      buildUser({ email: 'other@cityborn.test' }),
+    );
+
+    await expect(
+      userService.updateEmail(user, 'other@cityborn.test'),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
+    });
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('keeps the user when the email is unchanged', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+
+    await expect(userService.updateEmail(user, user.email)).resolves.toBe(user);
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('persists the new address and invalidates the pending verification links', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    const updatedUser: User = buildUser({
+      isVerified: false,
+      email: 'fixed@cityborn.test',
+    });
+    userRepository.findByEmail.mockResolvedValue(null);
+    userRepository.updateEmail.mockResolvedValue(updatedUser);
+
+    await expect(
+      userService.updateEmail(user, 'fixed@cityborn.test'),
+    ).resolves.toEqual(updatedUser);
+    expect(userRepository.updateEmail).toHaveBeenCalledWith(
+      user.id,
+      'fixed@cityborn.test',
+    );
+    expect(
+      emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+    ).toHaveBeenCalledWith(user.id);
+  });
+});
+
 describe('UserService.updatePassword', () => {
   it('persists the hash and returns the incremented auth version', async () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =
