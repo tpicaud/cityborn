@@ -3,10 +3,12 @@ import {
   type CreateSession,
   defaultGameConfig,
   ErrorCode,
+  type Game,
   type GameConfig,
   type Guess,
   type PlayerId,
   PlayerIdSchema,
+  type PlayerResults,
   type Session,
   type SessionId,
   SessionIdSchema,
@@ -82,24 +84,15 @@ export class SessionService {
     const { mode } = dto;
 
     const sessionID: SessionId = await this.generateUniqueSessionID();
-    const playerId = user?.username ?? PlayerIdSchema.parse('guest');
+    const soloPlayer: SessionPlayer = this.buildSoloPlayer(user);
 
     const newSession: Session = {
       id: sessionID,
-      hostID: mode === SessionMode.SOLO ? playerId : '',
+      hostID: mode === SessionMode.SOLO ? soloPlayer.username : '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
-      players:
-        mode === SessionMode.SOLO
-          ? [
-              {
-                username: playerId,
-                isGuest: !user,
-                id: user ? user.id : undefined,
-              },
-            ]
-          : [],
+      players: mode === SessionMode.SOLO ? [soloPlayer] : [],
     };
 
     if (mode === SessionMode.MULTI) await this.saveSession(newSession);
@@ -348,6 +341,34 @@ export class SessionService {
       session.currentGame = undefined;
       return finishedGameSession;
     });
+  }
+
+  async finalizeSoloGame({
+    game,
+    user,
+    visitorId,
+  }: {
+    game: Game;
+    user?: User;
+    visitorId?: string;
+  }): Promise<void> {
+    const soloPlayer: SessionPlayer = this.buildSoloPlayer(user);
+    const soloPlayerResults: PlayerResults = game.state.results[
+      soloPlayer.username
+    ] ?? { results: [] };
+    const soloGame: Game = {
+      ...game,
+      state: {
+        ...game.state,
+        results: { [soloPlayer.username]: soloPlayerResults },
+      },
+    };
+    await this.gameService.endGame(
+      soloGame,
+      [soloPlayer],
+      SessionMode.SOLO,
+      visitorId,
+    );
   }
 
   ///////////////////////
@@ -606,6 +627,14 @@ export class SessionService {
     );
     session.hostID =
       connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
+  }
+
+  private buildSoloPlayer(user?: User): SessionPlayer {
+    return {
+      username: user?.username ?? PlayerIdSchema.parse('guest'),
+      isGuest: !user,
+      id: user?.id,
+    };
   }
 
   private async generateUniqueSessionID(

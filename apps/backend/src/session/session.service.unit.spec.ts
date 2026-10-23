@@ -468,6 +468,86 @@ describe('SessionService game operations', () => {
       expect(result.currentGame).toBe(completedGame);
     });
   });
+
+  describe('finalizeSoloGame', () => {
+    it('records only the results of the authenticated player', async () => {
+      const user: User = buildUser({ username: playerId('alice') });
+      const game: Game = buildGame({
+        state: {
+          guessObjectsIds: ['guess-1'],
+          results: {
+            alice: {
+              results: [{ guessObjectId: 'guess-1', distance: 10, points: 80 }],
+            },
+            target: {
+              results: [{ guessObjectId: 'guess-1', distance: 0, points: 100 }],
+            },
+          },
+        },
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+
+      await sessionService.finalizeSoloGame({
+        game,
+        user,
+        visitorId: 'visitor-1',
+      });
+
+      expect(gameService.endGame).toHaveBeenCalledWith(
+        {
+          ...game,
+          state: {
+            guessObjectsIds: ['guess-1'],
+            results: {
+              alice: {
+                results: [
+                  { guessObjectId: 'guess-1', distance: 10, points: 80 },
+                ],
+              },
+            },
+          },
+        },
+        [{ username: 'alice', isGuest: false, id: user.id }],
+        SessionMode.SOLO,
+        'visitor-1',
+      );
+    });
+
+    it('records empty results for a guest whose results are missing', async () => {
+      const game: Game = buildGame({
+        state: {
+          guessObjectsIds: ['guess-1'],
+          results: {
+            target: {
+              results: [{ guessObjectId: 'guess-1', distance: 0, points: 100 }],
+            },
+          },
+        },
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+
+      await sessionService.finalizeSoloGame({ game });
+
+      expect(gameService.endGame).toHaveBeenCalledWith(
+        {
+          ...game,
+          state: {
+            guessObjectsIds: ['guess-1'],
+            results: { guest: { results: [] } },
+          },
+        },
+        [{ username: 'guest', isGuest: true, id: undefined }],
+        SessionMode.SOLO,
+        undefined,
+      );
+    });
+  });
 });
 
 describe('SessionService connection operations', () => {
