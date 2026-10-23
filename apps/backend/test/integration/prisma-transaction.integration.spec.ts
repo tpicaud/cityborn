@@ -51,10 +51,15 @@ import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme
 import { THEME_REPOSITORY } from '../../src/theme/repositories/theme.repository';
 import { ThemeService } from '../../src/theme/theme.service';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
+import { PASSWORD_RESET_TOKEN_REPOSITORY } from '../../src/user/repositories/password-reset-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
+import { PrismaPasswordResetTokenRepository } from '../../src/user/repositories/prisma-password-reset-token.repository';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import { USER_REPOSITORY } from '../../src/user/repositories/user.repository';
-import { UserService } from '../../src/user/user.service';
+import {
+  type PasswordResetGrant,
+  UserService,
+} from '../../src/user/user.service';
 import { PrismaWorldLocationRepository } from '../../src/world-location/repositories/prisma-world-location.repository';
 import { WORLD_LOCATION_REPOSITORY } from '../../src/world-location/repositories/world-location.repository';
 import { WorldLocationService } from '../../src/world-location/world-location.service';
@@ -71,6 +76,7 @@ describe('Prisma transactions', () => {
   let guessObjectRepository: PrismaGuessObjectRepository;
   let worldLocationRepository: PrismaWorldLocationRepository;
   let tokenRepository: PrismaEmailVerificationTokenRepository;
+  let passwordResetTokenRepository: PrismaPasswordResetTokenRepository;
   let userRepository: PrismaUserRepository;
   let userService: UserService;
   let passwordResetService: PasswordResetService;
@@ -122,6 +128,10 @@ describe('Prisma transactions', () => {
           provide: EMAIL_VERIFICATION_TOKEN_REPOSITORY,
           useClass: PrismaEmailVerificationTokenRepository,
         },
+        {
+          provide: PASSWORD_RESET_TOKEN_REPOSITORY,
+          useClass: PrismaPasswordResetTokenRepository,
+        },
         { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
       ],
     }).compile();
@@ -131,6 +141,7 @@ describe('Prisma transactions', () => {
     guessObjectRepository = module.get(GUESS_OBJECT_REPOSITORY);
     worldLocationRepository = module.get(WORLD_LOCATION_REPOSITORY);
     tokenRepository = module.get(EMAIL_VERIFICATION_TOKEN_REPOSITORY);
+    passwordResetTokenRepository = module.get(PASSWORD_RESET_TOKEN_REPOSITORY);
     userRepository = module.get(USER_REPOSITORY);
     userService = module.get(UserService);
     passwordResetService = module.get(PasswordResetService);
@@ -351,6 +362,42 @@ describe('Prisma transactions', () => {
           await prisma.emailVerificationToken.count({
             where: { userId: user.id },
           }),
+        ).toBe(1);
+      });
+    });
+
+    describe('resetPassword', () => {
+      it('keeps the previous password and the reset link when token cleanup fails', async () => {
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          password: 'previous-hash',
+          isVerified: userData.isVerified,
+        });
+        const { passwordResetToken }: PasswordResetGrant =
+          await userService.createPasswordResetToken(user.id);
+        jest
+          .spyOn(passwordResetTokenRepository, 'deleteByUserId')
+          .mockRejectedValueOnce(new Error('token cleanup failed'));
+
+        await expect(
+          userService.resetPassword({
+            passwordResetToken,
+            passwordHash: 'new-hash',
+          }),
+        ).rejects.toThrow('token cleanup failed');
+
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({
+          password: 'previous-hash',
+          isVerified: false,
+          authVersion: 0,
+        });
+        expect(
+          await prisma.passwordResetToken.count({ where: { userId: user.id } }),
         ).toBe(1);
       });
     });
