@@ -15,27 +15,20 @@ import {
   buildUser,
   buildWorldLocation,
   CreateWorldLocationSchema,
-  ErrorCode,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { CATEGORY_REPOSITORY } from '../../src/category/repositories/category.repository';
 import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
 import { CategoryService } from '../../src/category/services/category.service';
-import type { AuthSession } from '../../src/common/types/auth-session';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
-import { PASSWORD_RESET_TOKEN_REPOSITORY } from '../../src/user/repositories/password-reset-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
-import { PrismaPasswordResetTokenRepository } from '../../src/user/repositories/prisma-password-reset-token.repository';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
 import { USER_REPOSITORY } from '../../src/user/repositories/user.repository';
-import {
-  type PasswordResetGrant,
-  UserService,
-} from '../../src/user/user.service';
+import { UserService } from '../../src/user/user.service';
 import { PrismaWorldLocationRepository } from '../../src/world-location/repositories/prisma-world-location.repository';
 import { WORLD_LOCATION_REPOSITORY } from '../../src/world-location/repositories/world-location.repository';
 import { WorldLocationService } from '../../src/world-location/world-location.service';
@@ -51,7 +44,6 @@ describe('Prisma transactions', () => {
   let guessObjectRepository: PrismaGuessObjectRepository;
   let worldLocationRepository: PrismaWorldLocationRepository;
   let tokenRepository: PrismaEmailVerificationTokenRepository;
-  let passwordResetTokenRepository: PrismaPasswordResetTokenRepository;
   let userRepository: PrismaUserRepository;
   let userService: UserService;
 
@@ -76,10 +68,6 @@ describe('Prisma transactions', () => {
           provide: EMAIL_VERIFICATION_TOKEN_REPOSITORY,
           useClass: PrismaEmailVerificationTokenRepository,
         },
-        {
-          provide: PASSWORD_RESET_TOKEN_REPOSITORY,
-          useClass: PrismaPasswordResetTokenRepository,
-        },
         { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
       ],
     }).compile();
@@ -89,7 +77,6 @@ describe('Prisma transactions', () => {
     guessObjectRepository = module.get(GUESS_OBJECT_REPOSITORY);
     worldLocationRepository = module.get(WORLD_LOCATION_REPOSITORY);
     tokenRepository = module.get(EMAIL_VERIFICATION_TOKEN_REPOSITORY);
-    passwordResetTokenRepository = module.get(PASSWORD_RESET_TOKEN_REPOSITORY);
     userRepository = module.get(USER_REPOSITORY);
     userService = module.get(UserService);
   });
@@ -186,80 +173,6 @@ describe('Prisma transactions', () => {
             where: { userId: user.id },
           }),
         ).toBe(1);
-      });
-    });
-
-    describe('resetPassword', () => {
-      it('keeps the previous password and the reset link when token cleanup fails', async () => {
-        const userData: User = buildUser({ isVerified: false });
-        const user: User = await userRepository.create({
-          email: userData.email,
-          username: userData.username,
-          type: 'email',
-          password: 'previous-hash',
-          isVerified: userData.isVerified,
-        });
-        const { passwordResetToken }: PasswordResetGrant =
-          await userService.createPasswordResetToken(user.id);
-        jest
-          .spyOn(passwordResetTokenRepository, 'deleteByUserId')
-          .mockRejectedValueOnce(new Error('token cleanup failed'));
-
-        await expect(
-          userService.resetPassword({
-            passwordResetToken,
-            passwordHash: 'new-hash',
-          }),
-        ).rejects.toThrow('token cleanup failed');
-
-        expect(
-          await prisma.user.findUnique({ where: { id: user.id } }),
-        ).toMatchObject({
-          password: 'previous-hash',
-          isVerified: false,
-          authVersion: 0,
-        });
-        expect(
-          await prisma.passwordResetToken.count({ where: { userId: user.id } }),
-        ).toBe(1);
-      });
-
-      it('lets only one of two concurrent resets use the same link', async () => {
-        const userData: User = buildUser({ isVerified: false });
-        const user: User = await userRepository.create({
-          email: userData.email,
-          username: userData.username,
-          type: 'email',
-          password: 'previous-hash',
-          isVerified: userData.isVerified,
-        });
-        const { passwordResetToken }: PasswordResetGrant =
-          await userService.createPasswordResetToken(user.id);
-
-        const results: PromiseSettledResult<AuthSession>[] =
-          await Promise.allSettled(
-            ['first-hash', 'second-hash'].map((passwordHash: string) =>
-              userService.resetPassword({ passwordResetToken, passwordHash }),
-            ),
-          );
-
-        expect(
-          results.filter(
-            (result: PromiseSettledResult<AuthSession>) =>
-              result.status === 'fulfilled',
-          ),
-        ).toHaveLength(1);
-        expect(results).toContainEqual({
-          status: 'rejected',
-          reason: expect.objectContaining({
-            response: expect.objectContaining({
-              code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
-            }),
-          }),
-        });
-        expect(
-          await prisma.user.findUnique({ where: { id: user.id } }),
-        ).toMatchObject({ authVersion: 1 });
       });
     });
   });

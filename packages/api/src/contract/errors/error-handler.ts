@@ -34,8 +34,6 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON]:
     'Veuillez patienter 3 minutes avant de demander un nouveau mail de vérification.',
   [ErrorCode.USER_NOT_ADMIN]: 'Accès réservé aux administrateurs.',
-  [ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN]:
-    'Le lien de réinitialisation a expiré ou est invalide.',
 
   // Player
   [ErrorCode.PLAYER_NOT_FOUND]: "Le joueur n'existe pas.",

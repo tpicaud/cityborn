@@ -3,8 +3,6 @@ import {
   type CreateUser,
   ErrorCode,
   type PublicUser,
-  type RequestPasswordReset,
-  type ResetPassword,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
@@ -38,7 +36,7 @@ import type {
   UnverifiedAccountReclaim,
   UserCredentials,
 } from '../../user/repositories/user.repository';
-import { type PasswordResetGrant, UserService } from '../../user/user.service';
+import { UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
   type AppleIdentity,
@@ -100,15 +98,7 @@ export class AuthService {
 
     const existingUser: User | null = await this.userService.findByEmail(email);
     if (existingUser) {
-      this.sendMailInBackground({
-        operation: 'send_existing_account_email',
-        userId: existingUser.id,
-        mailOptions: buildMailOptions('existing-account-email', {
-          email: existingUser.email,
-          frontendUrl: this.httpConfig.frontendUrl,
-          username: existingUser.username,
-        }),
-      });
+      this.sendExistingAccountEmailInBackground(existingUser);
       return;
     }
 
@@ -336,48 +326,6 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async requestPasswordReset({
-    email,
-    clientIp,
-  }: RequestPasswordReset & { clientIp: string }): Promise<void> {
-    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
-
-    const user: User | null = await this.userService.findByEmail(email);
-    if (!user) return;
-
-    const { passwordResetToken, validityMinutes }: PasswordResetGrant =
-      await this.userService.createPasswordResetToken(user.id);
-    this.sendMailInBackground({
-      operation: 'send_password_reset_email',
-      userId: user.id,
-      mailOptions: buildMailOptions('password-reset-email', {
-        email: user.email,
-        frontendUrl: this.httpConfig.frontendUrl,
-        passwordResetToken,
-        username: user.username,
-        validityMinutes,
-      }),
-    });
-  }
-
-  async resetPassword({
-    passwordResetToken,
-    newPassword,
-  }: ResetPassword): Promise<void> {
-    const passwordHash: string = await bcrypt.hash(newPassword, 10);
-    const { user, authVersion }: AuthSession =
-      await this.userService.resetPassword({
-        passwordResetToken,
-        passwordHash,
-      });
-
-    this.authenticatedSocketService.disconnectOlderSessions(
-      user.id,
-      authVersion,
-    );
-    await this.rateLimitService.clearFailedSignIns(user.id);
-  }
-
   async updateEmail({
     user,
     email,
@@ -461,20 +409,20 @@ export class AuthService {
     });
   }
 
-  private sendMailInBackground({
-    operation,
-    userId,
-    mailOptions,
-  }: {
-    operation: string;
-    userId: UserId;
-    mailOptions: SendMailOptions;
-  }): void {
+  private sendExistingAccountEmailInBackground(user: User): void {
+    const mailOptions: SendMailOptions = buildMailOptions(
+      'existing-account-email',
+      {
+        email: user.email,
+        frontendUrl: this.httpConfig.frontendUrl,
+        username: user.username,
+      },
+    );
     void this.mailService.sendMail(mailOptions).catch((error: unknown) => {
       this.wideEventService.recordOperationError(error, {
         domain: 'auth',
-        operation,
-        userId,
+        operation: 'send_existing_account_email',
+        userId: user.id,
       });
     });
   }

@@ -69,7 +69,6 @@ function RootLayoutContent() {
               />
               <Stack.Screen name="auth/sign-in" />
               <Stack.Screen name="auth/sign-up" />
-              <Stack.Screen name="auth/forgot-password" />
               <Stack.Screen name="session/solo" />
               <Stack.Screen name="session/multi/[sessionID]" />
             </Stack>
