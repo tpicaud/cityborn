@@ -13,7 +13,7 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Teste toutes les branches de `SessionService.updateHost`. » | `conventions-testing` |
 | « Ajoute un test pour `mergeSessionUpdate` dans `@cityborn/client`. » | `conventions-testing` |
 | « Ajoute à `@cityborn/client` le chargement du classement. » | `conventions-client` |
-| « Signale « Objet non valide » quand le brouillon de l'éditeur de catégorie est vide. » | `conventions-client` |
+| « Signale « Objet non valide » quand le brouillon de l'éditeur de pack est vide. » | `conventions-client` |
 | « Ajoute l'écran de classement au frontend et au mobile. » | `conventions-client-apps`, `conventions-client` |
 | « Ajoute au frontend une page publique `/player/<username>`. » | `conventions-client-apps` |
 | « Ajoute la variable `SENTRY_DSN` au backend. » | `conventions-environment` |

@@ -53,7 +53,7 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 | Axe | Définition | Exemples |
 |---|---|---|
-| domaine métier | Une notion métier avec ses règles et ses données. | `user`, `category`, `session` |
+| domaine métier | Une notion métier avec ses règles et ses données. | `user`, `pack`, `session` |
 | feature | Un parcours produit, composé de domaines. | `play`, `profile`, `admin` |
 | socle technique | Ce qui ne connaît aucun domaine ni feature. | protocole HTTP, persistance, ports plateforme |
 

@@ -147,7 +147,7 @@ En cas d'erreur, consulter le chemin local `error.log` affiché. Il peut conteni
 
 ## 5. Vérifier et reprendre
 
-Redémarrer la version compatible du backend pour les vérifications, en gardant l'accès des utilisateurs et les workers suspendus. Vérifier la connexion avec un compte existant, le chargement des catégories et lieux, puis le déroulement et l'enregistrement d'une partie de test. Contrôler les logs du backend.
+Redémarrer la version compatible du backend pour les vérifications, en gardant l'accès des utilisateurs et les workers suspendus. Vérifier la connexion avec un compte existant, le chargement des packs et lieux, puis le déroulement et l'enregistrement d'une partie de test. Contrôler les logs du backend.
 
 Si les vérifications réussissent, rouvrir les accès et reprendre les workers. Consigner la date, la cible, le nom et le SHA-256 du backup, le résultat des contrôles et l'emplacement de la sauvegarde de sécurité. Conserver cette dernière selon la politique de rétention de l'équipe ; le script ne la supprime jamais.
 

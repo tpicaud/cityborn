@@ -1,12 +1,13 @@
 import { initContract } from '@ts-rest/core';
 import { authContract } from '../auth/auth.contract';
-import { categoryAdminContract } from '../category/category.admin.contract';
-import { categoryContract } from '../category/category.contract';
 import { gameRecordContract } from '../game-record/game-record.contract';
 import { deprecatedUserGameRecordContract } from '../game-record/game-record.deprecated.contract';
 import { guessObjectAdminContract } from '../guess-object/guess-object.admin.contract';
 import { guessObjectContract } from '../guess-object/guess-object.contract';
 import { healthContract } from '../health/health.contract';
+import { packAdminContract } from '../pack/pack.admin.contract';
+import { packContract } from '../pack/pack.contract';
+import { deprecatedCategoryContract } from '../pack/pack.deprecated.contract';
 import { searchAdminContract } from '../search/search.admin.contract';
 import { sentenceContract } from '../sentence/sentence.contract';
 import { sessionContract } from '../session/session.contract';
@@ -31,14 +32,15 @@ const publicRouters = {
   user: { ...deprecatedUserGameRecordContract, ...userContract },
   gameRecord: gameRecordContract,
   session: sessionContract,
-  category: categoryContract,
+  category: deprecatedCategoryContract,
+  pack: packContract,
   guessObjects: guessObjectContract,
   sentence: sentenceContract,
 } satisfies ApiDomainRouters;
 
 const adminRouters = {
-  category: categoryAdminContract,
   guessObjects: guessObjectAdminContract,
+  pack: packAdminContract,
   search: searchAdminContract,
   worldLocation: worldLocationAdminContract,
 } satisfies ApiDomainRouters;

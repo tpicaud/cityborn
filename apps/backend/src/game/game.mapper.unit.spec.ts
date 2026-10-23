@@ -8,7 +8,7 @@ describe('GameMapper.toGameRecord', () => {
     const prismaGameRecord: PrismaGameRecord = {
       id: '00000000-0000-4000-8000-000000000040',
       mode: 'solo',
-      gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
+      gameConfig: { packs: [], timer: 25, nbOfObjects: 6 },
       players: [],
       guessObjectsIds: [],
       results: {},
@@ -39,7 +39,7 @@ describe('GameMapper.toGameRecord', () => {
     const prismaGameRecord: PrismaGameRecord = {
       id: '00000000-0000-4000-8000-000000000040',
       mode: 'solo',
-      gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
+      gameConfig: { packs: [], timer: 25, nbOfObjects: 6 },
       players: [],
       guessObjectsIds: [],
       results: {},

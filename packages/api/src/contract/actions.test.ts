@@ -31,13 +31,6 @@ describe('httpActionRoutes', () => {
       .sort();
 
     assert.deepEqual(actions, [
-      'admin.category.createCategory',
-      'admin.category.deleteCategory',
-      'admin.category.getAllCategories',
-      'admin.category.getCategory',
-      'admin.category.getCategoryTrees',
-      'admin.category.getFullCategory',
-      'admin.category.updateCategory',
       'admin.guess-object.createGuessObject',
       'admin.guess-object.deleteGuessObject',
       'admin.guess-object.getFullGuessObject',
@@ -45,6 +38,13 @@ describe('httpActionRoutes', () => {
       'admin.guess-object.getGuessObject',
       'admin.guess-object.getGuessObjects',
       'admin.guess-object.updateGuessObject',
+      'admin.pack.createPack',
+      'admin.pack.deletePack',
+      'admin.pack.getAllPacks',
+      'admin.pack.getFullPack',
+      'admin.pack.getPack',
+      'admin.pack.getPackTrees',
+      'admin.pack.updatePack',
       'admin.search.searchGuessObject',
       'admin.search.searchWorldLocation',
       'admin.world-location.createWorldLocation',
@@ -73,6 +73,9 @@ describe('httpActionRoutes', () => {
       'guess-object.getGuessObject',
       'guess-object.getGuessObjects',
       'health.check',
+      'pack.getPack',
+      'pack.getPackTrees',
+      'pack.getPacks',
       'sentence.getSentence',
       'session.createGame',
       'session.createSession',
@@ -147,10 +150,10 @@ describe('resolveHttpAction', () => {
   it('resolves a static path that a parameterized route could match', () => {
     const action: HttpAction | undefined = resolveHttpAction(
       'GET',
-      '/admin/category/tree',
+      '/admin/pack/tree',
     );
 
-    assert.equal(action, 'admin.category.getCategoryTrees');
+    assert.equal(action, 'admin.pack.getPackTrees');
   });
 
   it('prefixes nested router keys below the domain', () => {

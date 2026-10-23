@@ -12,15 +12,15 @@ export {
   sortPlayersConnectedFirst,
 } from './sessionPlayers';
 export {
-  type CategorySelection,
-  type CategorySelectionOptions,
-  useCategorySelection,
-} from './useCategorySelection';
-export {
   type MultiSessionController,
   type MultiSessionControllerOptions,
   useMultiSessionController,
 } from './useMultiSessionController';
+export {
+  type PackSelection,
+  type PackSelectionOptions,
+  usePackSelection,
+} from './usePackSelection';
 export {
   type SoloSessionController,
   type SoloSessionControllerOptions,

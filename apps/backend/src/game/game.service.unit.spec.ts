@@ -85,7 +85,7 @@ describe('GameService.createGame', () => {
       visitorId: 'visitor-1',
       properties: {
         mode: SessionMode.MULTI,
-        categories: [],
+        packs: [],
         numberOfPlayers: 1,
       },
     });

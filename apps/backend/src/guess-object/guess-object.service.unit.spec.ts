@@ -1,26 +1,26 @@
 import type {
-  Category,
   CreateGuessObject,
   FullGuessObject,
   GameConfig,
   GuessObject,
   GuessObjectDraft,
   GuessObjectId,
+  Pack,
   WorldLocationId,
 } from '@cityborn/api';
 import {
-  buildCategory,
   buildFullGuessObject,
   buildGameConfig,
   buildGuessObject,
   buildGuessObjectDraft,
+  buildPack,
   ErrorCode,
   GuessObjectIdSchema,
   WorldLocationIdSchema,
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import type { CategoryRepository } from '../category/repositories/category.repository';
+import type { PackRepository } from '../pack/repositories/pack.repository';
 import type { WorldLocationService } from '../world-location/world-location.service';
 import { GuessObjectService } from './guess-object.service';
 import type {
@@ -47,20 +47,20 @@ const worldLocationId: (value: string) => WorldLocationId = (value: string) =>
 function buildGuessObjectService() {
   const guessObjectRepository: DeepMocked<GuessObjectRepository> =
     createMock<GuessObjectRepository>();
-  const categoryRepository: DeepMocked<CategoryRepository> =
-    createMock<CategoryRepository>();
+  const packRepository: DeepMocked<PackRepository> =
+    createMock<PackRepository>();
   const worldLocationService: DeepMocked<WorldLocationService> =
     createMock<WorldLocationService>();
   const guessObjectService: GuessObjectService = new GuessObjectService(
     guessObjectRepository,
-    categoryRepository,
+    packRepository,
     worldLocationService,
   );
 
   return {
     guessObjectService,
     guessObjectRepository,
-    categoryRepository,
+    packRepository,
     worldLocationService,
   };
 }
@@ -86,7 +86,7 @@ describe('GuessObjectService queries', () => {
   });
 
   describe('findShuffledGuessObjectsByGameConfig', () => {
-    it('filters configured categories and limits shuffled results', async () => {
+    it('filters configured packs and limits shuffled results', async () => {
       const {
         guessObjectService,
         guessObjectRepository,
@@ -97,9 +97,9 @@ describe('GuessObjectService queries', () => {
       ];
       guessObjectRepository.findFullBy.mockResolvedValue(objects);
       jest.spyOn(Math, 'random').mockReturnValue(0.5);
-      const category: Category = buildCategory();
+      const pack: Pack = buildPack();
       const gameConfig: GameConfig = buildGameConfig({
-        categories: [category],
+        packs: [pack],
         nbOfObjects: 1,
       });
 
@@ -109,7 +109,7 @@ describe('GuessObjectService queries', () => {
         );
 
       expect(guessObjectRepository.findFullBy).toHaveBeenCalledWith({
-        categoryIds: [category.id],
+        packIds: [pack.id],
       });
       expect(result).toHaveLength(1);
     });
@@ -191,15 +191,15 @@ describe('GuessObjectService.delete', () => {
     });
   });
 
-  it('rejects an object assigned to a category', async () => {
+  it('rejects an object assigned to a pack', async () => {
     const {
       guessObjectService,
       guessObjectRepository,
-      categoryRepository,
+      packRepository,
     }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
     const guessObject: GuessObject = buildGuessObject();
     guessObjectRepository.findBy.mockResolvedValue([guessObject]);
-    categoryRepository.countByGuessObjectId.mockResolvedValue(1);
+    packRepository.countByGuessObjectId.mockResolvedValue(1);
 
     await expect(
       guessObjectService.delete(guessObjectId('guess-1')),
@@ -210,12 +210,12 @@ describe('GuessObjectService.delete', () => {
     const {
       guessObjectService,
       guessObjectRepository,
-      categoryRepository,
+      packRepository,
       worldLocationService,
     }: ReturnType<typeof buildGuessObjectService> = buildGuessObjectService();
     const guessObject: GuessObject = buildGuessObject();
     guessObjectRepository.findBy.mockResolvedValue([guessObject]);
-    categoryRepository.countByGuessObjectId.mockResolvedValue(0);
+    packRepository.countByGuessObjectId.mockResolvedValue(0);
     guessObjectRepository.countByWorldLocationId.mockResolvedValue(0);
 
     await guessObjectService.delete(guessObject.id);

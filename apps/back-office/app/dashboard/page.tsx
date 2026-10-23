@@ -1,5 +1,5 @@
-import { CategoriesEditor } from '@/features/admin/categories-editor/categories-editor';
+import { PacksEditor } from '@/features/admin/packs-editor/packs-editor';
 
 export default function Dashboard() {
-  return <CategoriesEditor />;
+  return <PacksEditor />;
 }

@@ -667,6 +667,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@anatine/zod-openapi':
+        specifier: ^1.14.2
+        version: 1.14.2(openapi3-ts@2.0.2)(zod@3.25.76)
       '@ts-rest/core':
         specifier: ^3.52.1
         version: 3.52.1(@types/node@26.1.2)(zod@3.25.76)

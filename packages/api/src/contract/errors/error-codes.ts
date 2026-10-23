@@ -1,8 +1,8 @@
 import { AuthErrorCode } from '../../auth/auth.error-codes';
-import { CategoryErrorCode } from '../../category/category.error-codes';
 import { TechnicalErrorCode } from '../../errors/technical.error-codes';
 import { GameErrorCode } from '../../game/game.error-codes';
 import { GuessObjectErrorCode } from '../../guess-object/guess-object.error-codes';
+import { PackErrorCode } from '../../pack/pack.error-codes';
 import { PlayerErrorCode } from '../../player/player.error-codes';
 import { SentenceErrorCode } from '../../sentence/sentence.error-codes';
 import { SessionErrorCode } from '../../session/session.error-codes';
@@ -18,7 +18,7 @@ export const ErrorCode = Object.freeze({
   ...GameErrorCode,
   ...GuessObjectErrorCode,
   ...WorldLocationErrorCode,
-  ...CategoryErrorCode,
+  ...PackErrorCode,
   ...TechnicalErrorCode,
 });
 

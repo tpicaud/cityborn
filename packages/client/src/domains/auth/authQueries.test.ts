@@ -16,9 +16,9 @@ const signedInUserGameRecordsQueryKey: QueryKey = [
   'gameRecords',
 ];
 
-const categoryTreesQueryKey: QueryKey = ['category', 'trees'];
+const packTreesQueryKey: QueryKey = ['pack', 'trees'];
 
-const adminCategoryListQueryKey: QueryKey = ['admin', 'categories', 'list'];
+const adminPackListQueryKey: QueryKey = ['admin', 'packs', 'list'];
 
 function unexpectedCall(): never {
   throw new Error('unexpected auth call');
@@ -46,8 +46,8 @@ describe('clearCacheAfterSignOut', () => {
     context.after(() => queryClient.clear());
     await queryClient.query(currentUserQueryOptions(authApi));
     queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
-    queryClient.setQueryData<string[]>(categoryTreesQueryKey, ['cities']);
-    queryClient.setQueryData<string[]>(adminCategoryListQueryKey, ['draft']);
+    queryClient.setQueryData<string[]>(packTreesQueryKey, ['cities']);
+    queryClient.setQueryData<string[]>(adminPackListQueryKey, ['draft']);
 
     await clearCacheAfterSignOut(queryClient);
 

@@ -43,8 +43,8 @@ export class PrismaGuessObjectRepository implements GuessObjectRepository {
         ...(filter.external_id && {
           source: { path: ['external_id'], equals: filter.external_id },
         }),
-        ...(filter.categoryIds?.length && {
-          categories: { some: { id: { in: filter.categoryIds } } },
+        ...(filter.packIds?.length && {
+          packs: { some: { id: { in: filter.packIds } } },
         }),
       },
       include: { world_location: { include: { geometry: true } } },

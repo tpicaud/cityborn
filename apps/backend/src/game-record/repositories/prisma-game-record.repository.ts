@@ -1,4 +1,9 @@
-import type { CreateGameRecord, GameRecord, UserId } from '@cityborn/api';
+import type {
+  CreateGameRecord,
+  GameConfig,
+  GameRecord,
+  UserId,
+} from '@cityborn/api';
 import { GameRecordIdSchema } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
@@ -16,10 +21,12 @@ export class PrismaGameRecordRepository implements GameRecordRepository {
     createGameRecord: CreateGameRecord,
     users: { id: UserId }[],
   ): Promise<Pick<GameRecord, 'id'>> {
+    const { categories, ...gameConfig }: GameConfig =
+      createGameRecord.gameConfig;
     const gameRecord = await this.txHost.tx.gameRecord.create({
       data: {
         mode: createGameRecord.mode,
-        gameConfig: createGameRecord.gameConfig,
+        gameConfig,
         players: createGameRecord.players,
         guessObjectsIds: createGameRecord.guessObjectsIds,
         results: createGameRecord.results,

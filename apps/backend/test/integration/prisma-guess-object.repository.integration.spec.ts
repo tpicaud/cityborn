@@ -1,18 +1,14 @@
 import type {
-  Category,
   CreateGuessObject,
   FullGuessObject,
   GuessObject,
   GuessObjectDraft,
   GuessObjectId,
+  Pack,
   PatchGuessObject,
   WorldLocation,
 } from '@cityborn/api';
-import {
-  buildCategory,
-  buildGuessObject,
-  buildWorldLocation,
-} from '@cityborn/api';
+import { buildGuessObject, buildPack, buildWorldLocation } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -274,7 +270,7 @@ describe('PrismaGuessObjectRepository', () => {
   });
 
   describe('findFullBy', () => {
-    it('filters full guess objects by category and includes location geometry', async () => {
+    it('filters full guess objects by pack and includes location geometry', async () => {
       const location: WorldLocation = buildWorldLocation();
       await prisma.worldLocation.create({
         data: {
@@ -302,18 +298,18 @@ describe('PrismaGuessObjectRepository', () => {
         name: 'Louvre Museum',
         world_location_id: location.id,
       });
-      const category: Category = buildCategory();
-      await prisma.category.create({
+      const pack: Pack = buildPack();
+      await prisma.pack.create({
         data: {
-          id: category.id,
-          name: category.name,
-          isPublished: category.isPublished,
+          id: pack.id,
+          name: pack.name,
+          isPublished: pack.isPublished,
           guessObjects: { connect: { id: linkedId } },
         },
       });
 
       const found: FullGuessObject[] = await guessObjectRepository.findFullBy({
-        categoryIds: [category.id],
+        packIds: [pack.id],
       });
 
       expect(found.map(({ id }) => id)).toEqual([linkedId]);

@@ -1,8 +1,16 @@
-import type { PlayerId, Session, SessionJoinAck } from '@cityborn/api';
+import type {
+  Pack,
+  PlayerId,
+  Session,
+  SessionJoinAck,
+  WorldLocation,
+} from '@cityborn/api';
 import {
+  buildPack,
   buildPlayer,
   buildSession,
   buildUser,
+  buildWorldLocation,
   ErrorCode,
   PlayerIdSchema,
   SessionJoinAckSchema,
@@ -327,6 +335,81 @@ describe('Session gateway over a real socket', () => {
     expect(intruderAck).toMatchObject({
       success: false,
       error: { statusCode: 403, code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+    });
+  });
+
+  it('starts a game on the packs a legacy client sends only as categories', async () => {
+    const prismaService: PrismaService = app.get(PrismaService);
+    const location: WorldLocation = buildWorldLocation();
+    await prismaService.worldLocation.create({
+      data: {
+        id: location.id,
+        osm_type: location.osm_type,
+        external_id: location.source.external_id,
+        name: location.name,
+        display_name: location.display_name,
+        centroid: location.centroid,
+        source: location.source,
+        geometry: {
+          create: { data: { type: 'Point', coordinates: [2.3522, 48.8566] } },
+        },
+      },
+    });
+    const selectedPack: Pack = buildPack();
+    const otherPack: Pack = buildPack({
+      id: '00000000-0000-4000-8000-000000000011',
+      name: 'Musées',
+    });
+    await prismaService.pack.create({
+      data: {
+        id: selectedPack.id,
+        name: selectedPack.name,
+        isPublished: selectedPack.isPublished,
+        guessObjects: {
+          create: { name: 'Tour Eiffel', world_location_id: location.id },
+        },
+      },
+    });
+    await prismaService.pack.create({
+      data: {
+        id: otherPack.id,
+        name: otherPack.name,
+        isPublished: otherPack.isPublished,
+        guessObjects: {
+          create: { name: 'Louvre', world_location_id: location.id },
+        },
+      },
+    });
+    const session: Session = buildSession({ hostID: '', players: [] });
+    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    const hostClient: Socket = await connectClient();
+    await emitWithAck(hostClient, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID: PlayerIdSchema.parse('carol'),
+    });
+    const configAck: unknown = await emitWithAck(
+      hostClient,
+      sessionWsEvent.updateGameConfig,
+      { gameConfig: { categories: [selectedPack], timer: 25, nbOfObjects: 6 } },
+    );
+    const gameBroadcast: Promise<unknown> = nextEvent(
+      hostClient,
+      sessionWsServerEvent.update,
+    );
+
+    const startAck: unknown = await emitWithAck(
+      hostClient,
+      sessionWsEvent.startGame,
+    );
+
+    expect(configAck).toEqual({ success: true });
+    expect(startAck).toEqual({ success: true });
+    expect(await gameBroadcast).toMatchObject({
+      gameConfig: { packs: [selectedPack], categories: [selectedPack] },
+      currentGame: {
+        config: { packs: [selectedPack], categories: [selectedPack] },
+        state: { guessObjects: [{ name: 'Tour Eiffel' }] },
+      },
     });
   });
 });

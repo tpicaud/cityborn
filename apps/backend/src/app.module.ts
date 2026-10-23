@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CsrfOriginGuard } from './auth/guards/csrf-origin.guard';
-import { CategoryModule } from './category/category.module';
 import { loggerModuleParams } from './common/logger/logger.params';
 import { WideEventModule } from './common/wide-event/wide-event.module';
 import { BackendConfigModule } from './config/config.module';
@@ -16,6 +15,7 @@ import { HealthModule } from './health/health.module';
 import { IdModule } from './id/id.module';
 import { LockModule } from './lock/lock.module';
 import { NominatimModule } from './nominatim/nominatim.module';
+import { PackModule } from './pack/pack.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RateLimitGuard } from './rate-limit/rate-limit.guard';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
@@ -48,7 +48,7 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
     WikidataModule,
     NominatimModule,
     WorldLocationModule,
-    CategoryModule,
+    PackModule,
     SearchModule,
     RateLimitModule,
     WsHandshakeModule,

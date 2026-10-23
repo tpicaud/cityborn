@@ -47,7 +47,7 @@ describe('Admin routes access', () => {
     const accessToken: string = await createAccessToken(app, admin.id);
 
     await request(app.getHttpServer())
-      .get(contract.admin.category.getCategoryTrees.path)
+      .get(contract.admin.pack.getPackTrees.path)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
   });
@@ -58,7 +58,7 @@ describe('Admin routes access', () => {
     const accessToken: string = await createAccessToken(app, player.id);
 
     const response: request.Response = await request(app.getHttpServer())
-      .get(contract.admin.category.getCategoryTrees.path)
+      .get(contract.admin.pack.getPackTrees.path)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(403);
 
@@ -68,7 +68,7 @@ describe('Admin routes access', () => {
 
   it('rejects an anonymous request to an admin route', async () => {
     const response: request.Response = await request(app.getHttpServer())
-      .get(contract.admin.category.getCategoryTrees.path)
+      .get(contract.admin.pack.getPackTrees.path)
       .expect(401);
 
     const apiError: ApiError = ApiErrorSchema.parse(response.body);
@@ -81,7 +81,7 @@ describe('Admin routes access', () => {
     const accessToken: string = await createAccessToken(app, admin.id);
 
     await request(app.getHttpServer())
-      .get(contract.admin.category.getCategoryTrees.path)
+      .get(contract.admin.pack.getPackTrees.path)
       .set('Origin', httpConfig.backOfficeOrigin)
       .set('Cookie', `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}`)
       .expect(200);
@@ -92,7 +92,7 @@ describe('Admin routes access', () => {
     await persistUser(admin);
     const accessToken: string = await createAccessToken(app, admin.id);
     const response: request.Response = await request(app.getHttpServer())
-      .get(contract.admin.category.getCategoryTrees.path)
+      .get(contract.admin.pack.getPackTrees.path)
       .set('Origin', 'https://cityborn.test')
       .set('Cookie', `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}`)
       .expect(403);

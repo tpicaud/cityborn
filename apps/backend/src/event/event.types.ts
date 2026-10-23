@@ -1,4 +1,4 @@
-import type { AccountType, Category, SessionMode } from '@cityborn/api';
+import type { AccountType, Pack, SessionMode } from '@cityborn/api';
 
 export interface EventMap {
   user_signed_up: {
@@ -13,7 +13,7 @@ export interface EventMap {
   };
   game_started: {
     mode: SessionMode;
-    categories: Category[];
+    packs: Pack[];
     numberOfPlayers: number;
   };
   game_finished: {

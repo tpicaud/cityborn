@@ -1,5 +1,11 @@
-import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
-import { SessionStatus } from '@cityborn/api';
+import type {
+  Game,
+  GameConfigChanges,
+  Guess,
+  PlayerId,
+  Session,
+} from '@cityborn/api';
+import { applyGameConfigChanges, SessionStatus } from '@cityborn/api';
 import {
   applyGuess,
   beginGame,
@@ -17,9 +23,15 @@ export function withStatus(session: Session, status: SessionStatus): Session {
 
 export function withGameConfig(
   session: Session,
-  gameConfig: Partial<GameConfig>,
+  changes: GameConfigChanges,
 ): Session {
-  return { ...session, gameConfig: { ...session.gameConfig, ...gameConfig } };
+  return {
+    ...session,
+    gameConfig: applyGameConfigChanges({
+      gameConfig: session.gameConfig,
+      changes,
+    }),
+  };
 }
 
 export function withGame(session: Session, currentGame: Game): Session {
