@@ -21,6 +21,8 @@ function unexpectedCall(): never {
 function createFakeAuthApi(getCurrentUser: AuthApi['getCurrentUser']): AuthApi {
   return {
     getCurrentUser,
+    requestPasswordReset: unexpectedCall,
+    resetPassword: unexpectedCall,
     signIn: unexpectedCall,
     signUp: unexpectedCall,
     signInWithGoogle: unexpectedCall,
