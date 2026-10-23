@@ -43,7 +43,7 @@ Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-ev
 
 `domain` vient de `API_DOMAINS` (`@cityborn/api`), le vocabulaire qui contraint les `pathPrefix` des contrats ts-rest : une route ou un event WS y est rattaché par son premier segment, `infrastructure` couvre le hors-contrat écrit à la main et `other` le reste. Ajouter un domaine passe donc par `API_DOMAINS`, jamais par le backend seul.
 
-`action` identifie l'opération demandée, dérivée de la clé de route ts-rest ou d'event `clientToServer` : `session.createSession`, `session.guess`, `admin.category.getCategoryTrees`. Les connexions et déconnexions WS portent `session.connect` et `session.disconnect`, dérivés du domaine du channel. Une route hors contrat ou non reconnue n'a pas d'`action` ; `route` distingue alors `/` de `<unmatched>`. `operation` conserve sa valeur technique actuelle pour les requêtes Axiom existantes et les opérations hors contrat ; utiliser `action` pour regrouper les opérations du contrat.
+`action` identifie l'opération demandée, dérivée de la clé de route ts-rest ou d'event `clientToServer` : `session.createSession`, `session.guess`, `admin.pack.getPackTrees`. Les connexions et déconnexions WS portent `session.connect` et `session.disconnect`, dérivés du domaine du channel. Une route hors contrat ou non reconnue n'a pas d'`action` ; `route` distingue alors `/` de `<unmatched>`. `operation` conserve sa valeur technique actuelle pour les requêtes Axiom existantes et les opérations hors contrat ; utiliser `action` pour regrouper les opérations du contrat.
 
 Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide events sont toujours `info`, `warn` ou `error`.
 
