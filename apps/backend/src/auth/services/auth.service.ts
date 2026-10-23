@@ -18,7 +18,6 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -29,6 +28,7 @@ import { EventService } from '../../event/event.service';
 import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
+import type { SendMailOptions } from '../../mail/providers/mail.provider';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type {
   UnverifiedAccountReclaim,
@@ -69,42 +69,39 @@ export class AuthService {
 
     await this.userService.validateIdentifiers(username, email);
 
-    const hash: string = await hashPassword(password);
-
-    const user = await this.userService.createUser({
+    const user: User = await this.createEmailAccount({
       email,
       username,
-      type: 'email',
-      password: hash,
+      passwordHash: await hashPassword(password),
+      visitorId,
     });
-    if (!user)
-      throw new InternalServerErrorException({
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: `Error creating user in database`,
-      });
-
-    void this.sendVerificationEmail(user).catch((error: unknown) => {
-      this.wideEventService.recordOperationError(error, {
-        domain: 'auth',
-        operation: 'send_verification_email',
-        userId: user.id,
-      });
-    });
-
-    if (visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'user_signed_up',
-          visitorId,
-          properties: {
-            method: 'email',
-          },
-        }),
-      );
-    }
 
     const authSession: AuthSession = { user, authVersion: 0 };
     return this.createAuthResponse(authSession);
+  }
+
+  async register(dto: CreateUser, visitorId?: string): Promise<void> {
+    const { email, username, password } = dto;
+
+    await this.rateLimitService.consumeAccountEmail(email);
+    await this.userService.assertUsernameAvailable(username);
+    const passwordHash: string = await hashPassword(password);
+
+    const existingUser: User | null = await this.userService.findByEmail(email);
+    if (existingUser) {
+      this.sendMailInBackground({
+        operation: 'send_existing_account_email',
+        userId: existingUser.id,
+        mailOptions: buildMailOptions('existing-account-email', {
+          email: existingUser.email,
+          frontendUrl: this.httpConfig.frontendUrl,
+          username: existingUser.username,
+        }),
+      });
+      return;
+    }
+
+    await this.createEmailAccount({ email, username, passwordHash, visitorId });
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -339,6 +336,65 @@ export class AuthService {
     );
 
     return { id: user.id, username: user.username };
+  }
+
+  private async createEmailAccount({
+    email,
+    username,
+    passwordHash,
+    visitorId,
+  }: {
+    email: string;
+    username: Username;
+    passwordHash: string;
+    visitorId?: string;
+  }): Promise<User> {
+    const user: User = await this.userService.createUser({
+      email,
+      username,
+      type: 'email',
+      password: passwordHash,
+    });
+
+    void this.sendVerificationEmail(user).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: user.id,
+      });
+    });
+
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_up',
+          visitorId,
+          properties: {
+            method: 'email',
+          },
+        }),
+      );
+    }
+
+    return user;
+  }
+
+  private sendMailInBackground({
+    operation,
+    userId,
+    mailOptions,
+  }: {
+    operation: string;
+    userId: UserId;
+    mailOptions: SendMailOptions;
+  }): void {
+    void this.mailService.sendMail(mailOptions).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation,
+        userId,
+      });
+    });
   }
 
   private async sendVerificationEmail(

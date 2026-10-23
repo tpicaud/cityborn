@@ -44,7 +44,7 @@ export default function HomePage() {
       break;
 
     case 'sign-up':
-      content = <SignUpForm />;
+      content = <SignUpForm openSignIn={openSignIn} />;
       break;
 
     case 'profile':

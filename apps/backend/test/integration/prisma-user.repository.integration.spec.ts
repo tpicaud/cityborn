@@ -172,6 +172,24 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findByEmail', () => {
+    it('finds a user by email but not by username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const byEmail: User | null =
+        await userRepository.findByEmail('host@cityborn.test');
+      const byUsername: User | null = await userRepository.findByEmail('host');
+
+      expect(byEmail).toMatchObject({ id: user.id });
+      expect(byUsername).toBeNull();
+    });
+  });
+
   describe('findByIdentifiers', () => {
     it('finds an existing user by either username or email', async () => {
       const userData: User = buildUser();

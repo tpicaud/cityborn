@@ -237,6 +237,111 @@ describe('AuthService.signUp', () => {
   });
 });
 
+describe('AuthService.register', () => {
+  it('creates an unverified account and sends its verification email without signing in', async () => {
+    const unverifiedUser: User = buildUser({ isVerified: false });
+    const registration: CreateUser = {
+      email: unverifiedUser.email,
+      username: unverifiedUser.username,
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      jwtService,
+      eventService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
+    userService.createUser.mockResolvedValue(unverifiedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await authService.register(registration, 'visitor-1');
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
+      unverifiedUser.email,
+    );
+    expect(userService.createUser).toHaveBeenCalledWith({
+      email: unverifiedUser.email,
+      username: unverifiedUser.username,
+      type: 'email',
+      password: 'hashed-password',
+    });
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: unverifiedUser.email,
+        subject: 'Vérifiez votre adresse e-mail Cityborn',
+      }),
+    );
+    expect(jwtService.signAsync).not.toHaveBeenCalled();
+    expect(eventService.trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'user_signed_up' }),
+    );
+  });
+
+  it('emails the owner of a taken address instead of creating an account', async () => {
+    const existingUser: User = buildUser({
+      username: UsernameSchema.parse('alice'),
+    });
+    const registration: CreateUser = {
+      email: existingUser.email,
+      username: UsernameSchema.parse('newcomer'),
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      eventService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(existingUser);
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await expect(
+      authService.register(registration, 'visitor-1'),
+    ).resolves.toBeUndefined();
+
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(eventService.trackEvent).not.toHaveBeenCalled();
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: existingUser.email,
+        subject: 'Vous avez déjà un compte Cityborn',
+      }),
+    );
+  });
+
+  it('rejects a username taken by another account', async () => {
+    const registration: CreateUser = {
+      email: 'newcomer@cityborn.test',
+      username: UsernameSchema.parse('alice'),
+      password: 'plain-password',
+    };
+    const usernameTaken: HttpException = new HttpException(
+      { code: ErrorCode.USER_USERNAME_ALREADY_EXISTS },
+      HttpStatus.CONFLICT,
+    );
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.assertUsernameAvailable.mockRejectedValue(usernameTaken);
+
+    await expect(authService.register(registration)).rejects.toBe(
+      usernameTaken,
+    );
+
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+});
+
 describe('AuthService.signIn', () => {
   it('returns tokens for valid credentials', async () => {
     const {
