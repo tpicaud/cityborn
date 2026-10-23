@@ -3,11 +3,11 @@ import {
   type MultiSessionController,
   useMultiSessionController,
 } from '@cityborn/client/session';
-import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
 import { useNavigation } from '@/lib/navigation';
+import { ConnectionLostDialog } from './ConnectionLostDialog';
 import { MultiLobby } from './MultiLobby';
 
 type MultiSessionProps = {
@@ -65,22 +65,10 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
       )}
 
       {multiSession.connectionStatus === 'closed' && (
-        <View className="absolute inset-0 items-center justify-center bg-black/30">
-          <View className="items-center gap-4 py-8 px-6 bg-background rounded-xl">
-            <Text className="text-center">Connexion à la session perdue</Text>
-            <View className="flex-row gap-3">
-              <Button
-                label="Quitter"
-                variant="outlined"
-                onPress={multiSession.exitGame}
-              />
-              <Button
-                label="Réessayer"
-                onPress={multiSession.retryConnection}
-              />
-            </View>
-          </View>
-        </View>
+        <ConnectionLostDialog
+          onRetry={multiSession.retryConnection}
+          onExit={multiSession.exitGame}
+        />
       )}
     </View>
   );
