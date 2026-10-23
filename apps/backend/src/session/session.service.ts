@@ -35,6 +35,7 @@ import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
 import { RedisService } from '../redis/redis.service';
+import { UserService } from '../user/user.service';
 import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
@@ -60,6 +61,7 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
+    private readonly userService: UserService,
     @Inject(SESSION_PRESENCE_TIMING)
     private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
@@ -121,6 +123,12 @@ export class SessionService {
     playerID: PlayerId,
     user?: User,
   ): Promise<JoinedSession> {
+    if (!user && (await this.userService.existsByUsername(playerID)))
+      throw new ConflictException({
+        code: ErrorCode.SESSION_PLAYER_NAME_RESERVED,
+        message: 'Player name belongs to an account',
+      });
+
     return await this.updateSession(sessionID, async (session) => {
       if (session.currentGame)
         throw new ForbiddenException({

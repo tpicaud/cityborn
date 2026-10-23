@@ -7,5 +7,10 @@ export enum UserErrorCode {
   USER_VERIFICATION_EMAIL_INVALID_TOKEN = 'USER_VERIFICATION_EMAIL_INVALID_TOKEN',
   USER_VERIFICATION_EMAIL_EXPIRED_TOKEN = 'USER_VERIFICATION_EMAIL_EXPIRED_TOKEN',
   USER_VERIFICATION_EMAIL_RESEND_TOO_SOON = 'USER_VERIFICATION_EMAIL_RESEND_TOO_SOON',
+  /**
+   * @deprecated Plus émis : un invité peut créer une partie multi. Conservé
+   * pour les builds mobile publiées avant l'ouverture du multi aux invités.
+   * @deprecatedSince 2026-10-23
+   */
   USER_NO_ACCOUNT_OR_NOT_VERIFIED = 'USER_NO_ACCOUNT_OR_NOT_VERIFIED',
 }

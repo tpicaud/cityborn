@@ -3,9 +3,11 @@ import {
   buildPlayer,
   buildSession,
   buildUser,
+  contract,
   ErrorCode,
   PlayerIdSchema,
   SessionJoinAckSchema,
+  SessionMode,
   SessionSchema,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -18,6 +20,7 @@ import {
   type Socket,
   type SocketOptions,
 } from 'socket.io-client';
+import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
@@ -327,6 +330,37 @@ describe('Session gateway over a real socket', () => {
     expect(intruderAck).toMatchObject({
       success: false,
       error: { statusCode: 403, code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
+    });
+  });
+
+  it('lets a guest create a multi session but not join it under an account username', async () => {
+    const account: User = buildUser({
+      username: PlayerIdSchema.parse('alice'),
+    });
+    await app.get(PrismaService).user.create({
+      data: {
+        id: account.id,
+        email: account.email,
+        username: account.username,
+        type: account.type,
+        isVerified: account.isVerified,
+      },
+    });
+
+    const creation: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createSession.path)
+      .send({ mode: SessionMode.MULTI })
+      .expect(201);
+    const session: Session = SessionSchema.parse(creation.body);
+    const client: Socket = await connectClient();
+    const ack: unknown = await emitWithAck(client, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID: account.username,
+    });
+
+    expect(ack).toMatchObject({
+      success: false,
+      error: { statusCode: 409, code: ErrorCode.SESSION_PLAYER_NAME_RESERVED },
     });
   });
 });
