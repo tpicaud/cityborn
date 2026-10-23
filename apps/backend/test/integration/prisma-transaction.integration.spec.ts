@@ -1,9 +1,11 @@
+import { createHash } from 'node:crypto';
 import type {
   CreatePack,
   CreateWorldLocation,
   GuessObject,
   GuessObjectId,
   Pack,
+  ResetPassword,
   Theme,
   UpdatePack,
   User,
@@ -17,15 +19,27 @@ import {
   buildUser,
   buildWorldLocation,
   CreateWorldLocationSchema,
+  ErrorCode,
 } from '@cityborn/api';
+import { createMock } from '@golevelup/ts-jest';
 import { Test, type TestingModule } from '@nestjs/testing';
+import type { User as PrismaUser } from '@prisma/client';
+import { compare } from 'bcrypt';
+import { PASSWORD_RESET_REPOSITORY } from '../../src/auth/repositories/password-reset.repository';
+import { PrismaPasswordResetRepository } from '../../src/auth/repositories/prisma-password-reset.repository';
+import { PasswordResetService } from '../../src/auth/services/password-reset.service';
+import { WideEventService } from '../../src/common/wide-event/wide-event.service';
+import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
+import { MailService } from '../../src/mail/mail.service';
 import { PackService } from '../../src/pack/pack.service';
 import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
 import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
+import { RedisService } from '../../src/redis/redis.service';
 import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
 import { THEME_REPOSITORY } from '../../src/theme/repositories/theme.repository';
 import { ThemeService } from '../../src/theme/theme.service';
@@ -37,6 +51,7 @@ import { UserService } from '../../src/user/user.service';
 import { PrismaWorldLocationRepository } from '../../src/world-location/repositories/prisma-world-location.repository';
 import { WORLD_LOCATION_REPOSITORY } from '../../src/world-location/repositories/world-location.repository';
 import { WorldLocationService } from '../../src/world-location/world-location.service';
+import { AuthenticatedSocketService } from '../../src/ws-handshake/authenticated-socket.service';
 import { createTestInfrastructure } from '../support/infrastructure';
 
 describe('Prisma transactions', () => {
@@ -51,6 +66,8 @@ describe('Prisma transactions', () => {
   let tokenRepository: PrismaEmailVerificationTokenRepository;
   let userRepository: PrismaUserRepository;
   let userService: UserService;
+  let passwordResetService: PasswordResetService;
+  let rateLimitService: RateLimitService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -63,6 +80,29 @@ describe('Prisma transactions', () => {
         ThemeService,
         { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
         { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
+        PasswordResetService,
+        RateLimitService,
+        {
+          provide: RedisService,
+          useValue: new RedisService(
+            infrastructure.redis,
+            createMock<WideEventService>(),
+          ),
+        },
+        { provide: WideEventService, useValue: createMock<WideEventService>() },
+        { provide: MailService, useValue: createMock<MailService>() },
+        {
+          provide: HTTP_CONFIG,
+          useValue: { frontendUrl: 'http://localhost:3000' },
+        },
+        {
+          provide: AuthenticatedSocketService,
+          useValue: createMock<AuthenticatedSocketService>(),
+        },
+        {
+          provide: PASSWORD_RESET_REPOSITORY,
+          useClass: PrismaPasswordResetRepository,
+        },
         {
           provide: GUESS_OBJECT_REPOSITORY,
           useClass: PrismaGuessObjectRepository,
@@ -86,6 +126,8 @@ describe('Prisma transactions', () => {
     tokenRepository = module.get(EMAIL_VERIFICATION_TOKEN_REPOSITORY);
     userRepository = module.get(USER_REPOSITORY);
     userService = module.get(UserService);
+    passwordResetService = module.get(PasswordResetService);
+    rateLimitService = module.get(RateLimitService);
   });
 
   afterAll(async () => {
@@ -182,6 +224,188 @@ describe('Prisma transactions', () => {
             where: { userId: user.id },
           }),
         ).toBe(1);
+      });
+    });
+  });
+  describe('PasswordResetService', () => {
+    describe('reset', () => {
+      it('rolls back token consumption and the password when auth version increment fails', async () => {
+        const user: User = buildUser({ isVerified: false });
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            isVerified: user.isVerified,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: createHash('sha256').update('token').digest('hex'),
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        jest
+          .spyOn(userRepository, 'incrementAuthVersion')
+          .mockRejectedValueOnce(new Error('write failed'));
+
+        const data: ResetPassword = {
+          token: 'token',
+          password: 'NewPass1',
+          confirmPassword: 'NewPass1',
+        };
+
+        await expect(passwordResetService.reset(data)).rejects.toThrow(
+          'write failed',
+        );
+
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({
+          password: 'old-hash',
+          authVersion: 0,
+          isVerified: false,
+        });
+        expect(
+          await prisma.passwordResetToken.findUnique({
+            where: { userId: user.id },
+          }),
+        ).toEqual({
+          userId: user.id,
+          tokenHash: createHash('sha256').update('token').digest('hex'),
+          expiresAt: new Date('2099-01-01'),
+        });
+      });
+
+      it('commits one password update and auth version increment during concurrent resets', async () => {
+        const user: User = buildUser({ isVerified: false });
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            isVerified: user.isVerified,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: createHash('sha256').update('token').digest('hex'),
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+
+        const firstReset: ResetPassword = {
+          token: 'token',
+          password: 'NewPass1',
+          confirmPassword: 'NewPass1',
+        };
+        const secondReset: ResetPassword = {
+          token: 'token',
+          password: 'OtherPass1',
+          confirmPassword: 'OtherPass1',
+        };
+
+        const results: PromiseSettledResult<void>[] = await Promise.allSettled([
+          passwordResetService.reset(firstReset),
+          passwordResetService.reset(secondReset),
+        ]);
+
+        expect(
+          results.filter((result) => result.status === 'fulfilled'),
+        ).toHaveLength(1);
+        expect(
+          results.filter((result) => result.status === 'rejected'),
+        ).toEqual([
+          expect.objectContaining({
+            reason: expect.objectContaining({
+              status: 401,
+              response: expect.objectContaining({
+                code: ErrorCode.USER_INVALID_TOKEN,
+              }),
+            }),
+          }),
+        ]);
+        const successfulResetIndex: number = results.findIndex(
+          (result) => result.status === 'fulfilled',
+        );
+        const updatedUser: PrismaUser | null = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        expect(updatedUser).toMatchObject({
+          authVersion: 1,
+          isVerified: false,
+        });
+        expect(
+          await compare(
+            successfulResetIndex === 0
+              ? firstReset.password
+              : secondReset.password,
+            updatedUser?.password ?? '',
+          ),
+        ).toBe(true);
+        expect(await prisma.passwordResetToken.count()).toBe(0);
+      });
+
+      it('clears the sign-in lock after committing while preserving reset quotas', async () => {
+        const user: User = buildUser({ isVerified: false });
+        const data: ResetPassword = {
+          token: 'token',
+          password: 'NewPass1',
+          confirmPassword: 'NewPass1',
+        };
+        const emailHash: string = createHash('sha256')
+          .update(user.email)
+          .digest('hex');
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            type: 'email',
+            password: 'old-hash',
+            isVerified: user.isVerified,
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: createHash('sha256').update(data.token).digest('hex'),
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        await Promise.all(
+          Array.from({ length: 10 }, () =>
+            rateLimitService.recordFailedSignIn(user.id),
+          ),
+        );
+        await rateLimitService.consumePasswordReset('reset-ip');
+        await rateLimitService.reservePasswordResetEmail(emailHash);
+        await expect(
+          rateLimitService.assertSignInAllowed(user.id),
+        ).rejects.toMatchObject({ status: 429 });
+
+        await passwordResetService.reset(data);
+
+        await expect(
+          rateLimitService.assertSignInAllowed(user.id),
+        ).resolves.toBeUndefined();
+        expect(
+          await infrastructure.redis.exists(
+            `rl:password-reset:email:${emailHash}`,
+          ),
+        ).toBe(1);
+        expect(
+          await infrastructure.redis.exists('rl:password-reset:ip:reset-ip'),
+        ).toBe(1);
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({ authVersion: 1 });
       });
     });
   });

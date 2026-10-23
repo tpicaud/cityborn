@@ -8,6 +8,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInForm = () => {
   const router = useRouter();
@@ -89,6 +90,7 @@ export const SignInForm = () => {
             onPress={submit}
             className="mt-8"
           />
+          <RequestPasswordResetDialog />
           <Button
             variant="default"
             label="Pas de compte ? Inscris-toi ici !"

@@ -61,6 +61,8 @@ function createFakeClient({
   return {
     auth: {
       me: unexpectedCall,
+      requestPasswordReset: unexpectedCall,
+      resetPassword: unexpectedCall,
       refresh: unexpectedCall,
       signOut: unexpectedCall,
       cookie: {

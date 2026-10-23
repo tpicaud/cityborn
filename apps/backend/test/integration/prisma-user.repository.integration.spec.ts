@@ -261,6 +261,28 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findCredentialsByEmail', () => {
+    it('matches only the email and retains unverified credentials', async () => {
+      const user: User = buildUser({ isVerified: false });
+      await userRepository.create({
+        email: user.email,
+        username: user.username,
+        type: 'email',
+        password: 'hash',
+      });
+
+      expect(
+        await userRepository.findCredentialsByEmail(user.email),
+      ).toMatchObject({
+        passwordHash: 'hash',
+        authSession: { user: { email: user.email, isVerified: false } },
+      });
+      expect(
+        await userRepository.findCredentialsByEmail(user.username),
+      ).toBeNull();
+    });
+  });
+
   describe('updatePassword', () => {
     it('persists the new password hash', async () => {
       const userData: User = buildUser();
