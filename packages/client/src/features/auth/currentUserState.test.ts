@@ -41,7 +41,7 @@ async function fetchCurrentUserIgnoringFailure({
   authApi: AuthApi;
 }): Promise<void> {
   await queryClient
-    .fetchQuery({ ...currentUserQueryOptions(authApi), staleTime: 0 })
+    .query({ ...currentUserQueryOptions(authApi), staleTime: 0 })
     .catch(() => null);
 }
 

@@ -93,7 +93,7 @@ describe('removeDeletedCategory', () => {
           categoryId: deletedCategoryId,
         }),
       );
-    await queryClient.fetchQuery(categoriesQueryOptions(categoryApi));
+    await queryClient.query(categoriesQueryOptions(categoryApi));
     const stopObservingFullCategory: () => void =
       await waitForFirstData(fullCategoryObserver);
     context.after(() => {

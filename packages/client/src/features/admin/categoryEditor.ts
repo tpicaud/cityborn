@@ -171,7 +171,7 @@ export function useCategoryEditor({
     guessObjectId: GuessObjectId,
   ): Promise<GuessObject | null> => {
     try {
-      const guessObject: GuessObject | null = await queryClient.fetchQuery(
+      const guessObject: GuessObject | null = await queryClient.query(
         guessObjectQueryOptions({ guessObjectApi, guessObjectId }),
       );
       if (!guessObject) return null;

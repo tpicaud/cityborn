@@ -1,5 +1,5 @@
 import { LoaderCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 
 export default function Loader({ className = '' }: { className?: string }) {
   return <LoaderCircle className={cn(className, 'animate-spin')} />;

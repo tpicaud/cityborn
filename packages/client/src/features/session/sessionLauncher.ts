@@ -97,7 +97,7 @@ export function useSessionLauncher({
     code,
   }: JoinSessionFormValues): Promise<void> => {
     try {
-      await queryClient.fetchQuery(
+      await queryClient.query(
         sessionQueryOptions({ sessionApi, sessionId: code }),
       );
       navigation.push(multiSessionPath(code));

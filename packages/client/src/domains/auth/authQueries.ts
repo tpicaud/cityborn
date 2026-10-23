@@ -67,7 +67,7 @@ export function refreshCurrentUser({
   queryClient,
   authApi,
 }: CurrentUserRefresh): Promise<User | null> {
-  return queryClient.fetchQuery({
+  return queryClient.query({
     ...currentUserQueryOptions(authApi),
     staleTime: 0,
   });

@@ -73,7 +73,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
   const fetchFullGuessObject = (
     guessObjectId: GuessObjectId,
   ): Promise<FullGuessObject | null> =>
-    queryClient.fetchQuery(
+    queryClient.query(
       fullGuessObjectQueryOptions({ guessObjectApi, guessObjectId }),
     );
 
@@ -130,7 +130,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
     const externalId: string | undefined = searchResult.source?.external_id;
     if (!externalId) return;
     const foundGuessObject: GuessObjectSearchResult | null =
-      await queryClient.fetchQuery(
+      await queryClient.query(
         guessObjectByExternalIdQueryOptions({ searchApi, externalId }),
       );
     if (!foundGuessObject) return;
@@ -154,7 +154,7 @@ export function useGuessObjectDraftEditor(): GuessObjectDraftEditor {
   ): Promise<void> => {
     if (!searchResult?.id) return;
     const foundWorldLocation: WorldLocationSearchResult | null =
-      await queryClient.fetchQuery(
+      await queryClient.query(
         worldLocationByOsmReferenceQueryOptions({
           searchApi,
           osmWorldLocationReference: {

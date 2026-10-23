@@ -2,46 +2,25 @@ import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import '../global.css';
 import 'react-native-get-random-values';
-import {
-  getApiVersionInfo,
-  installFrenchZodErrorMap,
-  isApiVersionOutdated,
-} from '@cityborn/api';
-import {
-  ApiProvider,
-  type ApiVersionSupport,
-  ErrorReporterProvider,
-  useApiVersionSupport,
-} from '@cityborn/client';
-import {
-  AuthProvider,
-  type CurrentUserLoad,
-  useCurrentUserLoad,
-} from '@cityborn/client/auth';
-import {
-  type ServerReachability,
-  useServerReachability,
-} from '@cityborn/client/health';
+import { installFrenchZodErrorMap } from '@cityborn/api';
+import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import BackendUnreachableDialog from '@/components/ui/BackendUnreachableDialog';
-import Button from '@/components/ui/Button';
+import ForceUpdateDialog from '@/components/ForceUpdateDialog';
 import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
-import ForceUpdateDialog from '@/components/ui/ForceUpdateDialog';
-import LoaderIcon from '@/components/ui/LoaderIcon';
-import { Text, View } from '@/components/ui/native/NativeComponents';
+import { View } from '@/components/ui/native/NativeComponents';
+import { AuthBootstrap } from '@/features/auth/AuthBootstrap';
+import BackendUnreachableDialog from '@/features/health/BackendUnreachableDialog';
 import { authApi } from '@/lib/api/auth';
 import { contractClient } from '@/lib/api/contractClient';
 import { appFocus } from '@/lib/appFocus';
 import { createSocketConnection } from '@/lib/socket';
 
 installFrenchZodErrorMap();
-
-const localApiVersionInfo = getApiVersionInfo();
 
 export default function RootLayout() {
   return (
@@ -60,18 +39,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutContent() {
-  const { currentUserState, retry: retryCurrentUserLoad }: CurrentUserLoad =
-    useCurrentUserLoad();
-  const { isServerUnreachable, recheckServerReachability }: ServerReachability =
-    useServerReachability();
-  const { minSupportedApiVersion }: ApiVersionSupport = useApiVersionSupport();
-  const isForceUpdateRequired =
-    minSupportedApiVersion !== null &&
-    isApiVersionOutdated(
-      localApiVersionInfo.currentVersion,
-      minSupportedApiVersion,
-    );
-
   useEffect(() => {
     if (Platform.OS === 'android') {
       NavigationBar.setStyle('light');
@@ -80,55 +47,34 @@ function RootLayoutContent() {
 
   return (
     <>
-      <ForceUpdateDialog visible={isForceUpdateRequired} />
-      <BackendUnreachableDialog
-        visible={isServerUnreachable}
-        onRetry={async () => {
-          await recheckServerReachability();
-          retryCurrentUserLoad();
-        }}
-      />
-      {currentUserState.status === 'loading' && (
-        <View className="flex-1 items-center justify-center">
-          <LoaderIcon />
-        </View>
-      )}
-      {currentUserState.status === 'failed' && (
-        <View className="flex-1 items-center justify-center gap-4 px-6">
-          <Text className="text-lg text-center">
-            {currentUserState.errorMessage}
-          </Text>
-          <Button label="Réessayer" onPress={retryCurrentUserLoad} />
-        </View>
-      )}
-      {currentUserState.status === 'ready' && (
+      <ForceUpdateDialog />
+      <BackendUnreachableDialog />
+      <AuthBootstrap>
         <SafeAreaProvider>
           <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-            <AuthProvider user={currentUserState.user}>
-              <StatusBar hidden={true} />
-              <Stack
-                screenOptions={{
+            <StatusBar hidden={true} />
+            <Stack
+              screenOptions={{
+                contentStyle: { backgroundColor: 'transparent' },
+                animation: 'none',
+                header: (props) => <CustomHeader {...props} />,
+              }}
+            >
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
                   contentStyle: { backgroundColor: 'transparent' },
-                  animation: 'none',
-                  header: (props) => <CustomHeader {...props} />,
                 }}
-              >
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: 'transparent' },
-                  }}
-                />
-                <Stack.Screen name="auth/sign-in" />
-                <Stack.Screen name="auth/sign-up" />
-                <Stack.Screen name="session/solo" />
-                <Stack.Screen name="session/multi/[sessionID]" />
-              </Stack>
-            </AuthProvider>
+              />
+              <Stack.Screen name="auth/sign-in" />
+              <Stack.Screen name="auth/sign-up" />
+              <Stack.Screen name="session/solo" />
+              <Stack.Screen name="session/multi/[sessionID]" />
+            </Stack>
           </View>
         </SafeAreaProvider>
-      )}
+      </AuthBootstrap>
     </>
   );
 }

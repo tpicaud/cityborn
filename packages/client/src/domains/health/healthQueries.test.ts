@@ -14,7 +14,7 @@ function fetchServerReachability({
 }): Promise<boolean> {
   const queryClient: QueryClient = new QueryClient();
   context.after(() => queryClient.clear());
-  return queryClient.fetchQuery({
+  return queryClient.query({
     ...serverReachabilityQueryOptions(healthApi),
     retry: false,
   });

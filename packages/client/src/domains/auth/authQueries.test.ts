@@ -44,7 +44,7 @@ describe('clearCacheAfterSignOut', () => {
     const authApi: AuthApi = createFakeAuthApi(async () => signedInUser);
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
-    await queryClient.fetchQuery(currentUserQueryOptions(authApi));
+    await queryClient.query(currentUserQueryOptions(authApi));
     queryClient.setQueryData<GameRecord[]>(signedInUserGameRecordsQueryKey, []);
     queryClient.setQueryData<string[]>(categoryTreesQueryKey, ['cities']);
     queryClient.setQueryData<string[]>(adminCategoryListQueryKey, ['draft']);
@@ -75,7 +75,7 @@ describe('clearCacheAfterSignOut', () => {
     const queryClient: QueryClient = new QueryClient();
     context.after(() => queryClient.clear());
     const currentUserFetch: Promise<User | null> = queryClient
-      .fetchQuery(currentUserQueryOptions(authApi))
+      .query(currentUserQueryOptions(authApi))
       .catch(() => null);
 
     await clearCacheAfterSignOut(queryClient);

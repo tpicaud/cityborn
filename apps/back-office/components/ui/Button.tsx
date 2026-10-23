@@ -1,6 +1,6 @@
 import { Button as AriaButton } from '@ariakit/react';
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/classNames';
 import Loader from './Loader';
 
 export interface ButtonProps extends React.ComponentProps<typeof AriaButton> {
