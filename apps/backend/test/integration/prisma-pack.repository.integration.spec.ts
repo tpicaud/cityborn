@@ -26,7 +26,10 @@ describe('PrismaPackRepository', () => {
   const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let packRepository: PrismaPackRepository;
-  const miscellaneousTheme: Theme = buildTheme();
+  const miscellaneousTheme: Theme = buildTheme({
+    id: '244b803a-63aa-460a-a40d-4eea0ec2be50',
+    name: 'Divers',
+  });
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
