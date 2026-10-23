@@ -5,7 +5,7 @@ export type ThemeEditorState = {
   creationError: string | null;
   rowErrors: Partial<Record<ThemeId, string>>;
 };
-export type ThemeEditorAction =
+type ThemeEditorAction =
   | { type: 'edit'; id: ThemeId }
   | { type: 'confirmDeletion'; id: ThemeId }
   | { type: 'cancel' }

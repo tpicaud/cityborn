@@ -1,75 +1,51 @@
-'use client';
 import {
   type AdminTheme,
   ApiResponseError,
   ErrorCode,
   resolveErrorMessage,
   type SaveTheme,
-  SaveThemeSchema,
   type Theme,
   type ThemeId,
   UserFacingError,
 } from '@cityborn/api';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  type QueryClient,
-  type UseQueryResult,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useReducer, useState } from 'react';
-import { type UseFormReturn, useForm } from 'react-hook-form';
-import { type DomainApis, useDomainApis } from '../../../domains/apiProvider';
+import type { QueryClient } from '@tanstack/react-query';
+import type { UseFormReturn } from 'react-hook-form';
 import { invalidatePacks } from '../../../domains/pack/packQueries';
+import type { ThemeApi } from '../../../domains/theme/themeApi';
 import {
   invalidateThemes,
-  themesQueryOptions,
   updateThemesCache,
 } from '../../../domains/theme/themeQueries';
 import type { FormSubmitHandler } from '../../../shared/formSubmitHandler';
-import {
-  initialThemeEditorState,
-  type ThemeEditorState,
-  themeEditorReducer,
-} from './themeEditorState';
-export type ThemesEditor = {
-  themes: AdminTheme[];
-  state: ThemeEditorState;
-  creationForm: UseFormReturn<SaveTheme>;
-  renameForm: UseFormReturn<SaveTheme>;
+import type { themeEditorReducer } from './themeEditorState';
+
+export type ThemeMutations = {
   createTheme: FormSubmitHandler;
   renameTheme: FormSubmitHandler;
-  startRenaming: (theme: AdminTheme) => void;
-  confirmDeletion: (id: ThemeId) => void;
-  cancel: () => void;
   deleteTheme: (theme: AdminTheme) => Promise<void>;
-  isDeleting: boolean;
-  isLoading: boolean;
-  loadError: string | null;
-  reload: () => void;
 };
-const noThemes: AdminTheme[] = [];
-export function useThemesEditor(): ThemesEditor {
-  const { themeApi }: DomainApis = useDomainApis();
-  const queryClient: QueryClient = useQueryClient();
-  const query: UseQueryResult<AdminTheme[]> = useQuery({
-    ...themesQueryOptions(themeApi),
-    meta: { reportsError: false },
-  });
-  const [state, dispatch] = useReducer(
-    themeEditorReducer,
-    initialThemeEditorState,
-  );
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const creationForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
-    resolver: zodResolver(SaveThemeSchema),
-    defaultValues: { name: '' },
-  });
-  const renameForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
-    resolver: zodResolver(SaveThemeSchema),
-    defaultValues: { name: '' },
-  });
-  const themes: AdminTheme[] = query.data ?? noThemes;
+
+type ThemeForm = Pick<UseFormReturn<SaveTheme>, 'handleSubmit' | 'reset'>;
+
+export function createThemeMutations({
+  themeApi,
+  queryClient,
+  themes,
+  editedThemeId,
+  creationForm,
+  renameForm,
+  dispatch,
+  setIsDeleting,
+}: {
+  themeApi: ThemeApi;
+  queryClient: QueryClient;
+  themes: AdminTheme[];
+  editedThemeId: ThemeId | null;
+  creationForm: ThemeForm;
+  renameForm: ThemeForm;
+  dispatch: (action: Parameters<typeof themeEditorReducer>[1]) => void;
+  setIsDeleting: (isDeleting: boolean) => void;
+}): ThemeMutations {
   const refresh: () => Promise<void> = async () => {
     await Promise.all([
       invalidateThemes(queryClient),
@@ -77,22 +53,6 @@ export function useThemesEditor(): ThemesEditor {
     ]);
   };
   return {
-    themes,
-    state,
-    creationForm,
-    renameForm,
-    isDeleting,
-    isLoading: query.isPending,
-    loadError: query.isError ? resolveErrorMessage(query.error) : null,
-    reload: () => {
-      query.refetch();
-    },
-    startRenaming: (theme) => {
-      renameForm.reset({ name: theme.name });
-      dispatch({ type: 'edit', id: theme.id });
-    },
-    confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),
-    cancel: () => dispatch({ type: 'cancel' }),
     createTheme: creationForm.handleSubmit(async (data: SaveTheme) => {
       dispatch({ type: 'creationError', message: null });
       try {
@@ -111,7 +71,7 @@ export function useThemesEditor(): ThemesEditor {
       }
     }),
     renameTheme: renameForm.handleSubmit(async (data: SaveTheme) => {
-      const id: ThemeId | null = state.editedThemeId;
+      const id: ThemeId | null = editedThemeId;
       if (!id) return;
       try {
         const theme: Theme = await themeApi.updateTheme({ id, theme: data });

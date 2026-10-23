@@ -14,11 +14,13 @@ describe('themeEditorReducer', () => {
       initialThemeEditorState,
       { type: 'edit', id },
     );
+
     const failed: ThemeEditorState = themeEditorReducer(editing, {
       type: 'rowError',
       id,
       message: 'Ce thème existe déjà',
     });
+
     assert.equal(failed.editedThemeId, id);
     assert.equal(failed.rowErrors[id], 'Ce thème existe déjà');
   });
@@ -27,10 +29,12 @@ describe('themeEditorReducer', () => {
       initialThemeEditorState,
       { type: 'edit', id },
     );
+
     const confirming: ThemeEditorState = themeEditorReducer(editing, {
       type: 'confirmDeletion',
       id,
     });
+
     assert.equal(confirming.editedThemeId, null);
     assert.equal(confirming.deletionThemeId, id);
   });
@@ -40,9 +44,11 @@ describe('themeEditorReducer', () => {
       editedThemeId: id,
       creationError: 'Ce thème existe déjà',
     };
+
     const cancelled: ThemeEditorState = themeEditorReducer(state, {
       type: 'cancel',
     });
+
     assert.equal(cancelled.editedThemeId, null);
     assert.equal(cancelled.creationError, 'Ce thème existe déjà');
   });
@@ -52,10 +58,12 @@ describe('themeEditorReducer', () => {
       deletionThemeId: id,
       rowErrors: { [id]: 'Suppression impossible' },
     };
+
     const saved: ThemeEditorState = themeEditorReducer(state, {
       type: 'saved',
       id,
     });
+
     assert.equal(saved.deletionThemeId, null);
     assert.equal(saved.rowErrors[id], undefined);
   });

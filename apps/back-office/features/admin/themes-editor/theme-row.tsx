@@ -1,5 +1,5 @@
 import type { AdminTheme } from '@cityborn/api';
-import type { ThemesEditor } from '@cityborn/client/admin';
+import type { ThemesManagement } from '@cityborn/client/admin';
 import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -9,7 +9,7 @@ export function ThemeRow({
   isBusy,
 }: {
   theme: AdminTheme;
-  editor: ThemesEditor;
+  editor: ThemesManagement;
   isBusy: boolean;
 }) {
   const isEditing: boolean = editor.state.editedThemeId === theme.id;

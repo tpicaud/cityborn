@@ -1,14 +1,14 @@
 'use client';
 import {
-  type ThemesEditor as ThemesEditorState,
-  useThemesEditor,
+  type ThemesManagement,
+  useThemesManagement,
 } from '@cityborn/client/admin';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 import { ThemeRow } from './theme-row';
 export function ThemesEditor() {
-  const editor: ThemesEditorState = useThemesEditor();
-  const { creationForm, state }: ThemesEditorState = editor;
+  const editor: ThemesManagement = useThemesManagement();
+  const { creationForm, state }: ThemesManagement = editor;
   const isBusy: boolean =
     creationForm.formState.isSubmitting ||
     editor.renameForm.formState.isSubmitting ||

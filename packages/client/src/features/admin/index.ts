@@ -23,9 +23,9 @@ export {
 } from './search';
 export { findThemeName } from './themeName';
 export {
-  type ThemesEditor,
-  useThemesEditor,
-} from './themes-editor/useThemesEditor';
+  type ThemesManagement,
+  useThemesManagement,
+} from './themes-editor/useThemesManagement';
 export type { GuessObjectDraftEditor } from './useGuessObjectDraftEditor';
 export {
   type GuessObjectImport,
