@@ -104,16 +104,15 @@ export function useGuessObjectImport({
     name,
     description,
   }: ImportedGuessObject): Promise<void> => {
-    const searchResults: GuessObjectSearchResult[] =
-      await queryClient.fetchQuery(
-        guessObjectSearchQueryOptions({ searchApi, searchTerm: name }),
-      );
+    const searchResults: GuessObjectSearchResult[] = await queryClient.query(
+      guessObjectSearchQueryOptions({ searchApi, searchTerm: name }),
+    );
     const externalId: string | undefined =
       searchResults.at(0)?.source?.external_id;
     if (!externalId) throw new UserFacingError(missingExternalIdMessage);
 
     const foundGuessObject: GuessObjectSearchResult | null =
-      await queryClient.fetchQuery(
+      await queryClient.query(
         guessObjectByExternalIdQueryOptions({ searchApi, externalId }),
       );
     if (!foundGuessObject) throw new UserFacingError(missingGuessObjectMessage);

@@ -73,7 +73,7 @@ async function loadCategoryEditorIgnoringFailure({
 }: CategoryEditorObservation): Promise<void> {
   await Promise.all([
     queryClient
-      .fetchQuery({
+      .query({
         ...fullCategoryQueryOptions({
           categoryApi,
           categoryId: editedCategoryId,
@@ -82,7 +82,7 @@ async function loadCategoryEditorIgnoringFailure({
       })
       .catch(() => null),
     queryClient
-      .fetchQuery({ ...categoriesQueryOptions(categoryApi), staleTime: 0 })
+      .query({ ...categoriesQueryOptions(categoryApi), staleTime: 0 })
       .catch(() => null),
   ]);
 }

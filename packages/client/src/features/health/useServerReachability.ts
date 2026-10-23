@@ -24,7 +24,7 @@ export async function recheckServerReachability({
   healthApi: HealthApi;
 }): Promise<void> {
   const isServerReachable: boolean = await queryClient
-    .fetchQuery({ ...serverReachabilityQueryOptions(healthApi), staleTime: 0 })
+    .query({ ...serverReachabilityQueryOptions(healthApi), staleTime: 0 })
     .catch((): boolean => false);
   if (isServerReachable) {
     await invalidateCurrentUser(queryClient);

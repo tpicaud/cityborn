@@ -68,7 +68,7 @@ describe('guessObjectSearchQueryOptions', () => {
     searchObserver.setOptions(
       guessObjectSearchQueryOptions({ searchApi, searchTerm: '' }),
     );
-    await queryClient.fetchQuery(
+    await queryClient.query(
       guessObjectSearchQueryOptions({ searchApi, searchTerm: '' }),
     );
 
