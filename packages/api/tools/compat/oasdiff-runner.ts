@@ -16,6 +16,8 @@ export class OasdiffNotFoundError extends Error {
   }
 }
 
+const oasdiffOutputMaxBytes: number = 64 * 1024 * 1024;
+
 export function assertOasdiffAvailable(): void {
   const probe = spawnSync('oasdiff', ['--version'], { encoding: 'utf-8' });
   if (probe.error || probe.status !== 0) {
@@ -258,7 +260,7 @@ export function diffBreaking({
       baseFile,
       revisionFile,
     ],
-    { encoding: 'utf-8' },
+    { encoding: 'utf-8', maxBuffer: oasdiffOutputMaxBytes },
   );
 
   if (result.error) {
