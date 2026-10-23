@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
-import { getWsOpenApiDocument } from '../openapi/generate-ws-openapi';
+import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
 import { OasdiffNotFoundError } from './compat/oasdiff-runner';
 import { formatHumanSummary, toJsonReport } from './compat/report';
 import { runCompatCheck } from './compat/run-compat-check';

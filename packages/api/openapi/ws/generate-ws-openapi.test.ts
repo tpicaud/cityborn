@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { OpenAPIObject } from 'openapi3-ts';
 import { z } from 'zod';
-import { wsChannels, wsSharedServerEvents } from '../src/contract/ws/registry';
+import {
+  wsChannels,
+  wsSharedServerEvents,
+} from '../../src/contract/ws/registry';
 import { getWsOpenApiDocument } from './generate-ws-openapi';
 
 const JsonResponseSchema = z.object({

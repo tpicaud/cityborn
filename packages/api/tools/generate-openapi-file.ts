@@ -2,7 +2,7 @@ import { appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getOpenApiDocument } from '../openapi/generate-openapi';
-import { getWsOpenApiDocument } from '../openapi/generate-ws-openapi';
+import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
 import { versionDocuments } from './versioning/version-documents';
 
 const toolsDir: string = dirname(fileURLToPath(import.meta.url));
@@ -15,11 +15,12 @@ if (mode !== 'draft' && mode !== 'release') {
   throw new Error('Usage: generate-openapi-file.ts --mode=draft|release');
 }
 
-const { changed, filename } = versionDocuments({
-  mode,
-  versionsDir: join(toolsDir, '../openapi/versions'),
-  documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
-});
+const { changed, filename }: ReturnType<typeof versionDocuments> =
+  versionDocuments({
+    mode,
+    versionsDir: join(toolsDir, '../openapi/versions'),
+    documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
+  });
 
 console.log(
   changed

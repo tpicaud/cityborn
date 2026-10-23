@@ -2,12 +2,15 @@ import type { AppRoute, AppRouter } from '@ts-rest/core';
 import { generateOpenApi } from '@ts-rest/open-api';
 import type { OpenAPIObject } from 'openapi3-ts';
 import { z } from 'zod';
-import packageJson from '../package.json';
-import { wsAckSchema } from '../src/contract/ws/ack.schema';
-import { wsChannels, wsSharedServerEvents } from '../src/contract/ws/registry';
-import type { WsChannel, WsServerEvent } from '../src/ws/channel';
+import packageJson from '../../package.json';
+import { wsAckSchema } from '../../src/contract/ws/ack.schema';
+import {
+  wsChannels,
+  wsSharedServerEvents,
+} from '../../src/contract/ws/registry';
+import type { WsChannel, WsServerEvent } from '../../src/ws/channel';
 
-export type WsOpenApiOptions = {
+type WsOpenApiOptions = {
   channels?: readonly WsChannel[];
   sharedServerEvents?: Readonly<Record<string, WsServerEvent>>;
 };

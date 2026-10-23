@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, it, type TestContext } from 'node:test';
 import type { OpenAPIObject } from 'openapi3-ts';
 import { z } from 'zod';
-import { getWsOpenApiDocument } from '../../openapi/generate-ws-openapi';
+import { getWsOpenApiDocument } from '../../openapi/ws/generate-ws-openapi';
 import type { WsChannel, WsServerEvent } from '../../src/ws/channel';
 import { formatHumanSummary, toJsonReport } from './report';
 import { type RunCompatCheckOptions, runCompatCheck } from './run-compat-check';
