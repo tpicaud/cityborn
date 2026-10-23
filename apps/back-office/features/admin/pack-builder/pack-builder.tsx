@@ -126,10 +126,13 @@ export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
                 >
                   <option value="">Aucun</option>
                   {packs
-                    .filter((c) => c.id !== pack.id)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
+                    .filter((candidateParent) => candidateParent.id !== pack.id)
+                    .map((candidateParent) => (
+                      <option
+                        key={candidateParent.id}
+                        value={candidateParent.id}
+                      >
+                        {candidateParent.name}
                       </option>
                     ))}
                 </select>
