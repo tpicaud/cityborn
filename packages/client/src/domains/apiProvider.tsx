@@ -5,7 +5,6 @@ import type { ContractClient } from '../api/contractClient';
 import type { AppFocus } from '../platform/appFocus';
 import { ServerStateProvider } from '../shared/serverStateProvider';
 import type { AuthApi } from './auth/authApi';
-import { type CategoryApi, createCategoryApi } from './category/categoryApi';
 import {
   createGameRecordApi,
   type GameRecordApi,
@@ -15,6 +14,7 @@ import {
   type GuessObjectApi,
 } from './guess-object/guessObjectApi';
 import { createHealthApi, type HealthApi } from './health/healthApi';
+import { createPackApi, type PackApi } from './pack/packApi';
 import { createSearchApi, type SearchApi } from './search/searchApi';
 import { createSessionApi, type SessionApi } from './session/sessionApi';
 import { createUserApi, type UserApi } from './user/userApi';
@@ -25,7 +25,7 @@ import {
 
 export type DomainApis = {
   authApi: AuthApi;
-  categoryApi: CategoryApi;
+  packApi: PackApi;
   gameRecordApi: GameRecordApi;
   guessObjectApi: GuessObjectApi;
   healthApi: HealthApi;
@@ -53,7 +53,7 @@ export function ApiProvider({
   const domainApis: DomainApis = useMemo<DomainApis>(
     () => ({
       authApi,
-      categoryApi: createCategoryApi(contractClient),
+      packApi: createPackApi(contractClient),
       gameRecordApi: createGameRecordApi(contractClient),
       guessObjectApi: createGuessObjectApi(contractClient),
       healthApi: createHealthApi(contractClient),

@@ -1,10 +1,10 @@
 import type { GameConfig, PlayerId, Session } from '@cityborn/api';
 import {
-  type CategorySelection,
+  type PackSelection,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
-  useCategorySelection,
+  usePackSelection,
   usePlayerNameForm,
 } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
@@ -39,14 +39,14 @@ export function MultiLobby({
   const [copied, setCopied] = useState(false);
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const {
-    isLoading: isLoadingCategories,
+    isLoading: isLoadingPacks,
     selectedPath,
     currentNodes,
     currentName,
-    openCategory,
+    openPack,
     goBack,
-    playCategory,
-  }: CategorySelection = useCategorySelection({
+    playPack,
+  }: PackSelection = usePackSelection({
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
@@ -63,7 +63,7 @@ export function MultiLobby({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (isLoadingCategories) {
+  if (isLoadingPacks) {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
@@ -144,7 +144,7 @@ export function MultiLobby({
                         size="small"
                         label="Jouer"
                         disabled={!isHost}
-                        onPress={() => playCategory(node)}
+                        onPress={() => playPack(node)}
                         className="w-24 h-9 px-0"
                       />
                       {node.children.length > 0 && (
@@ -152,7 +152,7 @@ export function MultiLobby({
                           variant="outlined"
                           size="small"
                           label="Sous-packs"
-                          onPress={() => openCategory(node)}
+                          onPress={() => openPack(node)}
                           className="w-24 h-9 px-0"
                         />
                       )}

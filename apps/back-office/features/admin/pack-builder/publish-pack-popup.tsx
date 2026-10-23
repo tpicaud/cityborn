@@ -2,12 +2,12 @@ import * as Ariakit from '@ariakit/react';
 import { CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-export function PublishCategoryPopup({
+export function PublishPackPopup({
   isPublished,
-  handlePublishCategory,
+  handlePublishPack,
 }: {
   isPublished: boolean;
-  handlePublishCategory: (publish: boolean) => Promise<void>;
+  handlePublishPack: (publish: boolean) => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
 
@@ -35,7 +35,7 @@ export function PublishCategoryPopup({
             />
             <p>
               Etes-vous sûr de vouloir {isPublished ? 'dépublier' : 'publier'}{' '}
-              la catégorie ?
+              le pack ?
             </p>
           </Ariakit.DialogHeading>
           <div className="flex justify-center gap-2 mt-4">
@@ -46,7 +46,7 @@ export function PublishCategoryPopup({
               <Button
                 variant="destructive"
                 onClick={async () => {
-                  await handlePublishCategory(false);
+                  await handlePublishPack(false);
                   dialog.hide();
                 }}
               >
@@ -56,7 +56,7 @@ export function PublishCategoryPopup({
               <Button
                 variant="destructive"
                 onClick={async () => {
-                  await handlePublishCategory(true);
+                  await handlePublishPack(true);
                   dialog.hide();
                 }}
               >

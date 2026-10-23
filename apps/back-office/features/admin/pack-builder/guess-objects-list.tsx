@@ -5,19 +5,17 @@ export function GuessObjectsList({
   guessObjects,
   selectedGuessObjectId,
   handleSelectGuessObject,
-  handleRemoveFromCategory,
+  handleRemoveFromPack,
 }: {
   guessObjects: GuessObject[] | undefined;
   selectedGuessObjectId: GuessObjectId | undefined;
   handleSelectGuessObject: (guessObject: GuessObject) => void;
-  handleRemoveFromCategory: (guessObject: GuessObject) => void;
+  handleRemoveFromPack: (guessObject: GuessObject) => void;
 }) {
   return (
     <div className="h-full w-full z-0">
       {!guessObjects || guessObjects.length === 0 ? (
-        <p className="text-center text-gray-300">
-          Aucun objet dans cette catégorie
-        </p>
+        <p className="text-center text-gray-300">Aucun objet dans ce pack</p>
       ) : (
         <div className="flex flex-col gap-2">
           {guessObjects.map((obj) => (
@@ -52,7 +50,7 @@ export function GuessObjectsList({
                   size="sm"
                   variant="destructive"
                   className="group-hover:!border-transparent group-hover:!bg-neutral-700"
-                  onClick={() => handleRemoveFromCategory(obj)}
+                  onClick={() => handleRemoveFromPack(obj)}
                 >
                   X
                 </Button>

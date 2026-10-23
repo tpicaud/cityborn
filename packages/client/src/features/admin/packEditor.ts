@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  type Category,
-  type CategoryId,
-  type FullCategory,
+  type FullPack,
   type GuessObject,
   type GuessObjectDraft,
   type GuessObjectId,
-  type UpdateCategory,
+  type Pack,
+  type PackId,
+  type UpdatePack,
   UserFacingError,
   type WorldLocationId,
 } from '@cityborn/api';
@@ -19,52 +19,47 @@ import {
 } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
-import {
-  categoriesQueryOptions,
-  fullCategoryQueryOptions,
-  markCategoriesStale,
-  removeDeletedCategory,
-} from '../../domains/category/categoryQueries';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
+import {
+  fullPackQueryOptions,
+  markPacksStale,
+  packsQueryOptions,
+  removeDeletedPack,
+} from '../../domains/pack/packQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
-import {
-  type CategoryEditorState,
-  toCategoryEditorState,
-} from './categoryEditorState';
 import { saveGuessObject } from './guessObjectSave';
+import { type PackEditorState, toPackEditorState } from './packEditorState';
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraftEditor,
 } from './useGuessObjectDraftEditor';
 
-export type CategoryEditorLoadOptions = {
-  categoryId: CategoryId;
+export type PackEditorLoadOptions = {
+  packId: PackId;
 };
 
-export type CategoryEditorLoad = {
-  categoryEditorState: CategoryEditorState;
+export type PackEditorLoad = {
+  packEditorState: PackEditorState;
   retry: () => void;
 };
 
-export type CategoryEditorOptions = {
-  editedCategory: FullCategory;
-  onCategoryDeleted: () => void;
+export type PackEditorOptions = {
+  editedPack: FullPack;
+  onPackDeleted: () => void;
 };
 
-type CategoryFields = Partial<
-  Pick<FullCategory, 'name' | 'description' | 'parentId'>
->;
+type PackFields = Partial<Pick<FullPack, 'name' | 'description' | 'parentId'>>;
 
-export type CategoryEditor = {
-  category: FullCategory;
+export type PackEditor = {
+  pack: FullPack;
   isSaving: boolean;
-  updateCategory: (fields: CategoryFields) => void;
-  saveCategory: () => Promise<void>;
-  publishCategory: (isPublished: boolean) => Promise<void>;
-  deleteCategory: () => Promise<void>;
+  updatePack: (fields: PackFields) => void;
+  savePack: () => Promise<void>;
+  publishPack: (isPublished: boolean) => Promise<void>;
+  deletePack: () => Promise<void>;
   removeGuessObject: (guessObject: GuessObject) => Promise<void>;
   saveGuessObjectDraft: () => Promise<void>;
   addImportedGuessObject: (guessObjectId: GuessObjectId) => Promise<void>;
@@ -87,77 +82,70 @@ function upsertGuessObject({
   guessObjects,
   guessObject,
 }: GuessObjectUpsert): GuessObject[] {
-  const isInCategory: boolean = guessObjects.some(
-    (categoryGuessObject: GuessObject) =>
-      categoryGuessObject.id === guessObject.id,
+  const isInPack: boolean = guessObjects.some(
+    (packGuessObject: GuessObject) => packGuessObject.id === guessObject.id,
   );
-  if (!isInCategory) return [...guessObjects, guessObject];
-  return guessObjects.map((categoryGuessObject: GuessObject) =>
-    categoryGuessObject.id === guessObject.id
-      ? guessObject
-      : categoryGuessObject,
+  if (!isInPack) return [...guessObjects, guessObject];
+  return guessObjects.map((packGuessObject: GuessObject) =>
+    packGuessObject.id === guessObject.id ? guessObject : packGuessObject,
   );
 }
 
-export function useCategoryEditorLoad({
-  categoryId,
-}: CategoryEditorLoadOptions): CategoryEditorLoad {
-  const { categoryApi }: DomainApis = useDomainApis();
-  const fullCategoryQuery: UseQueryResult<FullCategory | null> = useQuery(
-    fullCategoryQueryOptions({ categoryApi, categoryId }),
+export function usePackEditorLoad({
+  packId,
+}: PackEditorLoadOptions): PackEditorLoad {
+  const { packApi }: DomainApis = useDomainApis();
+  const fullPackQuery: UseQueryResult<FullPack | null> = useQuery(
+    fullPackQueryOptions({ packApi, packId }),
   );
-  const categoriesQuery: UseQueryResult<Category[]> = useQuery(
-    categoriesQueryOptions(categoryApi),
+  const packsQuery: UseQueryResult<Pack[]> = useQuery(
+    packsQueryOptions(packApi),
   );
 
   return {
-    categoryEditorState: toCategoryEditorState({
-      fullCategoryQuery,
-      categoriesQuery,
+    packEditorState: toPackEditorState({
+      fullPackQuery,
+      packsQuery,
     }),
     retry: () => {
-      fullCategoryQuery.refetch();
-      categoriesQuery.refetch();
+      fullPackQuery.refetch();
+      packsQuery.refetch();
     },
   };
 }
 
-export function useCategoryEditor({
-  editedCategory,
-  onCategoryDeleted,
-}: CategoryEditorOptions): CategoryEditor {
-  const { categoryApi, guessObjectApi }: DomainApis = useDomainApis();
+export function usePackEditor({
+  editedPack,
+  onPackDeleted,
+}: PackEditorOptions): PackEditor {
+  const { packApi, guessObjectApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
-  const [category, setCategory] = useState<FullCategory>(editedCategory);
+  const [pack, setPack] = useState<FullPack>(editedPack);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const sendCategoryUpdate = async (
-    categoryUpdate: UpdateCategory,
-  ): Promise<void> => {
-    await categoryApi.updateCategory({
-      categoryId: categoryUpdate.id,
-      category: categoryUpdate,
+  const sendPackUpdate = async (packUpdate: UpdatePack): Promise<void> => {
+    await packApi.updatePack({
+      packId: packUpdate.id,
+      pack: packUpdate,
     });
-    await markCategoriesStale(queryClient);
+    await markPacksStale(queryClient);
   };
 
-  const saveCategoryPublication = async (
-    isPublished: boolean,
-  ): Promise<void> => {
+  const savePackPublication = async (isPublished: boolean): Promise<void> => {
     setIsSaving(true);
     try {
-      await sendCategoryUpdate({
-        id: category.id,
-        name: category.name,
+      await sendPackUpdate({
+        id: pack.id,
+        name: pack.name,
         isPublished,
-        description: category.description,
-        parentId: category.parentId,
+        description: pack.description,
+        parentId: pack.parentId,
       });
-      setCategory((currentCategory: FullCategory) => ({
-        ...currentCategory,
+      setPack((currentPack: FullPack) => ({
+        ...currentPack,
         isPublished,
       }));
     } catch (error: unknown) {
@@ -176,16 +164,16 @@ export function useCategoryEditor({
       );
       if (!guessObject) return null;
 
-      await sendCategoryUpdate({
-        id: category.id,
-        name: category.name,
-        isPublished: category.isPublished,
+      await sendPackUpdate({
+        id: pack.id,
+        name: pack.name,
+        isPublished: pack.isPublished,
         connectIds: [guessObjectId],
       });
-      setCategory((currentCategory: FullCategory) => ({
-        ...currentCategory,
+      setPack((currentPack: FullPack) => ({
+        ...currentPack,
         guessObjects: upsertGuessObject({
-          guessObjects: currentCategory.guessObjects,
+          guessObjects: currentPack.guessObjects,
           guessObject,
         }),
       }));
@@ -232,24 +220,22 @@ export function useCategoryEditor({
   };
 
   const removeGuessObject = async (guessObject: GuessObject): Promise<void> => {
-    const isInCategory: boolean = category.guessObjects.some(
-      (categoryGuessObject: GuessObject) =>
-        categoryGuessObject.id === guessObject.id,
+    const isInPack: boolean = pack.guessObjects.some(
+      (packGuessObject: GuessObject) => packGuessObject.id === guessObject.id,
     );
-    if (!isInCategory) return;
+    if (!isInPack) return;
 
-    setCategory((currentCategory: FullCategory) => ({
-      ...currentCategory,
-      guessObjects: currentCategory.guessObjects.filter(
-        (categoryGuessObject: GuessObject) =>
-          categoryGuessObject.id !== guessObject.id,
+    setPack((currentPack: FullPack) => ({
+      ...currentPack,
+      guessObjects: currentPack.guessObjects.filter(
+        (packGuessObject: GuessObject) => packGuessObject.id !== guessObject.id,
       ),
     }));
     try {
-      await sendCategoryUpdate({
-        id: category.id,
-        name: category.name,
-        isPublished: category.isPublished,
+      await sendPackUpdate({
+        id: pack.id,
+        name: pack.name,
+        isPublished: pack.isPublished,
         disconnectIds: [guessObject.id],
       });
       guessObjectDraftEditor.showGuessObjectDraft(undefined);
@@ -259,21 +245,21 @@ export function useCategoryEditor({
   };
 
   return {
-    category,
+    pack,
     isSaving,
-    updateCategory: (fields: CategoryFields) =>
-      setCategory((currentCategory: FullCategory) => ({
-        ...currentCategory,
+    updatePack: (fields: PackFields) =>
+      setPack((currentPack: FullPack) => ({
+        ...currentPack,
         ...fields,
       })),
-    saveCategory: () => saveCategoryPublication(category.isPublished),
-    publishCategory: saveCategoryPublication,
-    deleteCategory: async () => {
+    savePack: () => savePackPublication(pack.isPublished),
+    publishPack: savePackPublication,
+    deletePack: async () => {
       setIsSaving(true);
       try {
-        await categoryApi.deleteCategory(category.id);
-        await removeDeletedCategory({ queryClient, categoryId: category.id });
-        onCategoryDeleted();
+        await packApi.deletePack(pack.id);
+        await removeDeletedPack({ queryClient, packId: pack.id });
+        onPackDeleted();
       } catch (error: unknown) {
         reportError(error, unexpectedErrorMessage);
       } finally {

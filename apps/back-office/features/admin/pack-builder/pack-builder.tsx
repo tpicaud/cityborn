@@ -1,50 +1,47 @@
 'use client';
 
 import {
-  type Category,
-  CategoryIdSchema,
-  type FullCategory,
+  type FullPack,
   type GuessObject,
+  type Pack,
+  PackIdSchema,
 } from '@cityborn/api';
 import {
-  type CategoryEditor,
   type GuessObjectDraftEditor,
-  useCategoryEditor,
+  type PackEditor,
+  usePackEditor,
 } from '@cityborn/client/admin';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
-import { DeleteCategoryPopup } from './delete-category-popup';
+import { DeletePackPopup } from './delete-pack-popup';
 import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
-import { PublishCategoryPopup } from './publish-category-popup';
+import { PublishPackPopup } from './publish-pack-popup';
 
-type CategoryBuilderProps = {
-  editedCategory: FullCategory;
-  categories: Category[];
+type PackBuilderProps = {
+  editedPack: FullPack;
+  packs: Pack[];
 };
 
-export function CategoryBuilder({
-  editedCategory,
-  categories,
-}: CategoryBuilderProps) {
+export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
   const router = useRouter();
   const {
-    category,
+    pack,
     isSaving,
-    updateCategory,
-    saveCategory,
-    publishCategory,
-    deleteCategory,
+    updatePack,
+    savePack,
+    publishPack,
+    deletePack,
     removeGuessObject,
     saveGuessObjectDraft,
     addImportedGuessObject,
     guessObjectDraftEditor,
-  }: CategoryEditor = useCategoryEditor({
-    editedCategory,
-    onCategoryDeleted: () => router.push('/dashboard'),
+  }: PackEditor = usePackEditor({
+    editedPack,
+    onPackDeleted: () => router.push('/dashboard'),
   });
   const {
     guessObjectDraft,
@@ -55,12 +52,12 @@ export function CategoryBuilder({
 
   const filteredGuessObjects: GuessObject[] = useMemo(
     () =>
-      category.guessObjects.filter((guessObject: GuessObject) =>
+      pack.guessObjects.filter((guessObject: GuessObject) =>
         guessObject.name
           .toLowerCase()
           .includes(searchObjectValue.toLowerCase()),
       ),
-    [category, searchObjectValue],
+    [pack, searchObjectValue],
   );
 
   return (
@@ -68,16 +65,16 @@ export function CategoryBuilder({
       <div className="flex-1 flex flex-col gap-8 w-full">
         <div className="flex flex-col w-full">
           <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
-            <h2 className="text-xl font-bold">Editeur de catégorie</h2>
+            <h2 className="text-xl font-bold">Editeur de pack</h2>
             <div className="flex flex-row items-center justify-center gap-2">
-              <Button size="sm" variant="outline" onClick={saveCategory}>
+              <Button size="sm" variant="outline" onClick={savePack}>
                 {isSaving ? <Loader /> : <p>Enregistrer</p>}
               </Button>
-              <PublishCategoryPopup
-                isPublished={category.isPublished}
-                handlePublishCategory={publishCategory}
+              <PublishPackPopup
+                isPublished={pack.isPublished}
+                handlePublishPack={publishPack}
               />
-              <DeleteCategoryPopup handleDeleteCategory={deleteCategory} />
+              <DeletePackPopup handleDeletePack={deletePack} />
             </div>
           </div>
           <span className="h-[2px] w-full bg-foreground"></span>
@@ -90,10 +87,10 @@ export function CategoryBuilder({
                 <input
                   type="text"
                   id="name"
-                  name={category.name}
+                  name={pack.name}
                   placeholder="e.g. Rolland Garros 2024"
-                  value={category.name}
-                  onChange={(e) => updateCategory({ name: e.target.value })}
+                  value={pack.name}
+                  onChange={(e) => updatePack({ name: e.target.value })}
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
@@ -102,12 +99,10 @@ export function CategoryBuilder({
                 <input
                   type="text"
                   id="Description"
-                  name={category.name}
+                  name={pack.name}
                   placeholder="e.g. Rolland Garros 2024"
-                  value={category.description}
-                  onChange={(e) =>
-                    updateCategory({ description: e.target.value })
-                  }
+                  value={pack.description}
+                  onChange={(e) => updatePack({ description: e.target.value })}
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
@@ -119,19 +114,19 @@ export function CategoryBuilder({
                 <label htmlFor="parent">Parent</label>
                 <select
                   id="parent"
-                  value={category.parentId ?? ''}
+                  value={pack.parentId ?? ''}
                   onChange={(e) =>
-                    updateCategory({
+                    updatePack({
                       parentId: e.target.value
-                        ? CategoryIdSchema.parse(e.target.value)
+                        ? PackIdSchema.parse(e.target.value)
                         : null,
                     })
                   }
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 >
                   <option value="">Aucun</option>
-                  {categories
-                    .filter((c) => c.id !== category.id)
+                  {packs
+                    .filter((c) => c.id !== pack.id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -144,10 +139,10 @@ export function CategoryBuilder({
                 <p
                   className={`
                             w-fit p-2 mt-3 text-xs rounded-md border
-                            ${category.isPublished ? 'text-green-600 border-green-500' : 'text-orange-500 border-orange-500'}
+                            ${pack.isPublished ? 'text-green-600 border-green-500' : 'text-orange-500 border-orange-500'}
                             `}
                 >
-                  {category.isPublished ? 'Publiée' : 'Non publiée'}
+                  {pack.isPublished ? 'Publié' : 'Non publié'}
                 </p>
               </div>
             </div>
@@ -158,7 +153,7 @@ export function CategoryBuilder({
                 Objets
                 <span className="font-bold text-gray-300">
                   {'(' +
-                    (category.guessObjects ? category.guessObjects.length : 0) +
+                    (pack.guessObjects ? pack.guessObjects.length : 0) +
                     ')'}
                 </span>
               </h2>
@@ -188,7 +183,7 @@ export function CategoryBuilder({
                     guessObjects={filteredGuessObjects}
                     selectedGuessObjectId={guessObjectDraft?.id}
                     handleSelectGuessObject={toggleGuessObjectSelection}
-                    handleRemoveFromCategory={removeGuessObject}
+                    handleRemoveFromPack={removeGuessObject}
                   />
                 </div>
               </div>

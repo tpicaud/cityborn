@@ -67,7 +67,7 @@ describe('createErrorReportingQueryCache', () => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
     context.after(() => queryClient.clear());
-    const queryError: Error = new Error('category trees unavailable');
+    const queryError: Error = new Error('pack trees unavailable');
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
     const stopObserving: () => void = observeQuery({
@@ -102,19 +102,19 @@ describe('createErrorReportingQueryCache', () => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
     context.after(() => queryClient.clear());
-    let failCategoryTreesFetch: (error: Error) => void = () => undefined;
+    let failPackTreesFetch: (error: Error) => void = () => undefined;
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
     const stopObserving: () => void = observeQuery({
       queryClient,
       queryFn: () =>
         new Promise<never>((_resolve, reject) => {
-          failCategoryTreesFetch = reject;
+          failPackTreesFetch = reject;
         }),
       reportsError: true,
     });
     stopObserving();
-    failCategoryTreesFetch(new Error('category trees unavailable'));
+    failPackTreesFetch(new Error('pack trees unavailable'));
     await queryErrorReceived;
 
     assert.deepEqual(reportedErrors, []);
@@ -124,12 +124,12 @@ describe('createErrorReportingQueryCache', () => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
     context.after(() => queryClient.clear());
-    queryClient.setQueryData<string>(observedQueryKey, 'cached category trees');
+    queryClient.setQueryData<string>(observedQueryKey, 'cached pack trees');
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
     const stopObserving: () => void = observeQuery({
       queryClient,
-      queryFn: () => Promise.reject(new Error('category trees unavailable')),
+      queryFn: () => Promise.reject(new Error('pack trees unavailable')),
       reportsError: true,
     });
     context.after(stopObserving);

@@ -2,10 +2,10 @@ import * as Ariakit from '@ariakit/react';
 import { CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-export function DeleteCategoryPopup({
-  handleDeleteCategory,
+export function DeletePackPopup({
+  handleDeletePack,
 }: {
-  handleDeleteCategory: () => Promise<void>;
+  handleDeletePack: () => Promise<void>;
 }) {
   const dialog = Ariakit.useDialogStore();
 
@@ -33,14 +33,14 @@ export function DeleteCategoryPopup({
             />
             <div>
               <p className="font-bold">Action irréversible</p>
-              <p>Etes-vous sûr de vouloir supprimer la catégorie ?</p>
+              <p>Etes-vous sûr de vouloir supprimer le pack ?</p>
             </div>
           </Ariakit.DialogHeading>
           <div className="flex justify-center gap-2 mt-4">
             <Button onClick={dialog.hide} variant="outline">
               Annuler
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCategory}>
+            <Button variant="destructive" onClick={handleDeletePack}>
               Supprimer
             </Button>
           </div>

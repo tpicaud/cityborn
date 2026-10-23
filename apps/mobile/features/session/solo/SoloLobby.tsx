@@ -1,8 +1,5 @@
 import type { GameConfig, Session } from '@cityborn/api';
-import {
-  type CategorySelection,
-  useCategorySelection,
-} from '@cityborn/client/session';
+import { type PackSelection, usePackSelection } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -24,21 +21,21 @@ export function SoloLobby({
   handleStartGame,
 }: SoloLobbyProps) {
   const {
-    isLoading: isLoadingCategories,
+    isLoading: isLoadingPacks,
     selectedPath,
     currentNodes,
     currentName,
-    openCategory,
+    openPack,
     goBack,
-    playCategory,
-  }: CategorySelection = useCategorySelection({
+    playPack,
+  }: PackSelection = usePackSelection({
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });
 
-  if (isLoadingCategories) {
+  if (isLoadingPacks) {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
@@ -80,7 +77,7 @@ export function SoloLobby({
                       size="small"
                       label="Jouer"
                       disabled={!isHost}
-                      onPress={() => playCategory(node)}
+                      onPress={() => playPack(node)}
                       className="w-26 h-9"
                     />
                     {node.children.length > 0 && (
@@ -88,7 +85,7 @@ export function SoloLobby({
                         variant="outlined"
                         size="small"
                         label="Sous-packs"
-                        onPress={() => openCategory(node)}
+                        onPress={() => openPack(node)}
                         className="w-26 h-9 px-0"
                       />
                     )}

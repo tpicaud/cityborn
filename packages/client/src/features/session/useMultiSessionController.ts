@@ -1,7 +1,7 @@
 'use client';
 
 import type {
-  GameConfig,
+  GameConfigChanges,
   Guess,
   PlayerId,
   Session,
@@ -10,7 +10,11 @@ import type {
   SessionReconnectToken,
   UserId,
 } from '@cityborn/api';
-import { GameStatus, SessionStatus } from '@cityborn/api';
+import {
+  applyGameConfigChanges,
+  GameStatus,
+  SessionStatus,
+} from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   type RefObject,
@@ -173,15 +177,14 @@ export function useMultiSessionController({
     }).updateHost(newHostID);
   };
 
-  const updateGameConfig = async (partialGameConfig: Partial<GameConfig>) => {
+  const updateGameConfig = async (changes: GameConfigChanges) => {
     const current = requireSession('Updating game config');
     await requireOpenedSessionChannel({
       sessionChannel,
       action: 'Updating game config',
-    }).updateGameConfig({
-      ...current.gameConfig,
-      ...partialGameConfig,
-    });
+    }).updateGameConfig(
+      applyGameConfigChanges({ gameConfig: current.gameConfig, changes }),
+    );
   };
 
   const startGame = async () => {

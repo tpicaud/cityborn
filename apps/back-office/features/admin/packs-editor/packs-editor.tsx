@@ -1,39 +1,35 @@
 'use client';
 
-import type { Category } from '@cityborn/api';
-import {
-  type CategoryCatalog,
-  useCategoryCatalog,
-} from '@cityborn/client/admin';
+import type { Pack } from '@cityborn/api';
+import { type PackCatalog, usePackCatalog } from '@cityborn/client/admin';
 import { RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
-import { CategoriesList } from './categories-list';
-import { CreateCategoryDialog } from './create-category-popup';
+import { CreatePackDialog } from './create-pack-popup';
+import { PacksList } from './packs-list';
 
-export function CategoriesEditor() {
+export function PacksEditor() {
   const router = useRouter();
-  const { categories, isLoading, reloadCategories }: CategoryCatalog =
-    useCategoryCatalog();
+  const { packs, isLoading, reloadPacks }: PackCatalog = usePackCatalog();
   const [searchValue, setSearchValue] = useState<string>('');
 
-  const filteredCategories = useMemo(() => {
-    return categories.filter((category) =>
-      category.name.toLowerCase().includes(searchValue.toLowerCase()),
+  const filteredPacks = useMemo(() => {
+    return packs.filter((pack) =>
+      pack.name.toLowerCase().includes(searchValue.toLowerCase()),
     );
-  }, [categories, searchValue]);
+  }, [packs, searchValue]);
 
-  function onCategorySelect(category: Category): void {
-    router.push(`/dashboard/edit-category?id=${category.id}`);
+  function onPackSelect(pack: Pack): void {
+    router.push(`/dashboard/edit-pack?id=${pack.id}`);
   }
 
   return (
     <div className="h-full w-full flex flex-col gap-6">
       <div className="flex flex-col w-full">
         <div className="flex flex-row gap-2 mb-2 items-center">
-          <h2 className="text-xl font-bold">Catégories</h2>
+          <h2 className="text-xl font-bold">Packs</h2>
         </div>
 
         <span className="h-[2px] w-full bg-foreground"></span>
@@ -49,21 +45,16 @@ export function CategoriesEditor() {
       </div>
       <div className="flex flex-col items-center justify-center gap-4">
         <div className="flex flex-row gap-2 mb-1">
-          <CreateCategoryDialog onCategoryCreated={onCategorySelect} />
-          <Button variant="outline" onClick={reloadCategories}>
+          <CreatePackDialog onPackCreated={onPackSelect} />
+          <Button variant="outline" onClick={reloadPacks}>
             <RefreshCcw />
           </Button>
         </div>
         {!isLoading ? (
-          !filteredCategories || filteredCategories.length === 0 ? (
-            <p className="text-center text-gray-300">
-              Aucunes catégories trouvées
-            </p>
+          !filteredPacks || filteredPacks.length === 0 ? (
+            <p className="text-center text-gray-300">Aucun pack trouvé</p>
           ) : (
-            <CategoriesList
-              categories={filteredCategories}
-              onCategorySelect={onCategorySelect}
-            />
+            <PacksList packs={filteredPacks} onPackSelect={onPackSelect} />
           )
         ) : (
           <div className="flex items-center justify-center">

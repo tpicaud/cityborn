@@ -1,16 +1,13 @@
 import * as Ariakit from '@ariakit/react';
-import type { Category } from '@cityborn/api';
-import {
-  type CategoryCreation,
-  useCategoryCreation,
-} from '@cityborn/client/admin';
+import type { Pack } from '@cityborn/api';
+import { type PackCreation, usePackCreation } from '@cityborn/client/admin';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-export function CreateCategoryDialog({
-  onCategoryCreated,
+export function CreatePackDialog({
+  onPackCreated,
 }: {
-  onCategoryCreated: (category: Category) => void;
+  onPackCreated: (pack: Pack) => void;
 }) {
   const dialog = Ariakit.useDialogStore();
   const {
@@ -19,10 +16,10 @@ export function CreateCategoryDialog({
       formState: { errors, isSubmitting },
     },
     submit,
-  }: CategoryCreation = useCategoryCreation({
-    onCategoryCreated: (category: Category) => {
+  }: PackCreation = usePackCreation({
+    onPackCreated: (pack: Pack) => {
       dialog.hide();
-      onCategoryCreated(category);
+      onPackCreated(pack);
     },
   });
 
@@ -43,7 +40,7 @@ export function CreateCategoryDialog({
       >
         <div className="h-full w-full p-6">
           <Ariakit.DialogHeading className="text-center font-bold">
-            Nouvelle catégorie
+            Nouveau pack
           </Ariakit.DialogHeading>
 
           <form

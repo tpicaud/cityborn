@@ -1,6 +1,12 @@
 'use client';
 
-import type { Game, GameConfig, Guess, PlayerId, Session } from '@cityborn/api';
+import type {
+  Game,
+  GameConfigChanges,
+  Guess,
+  PlayerId,
+  Session,
+} from '@cityborn/api';
 import { PlayerIdSchema, SessionMode } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -63,9 +69,9 @@ export function useSoloSessionController({
     return current;
   };
 
-  const updateGameConfig = async (gameConfig: Partial<GameConfig>) => {
+  const updateGameConfig = async (changes: GameConfigChanges) => {
     const current = requireSession('Updating game config');
-    updateSession(withGameConfig(current, gameConfig));
+    updateSession(withGameConfig(current, changes));
   };
 
   const startGame = async () => {

@@ -7,12 +7,12 @@ import {
   SessionMode,
 } from '@cityborn/api';
 import {
-  type CategorySelection,
+  type PackSelection,
   type PlayerConnectionStatus,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
-  useCategorySelection,
+  usePackSelection,
   usePlayerNameForm,
 } from '@cityborn/client/session';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -76,14 +76,14 @@ export const Lobby = ({
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const navigation = useNavigation();
   const {
-    isLoading: isLoadingCategories,
+    isLoading: isLoadingPacks,
     selectedPath,
     currentNodes,
     currentName,
-    openCategory,
+    openPack,
     goBack,
-    playCategory,
-  }: CategorySelection = useCategorySelection({
+    playPack,
+  }: PackSelection = usePackSelection({
     session,
     isHost,
     updateGameConfig: handleUpdateGameConfig,
@@ -100,8 +100,8 @@ export const Lobby = ({
     await handleJoinSession?.(playerID);
   });
 
-  if (isLoadingCategories) {
-    return <LoadingDialog message="Chargement des catégories" />;
+  if (isLoadingPacks) {
+    return <LoadingDialog message="Chargement des packs" />;
   }
 
   return (
@@ -259,7 +259,7 @@ export const Lobby = ({
                         size="small"
                         variant="contained"
                         disabled={!isHost}
-                        onClick={() => playCategory(node)}
+                        onClick={() => playPack(node)}
                         sx={{ width: 96, fontSize: '0.7rem' }}
                       >
                         Jouer
@@ -268,7 +268,7 @@ export const Lobby = ({
                         <Button
                           size="small"
                           variant="outlined"
-                          onClick={() => openCategory(node)}
+                          onClick={() => openPack(node)}
                           sx={{ width: 96, fontSize: '0.7rem' }}
                         >
                           Sous-packs
