@@ -24,6 +24,12 @@
       "file": "api-v5.json",
       "versionNumber": 5,
       "releasedAt": "2026-10-23T09:00:16.024Z"
+    },
+    {
+      "file": "api-v6.json",
+      "versionNumber": 6,
+      "releasedAt": "2026-10-23T12:35:32.934Z",
+      "draft": true
     }
   ]
 }
