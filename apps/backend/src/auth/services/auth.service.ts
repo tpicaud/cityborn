@@ -8,6 +8,7 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdateEmail,
   type UpdatePassword,
   type User,
   type UserId,
@@ -366,6 +367,14 @@ export class AuthService {
     await this.rateLimitService.clearFailedSignIns(user.id);
   }
 
+  async updateEmail(user: User, { email }: UpdateEmail): Promise<User> {
+    await this.rateLimitService.consumeAccountEmail(user.id);
+
+    const updatedUser: User = await this.userService.updateEmail(user, email);
+    this.sendVerificationEmailInBackground(updatedUser);
+    return updatedUser;
+  }
+
   async resendVerificationEmail(user: User): Promise<void> {
     if (user.isVerified) return;
     await this.sendVerificationEmail(user, verificationEmailCooldown);
@@ -397,13 +406,7 @@ export class AuthService {
       password: passwordHash,
     });
 
-    void this.sendVerificationEmail(user).catch((error: unknown) => {
-      this.wideEventService.recordOperationError(error, {
-        domain: 'auth',
-        operation: 'send_verification_email',
-        userId: user.id,
-      });
-    });
+    this.sendVerificationEmailInBackground(user);
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -418,6 +421,16 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  private sendVerificationEmailInBackground(user: User): void {
+    void this.sendVerificationEmail(user).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: user.id,
+      });
+    });
   }
 
   private sendMailInBackground({

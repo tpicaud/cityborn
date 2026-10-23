@@ -279,6 +279,27 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('persists the new email', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const updatedUser: User = await userRepository.updateEmail(
+        user.id,
+        'fixed@cityborn.test',
+      );
+
+      expect(updatedUser.email).toBe('fixed@cityborn.test');
+      expect(
+        await userRepository.findByEmail('fixed@cityborn.test'),
+      ).toMatchObject({ id: user.id });
+    });
+  });
+
   describe('updatePassword', () => {
     it('persists the new password hash', async () => {
       const userData: User = buildUser();

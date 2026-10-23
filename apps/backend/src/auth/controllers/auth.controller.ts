@@ -30,6 +30,7 @@ const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
   resendVerificationEmail: contract.auth.resendVerificationEmail,
+  updateEmail: contract.auth.updateEmail,
 });
 
 const refreshRoutes = c.router({
@@ -94,6 +95,10 @@ export class AuthController {
         await this.authService.resendVerificationEmail(user);
         return { status: 200 as const, body: {} };
       },
+      updateEmail: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.authService.updateEmail(user, body),
+      }),
     });
   }
 

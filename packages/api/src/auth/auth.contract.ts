@@ -12,6 +12,7 @@ import {
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UpdateEmailSchema,
   UpdatePasswordSchema,
   VerifyEmailDataSchema,
 } from './auth.schema';
@@ -136,6 +137,12 @@ export const authContract = c.router(
       path: '/password',
       body: UpdatePasswordSchema,
       responses: { 200: AuthResponseSchema },
+    },
+    updateEmail: {
+      method: 'PATCH',
+      path: '/email',
+      body: UpdateEmailSchema,
+      responses: { 200: UserSchema },
     },
     requestPasswordReset: {
       method: 'POST',

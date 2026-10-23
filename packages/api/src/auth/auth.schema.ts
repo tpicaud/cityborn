@@ -16,6 +16,10 @@ export const CreateUserSchema = z.object({
   password: PasswordSchema,
 });
 
+export const UpdateEmailSchema = z.object({
+  email: z.string().email(),
+});
+
 export const UpdatePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: PasswordSchema,
@@ -62,6 +66,7 @@ export const VerifyEmailDataSchema = z.object({
 });
 
 export type CreateUser = z.infer<typeof CreateUserSchema>;
+export type UpdateEmail = z.infer<typeof UpdateEmailSchema>;
 export type UpdatePassword = z.infer<typeof UpdatePasswordSchema>;
 export type RequestPasswordReset = z.infer<typeof RequestPasswordResetSchema>;
 export type ResetPassword = z.infer<typeof ResetPasswordSchema>;

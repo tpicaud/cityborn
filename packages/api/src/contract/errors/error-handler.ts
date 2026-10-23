@@ -13,6 +13,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "Le nom d'utilisateur est déjà pris.",
   [ErrorCode.USER_EMAIL_ALREADY_TAKEN]:
     "L'adresse mail est déjà utilisée pour un autre compte.",
+  [ErrorCode.USER_EMAIL_ALREADY_VERIFIED]:
+    "L'adresse mail est déjà vérifiée et ne peut plus être modifiée.",
   [ErrorCode.USER_NOT_VANILLA_ACCOUNT]:
     "Vous n'avez pas de compte Cityborn. Êtes-vous sûr que ce n'est pas un compte d'un autre fournisseur ? (e.g. Google)",
   [ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED]:

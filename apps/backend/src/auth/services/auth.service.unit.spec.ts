@@ -724,6 +724,44 @@ describe('AuthService account operations', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('sends a verification link to the corrected address', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const updatedUser: User = buildUser({
+        isVerified: false,
+        email: 'fixed@cityborn.test',
+      });
+      const {
+        authService,
+        userService,
+        mailService,
+        rateLimitService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(updatedUser);
+      userService.createEmailVerificationToken.mockResolvedValue(
+        'verification-token',
+      );
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      const result: User = await authService.updateEmail(user, {
+        email: 'fixed@cityborn.test',
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
+        user.id,
+      );
+      expect(userService.updateEmail).toHaveBeenCalledWith(
+        user,
+        'fixed@cityborn.test',
+      );
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'fixed@cityborn.test' }),
+      );
+      expect(result).toEqual(updatedUser);
+    });
+  });
+
   describe('resendVerificationEmail', () => {
     it('does not resend verification to a verified user', async () => {
       const {
