@@ -799,6 +799,51 @@ describe('AuthService account operations', () => {
     });
   });
 
+  describe('renewVerificationEmail', () => {
+    it('sends a new link to the unverified owner of the token', async () => {
+      const owner: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(owner);
+      userService.createEmailVerificationToken.mockResolvedValue('fresh-token');
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(userService.findVerificationTokenOwner).toHaveBeenCalledWith(
+        'expired-token',
+      );
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: owner.email,
+          text: expect.stringContaining('verification_token=fresh-token'),
+        }),
+      );
+    });
+
+    it('sends nothing to an already verified owner', async () => {
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(
+        buildUser({ isVerified: true }),
+      );
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+    });
+  });
+
   describe('verifyEmail', () => {
     it('verifies an email and returns the public user', async () => {
       const unverifiedUser: User = buildUser({ isVerified: false });

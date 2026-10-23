@@ -380,6 +380,15 @@ export class AuthService {
     await this.sendVerificationEmail(user, verificationEmailCooldown);
   }
 
+  async renewVerificationEmail({
+    verification_token,
+  }: VerifyEmailData): Promise<void> {
+    const user: User =
+      await this.userService.findVerificationTokenOwner(verification_token);
+    if (user.isVerified) return;
+    await this.sendVerificationEmail(user, verificationEmailCooldown);
+  }
+
   async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
     const user = await this.userService.verifyEmail(
       verifyEmailData.verification_token,

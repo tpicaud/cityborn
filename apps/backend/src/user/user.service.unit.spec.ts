@@ -333,9 +333,10 @@ describe('UserService verification tokens', () => {
   });
 
   describe('verifyEmail', () => {
-    it('deletes and rejects an expired token', async () => {
+    it('keeps and rejects an expired token as expired', async () => {
       const {
         emailVerificationTokenRepository,
+        userRepository,
         userService,
       }: ReturnType<typeof buildUserService> = buildUserService();
       const expiredToken: EmailVerificationToken = {
@@ -349,11 +350,26 @@ describe('UserService verification tokens', () => {
       );
 
       await expect(userService.verifyEmail('expired')).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN },
       });
       expect(
-        emailVerificationTokenRepository.deleteVerificationToken,
-      ).toHaveBeenCalledWith('token-id');
+        emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+      ).not.toHaveBeenCalled();
+      expect(userRepository.markEmailVerified).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown token as invalid', async () => {
+      const {
+        emailVerificationTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+        null,
+      );
+
+      await expect(userService.verifyEmail('unknown')).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+      });
     });
 
     it('verifies the user and removes its tokens', async () => {
@@ -380,6 +396,44 @@ describe('UserService verification tokens', () => {
       expect(
         emailVerificationTokenRepository.deleteVerificationTokensByUserId,
       ).toHaveBeenCalledWith(verificationToken.userId);
+    });
+  });
+});
+
+describe('UserService.findVerificationTokenOwner', () => {
+  it('identifies the owner of an expired token', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    const owner: User = buildUser({ isVerified: false });
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue({
+      id: 'token-id',
+      userId: owner.id,
+      expiresAt: new Date(Date.now() - 1),
+      createdAt: new Date(),
+    });
+    userRepository.findById.mockResolvedValue(owner);
+
+    await expect(
+      userService.findVerificationTokenOwner('expired'),
+    ).resolves.toEqual(owner);
+  });
+
+  it('rejects an unknown token', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+      null,
+    );
+
+    await expect(
+      userService.findVerificationTokenOwner('unknown'),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
     });
   });
 });

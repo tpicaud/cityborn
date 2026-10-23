@@ -26,6 +26,5 @@ export interface EmailVerificationTokenRepository {
     verificationToken: string,
   ): Promise<EmailVerificationToken | null>;
   createVerificationToken(data: CreateEmailVerificationToken): Promise<void>;
-  deleteVerificationToken(id: string): Promise<void>;
   deleteVerificationTokensByUserId(userId: UserId): Promise<void>;
 }

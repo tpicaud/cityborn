@@ -1,10 +1,13 @@
 import { Suspense } from 'react';
+import CenteredPageCard from '@/components/ui/cards/CenteredPageCard';
 import { VerifyEmail } from '@/features/auth/VerifyEmail';
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense>
-      <VerifyEmail />
-    </Suspense>
+    <CenteredPageCard>
+      <Suspense>
+        <VerifyEmail />
+      </Suspense>
+    </CenteredPageCard>
   );
 }
