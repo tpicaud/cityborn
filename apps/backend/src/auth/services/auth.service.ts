@@ -388,7 +388,9 @@ export class AuthService {
       user,
       email,
     });
-    this.sendVerificationEmailInBackground(updatedUser);
+    if (updatedUser.email !== user.email) {
+      this.sendVerificationEmailInBackground(updatedUser);
+    }
     return updatedUser;
   }
 
