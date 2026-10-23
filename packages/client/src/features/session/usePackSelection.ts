@@ -55,21 +55,24 @@ export function usePackSelection({
   }: UseQueryResult<PackTree[]> = useQuery(packTreesQueryOptions(packApi));
   const [selectedPath, setSelectedPath] = useState<PackTree[]>([]);
 
-  const allPacks = useMemo(() => flattenPackTree(packTrees), [packTrees]);
+  const allPacks: Pack[] = useMemo(
+    () => flattenPackTree(packTrees),
+    [packTrees],
+  );
 
-  const hasPacks = session.gameConfig.packs.length > 0;
+  const hasPacks: boolean = session.gameConfig.packs.length > 0;
 
   useEffect(() => {
     if (!isHost || hasPacks || allPacks.length === 0) return;
     updateGameConfig({ packs: allPacks });
   }, [isHost, hasPacks, allPacks, updateGameConfig]);
 
-  const currentNodes =
+  const currentNodes: PackTree[] =
     selectedPath.length === 0
       ? packTrees
       : selectedPath[selectedPath.length - 1].children;
 
-  const playPack = async (node: PackTree) => {
+  const playPack: PackSelection['playPack'] = async (node: PackTree) => {
     await updateGameConfig({ packs: [toPack(node)] });
     await startGame();
   };
