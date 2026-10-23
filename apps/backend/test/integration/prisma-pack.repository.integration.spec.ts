@@ -4,12 +4,14 @@ import type {
   GuessObject,
   Pack,
   PackTree,
+  Theme,
   UpdatePack,
   WorldLocation,
 } from '@cityborn/api';
 import {
   buildCreatePack,
   buildGuessObject,
+  buildTheme,
   buildUpdatePack,
   buildWorldLocation,
 } from '@cityborn/api';
@@ -24,6 +26,7 @@ describe('PrismaPackRepository', () => {
   const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
   let packRepository: PrismaPackRepository;
+  const miscellaneousTheme: Theme = buildTheme();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -37,6 +40,10 @@ describe('PrismaPackRepository', () => {
   afterAll(async () => {
     await module?.close();
     await infrastructure.close();
+  });
+
+  beforeEach(async () => {
+    await prisma.theme.create({ data: miscellaneousTheme });
   });
 
   describe('findBy', () => {
@@ -116,6 +123,14 @@ describe('PrismaPackRepository', () => {
   });
 
   describe('create', () => {
+    it('places a new pack in the miscellaneous theme', async () => {
+      const packData: CreatePack = buildCreatePack();
+
+      const pack: Pack = await packRepository.create(packData);
+
+      expect(pack.themeId).toBe(miscellaneousTheme.id);
+    });
+
     it('connects a guess object when creating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
@@ -150,6 +165,39 @@ describe('PrismaPackRepository', () => {
   });
 
   describe('update', () => {
+    it('moves a pack to another theme without changing its parent theme', async () => {
+      const sportTheme: Theme = buildTheme({
+        id: '00000000-0000-4000-8000-000000000050',
+        name: 'Sport',
+      });
+      await prisma.theme.create({ data: sportTheme });
+      const parentData: CreatePack = buildCreatePack({ name: 'Parent' });
+      const parent: Pack = await packRepository.create(parentData);
+      const childData: CreatePack = buildCreatePack({
+        name: 'Child',
+        parentId: parent.id,
+      });
+      const child: Pack = await packRepository.create(childData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: child.id,
+        name: child.name,
+        parentId: parent.id,
+        themeId: sportTheme.id,
+      });
+
+      await packRepository.update(child.id, updateData);
+
+      const packs: Pack[] = await packRepository.findBy({
+        ids: [parent.id, child.id],
+      });
+      expect(packs.map(({ id, themeId }) => ({ id, themeId }))).toEqual(
+        expect.arrayContaining([
+          { id: parent.id, themeId: miscellaneousTheme.id },
+          { id: child.id, themeId: sportTheme.id },
+        ]),
+      );
+    });
+
     it('connects a guess object when updating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();

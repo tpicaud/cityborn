@@ -2,21 +2,24 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { z } from 'zod';
 import { buildPack } from '../pack/pack.builder';
-import type { Pack } from '../pack/pack.schema';
+import { type Pack, PackIdSchema } from '../pack/pack.schema';
 import {
   applyGameConfigChanges,
   type GameConfig,
+  type GameConfigPack,
   GameConfigSchema,
 } from './game.schema';
 
-const monuments: Pack = buildPack({
-  id: '00000000-0000-4000-8000-000000000011',
+const monuments: GameConfigPack = {
+  id: PackIdSchema.parse('00000000-0000-4000-8000-000000000011'),
   name: 'Monuments',
-});
-const capitals: Pack = buildPack({
-  id: '00000000-0000-4000-8000-000000000012',
+  isPublished: true,
+};
+const capitals: GameConfigPack = {
+  id: PackIdSchema.parse('00000000-0000-4000-8000-000000000012'),
   name: 'Capitales',
-});
+  isPublished: true,
+};
 
 describe('GameConfigSchema', () => {
   it('emits the packs under both keys when only packs is sent', () => {
@@ -55,6 +58,21 @@ describe('GameConfigSchema', () => {
 
     assert.deepEqual(gameConfig.packs, [capitals]);
     assert.deepEqual(gameConfig.categories, [capitals]);
+  });
+
+  it('drops the theme of the selected packs', () => {
+    const themedMonuments: Pack = buildPack({
+      id: monuments.id,
+      name: monuments.name,
+    });
+
+    const gameConfig: GameConfig = GameConfigSchema.parse({
+      packs: [themedMonuments],
+      timer: 25,
+      nbOfObjects: 6,
+    });
+
+    assert.deepEqual(gameConfig.packs, [monuments]);
   });
 
   it('rejects a config without packs nor categories', () => {

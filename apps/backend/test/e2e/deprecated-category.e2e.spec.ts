@@ -2,9 +2,11 @@ import {
   type ApiError,
   ApiErrorSchema,
   buildPack,
+  buildTheme,
   contract,
   ErrorCode,
   type Pack,
+  type Theme,
 } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
@@ -23,9 +25,17 @@ describe('Deprecated category routes', () => {
   });
 
   it('serves the same pack trees as the pack route', async () => {
-    const pack: Pack = buildPack();
-    await app.get(PrismaService).pack.create({
-      data: { id: pack.id, name: pack.name, isPublished: pack.isPublished },
+    const prismaService: PrismaService = app.get(PrismaService);
+    const theme: Theme = buildTheme();
+    await prismaService.theme.create({ data: theme });
+    const pack: Pack = buildPack({ themeId: theme.id });
+    await prismaService.pack.create({
+      data: {
+        id: pack.id,
+        name: pack.name,
+        isPublished: pack.isPublished,
+        themeId: pack.themeId,
+      },
     });
 
     const categoryResponse: request.Response = await request(
@@ -42,6 +52,7 @@ describe('Deprecated category routes', () => {
         id: pack.id,
         name: pack.name,
         isPublished: pack.isPublished,
+        themeId: theme.id,
         children: [],
       },
     ]);

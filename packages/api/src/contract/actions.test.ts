@@ -47,6 +47,7 @@ describe('httpActionRoutes', () => {
       'admin.pack.updatePack',
       'admin.search.searchGuessObject',
       'admin.search.searchWorldLocation',
+      'admin.theme.getThemes',
       'admin.world-location.createWorldLocation',
       'auth.cookie.refresh',
       'auth.cookie.signIn',

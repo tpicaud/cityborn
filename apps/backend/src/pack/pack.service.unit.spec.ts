@@ -13,14 +13,18 @@ import {
   buildFullPack,
   buildGuessObject,
   buildPack,
+  buildTheme,
   buildUpdatePack,
   ErrorCode,
   GuessObjectIdSchema,
   PackIdSchema,
+  type Theme,
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import { NotFoundException } from '@nestjs/common';
 import type { GuessObjectService } from '../guess-object/guess-object.service';
+import type { ThemeService } from '../theme/theme.service';
 import { PackService } from './pack.service';
 import type { PackRepository } from './repositories/pack.repository';
 
@@ -45,12 +49,14 @@ function buildPackService() {
     createMock<PackRepository>();
   const guessObjectService: DeepMocked<GuessObjectService> =
     createMock<GuessObjectService>();
+  const themeService: DeepMocked<ThemeService> = createMock<ThemeService>();
   const packService: PackService = new PackService(
     packRepository,
     guessObjectService,
+    themeService,
   );
 
-  return { packRepository, packService, guessObjectService };
+  return { packRepository, packService, guessObjectService, themeService };
 }
 
 describe('PackService.findTrees', () => {
@@ -243,6 +249,62 @@ describe('PackService.update', () => {
 
     expect(guessObjectService.delete).toHaveBeenCalledTimes(1);
     expect(guessObjectService.delete).toHaveBeenCalledWith(orphanId);
+  });
+
+  it('checks that the requested theme exists before updating the pack', async () => {
+    const {
+      packRepository,
+      packService,
+      themeService,
+    }: ReturnType<typeof buildPackService> = buildPackService();
+    const theme: Theme = buildTheme({
+      id: '00000000-0000-4000-8000-000000000050',
+      name: 'Sport',
+    });
+    const payload: UpdatePack = buildUpdatePack({ themeId: theme.id });
+    themeService.findById.mockResolvedValue(theme);
+    packRepository.update.mockResolvedValue(buildPack(payload));
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(themeService.findById).toHaveBeenCalledWith(theme.id);
+    expect(packRepository.update).toHaveBeenCalledWith(
+      packId('pack-1'),
+      payload,
+    );
+  });
+
+  it('rejects an unknown theme without updating the pack', async () => {
+    const {
+      packRepository,
+      packService,
+      themeService,
+    }: ReturnType<typeof buildPackService> = buildPackService();
+    const payload: UpdatePack = buildUpdatePack({
+      themeId: '00000000-0000-4000-8000-000000000051',
+    });
+    themeService.findById.mockRejectedValue(
+      new NotFoundException({ code: ErrorCode.THEME_NOT_FOUND }),
+    );
+
+    await expect(
+      packService.update(packId('pack-1'), payload),
+    ).rejects.toMatchObject({ response: { code: ErrorCode.THEME_NOT_FOUND } });
+    expect(packRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('keeps the theme unchecked when the update does not change it', async () => {
+    const {
+      packRepository,
+      packService,
+      themeService,
+    }: ReturnType<typeof buildPackService> = buildPackService();
+    const payload: UpdatePack = buildUpdatePack({ themeId: undefined });
+    packRepository.update.mockResolvedValue(buildPack());
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(themeService.findById).not.toHaveBeenCalled();
   });
 });
 

@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { GuessObjectService } from '../guess-object/guess-object.service';
+import { ThemeService } from '../theme/theme.service';
 import {
   PACK_REPOSITORY,
   type PackRepository,
@@ -27,6 +28,7 @@ export class PackService {
     @Inject(PACK_REPOSITORY)
     private readonly packRepository: PackRepository,
     private readonly guessObjectService: GuessObjectService,
+    private readonly themeService: ThemeService,
   ) {}
 
   async findTrees(): Promise<PackTree[]> {
@@ -71,6 +73,9 @@ export class PackService {
   }
 
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
+    if (data.themeId !== undefined) {
+      await this.themeService.findById(data.themeId);
+    }
     if (!data.disconnectIds?.length) {
       return this.packRepository.update(packId, data);
     }

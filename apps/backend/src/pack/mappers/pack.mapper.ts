@@ -29,6 +29,7 @@ export const PackMapper = {
       isPublished: prismaPack.isPublished,
       description: prismaPack.description ?? undefined,
       parentId: prismaPack.parentId ?? undefined,
+      themeId: prismaPack.themeId,
     });
   },
 
@@ -43,6 +44,7 @@ export const PackMapper = {
       isPublished: prismaPack.isPublished,
       description: prismaPack.description ?? undefined,
       parentId: prismaPack.parentId ?? undefined,
+      themeId: prismaPack.themeId,
       guessObjects:
         prismaPack.guessObjects?.map((guessObject) =>
           GuessObjectMapper.toGuessObject(guessObject),
@@ -61,6 +63,7 @@ export const PackMapper = {
       isPublished: node.isPublished,
       description: node.description ?? undefined,
       parentId: node.parentId ?? undefined,
+      themeId: node.themeId,
       children:
         'children' in node
           ? node.children.map((child) => PackMapper.toPackTree(child))

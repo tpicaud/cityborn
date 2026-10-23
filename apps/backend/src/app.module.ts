@@ -23,6 +23,7 @@ import { RedisModule } from './redis/redis.module';
 import { SearchModule } from './search/search.module';
 import { SentenceModule } from './sentence/sentence.module';
 import { SessionModule } from './session/session.module';
+import { ThemeModule } from './theme/theme.module';
 import { UserModule } from './user/user.module';
 import { WikidataModule } from './wikidata/wikidata.module';
 import { WorldLocationModule } from './world-location/world-location.module';
@@ -49,6 +50,7 @@ import { WsHandshakeModule } from './ws-handshake/ws-handshake.module';
     NominatimModule,
     WorldLocationModule,
     PackModule,
+    ThemeModule,
     SearchModule,
     RateLimitModule,
     WsHandshakeModule,

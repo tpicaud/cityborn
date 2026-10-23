@@ -4,7 +4,7 @@ import {
   FullGuessObjectSchema,
   GuessObjectIdSchema,
 } from '../guess-object/guess-object.schema';
-import { type Pack, PackSchema } from '../pack/pack.schema';
+import { PackSchema } from '../pack/pack.schema';
 import { PlayerIdSchema, PlayerResultsSchema } from '../player/player.schema';
 
 export const GameIdSchema = z.string().brand<'GameId'>();
@@ -52,14 +52,16 @@ const PlayerResultsByIdSchema = z
   .record(PlayerIdSchema, PlayerResultsSchema)
   .refine(isCompleteRecord);
 
+const GameConfigPackSchema = PackSchema.omit({ themeId: true });
+
 const GameConfigInputSchema = z.object({
-  packs: z.array(PackSchema).optional(),
+  packs: z.array(GameConfigPackSchema).optional(),
   /**
    * @deprecated Utiliser `packs` à la place. Conservé pour les builds mobile
    * publiées avant le renommage de Category en Pack.
    * @deprecatedSince 2026-10-23
    */
-  categories: z.array(PackSchema).optional(),
+  categories: z.array(GameConfigPackSchema).optional(),
   timer: z.number(),
   nbOfObjects: z.number(),
 });
@@ -67,7 +69,7 @@ const GameConfigInputSchema = z.object({
 export const GameConfigSchema = extendApi(
   GameConfigInputSchema.transform(
     ({ packs, categories, ...settings }, context) => {
-      const selectedPacks: Pack[] | undefined = categories ?? packs;
+      const selectedPacks: GameConfigPack[] | undefined = categories ?? packs;
       if (selectedPacks === undefined) {
         context.addIssue({
           code: z.ZodIssueCode.invalid_type,
@@ -117,6 +119,7 @@ export const defaultGameConfig: Readonly<GameConfig> = {
   nbOfObjects: 6,
 };
 
+export type GameConfigPack = z.infer<typeof GameConfigPackSchema>;
 export type Coord = z.infer<typeof CoordSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
@@ -132,6 +135,6 @@ export function applyGameConfigChanges({
   gameConfig: GameConfig;
   changes: GameConfigChanges;
 }): GameConfig {
-  const packs: Pack[] = changes.packs ?? gameConfig.packs;
+  const packs: GameConfigPack[] = changes.packs ?? gameConfig.packs;
   return { ...gameConfig, ...changes, packs, categories: packs };
 }

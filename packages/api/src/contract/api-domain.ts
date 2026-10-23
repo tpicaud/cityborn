@@ -13,6 +13,7 @@ export const API_DOMAINS = [
   'search',
   'sentence',
   'session',
+  'theme',
   'user',
   'world-location',
 ] as const;

@@ -78,6 +78,9 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
 
+  // Theme
+  [ErrorCode.THEME_NOT_FOUND]: 'Aucun thème trouvé pour cet identifiant.',
+
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:
     'Trop de requêtes. Veuillez patienter avant de réessayer.',

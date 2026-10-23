@@ -30,6 +30,8 @@ export * from './src/sentence/sentence.schema';
 export * from './src/session/session.builder';
 export * from './src/session/session.channel';
 export * from './src/session/session.schema';
+export * from './src/theme/theme.builder';
+export * from './src/theme/theme.schema';
 export * from './src/user/user.builder';
 export * from './src/user/user.schema';
 export * from './src/world-location/world-location.builder';
