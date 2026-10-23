@@ -27,7 +27,7 @@ Terminé quand le check passe et que les cas des descriptions modifiées sont à
   - il nomme le skill, jamais ses fichiers de référence ;
   - il va du spécifique vers le générique, sans cycle ;
   - `AGENTS.md` renvoie vers un skill seulement pour une étape ou un garde-fou incontournable.
-- `writing-for-agents` reste identique à sa source (`mattpocock/skills`) ; toute adaptation Cityborn vit dans ce skill.
+- Un skill importé, listé dans `skills-lock.json`, reste identique à sa source, langue comprise ; toute adaptation Cityborn vit dans ce skill.
 
 ## Skills
 

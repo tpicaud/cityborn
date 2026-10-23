@@ -18,8 +18,10 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Ajoute au frontend une page publique `/player/<username>`. » | `conventions-client-apps` |
 | « Ajoute la variable `SENTRY_DSN` au backend. » | `conventions-environment` |
 | « Rédige une issue pour le bug de reconnexion. » | `write-issue` |
+| « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `write-issue`, puis `grilling` avant le brouillon |
 | « Développe-moi l'issue #123. » | `deliver-issue` |
 | « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
+| « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |
 | « Vérifie les dépréciations de l'API. » | `remove-deprecations` |
 | « Nettoie toutes les dépréciations éligibles. » | `remove-deprecations` |
 | « Ajoute au skill client une règle de nommage des hooks. » | `agent-docs`, puis `writing-for-agents` |

@@ -68,7 +68,26 @@ const listMarkdownFiles = (directoryPath: string): string[] => {
   });
 };
 
-const externalSkillRoots: string[] = [join(skillsRoot, 'writing-for-agents')];
+const skillsLockPath: string = join(repositoryRoot, 'skills-lock.json');
+
+const importedSkillNames = (): string[] => {
+  const skillsLock: unknown = JSON.parse(readText(skillsLockPath));
+  if (
+    typeof skillsLock !== 'object' ||
+    skillsLock === null ||
+    !('skills' in skillsLock) ||
+    typeof skillsLock.skills !== 'object' ||
+    skillsLock.skills === null
+  ) {
+    errors.push(`${repositoryPath(skillsLockPath)}: champ skills invalide`);
+    return [];
+  }
+  return Object.keys(skillsLock.skills);
+};
+
+const externalSkillRoots: string[] = importedSkillNames().map(
+  (skillName: string): string => join(skillsRoot, skillName),
+);
 
 const isExternalSkillDocument = (markdownPath: string): boolean =>
   externalSkillRoots.some((externalSkillRoot: string): boolean =>
