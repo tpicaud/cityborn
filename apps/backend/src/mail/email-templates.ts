@@ -1,41 +1,274 @@
-import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type {
-  MailAttachment,
-  SendMailOptions,
-} from './providers/mail.provider';
+import type { SendMailOptions } from './providers/mail.provider';
 
-const logoFilename: string = 'logo-transparent.png';
-const logoContentId: string = logoFilename;
-const bundledLogoPath: string = resolve(
+const logoFilename = 'logo-transparent.png';
+const logoContentId = logoFilename;
+const logoPath = resolve(
   __dirname,
   '../../frontend/assets/logo-transparent.png',
 );
-const logoPath: string = existsSync(bundledLogoPath)
-  ? bundledLogoPath
-  : resolve(__dirname, '../../../frontend/assets/logo-transparent.png');
+
+const ignoreRequestNotice: string =
+  "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.";
+
+type EmailAction = {
+  label: string;
+  url: URL;
+};
+
+type ActionEmail = {
+  to: string;
+  subject: string;
+  preheader: string;
+  heading: string;
+  paragraphs: string[];
+  primaryAction: EmailAction;
+  secondaryAction?: EmailAction;
+  validityNotice?: string;
+};
+
+type VerificationEmailParams = {
+  email: string;
+  frontendUrl: string;
+  verificationToken: string;
+  username: string;
+};
+
+type PasswordResetEmailParams = {
+  email: string;
+  frontendUrl: string;
+  passwordResetToken: string;
+  username: string;
+  validityMinutes: number;
+};
+
+type ExistingAccountEmailParams = {
+  email: string;
+  frontendUrl: string;
+  username: string;
+};
+
+type MailTemplateParams = {
+  'verification-email': VerificationEmailParams;
+  'password-reset-email': PasswordResetEmailParams;
+  'existing-account-email': ExistingAccountEmailParams;
+};
+
+type BuildMailOptionsArgs = {
+  [TemplateName in keyof MailTemplateParams]: [
+    templateName: TemplateName,
+    templateParams: MailTemplateParams[TemplateName],
+  ];
+}[keyof MailTemplateParams];
+
+export function buildMailOptions(
+  ...args: BuildMailOptionsArgs
+): SendMailOptions {
+  switch (args[0]) {
+    case 'verification-email':
+      return buildActionEmail(buildVerificationEmail(args[1]));
+    case 'password-reset-email':
+      return buildActionEmail(buildPasswordResetEmail(args[1]));
+    case 'existing-account-email':
+      return buildActionEmail(buildExistingAccountEmail(args[1]));
+  }
+}
+
+function buildVerificationEmail({
+  email,
+  frontendUrl,
+  verificationToken,
+  username,
+}: VerificationEmailParams): ActionEmail {
+  const verificationUrl: URL = new URL('/verify-email', frontendUrl);
+  verificationUrl.searchParams.set('verification_token', verificationToken);
+
+  return {
+    to: email,
+    subject: 'Vérifiez votre adresse e-mail Cityborn',
+    preheader: "Plus qu'une étape pour commencer votre aventure Cityborn.",
+    heading: `Bienvenue, ${username} !`,
+    paragraphs: [
+      'Votre compte est presque prêt. Confirmez votre adresse e-mail pour finaliser votre inscription et commencer à explorer le monde avec Cityborn.',
+      'Il vous suffit de cliquer sur le bouton ci-dessous :',
+    ],
+    primaryAction: {
+      label: 'Vérifier mon adresse e-mail',
+      url: verificationUrl,
+    },
+    validityNotice: 'Ce lien est valable pendant 24 heures.',
+  };
+}
+
+function buildPasswordResetEmail({
+  email,
+  frontendUrl,
+  passwordResetToken,
+  username,
+  validityMinutes,
+}: PasswordResetEmailParams): ActionEmail {
+  const passwordResetUrl: URL = new URL('/reset-password', frontendUrl);
+  passwordResetUrl.searchParams.set('token', passwordResetToken);
+
+  return {
+    to: email,
+    subject: 'Réinitialisez votre mot de passe Cityborn',
+    preheader: 'Choisissez un nouveau mot de passe pour votre compte Cityborn.',
+    heading: `Bonjour, ${username} !`,
+    paragraphs: [
+      'Une réinitialisation du mot de passe de votre compte Cityborn a été demandée.',
+      'Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Vos autres appareils seront déconnectés.',
+    ],
+    primaryAction: {
+      label: 'Choisir un nouveau mot de passe',
+      url: passwordResetUrl,
+    },
+    validityNotice: `Ce lien est valable pendant ${validityMinutes} minutes.`,
+  };
+}
+
+function buildExistingAccountEmail({
+  email,
+  frontendUrl,
+  username,
+}: ExistingAccountEmailParams): ActionEmail {
+  return {
+    to: email,
+    subject: 'Vous avez déjà un compte Cityborn',
+    preheader: 'Une inscription a été tentée avec votre adresse e-mail.',
+    heading: `Bonjour, ${username} !`,
+    paragraphs: [
+      'Une inscription à Cityborn a été demandée avec votre adresse e-mail, mais un compte existe déjà pour cette adresse.',
+      `Connectez-vous avec votre pseudo ${username} ou votre adresse e-mail. Si vous avez oublié votre mot de passe, vous pouvez le réinitialiser.`,
+    ],
+    primaryAction: {
+      label: 'Me connecter',
+      url: new URL('/', frontendUrl),
+    },
+    secondaryAction: {
+      label: 'Réinitialiser mon mot de passe',
+      url: new URL('/forgot-password', frontendUrl),
+    },
+  };
+}
+
+function buildActionEmail({
+  to,
+  subject,
+  preheader,
+  heading,
+  paragraphs,
+  primaryAction,
+  secondaryAction,
+  validityNotice,
+}: ActionEmail): SendMailOptions {
+  const primaryHref: string = escapeHtml(primaryAction.url.toString());
+
+  return {
+    to,
+    subject,
+    text: [
+      heading,
+      '',
+      ...paragraphs,
+      '',
+      `${primaryAction.label} : ${primaryAction.url.toString()}`,
+      ...(secondaryAction
+        ? [`${secondaryAction.label} : ${secondaryAction.url.toString()}`]
+        : []),
+      '',
+      ...(validityNotice ? [validityNotice] : []),
+      ignoreRequestNotice,
+      '',
+      "L'équipe Cityborn",
+    ].join('\n'),
+    html: `
+      ${buildEmailTemplateHeader({ preheader, title: subject })}
+                  <tr>
+                    <td style="padding:42px 44px 20px;">
+                      <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
+                        ${escapeHtml(heading)}
+                      </h1>
+                      ${paragraphs
+                        .map(
+                          (paragraph: string) => `
+                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
+                        ${escapeHtml(paragraph)}
+                      </p>`,
+                        )
+                        .join('')}
+
+                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:12px auto 0;">
+                        <tr>
+                          <td align="center" bgcolor="#ff7600" style="border-radius:12px; mso-padding-alt:15px 28px;">
+                            <a href="${primaryHref}" style="display:inline-block; padding:15px 28px; color:#ffffff; font-size:16px; line-height:20px; font-weight:800; text-decoration:none; border-radius:12px;">
+                              ${escapeHtml(primaryAction.label)}
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                      ${secondaryAction ? buildSecondaryAction(secondaryAction) : ''}
+                      ${validityNotice ? buildValidityNotice(validityNotice) : ''}
+
+                      <p style="margin:28px 0 0; color:#6d7f7f; font-size:13px; line-height:21px;">
+                        Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :
+                      </p>
+                      <p style="margin:6px 0 0; font-size:12px; line-height:19px; word-break:break-all;">
+                        <a href="${primaryHref}" style="color:#008988; text-decoration:underline;">${primaryHref}</a>
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:24px 44px 32px;">
+                      <div style="height:1px; background-color:#dceaea; font-size:0; line-height:0;">&nbsp;</div>
+                      <p style="margin:22px 0 0; color:#7b8c8c; font-size:13px; line-height:21px; text-align:center;">
+                        ${escapeHtml(ignoreRequestNotice)}
+                      </p>
+                    </td>
+                  </tr>
+                  ${buildEmailTemplateFooter()}
+    `,
+    attachments: [
+      {
+        filename: logoFilename,
+        path: logoPath,
+        cid: logoContentId,
+        contentDisposition: 'inline',
+      },
+    ],
+  };
+}
+
+function buildSecondaryAction({ label, url }: EmailAction): string {
+  return `
+                      <p style="margin:20px 0 0; text-align:center; font-size:15px; line-height:22px;">
+                        <a href="${escapeHtml(url.toString())}" style="color:#008988; font-weight:700; text-decoration:underline;">${escapeHtml(label)}</a>
+                      </p>`;
+}
+
+function buildValidityNotice(validityNotice: string): string {
+  return `
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
+                        <tr>
+                          <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
+                            <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
+                              ${escapeHtml(validityNotice)}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>`;
+}
 
 type EmailTemplateHeaderParams = {
   preheader: string;
   title: string;
 };
 
-type ActionEmailParams = {
-  email: string;
-  subject: string;
-  text: string;
-  preheader: string;
-  title: string;
-  introduction: string;
-  actionUrl: URL;
-  actionLabel: string;
-  validityDuration: string;
-};
-
-const buildEmailTemplateHeader = ({
+function buildEmailTemplateHeader({
   preheader,
   title,
-}: EmailTemplateHeaderParams): string => `
+}: EmailTemplateHeaderParams): string {
+  return `
       <!doctype html>
       <html lang="fr">
         <head>
@@ -65,8 +298,10 @@ const buildEmailTemplateHeader = ({
                     </td>
                   </tr>
 `;
+}
 
-const buildEmailTemplateFooter = (): string => `
+function buildEmailTemplateFooter(): string {
+  return `
                   <tr>
                     <td align="center" style="padding:24px 32px; background-color:#006f6e;">
                       <p style="margin:0; color:#ffffff; font-size:13px; line-height:20px; font-weight:700;">
@@ -84,129 +319,6 @@ const buildEmailTemplateFooter = (): string => `
         </body>
       </html>
 `;
-
-type VerificationEmailParams = {
-  email: string;
-  frontendUrl: string;
-  verificationToken: string;
-  username: string;
-};
-
-type MailTemplateParams = {
-  'verification-email': VerificationEmailParams;
-  'password-reset': {
-    email: string;
-    username: string;
-    token: string;
-    frontendUrl: string;
-    validityDurationMinutes: number;
-  };
-  'password-changed': { email: string; username: string };
-};
-
-type BuildMailOptionsArgs = {
-  [TemplateName in keyof MailTemplateParams]: [
-    templateName: TemplateName,
-    templateParams: MailTemplateParams[TemplateName],
-  ];
-}[keyof MailTemplateParams];
-
-export function buildMailOptions(
-  ...args: BuildMailOptionsArgs
-): SendMailOptions {
-  switch (args[0]) {
-    case 'password-reset':
-      return buildPasswordResetEmail(args[1]);
-    case 'password-changed':
-      return buildPasswordChangedEmail(args[1]);
-    case 'verification-email':
-      return buildVerificationEmail(args[1]);
-  }
-}
-
-function buildVerificationEmail({
-  email,
-  frontendUrl,
-  verificationToken,
-  username,
-}: VerificationEmailParams): SendMailOptions {
-  const verificationUrl = new URL('/verify-email', frontendUrl);
-  verificationUrl.searchParams.set('verification_token', verificationToken);
-  const escapedUsername = escapeHtml(username);
-  const verificationHref = escapeHtml(verificationUrl.toString());
-
-  return {
-    to: email,
-    subject: 'Vérifiez votre adresse e-mail Cityborn',
-    text: [
-      `Bonjour ${username},`,
-      '',
-      'Bienvenue sur Cityborn !',
-      'Confirmez votre adresse e-mail pour finaliser la création de votre compte :',
-      verificationUrl.toString(),
-      '',
-      'Ce lien est valable pendant 24 heures.',
-      "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.",
-      '',
-      "L'équipe Cityborn",
-    ].join('\n'),
-    html: `
-      ${buildEmailTemplateHeader({
-        preheader: "Plus qu'une étape pour commencer votre aventure Cityborn.",
-        title: 'Vérifiez votre adresse e-mail Cityborn',
-      })}
-                  <tr>
-                    <td style="padding:42px 44px 20px;">
-                      <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
-                        Bienvenue, ${escapedUsername} !
-                      </h1>
-                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Votre compte est presque prêt. Confirmez votre adresse e-mail pour finaliser votre inscription et commencer à explorer le monde avec Cityborn.
-                      </p>
-                      <p style="margin:0 0 28px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Il vous suffit de cliquer sur le bouton ci-dessous :
-                      </p>
-
-                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
-                        <tr>
-                          <td align="center" bgcolor="#ff7600" style="border-radius:12px; mso-padding-alt:15px 28px;">
-                            <a href="${verificationHref}" style="display:inline-block; padding:15px 28px; color:#ffffff; font-size:16px; line-height:20px; font-weight:800; text-decoration:none; border-radius:12px;">
-                              Vérifier mon adresse e-mail
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
-                        <tr>
-                          <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
-                            <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
-                              Ce lien est valable pendant <strong style="color:#008988;">24 heures</strong>.
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p style="margin:28px 0 0; color:#6d7f7f; font-size:13px; line-height:21px;">
-                        Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :
-                      </p>
-                      <p style="margin:6px 0 0; font-size:12px; line-height:19px; word-break:break-all;">
-                        <a href="${verificationHref}" style="color:#008988; text-decoration:underline;">${verificationHref}</a>
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:24px 44px 32px;">
-                      <div style="height:1px; background-color:#dceaea; font-size:0; line-height:0;">&nbsp;</div>
-                      <p style="margin:22px 0 0; color:#7b8c8c; font-size:13px; line-height:21px; text-align:center;">
-                        Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.
-                      </p>
-                    </td>
-                  </tr>
-                  ${buildEmailTemplateFooter()}
-    `,
-    attachments: [buildLogoAttachment()],
-  };
 }
 
 function escapeHtml(value: string): string {
@@ -216,150 +328,4 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-function buildActionEmail(params: ActionEmailParams): SendMailOptions {
-  const actionHref: string = escapeHtml(params.actionUrl.toString());
-
-  return {
-    to: params.email,
-    subject: params.subject,
-    text: params.text,
-    html: `
-      ${buildEmailTemplateHeader({
-        preheader: params.preheader,
-        title: params.subject,
-      })}
-                  <tr>
-                    <td style="padding:42px 44px 20px;">
-                      <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
-                        ${escapeHtml(params.title)}
-                      </h1>
-                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        ${escapeHtml(params.introduction)}
-                      </p>
-                      <p style="margin:0 0 28px; color:#3f5555; font-size:16px; line-height:26px;">
-                        Il vous suffit de cliquer sur le bouton ci-dessous :
-                      </p>
-
-                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
-                        <tr>
-                          <td align="center" bgcolor="#ff7600" style="border-radius:12px; mso-padding-alt:15px 28px;">
-                            <a href="${actionHref}" style="display:inline-block; padding:15px 28px; color:#ffffff; font-size:16px; line-height:20px; font-weight:800; text-decoration:none; border-radius:12px;">
-                              ${escapeHtml(params.actionLabel)}
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
-                        <tr>
-                          <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
-                            <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
-                              Ce lien est valable pendant <strong style="color:#008988;">${escapeHtml(params.validityDuration)}</strong>.
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p style="margin:28px 0 0; color:#6d7f7f; font-size:13px; line-height:21px;">
-                        Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :
-                      </p>
-                      <p style="margin:6px 0 0; font-size:12px; line-height:19px; word-break:break-all;">
-                        <a href="${actionHref}" style="color:#008988; text-decoration:underline;">${actionHref}</a>
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:24px 44px 32px;">
-                      <div style="height:1px; background-color:#dceaea; font-size:0; line-height:0;">&nbsp;</div>
-                      <p style="margin:22px 0 0; color:#7b8c8c; font-size:13px; line-height:21px; text-align:center;">
-                        Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.
-                      </p>
-                    </td>
-                  </tr>
-                  ${buildEmailTemplateFooter()}
-    `,
-    attachments: [buildLogoAttachment()],
-  };
-}
-
-function buildPasswordResetEmail(
-  params: MailTemplateParams['password-reset'],
-): SendMailOptions {
-  const url: URL = new URL('/reset-password', params.frontendUrl);
-  url.hash = new URLSearchParams({ token: params.token }).toString();
-  const subject: string = 'Réinitialisez votre mot de passe Cityborn';
-  const validityDuration: string = new Intl.NumberFormat('fr', {
-    style: 'unit',
-    unit: 'minute',
-    unitDisplay: 'long',
-  }).format(params.validityDurationMinutes);
-  return buildActionEmail({
-    email: params.email,
-    subject,
-    text: `Bonjour ${params.username},\nRéinitialisez votre mot de passe : ${url.toString()}\nCe lien expire dans ${validityDuration}. Si vous n’avez pas demandé ce changement, ignorez cet e-mail.`,
-    preheader: 'Choisissez un nouveau mot de passe pour votre compte Cityborn.',
-    title: `Bonjour ${params.username},`,
-    introduction:
-      'Vous avez demandé la réinitialisation de votre mot de passe Cityborn. Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.',
-    actionUrl: url,
-    actionLabel: 'Réinitialiser mon mot de passe',
-    validityDuration,
-  });
-}
-
-function buildPasswordChangedEmail(
-  params: MailTemplateParams['password-changed'],
-): SendMailOptions {
-  const subject: string = 'Votre mot de passe Cityborn a été modifié';
-  const greeting: string = `Bonjour ${params.username},`;
-  const confirmationMessage: string =
-    'Votre mot de passe a bien été modifié. Toutes vos anciennes sessions ont été déconnectées.';
-  const securityNotice: string =
-    'Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe depuis la connexion Cityborn.';
-  return {
-    to: params.email,
-    subject,
-    text: `${greeting}\n\n${confirmationMessage} ${securityNotice}\n\nL’équipe Cityborn`,
-    html: `
-      ${buildEmailTemplateHeader({
-        preheader: 'Votre nouveau mot de passe est prêt à être utilisé.',
-        title: subject,
-      })}
-                  <tr>
-                    <td style="padding:42px 44px 32px;">
-                      <h1 style="margin:0 0 20px; color:#008988; font-size:28px; line-height:36px; font-weight:800;">
-                        Votre mot de passe a été modifié
-                      </h1>
-                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        ${escapeHtml(greeting)}
-                      </p>
-                      <p style="margin:0 0 16px; color:#3f5555; font-size:16px; line-height:26px;">
-                        ${escapeHtml(confirmationMessage)}
-                      </p>
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
-                        <tr>
-                          <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
-                            <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
-                              ${escapeHtml(securityNotice)}
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-      ${buildEmailTemplateFooter()}
-    `,
-    attachments: [buildLogoAttachment()],
-  };
-}
-
-function buildLogoAttachment(): MailAttachment {
-  return {
-    filename: logoFilename,
-    path: logoPath,
-    cid: logoContentId,
-    contentDisposition: 'inline',
-  };
 }
