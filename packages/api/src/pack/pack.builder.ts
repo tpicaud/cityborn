@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { buildTheme } from '../theme/theme.builder';
 import {
   type CreatePack,
   CreatePackSchema,
@@ -17,6 +18,7 @@ export function buildPack(
     id: '00000000-0000-4000-8000-000000000010',
     name: 'Monuments',
     isPublished: true,
+    themeId: buildTheme().id,
     ...overrides,
   });
 }

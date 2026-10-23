@@ -66,9 +66,9 @@ model GameRecord {
   users User[] @relation("GameRecordUsers")
 }
 
-///////////////////////////////////////
-// Location/GuessObject/Packs models //
-///////////////////////////////////////
+//////////////////////////////////////////////
+// Location/GuessObject/Packs/Themes models //
+//////////////////////////////////////////////
 
 model WorldLocation {
   id           String  @id @default(dbgenerated("gen_random_uuid()"))
@@ -110,18 +110,28 @@ model GuessObject {
   packs             Pack[]        @relation("PackGuessObjects")
 }
 
+model Theme {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @unique
+
+  packs Pack[]
+}
+
 model Pack {
   id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   isPublished Boolean @default(false)
   description String?
   parentId    String? @db.Uuid
+  themeId     String  @default("244b803a-63aa-460a-a40d-4eea0ec2be50") @db.Uuid
 
   parent       Pack?         @relation("PackChildren", fields: [parentId], references: [id])
   children     Pack[]        @relation("PackChildren")
+  theme        Theme         @relation(fields: [themeId], references: [id])
   guessObjects GuessObject[] @relation("PackGuessObjects")
 
   @@index([parentId])
+  @@index([themeId])
 }
 
 ///////////////////////

@@ -5,6 +5,8 @@ import {
   type GuessObject,
   type Pack,
   PackIdSchema,
+  type Theme,
+  ThemeIdSchema,
 } from '@cityborn/api';
 import {
   type GuessObjectDraftEditor,
@@ -16,6 +18,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
+import { ThemeBadge } from '../theme-badge';
 import { DeletePackPopup } from './delete-pack-popup';
 import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
@@ -24,9 +27,10 @@ import { PublishPackPopup } from './publish-pack-popup';
 type PackBuilderProps = {
   editedPack: FullPack;
   packs: Pack[];
+  themes: Theme[];
 };
 
-export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
+export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
   const router = useRouter();
   const {
     pack,
@@ -66,6 +70,7 @@ export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
         <div className="flex flex-col w-full">
           <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
             <h2 className="text-xl font-bold">Editeur de pack</h2>
+            <ThemeBadge themes={themes} themeId={pack.themeId} />
             <div className="flex flex-row items-center justify-center gap-2">
               <Button size="sm" variant="outline" onClick={savePack}>
                 {isSaving ? <Loader /> : <p>Enregistrer</p>}
@@ -110,7 +115,7 @@ export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
           </div>
           <div className="flex flex-col">
             <div className="w-full flex flex-row gap-12">
-              <div className="h-full flex flex-col w-[70%] min-w-40">
+              <div className="h-full flex flex-col w-[40%] min-w-40">
                 <label htmlFor="parent">Parent</label>
                 <select
                   id="parent"
@@ -135,6 +140,23 @@ export function PackBuilder({ editedPack, packs }: PackBuilderProps) {
                         {candidateParent.name}
                       </option>
                     ))}
+                </select>
+              </div>
+              <div className="h-full flex flex-col w-[30%] min-w-40">
+                <label htmlFor="theme">Thème</label>
+                <select
+                  id="theme"
+                  value={pack.themeId}
+                  onChange={(e) =>
+                    updatePack({ themeId: ThemeIdSchema.parse(e.target.value) })
+                  }
+                  className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
+                >
+                  {themes.map((theme: Theme) => (
+                    <option key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="h-full flex flex-col w-[30%] min-w-40">

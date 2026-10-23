@@ -6,9 +6,15 @@ import type {
   GuessObjectId,
   Pack,
   PatchGuessObject,
+  Theme,
   WorldLocation,
 } from '@cityborn/api';
-import { buildGuessObject, buildPack, buildWorldLocation } from '@cityborn/api';
+import {
+  buildGuessObject,
+  buildPack,
+  buildTheme,
+  buildWorldLocation,
+} from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -298,12 +304,15 @@ describe('PrismaGuessObjectRepository', () => {
         name: 'Louvre Museum',
         world_location_id: location.id,
       });
-      const pack: Pack = buildPack();
+      const theme: Theme = buildTheme();
+      await prisma.theme.create({ data: theme });
+      const pack: Pack = buildPack({ themeId: theme.id });
       await prisma.pack.create({
         data: {
           id: pack.id,
           name: pack.name,
           isPublished: pack.isPublished,
+          themeId: pack.themeId,
           guessObjects: { connect: { id: linkedId } },
         },
       });

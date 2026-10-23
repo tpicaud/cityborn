@@ -37,6 +37,7 @@ export function PackBuilderLoader({ packId }: { packId: PackId }) {
       key={packEditorState.pack.id}
       editedPack={packEditorState.pack}
       packs={packEditorState.packs}
+      themes={packEditorState.themes}
     />
   );
 }

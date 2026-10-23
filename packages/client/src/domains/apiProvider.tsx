@@ -17,6 +17,7 @@ import { createHealthApi, type HealthApi } from './health/healthApi';
 import { createPackApi, type PackApi } from './pack/packApi';
 import { createSearchApi, type SearchApi } from './search/searchApi';
 import { createSessionApi, type SessionApi } from './session/sessionApi';
+import { createThemeApi, type ThemeApi } from './theme/themeApi';
 import { createUserApi, type UserApi } from './user/userApi';
 import {
   createWorldLocationApi,
@@ -31,6 +32,7 @@ export type DomainApis = {
   healthApi: HealthApi;
   searchApi: SearchApi;
   sessionApi: SessionApi;
+  themeApi: ThemeApi;
   userApi: UserApi;
   worldLocationApi: WorldLocationApi;
 };
@@ -59,6 +61,7 @@ export function ApiProvider({
       healthApi: createHealthApi(contractClient),
       searchApi: createSearchApi(contractClient),
       sessionApi: createSessionApi(contractClient),
+      themeApi: createThemeApi(contractClient),
       userApi: createUserApi(contractClient),
       worldLocationApi: createWorldLocationApi(contractClient),
     }),

@@ -6,6 +6,7 @@ import { PackErrorCode } from '../../pack/pack.error-codes';
 import { PlayerErrorCode } from '../../player/player.error-codes';
 import { SentenceErrorCode } from '../../sentence/sentence.error-codes';
 import { SessionErrorCode } from '../../session/session.error-codes';
+import { ThemeErrorCode } from '../../theme/theme.error-codes';
 import { UserErrorCode } from '../../user/user.error-codes';
 import { WorldLocationErrorCode } from '../../world-location/world-location.error-codes';
 
@@ -19,6 +20,7 @@ export const ErrorCode = Object.freeze({
   ...GuessObjectErrorCode,
   ...WorldLocationErrorCode,
   ...PackErrorCode,
+  ...ThemeErrorCode,
   ...TechnicalErrorCode,
 });
 

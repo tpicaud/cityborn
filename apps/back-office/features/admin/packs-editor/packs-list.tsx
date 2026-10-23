@@ -1,10 +1,13 @@
-import type { Pack } from '@cityborn/api';
+import type { Pack, Theme } from '@cityborn/api';
+import { ThemeBadge } from '../theme-badge';
 
 export function PacksList({
   packs,
+  themes,
   onPackSelect,
 }: {
   packs: Pack[];
+  themes: Theme[];
   onPackSelect: (pack: Pack) => void;
 }) {
   return (
@@ -34,6 +37,7 @@ export function PacksList({
                 )}
               </div>
               <h3 className="text-left text-lg font-bold">{pack.name}</h3>
+              <ThemeBadge themes={themes} themeId={pack.themeId} />
             </div>
             <div>
               {pack.description ? (

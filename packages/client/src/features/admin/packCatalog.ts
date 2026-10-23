@@ -5,6 +5,7 @@ import {
   type CreatePackInput,
   CreatePackSchema,
   type Pack,
+  type Theme,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -20,6 +21,7 @@ import {
   packsQueryOptions,
   reloadPacks,
 } from '../../domains/pack/packQueries';
+import { themesQueryOptions } from '../../domains/theme/themeQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -32,6 +34,7 @@ export type PackCreationOptions = {
 
 export type PackCatalog = {
   packs: Pack[];
+  themes: Theme[];
   isLoading: boolean;
   reloadPacks: () => Promise<void>;
 };
@@ -43,6 +46,8 @@ export type PackCreation = {
 
 const noPacks: Pack[] = [];
 
+const noThemes: Theme[] = [];
+
 const packCreationDefaultValues: CreatePackInput = {
   name: '',
   description: '',
@@ -50,15 +55,19 @@ const packCreationDefaultValues: CreatePackInput = {
 };
 
 export function usePackCatalog(): PackCatalog {
-  const { packApi }: DomainApis = useDomainApis();
+  const { packApi, themeApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const {
     data: packs = noPacks,
     isPending: isLoading,
   }: UseQueryResult<Pack[]> = useQuery(packsQueryOptions(packApi));
+  const { data: themes = noThemes }: UseQueryResult<Theme[]> = useQuery(
+    themesQueryOptions(themeApi),
+  );
 
   return {
     packs,
+    themes,
     isLoading,
     reloadPacks: () => reloadPacks(queryClient),
   };

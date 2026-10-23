@@ -11,6 +11,7 @@ import { deprecatedCategoryContract } from '../pack/pack.deprecated.contract';
 import { searchAdminContract } from '../search/search.admin.contract';
 import { sentenceContract } from '../sentence/sentence.contract';
 import { sessionContract } from '../session/session.contract';
+import { themeAdminContract } from '../theme/theme.admin.contract';
 import { userContract } from '../user/user.contract';
 import { worldLocationAdminContract } from '../world-location/world-location.admin.contract';
 import type { ApiDomain } from './api-domain';
@@ -42,6 +43,7 @@ const adminRouters = {
   guessObjects: guessObjectAdminContract,
   pack: packAdminContract,
   search: searchAdminContract,
+  theme: themeAdminContract,
   worldLocation: worldLocationAdminContract,
 } satisfies ApiDomainRouters;
 

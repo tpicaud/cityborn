@@ -1,10 +1,18 @@
-import type { FullPack, Pack, PackTree } from '@cityborn/api';
+import {
+  buildTheme,
+  type FullPack,
+  type Pack,
+  type PackTree,
+  type Theme,
+} from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
   Pack as PrismaPack,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
 import { PackMapper, type PrismaPackNode } from './pack.mapper';
+
+const theme: Theme = buildTheme();
 
 describe('PackMapper.toPack', () => {
   it('maps nullable values to optional contract fields', () => {
@@ -14,6 +22,7 @@ describe('PackMapper.toPack', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const pack: Pack = PackMapper.toPack(prismaPack);
@@ -24,6 +33,7 @@ describe('PackMapper.toPack', () => {
       isPublished: true,
       description: undefined,
       parentId: undefined,
+      themeId: theme.id,
     });
   });
 });
@@ -36,6 +46,7 @@ describe('PackMapper.toPacks', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const input: PrismaPack[] = [
@@ -63,6 +74,7 @@ describe('PackMapper.toFullPack', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const prismaWorldLocation: PrismaWorldLocation = {
@@ -118,6 +130,7 @@ describe('PackMapper.toFullPack', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const pack: FullPack = PackMapper.toFullPack(prismaPack);
@@ -134,6 +147,7 @@ describe('PackMapper.toFullPacks', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const prismaWorldLocation: PrismaWorldLocation = {
@@ -189,6 +203,7 @@ describe('PackMapper.toPackTree', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const child: PrismaPackNode = {
@@ -212,6 +227,7 @@ describe('PackMapper.toPackTree', () => {
         isPublished: true,
         description: undefined,
         parentId: '00000000-0000-4000-8000-000000000010',
+        themeId: theme.id,
         children: [],
       },
     ]);
@@ -226,6 +242,7 @@ describe('PackMapper.toPackTrees', () => {
       isPublished: true,
       description: null,
       parentId: null,
+      themeId: theme.id,
     };
 
     const roots: PrismaPackNode[] = [

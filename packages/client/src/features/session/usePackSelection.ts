@@ -1,6 +1,11 @@
 'use client';
 
-import type { GameConfigChanges, Pack, PackTree, Session } from '@cityborn/api';
+import type {
+  GameConfigChanges,
+  GameConfigPack,
+  PackTree,
+  Session,
+} from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
@@ -8,7 +13,7 @@ import { packTreesQueryOptions } from '../../domains/pack/packQueries';
 
 const noPackTrees: PackTree[] = [];
 
-function toPack(node: PackTree): Pack {
+function toGameConfigPack(node: PackTree): GameConfigPack {
   return {
     id: node.id,
     name: node.name,
@@ -18,9 +23,9 @@ function toPack(node: PackTree): Pack {
   };
 }
 
-function flattenPackTree(nodes: PackTree[]): Pack[] {
+function flattenPackTree(nodes: PackTree[]): GameConfigPack[] {
   return nodes.flatMap((node) => [
-    toPack(node),
+    toGameConfigPack(node),
     ...flattenPackTree(node.children),
   ]);
 }
@@ -55,7 +60,7 @@ export function usePackSelection({
   }: UseQueryResult<PackTree[]> = useQuery(packTreesQueryOptions(packApi));
   const [selectedPath, setSelectedPath] = useState<PackTree[]>([]);
 
-  const allPacks: Pack[] = useMemo(
+  const allPacks: GameConfigPack[] = useMemo(
     () => flattenPackTree(packTrees),
     [packTrees],
   );
@@ -73,7 +78,7 @@ export function usePackSelection({
       : selectedPath[selectedPath.length - 1].children;
 
   const playPack: PackSelection['playPack'] = async (node: PackTree) => {
-    await updateGameConfig({ packs: [toPack(node)] });
+    await updateGameConfig({ packs: [toGameConfigPack(node)] });
     await startGame();
   };
 

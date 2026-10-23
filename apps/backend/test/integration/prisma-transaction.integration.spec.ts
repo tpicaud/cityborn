@@ -4,6 +4,7 @@ import type {
   GuessObject,
   GuessObjectId,
   Pack,
+  Theme,
   UpdatePack,
   User,
   WorldLocation,
@@ -11,6 +12,7 @@ import type {
 import {
   buildCreatePack,
   buildGuessObject,
+  buildTheme,
   buildUpdatePack,
   buildUser,
   buildWorldLocation,
@@ -24,6 +26,9 @@ import { PackService } from '../../src/pack/pack.service';
 import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
 import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
+import { THEME_REPOSITORY } from '../../src/theme/repositories/theme.repository';
+import { ThemeService } from '../../src/theme/theme.service';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
 import { PrismaUserRepository } from '../../src/user/repositories/prisma-user.repository';
@@ -55,7 +60,9 @@ describe('Prisma transactions', () => {
         GuessObjectService,
         WorldLocationService,
         UserService,
+        ThemeService,
         { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
+        { provide: THEME_REPOSITORY, useClass: PrismaThemeRepository },
         {
           provide: GUESS_OBJECT_REPOSITORY,
           useClass: PrismaGuessObjectRepository,
@@ -105,6 +112,8 @@ describe('Prisma transactions', () => {
             world_location_id: location.id,
           },
         );
+        const theme: Theme = buildTheme();
+        await prisma.theme.create({ data: theme });
         const packData: CreatePack = buildCreatePack({
           guessObjectsIds: [guessObjectId],
         });
@@ -112,6 +121,7 @@ describe('Prisma transactions', () => {
         const updateData: UpdatePack = buildUpdatePack({
           id: pack.id,
           name: 'Changed',
+          themeId: theme.id,
           disconnectIds: [guessObjectId],
         });
         jest

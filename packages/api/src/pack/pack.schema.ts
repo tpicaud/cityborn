@@ -3,6 +3,7 @@ import {
   GuessObjectIdSchema,
   GuessObjectSchema,
 } from '../guess-object/guess-object.schema';
+import { type ThemeId, ThemeIdSchema } from '../theme/theme.schema';
 
 export const PackIdSchema = z.string().brand<'PackId'>();
 export const PackUuidIdSchema = z.string().uuid().brand<'PackId'>();
@@ -16,6 +17,7 @@ export const PackSchema = z.object({
   isPublished: z.boolean(),
   description: z.string().optional(),
   parentId: PackUuidIdSchema.nullable().optional(),
+  themeId: ThemeIdSchema,
 });
 
 export const FullPackSchema = PackSchema.extend({
@@ -24,11 +26,15 @@ export const FullPackSchema = PackSchema.extend({
 
 export const PacksSchema = z.array(PackSchema);
 
-export const CreatePackSchema = PackSchema.omit({ id: true }).extend({
+export const CreatePackSchema = PackSchema.omit({
+  id: true,
+  themeId: true,
+}).extend({
   guessObjectsIds: z.array(GuessObjectIdSchema).optional(),
 });
 
 export const UpdatePackSchema = PackSchema.extend({
+  themeId: ThemeIdSchema.optional(),
   connectIds: z.array(GuessObjectIdSchema).optional(),
   disconnectIds: z.array(GuessObjectIdSchema).optional(),
 });
@@ -39,6 +45,7 @@ export type PackTree = {
   isPublished: boolean;
   description?: string;
   parentId?: PackId | null;
+  themeId: ThemeId;
   children: PackTree[];
 };
 
@@ -48,6 +55,7 @@ export type PackTreeInput = {
   isPublished: boolean;
   description?: string;
   parentId?: string | null;
+  themeId: string;
   children: PackTreeInput[];
 };
 
@@ -59,6 +67,7 @@ export const PackTreeSchema: z.ZodType<PackTree, z.ZodTypeDef, PackTreeInput> =
       isPublished: z.boolean(),
       description: z.string().optional(),
       parentId: PackUuidIdSchema.nullable().optional(),
+      themeId: ThemeIdSchema,
       children: z.array(PackTreeSchema),
     }),
   );

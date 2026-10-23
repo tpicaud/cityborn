@@ -1,14 +1,17 @@
 import type {
+  GameConfigPack,
   Pack,
   PlayerId,
   Session,
   SessionJoinAck,
+  Theme,
   WorldLocation,
 } from '@cityborn/api';
 import {
   buildPack,
   buildPlayer,
   buildSession,
+  buildTheme,
   buildUser,
   buildWorldLocation,
   ErrorCode,
@@ -355,16 +358,25 @@ describe('Session gateway over a real socket', () => {
         },
       },
     });
-    const selectedPack: Pack = buildPack();
+    const theme: Theme = buildTheme();
+    await prismaService.theme.create({ data: theme });
+    const selectedPack: Pack = buildPack({ themeId: theme.id });
     const otherPack: Pack = buildPack({
       id: '00000000-0000-4000-8000-000000000011',
       name: 'Musées',
+      themeId: theme.id,
     });
+    const legacySelectedPack: GameConfigPack = {
+      id: selectedPack.id,
+      name: selectedPack.name,
+      isPublished: selectedPack.isPublished,
+    };
     await prismaService.pack.create({
       data: {
         id: selectedPack.id,
         name: selectedPack.name,
         isPublished: selectedPack.isPublished,
+        themeId: selectedPack.themeId,
         guessObjects: {
           create: { name: 'Tour Eiffel', world_location_id: location.id },
         },
@@ -375,6 +387,7 @@ describe('Session gateway over a real socket', () => {
         id: otherPack.id,
         name: otherPack.name,
         isPublished: otherPack.isPublished,
+        themeId: otherPack.themeId,
         guessObjects: {
           create: { name: 'Louvre', world_location_id: location.id },
         },
@@ -390,7 +403,13 @@ describe('Session gateway over a real socket', () => {
     const configAck: unknown = await emitWithAck(
       hostClient,
       sessionWsEvent.updateGameConfig,
-      { gameConfig: { categories: [selectedPack], timer: 25, nbOfObjects: 6 } },
+      {
+        gameConfig: {
+          categories: [legacySelectedPack],
+          timer: 25,
+          nbOfObjects: 6,
+        },
+      },
     );
     const gameBroadcast: Promise<unknown> = nextEvent(
       hostClient,
@@ -405,9 +424,15 @@ describe('Session gateway over a real socket', () => {
     expect(configAck).toEqual({ success: true });
     expect(startAck).toEqual({ success: true });
     expect(await gameBroadcast).toMatchObject({
-      gameConfig: { packs: [selectedPack], categories: [selectedPack] },
+      gameConfig: {
+        packs: [legacySelectedPack],
+        categories: [legacySelectedPack],
+      },
       currentGame: {
-        config: { packs: [selectedPack], categories: [selectedPack] },
+        config: {
+          packs: [legacySelectedPack],
+          categories: [legacySelectedPack],
+        },
         state: { guessObjects: [{ name: 'Tour Eiffel' }] },
       },
     });
