@@ -1,37 +1,37 @@
 import type {
-  Category,
-  CategoryTree,
-  CreateCategory,
-  FullCategory,
+  CreatePack,
+  FullPack,
   GuessObject,
-  UpdateCategory,
+  Pack,
+  PackTree,
+  UpdatePack,
   WorldLocation,
 } from '@cityborn/api';
 import {
-  buildCreateCategory,
+  buildCreatePack,
   buildGuessObject,
-  buildUpdateCategory,
+  buildUpdatePack,
   buildWorldLocation,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
+import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { createTestInfrastructure } from '../support/infrastructure';
 
-describe('PrismaCategoryRepository', () => {
+describe('PrismaPackRepository', () => {
   const infrastructure: ReturnType<typeof createTestInfrastructure> =
     createTestInfrastructure();
   const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
-  let categoryRepository: PrismaCategoryRepository;
+  let packRepository: PrismaPackRepository;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [PrismaClsModule],
-      providers: [PrismaCategoryRepository],
+      providers: [PrismaPackRepository],
     }).compile();
     await module.init();
-    categoryRepository = module.get(PrismaCategoryRepository);
+    packRepository = module.get(PrismaPackRepository);
   });
 
   afterAll(async () => {
@@ -41,29 +41,28 @@ describe('PrismaCategoryRepository', () => {
 
   describe('findBy', () => {
     it('combines identifier and publication filters', async () => {
-      const publishedData: CreateCategory = buildCreateCategory({
+      const publishedData: CreatePack = buildCreatePack({
         name: 'Published',
         isPublished: true,
       });
-      const hiddenData: CreateCategory = buildCreateCategory({
+      const hiddenData: CreatePack = buildCreatePack({
         name: 'Hidden',
         isPublished: false,
       });
-      const unrelatedData: CreateCategory = buildCreateCategory({
+      const unrelatedData: CreatePack = buildCreatePack({
         name: 'Unrelated',
         isPublished: true,
       });
-      const published: Category =
-        await categoryRepository.create(publishedData);
-      const hidden: Category = await categoryRepository.create(hiddenData);
-      await categoryRepository.create(unrelatedData);
+      const published: Pack = await packRepository.create(publishedData);
+      const hidden: Pack = await packRepository.create(hiddenData);
+      await packRepository.create(unrelatedData);
 
-      const categories: Category[] = await categoryRepository.findBy({
+      const packs: Pack[] = await packRepository.findBy({
         ids: [published.id, hidden.id],
         isPublished: true,
       });
 
-      expect(categories.map(({ id }) => id)).toEqual([published.id]);
+      expect(packs.map(({ id }) => id)).toEqual([published.id]);
     });
   });
 
@@ -71,12 +70,12 @@ describe('PrismaCategoryRepository', () => {
     it('loads linked guess objects and applies the publication filter', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
-      const publishedData: CreateCategory = buildCreateCategory({
+      const publishedData: CreatePack = buildCreatePack({
         name: 'Published',
         isPublished: true,
         guessObjectsIds: [guessObject.id],
       });
-      const hiddenData: CreateCategory = buildCreateCategory({
+      const hiddenData: CreatePack = buildCreatePack({
         name: 'Hidden',
         isPublished: false,
         guessObjectsIds: [guessObject.id],
@@ -95,15 +94,14 @@ describe('PrismaCategoryRepository', () => {
           },
         },
       });
-      const published: Category =
-        await categoryRepository.create(publishedData);
-      await categoryRepository.create(hiddenData);
+      const published: Pack = await packRepository.create(publishedData);
+      await packRepository.create(hiddenData);
 
-      const categories: FullCategory[] = await categoryRepository.findFullBy({
+      const packs: FullPack[] = await packRepository.findFullBy({
         isPublished: true,
       });
 
-      expect(categories).toMatchObject([
+      expect(packs).toMatchObject([
         {
           id: published.id,
           guessObjects: [
@@ -118,10 +116,10 @@ describe('PrismaCategoryRepository', () => {
   });
 
   describe('create', () => {
-    it('connects a guess object when creating a category', async () => {
+    it('connects a guess object when creating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
-      const categoryData: CreateCategory = buildCreateCategory({
+      const packData: CreatePack = buildCreatePack({
         guessObjectsIds: [guessObject.id],
       });
       await prisma.worldLocation.create({
@@ -139,25 +137,23 @@ describe('PrismaCategoryRepository', () => {
         },
       });
 
-      const category: Category = await categoryRepository.create(categoryData);
-      const categories: FullCategory[] = await categoryRepository.findFullBy({
-        ids: [category.id],
+      const pack: Pack = await packRepository.create(packData);
+      const packs: FullPack[] = await packRepository.findFullBy({
+        ids: [pack.id],
       });
 
-      expect(categories[0]?.guessObjects.map(({ id }) => id)).toEqual([
+      expect(packs[0]?.guessObjects.map(({ id }) => id)).toEqual([
         guessObject.id,
       ]);
-      expect(
-        await categoryRepository.countByGuessObjectId(guessObject.id),
-      ).toBe(1);
+      expect(await packRepository.countByGuessObjectId(guessObject.id)).toBe(1);
     });
   });
 
   describe('update', () => {
-    it('connects a guess object when updating a category', async () => {
+    it('connects a guess object when updating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
-      const categoryData: CreateCategory = buildCreateCategory();
+      const packData: CreatePack = buildCreatePack();
       await prisma.worldLocation.create({
         data: {
           id: location.id,
@@ -172,30 +168,27 @@ describe('PrismaCategoryRepository', () => {
           },
         },
       });
-      const category: Category = await categoryRepository.create(categoryData);
-      const updateData: UpdateCategory = buildUpdateCategory({
-        id: category.id,
+      const pack: Pack = await packRepository.create(packData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: pack.id,
         name: 'Connected',
         connectIds: [guessObject.id],
       });
 
-      const updated: Category = await categoryRepository.update(
-        category.id,
-        updateData,
-      );
+      const updated: Pack = await packRepository.update(pack.id, updateData);
 
       expect(updated.name).toBe('Connected');
       expect(
         (
-          await categoryRepository.findFullBy({ ids: [category.id] })
+          await packRepository.findFullBy({ ids: [pack.id] })
         )[0]?.guessObjects.map(({ id }) => id),
       ).toEqual([guessObject.id]);
     });
 
-    it('disconnects a guess object when updating a category', async () => {
+    it('disconnects a guess object when updating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
-      const categoryData: CreateCategory = buildCreateCategory({
+      const packData: CreatePack = buildCreatePack({
         guessObjectsIds: [guessObject.id],
       });
       await prisma.worldLocation.create({
@@ -212,56 +205,53 @@ describe('PrismaCategoryRepository', () => {
           },
         },
       });
-      const category: Category = await categoryRepository.create(categoryData);
-      const updateData: UpdateCategory = buildUpdateCategory({
-        id: category.id,
+      const pack: Pack = await packRepository.create(packData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: pack.id,
         disconnectIds: [guessObject.id],
       });
 
-      await categoryRepository.update(category.id, updateData);
+      await packRepository.update(pack.id, updateData);
 
+      expect(await packRepository.countByGuessObjectId(guessObject.id)).toBe(0);
       expect(
-        await categoryRepository.countByGuessObjectId(guessObject.id),
-      ).toBe(0);
-      expect(
-        (await categoryRepository.findFullBy({ ids: [category.id] }))[0]
-          ?.guessObjects,
+        (await packRepository.findFullBy({ ids: [pack.id] }))[0]?.guessObjects,
       ).toEqual([]);
     });
   });
 
   describe('countChildren', () => {
     it('counts direct children without counting grandchildren', async () => {
-      const parentData: CreateCategory = buildCreateCategory({
+      const parentData: CreatePack = buildCreatePack({
         name: 'Parent',
       });
-      const parent: Category = await categoryRepository.create(parentData);
-      const childData: CreateCategory = buildCreateCategory({
+      const parent: Pack = await packRepository.create(parentData);
+      const childData: CreatePack = buildCreatePack({
         name: 'Child',
         parentId: parent.id,
       });
-      const child: Category = await categoryRepository.create(childData);
-      const grandchildData: CreateCategory = buildCreateCategory({
+      const child: Pack = await packRepository.create(childData);
+      const grandchildData: CreatePack = buildCreatePack({
         name: 'Grandchild',
         parentId: child.id,
       });
-      await categoryRepository.create(grandchildData);
+      await packRepository.create(grandchildData);
 
-      const count: number = await categoryRepository.countChildren(parent.id);
+      const count: number = await packRepository.countChildren(parent.id);
 
       expect(count).toBe(1);
     });
   });
 
   describe('countByGuessObjectId', () => {
-    it('counts only categories linked to the requested guess object', async () => {
+    it('counts only packs linked to the requested guess object', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
       const otherGuessObject: GuessObject = buildGuessObject({
         id: '00000000-0000-4000-8000-000000000021',
         name: 'Louvre Museum',
       });
-      const categoryData: CreateCategory = buildCreateCategory({
+      const packData: CreatePack = buildCreatePack({
         guessObjectsIds: [guessObject.id],
       });
       await prisma.worldLocation.create({
@@ -281,13 +271,14 @@ describe('PrismaCategoryRepository', () => {
           },
         },
       });
-      await categoryRepository.create(categoryData);
+      await packRepository.create(packData);
 
-      const linkedCount: number = await categoryRepository.countByGuessObjectId(
+      const linkedCount: number = await packRepository.countByGuessObjectId(
         guessObject.id,
       );
-      const unlinkedCount: number =
-        await categoryRepository.countByGuessObjectId(otherGuessObject.id);
+      const unlinkedCount: number = await packRepository.countByGuessObjectId(
+        otherGuessObject.id,
+      );
 
       expect(linkedCount).toBe(1);
       expect(unlinkedCount).toBe(0);
@@ -295,37 +286,35 @@ describe('PrismaCategoryRepository', () => {
   });
 
   describe('delete', () => {
-    it('removes the requested category', async () => {
-      const categoryData: CreateCategory = buildCreateCategory();
-      const category: Category = await categoryRepository.create(categoryData);
+    it('removes the requested pack', async () => {
+      const packData: CreatePack = buildCreatePack();
+      const pack: Pack = await packRepository.create(packData);
 
-      await categoryRepository.delete(category.id);
+      await packRepository.delete(pack.id);
 
-      expect(await categoryRepository.findBy({ ids: [category.id] })).toEqual(
-        [],
-      );
+      expect(await packRepository.findBy({ ids: [pack.id] })).toEqual([]);
     });
   });
 
   describe('findTree', () => {
-    it('loads nested categories beneath published roots', async () => {
-      const rootData: CreateCategory = buildCreateCategory({
+    it('loads nested packs beneath published roots', async () => {
+      const rootData: CreatePack = buildCreatePack({
         name: 'Countries',
         isPublished: true,
       });
-      const root: Category = await categoryRepository.create(rootData);
-      const childData: CreateCategory = buildCreateCategory({
+      const root: Pack = await packRepository.create(rootData);
+      const childData: CreatePack = buildCreatePack({
         name: 'France',
         parentId: root.id,
       });
-      const child: Category = await categoryRepository.create(childData);
-      const hiddenData: CreateCategory = buildCreateCategory({
+      const child: Pack = await packRepository.create(childData);
+      const hiddenData: CreatePack = buildCreatePack({
         name: 'Hidden',
         isPublished: false,
       });
-      await categoryRepository.create(hiddenData);
+      await packRepository.create(hiddenData);
 
-      const tree: CategoryTree[] = await categoryRepository.findTree({
+      const tree: PackTree[] = await packRepository.findTree({
         isPublished: true,
       });
 

@@ -69,9 +69,11 @@ describe('PrismaGameRecordRepository', () => {
         include: { users: true },
       });
 
-      expect(persisted).toMatchObject({
-        mode: 'solo',
-        gameConfig: { categories: [], timer: 25, nbOfObjects: 6 },
+      expect(persisted?.mode).toBe('solo');
+      expect(persisted?.gameConfig).toEqual({
+        packs: [],
+        timer: 25,
+        nbOfObjects: 6,
       });
       expect(persisted?.users.map(({ id }) => id).sort()).toEqual([
         '00000000-0000-4000-8000-000000000001',

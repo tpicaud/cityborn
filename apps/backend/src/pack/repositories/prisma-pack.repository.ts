@@ -1,39 +1,37 @@
 import type {
-  Category,
-  CategoryId,
-  CategoryTree,
-  CreateCategory,
-  FullCategory,
+  CreatePack,
+  FullPack,
   GuessObjectId,
-  UpdateCategory,
+  Pack,
+  PackId,
+  PackTree,
+  UpdatePack,
 } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
-import { CategoryMapper } from '../mappers/category.mapper';
-import type { CategoryFilter, CategoryRepository } from './category.repository';
+import { PackMapper } from '../mappers/pack.mapper';
+import type { PackFilter, PackRepository } from './pack.repository';
 
 const TREE_DEPTH = 6;
 
-type CategoryChildrenInclude = {
-  children: true | { include: CategoryChildrenInclude };
+type PackChildrenInclude = {
+  children: true | { include: PackChildrenInclude };
 };
 
-function buildChildrenInclude(depth: number): CategoryChildrenInclude {
+function buildChildrenInclude(depth: number): PackChildrenInclude {
   if (depth <= 1) return { children: true };
   return { children: { include: buildChildrenInclude(depth - 1) } };
 }
 
 @Injectable()
-export class PrismaCategoryRepository implements CategoryRepository {
+export class PrismaPackRepository implements PackRepository {
   constructor(
     @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
   ) {}
 
-  async findTree(
-    filter: Pick<CategoryFilter, 'isPublished'>,
-  ): Promise<CategoryTree[]> {
-    const roots = await this.txHost.tx.category.findMany({
+  async findTree(filter: Pick<PackFilter, 'isPublished'>): Promise<PackTree[]> {
+    const roots = await this.txHost.tx.pack.findMany({
       where: {
         parentId: null,
         ...(filter.isPublished !== undefined && {
@@ -42,11 +40,11 @@ export class PrismaCategoryRepository implements CategoryRepository {
       },
       include: buildChildrenInclude(TREE_DEPTH),
     });
-    return CategoryMapper.toCategoryTrees(roots);
+    return PackMapper.toPackTrees(roots);
   }
 
-  async findBy(filter: CategoryFilter): Promise<Category[]> {
-    const categories = await this.txHost.tx.category.findMany({
+  async findBy(filter: PackFilter): Promise<Pack[]> {
+    const packs = await this.txHost.tx.pack.findMany({
       where: {
         ...(filter.ids && { id: { in: filter.ids } }),
         ...(filter.isPublished !== undefined && {
@@ -54,11 +52,11 @@ export class PrismaCategoryRepository implements CategoryRepository {
         }),
       },
     });
-    return CategoryMapper.toCategories(categories);
+    return PackMapper.toPacks(packs);
   }
 
-  async findFullBy(filter: CategoryFilter): Promise<FullCategory[]> {
-    const categories = await this.txHost.tx.category.findMany({
+  async findFullBy(filter: PackFilter): Promise<FullPack[]> {
+    const packs = await this.txHost.tx.pack.findMany({
       where: {
         ...(filter.ids && { id: { in: filter.ids } }),
         ...(filter.isPublished !== undefined && {
@@ -67,27 +65,24 @@ export class PrismaCategoryRepository implements CategoryRepository {
       },
       include: { guessObjects: { include: { world_location: true } } },
     });
-    return CategoryMapper.toFullCategories(categories);
+    return PackMapper.toFullPacks(packs);
   }
 
-  async create(data: CreateCategory): Promise<Category> {
-    const { guessObjectsIds, ...categoryData } = data;
-    const category = await this.txHost.tx.category.create({
+  async create(data: CreatePack): Promise<Pack> {
+    const { guessObjectsIds, ...packData } = data;
+    const pack = await this.txHost.tx.pack.create({
       data: {
-        ...categoryData,
+        ...packData,
         guessObjects: guessObjectsIds
           ? { connect: guessObjectsIds.map((id) => ({ id })) }
           : undefined,
       },
     });
-    return CategoryMapper.toCategory(category);
+    return PackMapper.toPack(pack);
   }
 
-  async update(
-    categoryId: CategoryId,
-    data: UpdateCategory,
-  ): Promise<Category> {
-    const { connectIds, disconnectIds, id, ...categoryData } = data;
+  async update(packId: PackId, data: UpdatePack): Promise<Pack> {
+    const { connectIds, disconnectIds, id, ...packData } = data;
 
     const relationUpdate: {
       connect?: { id: GuessObjectId }[];
@@ -97,30 +92,30 @@ export class PrismaCategoryRepository implements CategoryRepository {
     if (disconnectIds)
       relationUpdate.disconnect = disconnectIds.map((id) => ({ id }));
 
-    const updated_category = await this.txHost.tx.category.update({
-      where: { id: categoryId },
+    const updated_pack = await this.txHost.tx.pack.update({
+      where: { id: packId },
       data: {
-        ...categoryData,
+        ...packData,
         ...(Object.keys(relationUpdate).length > 0
           ? { guessObjects: relationUpdate }
           : {}),
       },
       include: { guessObjects: { include: { world_location: true } } },
     });
-    return CategoryMapper.toCategory(updated_category);
+    return PackMapper.toPack(updated_pack);
   }
 
-  async countChildren(id: CategoryId): Promise<number> {
-    return this.txHost.tx.category.count({ where: { parentId: id } });
+  async countChildren(id: PackId): Promise<number> {
+    return this.txHost.tx.pack.count({ where: { parentId: id } });
   }
 
   async countByGuessObjectId(id: GuessObjectId): Promise<number> {
-    return this.txHost.tx.category.count({
+    return this.txHost.tx.pack.count({
       where: { guessObjects: { some: { id } } },
     });
   }
 
-  async delete(id: CategoryId): Promise<void> {
-    await this.txHost.tx.category.delete({ where: { id } });
+  async delete(id: PackId): Promise<void> {
+    await this.txHost.tx.pack.delete({ where: { id } });
   }
 }

@@ -1,10 +1,10 @@
 import type {
-  CategoryId,
   CreateGuessObject,
   FullGuessObject,
   GuessObject,
   GuessObjectDraft,
   GuessObjectId,
+  PackId,
   PatchGuessObject,
   WorldLocationId,
 } from '@cityborn/api';
@@ -14,7 +14,7 @@ export const GUESS_OBJECT_REPOSITORY = Symbol('GUESS_OBJECT_REPOSITORY');
 export interface GuessObjectFilter {
   ids?: GuessObjectId[];
   external_id?: string;
-  categoryIds?: CategoryId[];
+  packIds?: PackId[];
 }
 
 export interface GuessObjectRepository {

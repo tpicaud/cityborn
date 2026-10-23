@@ -75,7 +75,7 @@ export class GameService {
           visitorId,
           properties: {
             mode,
-            categories: gameConfig.categories,
+            packs: gameConfig.packs,
             numberOfPlayers:
               mode === SessionMode.SOLO
                 ? players.length

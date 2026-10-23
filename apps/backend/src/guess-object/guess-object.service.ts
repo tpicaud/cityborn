@@ -16,9 +16,9 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
-  CATEGORY_REPOSITORY,
-  type CategoryRepository,
-} from '../category/repositories/category.repository';
+  PACK_REPOSITORY,
+  type PackRepository,
+} from '../pack/repositories/pack.repository';
 import { WorldLocationService } from '../world-location/world-location.service';
 import {
   GUESS_OBJECT_REPOSITORY,
@@ -31,8 +31,8 @@ export class GuessObjectService {
   constructor(
     @Inject(GUESS_OBJECT_REPOSITORY)
     private readonly guessObjectRepository: GuessObjectRepository,
-    @Inject(CATEGORY_REPOSITORY)
-    private readonly categoryRepository: CategoryRepository,
+    @Inject(PACK_REPOSITORY)
+    private readonly packRepository: PackRepository,
     private readonly worldLocationService: WorldLocationService,
   ) {}
 
@@ -48,7 +48,7 @@ export class GuessObjectService {
     gameConfig: GameConfig,
   ): Promise<FullGuessObject[]> {
     const allObjects = await this.guessObjectRepository.findFullBy({
-      categoryIds: gameConfig.categories?.map((cat) => cat.id),
+      packIds: gameConfig.packs?.map((pack) => pack.id),
     });
     const shuffled = allObjects.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, gameConfig.nbOfObjects);
@@ -98,12 +98,11 @@ export class GuessObjectService {
       });
     }
 
-    const categoriesCount =
-      await this.categoryRepository.countByGuessObjectId(id);
-    if (categoriesCount > 0) {
+    const packsCount = await this.packRepository.countByGuessObjectId(id);
+    if (packsCount > 0) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
-        message: `Cannot delete guess object because it belongs to one or more categories`,
+        message: `Cannot delete guess object because it belongs to one or more packs`,
       });
     }
 

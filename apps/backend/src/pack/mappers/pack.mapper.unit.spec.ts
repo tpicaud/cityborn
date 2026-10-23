@@ -1,14 +1,14 @@
-import type { Category, CategoryTree, FullCategory } from '@cityborn/api';
+import type { FullPack, Pack, PackTree } from '@cityborn/api';
 import type {
-  Category as PrismaCategory,
   GuessObject as PrismaGuessObject,
+  Pack as PrismaPack,
   WorldLocation as PrismaWorldLocation,
 } from '@prisma/client';
-import { CategoryMapper, type PrismaCategoryNode } from './category.mapper';
+import { PackMapper, type PrismaPackNode } from './pack.mapper';
 
-describe('CategoryMapper.toCategory', () => {
+describe('PackMapper.toPack', () => {
   it('maps nullable values to optional contract fields', () => {
-    const prismaCategory: PrismaCategory = {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -16,9 +16,9 @@ describe('CategoryMapper.toCategory', () => {
       parentId: null,
     };
 
-    const category: Category = CategoryMapper.toCategory(prismaCategory);
+    const pack: Pack = PackMapper.toPack(prismaPack);
 
-    expect(category).toEqual({
+    expect(pack).toEqual({
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -28,9 +28,9 @@ describe('CategoryMapper.toCategory', () => {
   });
 });
 
-describe('CategoryMapper.toCategories', () => {
-  it('maps every category', () => {
-    const prismaCategory: PrismaCategory = {
+describe('PackMapper.toPacks', () => {
+  it('maps every pack', () => {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -38,26 +38,26 @@ describe('CategoryMapper.toCategories', () => {
       parentId: null,
     };
 
-    const input: PrismaCategory[] = [
-      prismaCategory,
-      { ...prismaCategory, id: 'category-2', name: 'Museums' },
+    const input: PrismaPack[] = [
+      prismaPack,
+      { ...prismaPack, id: 'pack-2', name: 'Museums' },
     ];
 
-    const categories: Category[] = CategoryMapper.toCategories(input);
+    const packs: Pack[] = PackMapper.toPacks(input);
 
-    expect(categories.map(({ id, name }) => ({ id, name }))).toEqual([
+    expect(packs.map(({ id, name }) => ({ id, name }))).toEqual([
       {
         id: '00000000-0000-4000-8000-000000000010',
         name: 'Monuments',
       },
-      { id: 'category-2', name: 'Museums' },
+      { id: 'pack-2', name: 'Museums' },
     ]);
   });
 });
 
-describe('CategoryMapper.toFullCategory', () => {
+describe('PackMapper.toFullPack', () => {
   it('maps loaded guess objects', () => {
-    const prismaCategory: PrismaCategory = {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -88,8 +88,8 @@ describe('CategoryMapper.toFullCategory', () => {
       world_location_id: 'location-1',
     };
 
-    const input: Parameters<typeof CategoryMapper.toFullCategory>[0] = {
-      ...prismaCategory,
+    const input: Parameters<typeof PackMapper.toFullPack>[0] = {
+      ...prismaPack,
       description: 'Places to visit',
       parentId: '00000000-0000-4000-8000-000000000011',
       guessObjects: [
@@ -97,9 +97,9 @@ describe('CategoryMapper.toFullCategory', () => {
       ],
     };
 
-    const category: FullCategory = CategoryMapper.toFullCategory(input);
+    const pack: FullPack = PackMapper.toFullPack(input);
 
-    expect(category).toMatchObject({
+    expect(pack).toMatchObject({
       description: 'Places to visit',
       parentId: '00000000-0000-4000-8000-000000000011',
       guessObjects: [
@@ -112,7 +112,7 @@ describe('CategoryMapper.toFullCategory', () => {
   });
 
   it('returns an empty list when relations are not loaded', () => {
-    const prismaCategory: PrismaCategory = {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -120,16 +120,15 @@ describe('CategoryMapper.toFullCategory', () => {
       parentId: null,
     };
 
-    const category: FullCategory =
-      CategoryMapper.toFullCategory(prismaCategory);
+    const pack: FullPack = PackMapper.toFullPack(prismaPack);
 
-    expect(category.guessObjects).toEqual([]);
+    expect(pack.guessObjects).toEqual([]);
   });
 });
 
-describe('CategoryMapper.toFullCategories', () => {
-  it('maps every full category', () => {
-    const prismaCategory: PrismaCategory = {
+describe('PackMapper.toFullPacks', () => {
+  it('maps every full pack', () => {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -160,31 +159,31 @@ describe('CategoryMapper.toFullCategories', () => {
       world_location_id: 'location-1',
     };
 
-    const input: Parameters<typeof CategoryMapper.toFullCategories>[0] = [
-      { ...prismaCategory, guessObjects: [] },
+    const input: Parameters<typeof PackMapper.toFullPacks>[0] = [
+      { ...prismaPack, guessObjects: [] },
       {
-        ...prismaCategory,
-        id: 'category-2',
+        ...prismaPack,
+        id: 'pack-2',
         guessObjects: [
           { ...prismaGuessObject, world_location: prismaWorldLocation },
         ],
       },
     ];
 
-    const categories: FullCategory[] = CategoryMapper.toFullCategories(input);
+    const packs: FullPack[] = PackMapper.toFullPacks(input);
 
     expect(
-      categories.map(({ id, guessObjects }) => [id, guessObjects.length]),
+      packs.map(({ id, guessObjects }) => [id, guessObjects.length]),
     ).toEqual([
       ['00000000-0000-4000-8000-000000000010', 0],
-      ['category-2', 1],
+      ['pack-2', 1],
     ]);
   });
 });
 
-describe('CategoryMapper.toCategoryTree', () => {
+describe('PackMapper.toPackTree', () => {
   it('maps nested children recursively', () => {
-    const prismaCategory: PrismaCategory = {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -192,23 +191,23 @@ describe('CategoryMapper.toCategoryTree', () => {
       parentId: null,
     };
 
-    const child: PrismaCategoryNode = {
-      ...prismaCategory,
-      id: 'category-child',
+    const child: PrismaPackNode = {
+      ...prismaPack,
+      id: 'pack-child',
       name: 'Landmarks',
       parentId: '00000000-0000-4000-8000-000000000010',
       children: [],
     };
-    const root: PrismaCategoryNode = {
-      ...prismaCategory,
+    const root: PrismaPackNode = {
+      ...prismaPack,
       children: [child],
     };
 
-    const tree: CategoryTree = CategoryMapper.toCategoryTree(root);
+    const tree: PackTree = PackMapper.toPackTree(root);
 
     expect(tree.children).toEqual([
       {
-        id: 'category-child',
+        id: 'pack-child',
         name: 'Landmarks',
         isPublished: true,
         description: undefined,
@@ -219,9 +218,9 @@ describe('CategoryMapper.toCategoryTree', () => {
   });
 });
 
-describe('CategoryMapper.toCategoryTrees', () => {
+describe('PackMapper.toPackTrees', () => {
   it('maps every root tree', () => {
-    const prismaCategory: PrismaCategory = {
+    const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
@@ -229,16 +228,16 @@ describe('CategoryMapper.toCategoryTrees', () => {
       parentId: null,
     };
 
-    const roots: PrismaCategoryNode[] = [
-      { ...prismaCategory, children: [] },
-      { ...prismaCategory, id: 'category-2', children: [] },
+    const roots: PrismaPackNode[] = [
+      { ...prismaPack, children: [] },
+      { ...prismaPack, id: 'pack-2', children: [] },
     ];
 
-    const trees: CategoryTree[] = CategoryMapper.toCategoryTrees(roots);
+    const trees: PackTree[] = PackMapper.toPackTrees(roots);
 
     expect(trees.map(({ id }) => id)).toEqual([
       '00000000-0000-4000-8000-000000000010',
-      'category-2',
+      'pack-2',
     ]);
   });
 });

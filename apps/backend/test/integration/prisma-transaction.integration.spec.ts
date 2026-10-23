@@ -1,28 +1,28 @@
 import type {
-  Category,
-  CreateCategory,
+  CreatePack,
   CreateWorldLocation,
   GuessObject,
   GuessObjectId,
-  UpdateCategory,
+  Pack,
+  UpdatePack,
   User,
   WorldLocation,
 } from '@cityborn/api';
 import {
-  buildCreateCategory,
+  buildCreatePack,
   buildGuessObject,
-  buildUpdateCategory,
+  buildUpdatePack,
   buildUser,
   buildWorldLocation,
   CreateWorldLocationSchema,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { CATEGORY_REPOSITORY } from '../../src/category/repositories/category.repository';
-import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
-import { CategoryService } from '../../src/category/services/category.service';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
+import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
+import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
+import { PackService } from '../../src/pack/services/pack.service';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { EMAIL_VERIFICATION_TOKEN_REPOSITORY } from '../../src/user/repositories/email-verification-token.repository';
 import { PrismaEmailVerificationTokenRepository } from '../../src/user/repositories/prisma-email-verification-token.repository';
@@ -39,8 +39,8 @@ describe('Prisma transactions', () => {
     createTestInfrastructure();
   const { prisma }: typeof infrastructure = infrastructure;
   let module: TestingModule;
-  let categoryRepository: PrismaCategoryRepository;
-  let categoryService: CategoryService;
+  let packRepository: PrismaPackRepository;
+  let packService: PackService;
   let guessObjectRepository: PrismaGuessObjectRepository;
   let worldLocationRepository: PrismaWorldLocationRepository;
   let tokenRepository: PrismaEmailVerificationTokenRepository;
@@ -51,11 +51,11 @@ describe('Prisma transactions', () => {
     module = await Test.createTestingModule({
       imports: [PrismaClsModule],
       providers: [
-        CategoryService,
+        PackService,
         GuessObjectService,
         WorldLocationService,
         UserService,
-        { provide: CATEGORY_REPOSITORY, useClass: PrismaCategoryRepository },
+        { provide: PACK_REPOSITORY, useClass: PrismaPackRepository },
         {
           provide: GUESS_OBJECT_REPOSITORY,
           useClass: PrismaGuessObjectRepository,
@@ -72,8 +72,8 @@ describe('Prisma transactions', () => {
       ],
     }).compile();
     await module.init();
-    categoryRepository = module.get(CATEGORY_REPOSITORY);
-    categoryService = module.get(CategoryService);
+    packRepository = module.get(PACK_REPOSITORY);
+    packService = module.get(PackService);
     guessObjectRepository = module.get(GUESS_OBJECT_REPOSITORY);
     worldLocationRepository = module.get(WORLD_LOCATION_REPOSITORY);
     tokenRepository = module.get(EMAIL_VERIFICATION_TOKEN_REPOSITORY);
@@ -86,7 +86,7 @@ describe('Prisma transactions', () => {
     await infrastructure.close();
   });
 
-  describe('CategoryService', () => {
+  describe('PackService', () => {
     describe('update', () => {
       it('rolls back relation and object deletion when location cleanup fails', async () => {
         const locationData: WorldLocation = buildWorldLocation();
@@ -105,13 +105,12 @@ describe('Prisma transactions', () => {
             world_location_id: location.id,
           },
         );
-        const categoryData: CreateCategory = buildCreateCategory({
+        const packData: CreatePack = buildCreatePack({
           guessObjectsIds: [guessObjectId],
         });
-        const category: Category =
-          await categoryRepository.create(categoryData);
-        const updateData: UpdateCategory = buildUpdateCategory({
-          id: category.id,
+        const pack: Pack = await packRepository.create(packData);
+        const updateData: UpdatePack = buildUpdatePack({
+          id: pack.id,
           name: 'Changed',
           disconnectIds: [guessObjectId],
         });
@@ -119,13 +118,13 @@ describe('Prisma transactions', () => {
           .spyOn(worldLocationRepository, 'delete')
           .mockRejectedValueOnce(new Error('location cleanup failed'));
 
-        await expect(
-          categoryService.update(category.id, updateData),
-        ).rejects.toThrow('location cleanup failed');
+        await expect(packService.update(pack.id, updateData)).rejects.toThrow(
+          'location cleanup failed',
+        );
 
         expect(
-          await prisma.category.findUnique({
-            where: { id: category.id },
+          await prisma.pack.findUnique({
+            where: { id: pack.id },
             include: { guessObjects: true },
           }),
         ).toMatchObject({
