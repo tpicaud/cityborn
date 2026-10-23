@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   CreateUser,
   PublicUser,
+  RequestPasswordReset,
+  ResetPassword,
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
@@ -26,6 +28,8 @@ export interface AuthApi {
   updatePassword(data: UpdatePassword): Promise<User>;
   resendVerificationEmail(): Promise<void>;
   verifyEmail(data: VerifyEmailData): Promise<PublicUser>;
+  requestPasswordReset(data: RequestPasswordReset): Promise<void>;
+  resetPassword(data: ResetPassword): Promise<void>;
 }
 
 interface AuthCredentialsStrategy
@@ -83,6 +87,18 @@ function buildAuthApi(
     async verifyEmail(data) {
       return unwrapApiResponse(
         await contractClient.auth.verifyEmail({ body: data }),
+      );
+    },
+
+    async requestPasswordReset(data) {
+      unwrapApiResponse(
+        await contractClient.auth.requestPasswordReset({ body: data }),
+      );
+    },
+
+    async resetPassword(data) {
+      unwrapApiResponse(
+        await contractClient.auth.resetPassword({ body: data }),
       );
     },
   };

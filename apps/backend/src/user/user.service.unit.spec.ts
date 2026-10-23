@@ -7,15 +7,20 @@ import {
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import type { AuthSession } from '../common/types/auth-session';
 import type {
   EmailVerificationToken,
   EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import type {
+  PasswordResetToken,
+  PasswordResetTokenRepository,
+} from './repositories/password-reset-token.repository';
+import type {
   CreateUserData,
   UserRepository,
 } from './repositories/user.repository';
-import { UserService } from './user.service';
+import { type PasswordResetGrant, UserService } from './user.service';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -38,13 +43,17 @@ function buildUserService() {
     createMock<UserRepository>();
   const emailVerificationTokenRepository: DeepMocked<EmailVerificationTokenRepository> =
     createMock<EmailVerificationTokenRepository>();
+  const passwordResetTokenRepository: DeepMocked<PasswordResetTokenRepository> =
+    createMock<PasswordResetTokenRepository>();
   const userService: UserService = new UserService(
     userRepository,
     emailVerificationTokenRepository,
+    passwordResetTokenRepository,
   );
 
   return {
     emailVerificationTokenRepository,
+    passwordResetTokenRepository,
     userRepository,
     userService,
   };
@@ -305,6 +314,117 @@ describe('UserService verification tokens', () => {
       expect(
         emailVerificationTokenRepository.deleteVerificationTokensByUserId,
       ).toHaveBeenCalledWith(verificationToken.userId);
+    });
+  });
+});
+
+describe('UserService password reset', () => {
+  describe('createPasswordResetToken', () => {
+    it('replaces previous tokens and stores only the hash of the new one', async () => {
+      const {
+        passwordResetTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+
+      const grant: PasswordResetGrant =
+        await userService.createPasswordResetToken(userId('user-1'));
+
+      expect(grant.passwordResetToken).toMatch(/^[a-f0-9]{64}$/);
+      expect(grant.validityMinutes).toBe(60);
+      expect(passwordResetTokenRepository.deleteByUserId).toHaveBeenCalledWith(
+        userId('user-1'),
+      );
+      expect(passwordResetTokenRepository.create).toHaveBeenCalledWith({
+        userId: userId('user-1'),
+        tokenHash: expect.not.stringMatching(grant.passwordResetToken),
+        expiresAt: expect.any(Date),
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('deletes and rejects an expired token', async () => {
+      const {
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const expiredToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() - 1),
+        createdAt: new Date(),
+      };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        expiredToken,
+      );
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'expired',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+      expect(passwordResetTokenRepository.delete).toHaveBeenCalledWith(
+        'token-id',
+      );
+      expect(userRepository.resetPassword).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown token', async () => {
+      const {
+        passwordResetTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(null);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'unknown',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+    });
+
+    it('resets the password and removes the pending account tokens', async () => {
+      const {
+        emailVerificationTokenRepository,
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const resetToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      const authSession: AuthSession = { user: buildUser(), authVersion: 2 };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        resetToken,
+      );
+      userRepository.resetPassword.mockResolvedValue(authSession);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'reset-token',
+          passwordHash: 'new-hash',
+        }),
+      ).resolves.toEqual(authSession);
+      expect(userRepository.resetPassword).toHaveBeenCalledWith({
+        userId: userId('user-1'),
+        passwordHash: 'new-hash',
+      });
+      expect(passwordResetTokenRepository.deleteByUserId).toHaveBeenCalledWith(
+        userId('user-1'),
+      );
+      expect(
+        emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+      ).toHaveBeenCalledWith(userId('user-1'));
     });
   });
 });

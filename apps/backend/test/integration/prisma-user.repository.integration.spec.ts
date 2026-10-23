@@ -343,6 +343,32 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('resetPassword', () => {
+    it('replaces the password, verifies the account and bumps its auth version', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'email',
+        password: 'squatter-hash',
+        isVerified: userData.isVerified,
+      });
+
+      const authSession: AuthSession = await userRepository.resetPassword({
+        userId: user.id,
+        passwordHash: 'owner-hash',
+      });
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsById(user.id);
+
+      expect(authSession).toMatchObject({
+        user: { id: user.id, isVerified: true },
+        authVersion: 1,
+      });
+      expect(credentials?.passwordHash).toBe('owner-hash');
+    });
+  });
+
   describe('reclaimUnverifiedAccount', () => {
     it('hands an unverified account over to its identity provider owner', async () => {
       const userData: User = buildUser({ isVerified: false });

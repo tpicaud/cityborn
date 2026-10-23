@@ -34,8 +34,9 @@ model User {
   isVerified Boolean   @default(false)
   appleId    String?
 
-  tokens      EmailVerificationToken[]
-  gameRecords GameRecord[]             @relation("GameRecordUsers")
+  tokens              EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  gameRecords         GameRecord[]             @relation("GameRecordUsers")
 }
 
 model EmailVerificationToken {
@@ -44,6 +45,17 @@ model EmailVerificationToken {
 
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id])
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash String @unique
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   expiresAt DateTime
   createdAt DateTime @default(now())

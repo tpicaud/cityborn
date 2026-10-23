@@ -91,6 +91,12 @@ export const SignInForm = () => {
           />
           <Button
             variant="default"
+            label="Mot de passe oublié ?"
+            onPress={() => router.navigate('/auth/forgot-password')}
+            className="mt-6"
+          />
+          <Button
+            variant="default"
             label="Pas de compte ? Inscris-toi ici !"
             onPress={() => router.navigate('/auth/sign-up')}
             className="mt-6"

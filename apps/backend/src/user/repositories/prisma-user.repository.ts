@@ -12,6 +12,7 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
+  PasswordReset,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -134,6 +135,21 @@ export class PrismaUserRepository implements UserRepository {
       select: { authVersion: true },
     });
     return user.authVersion;
+  }
+
+  async resetPassword({
+    userId,
+    passwordHash,
+  }: PasswordReset): Promise<AuthSession> {
+    const user: PrismaUser = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: {
+        password: passwordHash,
+        isVerified: true,
+        authVersion: { increment: 1 },
+      },
+    });
+    return UserMapper.toAuthSession(user);
   }
 
   async reclaimUnverifiedAccount({

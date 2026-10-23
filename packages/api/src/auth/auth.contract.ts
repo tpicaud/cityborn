@@ -7,6 +7,8 @@ import { PublicUserSchema, UserSchema } from '../user/user.schema';
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  RequestPasswordResetSchema,
+  ResetPasswordSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
@@ -134,6 +136,18 @@ export const authContract = c.router(
       path: '/password',
       body: UpdatePasswordSchema,
       responses: { 200: AuthResponseSchema },
+    },
+    requestPasswordReset: {
+      method: 'POST',
+      path: '/request-password-reset',
+      body: RequestPasswordResetSchema,
+      responses: { 202: emptyResponseSchema },
+    },
+    resetPassword: {
+      method: 'POST',
+      path: '/reset-password',
+      body: ResetPasswordSchema,
+      responses: { 200: emptyResponseSchema },
     },
     signOut: {
       method: 'POST',

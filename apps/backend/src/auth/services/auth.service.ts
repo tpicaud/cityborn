@@ -3,6 +3,8 @@ import {
   type CreateUser,
   ErrorCode,
   type PublicUser,
+  type RequestPasswordReset,
+  type ResetPassword,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
@@ -35,7 +37,7 @@ import type {
   UnverifiedAccountReclaim,
   UserCredentials,
 } from '../../user/repositories/user.repository';
-import { UserService } from '../../user/user.service';
+import { type PasswordResetGrant, UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
   type AppleIdentity,
@@ -323,6 +325,45 @@ export class AuthService {
 
     const authSession: AuthSession = { user, authVersion };
     return this.createAuthResponse(authSession);
+  }
+
+  async requestPasswordReset({ email }: RequestPasswordReset): Promise<void> {
+    await this.rateLimitService.consumeAccountEmail(email);
+
+    const user: User | null = await this.userService.findByEmail(email);
+    if (!user) return;
+
+    const { passwordResetToken, validityMinutes }: PasswordResetGrant =
+      await this.userService.createPasswordResetToken(user.id);
+    this.sendMailInBackground({
+      operation: 'send_password_reset_email',
+      userId: user.id,
+      mailOptions: buildMailOptions('password-reset-email', {
+        email: user.email,
+        frontendUrl: this.httpConfig.frontendUrl,
+        passwordResetToken,
+        username: user.username,
+        validityMinutes,
+      }),
+    });
+  }
+
+  async resetPassword({
+    passwordResetToken,
+    newPassword,
+  }: ResetPassword): Promise<void> {
+    const passwordHash: string = await bcrypt.hash(newPassword, 10);
+    const { user, authVersion }: AuthSession =
+      await this.userService.resetPassword({
+        passwordResetToken,
+        passwordHash,
+      });
+
+    this.authenticatedSocketService.disconnectOlderSessions(
+      user.id,
+      authVersion,
+    );
+    await this.rateLimitService.clearFailedSignIns(user.id);
   }
 
   async resendVerificationEmail(user: User): Promise<void> {

@@ -339,6 +339,82 @@ describe('AuthService.register', () => {
   });
 });
 
+describe('AuthService.requestPasswordReset', () => {
+  it('emails a reset link to the owner of the address', async () => {
+    const user: User = buildUser({ isVerified: false });
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(user);
+    userService.createPasswordResetToken.mockResolvedValue({
+      passwordResetToken: 'reset-token',
+      validityMinutes: 60,
+    });
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await authService.requestPasswordReset({ email: user.email });
+
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
+      user.email,
+    );
+    expect(userService.createPasswordResetToken).toHaveBeenCalledWith(user.id);
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: user.email,
+        text: expect.stringContaining(
+          'https://cityborn.test/reset-password?token=reset-token',
+        ),
+      }),
+    );
+  });
+
+  it('answers the same way without emailing an unknown address', async () => {
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      authService.requestPasswordReset({ email: 'unknown@cityborn.test' }),
+    ).resolves.toBeUndefined();
+
+    expect(userService.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.resetPassword', () => {
+  it('revokes the other sessions and unlocks the sign-in', async () => {
+    const user: User = buildUser();
+    const {
+      authService,
+      userService,
+      authenticatedSocketService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.resetPassword.mockResolvedValue({ user, authVersion: 4 });
+
+    await authService.resetPassword({
+      passwordResetToken: 'reset-token',
+      newPassword: 'Password2',
+    });
+
+    expect(userService.resetPassword).toHaveBeenCalledWith({
+      passwordResetToken: 'reset-token',
+      passwordHash: 'hashed-password',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(user.id, 4);
+    expect(rateLimitService.clearFailedSignIns).toHaveBeenCalledWith(user.id);
+  });
+});
+
 describe('AuthService.signIn', () => {
   it('returns tokens for valid credentials', async () => {
     const {

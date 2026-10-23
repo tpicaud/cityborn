@@ -2,6 +2,7 @@
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
+import Link from 'next/link';
 import Button from '@/components/ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
@@ -46,6 +47,13 @@ export const SignInForm = () => {
       <Button variant="contained" type="submit" loading={isSubmitting}>
         Se connecter
       </Button>
+
+      <Link
+        href="/forgot-password"
+        className="text-sm text-gray-600 hover:underline text-center"
+      >
+        Mot de passe oublié ?
+      </Link>
 
       <div className="flex flex-row gap-3 items-center w-full">
         <div className="flex-1 h-px bg-black rounded-full"></div>

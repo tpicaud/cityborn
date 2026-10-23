@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   ErrorCode,
   type User,
@@ -19,12 +19,34 @@ import {
   type EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import {
+  PASSWORD_RESET_TOKEN_REPOSITORY,
+  type PasswordResetToken,
+  type PasswordResetTokenRepository,
+} from './repositories/password-reset-token.repository';
+import {
   type CreateUserData,
+  type PasswordReset,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
   type UserRepository,
 } from './repositories/user.repository';
+
+const passwordResetValidityMinutes: number = 60;
+
+export type PasswordResetGrant = {
+  passwordResetToken: string;
+  validityMinutes: number;
+};
+
+type PasswordResetCompletion = {
+  passwordResetToken: string;
+  passwordHash: string;
+};
+
+function hashPasswordResetToken(passwordResetToken: string): string {
+  return createHash('sha256').update(passwordResetToken).digest('hex');
+}
 
 @Injectable()
 export class UserService {
@@ -33,6 +55,8 @@ export class UserService {
     private readonly userRepository: UserRepository,
     @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
     private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
+    @Inject(PASSWORD_RESET_TOKEN_REPOSITORY)
+    private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
   ) {}
 
   async createUser(data: CreateUserData): Promise<User> {
@@ -203,5 +227,63 @@ export class UserService {
       userId,
     );
     return user;
+  }
+
+  @Transactional()
+  async createPasswordResetToken(userId: UserId): Promise<PasswordResetGrant> {
+    const passwordResetToken: string = randomBytes(32).toString('hex');
+    const expiresAt: Date = new Date(
+      Date.now() + passwordResetValidityMinutes * 60 * 1000,
+    );
+
+    await this.passwordResetTokenRepository.deleteByUserId(userId);
+    await this.passwordResetTokenRepository.create({
+      userId,
+      tokenHash: hashPasswordResetToken(passwordResetToken),
+      expiresAt,
+    });
+
+    return {
+      passwordResetToken,
+      validityMinutes: passwordResetValidityMinutes,
+    };
+  }
+
+  async resetPassword({
+    passwordResetToken,
+    passwordHash,
+  }: PasswordResetCompletion): Promise<AuthSession> {
+    const token: PasswordResetToken | null =
+      await this.passwordResetTokenRepository.findByTokenHash(
+        hashPasswordResetToken(passwordResetToken),
+      );
+
+    if (!token || token.expiresAt < new Date()) {
+      if (token) {
+        await this.passwordResetTokenRepository.delete(token.id);
+      }
+
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+        message: 'Password reset token is invalid or expired',
+      });
+    }
+
+    return this.completePasswordReset({ userId: token.userId, passwordHash });
+  }
+
+  @Transactional()
+  private async completePasswordReset(
+    passwordReset: PasswordReset,
+  ): Promise<AuthSession> {
+    const authSession: AuthSession =
+      await this.userRepository.resetPassword(passwordReset);
+    await this.passwordResetTokenRepository.deleteByUserId(
+      passwordReset.userId,
+    );
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      passwordReset.userId,
+    );
+    return authSession;
   }
 }
