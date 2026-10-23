@@ -27,6 +27,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.USER_INVALID_TOKEN]: 'Token invalide. Veuillez vous reconnecter.',
   [ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN]:
     'Le lien de vérification a expiré ou est invalide.',
+  [ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN]:
+    'Le lien de vérification a expiré.',
   [ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED]:
     'Vous devez posséder un compte utilisateur vérifié.',
   [ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON]:

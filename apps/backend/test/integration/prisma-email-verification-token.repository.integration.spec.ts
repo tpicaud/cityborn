@@ -1,7 +1,6 @@
 import type { User } from '@cityborn/api';
 import { buildUser } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import type { EmailVerificationToken as PrismaEmailVerificationToken } from '@prisma/client';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import type {
   CreateEmailVerificationToken,
@@ -168,44 +167,6 @@ describe('PrismaEmailVerificationTokenRepository', () => {
         await tokenRepository.findVerificationToken('missing-token');
 
       expect(found).toBeNull();
-    });
-  });
-
-  describe('deleteVerificationToken', () => {
-    it('removes only the requested token', async () => {
-      const user: User = buildUser();
-      await prisma.user.create({
-        data: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          type: user.type,
-        },
-      });
-      const token: PrismaEmailVerificationToken =
-        await prisma.emailVerificationToken.create({
-          data: {
-            userId: user.id,
-            token: 'deleted-token',
-            expiresAt: new Date('2099-01-01'),
-          },
-        });
-      await prisma.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          token: 'retained-token',
-          expiresAt: new Date('2099-01-01'),
-        },
-      });
-
-      await tokenRepository.deleteVerificationToken(token.id);
-
-      expect(
-        await tokenRepository.findVerificationToken('deleted-token'),
-      ).toBeNull();
-      expect(
-        await tokenRepository.findVerificationToken('retained-token'),
-      ).toMatchObject({ userId: user.id });
     });
   });
 

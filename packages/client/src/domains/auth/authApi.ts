@@ -33,6 +33,7 @@ export interface AuthApi {
   updatePassword(data: UpdatePassword): Promise<User>;
   resendVerificationEmail(): Promise<void>;
   verifyEmail(data: VerifyEmailData): Promise<PublicUser>;
+  renewVerificationEmail(data: VerifyEmailData): Promise<void>;
   updateEmail(data: UpdateEmail): Promise<User>;
 }
 
@@ -101,6 +102,11 @@ function buildAuthApi(
     async verifyEmail(data) {
       return unwrapApiResponse(
         await contractClient.auth.verifyEmail({ body: data }),
+      );
+    },
+    async renewVerificationEmail(data) {
+      unwrapApiResponse(
+        await contractClient.auth.renewVerificationEmail({ body: data }),
       );
     },
     async updateEmail(data) {

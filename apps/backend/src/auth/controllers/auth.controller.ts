@@ -26,6 +26,7 @@ const publicAuthRoutes = c.router({
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
   verifyEmail: contract.auth.verifyEmail,
+  renewVerificationEmail: contract.auth.renewVerificationEmail,
 });
 
 const protectedAuthRoutes = c.router({
@@ -87,6 +88,10 @@ export class AuthController {
         status: 200 as const,
         body: await this.authService.verifyEmail(body),
       }),
+      renewVerificationEmail: async ({ body }) => {
+        await this.authService.renewVerificationEmail(body);
+        return { status: 202 as const, body: {} };
+      },
     });
   }
 

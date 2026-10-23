@@ -138,6 +138,12 @@ export const authContract = c.router(
       body: VerifyEmailDataSchema,
       responses: { 200: PublicUserSchema },
     },
+    renewVerificationEmail: {
+      method: 'POST',
+      path: '/renew-verification-email',
+      body: VerifyEmailDataSchema,
+      responses: { 202: emptyResponseSchema },
+    },
     deleteUser: {
       method: 'POST',
       path: '/delete-user',

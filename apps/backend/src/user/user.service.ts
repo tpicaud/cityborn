@@ -17,6 +17,7 @@ import { Transactional } from '@nestjs-cls/transactional';
 import type { AuthSession, AuthVersion } from '../common/types/auth-session';
 import {
   EMAIL_VERIFICATION_TOKEN_REPOSITORY,
+  type EmailVerificationToken,
   type EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import {
@@ -26,6 +27,13 @@ import {
   type UserCredentials,
   type UserRepository,
 } from './repositories/user.repository';
+
+function invalidVerificationTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
+    message: 'Email verification token is invalid',
+  });
+}
 
 @Injectable()
 export class UserService {
@@ -212,25 +220,34 @@ export class UserService {
   }
 
   async verifyEmail(verificationToken: string): Promise<User> {
-    const token =
+    const token: EmailVerificationToken | null =
       await this.emailVerificationTokenRepository.findVerificationToken(
         verificationToken,
       );
 
-    if (!token || token.expiresAt < new Date()) {
-      if (token) {
-        await this.emailVerificationTokenRepository.deleteVerificationToken(
-          token.id,
-        );
-      }
+    if (!token) throw invalidVerificationTokenException();
 
+    if (token.expiresAt < new Date())
       throw new UnauthorizedException({
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-        message: 'Email verification token is invalid or expired',
+        code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN,
+        message: 'Email verification token is expired',
       });
-    }
 
     return this.completeEmailVerification(token.userId);
+  }
+
+  async findVerificationTokenOwner(verificationToken: string): Promise<User> {
+    const token: EmailVerificationToken | null =
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
+    const owner: User | null = token
+      ? await this.userRepository.findById(token.userId)
+      : null;
+
+    if (!owner) throw invalidVerificationTokenException();
+
+    return owner;
   }
 
   @Transactional()
