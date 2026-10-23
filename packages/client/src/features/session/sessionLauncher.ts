@@ -14,7 +14,6 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { joinableSessionPath, sessionPath } from './sessionPath';
 
 const sessionCodeLength: number = 6;
@@ -65,7 +64,6 @@ export function useSessionLauncher({
   const { sessionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
-  const { user }: CurrentUser = useCurrentUser();
   const [authenticationRequired, setAuthenticationRequired] =
     useState<boolean>(false);
   const joinSessionForm: JoinSessionForm = useForm<
@@ -89,11 +87,6 @@ export function useSessionLauncher({
   };
 
   const playMulti: () => Promise<void> = async (): Promise<void> => {
-    if (!user) {
-      setAuthenticationRequired(true);
-      return;
-    }
-
     await openNewSession(SessionMode.MULTI);
   };
 

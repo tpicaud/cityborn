@@ -46,6 +46,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.SESSION_PLAYER_NOT_CONNECTED]: "Le joueur n'est pas connecté.",
   [ErrorCode.SESSION_PLAYER_ALREADY_EXISTS]:
     'Le joueur existe déjà dans la session.',
+  [ErrorCode.SESSION_PLAYER_NAME_RESERVED]:
+    'Ce pseudo appartient à un compte Cityborn. Choisissez-en un autre.',
   [ErrorCode.SESSION_CREATION_FAILED]:
     'Erreur lors de la création de la session. Veuillez réessayer.',
   [ErrorCode.SESSION_FORBIDDEN_HOST]:

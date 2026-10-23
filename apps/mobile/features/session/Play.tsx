@@ -3,17 +3,14 @@ import {
   type SessionLauncher,
   useSessionLauncher,
 } from '@cityborn/client/session';
-import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import Button from '@/components/ui/Button';
-import Dialog from '@/components/ui/Dialog';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { useNavigation } from '@/lib/navigation';
 
 export default function Play() {
-  const router = useRouter();
   const navigation = useNavigation();
   const {
     joinSessionForm: {
@@ -23,8 +20,6 @@ export default function Play() {
     playSolo,
     playMulti,
     joinSession,
-    authenticationRequired,
-    dismissAuthenticationRequired,
   }: SessionLauncher = useSessionLauncher({ navigation });
 
   return (
@@ -93,38 +88,6 @@ export default function Play() {
             </View>
           </View>
         </View>
-
-        <Dialog
-          visible={authenticationRequired}
-          onClose={dismissAuthenticationRequired}
-          className="h-auto"
-        >
-          <View className="p-5">
-            <Text className="text-center text-xl mb-6">
-              Vous devez être connecté pour jouer en mode multi !
-            </Text>
-            <View className="flex flex-col gap-4 items-center justify-center w-min-full">
-              <Button
-                label="CONNEXION"
-                size="medium"
-                variant="outlined"
-                onPress={() => {
-                  dismissAuthenticationRequired();
-                  router.navigate('/auth/sign-in');
-                }}
-              />
-              <Button
-                label="INSCRIPTION"
-                size="medium"
-                variant="filled"
-                onPress={() => {
-                  dismissAuthenticationRequired();
-                  router.navigate('/auth/sign-up');
-                }}
-              />
-            </View>
-          </View>
-        </Dialog>
       </View>
     </TouchableWithoutFeedback>
   );
