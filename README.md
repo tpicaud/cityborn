@@ -145,3 +145,5 @@ cityborn/
 ├── lint-rules/          # Règles Biome du monorepo (plugins GritQL)
 └── scripts/             # Scripts du monorepo
 ```
+
+[Réinitialisation du mot de passe](docs/password-reset.md).

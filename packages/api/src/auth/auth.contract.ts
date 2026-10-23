@@ -7,6 +7,9 @@ import { PublicUserSchema, UserSchema } from '../user/user.schema';
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  PasswordResetRequestResponseSchema,
+  RequestPasswordResetSchema,
+  ResetPasswordSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
@@ -60,6 +63,18 @@ const cookieAuthContract = c.router(
 
 export const authContract = c.router(
   {
+    requestPasswordReset: {
+      method: 'POST',
+      path: '/request-password-reset',
+      body: RequestPasswordResetSchema,
+      responses: { 200: PasswordResetRequestResponseSchema },
+    },
+    resetPassword: {
+      method: 'POST',
+      path: '/reset-password',
+      body: ResetPasswordSchema,
+      responses: { 200: emptyResponseSchema },
+    },
     me: {
       method: 'GET',
       path: '/me',

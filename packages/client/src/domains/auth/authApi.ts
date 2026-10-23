@@ -2,7 +2,10 @@ import type {
   AppContract,
   AuthResponse,
   CreateUser,
+  PasswordResetRequestResponse,
   PublicUser,
+  RequestPasswordReset,
+  ResetPassword,
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
@@ -16,6 +19,10 @@ import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 
 export interface AuthApi {
+  requestPasswordReset(
+    data: RequestPasswordReset,
+  ): Promise<PasswordResetRequestResponse>;
+  resetPassword(data: ResetPassword): Promise<void>;
   getCurrentUser(): Promise<User | null>;
   signIn(data: SignIn): Promise<User>;
   signUp(data: CreateUser): Promise<User>;
@@ -46,6 +53,16 @@ function buildAuthApi(
   credentialsStrategy: AuthCredentialsStrategy,
 ): AuthApi {
   return {
+    async requestPasswordReset(data) {
+      return unwrapApiResponse(
+        await contractClient.auth.requestPasswordReset({ body: data }),
+      );
+    },
+    async resetPassword(data) {
+      unwrapApiResponse(
+        await contractClient.auth.resetPassword({ body: data }),
+      );
+    },
     async getCurrentUser() {
       try {
         if (!(await credentialsStrategy.mayHoldCredentials())) return null;
