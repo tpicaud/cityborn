@@ -12,7 +12,8 @@ import { PacksList } from './packs-list';
 
 export function PacksEditor() {
   const router = useRouter();
-  const { packs, isLoading, reloadPacks }: PackCatalog = usePackCatalog();
+  const { packs, themes, isLoading, reloadPacks }: PackCatalog =
+    usePackCatalog();
   const [searchValue, setSearchValue] = useState<string>('');
 
   const filteredPacks = useMemo(() => {
@@ -54,7 +55,11 @@ export function PacksEditor() {
           !filteredPacks || filteredPacks.length === 0 ? (
             <p className="text-center text-gray-300">Aucun pack trouvé</p>
           ) : (
-            <PacksList packs={filteredPacks} onPackSelect={onPackSelect} />
+            <PacksList
+              packs={filteredPacks}
+              themes={themes}
+              onPackSelect={onPackSelect}
+            />
           )
         ) : (
           <div className="flex items-center justify-center">

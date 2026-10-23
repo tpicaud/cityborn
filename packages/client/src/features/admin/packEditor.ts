@@ -7,6 +7,7 @@ import {
   type GuessObjectId,
   type Pack,
   type PackId,
+  type Theme,
   type UpdatePack,
   UserFacingError,
   type WorldLocationId,
@@ -26,6 +27,7 @@ import {
   packsQueryOptions,
   removeDeletedPack,
 } from '../../domains/pack/packQueries';
+import { themesQueryOptions } from '../../domains/theme/themeQueries';
 import {
   type ErrorReporter,
   useErrorReporter,
@@ -51,7 +53,9 @@ export type PackEditorOptions = {
   onPackDeleted: () => void;
 };
 
-type PackFields = Partial<Pick<FullPack, 'name' | 'description' | 'parentId'>>;
+type PackFields = Partial<
+  Pick<FullPack, 'name' | 'description' | 'parentId' | 'themeId'>
+>;
 
 export type PackEditor = {
   pack: FullPack;
@@ -94,22 +98,27 @@ function upsertGuessObject({
 export function usePackEditorLoad({
   packId,
 }: PackEditorLoadOptions): PackEditorLoad {
-  const { packApi }: DomainApis = useDomainApis();
+  const { packApi, themeApi }: DomainApis = useDomainApis();
   const fullPackQuery: UseQueryResult<FullPack | null> = useQuery(
     fullPackQueryOptions({ packApi, packId }),
   );
   const packsQuery: UseQueryResult<Pack[]> = useQuery(
     packsQueryOptions(packApi),
   );
+  const themesQuery: UseQueryResult<Theme[]> = useQuery(
+    themesQueryOptions(themeApi),
+  );
 
   return {
     packEditorState: toPackEditorState({
       fullPackQuery,
       packsQuery,
+      themesQuery,
     }),
     retry: () => {
       fullPackQuery.refetch();
       packsQuery.refetch();
+      themesQuery.refetch();
     },
   };
 }
@@ -143,6 +152,7 @@ export function usePackEditor({
         isPublished,
         description: pack.description,
         parentId: pack.parentId,
+        themeId: pack.themeId,
       });
       setPack((currentPack: FullPack) => ({
         ...currentPack,
