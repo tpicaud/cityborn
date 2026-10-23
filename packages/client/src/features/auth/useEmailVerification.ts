@@ -1,6 +1,5 @@
 'use client';
 
-import { ApiResponseError, ErrorCode } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
@@ -9,6 +8,7 @@ import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
+import { toFailedEmailVerificationStatus } from './failedEmailVerificationStatus';
 
 export type EmailVerificationStatus =
   | 'verifying'
@@ -25,13 +25,6 @@ export type EmailVerification = {
   status: EmailVerificationStatus;
   renew: () => Promise<void>;
 };
-
-function isExpiredVerificationToken(error: unknown): boolean {
-  return (
-    error instanceof ApiResponseError &&
-    error.code === ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN
-  );
-}
 
 export function useEmailVerification({
   verificationToken,
@@ -58,7 +51,7 @@ export function useEmailVerification({
         await invalidateCurrentUser(queryClient);
         setStatus('verified');
       } catch (error: unknown) {
-        setStatus(isExpiredVerificationToken(error) ? 'expired' : 'invalid');
+        setStatus(toFailedEmailVerificationStatus(error));
       }
     };
     verify();
