@@ -32,7 +32,7 @@ export default function HomePage() {
   const homeContent: ReactNode = (
     <div className="flex flex-col items-center gap-5">
       <Home openSignIn={openSignIn} openSignUp={openSignUp} />
-      <Play openSignIn={openSignIn} openSignUp={openSignUp} />
+      <Play />
     </div>
   );
 
@@ -44,7 +44,7 @@ export default function HomePage() {
       break;
 
     case 'sign-up':
-      content = <SignUpForm />;
+      content = <SignUpForm openSignIn={openSignIn} />;
       break;
 
     case 'profile':

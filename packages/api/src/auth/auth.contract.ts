@@ -7,9 +7,12 @@ import { PublicUserSchema, UserSchema } from '../user/user.schema';
 import {
   AuthResponseSchema,
   CreateUserSchema,
+  RequestPasswordResetSchema,
+  ResetPasswordSchema,
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UpdateEmailSchema,
   UpdatePasswordSchema,
   VerifyEmailDataSchema,
 } from './auth.schema';
@@ -24,6 +27,11 @@ const cookieAuthContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: UserSchema },
     },
+    /**
+     * @deprecated Utiliser `auth.register` à la place. Conservé pour les
+     * builds web publiées avant l'inscription sans connexion immédiate.
+     * @deprecatedSince 2026-10-23
+     */
     signUp: {
       method: 'POST',
       path: '/sign-up',
@@ -71,11 +79,22 @@ export const authContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: AuthResponseSchema },
     },
+    /**
+     * @deprecated Utiliser `register` à la place. Conservé pour les builds
+     * mobile publiées avant l'inscription sans connexion immédiate.
+     * @deprecatedSince 2026-10-23
+     */
     signUp: {
       method: 'POST',
       path: '/sign-up',
       body: CreateUserSchema,
       responses: { 201: AuthResponseSchema },
+    },
+    register: {
+      method: 'POST',
+      path: '/register',
+      body: CreateUserSchema,
+      responses: { 202: emptyResponseSchema },
     },
     signIn: {
       method: 'POST',
@@ -107,6 +126,12 @@ export const authContract = c.router(
       body: VerifyEmailDataSchema,
       responses: { 200: PublicUserSchema },
     },
+    renewVerificationEmail: {
+      method: 'POST',
+      path: '/renew-verification-email',
+      body: VerifyEmailDataSchema,
+      responses: { 202: emptyResponseSchema },
+    },
     deleteUser: {
       method: 'POST',
       path: '/delete-user',
@@ -118,6 +143,24 @@ export const authContract = c.router(
       path: '/password',
       body: UpdatePasswordSchema,
       responses: { 200: AuthResponseSchema },
+    },
+    updateEmail: {
+      method: 'PATCH',
+      path: '/email',
+      body: UpdateEmailSchema,
+      responses: { 200: UserSchema },
+    },
+    requestPasswordReset: {
+      method: 'POST',
+      path: '/request-password-reset',
+      body: RequestPasswordResetSchema,
+      responses: { 202: emptyResponseSchema },
+    },
+    resetPassword: {
+      method: 'POST',
+      path: '/reset-password',
+      body: ResetPasswordSchema,
+      responses: { 200: emptyResponseSchema },
     },
     signOut: {
       method: 'POST',

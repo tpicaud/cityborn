@@ -3,9 +3,12 @@ import {
   type CreateUser,
   ErrorCode,
   type PublicUser,
+  type RequestPasswordReset,
+  type ResetPassword,
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdateEmail,
   type UpdatePassword,
   type User,
   type UserId,
@@ -18,7 +21,6 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -30,12 +32,13 @@ import { EventService } from '../../event/event.service';
 import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
+import type { SendMailOptions } from '../../mail/providers/mail.provider';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type {
   UnverifiedAccountReclaim,
   UserCredentials,
 } from '../../user/repositories/user.repository';
-import { UserService } from '../../user/user.service';
+import { type PasswordResetGrant, UserService } from '../../user/user.service';
 import { AuthenticatedSocketService } from '../../ws-handshake/authenticated-socket.service';
 import {
   type AppleIdentity,
@@ -69,42 +72,47 @@ export class AuthService {
 
     await this.userService.validateIdentifiers(username, email);
 
-    const hash = await bcrypt.hash(password, 10);
-
-    const user = await this.userService.createUser({
+    const user: User = await this.createEmailAccount({
       email,
       username,
-      type: 'email',
-      password: hash,
+      passwordHash: await bcrypt.hash(password, 10),
+      visitorId,
     });
-    if (!user)
-      throw new InternalServerErrorException({
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: `Error creating user in database`,
-      });
-
-    void this.sendVerificationEmail(user).catch((error: unknown) => {
-      this.wideEventService.recordOperationError(error, {
-        domain: 'auth',
-        operation: 'send_verification_email',
-        userId: user.id,
-      });
-    });
-
-    if (visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'user_signed_up',
-          visitorId,
-          properties: {
-            method: 'email',
-          },
-        }),
-      );
-    }
 
     const authSession: AuthSession = { user, authVersion: 0 };
     return this.createAuthResponse(authSession);
+  }
+
+  async register({
+    registration,
+    visitorId,
+    clientIp,
+  }: {
+    registration: CreateUser;
+    visitorId?: string;
+    clientIp: string;
+  }): Promise<void> {
+    const { email, username, password }: CreateUser = registration;
+
+    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
+    await this.userService.assertUsernameAvailable(username);
+    const passwordHash: string = await bcrypt.hash(password, 10);
+
+    const existingUser: User | null = await this.userService.findByEmail(email);
+    if (existingUser) {
+      this.sendMailInBackground({
+        operation: 'send_existing_account_email',
+        userId: existingUser.id,
+        mailOptions: buildMailOptions('existing-account-email', {
+          email: existingUser.email,
+          frontendUrl: this.httpConfig.frontendUrl,
+          username: existingUser.username,
+        }),
+      });
+      return;
+    }
+
+    await this.createEmailAccount({ email, username, passwordHash, visitorId });
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -328,7 +336,74 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
+  async requestPasswordReset({
+    email,
+    clientIp,
+  }: RequestPasswordReset & { clientIp: string }): Promise<void> {
+    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
+
+    const user: User | null = await this.userService.findByEmail(email);
+    if (!user) return;
+
+    const { passwordResetToken, validityMinutes }: PasswordResetGrant =
+      await this.userService.createPasswordResetToken(user.id);
+    this.sendMailInBackground({
+      operation: 'send_password_reset_email',
+      userId: user.id,
+      mailOptions: buildMailOptions('password-reset-email', {
+        email: user.email,
+        frontendUrl: this.httpConfig.frontendUrl,
+        passwordResetToken,
+        username: user.username,
+        validityMinutes,
+      }),
+    });
+  }
+
+  async resetPassword({
+    passwordResetToken,
+    newPassword,
+  }: ResetPassword): Promise<void> {
+    const passwordHash: string = await bcrypt.hash(newPassword, 10);
+    const { user, authVersion }: AuthSession =
+      await this.userService.resetPassword({
+        passwordResetToken,
+        passwordHash,
+      });
+
+    this.authenticatedSocketService.disconnectOlderSessions(
+      user.id,
+      authVersion,
+    );
+    await this.rateLimitService.clearFailedSignIns(user.id);
+  }
+
+  async updateEmail({
+    user,
+    email,
+  }: UpdateEmail & { user: User }): Promise<User> {
+    await this.rateLimitService.consumeEmailChange(user.id);
+
+    const updatedUser: User = await this.userService.updateEmail({
+      user,
+      email,
+    });
+    if (updatedUser.email !== user.email) {
+      this.sendVerificationEmailInBackground(updatedUser);
+    }
+    return updatedUser;
+  }
+
   async resendVerificationEmail(user: User): Promise<void> {
+    if (user.isVerified) return;
+    await this.sendVerificationEmail(user, verificationEmailCooldown);
+  }
+
+  async renewVerificationEmail({
+    verification_token,
+  }: VerifyEmailData): Promise<void> {
+    const user: User =
+      await this.userService.findVerificationTokenOwner(verification_token);
     if (user.isVerified) return;
     await this.sendVerificationEmail(user, verificationEmailCooldown);
   }
@@ -339,6 +414,69 @@ export class AuthService {
     );
 
     return { id: user.id, username: user.username };
+  }
+
+  private async createEmailAccount({
+    email,
+    username,
+    passwordHash,
+    visitorId,
+  }: {
+    email: string;
+    username: Username;
+    passwordHash: string;
+    visitorId?: string;
+  }): Promise<User> {
+    const user: User = await this.userService.createUser({
+      email,
+      username,
+      type: 'email',
+      password: passwordHash,
+    });
+
+    this.sendVerificationEmailInBackground(user);
+
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_up',
+          visitorId,
+          properties: {
+            method: 'email',
+          },
+        }),
+      );
+    }
+
+    return user;
+  }
+
+  private sendVerificationEmailInBackground(user: User): void {
+    void this.sendVerificationEmail(user).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: user.id,
+      });
+    });
+  }
+
+  private sendMailInBackground({
+    operation,
+    userId,
+    mailOptions,
+  }: {
+    operation: string;
+    userId: UserId;
+    mailOptions: SendMailOptions;
+  }): void {
+    void this.mailService.sendMail(mailOptions).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation,
+        userId,
+      });
+    });
   }
 
   private async sendVerificationEmail(

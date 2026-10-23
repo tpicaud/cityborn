@@ -172,6 +172,24 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findByEmail', () => {
+    it('finds a user by email but not by username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const byEmail: User | null =
+        await userRepository.findByEmail('host@cityborn.test');
+      const byUsername: User | null = await userRepository.findByEmail('host');
+
+      expect(byEmail).toMatchObject({ id: user.id });
+      expect(byUsername).toBeNull();
+    });
+  });
+
   describe('findByIdentifiers', () => {
     it('finds an existing user by either username or email', async () => {
       const userData: User = buildUser();
@@ -261,6 +279,27 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('persists the new email', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const updatedUser: User = await userRepository.updateEmail({
+        userId: user.id,
+        email: 'fixed@cityborn.test',
+      });
+
+      expect(updatedUser.email).toBe('fixed@cityborn.test');
+      expect(
+        await userRepository.findByEmail('fixed@cityborn.test'),
+      ).toMatchObject({ id: user.id });
+    });
+  });
+
   describe('updatePassword', () => {
     it('persists the new password hash', async () => {
       const userData: User = buildUser();
@@ -322,6 +361,32 @@ describe('PrismaUserRepository', () => {
       expect(firstVersion).toBe(1);
       expect(secondVersion).toBe(2);
       expect(authSession?.authVersion).toBe(2);
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('replaces the password, verifies the account and bumps its auth version', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: 'email',
+        password: 'squatter-hash',
+        isVerified: userData.isVerified,
+      });
+
+      const authSession: AuthSession = await userRepository.resetPassword({
+        userId: user.id,
+        passwordHash: 'owner-hash',
+      });
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsById(user.id);
+
+      expect(authSession).toMatchObject({
+        user: { id: user.id, isVerified: true },
+        authVersion: 1,
+      });
+      expect(credentials?.passwordHash).toBe('owner-hash');
     });
   });
 

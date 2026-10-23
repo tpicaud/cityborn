@@ -20,6 +20,11 @@ export type UnverifiedAccountReclaim = {
   appleId?: string;
 };
 
+export type PasswordReset = {
+  userId: UserId;
+  passwordHash: string;
+};
+
 export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
   delete(user_id: UserId): Promise<void>;
@@ -27,6 +32,7 @@ export interface UserRepository {
   findById(id: UserId): Promise<User | null>;
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
   findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null>;
@@ -38,8 +44,10 @@ export interface UserRepository {
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
   updateUsername(userId: UserId, username: Username): Promise<User>;
+  updateEmail(emailUpdate: { userId: UserId; email: string }): Promise<User>;
   updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
+  resetPassword(passwordReset: PasswordReset): Promise<AuthSession>;
   reclaimUnverifiedAccount(
     reclaim: UnverifiedAccountReclaim,
   ): Promise<AuthSession>;

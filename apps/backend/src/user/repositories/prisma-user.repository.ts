@@ -12,6 +12,7 @@ import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
 import type {
   CreateUserData,
+  PasswordReset,
   UnverifiedAccountReclaim,
   UserCredentials,
   UserRepository,
@@ -54,6 +55,13 @@ export class PrismaUserRepository implements UserRepository {
   async findByIdentifier(identifier: string): Promise<User | null> {
     const user = await this.txHost.tx.user.findFirst({
       where: { OR: [{ email: identifier }, { username: identifier }] },
+    });
+    return user ? UserMapper.toUser(user) : null;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { email },
     });
     return user ? UserMapper.toUser(user) : null;
   }
@@ -113,6 +121,20 @@ export class PrismaUserRepository implements UserRepository {
     return UserMapper.toUser(user);
   }
 
+  async updateEmail({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User> {
+    const user: PrismaUser = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: { email },
+    });
+    return UserMapper.toUser(user);
+  }
+
   async updatePassword(userId: UserId, passwordHash: string): Promise<void> {
     await this.txHost.tx.user.update({
       where: { id: userId },
@@ -127,6 +149,21 @@ export class PrismaUserRepository implements UserRepository {
       select: { authVersion: true },
     });
     return user.authVersion;
+  }
+
+  async resetPassword({
+    userId,
+    passwordHash,
+  }: PasswordReset): Promise<AuthSession> {
+    const user: PrismaUser = await this.txHost.tx.user.update({
+      where: { id: userId },
+      data: {
+        password: passwordHash,
+        isVerified: true,
+        authVersion: { increment: 1 },
+      },
+    });
+    return UserMapper.toAuthSession(user);
   }
 
   async reclaimUnverifiedAccount({

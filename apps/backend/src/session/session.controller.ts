@@ -1,5 +1,5 @@
-import { contract, ErrorCode, type Session, User } from '@cityborn/api';
-import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { contract, type Session, User } from '@cityborn/api';
+import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { CurrentUser } from '../auth/current-auth-session.decorator';
@@ -50,11 +50,6 @@ export class SessionController {
   ) {
     return tsRestHandler(optionalAuthSessionRoutes, {
       createSession: async ({ body }) => {
-        if (body.mode === 'multi' && !user)
-          throw new UnauthorizedException({
-            code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED,
-            message: 'User does not have an account or is not verified',
-          });
         const session = await this.sessionService.create(body, user, visitorId);
         this.wideEventService.enrichBusinessContext({ sessionId: session.id });
         return {

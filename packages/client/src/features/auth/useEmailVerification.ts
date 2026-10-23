@@ -1,26 +1,72 @@
 'use client';
 
-import type { VerifyEmailData } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { invalidateCurrentUser } from '../../domains/auth/authQueries';
+import {
+  type ErrorReporter,
+  useErrorReporter,
+} from '../../shared/errorReporter';
+import { toFailedEmailVerificationStatus } from './failedEmailVerificationStatus';
 
-export type EmailVerification = {
-  verifyEmail: (data: VerifyEmailData) => Promise<void>;
+export type EmailVerificationStatus =
+  | 'verifying'
+  | 'verified'
+  | 'expired'
+  | 'invalid'
+  | 'renewed';
+
+export type EmailVerificationOptions = {
+  verificationToken: string;
 };
 
-export function useEmailVerification(): EmailVerification {
+export type EmailVerification = {
+  status: EmailVerificationStatus;
+  renew: () => Promise<void>;
+};
+
+export function useEmailVerification({
+  verificationToken,
+}: EmailVerificationOptions): EmailVerification {
   const { authApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
+  const { reportError }: ErrorReporter = useErrorReporter();
+  const verifiedToken: RefObject<string | null> = useRef<string | null>(null);
+  const [status, setStatus] = useState<EmailVerificationStatus>('verifying');
 
-  const verifyEmail: (data: VerifyEmailData) => Promise<void> = useCallback(
-    async (data: VerifyEmailData): Promise<void> => {
-      await authApi.verifyEmail(data);
-      await invalidateCurrentUser(queryClient);
-    },
-    [authApi, queryClient],
-  );
+  useEffect(() => {
+    if (verifiedToken.current === verificationToken) return;
+    verifiedToken.current = verificationToken;
 
-  return { verifyEmail };
+    if (!verificationToken) {
+      setStatus('invalid');
+      return;
+    }
+
+    const verify = async (): Promise<void> => {
+      setStatus('verifying');
+      try {
+        await authApi.verifyEmail({ verification_token: verificationToken });
+        await invalidateCurrentUser(queryClient);
+        setStatus('verified');
+      } catch (error: unknown) {
+        setStatus(toFailedEmailVerificationStatus(error));
+      }
+    };
+    verify();
+  }, [authApi, queryClient, verificationToken]);
+
+  const renew = async (): Promise<void> => {
+    try {
+      await authApi.renewVerificationEmail({
+        verification_token: verificationToken,
+      });
+      setStatus('renewed');
+    } catch (error: unknown) {
+      reportError(error);
+    }
+  };
+
+  return { status, renew };
 }

@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   ErrorCode,
   type User,
@@ -8,6 +8,7 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -16,15 +17,52 @@ import { Transactional } from '@nestjs-cls/transactional';
 import type { AuthSession, AuthVersion } from '../common/types/auth-session';
 import {
   EMAIL_VERIFICATION_TOKEN_REPOSITORY,
+  type EmailVerificationToken,
   type EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import {
+  PASSWORD_RESET_TOKEN_REPOSITORY,
+  type PasswordResetToken,
+  type PasswordResetTokenRepository,
+} from './repositories/password-reset-token.repository';
+import {
   type CreateUserData,
+  type PasswordReset,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
   type UserRepository,
 } from './repositories/user.repository';
+
+const passwordResetValidityMinutes: number = 60;
+
+export type PasswordResetGrant = {
+  passwordResetToken: string;
+  validityMinutes: number;
+};
+
+type PasswordResetCompletion = {
+  passwordResetToken: string;
+  passwordHash: string;
+};
+
+function invalidVerificationTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
+    message: 'Email verification token is invalid',
+  });
+}
+
+function invalidPasswordResetTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+    message: 'Password reset token is invalid or expired',
+  });
+}
+
+function hashPasswordResetToken(passwordResetToken: string): string {
+  return createHash('sha256').update(passwordResetToken).digest('hex');
+}
 
 @Injectable()
 export class UserService {
@@ -33,6 +71,8 @@ export class UserService {
     private readonly userRepository: UserRepository,
     @Inject(EMAIL_VERIFICATION_TOKEN_REPOSITORY)
     private readonly emailVerificationTokenRepository: EmailVerificationTokenRepository,
+    @Inject(PASSWORD_RESET_TOKEN_REPOSITORY)
+    private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
   ) {}
 
   async createUser(data: CreateUserData): Promise<User> {
@@ -83,9 +123,11 @@ export class UserService {
     return this.userRepository.findByAppleId(appleUserId);
   }
 
-  async updateUsername(user: User, username: Username): Promise<User> {
-    if (user.username === username) return user;
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
 
+  async assertUsernameAvailable(username: Username): Promise<void> {
     const usernameExists: boolean =
       await this.userRepository.existsByUsername(username);
     if (usernameExists)
@@ -93,8 +135,48 @@ export class UserService {
         code: ErrorCode.USER_USERNAME_ALREADY_EXISTS,
         message: 'Username already exists',
       });
+  }
+
+  async updateUsername(user: User, username: Username): Promise<User> {
+    if (user.username === username) return user;
+
+    await this.assertUsernameAvailable(username);
 
     return this.userRepository.updateUsername(user.id, username);
+  }
+
+  @Transactional()
+  async updateEmail({
+    user,
+    email,
+  }: {
+    user: User;
+    email: string;
+  }): Promise<User> {
+    if (user.isVerified)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
+        message: 'A verified email cannot be changed',
+      });
+
+    if (user.email === email) return user;
+
+    const emailOwner: User | null =
+      await this.userRepository.findByEmail(email);
+    if (emailOwner)
+      throw new ConflictException({
+        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        message: 'Email already taken',
+      });
+
+    const updatedUser: User = await this.userRepository.updateEmail({
+      userId: user.id,
+      email,
+    });
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      user.id,
+    );
+    return updatedUser;
   }
 
   @Transactional()
@@ -167,25 +249,34 @@ export class UserService {
   }
 
   async verifyEmail(verificationToken: string): Promise<User> {
-    const token =
+    const token: EmailVerificationToken | null =
       await this.emailVerificationTokenRepository.findVerificationToken(
         verificationToken,
       );
 
-    if (!token || token.expiresAt < new Date()) {
-      if (token) {
-        await this.emailVerificationTokenRepository.deleteVerificationToken(
-          token.id,
-        );
-      }
+    if (!token) throw invalidVerificationTokenException();
 
+    if (token.expiresAt < new Date())
       throw new UnauthorizedException({
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-        message: 'Email verification token is invalid or expired',
+        code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN,
+        message: 'Email verification token is expired',
       });
-    }
 
     return this.completeEmailVerification(token.userId);
+  }
+
+  async findVerificationTokenOwner(verificationToken: string): Promise<User> {
+    const token: EmailVerificationToken | null =
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
+    const owner: User | null = token
+      ? await this.userRepository.findById(token.userId)
+      : null;
+
+    if (!owner) throw invalidVerificationTokenException();
+
+    return owner;
   }
 
   @Transactional()
@@ -195,5 +286,71 @@ export class UserService {
       userId,
     );
     return user;
+  }
+
+  @Transactional()
+  async createPasswordResetToken(userId: UserId): Promise<PasswordResetGrant> {
+    const passwordResetToken: string = randomBytes(32).toString('hex');
+    const expiresAt: Date = new Date(
+      Date.now() + passwordResetValidityMinutes * 60 * 1000,
+    );
+
+    await this.passwordResetTokenRepository.deleteByUserId(userId);
+    await this.passwordResetTokenRepository.create({
+      userId,
+      tokenHash: hashPasswordResetToken(passwordResetToken),
+      expiresAt,
+    });
+
+    return {
+      passwordResetToken,
+      validityMinutes: passwordResetValidityMinutes,
+    };
+  }
+
+  async resetPassword({
+    passwordResetToken,
+    passwordHash,
+  }: PasswordResetCompletion): Promise<AuthSession> {
+    const tokenHash: string = hashPasswordResetToken(passwordResetToken);
+    const token: PasswordResetToken | null =
+      await this.passwordResetTokenRepository.findByTokenHash(tokenHash);
+
+    if (!token || token.expiresAt < new Date()) {
+      if (token) {
+        await this.passwordResetTokenRepository.delete(token.id);
+      }
+
+      throw invalidPasswordResetTokenException();
+    }
+
+    return this.completePasswordReset({
+      tokenHash,
+      userId: token.userId,
+      passwordHash,
+    });
+  }
+
+  @Transactional()
+  private async completePasswordReset({
+    tokenHash,
+    ...passwordReset
+  }: PasswordReset & { tokenHash: string }): Promise<AuthSession> {
+    const isTokenConsumed: boolean =
+      await this.passwordResetTokenRepository.consumeUnexpired({
+        tokenHash,
+        now: new Date(),
+      });
+    if (!isTokenConsumed) throw invalidPasswordResetTokenException();
+
+    const authSession: AuthSession =
+      await this.userRepository.resetPassword(passwordReset);
+    await this.passwordResetTokenRepository.deleteByUserId(
+      passwordReset.userId,
+    );
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      passwordReset.userId,
+    );
+    return authSession;
   }
 }

@@ -7,15 +7,20 @@ import {
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
+import type { AuthSession } from '../common/types/auth-session';
 import type {
   EmailVerificationToken,
   EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import type {
+  PasswordResetToken,
+  PasswordResetTokenRepository,
+} from './repositories/password-reset-token.repository';
+import type {
   CreateUserData,
   UserRepository,
 } from './repositories/user.repository';
-import { UserService } from './user.service';
+import { type PasswordResetGrant, UserService } from './user.service';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -38,13 +43,17 @@ function buildUserService() {
     createMock<UserRepository>();
   const emailVerificationTokenRepository: DeepMocked<EmailVerificationTokenRepository> =
     createMock<EmailVerificationTokenRepository>();
+  const passwordResetTokenRepository: DeepMocked<PasswordResetTokenRepository> =
+    createMock<PasswordResetTokenRepository>();
   const userService: UserService = new UserService(
     userRepository,
     emailVerificationTokenRepository,
+    passwordResetTokenRepository,
   );
 
   return {
     emailVerificationTokenRepository,
+    passwordResetTokenRepository,
     userRepository,
     userService,
   };
@@ -146,6 +155,74 @@ describe('UserService.updateUsername', () => {
       user.id,
       updatedUser.username,
     );
+  });
+});
+
+describe('UserService.updateEmail', () => {
+  it('rejects a verified account', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: true });
+
+    await expect(
+      userService.updateEmail({ user, email: 'other@cityborn.test' }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED },
+    });
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects an address used by another account', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    userRepository.findByEmail.mockResolvedValue(
+      buildUser({ email: 'other@cityborn.test' }),
+    );
+
+    await expect(
+      userService.updateEmail({ user, email: 'other@cityborn.test' }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
+    });
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('keeps the user when the email is unchanged', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+
+    await expect(
+      userService.updateEmail({ user, email: user.email }),
+    ).resolves.toBe(user);
+    expect(userRepository.updateEmail).not.toHaveBeenCalled();
+  });
+
+  it('persists the new address and invalidates the pending verification links', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    const updatedUser: User = buildUser({
+      isVerified: false,
+      email: 'fixed@cityborn.test',
+    });
+    userRepository.findByEmail.mockResolvedValue(null);
+    userRepository.updateEmail.mockResolvedValue(updatedUser);
+
+    await expect(
+      userService.updateEmail({ user, email: 'fixed@cityborn.test' }),
+    ).resolves.toEqual(updatedUser);
+    expect(userRepository.updateEmail).toHaveBeenCalledWith({
+      userId: user.id,
+      email: 'fixed@cityborn.test',
+    });
+    expect(
+      emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+    ).toHaveBeenCalledWith(user.id);
   });
 });
 
@@ -258,9 +335,10 @@ describe('UserService verification tokens', () => {
   });
 
   describe('verifyEmail', () => {
-    it('deletes and rejects an expired token', async () => {
+    it('keeps and rejects an expired token as expired', async () => {
       const {
         emailVerificationTokenRepository,
+        userRepository,
         userService,
       }: ReturnType<typeof buildUserService> = buildUserService();
       const expiredToken: EmailVerificationToken = {
@@ -274,11 +352,26 @@ describe('UserService verification tokens', () => {
       );
 
       await expect(userService.verifyEmail('expired')).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN },
       });
       expect(
-        emailVerificationTokenRepository.deleteVerificationToken,
-      ).toHaveBeenCalledWith('token-id');
+        emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+      ).not.toHaveBeenCalled();
+      expect(userRepository.markEmailVerified).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown token as invalid', async () => {
+      const {
+        emailVerificationTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+        null,
+      );
+
+      await expect(userService.verifyEmail('unknown')).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+      });
     });
 
     it('verifies the user and removes its tokens', async () => {
@@ -305,6 +398,190 @@ describe('UserService verification tokens', () => {
       expect(
         emailVerificationTokenRepository.deleteVerificationTokensByUserId,
       ).toHaveBeenCalledWith(verificationToken.userId);
+    });
+  });
+});
+
+describe('UserService.findVerificationTokenOwner', () => {
+  it('identifies the owner of an expired token', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    const owner: User = buildUser({ isVerified: false });
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue({
+      id: 'token-id',
+      userId: owner.id,
+      expiresAt: new Date(Date.now() - 1),
+      createdAt: new Date(),
+    });
+    userRepository.findById.mockResolvedValue(owner);
+
+    await expect(
+      userService.findVerificationTokenOwner('expired'),
+    ).resolves.toEqual(owner);
+  });
+
+  it('rejects an unknown token', async () => {
+    const {
+      emailVerificationTokenRepository,
+      userService,
+    }: ReturnType<typeof buildUserService> = buildUserService();
+    emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+      null,
+    );
+
+    await expect(
+      userService.findVerificationTokenOwner('unknown'),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+    });
+  });
+});
+
+describe('UserService password reset', () => {
+  describe('createPasswordResetToken', () => {
+    it('replaces previous tokens and stores only the hash of the new one', async () => {
+      const {
+        passwordResetTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+
+      const grant: PasswordResetGrant =
+        await userService.createPasswordResetToken(userId('user-1'));
+
+      expect(grant.passwordResetToken).toMatch(/^[a-f0-9]{64}$/);
+      expect(grant.validityMinutes).toBe(60);
+      expect(passwordResetTokenRepository.deleteByUserId).toHaveBeenCalledWith(
+        userId('user-1'),
+      );
+      expect(passwordResetTokenRepository.create).toHaveBeenCalledWith({
+        userId: userId('user-1'),
+        tokenHash: expect.not.stringMatching(grant.passwordResetToken),
+        expiresAt: expect.any(Date),
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('deletes and rejects an expired token', async () => {
+      const {
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const expiredToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() - 1),
+        createdAt: new Date(),
+      };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        expiredToken,
+      );
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'expired',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+      expect(passwordResetTokenRepository.delete).toHaveBeenCalledWith(
+        'token-id',
+      );
+      expect(userRepository.resetPassword).not.toHaveBeenCalled();
+    });
+
+    it('rejects a token consumed by a concurrent reset', async () => {
+      const {
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const resetToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        resetToken,
+      );
+      passwordResetTokenRepository.consumeUnexpired.mockResolvedValue(false);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'reset-token',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+      expect(userRepository.resetPassword).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown token', async () => {
+      const {
+        passwordResetTokenRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(null);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'unknown',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+    });
+
+    it('resets the password and removes the pending account tokens', async () => {
+      const {
+        emailVerificationTokenRepository,
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const resetToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      const authSession: AuthSession = { user: buildUser(), authVersion: 2 };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        resetToken,
+      );
+      passwordResetTokenRepository.consumeUnexpired.mockResolvedValue(true);
+      userRepository.resetPassword.mockResolvedValue(authSession);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'reset-token',
+          passwordHash: 'new-hash',
+        }),
+      ).resolves.toEqual(authSession);
+      expect(
+        passwordResetTokenRepository.consumeUnexpired,
+      ).toHaveBeenCalledWith({
+        tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        now: expect.any(Date),
+      });
+      expect(userRepository.resetPassword).toHaveBeenCalledWith({
+        userId: userId('user-1'),
+        passwordHash: 'new-hash',
+      });
+      expect(passwordResetTokenRepository.deleteByUserId).toHaveBeenCalledWith(
+        userId('user-1'),
+      );
+      expect(
+        emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+      ).toHaveBeenCalledWith(userId('user-1'));
     });
   });
 });

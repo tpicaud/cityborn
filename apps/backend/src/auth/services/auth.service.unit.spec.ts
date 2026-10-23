@@ -14,6 +14,7 @@ import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
+import { RateLimiterRes } from 'rate-limiter-flexible';
 import type { WideEventService } from '../../common/wide-event/wide-event.service';
 import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
@@ -231,6 +232,250 @@ describe('AuthService.signUp', () => {
         userId: unverifiedUser.id,
       },
     );
+  });
+});
+
+describe('AuthService.register', () => {
+  it('creates an unverified account and sends its verification email without signing in', async () => {
+    const unverifiedUser: User = buildUser({ isVerified: false });
+    const registration: CreateUser = {
+      email: unverifiedUser.email,
+      username: unverifiedUser.username,
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      jwtService,
+      eventService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
+    userService.createUser.mockResolvedValue(unverifiedUser);
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await authService.register({
+      registration,
+      visitorId: 'visitor-1',
+      clientIp: '203.0.113.7',
+    });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith({
+      email: unverifiedUser.email,
+      clientIp: '203.0.113.7',
+    });
+    expect(userService.createUser).toHaveBeenCalledWith({
+      email: unverifiedUser.email,
+      username: unverifiedUser.username,
+      type: 'email',
+      password: 'hashed-password',
+    });
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: unverifiedUser.email,
+        subject: 'Vérifiez votre adresse e-mail Cityborn',
+      }),
+    );
+    expect(jwtService.signAsync).not.toHaveBeenCalled();
+    expect(eventService.trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'user_signed_up' }),
+    );
+  });
+
+  it('emails the owner of a taken address instead of creating an account', async () => {
+    const existingUser: User = buildUser({
+      username: UsernameSchema.parse('alice'),
+    });
+    const registration: CreateUser = {
+      email: existingUser.email,
+      username: UsernameSchema.parse('newcomer'),
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      eventService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(existingUser);
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await expect(
+      authService.register({
+        registration,
+        visitorId: 'visitor-1',
+        clientIp: '203.0.113.7',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(eventService.trackEvent).not.toHaveBeenCalled();
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: existingUser.email,
+        subject: 'Vous avez déjà un compte Cityborn',
+      }),
+    );
+  });
+
+  it('rejects a username taken by another account', async () => {
+    const registration: CreateUser = {
+      email: 'newcomer@cityborn.test',
+      username: UsernameSchema.parse('alice'),
+      password: 'plain-password',
+    };
+    const usernameTaken: HttpException = new HttpException(
+      { code: ErrorCode.USER_USERNAME_ALREADY_EXISTS },
+      HttpStatus.CONFLICT,
+    );
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.assertUsernameAvailable.mockRejectedValue(usernameTaken);
+
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).rejects.toBe(usernameTaken);
+
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('stops before looking up the address when the account email limit is reached', async () => {
+    const registration: CreateUser = {
+      email: 'alice@cityborn.test',
+      username: UsernameSchema.parse('newcomer'),
+      password: 'plain-password',
+    };
+    const rateLimitRejection: RateLimiterRes = new RateLimiterRes(0, 60_000);
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    rateLimitService.consumeAccountEmail.mockRejectedValue(rateLimitRejection);
+
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).rejects.toBe(rateLimitRejection);
+
+    expect(userService.assertUsernameAvailable).not.toHaveBeenCalled();
+    expect(userService.findByEmail).not.toHaveBeenCalled();
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.requestPasswordReset', () => {
+  it('emails a reset link to the owner of the address', async () => {
+    const user: User = buildUser({ isVerified: false });
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(user);
+    userService.createPasswordResetToken.mockResolvedValue({
+      passwordResetToken: 'reset-token',
+      validityMinutes: 60,
+    });
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await authService.requestPasswordReset({
+      email: user.email,
+      clientIp: '203.0.113.7',
+    });
+
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith({
+      email: user.email,
+      clientIp: '203.0.113.7',
+    });
+    expect(userService.createPasswordResetToken).toHaveBeenCalledWith(user.id);
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: user.email,
+        text: expect.stringContaining(
+          'https://cityborn.test/reset-password?token=reset-token',
+        ),
+      }),
+    );
+  });
+
+  it('answers the same way without emailing an unknown address', async () => {
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      authService.requestPasswordReset({
+        email: 'unknown@cityborn.test',
+        clientIp: '203.0.113.7',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(userService.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('stops before looking up the address when the account email limit is reached', async () => {
+    const rateLimitRejection: RateLimiterRes = new RateLimiterRes(0, 60_000);
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    rateLimitService.consumeAccountEmail.mockRejectedValue(rateLimitRejection);
+
+    await expect(
+      authService.requestPasswordReset({
+        email: 'alice@cityborn.test',
+        clientIp: '203.0.113.7',
+      }),
+    ).rejects.toBe(rateLimitRejection);
+
+    expect(userService.findByEmail).not.toHaveBeenCalled();
+    expect(userService.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.resetPassword', () => {
+  it('revokes the other sessions and unlocks the sign-in', async () => {
+    const user: User = buildUser();
+    const {
+      authService,
+      userService,
+      authenticatedSocketService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.resetPassword.mockResolvedValue({ user, authVersion: 4 });
+
+    await authService.resetPassword({
+      passwordResetToken: 'reset-token',
+      newPassword: 'Password2',
+    });
+
+    expect(userService.resetPassword).toHaveBeenCalledWith({
+      passwordResetToken: 'reset-token',
+      passwordHash: 'hashed-password',
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(user.id, 4);
+    expect(rateLimitService.clearFailedSignIns).toHaveBeenCalledWith(user.id);
   });
 });
 
@@ -543,6 +788,63 @@ describe('AuthService account operations', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('sends a verification link to the corrected address', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const updatedUser: User = buildUser({
+        isVerified: false,
+        email: 'fixed@cityborn.test',
+      });
+      const {
+        authService,
+        userService,
+        mailService,
+        rateLimitService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(updatedUser);
+      userService.createEmailVerificationToken.mockResolvedValue(
+        'verification-token',
+      );
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      const result: User = await authService.updateEmail({
+        user,
+        email: 'fixed@cityborn.test',
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(rateLimitService.consumeEmailChange).toHaveBeenCalledWith(user.id);
+      expect(userService.updateEmail).toHaveBeenCalledWith({
+        user,
+        email: 'fixed@cityborn.test',
+      });
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'fixed@cityborn.test' }),
+      );
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('sends no verification link when the address is unchanged', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(user);
+
+      const result: User = await authService.updateEmail({
+        user,
+        email: user.email,
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(userService.createEmailVerificationToken).not.toHaveBeenCalled();
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
+  });
+
   describe('resendVerificationEmail', () => {
     it('does not resend verification to a verified user', async () => {
       const {
@@ -577,6 +879,51 @@ describe('AuthService account operations', () => {
         180000,
       );
       expect(mailService.sendMail).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('renewVerificationEmail', () => {
+    it('sends a new link to the unverified owner of the token', async () => {
+      const owner: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(owner);
+      userService.createEmailVerificationToken.mockResolvedValue('fresh-token');
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(userService.findVerificationTokenOwner).toHaveBeenCalledWith(
+        'expired-token',
+      );
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: owner.email,
+          text: expect.stringContaining('verification_token=fresh-token'),
+        }),
+      );
+    });
+
+    it('sends nothing to an already verified owner', async () => {
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(
+        buildUser({ isVerified: true }),
+      );
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(mailService.sendMail).not.toHaveBeenCalled();
     });
   });
 

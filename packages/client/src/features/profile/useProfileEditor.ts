@@ -14,9 +14,11 @@ import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { type SignOut, useSignOut } from '../auth/useSignOut';
 import {
   type ChangePasswordForm,
+  type EmailForm,
   toUpdatePassword,
   type UsernameForm,
   useChangePasswordForm,
+  useEmailForm,
   useUsernameForm,
 } from './profileForms';
 
@@ -30,6 +32,12 @@ export type ProfileEditor = {
   startUsernameEdit: () => void;
   cancelUsernameEdit: () => void;
   submitUsername: FormSubmitHandler;
+  emailForm: EmailForm;
+  isEditingEmail: boolean;
+  isEmailUpdated: boolean;
+  startEmailEdit: () => void;
+  cancelEmailEdit: () => void;
+  submitEmail: FormSubmitHandler;
   passwordForm: ChangePasswordForm;
   isPasswordDialogOpen: boolean;
   isPasswordUpdated: boolean;
@@ -50,8 +58,11 @@ export function useProfileEditor({
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const usernameForm: UsernameForm = useUsernameForm(user?.username ?? '');
+  const emailForm: EmailForm = useEmailForm(user?.email ?? '');
   const passwordForm: ChangePasswordForm = useChangePasswordForm();
   const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false);
+  const [isEditingEmail, setIsEditingEmail] = useState<boolean>(false);
+  const [isEmailUpdated, setIsEmailUpdated] = useState<boolean>(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] =
     useState<boolean>(false);
   const [isPasswordUpdated, setIsPasswordUpdated] = useState<boolean>(false);
@@ -80,6 +91,25 @@ export function useProfileEditor({
   const cancelUsernameEdit = (): void => {
     usernameForm.reset({ username: user?.username ?? '' });
     setIsEditingUsername(false);
+  };
+
+  const submitEmail: FormSubmitHandler = emailForm.handleSubmit(
+    async (data) => {
+      try {
+        const updatedUser: User = await authApi.updateEmail(data);
+        await setCurrentUser({ queryClient, user: updatedUser });
+        emailForm.reset({ email: updatedUser.email });
+        setIsEditingEmail(false);
+        setIsEmailUpdated(true);
+      } catch (error: unknown) {
+        reportError(error);
+      }
+    },
+  );
+
+  const cancelEmailEdit = (): void => {
+    emailForm.reset({ email: user?.email ?? '' });
+    setIsEditingEmail(false);
   };
 
   const closePasswordDialog = (): void => {
@@ -119,6 +149,15 @@ export function useProfileEditor({
     startUsernameEdit: () => setIsEditingUsername(true),
     cancelUsernameEdit,
     submitUsername,
+    emailForm,
+    isEditingEmail,
+    isEmailUpdated,
+    startEmailEdit: () => {
+      setIsEmailUpdated(false);
+      setIsEditingEmail(true);
+    },
+    cancelEmailEdit,
+    submitEmail,
     passwordForm,
     isPasswordDialogOpen,
     isPasswordUpdated,

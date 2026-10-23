@@ -28,7 +28,11 @@ function createFakeAuthApi(getCurrentUser: AuthApi['getCurrentUser']): AuthApi {
   return {
     getCurrentUser,
     signIn: unexpectedCall,
-    signUp: unexpectedCall,
+    register: unexpectedCall,
+    renewVerificationEmail: unexpectedCall,
+    requestPasswordReset: unexpectedCall,
+    resetPassword: unexpectedCall,
+    updateEmail: unexpectedCall,
     signInWithGoogle: unexpectedCall,
     signInWithApple: unexpectedCall,
     signOut: unexpectedCall,
