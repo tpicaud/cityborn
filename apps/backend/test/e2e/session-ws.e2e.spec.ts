@@ -333,34 +333,32 @@ describe('Session gateway over a real socket', () => {
     });
   });
 
-  it('lets a guest create a multi session but not join it under an account username', async () => {
-    const account: User = buildUser({
-      username: PlayerIdSchema.parse('alice'),
-    });
-    await app.get(PrismaService).user.create({
-      data: {
-        id: account.id,
-        email: account.email,
-        username: account.username,
-        type: account.type,
-        isVerified: account.isVerified,
-      },
-    });
-
+  it('lets a guest create a multi session then join it', async () => {
+    const playerID: PlayerId = PlayerIdSchema.parse('dave');
     const creation: request.Response = await request(app.getHttpServer())
       .post(contract.session.createSession.path)
       .send({ mode: SessionMode.MULTI })
       .expect(201);
     const session: Session = SessionSchema.parse(creation.body);
     const client: Socket = await connectClient();
+    const broadcast: Promise<unknown> = nextEvent(
+      client,
+      sessionWsServerEvent.update,
+    );
+
     const ack: unknown = await emitWithAck(client, sessionWsEvent.join, {
       sessionID: session.id,
-      playerID: account.username,
+      playerID,
     });
 
-    expect(ack).toMatchObject({
-      success: false,
-      error: { statusCode: 409, code: ErrorCode.SESSION_PLAYER_NAME_RESERVED },
+    expect(ack).toEqual({
+      success: true,
+      reconnectToken: expect.any(String),
+    });
+    expect(SessionSchema.parse(await broadcast)).toMatchObject({
+      id: session.id,
+      mode: SessionMode.MULTI,
+      players: [{ username: playerID, isGuest: true, connected: true }],
     });
   });
 });
