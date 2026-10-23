@@ -77,7 +77,6 @@ export class SessionController {
         await this.finalizeSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };
       },
-      // @deprecated kept for older mobile builds still calling this route; use finalizeGame.
       endSoloGame: async ({ body: session }) => {
         await this.finalizeSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };

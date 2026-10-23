@@ -19,21 +19,6 @@ type RecordedGameUsers = { users: { id: string }[] };
 describe('POST /session/finalize-game', () => {
   let app: NestExpressApplication;
   let prismaService: PrismaService;
-  const targetedUser: User = buildUser({
-    id: '00000000-0000-4000-8000-000000000002',
-    username: 'target',
-    email: 'target@cityborn.test',
-  });
-  const finalizedSession: Session = buildSession({
-    mode: SessionMode.SOLO,
-    hostID: 'target',
-    players: [
-      buildPlayer({ username: 'target', isGuest: false, id: targetedUser.id }),
-    ],
-    currentGame: buildGame({
-      state: { guessObjectsIds: [], results: { target: { results: [] } } },
-    }),
-  });
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -64,6 +49,25 @@ describe('POST /session/finalize-game', () => {
 
   it('records the game for the authenticated account instead of the account sent in the body', async () => {
     const authenticatedUser: User = buildUser({ username: 'alice' });
+    const targetedUser: User = buildUser({
+      id: '00000000-0000-4000-8000-000000000002',
+      username: 'target',
+      email: 'target@cityborn.test',
+    });
+    const finalizedSession: Session = buildSession({
+      mode: SessionMode.SOLO,
+      hostID: 'target',
+      players: [
+        buildPlayer({
+          username: 'target',
+          isGuest: false,
+          id: targetedUser.id,
+        }),
+      ],
+      currentGame: buildGame({
+        state: { guessObjectsIds: [], results: { target: { results: [] } } },
+      }),
+    });
     await persistUser(authenticatedUser);
     await persistUser(targetedUser);
     const accessToken: string = await createAccessToken(
@@ -85,6 +89,25 @@ describe('POST /session/finalize-game', () => {
   });
 
   it('records an anonymous game without attaching it to any account', async () => {
+    const targetedUser: User = buildUser({
+      id: '00000000-0000-4000-8000-000000000002',
+      username: 'target',
+      email: 'target@cityborn.test',
+    });
+    const finalizedSession: Session = buildSession({
+      mode: SessionMode.SOLO,
+      hostID: 'target',
+      players: [
+        buildPlayer({
+          username: 'target',
+          isGuest: false,
+          id: targetedUser.id,
+        }),
+      ],
+      currentGame: buildGame({
+        state: { guessObjectsIds: [], results: { target: { results: [] } } },
+      }),
+    });
     await persistUser(targetedUser);
 
     await request(app.getHttpServer())

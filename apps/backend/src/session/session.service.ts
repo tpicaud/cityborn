@@ -8,6 +8,7 @@ import {
   type Guess,
   type PlayerId,
   PlayerIdSchema,
+  type PlayerResults,
   type Session,
   type SessionId,
   SessionIdSchema,
@@ -351,9 +352,20 @@ export class SessionService {
     user?: User;
     visitorId?: string;
   }): Promise<void> {
+    const soloPlayer: SessionPlayer = this.buildSoloPlayer(user);
+    const soloPlayerResults: PlayerResults = game.state.results[
+      soloPlayer.username
+    ] ?? { results: [] };
+    const soloGame: Game = {
+      ...game,
+      state: {
+        ...game.state,
+        results: { [soloPlayer.username]: soloPlayerResults },
+      },
+    };
     await this.gameService.endGame(
-      game,
-      [this.buildSoloPlayer(user)],
+      soloGame,
+      [soloPlayer],
       SessionMode.SOLO,
       visitorId,
     );
