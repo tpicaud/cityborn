@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  type GameConfig,
+  type GameConfigChanges,
   type PlayerId,
   type Session,
   SessionMode,
@@ -41,7 +41,7 @@ type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
+  handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
   handleJoinSession?: (playerID: PlayerId) => Promise<void>;
 };

@@ -1,4 +1,4 @@
-import type { GameConfig, Session } from '@cityborn/api';
+import type { GameConfigChanges, Session } from '@cityborn/api';
 import { type PackSelection, usePackSelection } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
@@ -10,7 +10,7 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 type SoloLobbyProps = {
   session: Session;
   isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
+  handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
 };
 

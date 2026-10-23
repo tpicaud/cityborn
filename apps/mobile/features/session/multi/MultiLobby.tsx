@@ -1,4 +1,4 @@
-import type { GameConfig, PlayerId, Session } from '@cityborn/api';
+import type { GameConfigChanges, PlayerId, Session } from '@cityborn/api';
 import {
   type PackSelection,
   type PlayerNameForm,
@@ -23,7 +23,7 @@ type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
-  handleUpdateGameConfig: (gameConfig: Partial<GameConfig>) => Promise<void>;
+  handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
   handleJoinSession: (playerID: PlayerId) => Promise<void>;
 };
