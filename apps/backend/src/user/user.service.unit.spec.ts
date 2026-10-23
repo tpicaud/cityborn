@@ -156,7 +156,7 @@ describe('UserService.updateEmail', () => {
     const user: User = buildUser({ isVerified: true });
 
     await expect(
-      userService.updateEmail(user, 'other@cityborn.test'),
+      userService.updateEmail({ user, email: 'other@cityborn.test' }),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED },
     });
@@ -172,7 +172,7 @@ describe('UserService.updateEmail', () => {
     );
 
     await expect(
-      userService.updateEmail(user, 'other@cityborn.test'),
+      userService.updateEmail({ user, email: 'other@cityborn.test' }),
     ).rejects.toMatchObject({
       response: { code: ErrorCode.USER_EMAIL_ALREADY_TAKEN },
     });
@@ -184,7 +184,9 @@ describe('UserService.updateEmail', () => {
       buildUserService();
     const user: User = buildUser({ isVerified: false });
 
-    await expect(userService.updateEmail(user, user.email)).resolves.toBe(user);
+    await expect(
+      userService.updateEmail({ user, email: user.email }),
+    ).resolves.toBe(user);
     expect(userRepository.updateEmail).not.toHaveBeenCalled();
   });
 
@@ -203,12 +205,12 @@ describe('UserService.updateEmail', () => {
     userRepository.updateEmail.mockResolvedValue(updatedUser);
 
     await expect(
-      userService.updateEmail(user, 'fixed@cityborn.test'),
+      userService.updateEmail({ user, email: 'fixed@cityborn.test' }),
     ).resolves.toEqual(updatedUser);
-    expect(userRepository.updateEmail).toHaveBeenCalledWith(
-      user.id,
-      'fixed@cityborn.test',
-    );
+    expect(userRepository.updateEmail).toHaveBeenCalledWith({
+      userId: user.id,
+      email: 'fixed@cityborn.test',
+    });
     expect(
       emailVerificationTokenRepository.deleteVerificationTokensByUserId,
     ).toHaveBeenCalledWith(user.id);

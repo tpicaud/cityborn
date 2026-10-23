@@ -123,7 +123,13 @@ export class UserService {
   }
 
   @Transactional()
-  async updateEmail(user: User, email: string): Promise<User> {
+  async updateEmail({
+    user,
+    email,
+  }: {
+    user: User;
+    email: string;
+  }): Promise<User> {
     if (user.isVerified)
       throw new ForbiddenException({
         code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
@@ -140,10 +146,10 @@ export class UserService {
         message: 'Email already taken',
       });
 
-    const updatedUser: User = await this.userRepository.updateEmail(
-      user.id,
+    const updatedUser: User = await this.userRepository.updateEmail({
+      userId: user.id,
       email,
-    );
+    });
     await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       user.id,
     );

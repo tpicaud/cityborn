@@ -1,9 +1,9 @@
 import type { User } from '@cityborn/api';
 import { contract, PASSWORD_RESET_REQUEST_MESSAGE } from '@cityborn/api';
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import type { Request } from 'express';
+import { ClientIp } from '../../common/decorators/client-ip.decorator';
 import { VisitorId } from '../../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../../common/types/auth-session';
 import {
@@ -48,12 +48,12 @@ export class AuthController {
   ) {}
 
   @TsRestHandler(publicAuthRoutes)
-  async handler(@Req() request: Request, @VisitorId() visitorId?: string) {
+  async handler(@ClientIp() clientIp: string, @VisitorId() visitorId?: string) {
     return tsRestHandler(publicAuthRoutes, {
       requestPasswordReset: async ({ body }) => {
         await this.passwordResetService.request({
           email: body.email,
-          ip: request.ip ?? request.socket.remoteAddress ?? 'unknown',
+          ip: clientIp,
         });
         return {
           status: 200 as const,
@@ -69,7 +69,11 @@ export class AuthController {
         body: await this.authService.signUp(body, visitorId),
       }),
       register: async ({ body }) => {
-        await this.authService.register(body, visitorId);
+        await this.authService.register({
+          registration: body,
+          visitorId,
+          clientIp,
+        });
         return { status: 202 as const, body: {} };
       },
       signIn: async ({ body }) => ({

@@ -10,7 +10,9 @@ export class RateLimitService {
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
   private readonly failedSignInLimiter: RateLimiterRedis;
-  private readonly accountEmailLimiter: RateLimiterRedis;
+  private readonly accountEmailRequesterLimiter: RateLimiterRedis;
+  private readonly accountEmailRecipientLimiter: RateLimiterRedis;
+  private readonly emailChangeLimiter: RateLimiterRedis;
 
   constructor(private readonly redisService: RedisService) {
     this.passwordResetLimiter = new RateLimiterRedis({
@@ -43,9 +45,21 @@ export class RateLimitService {
       points: 10,
       duration: 15 * 60,
     });
-    this.accountEmailLimiter = new RateLimiterRedis({
+    this.accountEmailRequesterLimiter = new RateLimiterRedis({
       storeClient: this.redisService.redisClient,
-      keyPrefix: 'rl:auth:account-email',
+      keyPrefix: 'rl:auth:account-email:requester',
+      points: 5,
+      duration: 60 * 60,
+    });
+    this.accountEmailRecipientLimiter = new RateLimiterRedis({
+      storeClient: this.redisService.redisClient,
+      keyPrefix: 'rl:auth:account-email:recipient',
+      points: 20,
+      duration: 60 * 60,
+    });
+    this.emailChangeLimiter = new RateLimiterRedis({
+      storeClient: this.redisService.redisClient,
+      keyPrefix: 'rl:auth:email-change',
       points: 5,
       duration: 60 * 60,
     });
@@ -75,8 +89,20 @@ export class RateLimitService {
     return this.wsMessageLimiter.consume(key);
   }
 
-  async consumeAccountEmail(recipientKey: string): Promise<RateLimiterRes> {
-    return this.accountEmailLimiter.consume(recipientKey.toLowerCase());
+  async consumeAccountEmail({
+    email,
+    clientIp,
+  }: {
+    email: string;
+    clientIp: string;
+  }): Promise<void> {
+    const recipient: string = email.toLowerCase();
+    await this.accountEmailRequesterLimiter.consume(`${clientIp}:${recipient}`);
+    await this.accountEmailRecipientLimiter.consume(recipient);
+  }
+
+  async consumeEmailChange(userId: UserId): Promise<void> {
+    await this.emailChangeLimiter.consume(userId);
   }
 
   async assertSignInAllowed(userId: UserId): Promise<void> {

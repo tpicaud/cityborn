@@ -81,10 +81,18 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async register(dto: CreateUser, visitorId?: string): Promise<void> {
-    const { email, username, password } = dto;
+  async register({
+    registration,
+    visitorId,
+    clientIp,
+  }: {
+    registration: CreateUser;
+    visitorId?: string;
+    clientIp: string;
+  }): Promise<void> {
+    const { email, username, password }: CreateUser = registration;
 
-    await this.rateLimitService.consumeAccountEmail(email);
+    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
     await this.userService.assertUsernameAvailable(username);
     const passwordHash: string = await hashPassword(password);
 
@@ -341,6 +349,7 @@ export class AuthService {
   }
 
   async updateEmail(user: User, { email }: UpdateEmail): Promise<User> {
+    await this.rateLimitService.consumeEmailChange(user.id);
     const updatedUser: User = await this.userService.updateEmail(user, email);
     if (updatedUser.email !== user.email) {
       void this.sendVerificationEmail(updatedUser).catch((error: unknown) => {
