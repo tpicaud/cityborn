@@ -687,6 +687,26 @@ describe('AuthService account operations', () => {
       );
       expect(result).toEqual(updatedUser);
     });
+
+    it('sends no verification link when the address is unchanged', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(user);
+
+      const result: User = await authService.updateEmail({
+        user,
+        email: user.email,
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(userService.createEmailVerificationToken).not.toHaveBeenCalled();
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
   });
 
   describe('resendVerificationEmail', () => {
