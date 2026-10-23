@@ -13,6 +13,7 @@ import {
   type SessionLauncher,
   useSessionLauncher,
 } from '@cityborn/client/session';
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
@@ -174,14 +175,20 @@ export default function Menu({
             <b>MULTI</b>
           </LoadingButton>
         </div>
-        <p className="w-full text-center">
+        <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
+          <a
+            href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
+            className="text-sm text-gray-600 hover:underline"
+          >
+            Nous contacter
+          </a>
           <Link
             href="/terms-and-policies"
             className="text-sm text-gray-600 hover:underline text-center"
           >
-            Politique de confidentialité
+            Politiques et conditions
           </Link>
-        </p>{' '}
+        </footer>
       </div>
 
       <Dialog
