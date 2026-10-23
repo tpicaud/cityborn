@@ -44,7 +44,7 @@ export interface UserRepository {
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
   updateUsername(userId: UserId, username: Username): Promise<User>;
-  updateEmail(userId: UserId, email: string): Promise<User>;
+  updateEmail(emailUpdate: { userId: UserId; email: string }): Promise<User>;
   updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
   resetPassword(passwordReset: PasswordReset): Promise<AuthSession>;

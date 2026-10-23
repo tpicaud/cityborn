@@ -288,10 +288,10 @@ describe('PrismaUserRepository', () => {
         type: userData.type,
       });
 
-      const updatedUser: User = await userRepository.updateEmail(
-        user.id,
-        'fixed@cityborn.test',
-      );
+      const updatedUser: User = await userRepository.updateEmail({
+        userId: user.id,
+        email: 'fixed@cityborn.test',
+      });
 
       expect(updatedUser.email).toBe('fixed@cityborn.test');
       expect(

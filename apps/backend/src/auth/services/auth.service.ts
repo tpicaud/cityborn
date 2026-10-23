@@ -83,10 +83,18 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async register(dto: CreateUser, visitorId?: string): Promise<void> {
-    const { email, username, password } = dto;
+  async register({
+    registration,
+    visitorId,
+    clientIp,
+  }: {
+    registration: CreateUser;
+    visitorId?: string;
+    clientIp: string;
+  }): Promise<void> {
+    const { email, username, password }: CreateUser = registration;
 
-    await this.rateLimitService.consumeAccountEmail(email);
+    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
     await this.userService.assertUsernameAvailable(username);
     const passwordHash: string = await bcrypt.hash(password, 10);
 
@@ -328,8 +336,11 @@ export class AuthService {
     return this.createAuthResponse(authSession);
   }
 
-  async requestPasswordReset({ email }: RequestPasswordReset): Promise<void> {
-    await this.rateLimitService.consumeAccountEmail(email);
+  async requestPasswordReset({
+    email,
+    clientIp,
+  }: RequestPasswordReset & { clientIp: string }): Promise<void> {
+    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
 
     const user: User | null = await this.userService.findByEmail(email);
     if (!user) return;
@@ -367,10 +378,16 @@ export class AuthService {
     await this.rateLimitService.clearFailedSignIns(user.id);
   }
 
-  async updateEmail(user: User, { email }: UpdateEmail): Promise<User> {
-    await this.rateLimitService.consumeAccountEmail(user.id);
+  async updateEmail({
+    user,
+    email,
+  }: UpdateEmail & { user: User }): Promise<User> {
+    await this.rateLimitService.consumeEmailChange(user.id);
 
-    const updatedUser: User = await this.userService.updateEmail(user, email);
+    const updatedUser: User = await this.userService.updateEmail({
+      user,
+      email,
+    });
     this.sendVerificationEmailInBackground(updatedUser);
     return updatedUser;
   }

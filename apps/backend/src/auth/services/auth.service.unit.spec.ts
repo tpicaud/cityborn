@@ -14,6 +14,7 @@ import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
+import { RateLimiterRes } from 'rate-limiter-flexible';
 import type { WideEventService } from '../../common/wide-event/wide-event.service';
 import type { AuthConfig, HttpConfig } from '../../config/config.module';
 import type { EventService } from '../../event/event.service';
@@ -257,12 +258,17 @@ describe('AuthService.register', () => {
     );
     mailService.sendMail.mockResolvedValue(undefined);
 
-    await authService.register(registration, 'visitor-1');
+    await authService.register({
+      registration,
+      visitorId: 'visitor-1',
+      clientIp: '203.0.113.7',
+    });
     await new Promise<void>((resolve) => setImmediate(resolve));
 
-    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
-      unverifiedUser.email,
-    );
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith({
+      email: unverifiedUser.email,
+      clientIp: '203.0.113.7',
+    });
     expect(userService.createUser).toHaveBeenCalledWith({
       email: unverifiedUser.email,
       username: unverifiedUser.username,
@@ -300,7 +306,11 @@ describe('AuthService.register', () => {
     mailService.sendMail.mockResolvedValue(undefined);
 
     await expect(
-      authService.register(registration, 'visitor-1'),
+      authService.register({
+        registration,
+        visitorId: 'visitor-1',
+        clientIp: '203.0.113.7',
+      }),
     ).resolves.toBeUndefined();
 
     expect(userService.createUser).not.toHaveBeenCalled();
@@ -330,10 +340,35 @@ describe('AuthService.register', () => {
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.assertUsernameAvailable.mockRejectedValue(usernameTaken);
 
-    await expect(authService.register(registration)).rejects.toBe(
-      usernameTaken,
-    );
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).rejects.toBe(usernameTaken);
 
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('stops before looking up the address when the account email limit is reached', async () => {
+    const registration: CreateUser = {
+      email: 'alice@cityborn.test',
+      username: UsernameSchema.parse('newcomer'),
+      password: 'plain-password',
+    };
+    const rateLimitRejection: RateLimiterRes = new RateLimiterRes(0, 60_000);
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    rateLimitService.consumeAccountEmail.mockRejectedValue(rateLimitRejection);
+
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).rejects.toBe(rateLimitRejection);
+
+    expect(userService.assertUsernameAvailable).not.toHaveBeenCalled();
+    expect(userService.findByEmail).not.toHaveBeenCalled();
     expect(userService.createUser).not.toHaveBeenCalled();
     expect(mailService.sendMail).not.toHaveBeenCalled();
   });
@@ -355,11 +390,15 @@ describe('AuthService.requestPasswordReset', () => {
     });
     mailService.sendMail.mockResolvedValue(undefined);
 
-    await authService.requestPasswordReset({ email: user.email });
+    await authService.requestPasswordReset({
+      email: user.email,
+      clientIp: '203.0.113.7',
+    });
 
-    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
-      user.email,
-    );
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith({
+      email: user.email,
+      clientIp: '203.0.113.7',
+    });
     expect(userService.createPasswordResetToken).toHaveBeenCalledWith(user.id);
     expect(mailService.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -380,9 +419,34 @@ describe('AuthService.requestPasswordReset', () => {
     userService.findByEmail.mockResolvedValue(null);
 
     await expect(
-      authService.requestPasswordReset({ email: 'unknown@cityborn.test' }),
+      authService.requestPasswordReset({
+        email: 'unknown@cityborn.test',
+        clientIp: '203.0.113.7',
+      }),
     ).resolves.toBeUndefined();
 
+    expect(userService.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('stops before looking up the address when the account email limit is reached', async () => {
+    const rateLimitRejection: RateLimiterRes = new RateLimiterRes(0, 60_000);
+    const {
+      authService,
+      userService,
+      mailService,
+      rateLimitService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    rateLimitService.consumeAccountEmail.mockRejectedValue(rateLimitRejection);
+
+    await expect(
+      authService.requestPasswordReset({
+        email: 'alice@cityborn.test',
+        clientIp: '203.0.113.7',
+      }),
+    ).rejects.toBe(rateLimitRejection);
+
+    expect(userService.findByEmail).not.toHaveBeenCalled();
     expect(userService.createPasswordResetToken).not.toHaveBeenCalled();
     expect(mailService.sendMail).not.toHaveBeenCalled();
   });
@@ -743,23 +807,23 @@ describe('AuthService account operations', () => {
       );
       mailService.sendMail.mockResolvedValue(undefined);
 
-      const result: User = await authService.updateEmail(user, {
+      const result: User = await authService.updateEmail({
+        user,
         email: 'fixed@cityborn.test',
       });
       await new Promise<void>((resolve) => setImmediate(resolve));
 
-      expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
-        user.id,
-      );
-      expect(userService.updateEmail).toHaveBeenCalledWith(
+      expect(rateLimitService.consumeEmailChange).toHaveBeenCalledWith(user.id);
+      expect(userService.updateEmail).toHaveBeenCalledWith({
         user,
-        'fixed@cityborn.test',
-      );
+        email: 'fixed@cityborn.test',
+      });
       expect(mailService.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({ to: 'fixed@cityborn.test' }),
       );
       expect(result).toEqual(updatedUser);
     });
+
   });
 
   describe('resendVerificationEmail', () => {
