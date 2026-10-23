@@ -17,6 +17,7 @@ const c = initContract();
 
 const publicAuthRoutes = c.router({
   signUp: contract.auth.signUp,
+  register: contract.auth.register,
   signIn: contract.auth.signIn,
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
@@ -44,6 +45,10 @@ export class AuthController {
         status: 201 as const,
         body: await this.authService.signUp(body, visitorId),
       }),
+      register: async ({ body }) => {
+        await this.authService.register(body, visitorId);
+        return { status: 202 as const, body: {} };
+      },
       signIn: async ({ body }) => ({
         status: 200 as const,
         body: await this.authService.signIn(body, visitorId),

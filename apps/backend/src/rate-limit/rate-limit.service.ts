@@ -9,6 +9,7 @@ export class RateLimitService {
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
   private readonly failedSignInLimiter: RateLimiterRedis;
+  private readonly accountEmailLimiter: RateLimiterRedis;
 
   constructor(private readonly redisService: RedisService) {
     this.httpLimiter = new RateLimiterRedis({
@@ -35,6 +36,12 @@ export class RateLimitService {
       points: 10,
       duration: 15 * 60,
     });
+    this.accountEmailLimiter = new RateLimiterRedis({
+      storeClient: this.redisService.redisClient,
+      keyPrefix: 'rl:auth:account-email',
+      points: 5,
+      duration: 60 * 60,
+    });
   }
 
   async consumeHttp(key: string): Promise<RateLimiterRes> {
@@ -47,6 +54,10 @@ export class RateLimitService {
 
   async consumeWsMessage(key: string): Promise<RateLimiterRes> {
     return this.wsMessageLimiter.consume(key);
+  }
+
+  async consumeAccountEmail(recipientKey: string): Promise<RateLimiterRes> {
+    return this.accountEmailLimiter.consume(recipientKey.toLowerCase());
   }
 
   async assertSignInAllowed(userId: UserId): Promise<void> {
