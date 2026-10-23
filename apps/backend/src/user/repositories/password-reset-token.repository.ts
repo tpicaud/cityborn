@@ -21,6 +21,10 @@ export type CreatePasswordResetToken = Pick<
 export interface PasswordResetTokenRepository {
   findByTokenHash(tokenHash: string): Promise<PasswordResetToken | null>;
   create(data: CreatePasswordResetToken): Promise<void>;
+  consumeUnexpired(consumption: {
+    tokenHash: string;
+    now: Date;
+  }): Promise<boolean>;
   delete(id: string): Promise<void>;
   deleteByUserId(userId: UserId): Promise<void>;
 }

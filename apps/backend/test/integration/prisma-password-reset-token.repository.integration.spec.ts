@@ -66,6 +66,46 @@ describe('PrismaPasswordResetTokenRepository', () => {
     });
   });
 
+  describe('consumeUnexpired', () => {
+    it('deletes an unexpired token and reports it consumed', async () => {
+      const user: User = buildUser();
+      await persistUser(user);
+      await tokenRepository.create({
+        userId: user.id,
+        tokenHash: 'token-hash',
+        expiresAt: new Date('2099-01-01'),
+      });
+
+      const isConsumed: boolean = await tokenRepository.consumeUnexpired({
+        tokenHash: 'token-hash',
+        now: new Date('2026-01-01'),
+      });
+
+      expect(isConsumed).toBe(true);
+      expect(await tokenRepository.findByTokenHash('token-hash')).toBeNull();
+    });
+
+    it('keeps an expired token and reports it not consumed', async () => {
+      const user: User = buildUser();
+      await persistUser(user);
+      await tokenRepository.create({
+        userId: user.id,
+        tokenHash: 'token-hash',
+        expiresAt: new Date('2026-01-01'),
+      });
+
+      const isConsumed: boolean = await tokenRepository.consumeUnexpired({
+        tokenHash: 'token-hash',
+        now: new Date('2026-01-02'),
+      });
+
+      expect(isConsumed).toBe(false);
+      expect(await tokenRepository.findByTokenHash('token-hash')).toMatchObject(
+        { userId: user.id },
+      );
+    });
+  });
+
   describe('delete', () => {
     it('removes only the requested token', async () => {
       const user: User = buildUser();

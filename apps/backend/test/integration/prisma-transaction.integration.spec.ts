@@ -15,11 +15,13 @@ import {
   buildUser,
   buildWorldLocation,
   CreateWorldLocationSchema,
+  ErrorCode,
 } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { CATEGORY_REPOSITORY } from '../../src/category/repositories/category.repository';
 import { PrismaCategoryRepository } from '../../src/category/repositories/prisma-category.repository';
 import { CategoryService } from '../../src/category/services/category.service';
+import type { AuthSession } from '../../src/common/types/auth-session';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
@@ -220,6 +222,44 @@ describe('Prisma transactions', () => {
         expect(
           await prisma.passwordResetToken.count({ where: { userId: user.id } }),
         ).toBe(1);
+      });
+
+      it('lets only one of two concurrent resets use the same link', async () => {
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          password: 'previous-hash',
+          isVerified: userData.isVerified,
+        });
+        const { passwordResetToken }: PasswordResetGrant =
+          await userService.createPasswordResetToken(user.id);
+
+        const results: PromiseSettledResult<AuthSession>[] =
+          await Promise.allSettled(
+            ['first-hash', 'second-hash'].map((passwordHash: string) =>
+              userService.resetPassword({ passwordResetToken, passwordHash }),
+            ),
+          );
+
+        expect(
+          results.filter(
+            (result: PromiseSettledResult<AuthSession>) =>
+              result.status === 'fulfilled',
+          ),
+        ).toHaveLength(1);
+        expect(results).toContainEqual({
+          status: 'rejected',
+          reason: expect.objectContaining({
+            response: expect.objectContaining({
+              code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+            }),
+          }),
+        });
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({ authVersion: 1 });
       });
     });
   });

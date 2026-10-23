@@ -493,6 +493,34 @@ describe('UserService password reset', () => {
       expect(userRepository.resetPassword).not.toHaveBeenCalled();
     });
 
+    it('rejects a token consumed by a concurrent reset', async () => {
+      const {
+        passwordResetTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const resetToken: PasswordResetToken = {
+        id: 'token-id',
+        userId: userId('user-1'),
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
+        resetToken,
+      );
+      passwordResetTokenRepository.consumeUnexpired.mockResolvedValue(false);
+
+      await expect(
+        userService.resetPassword({
+          passwordResetToken: 'reset-token',
+          passwordHash: 'new-hash',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN },
+      });
+      expect(userRepository.resetPassword).not.toHaveBeenCalled();
+    });
+
     it('rejects an unknown token', async () => {
       const {
         passwordResetTokenRepository,
@@ -527,6 +555,7 @@ describe('UserService password reset', () => {
       passwordResetTokenRepository.findByTokenHash.mockResolvedValue(
         resetToken,
       );
+      passwordResetTokenRepository.consumeUnexpired.mockResolvedValue(true);
       userRepository.resetPassword.mockResolvedValue(authSession);
 
       await expect(
@@ -535,6 +564,12 @@ describe('UserService password reset', () => {
           passwordHash: 'new-hash',
         }),
       ).resolves.toEqual(authSession);
+      expect(
+        passwordResetTokenRepository.consumeUnexpired,
+      ).toHaveBeenCalledWith({
+        tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        now: expect.any(Date),
+      });
       expect(userRepository.resetPassword).toHaveBeenCalledWith({
         userId: userId('user-1'),
         passwordHash: 'new-hash',

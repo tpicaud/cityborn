@@ -53,6 +53,13 @@ function invalidVerificationTokenException(): UnauthorizedException {
   });
 }
 
+function invalidPasswordResetTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
+    message: 'Password reset token is invalid or expired',
+  });
+}
+
 function hashPasswordResetToken(passwordResetToken: string): string {
   return createHash('sha256').update(passwordResetToken).digest('hex');
 }
@@ -299,29 +306,37 @@ export class UserService {
     passwordResetToken,
     passwordHash,
   }: PasswordResetCompletion): Promise<AuthSession> {
+    const tokenHash: string = hashPasswordResetToken(passwordResetToken);
     const token: PasswordResetToken | null =
-      await this.passwordResetTokenRepository.findByTokenHash(
-        hashPasswordResetToken(passwordResetToken),
-      );
+      await this.passwordResetTokenRepository.findByTokenHash(tokenHash);
 
     if (!token || token.expiresAt < new Date()) {
       if (token) {
         await this.passwordResetTokenRepository.delete(token.id);
       }
 
-      throw new UnauthorizedException({
-        code: ErrorCode.USER_PASSWORD_RESET_INVALID_TOKEN,
-        message: 'Password reset token is invalid or expired',
-      });
+      throw invalidPasswordResetTokenException();
     }
 
-    return this.completePasswordReset({ userId: token.userId, passwordHash });
+    return this.completePasswordReset({
+      tokenHash,
+      userId: token.userId,
+      passwordHash,
+    });
   }
 
   @Transactional()
-  private async completePasswordReset(
-    passwordReset: PasswordReset,
-  ): Promise<AuthSession> {
+  private async completePasswordReset({
+    tokenHash,
+    ...passwordReset
+  }: PasswordReset & { tokenHash: string }): Promise<AuthSession> {
+    const isTokenConsumed: boolean =
+      await this.passwordResetTokenRepository.consumeUnexpired({
+        tokenHash,
+        now: new Date(),
+      });
+    if (!isTokenConsumed) throw invalidPasswordResetTokenException();
+
     const authSession: AuthSession =
       await this.userRepository.resetPassword(passwordReset);
     await this.passwordResetTokenRepository.deleteByUserId(

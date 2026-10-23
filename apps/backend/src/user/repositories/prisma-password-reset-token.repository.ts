@@ -38,6 +38,20 @@ export class PrismaPasswordResetTokenRepository
     });
   }
 
+  async consumeUnexpired({
+    tokenHash,
+    now,
+  }: {
+    tokenHash: string;
+    now: Date;
+  }): Promise<boolean> {
+    const { count }: { count: number } =
+      await this.txHost.tx.passwordResetToken.deleteMany({
+        where: { tokenHash, expiresAt: { gt: now } },
+      });
+    return count > 0;
+  }
+
   async delete(id: string): Promise<void> {
     await this.txHost.tx.passwordResetToken.delete({ where: { id } });
   }
