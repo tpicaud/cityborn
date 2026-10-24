@@ -1,22 +1,24 @@
 import type { ManifestEntry } from '../../src/protocol/version-manifest.schema';
 
-export interface OasdiffChange {
+export type OasdiffChange = {
   id: string;
   text: string;
   level: number;
   operation?: string;
   path?: string;
   source?: string;
-}
+};
 
-export interface VersionCheckResult {
+export type ProtocolChange = OasdiffChange & { protocol: 'HTTP' | 'WS' };
+
+export type VersionCheckResult = {
   entry: ManifestEntry;
   breaking: boolean;
-  changes: OasdiffChange[];
-}
+  changes: ProtocolChange[];
+};
 
-export interface CompatReport {
+export type CompatReport = {
   checked: VersionCheckResult[];
   brokenAt?: VersionCheckResult;
   skippedDeprecated: ManifestEntry[];
-}
+};

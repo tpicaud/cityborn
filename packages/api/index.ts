@@ -1,4 +1,4 @@
-export * from './openapi/generate-openapi';
+export * from './openapi/http/generate-openapi';
 export * from './src/auth/auth.schema';
 export * from './src/contract/actions';
 export * from './src/contract/api-domain';

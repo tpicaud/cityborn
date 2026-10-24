@@ -13,14 +13,14 @@ const apiRoot = join(__dirname, '..');
 function formatStatus(status: DeprecationStatus): string {
   if (status.kind === 'not-shipped') return '  status: ❓ not yet released';
   if (status.kind === 'eligible') {
-    return `  status: ✅ eligible for removal (shipped in ${status.originVersion.file})`;
+    return `  status: ✅ eligible for removal (shipped in v${status.originVersion.versionNumber})`;
   }
 
   const extra: string =
     status.versionsStillNeeded > 0
       ? `, needs ${status.versionsStillNeeded} more version(s) released`
       : '';
-  return `  status: ⏳ not yet eligible (shipped in ${status.originVersion.file}) — day window expires ${status.dayWindowExpiresAt}${extra}`;
+  return `  status: ⏳ not yet eligible (shipped in v${status.originVersion.versionNumber}) — day window expires ${status.dayWindowExpiresAt}${extra}`;
 }
 
 function main() {

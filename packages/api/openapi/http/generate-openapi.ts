@@ -1,7 +1,7 @@
 import { generateOpenApi } from '@ts-rest/open-api';
 import type { OpenAPIObject } from 'openapi3-ts';
-import packageJson from '../package.json';
-import { contract } from '../src/contract/contract';
+import packageJson from '../../package.json';
+import { contract } from '../../src/contract/contract';
 
 const capitalize = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1);

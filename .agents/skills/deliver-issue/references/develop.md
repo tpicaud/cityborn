@@ -11,7 +11,7 @@ Travailler dans le worktree transmis, déjà sur la branche liée à l'issue.
 ## Livrer
 
 1. Créer un commit dès qu'une étape cohérente est complète et vérifiée, en gardant séparées les étapes indépendantes.
-2. Après les vérifications finales, pousser la branche liée.
+2. Après les vérifications finales, pousser le développement initial et les correctifs de review sur la branche liée à la même PR.
 3. Créer la PR draft si la branche n'en a pas, sinon la mettre à jour, avec une description écrite pour le relecteur :
    - `## Résultat` : une bullet d'une phrase par changement, au niveau du comportement ou de la structure obtenue ; un symbole n'y figure que si le relecteur doit le connaître (surface publique, contrat) ;
    - `## Points d'attention` : ce que le relecteur doit trancher ou surveiller (surface publique ou contrat modifié, comportement changé, risque résiduel) ;

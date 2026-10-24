@@ -1,11 +1,13 @@
 import type { AnyZodObject } from 'zod';
 
 export interface WsClientEvent {
+  readonly deprecated?: boolean;
   readonly payload?: AnyZodObject;
   readonly ack?: AnyZodObject;
 }
 
 export interface WsServerEvent {
+  readonly deprecated?: boolean;
   readonly payload?: AnyZodObject;
 }
 
