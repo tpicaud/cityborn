@@ -37,11 +37,11 @@ const validAppleIdTokenClaims: AppleIdTokenClaims = {
 };
 let mockAppleIdTokenClaims: AppleIdTokenClaims | null = validAppleIdTokenClaims;
 
-function mockHash(): Promise<string> {
+function mockHashPassword(): Promise<string> {
   return Promise.resolve('hashed-password');
 }
 
-function mockCompare(): Promise<boolean> {
+function mockVerifyPassword(): Promise<boolean> {
   return Promise.resolve(mockPasswordMatches);
 }
 
@@ -49,7 +49,10 @@ function mockVerifyAppleIdToken(): Promise<AppleIdTokenClaims | null> {
   return Promise.resolve(mockAppleIdTokenClaims);
 }
 
-jest.mock('bcrypt', () => ({ hash: mockHash, compare: mockCompare }));
+jest.mock('../password-hashing', () => ({
+  hashPassword: mockHashPassword,
+  verifyPassword: mockVerifyPassword,
+}));
 jest.mock('../identity-providers/apple-id-token', () => ({
   verifyAppleIdToken: mockVerifyAppleIdToken,
 }));
