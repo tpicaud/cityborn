@@ -78,11 +78,15 @@ export function markPacksStale(queryClient: QueryClient): Promise<void> {
 export async function updateSavedPack({
   queryClient,
   pack,
+  signal,
 }: {
   queryClient: QueryClient;
   pack: Pack;
+  signal?: AbortSignal;
 }): Promise<void> {
+  signal?.throwIfAborted();
   await queryClient.cancelQueries({ queryKey: packsQueryKeyRoot });
+  signal?.throwIfAborted();
   queryClient.setQueryData<Pack[]>(packListQueryKey, (packs) =>
     packs?.map((cachedPack: Pack) =>
       cachedPack.id === pack.id ? pack : cachedPack,

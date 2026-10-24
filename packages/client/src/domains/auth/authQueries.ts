@@ -6,6 +6,7 @@ import {
   type QueryKey,
   queryOptions,
 } from '@tanstack/react-query';
+import { disposeSessionResources } from '../../shared/sessionResources';
 import type { AuthApi } from './authApi';
 
 const currentUserStaleTimeMs: number = 30 * 1000;
@@ -44,6 +45,9 @@ export async function setCurrentUser({
   queryClient,
   user,
 }: CurrentUserCacheUpdate): Promise<void> {
+  const currentUser: User | null | undefined =
+    queryClient.getQueryData(currentUserQueryKey);
+  if (currentUser?.id !== user.id) disposeSessionResources(queryClient);
   await queryClient.cancelQueries({ queryKey: currentUserQueryKey });
   queryClient.setQueryData<User | null>(currentUserQueryKey, user);
 }
@@ -51,6 +55,7 @@ export async function setCurrentUser({
 export async function clearCacheAfterSignOut(
   queryClient: QueryClient,
 ): Promise<void> {
+  disposeSessionResources(queryClient);
   await queryClient.cancelQueries({ queryKey: currentUserQueryKey });
   queryClient.removeQueries({
     predicate: (query: Query): boolean =>

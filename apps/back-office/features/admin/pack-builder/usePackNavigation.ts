@@ -13,11 +13,6 @@ export function usePackNavigation({
   useEffect(() => {
     if (saveState.status === 'saved') return;
 
-    const preventUnload = (event: BeforeUnloadEvent): void => {
-      void flushPackChanges();
-      event.preventDefault();
-      event.returnValue = '';
-    };
     const saveBeforeNavigation = (event: MouseEvent): void => {
       if (
         event.defaultPrevented ||
@@ -47,10 +42,8 @@ export function usePackNavigation({
       });
     };
 
-    window.addEventListener('beforeunload', preventUnload);
     document.addEventListener('click', saveBeforeNavigation, true);
     return () => {
-      window.removeEventListener('beforeunload', preventUnload);
       document.removeEventListener('click', saveBeforeNavigation, true);
     };
   }, [saveState.status, flushPackChanges, router]);

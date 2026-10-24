@@ -1,13 +1,14 @@
 import {
   type GuessObjectId,
   type Pack,
-  type PackId,
   resolveErrorMessage,
   type UpdatePack,
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { PackApi } from '../../../domains/pack/packApi';
 import { removeDeletedPack } from '../../../domains/pack/packQueries';
+import { registerSessionResource } from '../../../shared/sessionResources';
+import { getPackSaveRegistry } from './packSaveRegistry';
 import { savePack } from './savePack';
 
 export type PackFields = Partial<
@@ -35,11 +36,6 @@ export type PackPersistence = {
 
 const textSaveDelayMs: number = 500;
 
-const pendingPacksByClient: WeakMap<
-  QueryClient,
-  Map<PackId, PackPersistence>
-> = new WeakMap();
-
 export function getPackPersistence({
   packApi,
   queryClient,
@@ -49,18 +45,14 @@ export function getPackPersistence({
   queryClient: QueryClient;
   pack: Pack;
 }): PackPersistence {
-  let pendingPacks: Map<PackId, PackPersistence> | undefined =
-    pendingPacksByClient.get(queryClient);
-  if (!pendingPacks) {
-    pendingPacks = new Map();
-    pendingPacksByClient.set(queryClient, pendingPacks);
-  }
-  const existingPersistence: PackPersistence | undefined = pendingPacks.get(
+  const registry: ReturnType<typeof getPackSaveRegistry> =
+    getPackSaveRegistry(queryClient);
+  const existingPersistence: PackPersistence | undefined = registry.get(
     pack.id,
   );
   if (existingPersistence) return existingPersistence;
 
-  const retainedPacks: Map<PackId, PackPersistence> = pendingPacks;
+  const abortController: AbortController = new AbortController();
   let inFlightFields: PackFields = {};
   let savedPack: Pack = pack;
   let pendingFields: PackFields = {};
@@ -82,16 +74,17 @@ export function getPackPersistence({
     Object.keys(pendingFields).length > 0;
 
   const notify: () => void = () => {
-    const status: PackSaveState['status'] = errorMessage
-      ? 'failed'
-      : queuedWrites > 0
-        ? 'saving'
-        : hasPendingFields()
-          ? 'pending'
-          : 'saved';
+    const status: PackSaveState['status'] = abortController.signal.aborted
+      ? 'saved'
+      : errorMessage
+        ? 'failed'
+        : queuedWrites > 0
+          ? 'saving'
+          : hasPendingFields()
+            ? 'pending'
+            : 'saved';
     state = { status, errorMessage, successfulSaveCount };
-    retainedPacks.set(pack.id, persistence);
-    if (status === 'saved') retainedPacks.delete(pack.id);
+    registry.update({ packId: pack.id, persistence });
     listeners.forEach((listener) => {
       listener();
     });
@@ -103,10 +96,11 @@ export function getPackPersistence({
   };
 
   const enqueue = (write: () => Promise<void>): Promise<void> => {
+    if (abortController.signal.aborted) return Promise.resolve();
     queuedWrites += 1;
     notify();
     const result: Promise<void> = tail.then(async () => {
-      if (!isDeleted) await write();
+      if (!isDeleted && !abortController.signal.aborted) await write();
     });
     tail = result.then(
       () => {
@@ -126,6 +120,7 @@ export function getPackPersistence({
     savedPack = await savePack({
       packApi,
       queryClient,
+      signal: abortController.signal,
       pack: {
         id: savedPack.id,
         name: savedPack.name,
@@ -147,7 +142,9 @@ export function getPackPersistence({
     try {
       await persist(fields);
     } catch (error: unknown) {
-      pendingFields = { ...fields, ...pendingFields };
+      if (!abortController.signal.aborted) {
+        pendingFields = { ...fields, ...pendingFields };
+      }
       throw error;
     } finally {
       inFlightFields = {};
@@ -157,6 +154,7 @@ export function getPackPersistence({
 
   const flush: () => Promise<void> = () => {
     cancelTimer();
+    if (abortController.signal.aborted) return Promise.resolve();
     if (fieldSave) return fieldSave;
     if (!hasPendingFields() || isDeleted) return tail;
     errorMessage = null;
@@ -181,7 +179,7 @@ export function getPackPersistence({
 
   const persistence: PackPersistence = {
     updateFields: (fields) => {
-      if (isDeleted) return;
+      if (isDeleted || abortController.signal.aborted) return;
       pendingFields = { ...pendingFields, ...fields };
       errorMessage = null;
       cancelTimer();
@@ -202,6 +200,7 @@ export function getPackPersistence({
       await flush();
       await enqueue(async () => {
         await packApi.deletePack(savedPack.id);
+        abortController.signal.throwIfAborted();
         await removeDeletedPack({ queryClient, packId: savedPack.id });
         isDeleted = true;
         pendingFields = {};
@@ -218,5 +217,16 @@ export function getPackPersistence({
     getSnapshot: () => state,
     getPendingFields: () => ({ ...inFlightFields, ...pendingFields }),
   };
+  registerSessionResource({
+    queryClient,
+    dispose: () => {
+      abortController.abort();
+      cancelTimer();
+      pendingFields = {};
+      inFlightFields = {};
+      errorMessage = null;
+      notify();
+    },
+  });
   return persistence;
 }

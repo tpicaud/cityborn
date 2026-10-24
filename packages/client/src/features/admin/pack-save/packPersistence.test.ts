@@ -4,14 +4,20 @@ import {
   buildFullPack,
   buildGuessObject,
   buildPack,
+  buildUser,
   type FullPack,
   type GuessObjectId,
   type Pack,
   type ThemeId,
   ThemeIdSchema,
   type UpdatePack,
+  type User,
 } from '@cityborn/api';
 import { QueryClient } from '@tanstack/react-query';
+import {
+  clearCacheAfterSignOut,
+  setCurrentUser,
+} from '../../../domains/auth/authQueries';
 import type { PackApi } from '../../../domains/pack/packApi';
 import {
   fullPackQueryOptions,
@@ -23,6 +29,7 @@ import {
   type PackFields,
   type PackPersistence,
 } from './packPersistence';
+import { getPackSaveRegistry } from './packSaveRegistry';
 
 type PersistenceFixture = {
   persistence: PackPersistence;
@@ -483,6 +490,224 @@ describe('getPackPersistence', () => {
     assert.equal(reopenedPack.themeId, lastThemeId);
     assert.equal(requests.length, 1);
     assert.equal(reopenedPersistence.getSnapshot().status, 'saved');
+  });
+
+  it('drops failed drafts at sign-out before another account edits the pack', async (context: TestContext) => {
+    let rejects: boolean = true;
+    const { persistence, requests, queryClient, packApi }: PersistenceFixture =
+      createFixture({
+        context,
+        updatePack: async ({ pack }) => {
+          if (rejects) throw new TypeError('Network request failed');
+          return buildPack(pack);
+        },
+      });
+    persistence.updateFields({ name: 'First account draft' });
+    await assert.rejects(persistence.flush());
+
+    await clearCacheAfterSignOut(queryClient);
+    rejects = false;
+    const nextPersistence: PackPersistence = getPackPersistence({
+      queryClient,
+      packApi,
+      pack: buildFullPack({ name: 'Server name' }),
+    });
+    persistence.updateFields({ name: 'Stale editor' });
+    await persistence.flush();
+    nextPersistence.updateFields({ description: 'Second account description' });
+    await nextPersistence.flush();
+
+    assert.notEqual(nextPersistence, persistence);
+    assert.deepEqual(persistence.getPendingFields(), {});
+    assert.equal(requests.length, 2);
+    assert.equal(requests[1]?.name, 'Server name');
+    assert.equal(requests[1]?.description, 'Second account description');
+  });
+
+  it('cancels delayed saves and departure flushes at sign-out', async (context: TestContext) => {
+    const { persistence, requests, queryClient }: PersistenceFixture =
+      createFixture({ context });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    persistence.updateFields({ name: 'First account draft' });
+
+    await clearCacheAfterSignOut(queryClient);
+    context.mock.timers.tick(1000);
+    await persistence.flush();
+
+    assert.equal(requests.length, 0);
+    assert.deepEqual(persistence.getPendingFields(), {});
+    assert.equal(registry.getSnapshot(), false);
+  });
+
+  it('ignores late responses and follow-up writes from a signed-out account', async (context: TestContext) => {
+    const response: PromiseWithResolvers<Pack> = Promise.withResolvers();
+    const started: PromiseWithResolvers<void> = Promise.withResolvers();
+    const { persistence, requests, queryClient, packApi }: PersistenceFixture =
+      createFixture({
+        context,
+        updatePack: async () => {
+          started.resolve();
+          return response.promise;
+        },
+      });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    const nextPack: FullPack = buildFullPack({ name: 'Second account pack' });
+    persistence.updateFields({ name: 'First account draft' });
+    const save: Promise<void> = persistence.flush();
+    await started.promise;
+    persistence.updateFields({ description: 'First account follow-up' });
+    const publication: Promise<void> = persistence.publish(true);
+
+    await clearCacheAfterSignOut(queryClient);
+    queryClient.setQueryData(packsQueryOptions(packApi).queryKey, [nextPack]);
+    queryClient.setQueryData(
+      fullPackQueryOptions({ packApi, packId: nextPack.id }).queryKey,
+      nextPack,
+    );
+    response.resolve(buildPack({ name: 'First account draft' }));
+    await assert.rejects(save, { name: 'AbortError' });
+    await assert.rejects(publication, { name: 'AbortError' });
+
+    assert.equal(requests.length, 1);
+    assert.deepEqual(persistence.getPendingFields(), {});
+    assert.equal(registry.getSnapshot(), false);
+    assert.deepEqual(
+      queryClient.getQueryData(packsQueryOptions(packApi).queryKey),
+      [nextPack],
+    );
+    assert.deepEqual(
+      queryClient.getQueryData(
+        fullPackQueryOptions({ packApi, packId: nextPack.id }).queryKey,
+      ),
+      nextPack,
+    );
+  });
+
+  it('keeps the next session draft when an old request fails after sign-out', async (context: TestContext) => {
+    const response: PromiseWithResolvers<Pack> = Promise.withResolvers();
+    const started: PromiseWithResolvers<void> = Promise.withResolvers();
+    const { persistence, queryClient, packApi }: PersistenceFixture =
+      createFixture({
+        context,
+        updatePack: async () => {
+          started.resolve();
+          return response.promise;
+        },
+      });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    persistence.updateFields({ name: 'First account draft' });
+    const save: Promise<void> = persistence.flush();
+    await started.promise;
+
+    await clearCacheAfterSignOut(queryClient);
+    const nextPersistence: PackPersistence = getPackPersistence({
+      queryClient,
+      packApi,
+      pack: buildPack(),
+    });
+    nextPersistence.updateFields({ name: 'Second account draft' });
+    response.reject(new TypeError('Network request failed'));
+    await assert.rejects(save);
+
+    assert.deepEqual(persistence.getPendingFields(), {});
+    assert.equal(registry.getSnapshot(), true);
+    assert.equal(registry.get(buildPack().id), nextPersistence);
+    assert.deepEqual(nextPersistence.getPendingFields(), {
+      name: 'Second account draft',
+    });
+
+    await clearCacheAfterSignOut(queryClient);
+  });
+
+  it('keeps drafts for the same account and drops them when signing in as another account', async (context: TestContext) => {
+    const { queryClient, packApi }: PersistenceFixture = createFixture({
+      context,
+    });
+    const user: User = buildUser();
+    await setCurrentUser({ queryClient, user });
+    const persistence: PackPersistence = getPackPersistence({
+      queryClient,
+      packApi,
+      pack: buildPack(),
+    });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    persistence.updateFields({ name: 'First account draft' });
+
+    await setCurrentUser({ queryClient, user });
+
+    assert.equal(registry.getSnapshot(), true);
+    assert.deepEqual(persistence.getPendingFields(), {
+      name: 'First account draft',
+    });
+
+    await setCurrentUser({
+      queryClient,
+      user: buildUser({ id: '00000000-0000-4000-8000-000000000099' }),
+    });
+
+    assert.equal(registry.getSnapshot(), false);
+    assert.deepEqual(persistence.getPendingFields(), {});
+  });
+
+  it('keeps failed saves visible to the application after the editor unsubscribes', async (context: TestContext) => {
+    let rejects: boolean = true;
+    const { persistence, queryClient }: PersistenceFixture = createFixture({
+      context,
+      updatePack: async ({ pack }) => {
+        if (rejects) throw new TypeError('Network request failed');
+        return buildPack(pack);
+      },
+    });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    const applicationSnapshots: boolean[] = [];
+    context.after(
+      registry.subscribe(() =>
+        applicationSnapshots.push(registry.getSnapshot()),
+      ),
+    );
+    const stopObservingEditor: () => void = persistence.subscribe(
+      () => undefined,
+    );
+
+    persistence.updateFields({ name: 'Draft before going back' });
+    stopObservingEditor();
+    assert.equal(await registry.flush(), false);
+
+    assert.equal(registry.getSnapshot(), true);
+    assert.equal(applicationSnapshots.at(-1), true);
+
+    rejects = false;
+    assert.equal(await registry.flush(), true);
+
+    assert.equal(registry.getSnapshot(), false);
+    assert.equal(applicationSnapshots.at(-1), false);
+  });
+
+  it('keeps unload protection until every pending pack is saved', async (context: TestContext) => {
+    const { persistence, queryClient, packApi }: PersistenceFixture =
+      createFixture({ context });
+    const secondPersistence: PackPersistence = getPackPersistence({
+      queryClient,
+      packApi,
+      pack: buildPack({ id: '00000000-0000-4000-8000-000000000020' }),
+    });
+    const registry: ReturnType<typeof getPackSaveRegistry> =
+      getPackSaveRegistry(queryClient);
+    persistence.updateFields({ name: 'First draft' });
+    secondPersistence.updateFields({ name: 'Second draft' });
+
+    await persistence.flush();
+
+    assert.equal(registry.getSnapshot(), true);
+
+    assert.equal(await registry.flush(), true);
+
+    assert.equal(registry.getSnapshot(), false);
   });
 
   it('stops delayed writes after deleting the pack', async (context: TestContext) => {
