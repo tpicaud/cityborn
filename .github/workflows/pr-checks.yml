@@ -85,7 +85,7 @@ jobs:
         run: pnpm format:check
 
   api-compat:
-    name: HTTP and WebSocket compatibility
+    name: API compatibility
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
