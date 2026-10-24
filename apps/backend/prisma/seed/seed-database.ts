@@ -243,13 +243,21 @@ async function seedPack({
   });
 }
 
-async function seedContent(tx: Prisma.TransactionClient): Promise<void> {
-  const theme: { id: string } = await tx.theme.upsert({
-    where: { name: SEED_THEME_NAME },
-    create: { name: SEED_THEME_NAME },
-    update: {},
+async function seedTheme(
+  tx: Prisma.TransactionClient,
+): Promise<{ id: string }> {
+  const existingTheme: { id: string } | null = await tx.theme.findFirst({
+    where: { name: { equals: SEED_THEME_NAME, mode: 'insensitive' } },
     select: { id: true },
   });
+  return (
+    existingTheme ??
+    tx.theme.create({ data: { name: SEED_THEME_NAME }, select: { id: true } })
+  );
+}
+
+async function seedContent(tx: Prisma.TransactionClient): Promise<void> {
+  const theme: { id: string } = await seedTheme(tx);
   await Promise.all(
     SEED_PACKS.map((pack: SeedPack) =>
       seedPack({ tx, pack, themeId: theme.id }),
