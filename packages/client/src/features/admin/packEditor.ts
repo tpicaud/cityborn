@@ -31,7 +31,7 @@ import {
 } from '../../shared/errorReporter';
 import { saveGuessObject } from './guessObjectSave';
 import {
-  createPackPersistence,
+  getPackPersistence,
   type PackFields,
   type PackPersistence,
   type PackSaveState,
@@ -135,11 +135,14 @@ export function usePackEditor({
   const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
-  const [pack, setPack] = useState<FullPack>(editedPack);
-  const [loadedPack, setLoadedPack] = useState<FullPack>(editedPack);
   const [persistence] = useState<PackPersistence>(() =>
-    createPackPersistence({ packApi, queryClient, pack: editedPack }),
+    getPackPersistence({ packApi, queryClient, pack: editedPack }),
   );
+  const [pack, setPack] = useState<FullPack>(() => ({
+    ...editedPack,
+    ...persistence.getPendingFields(),
+  }));
+  const [loadedPack, setLoadedPack] = useState<FullPack>(editedPack);
   const saveState: PackSaveState = useSyncExternalStore(
     persistence.subscribe,
     persistence.getSnapshot,
@@ -167,7 +170,14 @@ export function usePackEditor({
 
   if (loadedPack !== editedPack) {
     setLoadedPack(editedPack);
-    setPack(synchronizePackDraft({ pack, loadedPack, editedPack }));
+    setPack(
+      synchronizePackDraft({
+        pack,
+        loadedPack,
+        editedPack,
+        pendingFields: persistence.getPendingFields(),
+      }),
+    );
   }
 
   const savePackPublication = async (isPublished: boolean): Promise<void> => {

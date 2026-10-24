@@ -279,6 +279,7 @@ describe('synchronizePackDraft', () => {
       pack: editedPack,
       loadedPack: editedPack,
       editedPack: refreshedPack,
+      pendingFields: {},
     });
 
     assert.deepEqual(pack, refreshedPack);
@@ -294,6 +295,7 @@ describe('synchronizePackDraft', () => {
       pack: { ...editedPack, name: 'Unsaved name' },
       loadedPack: editedPack,
       editedPack: refreshedPack,
+      pendingFields: { name: 'Unsaved name' },
     });
 
     assert.deepEqual(pack, { ...refreshedPack, name: 'Unsaved name' });
@@ -310,6 +312,7 @@ describe('synchronizePackDraft', () => {
       pack: draft,
       loadedPack: editedPack,
       editedPack: { ...editedPack, description: 'Updated description' },
+      pendingFields: { themeId: draft.themeId },
     });
 
     assert.deepEqual(pack, { ...draft, description: 'Updated description' });
@@ -322,6 +325,7 @@ describe('synchronizePackDraft', () => {
       pack: { ...editedPack, name: 'Unsaved name' },
       loadedPack: editedPack,
       editedPack: nextPack,
+      pendingFields: { name: 'Unsaved name' },
     });
 
     assert.deepEqual(pack, nextPack);

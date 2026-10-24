@@ -1,5 +1,6 @@
 import type { FullPack, Pack, Theme } from '@cityborn/api';
 import type { QueryObserverResult } from '@tanstack/react-query';
+import type { PackFields } from './pack-save/packPersistence';
 
 export type PackEditorState =
   | { status: 'loading' }
@@ -17,22 +18,17 @@ export function synchronizePackDraft({
   pack,
   loadedPack,
   editedPack,
+  pendingFields,
 }: {
   pack: FullPack;
   loadedPack: FullPack;
   editedPack: FullPack;
+  pendingFields: PackFields;
 }): FullPack {
   if (pack.id !== editedPack.id) return editedPack;
   return {
     ...editedPack,
-    ...(pack.name !== loadedPack.name ? { name: pack.name } : {}),
-    ...(pack.description !== loadedPack.description
-      ? { description: pack.description }
-      : {}),
-    ...(pack.parentId !== loadedPack.parentId
-      ? { parentId: pack.parentId }
-      : {}),
-    ...(pack.themeId !== loadedPack.themeId ? { themeId: pack.themeId } : {}),
+    ...pendingFields,
     ...(pack.isPublished !== loadedPack.isPublished
       ? { isPublished: pack.isPublished }
       : {}),

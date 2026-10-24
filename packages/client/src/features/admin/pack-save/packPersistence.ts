@@ -1,6 +1,7 @@
 import {
   type GuessObjectId,
   type Pack,
+  type PackId,
   resolveErrorMessage,
   type UpdatePack,
 } from '@cityborn/api';
@@ -28,11 +29,17 @@ export type PackPersistence = {
   synchronize: (pack: Pack) => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => PackSaveState;
+  getPendingFields: () => PackFields;
 };
 
 const textSaveDelayMs: number = 500;
 
-export function createPackPersistence({
+const pendingPacksByClient: WeakMap<
+  QueryClient,
+  Map<PackId, PackPersistence>
+> = new WeakMap();
+
+export function getPackPersistence({
   packApi,
   queryClient,
   pack,
@@ -41,6 +48,19 @@ export function createPackPersistence({
   queryClient: QueryClient;
   pack: Pack;
 }): PackPersistence {
+  let pendingPacks: Map<PackId, PackPersistence> | undefined =
+    pendingPacksByClient.get(queryClient);
+  if (!pendingPacks) {
+    pendingPacks = new Map();
+    pendingPacksByClient.set(queryClient, pendingPacks);
+  }
+  const existingPersistence: PackPersistence | undefined = pendingPacks.get(
+    pack.id,
+  );
+  if (existingPersistence) return existingPersistence;
+
+  const retainedPacks: Map<PackId, PackPersistence> = pendingPacks;
+  let inFlightFields: PackFields = {};
   let savedPack: Pack = pack;
   let pendingFields: PackFields = {};
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -64,6 +84,8 @@ export function createPackPersistence({
           ? 'pending'
           : 'saved';
     state = { status, errorMessage };
+    retainedPacks.set(pack.id, persistence);
+    if (status === 'saved') retainedPacks.delete(pack.id);
     listeners.forEach((listener) => {
       listener();
     });
@@ -114,11 +136,14 @@ export function createPackPersistence({
     if (!hasPendingFields()) return;
     const fields: PackFields = pendingFields;
     pendingFields = {};
+    inFlightFields = fields;
     try {
       await persist(fields);
     } catch (error: unknown) {
       pendingFields = { ...fields, ...pendingFields };
       throw error;
+    } finally {
+      inFlightFields = {};
     }
     await drainFields();
   };
@@ -147,7 +172,7 @@ export function createPackPersistence({
     await enqueue(() => persist(changes));
   };
 
-  return {
+  const persistence: PackPersistence = {
     updateFields: (fields) => {
       if (isDeleted) return;
       pendingFields = { ...pendingFields, ...fields };
@@ -184,5 +209,7 @@ export function createPackPersistence({
       return () => listeners.delete(listener);
     },
     getSnapshot: () => state,
+    getPendingFields: () => ({ ...inFlightFields, ...pendingFields }),
   };
+  return persistence;
 }
