@@ -79,6 +79,10 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Aucune catégorie trouvée pour cet identifiant.',
 
   // Theme
+  [ErrorCode.THEME_NAME_ALREADY_EXISTS]: 'Ce thème existe déjà',
+  [ErrorCode.THEME_HAS_PACKS]: 'Des packs sont encore rattachés à ce thème.',
+  [ErrorCode.THEME_DEFAULT_NOT_DELETABLE]:
+    'Le thème par défaut ne peut pas être supprimé.',
   [ErrorCode.THEME_NOT_FOUND]: 'Aucun thème trouvé pour cet identifiant.',
 
   // Rate limiting

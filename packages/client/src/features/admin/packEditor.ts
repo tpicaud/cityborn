@@ -23,7 +23,6 @@ import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   fullPackQueryOptions,
-  markPacksStale,
   packsQueryOptions,
   removeDeletedPack,
 } from '../../domains/pack/packQueries';
@@ -33,7 +32,12 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import { saveGuessObject } from './guessObjectSave';
-import { type PackEditorState, toPackEditorState } from './packEditorState';
+import { savePack } from './pack-save/savePack';
+import {
+  type PackEditorState,
+  synchronizePackDraft,
+  toPackEditorState,
+} from './packEditorState';
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraftEditor,
@@ -133,35 +137,46 @@ export function usePackEditor({
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
   const [pack, setPack] = useState<FullPack>(editedPack);
+  const [loadedPack, setLoadedPack] = useState<FullPack>(editedPack);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const sendPackUpdate = async (packUpdate: UpdatePack): Promise<void> => {
-    await packApi.updatePack({
-      packId: packUpdate.id,
-      pack: packUpdate,
-    });
-    await markPacksStale(queryClient);
+  if (loadedPack !== editedPack) {
+    setLoadedPack(editedPack);
+    setPack(synchronizePackDraft({ pack, loadedPack, editedPack }));
+  }
+
+  const sendPackUpdate = async (
+    changes: Partial<UpdatePack>,
+  ): Promise<void> => {
+    setIsSaving(true);
+    try {
+      await savePack({
+        packApi,
+        queryClient,
+        pack: {
+          id: pack.id,
+          name: pack.name,
+          description: pack.description,
+          parentId: pack.parentId,
+          themeId: pack.themeId,
+          isPublished: pack.isPublished,
+          ...changes,
+        },
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const savePackPublication = async (isPublished: boolean): Promise<void> => {
-    setIsSaving(true);
     try {
-      await sendPackUpdate({
-        id: pack.id,
-        name: pack.name,
-        isPublished,
-        description: pack.description,
-        parentId: pack.parentId,
-        themeId: pack.themeId,
-      });
+      await sendPackUpdate({ isPublished });
       setPack((currentPack: FullPack) => ({
         ...currentPack,
         isPublished,
       }));
     } catch (error: unknown) {
       reportError(error, unexpectedErrorMessage);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -175,9 +190,6 @@ export function usePackEditor({
       if (!guessObject) return null;
 
       await sendPackUpdate({
-        id: pack.id,
-        name: pack.name,
-        isPublished: pack.isPublished,
         connectIds: [guessObjectId],
       });
       setPack((currentPack: FullPack) => ({
@@ -243,9 +255,6 @@ export function usePackEditor({
     }));
     try {
       await sendPackUpdate({
-        id: pack.id,
-        name: pack.name,
-        isPublished: pack.isPublished,
         disconnectIds: [guessObject.id],
       });
       guessObjectDraftEditor.showGuessObjectDraft(undefined);

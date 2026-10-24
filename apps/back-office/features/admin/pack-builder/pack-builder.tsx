@@ -65,7 +65,10 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
   );
 
   return (
-    <div className="flex-1 w-full flex flex-row gap-12">
+    <fieldset
+      disabled={isSaving}
+      className="flex-1 min-w-0 w-full flex flex-row gap-12"
+    >
       <div className="flex-1 flex flex-col gap-8 w-full">
         <div className="flex flex-col w-full">
           <div className="flex flex-row gap-4 mb-2 items-center h-8 ">
@@ -245,6 +248,6 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
         </div>
         <GuessObjectBuilder guessObjectDraftEditor={guessObjectDraftEditor} />
       </div>
-    </div>
+    </fieldset>
   );
 }

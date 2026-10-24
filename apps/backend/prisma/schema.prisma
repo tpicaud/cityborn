@@ -112,7 +112,7 @@ model GuessObject {
 
 model Theme {
   id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String @unique
+  name String
 
   packs Pack[]
 }

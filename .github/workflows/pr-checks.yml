@@ -302,6 +302,9 @@ jobs:
       - name: Deploy database migrations
         run: pnpm --dir apps/backend db:up
 
+      - name: Seed database
+        run: pnpm --dir apps/backend exec prisma db seed
+
       - name: Run backend integration tests
         run: pnpm --dir apps/backend test:int
 
