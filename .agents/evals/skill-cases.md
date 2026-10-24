@@ -10,6 +10,8 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Ajoute un schéma Zod interne au module backend de recherche. » | `conventions-backend` seulement |
 | « Corrige l'exception retournée quand une session est absente. » | `conventions-backend`, et `conventions-api` seulement si le contrat change |
 | « Ajoute un repository Prisma au domaine game. » | `conventions-backend`, `conventions-testing` |
+| « Renomme le champ `durationMs` des wide events. » | `conventions-backend` seulement |
+| « Ajoute un dashboard Axiom des connexions WebSocket. » | `conventions-backend`, `axiom-building-dashboards` |
 | « Teste toutes les branches de `SessionService.updateHost`. » | `conventions-testing` |
 | « Ajoute un test pour `mergeSessionUpdate` dans `@cityborn/client`. » | `conventions-testing` |
 | « Ajoute à `@cityborn/client` le chargement du classement. » | `conventions-client` |

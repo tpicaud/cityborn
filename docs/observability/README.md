@@ -7,7 +7,7 @@ Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours
 | Variable | Valeur |
 |---|---|
 | `AXIOM_TOKEN` | token d'API, permission `ingest`, restreint au dataset |
-| `AXIOM_DATASET` | `cityborn-backend-staging`, `-prod`, `-dev` |
+| `AXIOM_DATASET` | `cityborn-backend-dev`, `-staging`, `-production` |
 
 Sans les deux, [`logger.params.ts`](../../apps/backend/src/common/logger/logger.params.ts) n'ajoute pas la cible Axiom et rien d'autre ne change. En local elles vont dans `apps/backend/.env` : `main.ts` précharge `dotenv/config` avant `AppModule`, sans quoi `logger.params` lirait l'environnement trop tôt.
 
@@ -15,6 +15,7 @@ Sans les deux, [`logger.params.ts`](../../apps/backend/src/common/logger/logger.
 
 - S'inscrire sur **`app.eu.axiom.co`**, pas `app.axiom.co` : pas de migration entre régions, et les events portent `ip`, `userAgent`, `userId`.
 - Un dataset et un token par environnement.
+- Un token d'API avancé limité aux dashboards de l'organisation, pour la CI : secret GitHub `AXIOM_DASHBOARDS_TOKEN`.
 - Ingestion sur `eu-central-1.aws.edge.axiom.co` via l'option `edge` ([doc Axiom](https://axiom.co/docs/guides/pino)) ; `url` ne sert qu'aux opérations hors ingestion, que le transport ne fait jamais.
 
 ## Cibles
@@ -30,7 +31,7 @@ Le drain tourne dans un worker : une panne d'ingestion n'interrompt ni la requê
 
 ## Champs
 
-Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom : renommer ici oblige à reprendre les dashboards de [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/) et, hors de portée de `grep`, les requêtes sauvegardées et les monitors.
+Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom : renommer, supprimer ou changer le sens d'un champ ou d'une de ses valeurs oblige à reprendre, dans la même PR, les dashboards de [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/) et, hors de portée de `grep`, les requêtes sauvegardées et les monitors.
 
 - **Communs** — `event` (`http_request` | `ws_message` | `ws_connection` | `ws_disconnection` | `operation_error`), `transport`, `requestId`, `domain`, `action` (opérations du contrat), `operation`, `outcome`, `statusCode`, `durationMs`, `ip`, `userAgent`, `visitorId`, `client`, `clientVersion`
 - **HTTP** — `method`, `route`, `apiVersion`
@@ -49,7 +50,24 @@ Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide ev
 
 ## Dashboards
 
-Source de vérité : [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/), un fichier `{ uid, dashboard }` par dashboard, rangé par environnement. Un changement modifie le fichier, puis le déploie avec `updateDashboard` du serveur MCP Axiom, sous l'`uid` du fichier. Une modification faite dans l'interface Axiom est écrasée au déploiement suivant : pour expérimenter, dupliquer le dashboard dans Axiom puis reporter le résultat dans le fichier.
+Source de vérité : [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/), un fichier par dashboard, commun à tous les environnements.
+
+- Le fichier est le document Axiom du dashboard ([format](https://axiom.co/docs/restapi/endpoints/createDashboard)), sans `uid`. `{{environment}}` y vaut `dev`, `staging` ou `production`, et chaque requête lit `['cityborn-backend-{{environment}}']`.
+- Le déploiement crée ou remplace le dashboard `cityborn-<environnement>-<fichier>` et supprime ceux de l'environnement dont le fichier a disparu.
+- `pnpm check:axiom-dashboards`, lancé en PR, vérifie que chaque graphique figure au layout et que chaque requête passe par `{{environment}}`.
+
+La CI déploie après le backend du même environnement :
+
+| Environnement | Workflow |
+|---|---|
+| `dev`, `staging` | `Deploy - Web - Staging`, à chaque merge sur `main` |
+| `production` | `Release - Web - Prod` |
+
+Une modification faite dans l'interface Axiom est écrasée au déploiement suivant. Pour itérer, dupliquer le dashboard dans Axiom, l'ajuster, puis reporter son JSON (`getDashboard` du MCP) dans le fichier, l'environnement remplacé par `{{environment}}`.
+
+## MCP Axiom
+
+[`.mcp.json`](../../.mcp.json) déclare le serveur MCP Axiom du projet ; la première utilisation ouvre une authentification OAuth dans le navigateur (`/mcp` dans Claude Code). Il sert à explorer les datasets, tester une requête APL et lire un dashboard ; les dashboards se déploient par la CI.
 
 ## Requêtes et alertes
 

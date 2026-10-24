@@ -111,6 +111,16 @@ jobs:
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
 
+  deploy-axiom-dashboards:
+    name: Deploy Axiom dashboards
+    needs:
+      - build-and-deploy-web-prod
+    if: ${{ !failure() && !cancelled() }}
+    secrets: inherit
+    uses: ./.github/workflows/deploy-to-axiom.yml
+    with:
+      environment: production
+
   create-release:
     name: Release
     needs:
