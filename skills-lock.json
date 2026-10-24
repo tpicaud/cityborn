@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "axiom-building-dashboards": {
+      "source": "axiomhq/skills",
+      "sourceType": "github",
+      "skillPath": "skills/axiom-building-dashboards/SKILL.md",
+      "computedHash": "95ee9f8622749b1c4ec3d3093e5450cca5dc9e15900ce3d6a1e8bb9dc86a8fdc"
+    },
     "grilling": {
       "source": "mattpocock/skills",
       "sourceType": "github",

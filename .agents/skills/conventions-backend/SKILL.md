@@ -1,6 +1,6 @@
 ---
 name: conventions-backend
-description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou relire la structure d'un module, la gestion des erreurs ou l'observabilité dans apps/backend.
+description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou relire la structure d'un module, la gestion des erreurs ou l'observabilité dans apps/backend, wide events et dashboards Axiom compris.
 ---
 
 # Conventions backend (NestJS)
@@ -30,7 +30,7 @@ description: Architecture backend NestJS Cityborn. À utiliser pour modifier ou 
 
 ## Observabilité
 
-Pour enrichir un wide event, remonter une erreur, instrumenter une gateway, ajouter un domaine ou toucher au contexte CLS, au filtre d'erreurs ou au lifecycle WS, lire [la référence d'observabilité](references/observability.md).
+Pour enrichir un wide event, ajouter, renommer ou supprimer un de ses champs, remonter une erreur, instrumenter une gateway, ajouter un domaine, créer ou modifier un dashboard Axiom, ou toucher au contexte CLS, au filtre d'erreurs ou au lifecycle WS, lire [la référence d'observabilité](references/observability.md).
 
 ## Critère de fin
 

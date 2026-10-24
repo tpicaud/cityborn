@@ -118,6 +118,16 @@ jobs:
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
 
+  deploy-axiom-dashboards:
+    name: Deploy Axiom dashboards
+    needs:
+      - build-and-deploy-web-staging
+    if: ${{ !failure() && !cancelled() }}
+    secrets: inherit
+    uses: ./.github/workflows/deploy-to-axiom.yml
+    with:
+      environment: staging
+
   notify-discord:
     name: Notify Discord (Staging deploy)
     needs:

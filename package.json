@@ -36,6 +36,8 @@
     "db:restore": "node --env-file-if-exists=apps/backend/.env.restore scripts/database-backup/restore.mts",
     "db:restore:test": "pnpm backend test:int --runTestsByPath test/integration/database-restore.integration.spec.ts",
     "check:agent-docs": "node scripts/check-agent-docs.mts",
+    "check:axiom-dashboards": "node scripts/axiom-dashboards.mts check",
+    "deploy:axiom-dashboards": "node scripts/axiom-dashboards.mts deploy",
     "check:api-compat": "pnpm --dir packages/api check:compat",
     "format": "biome check --write .",
     "format:check": "biome check .",
@@ -46,6 +48,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^2.1.1",
     "turbo": "^2.10.0",
     "typescript": "6.0.3"
   }
