@@ -1,5 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import {
+  Ajv2020,
+  type ErrorObject,
+  type ValidateFunction,
+} from 'ajv/dist/2020.js';
+import ajvFormats from 'ajv-formats';
 
 const environments = ['dev', 'staging', 'production'] as const;
 
@@ -21,6 +27,8 @@ type RenderedDashboards = {
 const environmentPlaceholder: string = '{{environment}}';
 const dashboardsRoot: string = join(process.cwd(), 'infra/axiom/dashboards');
 const dashboardsApiUrl: string = 'https://api.axiom.co/v2/dashboards';
+const dashboardSchemaUrl: string =
+  'https://axiom.co/docs/schemas/dashboard.json';
 
 const isJsonObject = (value: unknown): value is JsonObject =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -171,6 +179,40 @@ const renderDashboards = (environment: Environment): RenderedDashboards => {
   );
 };
 
+const loadDashboardValidator = async (): Promise<ValidateFunction> => {
+  const response: Response = await fetch(dashboardSchemaUrl);
+  if (!response.ok) {
+    throw new Error(`GET ${dashboardSchemaUrl} : ${response.status}`);
+  }
+  const schema: unknown = await response.json();
+  if (!isJsonObject(schema)) {
+    throw new Error(`${dashboardSchemaUrl} : schéma invalide`);
+  }
+  const ajv: Ajv2020 = new Ajv2020();
+  ajvFormats.default(ajv);
+  return ajv.compile(schema);
+};
+
+const renderingErrors = ({
+  rendered,
+  validate,
+}: {
+  rendered: RenderedDashboards;
+  validate: ValidateFunction;
+}): string[] => [
+  ...rendered.errors,
+  ...rendered.dashboards.flatMap((dashboard: Dashboard): string[] =>
+    validate(dashboard.document)
+      ? []
+      : (validate.errors ?? []).map((error: ErrorObject): string => {
+          const property: unknown = error.params.additionalProperty;
+          const detail: string =
+            typeof property === 'string' ? ` : ${property}` : '';
+          return `${dashboard.uid} : ${error.instancePath || '/'} ${error.message ?? 'invalide'}${detail}`;
+        }),
+  ),
+];
+
 const axiomRequest = async ({
   token,
   method,
@@ -201,9 +243,11 @@ const deployDashboards = async (environment: Environment): Promise<void> => {
   const token: string | undefined = process.env.AXIOM_DASHBOARDS_TOKEN;
   if (!token) throw new Error('AXIOM_DASHBOARDS_TOKEN manquant');
 
-  const { dashboards, errors }: RenderedDashboards =
-    renderDashboards(environment);
+  const validate: ValidateFunction = await loadDashboardValidator();
+  const rendered: RenderedDashboards = renderDashboards(environment);
+  const errors: string[] = renderingErrors({ rendered, validate });
   if (errors.length > 0) throw new Error(errors.join('\n'));
+  const { dashboards }: RenderedDashboards = rendered;
 
   await Promise.all(
     dashboards.map(async (dashboard: Dashboard): Promise<void> => {
@@ -257,10 +301,12 @@ const deployDashboards = async (environment: Environment): Promise<void> => {
   );
 };
 
-const checkDashboards = (): void => {
+const checkDashboards = async (): Promise<void> => {
+  const validate: ValidateFunction = await loadDashboardValidator();
   const rendered: RenderedDashboards[] = environments.map(renderDashboards);
   const errors: string[] = rendered.flatMap(
-    (result: RenderedDashboards): string[] => result.errors,
+    (result: RenderedDashboards): string[] =>
+      renderingErrors({ rendered: result, validate }),
   );
   if (errors.length > 0) throw new Error(errors.join('\n'));
   const dashboardCount: number = rendered[0]?.dashboards.length ?? 0;

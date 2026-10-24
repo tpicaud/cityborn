@@ -62,7 +62,6 @@
       "id": "latency-percentiles",
       "name": "Latence p50 / p95 / p99 (ms)",
       "type": "TimeSeries",
-      "customUnits": "ms",
       "query": {
         "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize percentiles_array(durationMs, 50, 95, 99) by bin_auto(_time)"
       }
