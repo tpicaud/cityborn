@@ -40,8 +40,8 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
    | Identifiant | Mot de passe | Rôle |
    |---|---|---|
-   | `admin` | `password123` | `admin` (back-office) |
-   | `player` | `password123` | `player` (frontend) |
+   | `admin` | `Password123` | `admin` (back-office) |
+   | `player` | `Password123` | `player` (frontend) |
 
    La seed ne tourne jamais en staging ni en production : `db:up` et `start`
    n'appliquent que les migrations.

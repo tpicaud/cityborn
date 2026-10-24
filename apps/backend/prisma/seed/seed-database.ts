@@ -1,3 +1,4 @@
+import { type CreateUser, CreateUserSchema } from '@cityborn/api';
 import type { Prisma, PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../../src/auth/password-hashing';
 
@@ -39,7 +40,7 @@ type SeedUser = {
   role: UserRole;
 };
 
-const SEED_PASSWORD: string = 'password123';
+const SEED_PASSWORD: string = 'Password123';
 
 const SEED_THEME_NAME: string = 'Divertissement';
 
@@ -265,16 +266,21 @@ async function seedUsers({
 }): Promise<void> {
   await Promise.all(
     SEED_USERS.map((user: SeedUser) => {
-      const account: Prisma.UserCreateInput = {
+      const credentials: CreateUser = CreateUserSchema.parse({
         username: user.username,
         email: user.email,
+        password: SEED_PASSWORD,
+      });
+      const account: Prisma.UserCreateInput = {
+        username: credentials.username,
+        email: credentials.email,
         type: 'email',
         role: user.role,
         password: passwordHash,
         isVerified: true,
       };
       return tx.user.upsert({
-        where: { username: user.username },
+        where: { username: credentials.username },
         create: account,
         update: account,
       });

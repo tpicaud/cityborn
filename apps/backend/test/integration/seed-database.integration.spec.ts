@@ -54,7 +54,7 @@ describe('seedDatabase', () => {
     const passwordMatches: boolean[] = await Promise.all(
       accounts.map((account: SeededAccount) =>
         verifyPassword({
-          password: 'password123',
+          password: 'Password123',
           passwordHash: account.password ?? '',
         }),
       ),
