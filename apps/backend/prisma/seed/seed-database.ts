@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient, UserRole } from '@prisma/client';
-import { hashPassword } from '../../src/auth/password-hash';
+import { hashPassword } from '../../src/auth/password-hashing';
 
 type Position = [number, number];
 

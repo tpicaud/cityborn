@@ -1,8 +1,8 @@
 import type { FullGuessObject, FullPack, PackId } from '@cityborn/api';
 import { createGuess, guessObjectCenter } from '@cityborn/core';
 import { Test, type TestingModule } from '@nestjs/testing';
-import * as bcrypt from 'bcrypt';
 import { seedDatabase } from '../../prisma/seed/seed-database';
+import { verifyPassword } from '../../src/auth/password-hashing';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
 import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -53,7 +53,10 @@ describe('seedDatabase', () => {
     });
     const passwordMatches: boolean[] = await Promise.all(
       accounts.map((account: SeededAccount) =>
-        bcrypt.compare('password123', account.password ?? ''),
+        verifyPassword({
+          password: 'password123',
+          passwordHash: account.password ?? '',
+        }),
       ),
     );
     expect(

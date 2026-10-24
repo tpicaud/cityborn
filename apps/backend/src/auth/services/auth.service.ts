@@ -22,7 +22,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import { WideEventService } from '../../common/wide-event/wide-event.service';
 import { HTTP_CONFIG, type HttpConfig } from '../../config/config.module';
@@ -42,7 +41,7 @@ import {
   type GoogleIdentity,
   IdentityTokenService,
 } from '../identity-providers/identity-token.service';
-import { hashPassword } from '../password-hash';
+import { hashPassword, verifyPassword } from '../password-hashing';
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
@@ -70,7 +69,7 @@ export class AuthService {
 
     await this.userService.validateIdentifiers(username, email);
 
-    const hash = await hashPassword(password);
+    const hash: string = await hashPassword(password);
 
     const user = await this.userService.createUser({
       email,
@@ -121,10 +120,10 @@ export class AuthService {
 
     const userId: UserId = credentials.authSession.user.id;
     await this.rateLimitService.assertSignInAllowed(userId);
-    const isPasswordValid = await bcrypt.compare(
+    const isPasswordValid: boolean = await verifyPassword({
       password,
-      credentials.passwordHash,
-    );
+      passwordHash: credentials.passwordHash,
+    });
     if (!isPasswordValid) {
       await this.rateLimitService.recordFailedSignIn(userId);
       throw new UnauthorizedException({
@@ -305,10 +304,10 @@ export class AuthService {
         message: 'Password update is only available for email accounts',
       });
 
-    const isCurrentPasswordValid: boolean = await bcrypt.compare(
-      data.currentPassword,
-      credentials.passwordHash,
-    );
+    const isCurrentPasswordValid: boolean = await verifyPassword({
+      password: data.currentPassword,
+      passwordHash: credentials.passwordHash,
+    });
     if (!isCurrentPasswordValid)
       throw new UnauthorizedException({
         code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT,
