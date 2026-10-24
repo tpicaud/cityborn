@@ -22,7 +22,7 @@
     "db:stop": "docker compose -f docker-compose.resources.yml down",
     "db:up": "prisma migrate deploy",
     "db:migrate": "prisma migrate dev --name",
-    "db:reset": "prisma migrate reset",
+    "db:reset": "prisma migrate reset && prisma db seed",
     "postinstall": "prisma generate",
     "format": "biome check --write .",
     "check": "biome check .",

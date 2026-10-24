@@ -6,6 +6,7 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    seed: 'ts-node --swc prisma/seed/run-seed.ts',
   },
   datasource: {
     url: prismaEnvironmentConfig.directUrl,
