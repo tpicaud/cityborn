@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: 'Environment whose dashboards to deploy: dev, staging or production'
+        description: 'Environment whose dashboards to deploy: staging or production'
         required: true
         type: string
     secrets:

@@ -56,12 +56,11 @@ Source de vérité : [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/),
 - Le déploiement crée ou remplace le dashboard `cityborn-<environnement>-<fichier>` et supprime ceux de l'environnement dont le fichier a disparu.
 - `pnpm check:axiom-dashboards`, lancé en PR, vérifie que chaque graphique figure au layout et que chaque requête passe par `{{environment}}`.
 
-La CI déploie après le backend du même environnement :
-
-| Environnement | Workflow |
+| Environnement | Déploiement |
 |---|---|
-| `dev`, `staging` | `Deploy - Web - Staging`, à chaque merge sur `main` |
-| `production` | `Release - Web - Prod` |
+| `staging` | CI, `Deploy - Web - Staging`, après le backend, à chaque merge sur `main` |
+| `production` | CI, `Release - Web - Prod`, après le backend |
+| `dev` | à la main, depuis sa branche : `AXIOM_DASHBOARDS_TOKEN=<token> pnpm deploy:axiom-dashboards dev` |
 
 Une modification faite dans l'interface Axiom est écrasée au déploiement suivant. Pour itérer, dupliquer le dashboard dans Axiom, l'ajuster, puis reporter son JSON (`getDashboard` du MCP) dans le fichier, l'environnement remplacé par `{{environment}}`.
 
