@@ -17,6 +17,7 @@ export type PackFields = Partial<
 export type PackSaveState = {
   status: 'saved' | 'pending' | 'saving' | 'failed';
   errorMessage: string | null;
+  successfulSaveCount: number;
 };
 
 export type PackPersistence = {
@@ -69,7 +70,12 @@ export function getPackPersistence({
   let queuedWrites: number = 0;
   let isDeleted: boolean = false;
   let errorMessage: string | null = null;
-  let state: PackSaveState = { status: 'saved', errorMessage: null };
+  let successfulSaveCount: number = 0;
+  let state: PackSaveState = {
+    status: 'saved',
+    errorMessage: null,
+    successfulSaveCount,
+  };
   const listeners: Set<() => void> = new Set();
 
   const hasPendingFields: () => boolean = () =>
@@ -83,7 +89,7 @@ export function getPackPersistence({
         : hasPendingFields()
           ? 'pending'
           : 'saved';
-    state = { status, errorMessage };
+    state = { status, errorMessage, successfulSaveCount };
     retainedPacks.set(pack.id, persistence);
     if (status === 'saved') retainedPacks.delete(pack.id);
     listeners.forEach((listener) => {
@@ -130,6 +136,7 @@ export function getPackPersistence({
         ...changes,
       },
     });
+    successfulSaveCount += 1;
   };
 
   const drainFields: () => Promise<void> = async () => {

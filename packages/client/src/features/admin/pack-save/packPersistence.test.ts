@@ -88,6 +88,30 @@ function createFixture({
 }
 
 describe('getPackPersistence', () => {
+  it('counts successful writes without counting initial reads, empty flushes or failed writes', async (context: TestContext) => {
+    const networkError: TypeError = new TypeError('Network request failed');
+    let fails: boolean = true;
+    const { persistence }: PersistenceFixture = createFixture({
+      context,
+      updatePack: async ({ pack }) => {
+        if (fails) throw networkError;
+        return buildPack(pack);
+      },
+    });
+
+    assert.equal(persistence.getSnapshot().successfulSaveCount, 0);
+    await persistence.flush();
+    await assert.rejects(persistence.publish(true), networkError);
+
+    assert.equal(persistence.getSnapshot().successfulSaveCount, 0);
+
+    fails = false;
+    await persistence.publish(true);
+    await persistence.flush();
+
+    assert.equal(persistence.getSnapshot().successfulSaveCount, 1);
+  });
+
   it('saves text fields after a pause and coalesces successive keystrokes', async (context: TestContext) => {
     const { persistence, requests }: PersistenceFixture = createFixture({
       context,
@@ -112,6 +136,7 @@ describe('getPackPersistence', () => {
     assert.deepEqual(persistence.getSnapshot(), {
       status: 'saved',
       errorMessage: null,
+      successfulSaveCount: 1,
     });
   });
 
@@ -218,6 +243,7 @@ describe('getPackPersistence', () => {
     assert.deepEqual(persistence.getSnapshot(), {
       status: 'failed',
       errorMessage: "Quelque chose s'est mal passé.",
+      successfulSaveCount: 0,
     });
     await persistence.flush();
 

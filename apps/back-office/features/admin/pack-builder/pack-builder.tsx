@@ -35,6 +35,7 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
   const {
     pack,
     saveState,
+    hasRecentSave,
     updatePack,
     flushPackChanges,
     publishPack,
@@ -81,8 +82,8 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
             </div>
           </div>
           <div role="status" aria-live="polite" className="mb-2 text-sm">
-            {saveState.status === 'saved' && (
-              <span>Modifications enregistrées</span>
+            {saveState.status === 'saved' && hasRecentSave && (
+              <span className="text-green-600">Modifications enregistrées</span>
             )}
             {saveState.status === 'pending' && (
               <span>Modifications en attente…</span>

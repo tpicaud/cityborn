@@ -63,6 +63,7 @@ export type PackEditorOptions = {
 export type PackEditor = {
   pack: FullPack;
   saveState: PackSaveState;
+  hasRecentSave: boolean;
   updatePack: (fields: PackFields) => void;
   flushPackChanges: () => Promise<boolean>;
   publishPack: (isPublished: boolean) => Promise<void>;
@@ -148,6 +149,9 @@ export function usePackEditor({
     persistence.getSnapshot,
     persistence.getSnapshot,
   );
+  const [acknowledgedSaveCount, setAcknowledgedSaveCount] = useState<number>(
+    saveState.successfulSaveCount,
+  );
   const flushPackChanges: () => Promise<boolean> = useCallback(
     () =>
       persistence.flush().then(
@@ -160,6 +164,15 @@ export function usePackEditor({
   useEffect(() => {
     persistence.synchronize(editedPack);
   }, [persistence, editedPack]);
+
+  useEffect(() => {
+    if (saveState.successfulSaveCount === acknowledgedSaveCount) return;
+
+    const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
+      setAcknowledgedSaveCount(saveState.successfulSaveCount);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [saveState.successfulSaveCount, acknowledgedSaveCount]);
 
   useEffect(
     () => () => {
@@ -274,6 +287,7 @@ export function usePackEditor({
   return {
     pack,
     saveState,
+    hasRecentSave: saveState.successfulSaveCount !== acknowledgedSaveCount,
     flushPackChanges,
     updatePack: (fields: PackFields) => {
       setPack((currentPack: FullPack) => ({
