@@ -40,7 +40,9 @@ export function selectVersionsToCheck(
 
   const union: ManifestEntry[] = [...withinWindow, ...mostRecent].filter(
     (entry, index, entries) =>
-      entries.findIndex((candidate) => candidate.file === entry.file) === index,
+      entries.findIndex(
+        (candidate) => candidate.versionNumber === entry.versionNumber,
+      ) === index,
   );
 
   return union.sort((a, b) => b.versionNumber - a.versionNumber);

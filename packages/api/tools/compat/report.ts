@@ -35,11 +35,11 @@ function formatDeprecated(report: CompatReport): string[] {
   const floorEntry = report.skippedDeprecated[0];
   return [
     '',
-    `Skipped ${report.skippedDeprecated.length} deprecated version(s) (not enforced, floor set at ${floorEntry.file}):`,
+    `Skipped ${report.skippedDeprecated.length} deprecated version(s) (not enforced, floor set at v${floorEntry.versionNumber}):`,
     ...report.skippedDeprecated.map((entry) =>
       entry.deprecatedAt
-        ? `  - ${entry.file}: deprecated ${entry.deprecatedAt} — ${entry.deprecationReason}`
-        : `  - ${entry.file}: deprecated (cascade, versions ≤ ${floorEntry.file} are retired)`,
+        ? `  - v${entry.versionNumber}: deprecated ${entry.deprecatedAt} — ${entry.deprecationReason}`
+        : `  - v${entry.versionNumber}: deprecated (cascade, versions ≤ v${floorEntry.versionNumber} are retired)`,
     ),
   ];
 }
@@ -48,10 +48,10 @@ export function formatHumanSummary(report: CompatReport): string {
   const lines: string[] = report.checked.flatMap((result) =>
     result.breaking
       ? [
-          `  ❌ ${result.entry.file}: BROKEN`,
+          `  ❌ v${result.entry.versionNumber}: BROKEN`,
           ...result.changes.map(formatChange),
         ]
-      : [`  ✅ ${result.entry.file}: OK`],
+      : [`  ✅ v${result.entry.versionNumber}: OK`],
   );
 
   lines.push(...formatNonBreaking(report));
@@ -59,7 +59,7 @@ export function formatHumanSummary(report: CompatReport): string {
   lines.push('');
   lines.push(
     report.brokenAt
-      ? `❌ Breaking change detected against ${report.brokenAt.entry.file} (${report.checked.length} version(s) checked before stopping).`
+      ? `❌ Breaking change detected against v${report.brokenAt.entry.versionNumber} (${report.checked.length} version(s) checked before stopping).`
       : `✅ All checked versions are compatible (${report.checked.length} version(s) checked).`,
   );
 

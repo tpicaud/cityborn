@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, unlinkSync } from 'node:fs';
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, type TestContext } from 'node:test';
 import type { OpenAPIObject } from 'openapi3-ts';
-import { ManifestSchema } from '../../src/protocol/version-manifest.schema';
+import {
+  type Manifest,
+  ManifestSchema,
+} from '../../src/protocol/version-manifest.schema';
 import {
   type VersionDocumentsOptions,
   versionDocuments,
@@ -23,7 +32,7 @@ function workspace(t: TestContext): string {
   return directory;
 }
 
-function readManifest(directory: string) {
+function readManifest(directory: string): Manifest {
   return ManifestSchema.parse(
     JSON.parse(
       readFileSync(join(directory, 'versions-manifest.json'), 'utf-8'),
@@ -34,15 +43,46 @@ function readManifest(directory: string) {
 const documents: Documents = { http: document('HTTP'), ws: document('WS') };
 
 describe('versionDocuments', () => {
-  it('rejects a missing document for an existing version', (t) => {
+  it('creates both protocol snapshots and a common manifest entry', (t) => {
     const versionsDir: string = workspace(t);
-    versionDocuments({ mode: 'draft', versionsDir, documents });
-    unlinkSync(join(versionsDir, 'v1-ws.json'));
 
-    assert.throws(
-      () => versionDocuments({ mode: 'draft', versionsDir, documents }),
-      /ENOENT.*v1-ws\.json/,
-    );
+    const result: VersioningResult = versionDocuments({
+      mode: 'draft',
+      versionsDir,
+      documents,
+      now: new Date('2026-10-24T12:00:00.000Z'),
+    });
+
+    assert.deepEqual(result, { changed: true, versionNumber: 1 });
+    assert.deepEqual(readdirSync(versionsDir).sort(), [
+      'v1-api.json',
+      'v1-ws.json',
+      'versions-manifest.json',
+    ]);
+    assert.deepEqual(readManifest(versionsDir), {
+      versions: [
+        {
+          versionNumber: 1,
+          releasedAt: '2026-10-24T12:00:00.000Z',
+          draft: true,
+        },
+      ],
+    });
+  });
+
+  const protocols: (keyof Documents)[] = ['http', 'ws'];
+  const filenames: string[] = ['v1-api.json', 'v1-ws.json'];
+  filenames.forEach((filename) => {
+    it(`rejects a missing ${filename} for an existing version`, (t) => {
+      const versionsDir: string = workspace(t);
+      versionDocuments({ mode: 'draft', versionsDir, documents });
+      unlinkSync(join(versionsDir, filename));
+
+      assert.throws(
+        () => versionDocuments({ mode: 'draft', versionsDir, documents }),
+        { code: 'ENOENT', path: join(versionsDir, filename) },
+      );
+    });
   });
 
   it('skips unchanged documents even when their info version differs', (t) => {
@@ -77,7 +117,7 @@ describe('versionDocuments', () => {
       documents: nextDocuments,
     });
 
-    assert.deepEqual(result, { changed: true, filename: 'v1-api.json' });
+    assert.deepEqual(result, { changed: true, versionNumber: 1 });
     assert.equal(readManifest(versionsDir).versions.length, 1);
     assert.match(
       readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
@@ -95,7 +135,7 @@ describe('versionDocuments', () => {
       documents: { ...documents, ws: document('Release WS') },
     });
 
-    assert.equal(result.filename, 'v1-api.json');
+    assert.deepEqual(result, { changed: true, versionNumber: 1 });
     assert.equal(readManifest(versionsDir).versions[0].draft, undefined);
     assert.match(
       readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
@@ -123,7 +163,6 @@ describe('versionDocuments', () => {
     assert.equal(readManifest(versionsDir).versions.length, 1);
   });
 
-  const protocols: (keyof Documents)[] = ['http', 'ws'];
   protocols.forEach((protocol) => {
     it(`creates a shared version on a ${protocol}-only change after release`, (t) => {
       const versionsDir: string = workspace(t);
@@ -143,7 +182,7 @@ describe('versionDocuments', () => {
         documents: { ...documents, [protocol]: document('Changed') },
       });
 
-      assert.equal(result.filename, 'v2-api.json');
+      assert.deepEqual(result, { changed: true, versionNumber: 2 });
       assert.deepEqual(
         readManifest(versionsDir).versions.map((entry) => entry.versionNumber),
         [1, 2],

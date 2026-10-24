@@ -7,6 +7,7 @@ import {
   type ManifestEntry,
   ManifestSchema,
 } from '../../src/protocol/version-manifest.schema';
+import { versionDocumentFilenames } from './version-document-filenames';
 
 const VersionDocumentSchema = z
   .object({
@@ -16,7 +17,9 @@ const VersionDocumentSchema = z
 
 type VersionDocument = z.infer<typeof VersionDocumentSchema>;
 
-type VersioningResult = { changed: boolean; filename?: string };
+type VersioningResult =
+  | { changed: false }
+  | { changed: true; versionNumber: number };
 
 export type VersionDocumentsOptions = {
   mode: 'draft' | 'release';
@@ -55,11 +58,16 @@ export function versionDocuments({
   const versionNumber: number = latestEntry?.draft
     ? latestEntry.versionNumber
     : (latestEntry?.versionNumber ?? 0) + 1;
-  const previousHttp: VersionDocument | undefined = latestEntry
-    ? readDocument(join(versionsDir, latestEntry.file))
+  const previousFilenames:
+    | ReturnType<typeof versionDocumentFilenames>
+    | undefined = latestEntry
+    ? versionDocumentFilenames(latestEntry.versionNumber)
     : undefined;
-  const previousWs: VersionDocument | undefined = latestEntry
-    ? readDocument(join(versionsDir, `v${latestEntry.versionNumber}-ws.json`))
+  const previousHttp: VersionDocument | undefined = previousFilenames
+    ? readDocument(join(versionsDir, previousFilenames.http))
+    : undefined;
+  const previousWs: VersionDocument | undefined = previousFilenames
+    ? readDocument(join(versionsDir, previousFilenames.ws))
     : undefined;
   const changed: boolean =
     !previousHttp ||
@@ -71,9 +79,8 @@ export function versionDocuments({
     return { changed: false };
   }
 
-  const filename: string = latestEntry?.draft
-    ? latestEntry.file
-    : `v${versionNumber}-api.json`;
+  const filenames: ReturnType<typeof versionDocumentFilenames> =
+    versionDocumentFilenames(versionNumber);
   const writeDocument = ({
     file,
     document,
@@ -94,16 +101,16 @@ export function versionDocuments({
     );
   };
 
-  writeDocument({ file: filename, document: documents.http });
-  writeDocument({ file: `v${versionNumber}-ws.json`, document: documents.ws });
+  writeDocument({ file: filenames.http, document: documents.http });
+  writeDocument({ file: filenames.ws, document: documents.ws });
   const entry: ManifestEntry = latestEntry?.draft
     ? latestEntry
-    : { file: filename, versionNumber, releasedAt: now.toISOString() };
+    : { versionNumber, releasedAt: now.toISOString() };
   entry.releasedAt = now.toISOString();
   if (mode === 'draft') entry.draft = true;
   if (mode === 'release') delete entry.draft;
   if (!updatingDraft) manifest.versions.push(entry);
   writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
 
-  return { changed: true, filename };
+  return { changed: true, versionNumber };
 }

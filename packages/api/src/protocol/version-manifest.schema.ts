@@ -9,7 +9,6 @@ export type CompatPolicy = z.infer<typeof CompatPolicySchema>;
 
 export const ManifestEntrySchema = z
   .object({
-    file: z.string(),
     versionNumber: z.number(),
     releasedAt: z.string(),
     draft: z.boolean().optional(),

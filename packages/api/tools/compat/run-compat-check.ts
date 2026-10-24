@@ -14,6 +14,7 @@ import {
   CompatPolicySchema,
   ManifestSchema,
 } from '../../src/protocol/version-manifest.schema';
+import { versionDocumentFilenames } from '../versioning/version-document-filenames';
 import {
   assertOasdiffAvailable,
   type DiffResult,
@@ -63,17 +64,15 @@ function checkUntilBreaking({
   const [entry, ...remainingEntries] = entries;
   if (entry === undefined) return [];
 
+  const filenames: ReturnType<typeof versionDocumentFilenames> =
+    versionDocumentFilenames(entry.versionNumber);
   const http: DiffResult = diffBreaking({
-    baseFile: join(options.versionsDir, entry.file),
+    baseFile: join(options.versionsDir, filenames.http),
     revisionFile: options.currentSpecFile,
     errIgnoreFile: options.errIgnoreFile,
   });
-  const wsFile: string = join(
-    options.versionsDir,
-    `v${entry.versionNumber}-ws.json`,
-  );
   const ws: DiffResult = diffBreaking({
-    baseFile: wsFile,
+    baseFile: join(options.versionsDir, filenames.ws),
     revisionFile: options.currentWsSpecFile,
     errIgnoreFile: options.errIgnoreFile,
   });

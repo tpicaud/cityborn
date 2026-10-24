@@ -60,12 +60,10 @@ function fixture(t: TestContext): CompatFixture {
     JSON.stringify({
       versions: [
         {
-          file: 'v1-api.json',
           versionNumber: 1,
           releasedAt: '2026-10-01T00:00:00.000Z',
         },
         {
-          file: 'v2-api.json',
           versionNumber: 2,
           releasedAt: '2026-10-02T00:00:00.000Z',
           draft: true,
@@ -99,9 +97,25 @@ describe('runCompatCheck', () => {
       [2, 1],
     );
     assert.deepEqual(JSON.parse(toJsonReport(report)), {
-      checked: report.checked,
+      checked: [
+        {
+          entry: {
+            versionNumber: 2,
+            releasedAt: '2026-10-02T00:00:00.000Z',
+            draft: true,
+          },
+          breaking: false,
+          changes: [],
+        },
+        {
+          entry: { versionNumber: 1, releasedAt: '2026-10-01T00:00:00.000Z' },
+          breaking: false,
+          changes: [],
+        },
+      ],
       skippedDeprecated: [],
     });
+    assert.match(formatHumanSummary(report), /✅ v2: OK\n {2}✅ v1: OK/);
   });
 
   it('compares synthetic empty snapshots with the current WS contract', (t) => {
@@ -119,11 +133,20 @@ describe('runCompatCheck', () => {
     assert.equal(report.checked.length, 2);
   });
 
-  it('rejects a missing WS snapshot', (t) => {
-    const options: CompatFixture = fixture(t);
-    unlinkSync(join(options.versionsDir, 'v1-ws.json'));
+  const filenames: string[] = ['v1-api.json', 'v1-ws.json'];
+  filenames.forEach((filename) => {
+    it(`rejects a missing ${filename} snapshot`, (t) => {
+      const options: CompatFixture = fixture(t);
+      unlinkSync(join(options.versionsDir, filename));
 
-    assert.throws(() => runCompatCheck(options), /oasdiff failed.*v1-ws\.json/);
+      assert.throws(
+        () => runCompatCheck(options),
+        (error: unknown) =>
+          error instanceof Error &&
+          error.message.includes('oasdiff failed') &&
+          error.message.includes(filename),
+      );
+    });
   });
 
   it('rejects a WS break against an older supported version', (t) => {
@@ -304,6 +327,8 @@ describe('runCompatCheck', () => {
     assert.equal(report.brokenAt?.entry.versionNumber, 2);
     assert.match(summary, /\[HTTP\]/);
     assert.match(summary, /\[WS\]/);
+    assert.match(summary, /❌ v2: BROKEN/);
+    assert.match(summary, /Breaking change detected against v2/);
   });
 
   it('uses the common ignore file for WS changes', (t) => {
@@ -334,14 +359,12 @@ describe('runCompatCheck', () => {
       JSON.stringify({
         versions: [
           {
-            file: 'v1-api.json',
             versionNumber: 1,
             releasedAt: '2026-10-01T00:00:00.000Z',
             deprecatedAt: '2026-10-22',
             deprecationReason: 'Retired test version',
           },
           {
-            file: 'v2-api.json',
             versionNumber: 2,
             releasedAt: '2026-10-02T00:00:00.000Z',
           },

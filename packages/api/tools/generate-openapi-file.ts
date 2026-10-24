@@ -15,21 +15,23 @@ if (mode !== 'draft' && mode !== 'release') {
   throw new Error('Usage: generate-openapi-file.ts --mode=draft|release');
 }
 
-const { changed, filename }: ReturnType<typeof versionDocuments> =
-  versionDocuments({
-    mode,
-    versionsDir: join(toolsDir, '../openapi/versions'),
-    documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
-  });
+const result: ReturnType<typeof versionDocuments> = versionDocuments({
+  mode,
+  versionsDir: join(toolsDir, '../openapi/versions'),
+  documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
+});
 
 console.log(
-  changed
-    ? `Versioned HTTP and WS documents: ${filename} (${mode}).`
+  result.changed
+    ? `Versioned HTTP and WS documents: v${result.versionNumber} (${mode}).`
     : 'No API changes detected, skipping.',
 );
 if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
-  if (filename) {
-    appendFileSync(process.env.GITHUB_OUTPUT, `filename=${filename}\n`);
+  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${result.changed}\n`);
+  if (result.changed) {
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `version=v${result.versionNumber}\n`,
+    );
   }
 }
