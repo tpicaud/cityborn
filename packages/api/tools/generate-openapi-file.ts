@@ -1,7 +1,7 @@
 import { appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getOpenApiDocument } from '../openapi/generate-openapi';
+import { getOpenApiDocument } from '../openapi/http/generate-openapi';
 import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
 import { versionDocuments } from './versioning/version-documents';
 

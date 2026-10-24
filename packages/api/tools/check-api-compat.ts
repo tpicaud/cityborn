@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getOpenApiDocument } from '../openapi/generate-openapi';
+import { getOpenApiDocument } from '../openapi/http/generate-openapi';
 import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
 import { OasdiffNotFoundError } from './compat/oasdiff-runner';
 import { formatHumanSummary, toJsonReport } from './compat/report';
