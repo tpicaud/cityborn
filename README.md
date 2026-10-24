@@ -31,6 +31,21 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
    pnpm db:up
    ```
 
+   Pour repartir d'une base locale propre, `pnpm db:reset` vide la base,
+   réapplique les migrations puis lance la seed de développement
+   (`apps/backend/prisma/seed/`). Relancée seule avec
+   `pnpm backend exec prisma db seed`, la seed met à jour ses données sans
+   créer de doublon. Elle crée un thème avec deux packs publiés de deux
+   personnalités chacun, et deux comptes vérifiés :
+
+   | Identifiant | Mot de passe | Rôle |
+   |---|---|---|
+   | `admin` | `password123` | `admin` (back-office) |
+   | `player` | `password123` | `player` (frontend) |
+
+   La seed ne tourne jamais en staging ni en production : `db:up` et `start`
+   n'appliquent que les migrations.
+
 2. Lancer la stack web (frontend, back-office et backend) :
 
    ```bash
@@ -57,7 +72,8 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 ## Accès au back-office
 
-Le back-office se connecte avec un compte Cityborn de rôle `admin`. Un compte est
+Le back-office se connecte avec un compte Cityborn de rôle `admin`. En local, la
+seed fournit le compte `admin` décrit plus haut. Un compte est
 créé avec le rôle `player`. Ne promouvoir qu'un compte dont l'email est vérifié
 et dont la personne a confirmé être à l'origine de la création, puis exécuter sur
 la base concernée :
