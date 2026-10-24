@@ -1,0 +1,152 @@
+{
+  "name": "Cityborn {{environment}} — Activité de l'API",
+  "description": "Appels reçus par le backend (requêtes HTTP et messages WebSocket), hors routes inexistantes : préflights CORS et robots.",
+  "owner": "X-AXIOM-EVERYONE",
+  "refreshTime": 15,
+  "schemaVersion": 2,
+  "timeWindowStart": "qr-now-1h",
+  "timeWindowEnd": "qr-now",
+  "charts": [
+    {
+      "id": "calls-count",
+      "name": "Appels",
+      "type": "Statistic",
+      "showChart": true,
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize calls=count()"
+      }
+    },
+    {
+      "id": "client-error-rate",
+      "name": "Erreurs client (%)",
+      "type": "Statistic",
+      "customUnits": "%",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize clientErrorRate=100.0 * countif(outcome == \"client_error\") / count()"
+      }
+    },
+    {
+      "id": "server-error-rate",
+      "name": "Erreurs serveur (%)",
+      "type": "Statistic",
+      "customUnits": "%",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize serverErrorRate=100.0 * countif(outcome == \"server_error\") / count()"
+      }
+    },
+    {
+      "id": "p95-latency",
+      "name": "Latence p95 (ms)",
+      "type": "Statistic",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize p95=percentile(durationMs, 95)"
+      }
+    },
+    {
+      "id": "calls-by-action",
+      "name": "Appels par action",
+      "type": "TimeSeries",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize count() by bin_auto(_time), action"
+      }
+    },
+    {
+      "id": "calls-by-outcome",
+      "name": "Appels par résultat",
+      "type": "TimeSeries",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize count() by bin_auto(_time), outcome"
+      }
+    },
+    {
+      "id": "latency-percentiles",
+      "name": "Latence p50 / p95 / p99 (ms)",
+      "type": "TimeSeries",
+      "customUnits": "ms",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize percentiles_array(durationMs, 50, 95, 99) by bin_auto(_time)"
+      }
+    },
+    {
+      "id": "actions-table",
+      "name": "Détail par action",
+      "type": "Table",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where event in (\"http_request\", \"ws_message\") and not(route == \"<unmatched>\")\n| summarize calls=count(), clientErrors=countif(outcome == \"client_error\"), serverErrors=countif(outcome == \"server_error\"), p95Ms=percentile(durationMs, 95) by transport, action\n| top 20 by calls"
+      }
+    },
+    {
+      "id": "latest-events",
+      "name": "Derniers events (100 plus récents)",
+      "type": "Table",
+      "query": {
+        "apl": "['cityborn-backend-{{environment}}']\n| where isnotnull(event) and not(route == \"<unmatched>\")\n| project _time, event, action, outcome, statusCode, durationMs, errorCode, client, requestId\n| order by _time desc\n| take 100"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "i": "calls-count",
+      "x": 0,
+      "y": 0,
+      "w": 3,
+      "h": 3
+    },
+    {
+      "i": "client-error-rate",
+      "x": 3,
+      "y": 0,
+      "w": 3,
+      "h": 3
+    },
+    {
+      "i": "server-error-rate",
+      "x": 6,
+      "y": 0,
+      "w": 3,
+      "h": 3
+    },
+    {
+      "i": "p95-latency",
+      "x": 9,
+      "y": 0,
+      "w": 3,
+      "h": 3
+    },
+    {
+      "i": "calls-by-action",
+      "x": 0,
+      "y": 3,
+      "w": 6,
+      "h": 4
+    },
+    {
+      "i": "calls-by-outcome",
+      "x": 6,
+      "y": 3,
+      "w": 6,
+      "h": 4
+    },
+    {
+      "i": "latency-percentiles",
+      "x": 0,
+      "y": 7,
+      "w": 6,
+      "h": 4
+    },
+    {
+      "i": "actions-table",
+      "x": 6,
+      "y": 7,
+      "w": 6,
+      "h": 5
+    },
+    {
+      "i": "latest-events",
+      "x": 0,
+      "y": 12,
+      "w": 12,
+      "h": 6
+    }
+  ]
+}

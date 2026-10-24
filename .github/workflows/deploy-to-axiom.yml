@@ -1,0 +1,33 @@
+name: Deploy to Axiom
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment whose dashboards to deploy: dev, staging or production'
+        required: true
+        type: string
+    secrets:
+      AXIOM_DASHBOARDS_TOKEN:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy Axiom dashboards
+    runs-on: ubuntu-latest
+    concurrency:
+      group: axiom-dashboards-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Deploy dashboards
+        run: node scripts/axiom-dashboards.mts deploy "$ENVIRONMENT"
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          AXIOM_DASHBOARDS_TOKEN: ${{ secrets.AXIOM_DASHBOARDS_TOKEN }}

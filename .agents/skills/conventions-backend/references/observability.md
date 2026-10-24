@@ -41,3 +41,11 @@ Une opération produit **un seul** récapitulatif structuré : requête HTTP, me
 | Déconnexion WS | `handleDisconnect` de la gateway, event `<domaine>:disconnect` du channel | idem |
 
 Le handshake est transverse à toutes les gateways et ignore les channels : il n'importe rien d'un domaine métier. Une nouvelle gateway ne gère ni rate-limit, ni auth, ni visitorId de connexion, et lit `socket.data` (`AppSocketData`) tel quel. Pour instrumenter sa déconnexion, appeler `WsWideEventLifecycle.runDisconnection` avec l'event `<domaine>:disconnect` de son channel ; il ouvre avec `createWsWideEvent`, enrichit l'auth depuis `socket.data.authSession` et finalise dans un `finally`.
+
+## Dashboards Axiom
+
+Les dashboards lisent les champs des wide events ; leur fonctionnement est décrit dans [la doc d'observabilité](../../../../docs/observability/README.md#dashboards).
+
+- Un champ, ou une valeur bornée comme `event`, `outcome` ou `domain`, renommé, supprimé ou dont le sens change : reprendre dans la même PR chaque requête de `infra/axiom/dashboards/` qui le lit.
+- Un dashboard se crée ou se modifie dans son fichier de `infra/axiom/dashboards/` ; la CI le déploie avec le backend de chaque environnement.
+- Le skill `axiom-building-dashboards` sert à concevoir les graphiques et les requêtes ; son résultat va dans le fichier, à la place de ses étapes de déploiement.
