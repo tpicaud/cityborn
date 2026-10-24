@@ -120,6 +120,10 @@
       "cache": false,
       "passThroughEnv": ["GITHUB_OUTPUT"]
     },
+    "//#deploy:axiom-dashboards": {
+      "cache": false,
+      "passThroughEnv": ["AXIOM_DASHBOARDS_TOKEN", "GITHUB_SHA"]
+    },
     "//#db:restore": {
       "cache": false,
       "passThroughEnv": [

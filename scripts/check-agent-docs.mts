@@ -165,9 +165,10 @@ const markdownFiles: string[] = listMarkdownFiles(agentsRoot);
 
 markdownFiles.forEach((markdownPath: string): void => {
   const content: string = readText(markdownPath);
-  const linkMatches: RegExpMatchArray[] = Array.from(
-    content.matchAll(/\[[^\]]*\]\(([^)]+)\)/gu),
-  );
+  const externalSkillDocument: boolean = isExternalSkillDocument(markdownPath);
+  const linkMatches: RegExpMatchArray[] = externalSkillDocument
+    ? []
+    : Array.from(content.matchAll(/\[[^\]]*\]\(([^)]+)\)/gu));
 
   linkMatches.forEach((match: RegExpMatchArray): void => {
     const rawTarget: string | undefined = match[1];
@@ -193,8 +194,6 @@ markdownFiles.forEach((markdownPath: string): void => {
       );
     }
   });
-
-  const externalSkillDocument: boolean = isExternalSkillDocument(markdownPath);
 
   content
     .split(/\r?\n/u)
