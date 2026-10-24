@@ -8,6 +8,7 @@ import {
   type Pack,
   type PackId,
   type Theme,
+  type UpdatePack,
   UserFacingError,
   type WorldLocationId,
 } from '@cityborn/api';
@@ -17,12 +18,13 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   fullPackQueryOptions,
   packsQueryOptions,
+  removeDeletedPack,
 } from '../../domains/pack/packQueries';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
 import {
@@ -30,12 +32,7 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import { saveGuessObject } from './guessObjectSave';
-import {
-  getPackPersistence,
-  type PackFields,
-  type PackPersistence,
-  type PackSaveState,
-} from './pack-save/packPersistence';
+import { savePack } from './pack-save/savePack';
 import {
   type PackEditorState,
   synchronizePackDraft,
@@ -60,12 +57,15 @@ export type PackEditorOptions = {
   onPackDeleted: () => void;
 };
 
+type PackFields = Partial<
+  Pick<FullPack, 'name' | 'description' | 'parentId' | 'themeId'>
+>;
+
 export type PackEditor = {
   pack: FullPack;
-  saveState: PackSaveState;
-  hasRecentSave: boolean;
+  isSaving: boolean;
   updatePack: (fields: PackFields) => void;
-  flushPackChanges: () => Promise<boolean>;
+  savePack: () => Promise<void>;
   publishPack: (isPublished: boolean) => Promise<void>;
   deletePack: () => Promise<void>;
   removeGuessObject: (guessObject: GuessObject) => Promise<void>;
@@ -136,66 +136,41 @@ export function usePackEditor({
   const { reportError }: ErrorReporter = useErrorReporter();
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
-  const [persistence] = useState<PackPersistence>(() =>
-    getPackPersistence({ packApi, queryClient, pack: editedPack }),
-  );
-  const [pack, setPack] = useState<FullPack>(() => ({
-    ...editedPack,
-    ...persistence.getPendingFields(),
-  }));
+  const [pack, setPack] = useState<FullPack>(editedPack);
   const [loadedPack, setLoadedPack] = useState<FullPack>(editedPack);
-  const saveState: PackSaveState = useSyncExternalStore(
-    persistence.subscribe,
-    persistence.getSnapshot,
-    persistence.getSnapshot,
-  );
-  const [acknowledgedSaveCount, setAcknowledgedSaveCount] = useState<number>(
-    saveState.successfulSaveCount,
-  );
-  const flushPackChanges: () => Promise<boolean> = useCallback(
-    () =>
-      persistence.flush().then(
-        () => true,
-        () => false,
-      ),
-    [persistence],
-  );
-
-  useEffect(() => {
-    persistence.synchronize(editedPack);
-  }, [persistence, editedPack]);
-
-  useEffect(() => {
-    if (saveState.successfulSaveCount === acknowledgedSaveCount) return;
-
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
-      setAcknowledgedSaveCount(saveState.successfulSaveCount);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [saveState.successfulSaveCount, acknowledgedSaveCount]);
-
-  useEffect(
-    () => () => {
-      void persistence.flush().catch(reportError);
-    },
-    [persistence, reportError],
-  );
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   if (loadedPack !== editedPack) {
     setLoadedPack(editedPack);
-    setPack(
-      synchronizePackDraft({
-        pack,
-        loadedPack,
-        editedPack,
-        pendingFields: persistence.getPendingFields(),
-      }),
-    );
+    setPack(synchronizePackDraft({ pack, loadedPack, editedPack }));
   }
+
+  const sendPackUpdate = async (
+    changes: Partial<UpdatePack>,
+  ): Promise<void> => {
+    setIsSaving(true);
+    try {
+      await savePack({
+        packApi,
+        queryClient,
+        pack: {
+          id: pack.id,
+          name: pack.name,
+          description: pack.description,
+          parentId: pack.parentId,
+          themeId: pack.themeId,
+          isPublished: pack.isPublished,
+          ...changes,
+        },
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const savePackPublication = async (isPublished: boolean): Promise<void> => {
     try {
-      await persistence.publish(isPublished);
+      await sendPackUpdate({ isPublished });
       setPack((currentPack: FullPack) => ({
         ...currentPack,
         isPublished,
@@ -214,7 +189,9 @@ export function usePackEditor({
       );
       if (!guessObject) return null;
 
-      await persistence.connect(guessObjectId);
+      await sendPackUpdate({
+        connectIds: [guessObjectId],
+      });
       setPack((currentPack: FullPack) => ({
         ...currentPack,
         guessObjects: upsertGuessObject({
@@ -277,7 +254,9 @@ export function usePackEditor({
       ),
     }));
     try {
-      await persistence.disconnect(guessObject.id);
+      await sendPackUpdate({
+        disconnectIds: [guessObject.id],
+      });
       guessObjectDraftEditor.showGuessObjectDraft(undefined);
     } catch (error: unknown) {
       reportError(error, unexpectedErrorMessage);
@@ -286,23 +265,24 @@ export function usePackEditor({
 
   return {
     pack,
-    saveState,
-    hasRecentSave: saveState.successfulSaveCount !== acknowledgedSaveCount,
-    flushPackChanges,
-    updatePack: (fields: PackFields) => {
+    isSaving,
+    updatePack: (fields: PackFields) =>
       setPack((currentPack: FullPack) => ({
         ...currentPack,
         ...fields,
-      }));
-      persistence.updateFields(fields);
-    },
+      })),
+    savePack: () => savePackPublication(pack.isPublished),
     publishPack: savePackPublication,
     deletePack: async () => {
+      setIsSaving(true);
       try {
-        await persistence.delete();
+        await packApi.deletePack(pack.id);
+        await removeDeletedPack({ queryClient, packId: pack.id });
         onPackDeleted();
       } catch (error: unknown) {
         reportError(error, unexpectedErrorMessage);
+      } finally {
+        setIsSaving(false);
       }
     },
     removeGuessObject,

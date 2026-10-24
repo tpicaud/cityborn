@@ -8,18 +8,12 @@ export async function savePack({
   packApi,
   queryClient,
   pack,
-  signal,
 }: {
   packApi: PackApi;
   queryClient: QueryClient;
   pack: UpdatePack;
-  signal?: AbortSignal;
-}): Promise<Pack> {
+}): Promise<void> {
   const savedPack: Pack = await packApi.updatePack({ packId: pack.id, pack });
-  signal?.throwIfAborted();
-  await updateSavedPack({ queryClient, pack: savedPack, signal });
-  signal?.throwIfAborted();
+  await updateSavedPack({ queryClient, pack: savedPack });
   await invalidateThemes(queryClient);
-  signal?.throwIfAborted();
-  return savedPack;
 }
