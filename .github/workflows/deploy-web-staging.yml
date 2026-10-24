@@ -123,13 +123,10 @@ jobs:
     needs:
       - build-and-deploy-web-staging
     if: ${{ !failure() && !cancelled() }}
-    strategy:
-      matrix:
-        environment: [dev, staging]
     secrets: inherit
     uses: ./.github/workflows/deploy-to-axiom.yml
     with:
-      environment: ${{ matrix.environment }}
+      environment: staging
 
   notify-discord:
     name: Notify Discord (Staging deploy)
