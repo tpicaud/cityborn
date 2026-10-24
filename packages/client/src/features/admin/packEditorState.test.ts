@@ -4,6 +4,7 @@ import {
   type AdminTheme,
   buildAdminTheme,
   buildFullPack,
+  buildGuessObject,
   buildPack,
   type FullPack,
   type Pack,
@@ -22,7 +23,11 @@ import {
 } from '../../domains/pack/packQueries';
 import type { ThemeApi } from '../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
-import { type PackEditorState, toPackEditorState } from './packEditorState';
+import {
+  type PackEditorState,
+  synchronizePackDraft,
+  toPackEditorState,
+} from './packEditorState';
 
 type PackReads = Pick<PackApi, 'getFullPack' | 'getPacks'>;
 
@@ -259,5 +264,66 @@ describe('toPackEditorState', () => {
     await fullPackRetry;
 
     assert.deepEqual(packEditorState, { status: 'loading' });
+  });
+});
+
+describe('synchronizePackDraft', () => {
+  it('replaces the old cached theme when the editor receives refreshed data', () => {
+    const refreshedPack: FullPack = buildFullPack({
+      ...editedPack,
+      themeId: '00000000-0000-4000-8000-000000000099',
+      guessObjects: [buildGuessObject()],
+    });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: editedPack,
+      loadedPack: editedPack,
+      editedPack: refreshedPack,
+    });
+
+    assert.deepEqual(pack, refreshedPack);
+  });
+
+  it('keeps unsaved fields when another field is refreshed', () => {
+    const refreshedPack: FullPack = buildFullPack({
+      ...editedPack,
+      themeId: '00000000-0000-4000-8000-000000000099',
+    });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: { ...editedPack, name: 'Unsaved name' },
+      loadedPack: editedPack,
+      editedPack: refreshedPack,
+    });
+
+    assert.deepEqual(pack, { ...refreshedPack, name: 'Unsaved name' });
+  });
+
+  it('keeps a theme selected while a refresh is in flight', () => {
+    const draft: FullPack = buildFullPack({
+      ...editedPack,
+      themeId: '00000000-0000-4000-8000-000000000099',
+      guessObjects: [buildGuessObject()],
+    });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: draft,
+      loadedPack: editedPack,
+      editedPack: { ...editedPack, description: 'Updated description' },
+    });
+
+    assert.deepEqual(pack, { ...draft, description: 'Updated description' });
+  });
+
+  it('discards the draft when opening a different pack', () => {
+    const nextPack: FullPack = buildFullPack({ id: 'next-pack' });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: { ...editedPack, name: 'Unsaved name' },
+      loadedPack: editedPack,
+      editedPack: nextPack,
+    });
+
+    assert.deepEqual(pack, nextPack);
   });
 });

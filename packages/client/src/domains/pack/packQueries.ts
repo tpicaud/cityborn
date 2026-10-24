@@ -1,4 +1,4 @@
-import type { Pack, PackId } from '@cityborn/api';
+import type { FullPack, Pack, PackId } from '@cityborn/api';
 import {
   type QueryClient,
   type QueryKey,
@@ -73,6 +73,26 @@ export function markPacksStale(queryClient: QueryClient): Promise<void> {
     queryKey: packsQueryKeyRoot,
     refetchType: 'none',
   });
+}
+
+export async function updateSavedPack({
+  queryClient,
+  pack,
+}: {
+  queryClient: QueryClient;
+  pack: Pack;
+}): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: packsQueryKeyRoot });
+  queryClient.setQueryData<Pack[]>(packListQueryKey, (packs) =>
+    packs?.map((cachedPack: Pack) =>
+      cachedPack.id === pack.id ? pack : cachedPack,
+    ),
+  );
+  queryClient.setQueryData<FullPack | null>(
+    fullPackQueryKey(pack.id),
+    (cachedPack) => (cachedPack ? { ...cachedPack, ...pack } : cachedPack),
+  );
+  await markPacksStale(queryClient);
 }
 
 export function removeDeletedPack({

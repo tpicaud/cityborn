@@ -23,7 +23,6 @@ import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   fullPackQueryOptions,
-  markPacksStale,
   packsQueryOptions,
   removeDeletedPack,
 } from '../../domains/pack/packQueries';
@@ -33,7 +32,12 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import { saveGuessObject } from './guessObjectSave';
-import { type PackEditorState, toPackEditorState } from './packEditorState';
+import { savePack } from './pack-save/savePack';
+import {
+  type PackEditorState,
+  synchronizePackDraft,
+  toPackEditorState,
+} from './packEditorState';
 import {
   type GuessObjectDraftEditor,
   useGuessObjectDraftEditor,
@@ -133,14 +137,16 @@ export function usePackEditor({
   const guessObjectDraftEditor: GuessObjectDraftEditor =
     useGuessObjectDraftEditor();
   const [pack, setPack] = useState<FullPack>(editedPack);
+  const [loadedPack, setLoadedPack] = useState<FullPack>(editedPack);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  if (loadedPack !== editedPack) {
+    setLoadedPack(editedPack);
+    setPack(synchronizePackDraft({ pack, loadedPack, editedPack }));
+  }
+
   const sendPackUpdate = async (packUpdate: UpdatePack): Promise<void> => {
-    await packApi.updatePack({
-      packId: packUpdate.id,
-      pack: packUpdate,
-    });
-    await markPacksStale(queryClient);
+    await savePack({ packApi, queryClient, pack: packUpdate });
   };
 
   const savePackPublication = async (isPublished: boolean): Promise<void> => {
