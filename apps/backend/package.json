@@ -50,7 +50,7 @@
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/nest": "^3.52.1",
     "bcrypt": "^6.0.0",
-    "body-parser": "^2.3.0",
+    "body-parser": "^2.4.0",
     "compression": "^1.8.2",
     "cookie": "^2.0.0",
     "dotenv": "^17.4.2",
