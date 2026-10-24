@@ -21,7 +21,7 @@
     "@ts-rest/open-api": "^3.52.1",
     "openapi3-ts": "^2.0.2",
     "typescript": "^6.0.3",
-    "zod": "^3.25.76"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
