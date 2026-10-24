@@ -1,11 +1,5 @@
 {
   "permissions": {
-    "allow": ["Bash(git commit *)", "Bash(git push *)", "Bash(gh pr create *)"],
-    "deny": [
-      "mcp__axiom__createDashboard",
-      "mcp__axiom__updateDashboard",
-      "mcp__axiom__updateDashboardChart",
-      "mcp__axiom__deleteDashboard"
-    ]
+    "allow": ["Bash(git commit *)", "Bash(git push *)", "Bash(gh pr create *)"]
   }
 }

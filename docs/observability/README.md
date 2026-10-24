@@ -60,13 +60,13 @@ Source de vérité : [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/),
 |---|---|
 | `staging` | CI, `Deploy - Web - Staging`, après le backend, à chaque merge sur `main` |
 | `production` | CI, `Release - Web - Prod`, après le backend |
-| `dev` | à la main, depuis sa branche : `AXIOM_DASHBOARDS_TOKEN=<token> pnpm deploy:axiom-dashboards dev` |
+| `dev` | à la main, depuis sa branche : `AXIOM_DASHBOARDS_TOKEN=<token> pnpm deploy:axiom-dashboards dev`, ou par le MCP Axiom sous l'uid `cityborn-dev-<fichier>` |
 
-Une modification faite dans l'interface Axiom est écrasée au déploiement suivant, et un dashboard créé hors du script n'est jamais mis à jour ni supprimé. Pour itérer, modifier le fichier puis le déployer en `dev`.
+Une modification faite dans l'interface Axiom est écrasée au déploiement suivant, et un dashboard dont l'uid n'est pas `cityborn-<environnement>-<fichier>` n'est jamais mis à jour ni supprimé. Pour itérer, modifier le fichier puis le déployer en `dev`.
 
 ## MCP Axiom
 
-[`.mcp.json`](../../.mcp.json) déclare le serveur MCP Axiom du projet ; la première utilisation ouvre une authentification OAuth dans le navigateur (`/mcp` dans Claude Code). Il sert à explorer les datasets, tester une requête APL et lire un dashboard ; ses outils d'écriture de dashboards sont refusés dans [`.claude/settings.json`](../../.claude/settings.json).
+[`.mcp.json`](../../.mcp.json) déclare le serveur MCP Axiom du projet ; la première utilisation ouvre une authentification OAuth dans le navigateur (`/mcp` dans Claude Code). Il sert à explorer les datasets, tester une requête APL, lire un dashboard et déployer les dashboards `dev` ; staging et production ne se déploient que par la CI.
 
 ## Requêtes et alertes
 
