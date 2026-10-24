@@ -12,8 +12,9 @@ export async function savePack({
   packApi: PackApi;
   queryClient: QueryClient;
   pack: UpdatePack;
-}): Promise<void> {
+}): Promise<Pack> {
   const savedPack: Pack = await packApi.updatePack({ packId: pack.id, pack });
   await updateSavedPack({ queryClient, pack: savedPack });
   await invalidateThemes(queryClient);
+  return savedPack;
 }

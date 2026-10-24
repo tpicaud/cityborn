@@ -16,13 +16,13 @@ import {
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import Loader from '@/components/ui/Loader';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
 import { ThemeBadge } from '../theme-badge';
 import { DeletePackPopup } from './delete-pack-popup';
 import { GuessObjectsList } from './guess-objects-list';
 import { ImportCSVPopup } from './import-csv-popup';
 import { PublishPackPopup } from './publish-pack-popup';
+import { usePackNavigation } from './usePackNavigation';
 
 type PackBuilderProps = {
   editedPack: FullPack;
@@ -34,9 +34,9 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
   const router = useRouter();
   const {
     pack,
-    isSaving,
+    saveState,
     updatePack,
-    savePack,
+    flushPackChanges,
     publishPack,
     deletePack,
     removeGuessObject,
@@ -47,6 +47,7 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
     editedPack,
     onPackDeleted: () => router.push('/dashboard'),
   });
+  usePackNavigation({ saveState, flushPackChanges });
   const {
     guessObjectDraft,
     startGuessObjectCreation,
@@ -72,15 +73,29 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
             <h2 className="text-xl font-bold">Editeur de pack</h2>
             <ThemeBadge themes={themes} themeId={pack.themeId} />
             <div className="flex flex-row items-center justify-center gap-2">
-              <Button size="sm" variant="outline" onClick={savePack}>
-                {isSaving ? <Loader /> : <p>Enregistrer</p>}
-              </Button>
               <PublishPackPopup
                 isPublished={pack.isPublished}
                 handlePublishPack={publishPack}
               />
               <DeletePackPopup handleDeletePack={deletePack} />
             </div>
+          </div>
+          <div role="status" aria-live="polite" className="mb-2 text-sm">
+            {saveState.status === 'saved' && (
+              <span>Modifications enregistrées</span>
+            )}
+            {saveState.status === 'pending' && (
+              <span>Modifications en attente…</span>
+            )}
+            {saveState.status === 'saving' && <span>Enregistrement…</span>}
+            {saveState.status === 'failed' && (
+              <div className="flex items-center gap-2 text-red-400">
+                <span>{saveState.errorMessage}</span>
+                <Button size="sm" variant="outline" onClick={flushPackChanges}>
+                  Réessayer
+                </Button>
+              </div>
+            )}
           </div>
           <span className="h-[2px] w-full bg-foreground"></span>
         </div>
@@ -96,6 +111,7 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
                   placeholder="e.g. Rolland Garros 2024"
                   value={pack.name}
                   onChange={(e) => updatePack({ name: e.target.value })}
+                  onBlur={flushPackChanges}
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
@@ -108,6 +124,7 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
                   placeholder="e.g. Rolland Garros 2024"
                   value={pack.description}
                   onChange={(e) => updatePack({ description: e.target.value })}
+                  onBlur={flushPackChanges}
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
