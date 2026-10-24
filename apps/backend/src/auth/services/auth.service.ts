@@ -42,6 +42,7 @@ import {
   type GoogleIdentity,
   IdentityTokenService,
 } from '../identity-providers/identity-token.service';
+import { hashPassword } from '../password-hash';
 import { type AuthTokenPair, AuthTokenService } from './auth-token.service';
 
 const verificationEmailCooldown = 3 * 60 * 1000;
@@ -69,7 +70,7 @@ export class AuthService {
 
     await this.userService.validateIdentifiers(username, email);
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await hashPassword(password);
 
     const user = await this.userService.createUser({
       email,
@@ -314,7 +315,7 @@ export class AuthService {
         message: 'Current password is incorrect',
       });
 
-    const passwordHash: string = await bcrypt.hash(data.newPassword, 10);
+    const passwordHash: string = await hashPassword(data.newPassword);
     const authVersion: AuthVersion = await this.userService.updatePassword(
       user.id,
       passwordHash,
