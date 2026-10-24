@@ -13,7 +13,7 @@
     "generate:openapi:release": "tsx tools/generate-openapi-file.ts --mode=release",
     "check:compat": "tsx tools/check-api-compat.ts",
     "check:deprecations": "tsx tools/check-deprecations.ts",
-    "test": "tsx --test 'tools/compat/**/*.test.ts' 'src/**/*.test.ts'"
+    "test": "tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.14.2",

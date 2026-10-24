@@ -120,7 +120,9 @@ export function resolveDeprecationStatus(
   if (!origin) return { kind: 'not-shipped' };
 
   const active = selectVersionsToCheck(manifest.versions, policy, now);
-  const stillRequired = active.some((entry) => entry.file === origin.file);
+  const stillRequired: boolean = active.some(
+    (entry) => entry.versionNumber === origin.versionNumber,
+  );
   if (!stillRequired) return { kind: 'eligible', originVersion: origin };
 
   const dayWindowExpiresAt = new Date(

@@ -101,7 +101,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add packages/api/openapi/
-          git commit -m "chore(api): version openapi draft ${{ steps.generate.outputs.filename }} [skip ci]"
+          git commit -m "chore(api): version openapi draft ${{ steps.generate.outputs.version }} [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
 

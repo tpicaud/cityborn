@@ -1,32 +1,26 @@
 {
   "versions": [
     {
-      "file": "api-v1.json",
       "versionNumber": 1,
       "releasedAt": "2026-07-28T18:13:17.000Z"
     },
     {
-      "file": "api-v2.json",
       "versionNumber": 2,
       "releasedAt": "2026-08-14T10:05:21.535Z"
     },
     {
-      "file": "api-v3.json",
       "versionNumber": 3,
       "releasedAt": "2026-08-30T16:34:53.466Z"
     },
     {
-      "file": "api-v4.json",
       "versionNumber": 4,
       "releasedAt": "2026-09-25T07:28:34.445Z"
     },
     {
-      "file": "api-v5.json",
       "versionNumber": 5,
       "releasedAt": "2026-10-23T09:00:16.024Z"
     },
     {
-      "file": "api-v6.json",
       "versionNumber": 6,
       "releasedAt": "2026-10-24T10:06:07.653Z",
       "draft": true

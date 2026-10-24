@@ -1,172 +1,37 @@
-import {
-  appendFileSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getOpenApiDocument } from '../openapi/generate-openapi';
-import type {
-  Manifest,
-  ManifestEntry,
-} from '../src/protocol/version-manifest.schema';
+import { getOpenApiDocument } from '../openapi/http/generate-openapi';
+import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
+import { versionDocuments } from './versioning/version-documents';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const outDir = join(__dirname, '../openapi/versions');
-const manifestFile = join(outDir, 'versions-manifest.json');
-
-mkdirSync(outDir, { recursive: true });
-
-const modeArg = process.argv.find((arg) => arg.startsWith('--mode='));
-const mode = modeArg?.slice('--mode='.length);
+const toolsDir: string = dirname(fileURLToPath(import.meta.url));
+const modeArg: string | undefined = process.argv.find((arg) =>
+  arg.startsWith('--mode='),
+);
+const mode: string | undefined = modeArg?.slice('--mode='.length);
 
 if (mode !== 'draft' && mode !== 'release') {
-  throw new Error(
-    'Usage: generate-openapi-file.ts --mode=draft|release\n' +
-      '  draft   upserts the pending draft version on every push to main (staging)\n' +
-      '  release finalizes the pending draft version into a permanent version (prod)',
-  );
+  throw new Error('Usage: generate-openapi-file.ts --mode=draft|release');
 }
 
-function withNormalizedVersion(document: Record<string, unknown>) {
-  const info = document.info as Record<string, unknown>;
-  return { ...document, info: { ...info, version: 'normalized' } };
-}
+const result: ReturnType<typeof versionDocuments> = versionDocuments({
+  mode,
+  versionsDir: join(toolsDir, '../openapi/versions'),
+  documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
+});
 
-function hasDocumentChanged(
-  previousDocument: Record<string, unknown> | undefined,
-  nextDocument: Record<string, unknown>,
-): boolean {
-  return (
-    !previousDocument ||
-    JSON.stringify(withNormalizedVersion(previousDocument)) !==
-      JSON.stringify(withNormalizedVersion(nextDocument))
-  );
-}
-
-function readManifest(): Manifest {
-  try {
-    return JSON.parse(readFileSync(manifestFile, 'utf-8')) as Manifest;
-  } catch {
-    return { versions: [] };
+console.log(
+  result.changed
+    ? `Versioned HTTP and WS documents: v${result.versionNumber} (${mode}).`
+    : 'No API changes detected, skipping.',
+);
+if (process.env.GITHUB_OUTPUT) {
+  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${result.changed}\n`);
+  if (result.changed) {
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `version=v${result.versionNumber}\n`,
+    );
   }
 }
-
-function readVersionDocument(filename: string): Record<string, unknown> {
-  return JSON.parse(readFileSync(join(outDir, filename), 'utf-8'));
-}
-
-function writeVersionDocument(filename: string, document: unknown) {
-  writeFileSync(join(outDir, filename), JSON.stringify(document, null, 2));
-}
-
-function writeManifest(manifest: Manifest) {
-  writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
-}
-
-function findLatestEntry(manifest: Manifest): ManifestEntry | undefined {
-  return [...manifest.versions].sort(
-    (a, b) => b.versionNumber - a.versionNumber,
-  )[0];
-}
-
-function writeOutputs(changed: boolean, filename?: string) {
-  if (!process.env.GITHUB_OUTPUT) return;
-  appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
-  if (filename) {
-    appendFileSync(process.env.GITHUB_OUTPUT, `filename=${filename}\n`);
-  }
-}
-
-function skip(): never {
-  console.log('No API changes detected, skipping.');
-  writeOutputs(false);
-  process.exit(0);
-}
-
-function insertNewVersion(
-  manifest: Manifest,
-  document: Record<string, unknown>,
-  versionNumber: number,
-  draft: boolean,
-): string {
-  const filename = `api-v${versionNumber}.json`;
-  writeVersionDocument(filename, document);
-  manifest.versions.push({
-    file: filename,
-    versionNumber,
-    releasedAt: new Date().toISOString(),
-    ...(draft ? { draft: true } : {}),
-  });
-  writeManifest(manifest);
-  return filename;
-}
-
-const manifest = readManifest();
-const latestEntry = findLatestEntry(manifest);
-const isDraftAtTop = latestEntry?.draft === true;
-
-const document = getOpenApiDocument();
-const targetVersion =
-  isDraftAtTop && latestEntry
-    ? latestEntry.versionNumber
-    : (latestEntry?.versionNumber ?? 0) + 1;
-document.info.version = `v${targetVersion}`;
-
-function createVersion(draft: boolean): void {
-  const previousDocument: Record<string, unknown> | undefined = latestEntry
-    ? readVersionDocument(latestEntry.file)
-    : undefined;
-  if (!hasDocumentChanged(previousDocument, document)) skip();
-
-  const filename: string = insertNewVersion(
-    manifest,
-    document,
-    targetVersion,
-    draft,
-  );
-  console.log(`${draft ? 'Created draft' : 'Created'} ${filename}`);
-  writeOutputs(true, filename);
-}
-
-function updateDraft(draftEntry: ManifestEntry): void {
-  const previousDocument: Record<string, unknown> = readVersionDocument(
-    draftEntry.file,
-  );
-  if (!hasDocumentChanged(previousDocument, document)) skip();
-
-  writeVersionDocument(draftEntry.file, document);
-  draftEntry.releasedAt = new Date().toISOString();
-  writeManifest(manifest);
-  console.log(`Updated draft ${draftEntry.file}`);
-  writeOutputs(true, draftEntry.file);
-}
-
-function releaseDraft(draftEntry: ManifestEntry): void {
-  const previousDocument: Record<string, unknown> = readVersionDocument(
-    draftEntry.file,
-  );
-  if (hasDocumentChanged(previousDocument, document)) {
-    writeVersionDocument(draftEntry.file, document);
-  }
-  draftEntry.releasedAt = new Date().toISOString();
-  draftEntry.draft = undefined;
-  writeManifest(manifest);
-  console.log(`Released ${draftEntry.file}`);
-  writeOutputs(true, draftEntry.file);
-}
-
-function publishVersion(draft: boolean): void {
-  if (!isDraftAtTop || !latestEntry) {
-    createVersion(draft);
-    return;
-  }
-  if (draft) {
-    updateDraft(latestEntry);
-    return;
-  }
-  releaseDraft(latestEntry);
-}
-
-publishVersion(mode === 'draft');

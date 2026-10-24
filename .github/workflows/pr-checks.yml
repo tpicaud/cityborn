@@ -112,7 +112,7 @@ jobs:
       - name: Install oasdiff
         run: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | version=1.26.1 sh
 
-      - name: Check API compatibility
+      - name: Check HTTP and WebSocket compatibility
         run: pnpm check:api-compat
 
   mobile-prebuild:
@@ -239,6 +239,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Install oasdiff
+        run: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | version=1.26.1 sh
 
       - name: Run unit tests
         run: pnpm test
