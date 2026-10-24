@@ -68,7 +68,7 @@ importers:
         version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5)
       '@hookform/resolvers':
         specifier: ^5.9.1
-        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)
+        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)
       '@mui/material':
         specifier: ^9.0.0
         version: 9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -115,8 +115,8 @@ importers:
         specifier: ^3.5.0
         version: 3.6.0
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.2.4
@@ -198,10 +198,10 @@ importers:
         version: 8.3.0(socket.io-adapter@2.5.8)
       '@ts-rest/core':
         specifier: ^3.52.1
-        version: 3.52.1(@types/node@26.1.1)(zod@4.6.6)
+        version: 3.52.1(@types/node@26.1.1)(zod@3.25.76)
       '@ts-rest/nest':
         specifier: ^3.52.1
-        version: 3.52.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@4.6.6))(rxjs@7.8.2)(zod@4.6.6)
+        version: 3.52.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76))(rxjs@7.8.2)(zod@3.25.76)
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -275,8 +275,8 @@ importers:
         specifier: ^14.0.1
         version: 14.0.1
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@golevelup/ts-jest':
         specifier: ^3.0.0
@@ -376,7 +376,7 @@ importers:
         version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5)
       '@hookform/resolvers':
         specifier: ^5.9.1
-        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)
+        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)
       '@mui/icons-material':
         specifier: ^9.0.0
         version: 9.2.0(@mui/material@9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@types/react@19.2.17)(react@19.2.5)
@@ -456,8 +456,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/geojson':
         specifier: ^7946.0.16
@@ -500,7 +500,7 @@ importers:
         version: 15.1.1(expo-font@57.0.1)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       '@hookform/resolvers':
         specifier: ^5.9.1
-        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)
+        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)
       '@react-native-async-storage/async-storage':
         specifier: ^2.2.0
         version: 2.2.0(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))
@@ -649,8 +649,8 @@ importers:
         specifier: ^3.5.0
         version: 3.6.0
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.2.4
@@ -678,13 +678,13 @@ importers:
     dependencies:
       '@anatine/zod-openapi':
         specifier: ^1.14.2
-        version: 1.14.2(openapi3-ts@2.0.2)(zod@4.6.6)
+        version: 1.14.2(openapi3-ts@2.0.2)(zod@3.25.76)
       '@ts-rest/core':
         specifier: ^3.52.1
-        version: 3.52.1(@types/node@26.1.2)(zod@4.6.6)
+        version: 3.52.1(@types/node@26.1.2)(zod@3.25.76)
       '@ts-rest/open-api':
         specifier: ^3.52.1
-        version: 3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@4.6.6))(zod@4.6.6)
+        version: 3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76))(zod@3.25.76)
       openapi3-ts:
         specifier: ^2.0.2
         version: 2.0.2
@@ -692,8 +692,8 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^26.1.2
@@ -712,7 +712,7 @@ importers:
         version: link:../core
       '@hookform/resolvers':
         specifier: ^5.9.1
-        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)
+        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: ^5.104.1
         version: 5.104.1(react@19.2.3)
@@ -735,8 +735,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.1
       zod:
-        specifier: ^4.6.6
-        version: 4.6.6
+        specifier: ^3.25.76
+        version: 3.25.76
 
   packages/core:
     dependencies:
@@ -10093,20 +10093,17 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.6.6:
-    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
-
 snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@4.6.6)':
+  '@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@3.25.76)':
     dependencies:
       openapi3-ts: 2.0.2
       ts-deepmerge: 6.2.1
-      zod: 4.6.6
+      zod: 3.25.76
 
   '@angular-devkit/core@19.2.24(chokidar@4.0.3)':
     dependencies:
@@ -11499,7 +11496,7 @@ snapshots:
     dependencies:
       '@hapi/hoek': 9.3.0
 
-  '@hookform/resolvers@5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)':
+  '@hookform/resolvers@5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.3))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.86.0(react@19.2.3)
@@ -11513,9 +11510,9 @@ snapshots:
       effect: 3.20.0
       joi: 17.13.4
       valibot: 1.2.0(typescript@6.0.3)
-      zod: 4.6.6
+      zod: 3.25.76
 
-  '@hookform/resolvers@5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@4.6.6)':
+  '@hookform/resolvers@5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(effect@3.20.0)(joi@17.13.4)(react-hook-form@7.86.0(react@19.2.5))(valibot@1.2.0(typescript@6.0.3))(zod@3.25.76)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.86.0(react@19.2.5)
@@ -11529,7 +11526,7 @@ snapshots:
       effect: 3.20.0
       joi: 17.13.4
       valibot: 1.2.0(typescript@6.0.3)
-      zod: 4.6.6
+      zod: 3.25.76
 
   '@img/colour@1.1.0':
     optional: true
@@ -13953,31 +13950,31 @@ snapshots:
       tree-sitter: 0.22.4
     optional: true
 
-  '@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@4.6.6)':
+  '@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76)':
     optionalDependencies:
       '@types/node': 26.1.1
-      zod: 4.6.6
+      zod: 3.25.76
 
-  '@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@4.6.6)':
+  '@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76)':
     optionalDependencies:
       '@types/node': 26.1.2
-      zod: 4.6.6
+      zod: 3.25.76
 
-  '@ts-rest/nest@3.52.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@4.6.6))(rxjs@7.8.2)(zod@4.6.6)':
+  '@ts-rest/nest@3.52.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@ts-rest/core@3.52.1(@types/node@26.1.1)(zod@3.25.76))(rxjs@7.8.2)(zod@3.25.76)':
     dependencies:
       '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(@nestjs/websockets@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@ts-rest/core': 3.52.1(@types/node@26.1.1)(zod@4.6.6)
+      '@ts-rest/core': 3.52.1(@types/node@26.1.1)(zod@3.25.76)
       rxjs: 7.8.2
     optionalDependencies:
-      zod: 4.6.6
+      zod: 3.25.76
 
-  '@ts-rest/open-api@3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@4.6.6))(zod@4.6.6)':
+  '@ts-rest/open-api@3.52.1(@ts-rest/core@3.52.1(@types/node@26.1.2)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
-      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@4.6.6)
-      '@ts-rest/core': 3.52.1(@types/node@26.1.2)(zod@4.6.6)
+      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.25.76)
+      '@ts-rest/core': 3.52.1(@types/node@26.1.2)(zod@3.25.76)
       openapi3-ts: 2.0.2
-      zod: 4.6.6
+      zod: 3.25.76
 
   '@tsconfig/node10@1.0.12': {}
 
@@ -21574,5 +21571,3 @@ snapshots:
       graphmatch: 1.1.1
 
   zod@3.25.76: {}
-
-  zod@4.6.6: {}
