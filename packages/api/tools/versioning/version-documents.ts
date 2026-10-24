@@ -25,10 +25,8 @@ export type VersionDocumentsOptions = {
   now?: Date;
 };
 
-function readDocument(file: string): VersionDocument | undefined {
-  return existsSync(file)
-    ? VersionDocumentSchema.parse(JSON.parse(readFileSync(file, 'utf-8')))
-    : undefined;
+function readDocument(file: string): VersionDocument {
+  return VersionDocumentSchema.parse(JSON.parse(readFileSync(file, 'utf-8')));
 }
 
 function normalizedDocument(document: VersionDocument | OpenAPIObject): string {
@@ -61,7 +59,7 @@ export function versionDocuments({
     ? readDocument(join(versionsDir, latestEntry.file))
     : undefined;
   const previousWs: VersionDocument | undefined = latestEntry
-    ? readDocument(join(versionsDir, `ws-v${latestEntry.versionNumber}.json`))
+    ? readDocument(join(versionsDir, `v${latestEntry.versionNumber}-ws.json`))
     : undefined;
   const changed: boolean =
     !previousHttp ||
@@ -75,7 +73,7 @@ export function versionDocuments({
 
   const filename: string = latestEntry?.draft
     ? latestEntry.file
-    : `api-v${versionNumber}.json`;
+    : `v${versionNumber}-api.json`;
   const writeDocument = ({
     file,
     document,
@@ -97,7 +95,7 @@ export function versionDocuments({
   };
 
   writeDocument({ file: filename, document: documents.http });
-  writeDocument({ file: `ws-v${versionNumber}.json`, document: documents.ws });
+  writeDocument({ file: `v${versionNumber}-ws.json`, document: documents.ws });
   const entry: ManifestEntry = latestEntry?.draft
     ? latestEntry
     : { file: filename, versionNumber, releasedAt: now.toISOString() };

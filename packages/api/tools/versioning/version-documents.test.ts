@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, type TestContext } from 'node:test';
@@ -34,45 +34,14 @@ function readManifest(directory: string) {
 const documents: Documents = { http: document('HTTP'), ws: document('WS') };
 
 describe('versionDocuments', () => {
-  it('bootstraps WS on the current draft without adding manifest fields or changing HTTP', (t) => {
+  it('rejects a missing document for an existing version', (t) => {
     const versionsDir: string = workspace(t);
-    const http: OpenAPIObject = {
-      ...documents.http,
-      info: { ...documents.http.info, version: 'v6' },
-    };
-    writeFileSync(
-      join(versionsDir, 'api-v6.json'),
-      JSON.stringify(http, null, 2),
-    );
-    writeFileSync(
-      join(versionsDir, 'versions-manifest.json'),
-      JSON.stringify({
-        versions: [
-          {
-            file: 'api-v6.json',
-            versionNumber: 6,
-            releasedAt: '2026-01-01T00:00:00.000Z',
-            draft: true,
-          },
-        ],
-      }),
-    );
+    versionDocuments({ mode: 'draft', versionsDir, documents });
+    unlinkSync(join(versionsDir, 'v1-ws.json'));
 
-    const result: VersioningResult = versionDocuments({
-      mode: 'draft',
-      versionsDir,
-      documents,
-    });
-
-    assert.deepEqual(result, { changed: true, filename: 'api-v6.json' });
-    assert.equal(readManifest(versionsDir).versions.length, 1);
-    assert.equal(
-      readFileSync(join(versionsDir, 'api-v6.json'), 'utf-8'),
-      JSON.stringify(http, null, 2),
-    );
-    assert.match(
-      readFileSync(join(versionsDir, 'ws-v6.json'), 'utf-8'),
-      /"version": "v6"/,
+    assert.throws(
+      () => versionDocuments({ mode: 'draft', versionsDir, documents }),
+      /ENOENT.*v1-ws\.json/,
     );
   });
 
@@ -108,10 +77,10 @@ describe('versionDocuments', () => {
       documents: nextDocuments,
     });
 
-    assert.deepEqual(result, { changed: true, filename: 'api-v1.json' });
+    assert.deepEqual(result, { changed: true, filename: 'v1-api.json' });
     assert.equal(readManifest(versionsDir).versions.length, 1);
     assert.match(
-      readFileSync(join(versionsDir, 'ws-v1.json'), 'utf-8'),
+      readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
       /New WS/,
     );
   });
@@ -126,10 +95,10 @@ describe('versionDocuments', () => {
       documents: { ...documents, ws: document('Release WS') },
     });
 
-    assert.equal(result.filename, 'api-v1.json');
+    assert.equal(result.filename, 'v1-api.json');
     assert.equal(readManifest(versionsDir).versions[0].draft, undefined);
     assert.match(
-      readFileSync(join(versionsDir, 'ws-v1.json'), 'utf-8'),
+      readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
       /Release WS/,
     );
   });
@@ -160,11 +129,11 @@ describe('versionDocuments', () => {
       const versionsDir: string = workspace(t);
       versionDocuments({ mode: 'release', versionsDir, documents });
       const previousHttp: string = readFileSync(
-        join(versionsDir, 'api-v1.json'),
+        join(versionsDir, 'v1-api.json'),
         'utf-8',
       );
       const previousWs: string = readFileSync(
-        join(versionsDir, 'ws-v1.json'),
+        join(versionsDir, 'v1-ws.json'),
         'utf-8',
       );
 
@@ -174,25 +143,25 @@ describe('versionDocuments', () => {
         documents: { ...documents, [protocol]: document('Changed') },
       });
 
-      assert.equal(result.filename, 'api-v2.json');
+      assert.equal(result.filename, 'v2-api.json');
       assert.deepEqual(
         readManifest(versionsDir).versions.map((entry) => entry.versionNumber),
         [1, 2],
       );
       assert.equal(
-        readFileSync(join(versionsDir, 'api-v1.json'), 'utf-8'),
+        readFileSync(join(versionsDir, 'v1-api.json'), 'utf-8'),
         previousHttp,
       );
       assert.equal(
-        readFileSync(join(versionsDir, 'ws-v1.json'), 'utf-8'),
+        readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
         previousWs,
       );
       assert.match(
-        readFileSync(join(versionsDir, 'api-v2.json'), 'utf-8'),
+        readFileSync(join(versionsDir, 'v2-api.json'), 'utf-8'),
         /"version": "v2"/,
       );
       assert.match(
-        readFileSync(join(versionsDir, 'ws-v2.json'), 'utf-8'),
+        readFileSync(join(versionsDir, 'v2-ws.json'), 'utf-8'),
         /"version": "v2"/,
       );
     });

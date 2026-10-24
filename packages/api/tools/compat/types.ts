@@ -21,5 +21,4 @@ export type CompatReport = {
   checked: VersionCheckResult[];
   brokenAt?: VersionCheckResult;
   skippedDeprecated: ManifestEntry[];
-  uncoveredWs: ManifestEntry[];
 };

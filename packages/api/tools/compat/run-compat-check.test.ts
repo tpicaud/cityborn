@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, type TestContext } from 'node:test';
@@ -54,12 +60,12 @@ function fixture(t: TestContext): CompatFixture {
     JSON.stringify({
       versions: [
         {
-          file: 'api-v1.json',
+          file: 'v1-api.json',
           versionNumber: 1,
           releasedAt: '2026-10-01T00:00:00.000Z',
         },
         {
-          file: 'api-v2.json',
+          file: 'v2-api.json',
           versionNumber: 2,
           releasedAt: '2026-10-02T00:00:00.000Z',
           draft: true,
@@ -67,21 +73,22 @@ function fixture(t: TestContext): CompatFixture {
       ],
     }),
   );
-  writeFileSync(join(directory, 'api-v1.json'), JSON.stringify(httpDocument));
-  writeFileSync(join(directory, 'api-v2.json'), JSON.stringify(httpDocument));
+  writeFileSync(join(directory, 'v1-api.json'), JSON.stringify(httpDocument));
+  writeFileSync(join(directory, 'v2-api.json'), JSON.stringify(httpDocument));
   writeFileSync(options.currentSpecFile, JSON.stringify(httpDocument));
   const wsDocument: OpenAPIObject = getWsOpenApiDocument({
     channels: [baselineChannel],
     sharedServerEvents: sharedEvents,
   });
-  writeFileSync(join(directory, 'ws-v2.json'), JSON.stringify(wsDocument));
+  writeFileSync(join(directory, 'v1-ws.json'), JSON.stringify(wsDocument));
+  writeFileSync(join(directory, 'v2-ws.json'), JSON.stringify(wsDocument));
   writeFileSync(options.currentWsSpecFile, JSON.stringify(wsDocument));
   writeFileSync(options.errIgnoreFile, '');
   return options;
 }
 
 describe('runCompatCheck', () => {
-  it('reports legacy versions without WS coverage and checks their HTTP contract', (t) => {
+  it('checks both protocols for every supported version', (t) => {
     const options: CompatFixture = fixture(t);
 
     const report: CompatReport = runCompatCheck(options);
@@ -91,15 +98,64 @@ describe('runCompatCheck', () => {
       report.checked.map((result) => result.entry.versionNumber),
       [2, 1],
     );
+    assert.deepEqual(JSON.parse(toJsonReport(report)), {
+      checked: report.checked,
+      skippedDeprecated: [],
+    });
+  });
+
+  it('compares synthetic empty snapshots with the current WS contract', (t) => {
+    const options: CompatFixture = fixture(t);
+    writeFileSync(
+      join(options.versionsDir, 'v1-ws.json'),
+      readFileSync(
+        new URL('../../openapi/versions/v1-ws.json', import.meta.url),
+      ),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+
+    assert.equal(report.brokenAt, undefined);
+    assert.equal(report.checked.length, 2);
+  });
+
+  it('rejects a missing WS snapshot', (t) => {
+    const options: CompatFixture = fixture(t);
+    unlinkSync(join(options.versionsDir, 'v1-ws.json'));
+
+    assert.throws(() => runCompatCheck(options), /oasdiff failed.*v1-ws\.json/);
+  });
+
+  it('rejects a WS break against an older supported version', (t) => {
+    const options: CompatFixture = fixture(t);
+    writeFileSync(
+      join(options.versionsDir, 'v1-ws.json'),
+      JSON.stringify(
+        getWsOpenApiDocument({
+          channels: [
+            {
+              ...baselineChannel,
+              serverToClient: {
+                ...baselineChannel.serverToClient,
+                retired: {},
+              },
+            },
+          ],
+          sharedServerEvents: sharedEvents,
+        }),
+      ),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+
+    assert.equal(report.brokenAt?.entry.versionNumber, 1);
     assert.deepEqual(
-      report.uncoveredWs.map((entry) => entry.versionNumber),
-      [1],
+      report.checked.map((result) => result.breaking),
+      [false, true],
     );
-    assert.match(
-      formatHumanSummary(report),
-      /WS not covered \(1 version\(s\) without a WS snapshot\):\n {2}- api-v1.json/,
+    assert.ok(
+      report.brokenAt?.changes.some((change) => change.protocol === 'WS'),
     );
-    assert.match(toJsonReport(report), /"uncoveredWs"/);
   });
 
   const scenarios: { name: string; channel: WsChannel }[] = [
@@ -274,22 +330,18 @@ describe('runCompatCheck', () => {
   it('uses the same version retirement floor for HTTP and WS', (t) => {
     const options: CompatFixture = fixture(t);
     writeFileSync(
-      join(options.versionsDir, 'ws-v1.json'),
-      readFileSync(join(options.versionsDir, 'ws-v2.json')),
-    );
-    writeFileSync(
       options.manifestFile,
       JSON.stringify({
         versions: [
           {
-            file: 'api-v1.json',
+            file: 'v1-api.json',
             versionNumber: 1,
             releasedAt: '2026-10-01T00:00:00.000Z',
             deprecatedAt: '2026-10-22',
             deprecationReason: 'Retired test version',
           },
           {
-            file: 'api-v2.json',
+            file: 'v2-api.json',
             versionNumber: 2,
             releasedAt: '2026-10-02T00:00:00.000Z',
           },
@@ -307,6 +359,5 @@ describe('runCompatCheck', () => {
       report.skippedDeprecated.map((entry) => entry.versionNumber),
       [1],
     );
-    assert.deepEqual(report.uncoveredWs, []);
   });
 });

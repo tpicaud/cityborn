@@ -151,11 +151,14 @@ encore supportées avec oasdiff 1.26.1, également requis par les tests de
 `packages/api`. Installer ce binaire sur le `PATH` avant de lancer ces commandes.
 
 Les commandes `generate:openapi:draft` et `generate:openapi:release` de
-`packages/api` versionnent ensemble `api-v<n>.json` et `ws-v<n>.json` dès que
+`packages/api` versionnent ensemble `v<n>-api.json` et `v<n>-ws.json` dès que
 l'un des contrats change. Les captures partagent le manifeste et la politique de
-support. La couverture WebSocket commence à la v6 ; le rapport signale les
-versions antérieures sans capture WebSocket. Le handshake et le sens métier des
-messages restent hors du contrôle de compatibilité des schémas.
+support. Les captures WebSocket réelles commencent à la v6 ; les versions v1 à v5
+contiennent des documents vides explicitement marqués comme synthétiques, car
+aucune capture WebSocket n’existait alors. Ces documents ne représentent pas
+les contrats historiques et suivent le même contrôle que les autres captures.
+Le handshake et le sens métier des messages restent hors du contrôle de
+compatibilité des schémas.
 
 ### Organisation
 

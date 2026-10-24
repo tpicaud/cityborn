@@ -56,14 +56,6 @@ export function formatHumanSummary(report: CompatReport): string {
 
   lines.push(...formatNonBreaking(report));
   lines.push(...formatDeprecated(report));
-  if (report.uncoveredWs.length > 0) {
-    lines.push(
-      '',
-      `WS not covered (${report.uncoveredWs.length} version(s) without a WS snapshot):`,
-      ...report.uncoveredWs.map((entry) => `  - ${entry.file}`),
-    );
-  }
-
   lines.push('');
   lines.push(
     report.brokenAt

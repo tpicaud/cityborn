@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   deprecationFloor,
@@ -70,15 +70,13 @@ function checkUntilBreaking({
   });
   const wsFile: string = join(
     options.versionsDir,
-    `ws-v${entry.versionNumber}.json`,
+    `v${entry.versionNumber}-ws.json`,
   );
-  const ws: DiffResult = existsSync(wsFile)
-    ? diffBreaking({
-        baseFile: wsFile,
-        revisionFile: options.currentWsSpecFile,
-        errIgnoreFile: options.errIgnoreFile,
-      })
-    : { breaking: false, changes: [] };
+  const ws: DiffResult = diffBreaking({
+    baseFile: wsFile,
+    revisionFile: options.currentWsSpecFile,
+    errIgnoreFile: options.errIgnoreFile,
+  });
   const result: VersionCheckResult = {
     entry,
     breaking: http.breaking || ws.breaking,
@@ -122,10 +120,5 @@ export function runCompatCheck(options: RunCompatCheckOptions): CompatReport {
     .filter((entry) => isDeprecated(entry, floor))
     .sort((a, b) => b.versionNumber - a.versionNumber);
 
-  const uncoveredWs: ManifestEntry[] = toCheck.filter(
-    (entry) =>
-      !existsSync(join(options.versionsDir, `ws-v${entry.versionNumber}.json`)),
-  );
-
-  return { checked, brokenAt, skippedDeprecated, uncoveredWs };
+  return { checked, brokenAt, skippedDeprecated };
 }

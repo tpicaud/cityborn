@@ -1,0 +1,10 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Cityborn WebSocket API",
+    "version": "v4",
+    "description": "Synthetic placeholder: no WebSocket OpenAPI snapshot was recorded for this version. This empty document does not represent the historical WebSocket contract."
+  },
+  "x-cityborn-synthetic-snapshot": true,
+  "paths": {}
+}
