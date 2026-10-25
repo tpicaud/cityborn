@@ -13,6 +13,7 @@ import type {
 import {
   applyGameConfigChanges,
   GameStatus,
+  SessionMode,
   SessionStatus,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -165,8 +166,11 @@ export function useSessionController({
     )
       return;
 
-    join(localPlayerID).catch(reportError);
-  }, [connectionStatus, session, localPlayerID, join, reportError]);
+    join(localPlayerID).catch((error: unknown) => {
+      reportError(error);
+      if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+    });
+  }, [connectionStatus, session, localPlayerID, join, reportError, navigation]);
 
   const requireSession = (action: string): Session => {
     if (!session) throw new Error(`${action} failed: session not initialized`);
