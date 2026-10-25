@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  ApiResponseError,
-  ErrorCode,
-  type Session,
-  SessionIdSchema,
-  SessionMode,
-} from '@cityborn/api';
+import { type Session, SessionIdSchema, SessionMode } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -21,10 +15,9 @@ import {
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { sessionPath } from './sessionPath';
+import { joinableSessionPath, sessionPath } from './sessionPath';
 
 const sessionCodeLength: number = 6;
-const soloSessionNotJoinableStatus: number = 403;
 const sessionCodePattern: RegExp = new RegExp(`^\\d{${sessionCodeLength}}$`);
 
 const JoinSessionSchema = z.object({
@@ -111,17 +104,7 @@ export function useSessionLauncher({
       const session: Session = await queryClient.query(
         sessionQueryOptions({ sessionApi, sessionId: code }),
       );
-      if (session.mode === SessionMode.SOLO) {
-        reportError(
-          new ApiResponseError({
-            code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
-            statusCode: soloSessionNotJoinableStatus,
-            message: 'Joining session failed: solo session',
-          }),
-        );
-        return;
-      }
-      navigation.push(sessionPath(session));
+      navigation.push(joinableSessionPath(session));
     } catch (error: unknown) {
       reportError(error);
     }

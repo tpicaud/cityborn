@@ -1,9 +1,45 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { type SessionId, SessionIdSchema, SessionMode } from '@cityborn/api';
-import { sessionIdFromSessionPath, sessionPath } from './sessionPath';
+import {
+  type Session,
+  type SessionId,
+  SessionIdSchema,
+  SessionMode,
+  UserFacingError,
+} from '@cityborn/api';
+import type { NavigationPath } from '../../platform/navigation';
+import {
+  joinableSessionPath,
+  sessionIdFromSessionPath,
+  sessionPath,
+} from './sessionPath';
 
 const sessionId: SessionId = SessionIdSchema.parse('brave-golden-lynx');
+
+describe('joinableSessionPath', () => {
+  it('returns the path of a multi session', () => {
+    const multiSession: Pick<Session, 'id' | 'mode'> = {
+      id: sessionId,
+      mode: SessionMode.MULTI,
+    };
+
+    const path: NavigationPath = joinableSessionPath(multiSession);
+
+    assert.equal(path, '/session/multi/brave-golden-lynx');
+  });
+
+  it('rejects a solo session', () => {
+    const soloSession: Pick<Session, 'id' | 'mode'> = {
+      id: sessionId,
+      mode: SessionMode.SOLO,
+    };
+
+    assert.throws(
+      () => joinableSessionPath(soloSession),
+      new UserFacingError('Une session solo ne peut pas être rejointe.'),
+    );
+  });
+});
 
 describe('sessionIdFromSessionPath', () => {
   it('reads the session of a solo or multi session path', () => {

@@ -120,7 +120,9 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Une erreur inconnue est survenue, veuillez réessayer.',
 };
 
-export const getFriendlyErrorMessage = (error: ApiError): string => {
+export const getFriendlyErrorMessage = (
+  error: Pick<ApiError, 'code'>,
+): string => {
   return ERROR_MESSAGES[error.code];
 };
 
