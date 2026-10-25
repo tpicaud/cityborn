@@ -103,7 +103,7 @@ describe('SessionService.create', () => {
     expect(redisService.setJSON).toHaveBeenCalledWith(
       'session:new-session',
       result,
-      1800,
+      600,
     );
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -134,7 +134,7 @@ describe('SessionService.create', () => {
     expect(redisService.setJSON).toHaveBeenCalledWith(
       'session:solo-session',
       result,
-      1800,
+      600,
     );
   });
 
@@ -239,11 +239,11 @@ describe('SessionService lobby operations', () => {
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
         expect.anything(),
-        1800,
+        600,
       );
       expect(redisService.expire).toHaveBeenCalledWith(
         `session:${session.id}:reconnect-token-hashes`,
-        1800,
+        600,
       );
     });
 
@@ -400,7 +400,7 @@ describe('SessionService game operations', () => {
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
         expect.objectContaining({ currentGame: lightGame }),
-        1800,
+        600,
       );
     });
 
@@ -508,7 +508,7 @@ describe('SessionService game operations', () => {
           status: SessionStatus.IN_LOBBY,
           currentGame: undefined,
         }),
-        1800,
+        600,
       );
       expect(result.currentGame).toBe(completedGame);
     });

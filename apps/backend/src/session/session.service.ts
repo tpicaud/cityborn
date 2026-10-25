@@ -48,7 +48,7 @@ export type JoinedSession = {
 @Injectable()
 export class SessionService {
   private readonly prefix = 'session:';
-  private readonly TTL = 30 * 60;
+  private readonly TTL = 10 * 60;
   private readonly LOCK_TTL = 2000;
   private readonly sessionExpirationsKey = 'session-expirations';
   private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
