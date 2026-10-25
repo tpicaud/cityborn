@@ -16,6 +16,7 @@ export const deprecatedUserGameRecordContract = c.router(
      */
     getGameRecords: {
       method: 'GET',
+      deprecated: true,
       path: '/game-records',
       responses: { 200: GameRecordsSchema },
     },
