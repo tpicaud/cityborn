@@ -192,11 +192,11 @@ describe('SessionService lobby operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const result: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('alice'),
+      const result: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('alice'),
         user,
-      );
+      });
 
       expect(result.session.hostID).toBe(playerId('alice'));
       expect(result.session.players).toEqual([
@@ -216,15 +216,15 @@ describe('SessionService lobby operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const guestJoin: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('guest'),
-      );
-      const userJoin: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('alice'),
+      const guestJoin: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('guest'),
+      });
+      const userJoin: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('alice'),
         user,
-      );
+      });
 
       expect(guestJoin.reconnectToken).toEqual(expect.any(String));
       expect(userJoin.reconnectToken).toBeUndefined();
@@ -237,7 +237,10 @@ describe('SessionService lobby operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      await sessionService.join(session.id, playerId('guest'));
+      await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('guest'),
+      });
 
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
@@ -259,10 +262,10 @@ describe('SessionService lobby operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const result: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('guest'),
-      );
+      const result: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('guest'),
+      });
 
       expect(result.session.hostID).toBe(playerId('guest'));
       expect(result.session.players).toEqual([
@@ -284,7 +287,10 @@ describe('SessionService lobby operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
       await expect(
-        sessionService.join(session.id, playerId('bob')),
+        sessionService.join({
+          sessionID: session.id,
+          playerID: playerId('bob'),
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_SOLO_NOT_JOINABLE },
       });
@@ -297,7 +303,10 @@ describe('SessionService lobby operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.join(session.id, playerId('host')),
+        sessionService.join({
+          sessionID: session.id,
+          playerID: playerId('host'),
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS },
       });
@@ -436,12 +445,12 @@ describe('SessionService game operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.applyGuess.mockReturnValue(updatedGame);
 
-      const result: Session = await sessionService.handleGuess(
-        playerId('host'),
-        session.id,
-        defaultGuess,
-        'server-scoring',
-      );
+      const result: Session = await sessionService.handleGuess({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        guess: defaultGuess,
+        scoringProtocol: 'server-scoring',
+      });
 
       expect(gameService.applyGuess).toHaveBeenCalledWith({
         game,
@@ -468,7 +477,11 @@ describe('SessionService game operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.handleGuess(playerId('host'), session.id, defaultGuess),
+        sessionService.handleGuess({
+          playerID: playerId('host'),
+          sessionID: session.id,
+          guess: defaultGuess,
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED },
       });
@@ -643,12 +656,12 @@ describe('SessionService connection operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const result: Session = await sessionService.reconnectPlayer(
-        session.id,
-        playerId('host'),
-        undefined,
+      const result: Session = await sessionService.reconnectPlayer({
+        sessionID: session.id,
+        playerID: playerId('host'),
+        reconnectToken: undefined,
         user,
-      );
+      });
 
       expect(result.hostID).toBe(playerId('host'));
       expect(result.players[0]).toEqual(
@@ -670,7 +683,11 @@ describe('SessionService connection operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.reconnectPlayer(session.id, playerId('host'), undefined),
+        sessionService.reconnectPlayer({
+          sessionID: session.id,
+          playerID: playerId('host'),
+          reconnectToken: undefined,
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_INVALID_CREDENTIALS },
       });
@@ -695,12 +712,12 @@ describe('SessionService connection operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.reconnectPlayer(
-          session.id,
-          playerId('host'),
-          undefined,
-          intruder,
-        ),
+        sessionService.reconnectPlayer({
+          sessionID: session.id,
+          playerID: playerId('host'),
+          reconnectToken: undefined,
+          user: intruder,
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -710,16 +727,16 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      const { reconnectToken }: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('guest'),
-      );
+      const { reconnectToken }: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('guest'),
+      });
 
-      const result: Session = await sessionService.reconnectPlayer(
-        session.id,
-        playerId('guest'),
+      const result: Session = await sessionService.reconnectPlayer({
+        sessionID: session.id,
+        playerID: playerId('guest'),
         reconnectToken,
-      );
+      });
 
       expect(result.players[0]).toEqual(
         expect.objectContaining({
@@ -733,18 +750,21 @@ describe('SessionService connection operations', () => {
       const session: Session = buildSession({ players: [] });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join(session.id, playerId('victim'));
-      const { reconnectToken }: JoinedSession = await sessionService.join(
-        session.id,
-        playerId('intruder'),
-      );
+      await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('victim'),
+      });
+      const { reconnectToken }: JoinedSession = await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('intruder'),
+      });
 
       await expect(
-        sessionService.reconnectPlayer(
-          session.id,
-          playerId('victim'),
+        sessionService.reconnectPlayer({
+          sessionID: session.id,
+          playerID: playerId('victim'),
           reconnectToken,
-        ),
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -755,15 +775,18 @@ describe('SessionService connection operations', () => {
       const user: User = buildUser({ username: playerId('intruder') });
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join(session.id, playerId('victim'));
+      await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('victim'),
+      });
 
       await expect(
-        sessionService.reconnectPlayer(
-          session.id,
-          playerId('victim'),
-          undefined,
+        sessionService.reconnectPlayer({
+          sessionID: session.id,
+          playerID: playerId('victim'),
+          reconnectToken: undefined,
           user,
-        ),
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });
@@ -775,14 +798,17 @@ describe('SessionService connection operations', () => {
         SessionReconnectTokenSchema.parse('forged-token');
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
-      await sessionService.join(session.id, playerId('victim'));
+      await sessionService.join({
+        sessionID: session.id,
+        playerID: playerId('victim'),
+      });
 
       await expect(
-        sessionService.reconnectPlayer(
-          session.id,
-          playerId('victim'),
-          forgedToken,
-        ),
+        sessionService.reconnectPlayer({
+          sessionID: session.id,
+          playerID: playerId('victim'),
+          reconnectToken: forgedToken,
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_RECONNECT_FORBIDDEN },
       });

@@ -135,12 +135,12 @@ export class SessionGateway
     });
 
     const { session, reconnectToken }: JoinedSession =
-      await this.sessionService.join(
+      await this.sessionService.join({
         sessionID,
         playerID,
         user,
         scoringProtocol,
-      );
+      });
     await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);
     return { reconnectToken };
@@ -203,11 +203,11 @@ export class SessionGateway
     @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'guess'>,
   ): Promise<void> {
     const { playerID, sessionID } = this.resolvePlayer(socket);
-    const session = await this.sessionService.handleGuess(
+    const session = await this.sessionService.handleGuess({
       playerID,
       sessionID,
       guess,
-    );
+    });
     this.enrichGame(session);
     this.broadcastSession(session);
   }
@@ -217,13 +217,13 @@ export class SessionGateway
     @ConnectedSocket() socket: AppSocket,
     @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'submitGuess'>,
   ): Promise<void> {
-    const { playerID, sessionID } = this.resolvePlayer(socket);
-    const session = await this.sessionService.handleGuess(
+    const { playerID, sessionID }: SocketPlayer = this.resolvePlayer(socket);
+    const session: Session = await this.sessionService.handleGuess({
       playerID,
       sessionID,
       guess,
-      'server-scoring',
-    );
+      scoringProtocol: 'server-scoring',
+    });
     this.enrichGame(session);
     this.broadcastSession(session);
   }
@@ -278,13 +278,13 @@ export class SessionGateway
       playerId: playerID,
     });
 
-    const session = await this.sessionService.reconnectPlayer(
+    const session = await this.sessionService.reconnectPlayer({
       sessionID,
       playerID,
       reconnectToken,
       user,
       scoringProtocol,
-    );
+    });
     this.enrichGame(session);
     await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);

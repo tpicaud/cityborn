@@ -116,12 +116,17 @@ export class SessionService {
     return this.toClientSession(await this.requireSession(sessionID));
   }
 
-  async join(
-    sessionID: SessionId,
-    playerID: PlayerId,
-    user?: User,
-    scoringProtocol?: Session['scoringProtocol'],
-  ): Promise<JoinedSession> {
+  async join({
+    sessionID,
+    playerID,
+    user,
+    scoringProtocol,
+  }: {
+    sessionID: SessionId;
+    playerID: PlayerId;
+    user?: User;
+    scoringProtocol?: Session['scoringProtocol'];
+  }): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
       this.assertScoringProtocol({ session, scoringProtocol });
       if (session.mode === SessionMode.SOLO && session.players.length > 0)
@@ -255,12 +260,17 @@ export class SessionService {
   // Current game method //
   /////////////////////////
 
-  async handleGuess(
-    playerID: PlayerId,
-    sessionID: SessionId,
-    guess: Guess | GuessSubmission,
-    scoringProtocol?: Session['scoringProtocol'],
-  ): Promise<Session> {
+  async handleGuess({
+    playerID,
+    sessionID,
+    guess,
+    scoringProtocol,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    guess: Guess | GuessSubmission;
+    scoringProtocol?: Session['scoringProtocol'];
+  }): Promise<Session> {
     const receivedAt: number = Date.now();
     return await this.updateSession(sessionID, async (session) => {
       this.assertScoringProtocol({ session, scoringProtocol });
@@ -411,13 +421,19 @@ export class SessionService {
   // Connection method //
   ///////////////////////
 
-  async reconnectPlayer(
-    sessionID: SessionId,
-    playerID: PlayerId,
-    reconnectToken: SessionReconnectToken | undefined,
-    user?: User,
-    scoringProtocol?: Session['scoringProtocol'],
-  ): Promise<Session> {
+  async reconnectPlayer({
+    sessionID,
+    playerID,
+    reconnectToken,
+    user,
+    scoringProtocol,
+  }: {
+    sessionID: SessionId;
+    playerID: PlayerId;
+    reconnectToken: SessionReconnectToken | undefined;
+    user?: User;
+    scoringProtocol?: Session['scoringProtocol'];
+  }): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
       this.assertScoringProtocol({ session, scoringProtocol });
       const players = session.players;
