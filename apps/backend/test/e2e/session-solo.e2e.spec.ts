@@ -46,11 +46,22 @@ type SoloPlayerAccess = {
   socketOptions: Partial<ManagerOptions & SocketOptions>;
 };
 
-function emitWithAck(
-  client: Socket,
-  event: string,
-  ...args: unknown[]
-): Promise<unknown> {
+type PlayedSoloGame = {
+  client: Socket;
+  joinAck: SessionJoinAck;
+  finishedSession: Session;
+};
+
+function emitWithAck({
+  client,
+  event,
+  payload,
+}: {
+  client: Socket;
+  event: string;
+  payload?: unknown;
+}): Promise<unknown> {
+  const args: unknown[] = payload === undefined ? [] : [payload];
   return new Promise((resolve) => client.emit(event, ...args, resolve));
 }
 
@@ -170,10 +181,14 @@ describe('Solo session over the session channel', () => {
 
   async function playRound(client: Socket): Promise<Session> {
     const guessUpdate: Promise<Session> = nextSessionUpdate(client);
-    await emitWithAck(client, sessionWsEvent.guess, { guess: buildGuess() });
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.guess,
+      payload: { guess: buildGuess() },
+    });
     await guessUpdate;
     const nextRoundUpdate: Promise<Session> = nextSessionUpdate(client);
-    await emitWithAck(client, sessionWsEvent.nextRound);
+    await emitWithAck({ client, event: sessionWsEvent.nextRound });
     return await nextRoundUpdate;
   }
 
@@ -181,24 +196,23 @@ describe('Solo session over the session channel', () => {
     playerID,
     authorization,
     socketOptions,
-  }: SoloPlayerAccess): Promise<{
-    client: Socket;
-    joinAck: SessionJoinAck;
-    finishedSession: Session;
-  }> {
+  }: SoloPlayerAccess): Promise<PlayedSoloGame> {
     const session: Session = await createSoloSession(authorization);
     const client: Socket = await connectClient(socketOptions);
     const joinAck: SessionJoinAck = SessionJoinAckSchema.parse(
-      await emitWithAck(client, sessionWsEvent.join, {
-        sessionID: session.id,
-        playerID,
+      await emitWithAck({
+        client,
+        event: sessionWsEvent.join,
+        payload: { sessionID: session.id, playerID },
       }),
     );
-    await emitWithAck(client, sessionWsEvent.updateGameConfig, {
-      gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 },
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.updateGameConfig,
+      payload: { gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 } },
     });
     const startUpdate: Promise<Session> = nextSessionUpdate(client);
-    await emitWithAck(client, sessionWsEvent.startGame);
+    await emitWithAck({ client, event: sessionWsEvent.startGame });
     await startUpdate;
 
     await playRound(client);
@@ -236,15 +250,16 @@ describe('Solo session over the session channel', () => {
   it('plays a guest solo game and records it once on the server', async () => {
     const playerID: PlayerId = PlayerIdSchema.parse('guest');
 
-    const { client, joinAck, finishedSession } = await playSoloGame({
-      playerID,
-      authorization: {},
-      socketOptions: {},
-    });
-    const replayedNextRoundAck: unknown = await emitWithAck(
+    const { client, joinAck, finishedSession }: PlayedSoloGame =
+      await playSoloGame({
+        playerID,
+        authorization: {},
+        socketOptions: {},
+      });
+    const replayedNextRoundAck: unknown = await emitWithAck({
       client,
-      sessionWsEvent.nextRound,
-    );
+      event: sessionWsEvent.nextRound,
+    });
 
     expect(joinAck.reconnectToken).toEqual(expect.any(String));
     expect(finishedSession).toMatchObject({
@@ -273,7 +288,7 @@ describe('Solo session over the session channel', () => {
     await persistUser(user);
     const accessToken: string = await createAccessToken(app, user.id);
 
-    const { joinAck, finishedSession } = await playSoloGame({
+    const { joinAck, finishedSession }: PlayedSoloGame = await playSoloGame({
       playerID: user.username,
       authorization: { Authorization: `Bearer ${accessToken}` },
       socketOptions: { auth: { access_token: accessToken } },
@@ -293,17 +308,24 @@ describe('Solo session over the session channel', () => {
   it('rejects a second player joining a solo session', async () => {
     const session: Session = await createSoloSession({});
     const soloClient: Socket = await connectClient();
-    await emitWithAck(soloClient, sessionWsEvent.join, {
-      sessionID: session.id,
-      playerID: PlayerIdSchema.parse('guest'),
+    await emitWithAck({
+      client: soloClient,
+      event: sessionWsEvent.join,
+      payload: {
+        sessionID: session.id,
+        playerID: PlayerIdSchema.parse('guest'),
+      },
     });
     const intruderClient: Socket = await connectClient();
 
-    const intruderAck: unknown = await emitWithAck(
-      intruderClient,
-      sessionWsEvent.join,
-      { sessionID: session.id, playerID: PlayerIdSchema.parse('intruder') },
-    );
+    const intruderAck: unknown = await emitWithAck({
+      client: intruderClient,
+      event: sessionWsEvent.join,
+      payload: {
+        sessionID: session.id,
+        playerID: PlayerIdSchema.parse('intruder'),
+      },
+    });
 
     expect(intruderAck).toMatchObject({
       success: false,

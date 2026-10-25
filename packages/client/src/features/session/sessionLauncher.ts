@@ -84,7 +84,9 @@ export function useSessionLauncher({
     defaultValues: joinSessionFormDefaultValues,
   });
 
-  const openNewSession = async (mode: SessionMode): Promise<void> => {
+  const openNewSession: (mode: SessionMode) => Promise<void> = async (
+    mode: SessionMode,
+  ): Promise<void> => {
     try {
       const session: Session = await sessionApi.createSession({ mode });
       navigation.push(sessionPath(session));

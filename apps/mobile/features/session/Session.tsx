@@ -1,4 +1,5 @@
 import { type SessionId, SessionMode, SessionStatus } from '@cityborn/api';
+import type { Navigation } from '@cityborn/client/platform';
 import {
   type SessionController,
   useSessionController,
@@ -16,7 +17,7 @@ type SessionProps = {
 };
 
 export default function Session({ sessionID }: SessionProps) {
-  const navigation = useNavigation();
+  const navigation: Navigation = useNavigation();
   const sessionController: SessionController = useSessionController({
     sessionID,
     navigation,
