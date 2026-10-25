@@ -1,6 +1,6 @@
 ---
 name: write-issue
-description: "Issues GitHub Cityborn. À utiliser pour rédiger, publier, modifier ou abandonner une issue et la rattacher au project Cityborn."
+description: "Planification et issues GitHub Cityborn. À utiliser pour planifier une tâche ou une feature, ou pour rédiger, publier, modifier ou abandonner une issue et la rattacher au project Cityborn."
 ---
 
 # Rédiger une issue
