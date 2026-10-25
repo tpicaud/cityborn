@@ -1,5 +1,4 @@
 import type {
-  CreateSession,
   Game,
   GameConfig,
   PlayerId,
@@ -87,15 +86,12 @@ describe('SessionService.create', () => {
       idService,
       eventService,
     }: ReturnType<typeof buildSessionService> = buildSessionService(null);
-    const user: User = buildUser();
-    const createData: CreateSession = { mode: SessionMode.MULTI };
     idService.generateNanoId.mockReturnValue('new-session');
 
-    const result: Session = await sessionService.create(
-      createData,
-      user,
-      'visitor-1',
-    );
+    const result: Session = await sessionService.create({
+      mode: SessionMode.MULTI,
+      visitorId: 'visitor-1',
+    });
 
     expect(result).toMatchObject({
       id: 'new-session',
@@ -117,22 +113,29 @@ describe('SessionService.create', () => {
     );
   });
 
-  it('creates a guest solo session without persisting it', async () => {
+  it('creates and persists a solo session waiting for its player', async () => {
     const {
       sessionService,
       redisService,
       idService,
     }: ReturnType<typeof buildSessionService> = buildSessionService(null);
-    const createData: CreateSession = { mode: SessionMode.SOLO };
     idService.generateNanoId.mockReturnValue('solo-session');
 
-    const result: Session = await sessionService.create(createData);
+    const result: Session = await sessionService.create({
+      mode: SessionMode.SOLO,
+    });
 
-    expect(result.hostID).toBe('guest');
-    expect(result.players).toEqual([
-      expect.objectContaining({ username: 'guest', isGuest: true }),
-    ]);
-    expect(redisService.setJSON).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      id: 'solo-session',
+      mode: SessionMode.SOLO,
+      hostID: '',
+      players: [],
+    });
+    expect(redisService.setJSON).toHaveBeenCalledWith(
+      'session:solo-session',
+      result,
+      1800,
+    );
   });
 
   it('fails after three session identifier collisions', async () => {
@@ -142,10 +145,11 @@ describe('SessionService.create', () => {
     }: ReturnType<typeof buildSessionService> = buildSessionService(
       buildSession(),
     );
-    const createData: CreateSession = { mode: SessionMode.MULTI };
     idService.generateNanoId.mockReturnValue('duplicate');
 
-    await expect(sessionService.create(createData)).rejects.toMatchObject({
+    await expect(
+      sessionService.create({ mode: SessionMode.MULTI }),
+    ).rejects.toMatchObject({
       response: { code: ErrorCode.SESSION_CREATION_FAILED },
     });
     expect(idService.generateNanoId).toHaveBeenCalledTimes(3);
@@ -241,6 +245,47 @@ describe('SessionService lobby operations', () => {
         `session:${session.id}:reconnect-token-hashes`,
         1800,
       );
+    });
+
+    it('makes the first player of a solo session its host', async () => {
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        hostID: '',
+        players: [],
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      const result: JoinedSession = await sessionService.join(
+        session.id,
+        playerId('guest'),
+      );
+
+      expect(result.session.hostID).toBe(playerId('guest'));
+      expect(result.session.players).toEqual([
+        expect.objectContaining({ username: 'guest', isGuest: true }),
+      ]);
+      expect(result.reconnectToken).toEqual(expect.any(String));
+    });
+
+    it('rejects a second player in a solo session', async () => {
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        hostID: playerId('alice'),
+        players: [buildPlayer({ username: playerId('alice') })],
+        currentGame: buildGame(),
+      });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await expect(
+        sessionService.join(session.id, playerId('bob')),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_SOLO_NOT_JOINABLE },
+      });
+      expect(redisService.setJSON).not.toHaveBeenCalled();
     });
 
     it('rejects a duplicate player', async () => {
@@ -469,7 +514,34 @@ describe('SessionService game operations', () => {
     });
   });
 
-  describe('finalizeSoloGame', () => {
+  describe('createClientSoloGame', () => {
+    it('creates the game for the solo player of the requester', async () => {
+      const user: User = buildUser({ username: playerId('alice') });
+      const gameConfig: GameConfig = buildGameConfig();
+      const game: Game = buildGame();
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+      gameService.createGame.mockResolvedValue(game);
+
+      const result: Game = await sessionService.createClientSoloGame({
+        gameConfig,
+        user,
+        visitorId: 'visitor-1',
+      });
+
+      expect(result).toBe(game);
+      expect(gameService.createGame).toHaveBeenCalledWith({
+        gameConfig,
+        players: [{ username: 'alice', isGuest: false, id: user.id }],
+        mode: SessionMode.SOLO,
+        visitorId: 'visitor-1',
+      });
+    });
+  });
+
+  describe('finalizeClientSoloGame', () => {
     it('records only the results of the authenticated player', async () => {
       const user: User = buildUser({ username: playerId('alice') });
       const game: Game = buildGame({
@@ -490,7 +562,7 @@ describe('SessionService game operations', () => {
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(null);
 
-      await sessionService.finalizeSoloGame({
+      await sessionService.finalizeClientSoloGame({
         game,
         user,
         visitorId: 'visitor-1',
@@ -532,7 +604,7 @@ describe('SessionService game operations', () => {
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(null);
 
-      await sessionService.finalizeSoloGame({ game });
+      await sessionService.finalizeClientSoloGame({ game });
 
       expect(gameService.endGame).toHaveBeenCalledWith(
         {

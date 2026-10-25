@@ -1,4 +1,10 @@
-import { contract, ErrorCode, type Session, User } from '@cityborn/api';
+import {
+  contract,
+  ErrorCode,
+  type Game,
+  type Session,
+  User,
+} from '@cityborn/api';
 import { Controller, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
@@ -6,7 +12,6 @@ import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { OptionalAuthGuard } from '../auth/guards/access-token.guard';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { WideEventService } from '../common/wide-event/wide-event.service';
-import { GameService } from '../game/game.service';
 import { SessionService } from './session.service';
 
 const c = initContract(); // TODO delete to use only shared contract
@@ -25,7 +30,6 @@ const optionalAuthSessionRoutes = c.router({
 export class SessionController {
   constructor(
     private readonly sessionService: SessionService,
-    private readonly gameService: GameService,
     private readonly wideEventService: WideEventService,
   ) {}
 
@@ -55,7 +59,10 @@ export class SessionController {
             code: ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED,
             message: 'User does not have an account or is not verified',
           });
-        const session = await this.sessionService.create(body, user, visitorId);
+        const session = await this.sessionService.create({
+          ...body,
+          visitorId,
+        });
         this.wideEventService.enrichBusinessContext({ sessionId: session.id });
         return {
           status: 201 as const,
@@ -64,27 +71,26 @@ export class SessionController {
       },
       createGame: async ({ body: session }) => {
         this.wideEventService.enrichBusinessContext({ sessionId: session.id });
-        const game = await this.gameService.createGame({
+        const game: Game = await this.sessionService.createClientSoloGame({
           gameConfig: session.gameConfig,
-          players: session.players,
-          mode: session.mode,
+          user,
           visitorId,
         });
         this.wideEventService.enrichBusinessContext({ gameId: game.id });
         return { status: 200 as const, body: game };
       },
       finalizeGame: async ({ body: session }) => {
-        await this.finalizeSoloGame({ session, user, visitorId });
+        await this.finalizeClientSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };
       },
       endSoloGame: async ({ body: session }) => {
-        await this.finalizeSoloGame({ session, user, visitorId });
+        await this.finalizeClientSoloGame({ session, user, visitorId });
         return { status: 200 as const, body: {} };
       },
     });
   }
 
-  private async finalizeSoloGame({
+  private async finalizeClientSoloGame({
     session,
     user,
     visitorId,
@@ -97,7 +103,7 @@ export class SessionController {
       sessionId: session.id,
       gameId: session.currentGame.id,
     });
-    await this.sessionService.finalizeSoloGame({
+    await this.sessionService.finalizeClientSoloGame({
       game: session.currentGame,
       user,
       visitorId,
