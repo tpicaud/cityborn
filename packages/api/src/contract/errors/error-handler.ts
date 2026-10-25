@@ -51,6 +51,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.SESSION_ALREADY_IN_GAME]: 'La session a déjà une partie en cours.',
   [ErrorCode.SESSION_RECONNECT_FORBIDDEN]:
     'Impossible de reprendre la place de ce joueur dans la session.',
+  [ErrorCode.SESSION_SOLO_NOT_JOINABLE]:
+    'Une session solo ne peut pas être rejointe.',
 
   // Game
   [ErrorCode.GAME_END_SENTENCE_NOT_FOUND]:
@@ -118,7 +120,9 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Une erreur inconnue est survenue, veuillez réessayer.',
 };
 
-export const getFriendlyErrorMessage = (error: ApiError): string => {
+export const getFriendlyErrorMessage = (
+  error: Pick<ApiError, 'code'>,
+): string => {
   return ERROR_MESSAGES[error.code];
 };
 

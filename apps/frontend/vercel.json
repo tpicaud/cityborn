@@ -2,8 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/session/solo/:sessionId",
+      "destination": "/session"
+    },
+    {
       "source": "/session/multi/:sessionId",
-      "destination": "/session/multi"
+      "destination": "/session"
     }
   ]
 }

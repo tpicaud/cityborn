@@ -48,9 +48,9 @@ export type JoinedSession = {
 @Injectable()
 export class SessionService {
   private readonly prefix = 'session:';
-  private readonly TTL = 30 * 60;
+  private readonly TTL = 10 * 60;
   private readonly LOCK_TTL = 2000;
-  private readonly multiSessionExpirationsKey = 'multi-session-expirations';
+  private readonly sessionExpirationsKey = 'session-expirations';
   private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
     new Map();
 
@@ -76,26 +76,20 @@ export class SessionService {
   // Session method //
   ////////////////////
 
-  async create(
-    dto: CreateSession,
-    user?: User,
-    visitorId?: string,
-  ): Promise<Session> {
-    const { mode } = dto;
-
-    const sessionID: SessionId = await this.generateUniqueSessionID();
-    const soloPlayer: SessionPlayer = this.buildSoloPlayer(user);
-
+  async create({
+    mode,
+    visitorId,
+  }: CreateSession & { visitorId?: string }): Promise<Session> {
     const newSession: Session = {
-      id: sessionID,
-      hostID: mode === SessionMode.SOLO ? soloPlayer.username : '',
+      id: await this.generateUniqueSessionID(),
+      hostID: '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
-      players: mode === SessionMode.SOLO ? [soloPlayer] : [],
+      players: [],
     };
 
-    if (mode === SessionMode.MULTI) await this.saveSession(newSession);
+    await this.saveSession(newSession);
 
     if (visitorId) {
       await this.eventService.trackEvent(
@@ -122,6 +116,12 @@ export class SessionService {
     user?: User,
   ): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
+      if (session.mode === SessionMode.SOLO && session.players.length > 0)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
+          message: `Solo session already has its player`,
+        });
+
       if (session.currentGame)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_ALREADY_IN_GAME,
@@ -343,7 +343,24 @@ export class SessionService {
     });
   }
 
-  async finalizeSoloGame({
+  async createClientSoloGame({
+    gameConfig,
+    user,
+    visitorId,
+  }: {
+    gameConfig: GameConfig;
+    user?: User;
+    visitorId?: string;
+  }): Promise<Game> {
+    return await this.gameService.createGame({
+      gameConfig,
+      players: [this.buildSoloPlayer(user)],
+      mode: SessionMode.SOLO,
+      visitorId,
+    });
+  }
+
+  async finalizeClientSoloGame({
     game,
     user,
     visitorId,
@@ -408,14 +425,14 @@ export class SessionService {
     });
   }
 
-  async listMultiSessionIDs(): Promise<SessionId[]> {
+  async listSessionIDs(): Promise<SessionId[]> {
     await this.redisService.redisClient.zremrangebyscore(
-      this.multiSessionExpirationsKey,
+      this.sessionExpirationsKey,
       '-inf',
       Date.now(),
     );
     const sessionIDs: string[] = await this.redisService.redisClient.zrange(
-      this.multiSessionExpirationsKey,
+      this.sessionExpirationsKey,
       0,
       -1,
     );
@@ -535,7 +552,7 @@ export class SessionService {
         ttl,
       ),
       this.redisService.redisClient.zadd(
-        this.multiSessionExpirationsKey,
+        this.sessionExpirationsKey,
         Date.now() + ttl * 1000,
         session.id,
       ),

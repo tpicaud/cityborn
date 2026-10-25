@@ -29,14 +29,26 @@ export const sessionContract = c.router(
       pathParams: SessionIdParamSchema,
       responses: { 200: SessionSchema },
     },
+    /**
+     * @deprecated Utiliser les events du channel WebSocket `session` à la place.
+     * Conservé pour les builds mobile publiées avant le solo en session serveur.
+     * @deprecatedSince 2026-10-25
+     */
     createGame: {
       method: 'POST',
+      deprecated: true,
       path: '/create-game',
       body: SessionSchema,
       responses: { 200: GameSchema },
     },
+    /**
+     * @deprecated Utiliser les events du channel WebSocket `session` à la place.
+     * Conservé pour les builds mobile publiées avant le solo en session serveur.
+     * @deprecatedSince 2026-10-25
+     */
     finalizeGame: {
       method: 'POST',
+      deprecated: true,
       path: '/finalize-game',
       body: finalizeGameBodySchema,
       responses: { 200: emptyResponseSchema },
@@ -48,6 +60,7 @@ export const sessionContract = c.router(
      */
     endSoloGame: {
       method: 'POST',
+      deprecated: true,
       path: '/end-solo-game',
       body: finalizeGameBodySchema,
       responses: { 200: emptyResponseSchema },

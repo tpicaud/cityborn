@@ -1,4 +1,7 @@
-export type NavigationPath = '/' | '/session/solo' | `/session/multi/${string}`;
+export type NavigationPath =
+  | '/'
+  | `/session/solo/${string}`
+  | `/session/multi/${string}`;
 
 export interface Navigation {
   push(path: NavigationPath): void;

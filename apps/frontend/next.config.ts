@@ -16,7 +16,8 @@ export default function createNextConfig(phase: string): NextConfig {
   return {
     ...nextConfig,
     rewrites: async () => [
-      { source: '/session/multi/:sessionId', destination: '/session/multi' },
+      { source: '/session/solo/:sessionId', destination: '/session' },
+      { source: '/session/multi/:sessionId', destination: '/session' },
     ],
   };
 }
