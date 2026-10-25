@@ -33,7 +33,7 @@ Ces règles valent pour les trois étapes.
 
 ## Étape 1 — Développement
 
-Transmettre au sous-agent l'URL de l'issue, les consignes explicites de l'utilisateur sur le périmètre recopiées telles quelles et l'instruction d'appliquer `.agents/skills/deliver-issue/references/develop.md`. Son rapport donne l'URL de la PR draft et le compte rendu final prévu par cette référence.
+Transmettre au sous-agent l'URL de l'issue, les consignes explicites de l'utilisateur sur le périmètre recopiées telles quelles et l'instruction d'appliquer `.agents/skills/deliver-issue/references/develop.md`. Son rapport donne l'URL de la PR draft.
 
 L'étape est terminée au critère de fin de la référence.
 
@@ -45,30 +45,19 @@ L'étape est terminée quand le rapport liste les findings au format de `review-
 
 ## Étape 3 — Correctifs
 
-Ajouter les findings hors périmètre à la section « Hors périmètre » de la description de la PR.
-
-Si aucun finding n'est dans le périmètre de l'issue, ajouter à la description de la PR une section « Review automatique » qui l'indique, puis passer au compte rendu.
-
-Sinon, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et les findings dans le périmètre, recopiés tels quels. Il doit :
+Si au moins un finding est dans le périmètre de l'issue, transmettre au sous-agent l'URL de l'issue, l'URL de la PR et ces findings, recopiés tels quels. Il doit :
 
 - charger les skills de conventions des périmètres touchés ;
 - traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
 - vérifier chaque correctif ;
-- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en ajoutant à la description de la PR la section « Review automatique », un tableau d'une ligne par finding traité :
+- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur la section « Review automatique » et les findings de « Pistes ».
 
-| ID | Gravité | Statut | Résumé |
-|---|---|---|---|
-| `F1` | 🟠 majeur | ✅ corrigé | le correctif en une phrase |
-| `F2` | 🟡 mineur | ❌ rejeté | la raison du rejet en une phrase |
+Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne.
 
-Son rapport donne le statut de chaque finding et les vérifications exécutées. L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la PR contient la section « Review automatique ».
+Dans tous les cas, écrire ensuite dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`, la section « Review automatique » et ajouter à « Pistes » les findings hors périmètre.
+
+L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la description de la PR contient la section « Review automatique ».
 
 ## Compte rendu final
 
-Indiquer :
-
-- l'issue traitée, le lien de la PR, le chemin du worktree et le résultat obtenu ;
-- le tableau de la section « Review automatique », puis les findings hors périmètre signalés ;
-- les vérifications exécutées au développement et aux correctifs, avec leur résultat, puis celles non exécutées et leur raison ;
-- les tests manuels attendus, risques résiduels ou problèmes d'architecture constatés ;
-- le cas échéant, que les étapes ont tourné sans sous-agent.
+Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter que les étapes ont tourné sans sous-agent.
