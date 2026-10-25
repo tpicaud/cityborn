@@ -126,6 +126,7 @@ export class SessionGateway
     @MessageBody() {
       sessionID,
       playerID,
+      scoringProtocol,
     }: WsPayload<typeof sessionWsChannel, 'join'>,
   ): Promise<SessionJoinAck> {
     this.wideEventService.enrichBusinessContext({
@@ -134,7 +135,12 @@ export class SessionGateway
     });
 
     const { session, reconnectToken }: JoinedSession =
-      await this.sessionService.join(sessionID, playerID, user);
+      await this.sessionService.join(
+        sessionID,
+        playerID,
+        user,
+        scoringProtocol,
+      );
     await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);
     return { reconnectToken };
@@ -206,6 +212,22 @@ export class SessionGateway
     this.broadcastSession(session);
   }
 
+  @WsMessage(sessionWsChannel, 'submitGuess')
+  async submitGuess(
+    @ConnectedSocket() socket: AppSocket,
+    @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'submitGuess'>,
+  ): Promise<void> {
+    const { playerID, sessionID } = this.resolvePlayer(socket);
+    const session = await this.sessionService.handleGuess(
+      playerID,
+      sessionID,
+      guess,
+      'server-scoring',
+    );
+    this.enrichGame(session);
+    this.broadcastSession(session);
+  }
+
   @WsMessage(sessionWsChannel, 'nextRound')
   async handleNextRound(
     @ConnectedSocket() socket: AppSocket,
@@ -248,6 +270,7 @@ export class SessionGateway
       sessionID,
       playerID,
       reconnectToken,
+      scoringProtocol,
     }: WsPayload<typeof sessionWsChannel, 'reconnect'>,
   ): Promise<void> {
     this.wideEventService.enrichBusinessContext({
@@ -260,6 +283,7 @@ export class SessionGateway
       playerID,
       reconnectToken,
       user,
+      scoringProtocol,
     );
     this.enrichGame(session);
     await this.attachPlayer({ socket, sessionID, playerID });

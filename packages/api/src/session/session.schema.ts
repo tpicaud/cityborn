@@ -25,7 +25,12 @@ export enum SessionStatus {
 export const SessionModeSchema = z.nativeEnum(SessionMode);
 export const SessionStatusSchema = z.nativeEnum(SessionStatus);
 
-export const CreateSessionSchema = z.object({ mode: SessionModeSchema });
+export const SessionScoringProtocolSchema = z.literal('server-scoring');
+
+export const CreateSessionSchema = z.object({
+  mode: SessionModeSchema,
+  scoringProtocol: SessionScoringProtocolSchema.optional(),
+});
 export const SessionReconnectTokenSchema = z
   .string()
   .min(1)
@@ -39,6 +44,7 @@ export const SessionHostIdSchema = z
 
 export const SessionSchema = z.object({
   id: SessionIdSchema,
+  scoringProtocol: SessionScoringProtocolSchema.optional(),
   serverTime: z.number().optional(),
   hostID: SessionHostIdSchema,
   mode: SessionModeSchema,

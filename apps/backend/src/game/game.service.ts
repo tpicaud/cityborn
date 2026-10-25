@@ -186,6 +186,24 @@ export class GameService {
       : { ...next, game: this.withRoundDeadline(next.game) };
   }
 
+  async restoreGuessObjects(game: Game): Promise<Game> {
+    if (game.state.guessObjects) return game;
+    const objects: FullGuessObject[] = await this.guessObjectService.findFullBy(
+      {
+        ids: game.state.guessObjectsIds,
+      },
+    );
+    return {
+      ...game,
+      state: {
+        ...game.state,
+        guessObjects: game.state.guessObjectsIds.flatMap((id) =>
+          objects.filter((object) => object.id === id),
+        ),
+      },
+    };
+  }
+
   toClientGame(game: Game): Game {
     const round: Round | undefined = game.state.currentRound;
     const objects: FullGuessObject[] = game.state.guessObjects ?? [];

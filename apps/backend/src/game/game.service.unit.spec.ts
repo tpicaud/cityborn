@@ -494,3 +494,53 @@ describe('GameService.resolveNextRound', () => {
     });
   });
 });
+
+describe('GameService.restoreGuessObjects', () => {
+  it('restores old Redis games in round order without replacing their progress', async () => {
+    const first: FullGuessObject = buildFullGuessObject({ id: 'first' });
+    const second: FullGuessObject = buildFullGuessObject({ id: 'second' });
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [first.id, second.id],
+        results: {},
+        currentRound: {
+          status: RoundStatus.SHOWING_RESULTS,
+          guessObjectId: second.id,
+        },
+      },
+    });
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([second, first]);
+
+    const restored: Game = await gameService.restoreGuessObjects(game);
+
+    expect(guessObjectService.findFullBy).toHaveBeenCalledWith({
+      ids: ['first', 'second'],
+    });
+    expect(restored.state.guessObjects).toEqual([first, second]);
+    expect(restored.state.currentRound).toBe(game.state.currentRound);
+    expect(restored.state.results).toBe(game.state.results);
+    expect(game.state.guessObjects).toBeUndefined();
+  });
+
+  it('keeps objects already persisted by the current backend', async () => {
+    const object: FullGuessObject = buildFullGuessObject();
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [object.id],
+        results: {},
+        guessObjects: [object],
+      },
+    });
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+
+    expect(await gameService.restoreGuessObjects(game)).toBe(game);
+    expect(guessObjectService.findFullBy).not.toHaveBeenCalled();
+  });
+});

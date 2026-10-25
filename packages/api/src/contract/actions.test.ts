@@ -198,6 +198,7 @@ describe('resolveWsAction', () => {
       'session.updateGameConfig',
       'session.startGame',
       'session.guess',
+      'session.submitGuess',
       'session.nextRound',
       'session.playAgain',
       'session.connect',

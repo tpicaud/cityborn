@@ -72,11 +72,18 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 ## Déroulement des manches
 
-Le serveur conserve les localisations et calcule les scores à partir des seules
+Les clients actuels créent des sessions `server-scoring`. Le serveur y conserve
+les localisations et calcule les scores à partir des seules
 coordonnées envoyées par les joueurs. Les clients reçoivent les réponses au passage
 en résultats de chaque manche. Une échéance serveur inclut le décompte initial de
 3 secondes et le timer configuré ; une tolérance réseau de 1 seconde suit cette
 échéance. Une réponse tardive ou sans clic rapporte zéro point.
+
+Les anciennes builds conservent les sessions sans protocole déclaré et l’événement
+`session:guess` déprécié, avec objets complets et résultats calculés côté client.
+`session:submitGuess` est réservé aux sessions `server-scoring`. Les protocoles ne
+se mélangent ni à la connexion ni à la reconnexion ; les anciennes sessions Redis
+sont reprises avec leurs objets rechargés par identifiant, sans réinitialisation.
 
 ## Accès au back-office
 

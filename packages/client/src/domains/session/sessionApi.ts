@@ -12,6 +12,7 @@ import {
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
+  UserFacingError,
   unwrapApiResponse,
 } from '@cityborn/api';
 import type { ContractClient } from '../../api/contractClient';
@@ -39,14 +40,21 @@ export function createSessionApi(
   return {
     async createSession(data) {
       return unwrapApiResponse(
-        await contractClient.session.createSession({ body: data }),
+        await contractClient.session.createSession({
+          body: { ...data, scoringProtocol: 'server-scoring' },
+        }),
       );
     },
 
     async fetchSession(id) {
-      return unwrapApiResponse(
+      const session: Session = unwrapApiResponse(
         await contractClient.session.getSession({ params: { id } }),
       );
+      if (session.scoringProtocol !== 'server-scoring')
+        throw new UserFacingError(
+          'Cette session utilise une ancienne version du jeu. Créez une nouvelle session.',
+        );
+      return session;
     },
   };
 }
@@ -68,11 +76,17 @@ export function createSessionChannel(
 ): SessionChannel {
   return {
     join(membership) {
-      return connection.emit(sessionWsEvent.join, membership);
+      return connection.emit(sessionWsEvent.join, {
+        ...membership,
+        scoringProtocol: 'server-scoring',
+      });
     },
 
     async reconnect(reconnection) {
-      await connection.emit(sessionWsEvent.reconnect, reconnection);
+      await connection.emit(sessionWsEvent.reconnect, {
+        ...reconnection,
+        scoringProtocol: 'server-scoring',
+      });
     },
 
     async updateHost(newHostID) {
@@ -88,7 +102,7 @@ export function createSessionChannel(
     },
 
     async guess(guess) {
-      await connection.emit(sessionWsEvent.guess, { guess });
+      await connection.emit(sessionWsEvent.submitGuess, { guess });
     },
 
     async nextRound() {

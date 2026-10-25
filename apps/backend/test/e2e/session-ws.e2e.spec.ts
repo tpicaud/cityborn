@@ -434,8 +434,7 @@ describe('Session gateway over a real socket', () => {
           categories: [legacySelectedPack],
         },
         state: {
-          guessObjectPreviews: [{ name: 'Tour Eiffel' }],
-          guessObjects: [],
+          guessObjects: [{ name: 'Tour Eiffel' }],
         },
       },
     });

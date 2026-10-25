@@ -4,11 +4,13 @@ import {
   buildUser,
   buildWorldLocation,
   contract,
+  defaultGuess,
   ErrorCode,
   GameStatus,
   type Pack,
   type PlayerId,
   PlayerIdSchema,
+  RoundStatus,
   type Session,
   type SessionJoinAck,
   SessionJoinAckSchema,
@@ -29,6 +31,7 @@ import {
 } from 'socket.io-client';
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { RedisService } from '../../src/redis/redis.service';
 import { SessionGateway } from '../../src/session/session.gateway';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
@@ -169,11 +172,12 @@ describe('Solo session over the session channel', () => {
 
   async function createSoloSession(
     authorization: Record<string, string>,
+    scoringProtocol: Session['scoringProtocol'],
   ): Promise<Session> {
     const response: request.Response = await request(app.getHttpServer())
       .post(contract.session.createSession.path)
       .set(authorization)
-      .send({ mode: SessionMode.SOLO })
+      .send({ mode: SessionMode.SOLO, scoringProtocol })
       .expect(201);
     return SessionSchema.parse(response.body);
   }
@@ -182,7 +186,7 @@ describe('Solo session over the session channel', () => {
     const guessUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({
       client,
-      event: sessionWsEvent.guess,
+      event: sessionWsEvent.submitGuess,
       payload: { guess: { coordinates: { lat: 48.8566, lng: 2.3522 } } },
     });
     const revealed: Session = await guessUpdate;
@@ -205,13 +209,20 @@ describe('Solo session over the session channel', () => {
     authorization,
     socketOptions,
   }: SoloPlayerAccess): Promise<PlayedSoloGame> {
-    const session: Session = await createSoloSession(authorization);
-    const client: Socket = await connectClient(socketOptions);
+    const session: Session = await createSoloSession(
+      authorization,
+      'server-scoring',
+    );
+    let client: Socket = await connectClient(socketOptions);
     const joinAck: SessionJoinAck = SessionJoinAckSchema.parse(
       await emitWithAck({
         client,
         event: sessionWsEvent.join,
-        payload: { sessionID: session.id, playerID },
+        payload: {
+          sessionID: session.id,
+          scoringProtocol: 'server-scoring',
+          playerID,
+        },
       }),
     );
     await emitWithAck({
@@ -228,21 +239,27 @@ describe('Solo session over the session channel', () => {
       .get(contract.session.getSession.path.replace(':id', session.id))
       .expect(200);
     expect(JSON.stringify(fetched.body)).not.toContain('world_location');
+    await disconnectClient(client);
+    client = await connectClient(socketOptions);
     const reconnectUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({
       client,
       event: sessionWsEvent.reconnect,
       payload: {
         sessionID: session.id,
+        scoringProtocol: 'server-scoring',
         playerID,
         reconnectToken: joinAck.reconnectToken,
       },
     });
     const reconnected: Session = await reconnectUpdate;
     expect(JSON.stringify(reconnected)).not.toContain('world_location');
+    expect(reconnected.currentGame?.state.currentRound?.deadline).toBe(
+      started.currentGame?.state.currentRound?.deadline,
+    );
     const forgedAck: unknown = await emitWithAck({
       client,
-      event: sessionWsEvent.guess,
+      event: sessionWsEvent.submitGuess,
       payload: {
         guess: {
           coordinates: { lat: 48.8566, lng: 2.3522 },
@@ -255,6 +272,16 @@ describe('Solo session over the session channel', () => {
     expect(forgedAck).toMatchObject({
       success: false,
       error: { statusCode: 400 },
+    });
+
+    const legacyGuessAck: unknown = await emitWithAck({
+      client,
+      event: sessionWsEvent.guess,
+      payload: { guess: { ...defaultGuess, points: 999999 } },
+    });
+    expect(legacyGuessAck).toMatchObject({
+      success: false,
+      error: { statusCode: 400, code: ErrorCode.BAD_REQUEST },
     });
 
     await playRound(client);
@@ -323,6 +350,12 @@ describe('Solo session over the session channel', () => {
         users: [],
       },
     ]);
+    const replayUpdate: Promise<Session> = nextSessionUpdate(client);
+    await emitWithAck({ client, event: sessionWsEvent.playAgain });
+    const replayed: Session = await replayUpdate;
+    expect(replayed.scoringProtocol).toBe('server-scoring');
+    expect(replayed.currentGame?.state.guessObjects).toEqual([]);
+    expect(JSON.stringify(replayed)).not.toContain('world_location');
   });
 
   it('plays a signed-in solo game and records it for the account', async () => {
@@ -348,13 +381,14 @@ describe('Solo session over the session channel', () => {
   });
 
   it('rejects a second player joining a solo session', async () => {
-    const session: Session = await createSoloSession({});
+    const session: Session = await createSoloSession({}, 'server-scoring');
     const soloClient: Socket = await connectClient();
     await emitWithAck({
       client: soloClient,
       event: sessionWsEvent.join,
       payload: {
         sessionID: session.id,
+        scoringProtocol: 'server-scoring',
         playerID: PlayerIdSchema.parse('guest'),
       },
     });
@@ -365,6 +399,7 @@ describe('Solo session over the session channel', () => {
       event: sessionWsEvent.join,
       payload: {
         sessionID: session.id,
+        scoringProtocol: 'server-scoring',
         playerID: PlayerIdSchema.parse('intruder'),
       },
     });
@@ -373,5 +408,162 @@ describe('Solo session over the session channel', () => {
       success: false,
       error: { statusCode: 403, code: ErrorCode.SESSION_SOLO_NOT_JOINABLE },
     });
+  });
+
+  it.each<Session['scoringProtocol']>([undefined, 'server-scoring'])(
+    'rejects joining and reconnecting across protocol boundaries for %s sessions',
+    async (scoringProtocol) => {
+      const session: Session = await createSoloSession({}, scoringProtocol);
+      const owner: Socket = await connectClient();
+      const playerID: PlayerId = PlayerIdSchema.parse('guest');
+      const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
+        await emitWithAck({
+          client: owner,
+          event: sessionWsEvent.join,
+          payload: { sessionID: session.id, playerID, scoringProtocol },
+        }),
+      );
+      const intruder: Socket = await connectClient();
+      const mismatchedProtocol: Session['scoringProtocol'] = scoringProtocol
+        ? undefined
+        : 'server-scoring';
+
+      const joined: unknown = await emitWithAck({
+        client: intruder,
+        event: sessionWsEvent.join,
+        payload: {
+          sessionID: session.id,
+          playerID: PlayerIdSchema.parse('intruder'),
+          scoringProtocol: mismatchedProtocol,
+        },
+      });
+      const reconnected: unknown = await emitWithAck({
+        client: intruder,
+        event: sessionWsEvent.reconnect,
+        payload: {
+          sessionID: session.id,
+          playerID,
+          reconnectToken,
+          scoringProtocol: mismatchedProtocol,
+        },
+      });
+
+      expect(joined).toMatchObject({
+        success: false,
+        error: { statusCode: 400, code: ErrorCode.BAD_REQUEST },
+      });
+      expect(reconnected).toMatchObject({
+        success: false,
+        error: { statusCode: 400, code: ErrorCode.BAD_REQUEST },
+      });
+      const intruderID: string = intruder.id ?? '';
+      expect(
+        app
+          .get(SessionGateway)
+          .io.sockets.sockets.get(intruderID)
+          ?.rooms.has(session.id),
+      ).toBe(false);
+      expect(
+        app.get(SessionGateway).io.sockets.sockets.get(intruderID)?.data.player,
+      ).toBeFalsy();
+    },
+  );
+
+  it('continues an old Redis game with complete HTTP and WS objects and client-calculated scores', async () => {
+    const session: Session = await createSoloSession({}, undefined);
+    const owner: Socket = await connectClient();
+    const playerID: PlayerId = PlayerIdSchema.parse('guest');
+    const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
+      await emitWithAck({
+        client: owner,
+        event: sessionWsEvent.join,
+        payload: { sessionID: session.id, playerID },
+      }),
+    );
+    await emitWithAck({
+      client: owner,
+      event: sessionWsEvent.updateGameConfig,
+      payload: { gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 } },
+    });
+    const startUpdate: Promise<Session> = nextSessionUpdate(owner);
+    await emitWithAck({ client: owner, event: sessionWsEvent.startGame });
+    const started: Session = await startUpdate;
+    expect(started.currentGame?.state.guessObjects).toHaveLength(2);
+    expect(JSON.stringify(started)).toContain('world_location');
+    const oldState: Session = SessionSchema.parse(started);
+    delete oldState.serverTime;
+    delete oldState.scoringProtocol;
+    if (!oldState.currentGame?.state.currentRound)
+      throw new Error('Missing active round');
+    delete oldState.currentGame.state.guessObjects;
+    delete oldState.currentGame.state.currentRound.deadline;
+    await app.get(RedisService).setJSON(`session:${session.id}`, oldState);
+    const fetched: request.Response = await request(app.getHttpServer())
+      .get(contract.session.getSession.path.replace(':id', session.id))
+      .expect(200);
+    expect(
+      SessionSchema.parse(fetched.body).currentGame?.state.guessObjects,
+    ).toHaveLength(2);
+    expect(JSON.stringify(fetched.body)).toContain('world_location');
+    const restored: Socket = await connectClient();
+    const reconnectUpdate: Promise<Session> = nextSessionUpdate(restored);
+    await emitWithAck({
+      client: restored,
+      event: sessionWsEvent.reconnect,
+      payload: { sessionID: session.id, playerID, reconnectToken },
+    });
+    const reconnected: Session = await reconnectUpdate;
+    expect(reconnected.currentGame?.state.guessObjects).toHaveLength(2);
+    expect(
+      reconnected.currentGame?.state.currentRound?.deadline,
+    ).toBeUndefined();
+    const modernAck: unknown = await emitWithAck({
+      client: restored,
+      event: sessionWsEvent.submitGuess,
+      payload: { guess: {} },
+    });
+    expect(modernAck).toMatchObject({
+      success: false,
+      error: { code: ErrorCode.BAD_REQUEST },
+    });
+
+    const playLegacyRound: () => Promise<Session> = async () => {
+      const resultsUpdate: Promise<Session> = nextSessionUpdate(restored);
+      const ack: unknown = await emitWithAck({
+        client: restored,
+        event: sessionWsEvent.guess,
+        payload: { guess: { ...defaultGuess, points: 765, distance: 123 } },
+      });
+      expect(ack).toEqual({ success: true });
+      const results: Session = await resultsUpdate;
+      expect(results.currentGame?.state.currentRound).toMatchObject({
+        status: RoundStatus.SHOWING_RESULTS,
+        playersGuesses: { guest: { points: 765, distance: 123 } },
+      });
+      expect(results.currentGame?.state.guessObjects).toHaveLength(2);
+      const nextUpdate: Promise<Session> = nextSessionUpdate(restored);
+      await emitWithAck({ client: restored, event: sessionWsEvent.nextRound });
+      return nextUpdate;
+    };
+
+    const secondRound: Session = await playLegacyRound();
+    expect(secondRound.currentGame?.state.currentRound?.status).toBe(
+      RoundStatus.GUESSING,
+    );
+    const finished: Session = await playLegacyRound();
+    expect(finished.currentGame?.status).toBe(GameStatus.IN_RESULTS);
+    expect(
+      finished.currentGame?.state.results[playerID].results.map(
+        ({ points }) => points,
+      ),
+    ).toEqual([765, 765]);
+    const replayUpdate: Promise<Session> = nextSessionUpdate(restored);
+    await emitWithAck({ client: restored, event: sessionWsEvent.playAgain });
+    const replayed: Session = await replayUpdate;
+    expect(replayed.scoringProtocol).toBeUndefined();
+    expect(replayed.currentGame?.state.guessObjects).toHaveLength(2);
+    expect(replayed.currentGame?.state.currentRound?.status).toBe(
+      RoundStatus.GUESSING,
+    );
   });
 });

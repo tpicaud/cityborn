@@ -57,6 +57,7 @@ function buildSessionService(session: Session | null) {
 
   const idService: DeepMocked<IdService> = createMock<IdService>();
   const gameService: DeepMocked<GameService> = createMock<GameService>();
+  gameService.restoreGuessObjects.mockImplementation(async (game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
 
   const sessionService: SessionService = new SessionService(
@@ -425,6 +426,7 @@ describe('SessionService game operations', () => {
       const updatedGame: Game = buildGame({ id: game.id });
       const session: Session = buildSession({
         status: SessionStatus.IN_GAME,
+        scoringProtocol: 'server-scoring',
         currentGame: game,
       });
       const {
@@ -438,6 +440,7 @@ describe('SessionService game operations', () => {
         playerId('host'),
         session.id,
         defaultGuess,
+        'server-scoring',
       );
 
       expect(gameService.applyGuess).toHaveBeenCalledWith({

@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { GameConfigSchema, GuessSubmissionSchema } from '../game/game.schema';
+import {
+  GameConfigSchema,
+  GuessSchema,
+  GuessSubmissionSchema,
+} from '../game/game.schema';
 import { PlayerIdSchema } from '../player/player.schema';
 import {
   type WsChannel,
@@ -11,11 +15,13 @@ import {
   SessionIdSchema,
   SessionReconnectTokenSchema,
   SessionSchema,
+  SessionScoringProtocolSchema,
 } from './session.schema';
 
 const SessionMembershipSchema = z.object({
   sessionID: SessionIdSchema,
   playerID: PlayerIdSchema,
+  scoringProtocol: SessionScoringProtocolSchema.optional(),
 });
 
 export const SessionJoinAckSchema = z.object({
@@ -36,7 +42,15 @@ export const sessionWsChannel = {
     updateHost: { payload: z.object({ newHostID: PlayerIdSchema }) },
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     startGame: {},
-    guess: { payload: z.object({ guess: GuessSubmissionSchema }).strict() },
+    /**
+     * @deprecated Utiliser `submitGuess` dans une session `server-scoring`.
+     * Conservé pour les builds mobile publiées qui calculent leurs scores.
+     * @deprecatedSince 2026-10-25
+     */
+    guess: { payload: z.object({ guess: GuessSchema }), deprecated: true },
+    submitGuess: {
+      payload: z.object({ guess: GuessSubmissionSchema }).strict(),
+    },
     nextRound: {},
     playAgain: {},
   },
@@ -52,6 +66,7 @@ export const sessionWsEvent = {
   updateGameConfig: wsEventName(sessionWsChannel, 'updateGameConfig'),
   startGame: wsEventName(sessionWsChannel, 'startGame'),
   guess: wsEventName(sessionWsChannel, 'guess'),
+  submitGuess: wsEventName(sessionWsChannel, 'submitGuess'),
   nextRound: wsEventName(sessionWsChannel, 'nextRound'),
   playAgain: wsEventName(sessionWsChannel, 'playAgain'),
 } satisfies WsClientEventNames<typeof sessionWsChannel>;

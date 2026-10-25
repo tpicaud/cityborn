@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { sessionWsChannel } from './session.channel';
 
-const guessPayload: typeof sessionWsChannel.clientToServer.guess.payload =
-  sessionWsChannel.clientToServer.guess.payload;
+const guessPayload: typeof sessionWsChannel.clientToServer.submitGuess.payload =
+  sessionWsChannel.clientToServer.submitGuess.payload;
 
-describe('sessionWsChannel.guess', () => {
+describe('sessionWsChannel.submitGuess', () => {
   it('accepts coordinates or an empty guess', () => {
     assert.deepEqual(
       guessPayload.parse({ guess: { coordinates: { lat: 0, lng: 0 } } }),
@@ -49,5 +49,31 @@ describe('sessionWsChannel.guess', () => {
       }).success,
       false,
     );
+  });
+});
+
+describe('sessionWsChannel.guess', () => {
+  it('preserves the published client-scored payload', () => {
+    const payload: {
+      guess: {
+        coordinates: { lat: number; lng: number };
+        distance: number;
+        points: number;
+        win: boolean;
+      };
+    } = {
+      guess: {
+        coordinates: { lat: 48, lng: 2 },
+        distance: 123,
+        points: 456,
+        win: false,
+      },
+    };
+
+    assert.deepEqual(
+      sessionWsChannel.clientToServer.guess.payload.parse(payload),
+      payload,
+    );
+    assert.equal(sessionWsChannel.clientToServer.guess.deprecated, true);
   });
 });

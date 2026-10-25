@@ -5,6 +5,8 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
+  type Guess,
+  GuessSchema,
   type GuessSubmission,
   type PlayerId,
   PlayerIdSchema,
@@ -20,7 +22,9 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
+import { applyGuess } from '@cityborn/core';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -79,10 +83,12 @@ export class SessionService {
   async create({
     mode,
     visitorId,
+    scoringProtocol,
   }: CreateSession & { visitorId?: string }): Promise<Session> {
     const newSession: Session = {
       id: await this.generateUniqueSessionID(),
       hostID: '',
+      scoringProtocol,
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
@@ -114,8 +120,10 @@ export class SessionService {
     sessionID: SessionId,
     playerID: PlayerId,
     user?: User,
+    scoringProtocol?: Session['scoringProtocol'],
   ): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
+      this.assertScoringProtocol({ session, scoringProtocol });
       if (session.mode === SessionMode.SOLO && session.players.length > 0)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
@@ -250,10 +258,12 @@ export class SessionService {
   async handleGuess(
     playerID: PlayerId,
     sessionID: SessionId,
-    guess: GuessSubmission,
+    guess: Guess | GuessSubmission,
+    scoringProtocol?: Session['scoringProtocol'],
   ): Promise<Session> {
     const receivedAt: number = Date.now();
     return await this.updateSession(sessionID, async (session) => {
+      this.assertScoringProtocol({ session, scoringProtocol });
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -289,13 +299,20 @@ export class SessionService {
         .filter((player) => player.connected)
         .map((player) => player.username);
 
-      session.currentGame = this.gameService.applyGuess({
-        game,
-        playerID,
-        submission: guess,
-        connectedPlayerIds: connectedPlayerUsernames,
-        receivedAt,
-      });
+      session.currentGame = scoringProtocol
+        ? this.gameService.applyGuess({
+            game,
+            playerID,
+            submission: guess,
+            connectedPlayerIds: connectedPlayerUsernames,
+            receivedAt,
+          })
+        : applyGuess(
+            game,
+            playerID,
+            GuessSchema.parse(guess),
+            connectedPlayerUsernames,
+          );
       return session;
     });
   }
@@ -399,8 +416,10 @@ export class SessionService {
     playerID: PlayerId,
     reconnectToken: SessionReconnectToken | undefined,
     user?: User,
+    scoringProtocol?: Session['scoringProtocol'],
   ): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
+      this.assertScoringProtocol({ session, scoringProtocol });
       const players = session.players;
 
       const playerIndex = players.findIndex(
@@ -536,7 +555,17 @@ export class SessionService {
       this.getKey(sessionID),
     );
     if (!storedSession) return null;
-    return SessionSchema.parse(storedSession);
+    const session: Session = SessionSchema.parse(storedSession);
+    if (
+      !session.scoringProtocol &&
+      session.currentGame &&
+      !session.currentGame.state.guessObjects
+    ) {
+      session.currentGame = await this.gameService.restoreGuessObjects(
+        session.currentGame,
+      );
+    }
+    return session;
   }
 
   private async saveSession(
@@ -669,12 +698,29 @@ export class SessionService {
     return this.generateUniqueSessionID(remainingAttempts - 1);
   }
 
+  private assertScoringProtocol({
+    session,
+    scoringProtocol,
+  }: {
+    session: Session;
+    scoringProtocol: Session['scoringProtocol'];
+  }): void {
+    if (session.scoringProtocol === scoringProtocol) return;
+    throw new BadRequestException({
+      code: ErrorCode.BAD_REQUEST,
+      message:
+        'Cette session nécessite une version compatible du jeu. Créez une nouvelle session.',
+    });
+  }
+
   toClientSession(session: Session): Session {
     return {
       ...session,
       serverTime: Date.now(),
       currentGame: session.currentGame
-        ? this.gameService.toClientGame(session.currentGame)
+        ? session.scoringProtocol
+          ? this.gameService.toClientGame(session.currentGame)
+          : session.currentGame
         : undefined,
     };
   }
