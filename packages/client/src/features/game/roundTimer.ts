@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { ServerClock } from '../../shared/serverClock/serverClock';
+import { useServerClock } from '../../shared/serverClock/serverClockContext';
 
 const roundTimerTickInMilliseconds = 10;
 const countdownTickInMilliseconds = 1000;
@@ -31,20 +33,29 @@ export function useRoundTimer({
   deadline,
   onTimeUp,
 }: RoundTimerOptions): RoundTimer {
+  const serverClock: ServerClock = useServerClock();
   const [timeLeftInSeconds, setTimeLeftInSeconds] =
     useState<number>(totalTimeInSeconds);
   const onTimeUpRef = useRef<() => void>(onTimeUp);
   onTimeUpRef.current = onTimeUp;
 
   useEffect(() => {
-    const endTime: number = deadline ?? Date.now() + totalTimeInSeconds * 1000;
-    setTimeLeftInSeconds(totalTimeInSeconds);
+    const fallbackDeadline: number =
+      performance.now() + totalTimeInSeconds * 1000;
+    const remainingTime: () => number = () =>
+      Math.min(
+        totalTimeInSeconds,
+        Math.max(
+          ((serverClock.localDeadline(deadline) ?? fallbackDeadline) -
+            performance.now()) /
+            1000,
+          0,
+        ),
+      );
+    setTimeLeftInSeconds(remainingTime());
 
     const intervalId = setInterval(() => {
-      const nextTimeLeftInSeconds: number = Math.max(
-        (endTime - Date.now()) / 1000,
-        0,
-      );
+      const nextTimeLeftInSeconds: number = remainingTime();
       setTimeLeftInSeconds(nextTimeLeftInSeconds);
       if (nextTimeLeftInSeconds > 0) return;
 
@@ -53,7 +64,7 @@ export function useRoundTimer({
     }, roundTimerTickInMilliseconds);
 
     return () => clearInterval(intervalId);
-  }, [totalTimeInSeconds, deadline]);
+  }, [totalTimeInSeconds, deadline, serverClock]);
 
   return {
     formattedTimeLeft: formatTimeLeft(timeLeftInSeconds),

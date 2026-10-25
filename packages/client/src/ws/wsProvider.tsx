@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, type ReactNode, useContext } from 'react';
+import { ServerClockProvider } from '../shared/serverClock/serverClockContext';
 import type { SocketFactory } from './socketFactory';
 
 type WsProviderProps = {
@@ -15,7 +16,7 @@ const SocketFactoryContext = createContext<SocketFactory | undefined>(
 export function WsProvider({ createSocket, children }: WsProviderProps) {
   return (
     <SocketFactoryContext.Provider value={createSocket}>
-      {children}
+      <ServerClockProvider>{children}</ServerClockProvider>
     </SocketFactoryContext.Provider>
   );
 }

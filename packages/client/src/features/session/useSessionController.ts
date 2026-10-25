@@ -33,6 +33,8 @@ import {
   type ErrorReporter,
   useErrorReporter,
 } from '../../shared/errorReporter';
+import type { ServerClock } from '../../shared/serverClock/serverClock';
+import { useServerClock } from '../../shared/serverClock/serverClockContext';
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
@@ -73,6 +75,7 @@ export function useSessionController({
   navigation,
 }: SessionControllerOptions): SessionController {
   const { sessionApi }: DomainApis = useDomainApis();
+  const serverClock: ServerClock = useServerClock();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
@@ -107,14 +110,20 @@ export function useSessionController({
   useEffect(() => {
     const loadSession = async (): Promise<void> => {
       try {
-        setSession(await sessionApi.fetchSession(sessionID));
+        const requestStartedAt: number = performance.now();
+        const loadedSession: Session = await sessionApi.fetchSession(sessionID);
+        serverClock.synchronize({
+          serverTime: loadedSession.serverTime,
+          requestStartedAt,
+        });
+        setSession(loadedSession);
       } catch (error: unknown) {
         reportError(error);
         navigation.returnTo('/');
       }
     };
     loadSession();
-  }, [sessionID, sessionApi, navigation, reportError]);
+  }, [sessionID, sessionApi, navigation, reportError, serverClock]);
 
   const gameStatus: GameStatus | undefined = session?.currentGame?.status;
   const userId: UserId | undefined = user?.id;
@@ -127,9 +136,10 @@ export function useSessionController({
   useEffect(
     () =>
       sessionChannel?.onSessionUpdate((incoming: Session) => {
+        serverClock.synchronize({ serverTime: incoming.serverTime });
         setSession((previous) => mergeSessionUpdate(previous, incoming));
       }),
-    [sessionChannel],
+    [sessionChannel, serverClock],
   );
 
   const join = useCallback(

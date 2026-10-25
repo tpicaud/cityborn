@@ -670,11 +670,12 @@ export class SessionService {
   }
 
   toClientSession(session: Session): Session {
-    if (!session.currentGame) return session;
-
     return {
       ...session,
-      currentGame: this.gameService.toClientGame(session.currentGame),
+      serverTime: Date.now(),
+      currentGame: session.currentGame
+        ? this.gameService.toClientGame(session.currentGame)
+        : undefined,
     };
   }
 }

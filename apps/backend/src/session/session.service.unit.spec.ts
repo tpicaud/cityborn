@@ -163,9 +163,11 @@ describe('SessionService lobby operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      await expect(sessionService.getById(session.id)).resolves.toStrictEqual(
-        session,
-      );
+      await expect(sessionService.getById(session.id)).resolves.toStrictEqual({
+        ...session,
+        serverTime: expect.any(Number),
+        currentGame: undefined,
+      });
     });
 
     it('rejects a missing session', async () => {
@@ -941,5 +943,45 @@ describe('SessionService session lock', () => {
       expect.any(Number),
       expect.any(Function),
     );
+  });
+});
+
+describe('SessionService.toClientSession', () => {
+  it('timestamps lobby snapshots without changing the persisted session', () => {
+    const session: Session = buildSession();
+    const { sessionService }: ReturnType<typeof buildSessionService> =
+      buildSessionService(session);
+    const serverTime: jest.SpyInstance<number, []> = jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(100000);
+
+    const clientSession: Session = sessionService.toClientSession(session);
+
+    expect(clientSession.serverTime).toBe(100000);
+    expect(session.serverTime).toBeUndefined();
+    serverTime.mockRestore();
+  });
+
+  it('timestamps game snapshots with the unchanged server deadline', () => {
+    const game: Game = buildGame({
+      state: buildGameState({ currentRound: buildRound({ deadline: 125000 }) }),
+    });
+    const session: Session = buildSession({ currentGame: game });
+    const {
+      sessionService,
+      gameService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+    gameService.toClientGame.mockReturnValue(game);
+    const serverTime: jest.SpyInstance<number, []> = jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(120000);
+
+    const clientSession: Session = sessionService.toClientSession(session);
+
+    expect(clientSession.serverTime).toBe(120000);
+    expect(clientSession.currentGame?.state.currentRound?.deadline).toBe(
+      125000,
+    );
+    serverTime.mockRestore();
   });
 });

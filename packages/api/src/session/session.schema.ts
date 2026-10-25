@@ -39,6 +39,7 @@ export const SessionHostIdSchema = z
 
 export const SessionSchema = z.object({
   id: SessionIdSchema,
+  serverTime: z.number().optional(),
   hostID: SessionHostIdSchema,
   mode: SessionModeSchema,
   status: SessionStatusSchema,
