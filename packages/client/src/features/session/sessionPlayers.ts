@@ -1,4 +1,11 @@
-import type { SessionPlayer } from '@cityborn/api';
+import {
+  type PlayerId,
+  PlayerIdSchema,
+  SessionMode,
+  type SessionPlayer,
+} from '@cityborn/api';
+
+const soloGuestPlayerID: PlayerId = PlayerIdSchema.parse('guest');
 
 export type PlayerConnectionStatus = 'connected' | 'disconnected' | 'unknown';
 
@@ -17,4 +24,15 @@ export function sortPlayersConnectedFirst(
       Number(playerConnectionStatus(first) === 'disconnected') -
       Number(playerConnectionStatus(second) === 'disconnected'),
   );
+}
+
+export function presetPlayerID({
+  mode,
+  username,
+}: {
+  mode: SessionMode | undefined;
+  username: PlayerId | undefined;
+}): PlayerId | undefined {
+  if (username) return username;
+  return mode === SessionMode.SOLO ? soloGuestPlayerID : undefined;
 }

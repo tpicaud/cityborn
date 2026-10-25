@@ -1,27 +1,28 @@
-import { type SessionId, SessionStatus } from '@cityborn/api';
+import { type SessionId, SessionMode, SessionStatus } from '@cityborn/api';
 import {
-  type MultiSessionController,
-  useMultiSessionController,
+  type SessionController,
+  useSessionController,
 } from '@cityborn/client/session';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { Game } from '@/features/game/Game';
 import { useNavigation } from '@/lib/navigation';
 import { ConnectionLostDialog } from './ConnectionLostDialog';
-import { MultiLobby } from './MultiLobby';
+import { MultiLobby } from './lobby/MultiLobby';
+import { SoloLobby } from './lobby/SoloLobby';
 
-type MultiSessionProps = {
+type SessionProps = {
   sessionID: SessionId;
 };
 
-export default function MultiSession({ sessionID }: MultiSessionProps) {
+export default function Session({ sessionID }: SessionProps) {
   const navigation = useNavigation();
-  const multiSession: MultiSessionController = useMultiSessionController({
+  const sessionController: SessionController = useSessionController({
     sessionID,
     navigation,
   });
 
-  if (!multiSession.session) {
+  if (!sessionController.session) {
     return (
       <View className="flex-1 items-center justify-center">
         <LoaderIcon />
@@ -32,30 +33,37 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
 
   return (
     <View className="flex-1">
-      {multiSession.session.status === SessionStatus.IN_GAME &&
-      multiSession.session.currentGame ? (
+      {sessionController.session.status === SessionStatus.IN_GAME &&
+      sessionController.session.currentGame ? (
         <Game
-          localPlayerID={multiSession.localPlayerID}
-          isHost={multiSession.isHost}
-          game={multiSession.session.currentGame}
-          handleGuess={multiSession.guess}
-          handleNextRound={multiSession.nextRound}
-          handleEndGame={multiSession.endGame}
-          handlePlayAgain={multiSession.playAgain}
-          handleExitGame={multiSession.exitGame}
+          localPlayerID={sessionController.localPlayerID}
+          isHost={sessionController.isHost}
+          game={sessionController.session.currentGame}
+          handleGuess={sessionController.guess}
+          handleNextRound={sessionController.nextRound}
+          handleEndGame={sessionController.endGame}
+          handlePlayAgain={sessionController.playAgain}
+          handleExitGame={sessionController.exitGame}
+        />
+      ) : sessionController.session.mode === SessionMode.SOLO ? (
+        <SoloLobby
+          isHost={sessionController.isHost}
+          session={sessionController.session}
+          handleUpdateGameConfig={sessionController.updateGameConfig}
+          handleStartGame={sessionController.startGame}
         />
       ) : (
         <MultiLobby
-          localPlayerID={multiSession.localPlayerID}
-          isHost={multiSession.isHost}
-          session={multiSession.session}
-          handleUpdateGameConfig={multiSession.updateGameConfig}
-          handleStartGame={multiSession.startGame}
-          handleJoinSession={multiSession.join}
+          localPlayerID={sessionController.localPlayerID}
+          isHost={sessionController.isHost}
+          session={sessionController.session}
+          handleUpdateGameConfig={sessionController.updateGameConfig}
+          handleStartGame={sessionController.startGame}
+          handleJoinSession={sessionController.join}
         />
       )}
 
-      {multiSession.connectionStatus === 'reconnecting' && (
+      {sessionController.connectionStatus === 'reconnecting' && (
         <View className="absolute inset-0 items-center justify-center bg-black/30">
           <View className="items-center gap-4 py-8 px-6 bg-background rounded-xl">
             <LoaderIcon />
@@ -64,10 +72,10 @@ export default function MultiSession({ sessionID }: MultiSessionProps) {
         </View>
       )}
 
-      {multiSession.connectionStatus === 'closed' && (
+      {sessionController.connectionStatus === 'closed' && (
         <ConnectionLostDialog
-          onRetry={multiSession.retryConnection}
-          onExit={multiSession.exitGame}
+          onRetry={sessionController.retryConnection}
+          onExit={sessionController.exitGame}
         />
       )}
     </View>

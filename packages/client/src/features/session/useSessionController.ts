@@ -37,19 +37,29 @@ import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
-import type { SessionController } from './sessionContract';
+import { presetPlayerID } from './sessionPlayers';
 import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
 
-export type MultiSessionControllerOptions = {
+export type SessionControllerOptions = {
   sessionID: SessionId;
   navigation: Navigation;
 };
 
-export type MultiSessionController = SessionController & {
+export type SessionController = {
+  session: Session | undefined;
+  localPlayerID: PlayerId | undefined;
+  isHost: boolean;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
   updateHost: (newHostID: PlayerId) => Promise<void>;
+  updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
+  startGame: () => Promise<void>;
+  guess: (guess: Guess) => Promise<void>;
+  nextRound: () => Promise<void>;
+  endGame: () => Promise<void>;
+  playAgain: () => Promise<void>;
+  exitGame: () => Promise<void>;
 };
 
 type JoinedPlayer = {
@@ -57,18 +67,19 @@ type JoinedPlayer = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
-export function useMultiSessionController({
+export function useSessionController({
   sessionID,
   navigation,
-}: MultiSessionControllerOptions): MultiSessionController {
+}: SessionControllerOptions): SessionController {
   const { sessionApi }: DomainApis = useDomainApis();
   const { user }: CurrentUser = useCurrentUser();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
-  const [localPlayerID, setLocalPlayerID] = useState<PlayerId | undefined>(
-    user?.username,
-  );
   const [session, setSession] = useState<Session>();
+  const [joinedPlayerID, setJoinedPlayerID] = useState<PlayerId>();
+  const localPlayerID: PlayerId | undefined =
+    joinedPlayerID ??
+    presetPlayerID({ mode: session?.mode, username: user?.username });
   const joinedPlayer: RefObject<JoinedPlayer | null> =
     useRef<JoinedPlayer | null>(null);
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
@@ -140,7 +151,7 @@ export function useMultiSessionController({
         playerID,
         reconnectToken: joinAck.reconnectToken,
       };
-      setLocalPlayerID(playerID);
+      setJoinedPlayerID(playerID);
     },
     [session, sessionChannel],
   );

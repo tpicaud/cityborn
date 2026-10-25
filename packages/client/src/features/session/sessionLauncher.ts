@@ -1,6 +1,12 @@
 'use client';
 
-import { type Session, SessionIdSchema, SessionMode } from '@cityborn/api';
+import {
+  ApiResponseError,
+  ErrorCode,
+  type Session,
+  SessionIdSchema,
+  SessionMode,
+} from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -15,9 +21,10 @@ import {
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
-import { multiSessionPath, soloSessionPath } from './sessionPath';
+import { sessionPath } from './sessionPath';
 
 const sessionCodeLength: number = 6;
+const soloSessionNotJoinableStatus: number = 403;
 const sessionCodePattern: RegExp = new RegExp(`^\\d{${sessionCodeLength}}$`);
 
 const JoinSessionSchema = z.object({
@@ -50,7 +57,7 @@ export type SessionLauncherOptions = {
 
 export type SessionLauncher = {
   joinSessionForm: JoinSessionForm;
-  playSolo: () => void;
+  playSolo: () => Promise<void>;
   playMulti: () => Promise<void>;
   joinSession: FormSubmitHandler;
   authenticationRequired: boolean;
@@ -77,30 +84,42 @@ export function useSessionLauncher({
     defaultValues: joinSessionFormDefaultValues,
   });
 
+  const openNewSession = async (mode: SessionMode): Promise<void> => {
+    try {
+      const session: Session = await sessionApi.createSession({ mode });
+      navigation.push(sessionPath(session));
+    } catch (error: unknown) {
+      reportError(error);
+    }
+  };
+
   const playMulti: () => Promise<void> = async (): Promise<void> => {
     if (!user) {
       setAuthenticationRequired(true);
       return;
     }
 
-    try {
-      const session: Session = await sessionApi.createSession({
-        mode: SessionMode.MULTI,
-      });
-      navigation.push(multiSessionPath(session.id));
-    } catch (error: unknown) {
-      reportError(error);
-    }
+    await openNewSession(SessionMode.MULTI);
   };
 
   const joinSession: (values: JoinSessionFormValues) => Promise<void> = async ({
     code,
   }: JoinSessionFormValues): Promise<void> => {
     try {
-      await queryClient.query(
+      const session: Session = await queryClient.query(
         sessionQueryOptions({ sessionApi, sessionId: code }),
       );
-      navigation.push(multiSessionPath(code));
+      if (session.mode === SessionMode.SOLO) {
+        reportError(
+          new ApiResponseError({
+            code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
+            statusCode: soloSessionNotJoinableStatus,
+            message: 'Joining session failed: solo session',
+          }),
+        );
+        return;
+      }
+      navigation.push(sessionPath(session));
     } catch (error: unknown) {
       reportError(error);
     }
@@ -108,7 +127,7 @@ export function useSessionLauncher({
 
   return {
     joinSessionForm,
-    playSolo: () => navigation.push(soloSessionPath),
+    playSolo: () => openNewSession(SessionMode.SOLO),
     playMulti,
     joinSession: joinSessionForm.handleSubmit(joinSession),
     authenticationRequired,

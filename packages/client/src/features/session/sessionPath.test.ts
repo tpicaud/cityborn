@@ -1,37 +1,49 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { type SessionId, SessionIdSchema } from '@cityborn/api';
-import { multiSessionPath, sessionIdFromMultiSessionPath } from './sessionPath';
+import { type SessionId, SessionIdSchema, SessionMode } from '@cityborn/api';
+import { sessionIdFromSessionPath, sessionPath } from './sessionPath';
 
 const sessionId: SessionId = SessionIdSchema.parse('brave-golden-lynx');
 
-describe('sessionIdFromMultiSessionPath', () => {
-  it('reads the session of a multi session path', () => {
-    const path: string = multiSessionPath(sessionId);
+describe('sessionIdFromSessionPath', () => {
+  it('reads the session of a solo or multi session path', () => {
+    const paths: string[] = [
+      sessionPath({ id: sessionId, mode: SessionMode.SOLO }),
+      sessionPath({ id: sessionId, mode: SessionMode.MULTI }),
+    ];
 
-    const readSessionId: SessionId | null = sessionIdFromMultiSessionPath(path);
+    const readSessionIds: (SessionId | null)[] = paths.map(
+      sessionIdFromSessionPath,
+    );
 
-    assert.equal(readSessionId, 'brave-golden-lynx');
+    assert.deepEqual(readSessionIds, [
+      'brave-golden-lynx',
+      'brave-golden-lynx',
+    ]);
   });
 
   it('rejects a path without session', () => {
-    const paths: string[] = ['/session/multi', '/session/multi/'];
+    const paths: string[] = [
+      '/session/multi',
+      '/session/multi/',
+      '/session/solo/',
+    ];
 
     const readSessionIds: (SessionId | null)[] = paths.map(
-      sessionIdFromMultiSessionPath,
+      sessionIdFromSessionPath,
     );
 
-    assert.deepEqual(readSessionIds, [null, null]);
+    assert.deepEqual(readSessionIds, [null, null, null]);
   });
 
-  it('rejects a path outside multi sessions', () => {
+  it('rejects a path outside sessions', () => {
     const paths: string[] = [
-      `/session/solo/${sessionId}`,
+      `/session/duo/${sessionId}`,
       `/session/multi/${sessionId}/results`,
     ];
 
     const readSessionIds: (SessionId | null)[] = paths.map(
-      sessionIdFromMultiSessionPath,
+      sessionIdFromSessionPath,
     );
 
     assert.deepEqual(readSessionIds, [null, null]);

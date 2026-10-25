@@ -1,6 +1,5 @@
 import type {
   CreateSession,
-  Game,
   GameConfig,
   Guess,
   PlayerId,
@@ -15,7 +14,6 @@ import {
   sessionWsServerEvent,
   unwrapApiResponse,
 } from '@cityborn/api';
-import { toLightGame } from '@cityborn/core';
 import type { ContractClient } from '../../api/contractClient';
 import type { WsChannelConnection } from '../../ws/wsChannelConnection';
 
@@ -30,20 +28,9 @@ type SessionReconnection = SessionMembership & {
 
 type SessionUpdateListener = (session: Session) => void;
 
-type FinalizedSession = Session & {
-  currentGame: NonNullable<Session['currentGame']>;
-};
-
-function buildFinalizeGameBody(session: Session): FinalizedSession | null {
-  if (!session.currentGame) return null;
-  return { ...session, currentGame: toLightGame(session.currentGame) };
-}
-
 export interface SessionApi {
   createSession(data: CreateSession): Promise<Session>;
   fetchSession(id: SessionId): Promise<Session>;
-  createSoloGame(session: Session): Promise<Game>;
-  finalizeGame(session: Session): Promise<void>;
 }
 
 export function createSessionApi(
@@ -60,18 +47,6 @@ export function createSessionApi(
       return unwrapApiResponse(
         await contractClient.session.getSession({ params: { id } }),
       );
-    },
-
-    async createSoloGame(session) {
-      return unwrapApiResponse(
-        await contractClient.session.createGame({ body: session }),
-      );
-    },
-
-    async finalizeGame(session) {
-      const body: FinalizedSession | null = buildFinalizeGameBody(session);
-      if (!body) return;
-      unwrapApiResponse(await contractClient.session.finalizeGame({ body }));
     },
   };
 }

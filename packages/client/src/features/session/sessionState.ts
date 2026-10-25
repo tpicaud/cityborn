@@ -1,45 +1,8 @@
-import type {
-  Game,
-  GameConfigChanges,
-  Guess,
-  PlayerId,
-  Session,
-} from '@cityborn/api';
-import { applyGameConfigChanges, SessionStatus } from '@cityborn/api';
-import {
-  applyGuess,
-  beginGame,
-  reconcileGuessObjects,
-  resolveNextRound,
-} from '@cityborn/core';
-
-export function withHost(session: Session, hostID: PlayerId): Session {
-  return { ...session, hostID };
-}
+import type { PlayerId, Session, SessionStatus } from '@cityborn/api';
+import { reconcileGuessObjects } from '@cityborn/core';
 
 export function withStatus(session: Session, status: SessionStatus): Session {
   return { ...session, status };
-}
-
-export function withGameConfig(
-  session: Session,
-  changes: GameConfigChanges,
-): Session {
-  return {
-    ...session,
-    gameConfig: applyGameConfigChanges({
-      gameConfig: session.gameConfig,
-      changes,
-    }),
-  };
-}
-
-export function withGame(session: Session, currentGame: Game): Session {
-  return { ...session, currentGame };
-}
-
-export function withoutGame(session: Session): Session {
-  return { ...session, currentGame: undefined };
 }
 
 export function isHostOf(
@@ -61,32 +24,4 @@ export function mergeSessionUpdate(
       incoming.currentGame,
     ),
   };
-}
-
-export function startSoloGame(session: Session, createdGame: Game): Session {
-  return {
-    ...session,
-    status: SessionStatus.IN_GAME,
-    currentGame: beginGame(createdGame),
-  };
-}
-
-export function applySoloGuess(
-  session: Session,
-  playerID: PlayerId,
-  guess: Guess,
-): Session {
-  const game = session.currentGame;
-  if (!game?.state.currentRound) return session;
-  return withGame(session, applyGuess(game, playerID, guess, [playerID]));
-}
-
-export function advanceSoloRound(session: Session): {
-  session: Session;
-  isGameOver: boolean;
-} {
-  const game = session.currentGame;
-  if (!game) return { session, isGameOver: false };
-  const { game: nextGame, isGameOver } = resolveNextRound(game);
-  return { session: withGame(session, nextGame), isGameOver };
 }

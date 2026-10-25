@@ -2,18 +2,16 @@
 
 import type { SessionId } from '@cityborn/api';
 import type { Navigation } from '@cityborn/client/platform';
-import { sessionIdFromMultiSessionPath } from '@cityborn/client/session';
+import { sessionIdFromSessionPath } from '@cityborn/client/session';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
-import MultiSession from '@/features/session/multi/MultiSession';
+import Session from '@/features/session/Session';
 import { useNavigation } from '@/lib/navigation';
 
-export default function MultiSessionPage() {
+export default function SessionPage() {
   const navigation: Navigation = useNavigation();
-  const sessionID: SessionId | null = sessionIdFromMultiSessionPath(
-    usePathname(),
-  );
+  const sessionID: SessionId | null = sessionIdFromSessionPath(usePathname());
 
   useEffect(() => {
     if (!sessionID) navigation.returnTo('/');
@@ -21,5 +19,5 @@ export default function MultiSessionPage() {
 
   if (!sessionID) return <LoadingDialog message="Chargement de la session" />;
 
-  return <MultiSession sessionID={sessionID} />;
+  return <Session sessionID={sessionID} />;
 }

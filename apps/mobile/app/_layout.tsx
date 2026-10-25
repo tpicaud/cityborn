@@ -69,8 +69,7 @@ function RootLayoutContent() {
               />
               <Stack.Screen name="auth/sign-in" />
               <Stack.Screen name="auth/sign-up" />
-              <Stack.Screen name="session/solo" />
-              <Stack.Screen name="session/multi/[sessionID]" />
+              <Stack.Screen name="session/[mode]/[sessionID]" />
             </Stack>
           </View>
         </SafeAreaProvider>

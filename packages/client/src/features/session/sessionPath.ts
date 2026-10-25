@@ -1,17 +1,24 @@
-import { type SessionId, SessionIdSchema } from '@cityborn/api';
+import {
+  type Session,
+  type SessionId,
+  SessionIdSchema,
+  SessionMode,
+} from '@cityborn/api';
 import type { NavigationPath } from '../../platform/navigation';
 
-export const soloSessionPath: NavigationPath = '/session/solo';
+const sessionPathPattern: RegExp = new RegExp(
+  `^/session/(?:${Object.values(SessionMode).join('|')})/([^/]+)$`,
+);
 
-const multiSessionPathPrefix = '/session/multi/';
-
-export function multiSessionPath(sessionID: SessionId): NavigationPath {
-  return `${multiSessionPathPrefix}${sessionID}`;
+export function sessionPath({
+  id,
+  mode,
+}: Pick<Session, 'id' | 'mode'>): NavigationPath {
+  return `/session/${mode}/${id}`;
 }
 
-export function sessionIdFromMultiSessionPath(path: string): SessionId | null {
-  if (!path.startsWith(multiSessionPathPrefix)) return null;
-  const pathSegment: string = path.slice(multiSessionPathPrefix.length);
-  if (pathSegment === '' || pathSegment.includes('/')) return null;
+export function sessionIdFromSessionPath(path: string): SessionId | null {
+  const pathSegment: string | undefined = sessionPathPattern.exec(path)?.[1];
+  if (pathSegment === undefined) return null;
   return SessionIdSchema.parse(pathSegment);
 }

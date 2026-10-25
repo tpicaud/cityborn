@@ -5,24 +5,19 @@ export {
   type SessionLauncherOptions,
   useSessionLauncher,
 } from './sessionLauncher';
-export { sessionIdFromMultiSessionPath } from './sessionPath';
+export { sessionIdFromSessionPath } from './sessionPath';
 export {
   type PlayerConnectionStatus,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
 } from './sessionPlayers';
 export {
-  type MultiSessionController,
-  type MultiSessionControllerOptions,
-  useMultiSessionController,
-} from './useMultiSessionController';
-export {
   type PackSelection,
   type PackSelectionOptions,
   usePackSelection,
 } from './usePackSelection';
 export {
-  type SoloSessionController,
-  type SoloSessionControllerOptions,
-  useSoloSessionController,
-} from './useSoloSessionController';
+  type SessionController,
+  type SessionControllerOptions,
+  useSessionController,
+} from './useSessionController';
