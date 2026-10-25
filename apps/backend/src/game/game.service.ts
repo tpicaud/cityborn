@@ -1,20 +1,27 @@
 import {
+  BaseGuessObjectSchema,
+  defaultGuess,
+  type FullGuessObject,
   type Game,
   type GameConfig,
   type GameId,
   GameIdSchema,
   GameStatus,
   type Guess,
+  type GuessObjectId,
+  type GuessSubmission,
   type PlayerId,
   type PlayerResults,
+  type Round,
+  RoundStatus,
   SessionMode,
   type SessionPlayer,
 } from '@cityborn/api';
 import {
   applyGuess,
   beginGame,
+  createGuess,
   resolveNextRound,
-  toLightGame,
 } from '@cityborn/core';
 import { Injectable } from '@nestjs/common';
 import { EventService } from '../event/event.service';
@@ -29,6 +36,9 @@ export type CreateGameParams = {
   mode: SessionMode;
   visitorId?: string;
 };
+
+const roundCountdownMs: number = 3000;
+const roundNetworkToleranceMs: number = 1000;
 
 @Injectable()
 export class GameService {
@@ -133,24 +143,102 @@ export class GameService {
   }
 
   beginGame(game: Game): Game {
-    return beginGame(game);
+    return this.withRoundDeadline(beginGame(game));
   }
 
-  applyGuess(
-    game: Game,
-    playerID: PlayerId,
-    guess: Guess,
-    connectedPlayerIds: PlayerId[],
-  ): Game {
+  applyGuess({
+    game,
+    playerID,
+    submission,
+    connectedPlayerIds,
+    receivedAt,
+  }: {
+    game: Game;
+    playerID: PlayerId;
+    submission: GuessSubmission;
+    connectedPlayerIds: PlayerId[];
+    receivedAt: number;
+  }): Game {
+    const round: Round | undefined = game.state.currentRound;
+    if (
+      game.status !== GameStatus.IN_GAME ||
+      round?.status !== RoundStatus.GUESSING
+    )
+      return game;
+    const guessObject: FullGuessObject | undefined =
+      game.state.guessObjects?.find(({ id }) => id === round.guessObjectId);
+    const guess: Guess =
+      submission.coordinates &&
+      guessObject &&
+      round.deadline !== undefined &&
+      receivedAt <= round.deadline + roundNetworkToleranceMs
+        ? createGuess(guessObject, submission.coordinates)
+        : defaultGuess;
     return applyGuess(game, playerID, guess, connectedPlayerIds);
   }
 
   resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {
-    return resolveNextRound(game);
+    if (game.state.currentRound?.status !== RoundStatus.SHOWING_RESULTS)
+      return { game, isGameOver: false };
+    const next: { game: Game; isGameOver: boolean } = resolveNextRound(game);
+    return next.isGameOver
+      ? next
+      : { ...next, game: this.withRoundDeadline(next.game) };
   }
 
-  toLightGame(game: Game): Game {
-    return toLightGame(game);
+  toClientGame(game: Game): Game {
+    const round: Round | undefined = game.state.currentRound;
+    const objects: FullGuessObject[] = game.state.guessObjects ?? [];
+    const currentIndex: number = game.state.guessObjectsIds.indexOf(
+      round?.guessObjectId ?? game.state.guessObjectsIds[0],
+    );
+    const revealedCount: number =
+      game.status === GameStatus.IN_RESULTS
+        ? objects.length
+        : Math.max(
+            0,
+            currentIndex +
+              (round?.status === RoundStatus.SHOWING_RESULTS ? 1 : 0),
+          );
+    const revealedIds: Set<GuessObjectId> = new Set(
+      game.state.guessObjectsIds.slice(0, revealedCount),
+    );
+    return {
+      ...game,
+      state: {
+        ...game.state,
+        guessObjectPreviews: objects.map((object) =>
+          BaseGuessObjectSchema.parse(object),
+        ),
+        guessObjects: objects.filter(({ id }) => revealedIds.has(id)),
+        currentRound:
+          round?.status === RoundStatus.GUESSING
+            ? {
+                ...round,
+                playersGuesses: Object.fromEntries(
+                  Object.keys(round.playersGuesses ?? {}).map((playerID) => [
+                    playerID,
+                    defaultGuess,
+                  ]),
+                ),
+              }
+            : round,
+      },
+    };
+  }
+
+  private withRoundDeadline(game: Game): Game {
+    if (!game.state.currentRound) return game;
+    return {
+      ...game,
+      state: {
+        ...game.state,
+        currentRound: {
+          ...game.state.currentRound,
+          deadline: Date.now() + roundCountdownMs + game.config.timer * 1000,
+        },
+      },
+    };
   }
 
   private async generateUniqueGameID(): Promise<GameId> {

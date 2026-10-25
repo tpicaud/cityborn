@@ -2,7 +2,7 @@
 
 import type {
   GameConfigChanges,
-  Guess,
+  GuessSubmission,
   PlayerId,
   Session,
   SessionId,
@@ -56,7 +56,7 @@ export type SessionController = {
   updateHost: (newHostID: PlayerId) => Promise<void>;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
-  guess: (guess: Guess) => Promise<void>;
+  guess: (guess: GuessSubmission) => Promise<void>;
   nextRound: () => Promise<void>;
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
@@ -210,7 +210,7 @@ export function useSessionController({
     }).startGame();
   };
 
-  const guess = async (playerGuess: Guess) => {
+  const guess = async (playerGuess: GuessSubmission) => {
     requireGame('Guess');
     await requireOpenedSessionChannel({
       sessionChannel,

@@ -1,6 +1,7 @@
 import { extendApi } from '@anatine/zod-openapi';
 import { z } from 'zod';
 import {
+  BaseGuessObjectSchema,
   FullGuessObjectSchema,
   GuessObjectIdSchema,
 } from '../guess-object/guess-object.schema';
@@ -36,6 +37,18 @@ export const CoordSchema = z.object({
   lat: z.number(),
   lng: z.number(),
 });
+
+export const GuessSubmissionSchema = z
+  .object({
+    coordinates: z
+      .object({
+        lat: z.number().finite().min(-90).max(90),
+        lng: z.number().finite().min(-180).max(180),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 
 export const GuessSchema = z.object({
   coordinates: CoordSchema,
@@ -87,6 +100,7 @@ export const GameConfigSchema = extendApi(
 
 export const RoundSchema = z.object({
   status: RoundStatusSchema,
+  deadline: z.number().optional(),
   guessObjectId: GuessObjectIdSchema,
   playersGuesses: PlayerGuessesSchema.optional(),
 });
@@ -96,6 +110,7 @@ export const GameStateSchema = z.object({
   results: PlayerResultsByIdSchema,
   currentRound: RoundSchema.optional(),
   guessObjects: z.array(FullGuessObjectSchema).optional(),
+  guessObjectPreviews: z.array(BaseGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({
@@ -121,6 +136,7 @@ export const defaultGameConfig: Readonly<GameConfig> = {
 
 export type GameConfigPack = z.infer<typeof GameConfigPackSchema>;
 export type Coord = z.infer<typeof CoordSchema>;
+export type GuessSubmission = z.infer<typeof GuessSubmissionSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 export type GameConfigChanges = Partial<Omit<GameConfig, 'categories'>>;

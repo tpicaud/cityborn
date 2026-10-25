@@ -433,7 +433,10 @@ describe('Session gateway over a real socket', () => {
           packs: [legacySelectedPack],
           categories: [legacySelectedPack],
         },
-        state: { guessObjects: [{ name: 'Tour Eiffel' }] },
+        state: {
+          guessObjectPreviews: [{ name: 'Tour Eiffel' }],
+          guessObjects: [],
+        },
       },
     });
   });

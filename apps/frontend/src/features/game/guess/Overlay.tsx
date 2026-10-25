@@ -1,9 +1,10 @@
 'use client';
 
 import {
-  type FullGuessObject,
+  type Coord,
   type Game,
-  type Guess,
+  type GuessObjectPreview,
+  type GuessSubmission,
   type PlayerId,
   RoundStatus,
 } from '@cityborn/api';
@@ -22,9 +23,9 @@ import Timer from './Timer';
 
 type OverlayProps = {
   localPlayerID: PlayerId;
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   game: Game;
-  handleGuess: (value: Guess) => Promise<void>;
+  handleGuess: (value: GuessSubmission) => Promise<void>;
   handleIsTimeUp: () => void;
 };
 
@@ -33,15 +34,15 @@ function GuessButton({
   disabled,
   handleGuess,
 }: {
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   disabled: boolean;
-  handleGuess: (value: Guess) => Promise<void>;
+  handleGuess: (value: GuessSubmission) => Promise<void>;
 }) {
   return (
     <LoadingButton
       variant="contained"
       onClick={async () => {
-        if (preGuess) await handleGuess(preGuess);
+        if (preGuess) await handleGuess({ coordinates: preGuess });
       }}
       disabled={disabled}
       sx={{
@@ -54,7 +55,7 @@ function GuessButton({
         textAlign: 'center',
       }}
     >
-      Guess
+      Deviner
     </LoadingButton>
   );
 }
@@ -122,7 +123,7 @@ export default function Overlay({
   handleGuess,
   handleIsTimeUp,
 }: OverlayProps) {
-  const guessObject: FullGuessObject | undefined = currentGuessObject(game);
+  const guessObject: GuessObjectPreview | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
     game,
     localPlayerID,
@@ -137,6 +138,7 @@ export default function Overlay({
         {isGuessing && (
           <Timer
             totalTimeInSeconds={game.config.timer}
+            deadline={game.state.currentRound?.deadline}
             endMessage="Terminé !"
             onTimeUp={handleIsTimeUp}
           />

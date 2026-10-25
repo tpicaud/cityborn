@@ -4,17 +4,20 @@ import { Text, View } from 'react-native';
 
 type TimerProps = {
   totalTimeInSeconds: number;
+  deadline?: number;
   endMessage: string;
   onTimeUp: () => void;
 };
 
 export default function Timer({
   totalTimeInSeconds,
+  deadline,
   endMessage,
   onTimeUp,
 }: TimerProps) {
   const roundTimer: RoundTimer = useRoundTimer({
     totalTimeInSeconds,
+    deadline,
     onTimeUp,
   });
 

@@ -375,11 +375,10 @@ describe('SessionService lobby operations', () => {
 
 describe('SessionService game operations', () => {
   describe('startGame', () => {
-    it('starts a game and persists its light representation', async () => {
+    it('starts a game and persists its private representation', async () => {
       const session: Session = buildSession();
       const game: Game = buildGame();
       const startedGame: Game = buildGame({ id: game.id });
-      const lightGame: Game = buildGame({ id: game.id });
       const {
         sessionService,
         redisService,
@@ -387,7 +386,6 @@ describe('SessionService game operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.createGame.mockResolvedValue(game);
       gameService.beginGame.mockReturnValue(startedGame);
-      gameService.toLightGame.mockReturnValue(lightGame);
 
       const result: Session = await sessionService.startGame(
         playerId('host'),
@@ -399,7 +397,7 @@ describe('SessionService game operations', () => {
       expect(result.currentGame).toBe(startedGame);
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
-        expect.objectContaining({ currentGame: lightGame }),
+        expect.objectContaining({ currentGame: startedGame }),
         600,
       );
     });
@@ -440,12 +438,13 @@ describe('SessionService game operations', () => {
         defaultGuess,
       );
 
-      expect(gameService.applyGuess).toHaveBeenCalledWith(
+      expect(gameService.applyGuess).toHaveBeenCalledWith({
         game,
-        playerId('host'),
-        defaultGuess,
-        [playerId('host'), playerId('bob')],
-      );
+        playerID: playerId('host'),
+        submission: defaultGuess,
+        connectedPlayerIds: [playerId('host'), playerId('bob')],
+        receivedAt: expect.any(Number),
+      });
       expect(result.currentGame).toBe(updatedGame);
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });

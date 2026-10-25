@@ -1,15 +1,17 @@
 import {
-  defaultGuess,
+  type Coord,
   type Game,
-  type Guess,
+  type GuessSubmission,
   RoundStatus,
 } from '@cityborn/api';
 
 export type RoundDisplayState = 'countdown' | 'guessing' | 'results';
 type RoundStatusValue = NonNullable<Game['state']['currentRound']>['status'];
 
-export function createTimedOutGuess(preGuess: Guess | undefined): Guess {
-  return { ...defaultGuess, ...(preGuess ?? {}) };
+export function createTimedOutGuess(
+  preGuess: Coord | undefined,
+): GuessSubmission {
+  return { coordinates: preGuess };
 }
 
 export function synchronizeRoundDisplayState(

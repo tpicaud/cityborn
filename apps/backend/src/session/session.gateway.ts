@@ -99,7 +99,12 @@ export class SessionGateway
   }
 
   private broadcastSession(session: Session): void {
-    this.io.to(session.id).emit(sessionWsServerEvent.update, session);
+    this.io
+      .to(session.id)
+      .emit(
+        sessionWsServerEvent.update,
+        this.sessionService.toClientSession(session),
+      );
   }
 
   private enrichGame(session: Session): void {

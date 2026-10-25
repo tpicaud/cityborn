@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildGuess, type Guess, RoundStatus } from '@cityborn/api';
+import { type Coord, type GuessSubmission, RoundStatus } from '@cityborn/api';
 import {
   createTimedOutGuess,
   type RoundDisplayState,
@@ -9,33 +9,18 @@ import {
 } from './gameRound';
 
 describe('createTimedOutGuess', () => {
-  it('keeps the pre-guess', () => {
-    const preGuess: Guess = buildGuess({
-      coordinates: { lat: 48.85, lng: 2.35 },
-      distance: 10,
-      points: 900,
-      win: false,
-    });
+  it('submits the coordinates of the pre-guess without a calculated score', () => {
+    const preGuess: Coord = { lat: 48.85, lng: 2.35 };
 
-    const timedOutGuess: Guess = createTimedOutGuess(preGuess);
+    const timedOutGuess: GuessSubmission = createTimedOutGuess(preGuess);
 
-    assert.deepEqual(timedOutGuess, {
-      coordinates: { lat: 48.85, lng: 2.35 },
-      distance: 10,
-      points: 900,
-      win: false,
-    });
+    assert.deepEqual(timedOutGuess, { coordinates: { lat: 48.85, lng: 2.35 } });
   });
 
-  it('falls back to an empty guess without a pre-guess', () => {
-    const timedOutGuess: Guess = createTimedOutGuess(undefined);
+  it('submits no coordinates without a pre-guess', () => {
+    const timedOutGuess: GuessSubmission = createTimedOutGuess(undefined);
 
-    assert.deepEqual(timedOutGuess, {
-      coordinates: { lat: 0, lng: 0 },
-      distance: -1,
-      points: 0,
-      win: false,
-    });
+    assert.deepEqual(timedOutGuess, { coordinates: undefined });
   });
 });
 

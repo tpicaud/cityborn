@@ -105,7 +105,11 @@ describe('canSubmitGuess', () => {
   it('accepts a pre-guess during a round the player has not guessed yet', () => {
     const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+    const canSubmit: boolean = canSubmitGuess(
+      game,
+      localPlayerID,
+      missedGuess.coordinates,
+    );
 
     assert.equal(canSubmit, true);
   });
@@ -124,7 +128,11 @@ describe('canSubmitGuess', () => {
       playersGuesses: { [localPlayerID]: missedGuess },
     });
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+    const canSubmit: boolean = canSubmitGuess(
+      game,
+      localPlayerID,
+      missedGuess.coordinates,
+    );
 
     assert.equal(canSubmit, false);
   });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GameConfigSchema, GuessSchema } from '../game/game.schema';
+import { GameConfigSchema, GuessSubmissionSchema } from '../game/game.schema';
 import { PlayerIdSchema } from '../player/player.schema';
 import {
   type WsChannel,
@@ -36,7 +36,7 @@ export const sessionWsChannel = {
     updateHost: { payload: z.object({ newHostID: PlayerIdSchema }) },
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     startGame: {},
-    guess: { payload: z.object({ guess: GuessSchema }) },
+    guess: { payload: z.object({ guess: GuessSubmissionSchema }).strict() },
     nextRound: {},
     playAgain: {},
   },

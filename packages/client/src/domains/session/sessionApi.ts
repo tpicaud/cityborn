@@ -1,7 +1,7 @@
 import type {
   CreateSession,
   GameConfig,
-  Guess,
+  GuessSubmission,
   PlayerId,
   Session,
   SessionId,
@@ -57,7 +57,7 @@ export type SessionChannel = {
   updateHost: (newHostID: PlayerId) => Promise<void>;
   updateGameConfig: (gameConfig: GameConfig) => Promise<void>;
   startGame: () => Promise<void>;
-  guess: (guess: Guess) => Promise<void>;
+  guess: (guess: GuessSubmission) => Promise<void>;
   nextRound: () => Promise<void>;
   playAgain: () => Promise<void>;
   onSessionUpdate: (listener: SessionUpdateListener) => () => void;

@@ -5,7 +5,7 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
-  type Guess,
+  type GuessSubmission,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -107,7 +107,7 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return await this.requireSession(sessionID);
+    return this.toClientSession(await this.requireSession(sessionID));
   }
 
   async join(
@@ -250,8 +250,9 @@ export class SessionService {
   async handleGuess(
     playerID: PlayerId,
     sessionID: SessionId,
-    guess: Guess,
+    guess: GuessSubmission,
   ): Promise<Session> {
+    const receivedAt: number = Date.now();
     return await this.updateSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({
@@ -288,12 +289,13 @@ export class SessionService {
         .filter((player) => player.connected)
         .map((player) => player.username);
 
-      session.currentGame = this.gameService.applyGuess(
+      session.currentGame = this.gameService.applyGuess({
         game,
         playerID,
-        guess,
-        connectedPlayerUsernames,
-      );
+        submission: guess,
+        connectedPlayerIds: connectedPlayerUsernames,
+        receivedAt,
+      });
       return session;
     });
   }
@@ -542,11 +544,7 @@ export class SessionService {
     ttl: number = this.TTL,
   ): Promise<void> {
     await Promise.all([
-      this.redisService.setJSON(
-        this.getKey(session.id),
-        this.getLightSession(session),
-        ttl,
-      ),
+      this.redisService.setJSON(this.getKey(session.id), session, ttl),
       this.redisService.expire(
         this.getReconnectTokenHashesKey(session.id),
         ttl,
@@ -671,12 +669,12 @@ export class SessionService {
     return this.generateUniqueSessionID(remainingAttempts - 1);
   }
 
-  private getLightSession(session: Session): Session {
+  toClientSession(session: Session): Session {
     if (!session.currentGame) return session;
 
     return {
       ...session,
-      currentGame: this.gameService.toLightGame(session.currentGame),
+      currentGame: this.gameService.toClientGame(session.currentGame),
     };
   }
 }

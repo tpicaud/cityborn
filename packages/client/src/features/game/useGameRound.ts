@@ -1,6 +1,6 @@
 'use client';
 
-import type { Game, Guess, PlayerId } from '@cityborn/api';
+import type { Coord, Game, GuessSubmission, PlayerId } from '@cityborn/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createTimedOutGuess,
@@ -16,22 +16,22 @@ const DEFAULT_MAP_ZOOM = 2;
 export type GameRoundOptions = {
   game: Game;
   localPlayerID: PlayerId;
-  handleGuess: (guess: Guess) => void;
+  handleGuess: (guess: GuessSubmission) => void;
 };
 
 export type GameRound = {
   mapProps: MapProps;
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   showCountdown: boolean;
   showOverlay: boolean;
   handleCountdownEnd: () => void;
   handleIsTimeUp: () => void;
 };
 
-function useGuess(handleGuess: (guess: Guess) => void) {
-  const [preGuess, setPreGuess] = useState<Guess>();
+function useGuess(handleGuess: (guess: GuessSubmission) => void) {
+  const [preGuess, setPreGuess] = useState<Coord>();
 
-  const handlePreGuess = useCallback((value: Guess) => {
+  const handlePreGuess = useCallback((value: Coord) => {
     setPreGuess(value);
   }, []);
 

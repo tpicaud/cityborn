@@ -1,7 +1,8 @@
 import {
-  type FullGuessObject,
+  type Coord,
   type Game,
-  type Guess,
+  type GuessObjectPreview,
+  type GuessSubmission,
   type PlayerId,
   RoundStatus,
 } from '@cityborn/api';
@@ -25,10 +26,10 @@ import Timer from './Timer';
 
 type OverlayProps = {
   localPlayerID: PlayerId;
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   game: Game;
   isHost: boolean;
-  handleGuess: (value: Guess) => Promise<void>;
+  handleGuess: (value: GuessSubmission) => Promise<void>;
   handleIsTimeUp: () => void;
   handleNextRound: () => Promise<void>;
 };
@@ -109,7 +110,7 @@ export default function Overlay({
 }: OverlayProps) {
   const [hasGuessed, setHasGuessed] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
-  const guessObject: FullGuessObject | undefined = currentGuessObject(game);
+  const guessObject: GuessObjectPreview | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
     game,
     localPlayerID,
@@ -137,6 +138,7 @@ export default function Overlay({
           {isGuessing && (
             <Timer
               totalTimeInSeconds={game.config.timer}
+              deadline={game.state.currentRound?.deadline}
               endMessage="Terminé !"
               onTimeUp={handleIsTimeUp}
             />
@@ -161,7 +163,7 @@ export default function Overlay({
               disabled={!canSubmitGuess(game, localPlayerID, preGuess)}
               onPress={async () => {
                 if (!preGuess) return;
-                await handleGuess(preGuess);
+                await handleGuess({ coordinates: preGuess });
                 setHasGuessed(true);
               }}
             />

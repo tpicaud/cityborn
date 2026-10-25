@@ -1,5 +1,4 @@
 import {
-  buildGuess,
   buildPack,
   buildTheme,
   buildUser,
@@ -184,9 +183,18 @@ describe('Solo session over the session channel', () => {
     await emitWithAck({
       client,
       event: sessionWsEvent.guess,
-      payload: { guess: buildGuess() },
+      payload: { guess: { coordinates: { lat: 48.8566, lng: 2.3522 } } },
     });
-    await guessUpdate;
+    const revealed: Session = await guessUpdate;
+    expect(revealed.currentGame?.state.guessObjects).toHaveLength(
+      (Object.values(revealed.currentGame?.state.results ?? {})[0]?.results
+        .length ?? 0) + 1,
+    );
+    expect(
+      Object.values(
+        revealed.currentGame?.state.currentRound?.playersGuesses ?? {},
+      )[0],
+    ).toMatchObject({ distance: 0, points: 1000 });
     const nextRoundUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({ client, event: sessionWsEvent.nextRound });
     return await nextRoundUpdate;
@@ -213,7 +221,41 @@ describe('Solo session over the session channel', () => {
     });
     const startUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({ client, event: sessionWsEvent.startGame });
-    await startUpdate;
+    const started: Session = await startUpdate;
+    expect(started.currentGame?.state.guessObjects).toEqual([]);
+    expect(JSON.stringify(started)).not.toContain('world_location');
+    const fetched: request.Response = await request(app.getHttpServer())
+      .get(contract.session.getSession.path.replace(':id', session.id))
+      .expect(200);
+    expect(JSON.stringify(fetched.body)).not.toContain('world_location');
+    const reconnectUpdate: Promise<Session> = nextSessionUpdate(client);
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.reconnect,
+      payload: {
+        sessionID: session.id,
+        playerID,
+        reconnectToken: joinAck.reconnectToken,
+      },
+    });
+    const reconnected: Session = await reconnectUpdate;
+    expect(JSON.stringify(reconnected)).not.toContain('world_location');
+    const forgedAck: unknown = await emitWithAck({
+      client,
+      event: sessionWsEvent.guess,
+      payload: {
+        guess: {
+          coordinates: { lat: 48.8566, lng: 2.3522 },
+          distance: 0,
+          points: 999999,
+          win: true,
+        },
+      },
+    });
+    expect(forgedAck).toMatchObject({
+      success: false,
+      error: { statusCode: 400 },
+    });
 
     await playRound(client);
     const finishedSession: Session = await playRound(client);

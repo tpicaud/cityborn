@@ -10,7 +10,6 @@ import {
 } from '@cityborn/api';
 import type { MapProps } from '@cityborn/client/game';
 import {
-  createGuess,
   type GuessObjectArea,
   guessObjectArea,
   guessObjectCenter,
@@ -40,7 +39,7 @@ const GameMap: React.FC<GameMapProps> = ({
     (obj) => obj.id === currentRound?.guessObjectId,
   );
 
-  if (!currentRound || !guessObject) {
+  if (!currentRound) {
     return null;
   }
 
@@ -67,14 +66,14 @@ const GameMap: React.FC<GameMapProps> = ({
 
   const handleMapClick = (event: MapMouseEvent) => {
     if (!event.detail.latLng) return;
-    handlePreGuess(createGuess(guessObject, event.detail.latLng));
+    handlePreGuess(event.detail.latLng);
   };
 
   return (
     <APIProvider apiKey={googleMapsApiKey}>
       <GoogleMap
         id="map"
-        key={guessObject.id}
+        key={currentRound.guessObjectId}
         {...mapOptions}
         onClick={(event) => {
           if (
@@ -85,13 +84,11 @@ const GameMap: React.FC<GameMapProps> = ({
           }
         }}
       >
-        {preGuess &&
-          preGuess.distance !== -1 &&
-          currentRound.status === RoundStatus.GUESSING && (
-            <AdvancedMarker position={preGuess.coordinates} />
-          )}
+        {preGuess && currentRound.status === RoundStatus.GUESSING && (
+          <AdvancedMarker position={preGuess} />
+        )}
 
-        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
+        {currentRound.status === RoundStatus.SHOWING_RESULTS && guessObject && (
           <>
             <AnswerDisplay guessObject={guessObject} />
             <LocalPlayerGuess
@@ -171,12 +168,13 @@ const LocalPlayerGuess: React.FC<{
       {guess && guess.distance !== -1 ? (
         <>
           <AdvancedMarker position={guess.coordinates} />
-          {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-            <ZoomToBounds
-              answer={guessObjectCenter(guessObject)}
-              guess={guess.coordinates}
-            />
-          )}
+          {currentRound.status === RoundStatus.SHOWING_RESULTS &&
+            guessObject && (
+              <ZoomToBounds
+                answer={guessObjectCenter(guessObject)}
+                guess={guess.coordinates}
+              />
+            )}
           {!guess.win && (
             <LineBetween
               guess={guess.coordinates}
@@ -186,9 +184,8 @@ const LocalPlayerGuess: React.FC<{
           )}
         </>
       ) : (
-        currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <ZoomToBounds answer={guessObjectCenter(guessObject)} />
-        )
+        currentRound.status === RoundStatus.SHOWING_RESULTS &&
+        guessObject && <ZoomToBounds answer={guessObjectCenter(guessObject)} />
       )}
     </>
   );

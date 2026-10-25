@@ -8,6 +8,7 @@ const runningOutThresholdInSeconds = 5;
 
 export type RoundTimerOptions = {
   totalTimeInSeconds: number;
+  deadline?: number;
   onTimeUp: () => void;
 };
 
@@ -27,6 +28,7 @@ export function formatTimeLeft(timeLeftInSeconds: number): string {
 
 export function useRoundTimer({
   totalTimeInSeconds,
+  deadline,
   onTimeUp,
 }: RoundTimerOptions): RoundTimer {
   const [timeLeftInSeconds, setTimeLeftInSeconds] =
@@ -35,13 +37,12 @@ export function useRoundTimer({
   onTimeUpRef.current = onTimeUp;
 
   useEffect(() => {
-    const startTime: number = Date.now();
+    const endTime: number = deadline ?? Date.now() + totalTimeInSeconds * 1000;
     setTimeLeftInSeconds(totalTimeInSeconds);
 
     const intervalId = setInterval(() => {
-      const elapsedTimeInSeconds: number = (Date.now() - startTime) / 1000;
       const nextTimeLeftInSeconds: number = Math.max(
-        totalTimeInSeconds - elapsedTimeInSeconds,
+        (endTime - Date.now()) / 1000,
         0,
       );
       setTimeLeftInSeconds(nextTimeLeftInSeconds);
@@ -52,7 +53,7 @@ export function useRoundTimer({
     }, roundTimerTickInMilliseconds);
 
     return () => clearInterval(intervalId);
-  }, [totalTimeInSeconds]);
+  }, [totalTimeInSeconds, deadline]);
 
   return {
     formattedTimeLeft: formatTimeLeft(timeLeftInSeconds),

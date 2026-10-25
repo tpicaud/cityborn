@@ -70,6 +70,14 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 3. Arrêter les ressources locales avec `pnpm db:stop`.
 
+## Déroulement des manches
+
+Le serveur conserve les localisations et calcule les scores à partir des seules
+coordonnées envoyées par les joueurs. Les clients reçoivent les réponses au passage
+en résultats de chaque manche. Une échéance serveur inclut le décompte initial de
+3 secondes et le timer configuré ; une tolérance réseau de 1 seconde suit cette
+échéance. Une réponse tardive ou sans clic rapporte zéro point.
+
 ## Accès au back-office
 
 Le back-office se connecte avec un compte Cityborn de rôle `admin`. En local, la
