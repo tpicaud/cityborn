@@ -15,13 +15,11 @@ import {
   SessionIdSchema,
   SessionReconnectTokenSchema,
   SessionSchema,
-  SessionScoringProtocolSchema,
 } from './session.schema';
 
 const SessionMembershipSchema = z.object({
   sessionID: SessionIdSchema,
   playerID: PlayerIdSchema,
-  scoringProtocol: SessionScoringProtocolSchema.optional(),
 });
 
 export const SessionJoinAckSchema = z.object({
@@ -43,7 +41,7 @@ export const sessionWsChannel = {
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     startGame: {},
     /**
-     * @deprecated Utiliser `submitGuess` dans une session `server-scoring`.
+     * @deprecated Utiliser `submitGuess` avec une build API v7 ou ultérieure.
      * Conservé pour les builds mobile publiées qui calculent leurs scores.
      * @deprecatedSince 2026-10-25
      */

@@ -10,6 +10,7 @@ import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { CurrentUser } from '../auth/current-auth-session.decorator';
 import { OptionalAuthGuard } from '../auth/guards/access-token.guard';
+import { ClientApiVersion } from '../common/decorators/client-api-version.decorator';
 import { VisitorId } from '../common/decorators/visitor-id.decorator';
 import { WideEventService } from '../common/wide-event/wide-event.service';
 import { SessionService } from './session.service';
@@ -34,13 +35,16 @@ export class SessionController {
   ) {}
 
   @TsRestHandler(publicSessionRoutes)
-  async handler() {
+  async handler(@ClientApiVersion() clientApiVersion?: number) {
     return tsRestHandler(publicSessionRoutes, {
       getSession: async ({ params }) => {
         this.wideEventService.enrichBusinessContext({ sessionId: params.id });
         return {
           status: 200 as const,
-          body: await this.sessionService.getById(params.id),
+          body: await this.sessionService.getById({
+            sessionID: params.id,
+            clientApiVersion,
+          }),
         };
       },
     });
@@ -49,6 +53,7 @@ export class SessionController {
   @TsRestHandler(optionalAuthSessionRoutes)
   @UseGuards(OptionalAuthGuard)
   async optionalAuthHandler(
+    @ClientApiVersion() clientApiVersion?: number,
     @CurrentUser() user?: User,
     @VisitorId() visitorId?: string,
   ) {
@@ -61,6 +66,7 @@ export class SessionController {
           });
         const session = await this.sessionService.create({
           ...body,
+          clientApiVersion,
           visitorId,
         });
         this.wideEventService.enrichBusinessContext({ sessionId: session.id });

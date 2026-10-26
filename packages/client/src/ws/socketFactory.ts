@@ -1,3 +1,4 @@
+import { CLIENT_API_VERSION } from '@cityborn/api';
 import {
   io,
   type ManagerOptions,
@@ -19,7 +20,7 @@ type SocketAuthenticationOptions = Pick<
   'auth' | 'withCredentials'
 >;
 
-type HandshakeAuth = { access_token: string | null };
+type HandshakeAuth = { access_token: string | null; apiVersion: number };
 
 function toUntypedEventName(event: SocketListenEvent): string {
   return event;
@@ -86,8 +87,11 @@ export function createBearerSocketFactory({
       auth: (provide: (handshakeAuth: HandshakeAuth) => void) => {
         tokenStorage.getAccessToken().then(
           (accessToken: string | null) =>
-            provide({ access_token: accessToken }),
-          () => provide({ access_token: null }),
+            provide({
+              access_token: accessToken,
+              apiVersion: CLIENT_API_VERSION,
+            }),
+          () => provide({ access_token: null, apiVersion: CLIENT_API_VERSION }),
         );
       },
     },
@@ -101,6 +105,9 @@ export function createCookieSocketFactory({
   return createSocketFactory({
     websocketUrl,
     getVisitorId,
-    authenticationOptions: { withCredentials: true },
+    authenticationOptions: {
+      withCredentials: true,
+      auth: { apiVersion: CLIENT_API_VERSION },
+    },
   });
 }

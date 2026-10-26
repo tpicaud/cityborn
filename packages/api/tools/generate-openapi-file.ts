@@ -17,6 +17,7 @@ if (mode !== 'draft' && mode !== 'release') {
 
 const result: ReturnType<typeof versionDocuments> = versionDocuments({
   mode,
+  newDraft: process.argv.includes('--new-draft'),
   versionsDir: join(toolsDir, '../openapi/versions'),
   documents: { http: getOpenApiDocument(), ws: getWsOpenApiDocument() },
 });

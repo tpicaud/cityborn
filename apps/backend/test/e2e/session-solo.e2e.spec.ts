@@ -1,8 +1,10 @@
 import {
+  API_VERSION_HEADER_NAME,
   buildPack,
   buildTheme,
   buildUser,
   buildWorldLocation,
+  CLIENT_API_VERSION,
   contract,
   defaultGuess,
   ErrorCode,
@@ -33,6 +35,10 @@ import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RedisService } from '../../src/redis/redis.service';
 import { SessionGateway } from '../../src/session/session.gateway';
+import {
+  type SessionState,
+  SessionStateSchema,
+} from '../../src/session/session-state';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
 
@@ -69,9 +75,11 @@ function emitWithAck({
 
 function nextSessionUpdate(client: Socket): Promise<Session> {
   return new Promise((resolve) =>
-    client.once(sessionWsServerEvent.update, (session: unknown) =>
-      resolve(SessionSchema.parse(session)),
-    ),
+    client.once(sessionWsServerEvent.update, (session: unknown) => {
+      expect(session).not.toHaveProperty('scoringMode');
+      expect(session).not.toHaveProperty('scoringProtocol');
+      resolve(SessionSchema.parse(session));
+    }),
   );
 }
 
@@ -88,6 +96,7 @@ describe('Solo session over the session channel', () => {
     const client: Socket = io(appUrl, {
       transports: ['websocket'],
       ...options,
+      auth: { apiVersion: CLIENT_API_VERSION, ...options.auth },
     });
     clients.push(client);
     await new Promise<void>((resolve) =>
@@ -172,13 +181,20 @@ describe('Solo session over the session channel', () => {
 
   async function createSoloSession(
     authorization: Record<string, string>,
-    scoringProtocol: Session['scoringProtocol'],
+    clientApiVersion: number | undefined,
   ): Promise<Session> {
     const response: request.Response = await request(app.getHttpServer())
       .post(contract.session.createSession.path)
-      .set(authorization)
-      .send({ mode: SessionMode.SOLO, scoringProtocol })
+      .set({
+        ...authorization,
+        ...(clientApiVersion === undefined
+          ? {}
+          : { [API_VERSION_HEADER_NAME]: String(clientApiVersion) }),
+      })
+      .send({ mode: SessionMode.SOLO })
       .expect(201);
+    expect(response.body).not.toHaveProperty('scoringMode');
+    expect(response.body).not.toHaveProperty('scoringProtocol');
     return SessionSchema.parse(response.body);
   }
 
@@ -211,7 +227,7 @@ describe('Solo session over the session channel', () => {
   }: SoloPlayerAccess): Promise<PlayedSoloGame> {
     const session: Session = await createSoloSession(
       authorization,
-      'server-scoring',
+      CLIENT_API_VERSION,
     );
     let client: Socket = await connectClient(socketOptions);
     const joinAck: SessionJoinAck = SessionJoinAckSchema.parse(
@@ -220,7 +236,6 @@ describe('Solo session over the session channel', () => {
         event: sessionWsEvent.join,
         payload: {
           sessionID: session.id,
-          scoringProtocol: 'server-scoring',
           playerID,
         },
       }),
@@ -237,8 +252,21 @@ describe('Solo session over the session channel', () => {
     expect(JSON.stringify(started)).not.toContain('world_location');
     const fetched: request.Response = await request(app.getHttpServer())
       .get(contract.session.getSession.path.replace(':id', session.id))
+      .set(API_VERSION_HEADER_NAME, String(CLIENT_API_VERSION))
       .expect(200);
     expect(JSON.stringify(fetched.body)).not.toContain('world_location');
+    await Promise.all(
+      [undefined, '6', 'invalid'].map(async (version) => {
+        const headers: Record<string, string> =
+          version === undefined ? {} : { [API_VERSION_HEADER_NAME]: version };
+        const rejected: request.Response = await request(app.getHttpServer())
+          .get(contract.session.getSession.path.replace(':id', session.id))
+          .set(headers)
+          .expect(400);
+        expect(JSON.stringify(rejected.body)).not.toContain('world_location');
+        expect(rejected.body).not.toHaveProperty('scoringMode');
+      }),
+    );
     await disconnectClient(client);
     client = await connectClient(socketOptions);
     const reconnectUpdate: Promise<Session> = nextSessionUpdate(client);
@@ -247,7 +275,6 @@ describe('Solo session over the session channel', () => {
       event: sessionWsEvent.reconnect,
       payload: {
         sessionID: session.id,
-        scoringProtocol: 'server-scoring',
         playerID,
         reconnectToken: joinAck.reconnectToken,
       },
@@ -353,7 +380,8 @@ describe('Solo session over the session channel', () => {
     const replayUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({ client, event: sessionWsEvent.playAgain });
     const replayed: Session = await replayUpdate;
-    expect(replayed.scoringProtocol).toBe('server-scoring');
+    expect(replayed).not.toHaveProperty('scoringProtocol');
+    expect(replayed).not.toHaveProperty('scoringMode');
     expect(replayed.currentGame?.state.guessObjects).toEqual([]);
     expect(JSON.stringify(replayed)).not.toContain('world_location');
   });
@@ -380,15 +408,128 @@ describe('Solo session over the session channel', () => {
     ]);
   });
 
+  it('plays a cookie-authenticated modern game and reconnects with the same identity', async () => {
+    const user: User = buildUser();
+    await persistUser(user);
+    const accessToken: string = await createAccessToken(app, user.id);
+    const cookie: string = `cityborn_access_token=${accessToken}`;
+
+    const { joinAck, finishedSession }: PlayedSoloGame = await playSoloGame({
+      playerID: user.username,
+      authorization: { Cookie: cookie, Origin: 'http://localhost:3000' },
+      socketOptions: {
+        withCredentials: true,
+        extraHeaders: { cookie, origin: 'http://localhost:3000' },
+      },
+    });
+
+    expect(joinAck.reconnectToken).toBeUndefined();
+    expect(finishedSession.players[0].id).toBe(user.id);
+  });
+
+  it.each<{ raw: string | undefined; scoringMode: 'legacy' | 'server' }>([
+    { raw: undefined, scoringMode: 'legacy' },
+    { raw: '6', scoringMode: 'legacy' },
+    { raw: 'invalid', scoringMode: 'legacy' },
+    { raw: '7.5', scoringMode: 'legacy' },
+    { raw: '7', scoringMode: 'server' },
+    { raw: '999', scoringMode: 'server' },
+  ])(
+    'selects $scoringMode from HTTP version $raw and never returns its private marker',
+    async ({ raw, scoringMode }) => {
+      const headers: Record<string, string> =
+        raw === undefined ? {} : { [API_VERSION_HEADER_NAME]: raw };
+
+      const created: request.Response = await request(app.getHttpServer())
+        .post(contract.session.createSession.path)
+        .set(headers)
+        .send({ mode: SessionMode.SOLO, scoringProtocol: 'server-scoring' })
+        .expect(201);
+      const session: Session = SessionSchema.parse(created.body);
+      const stored: unknown = await app
+        .get(RedisService)
+        .getJSON(`session:${session.id}`);
+      const fetched: request.Response = await request(app.getHttpServer())
+        .get(contract.session.getSession.path.replace(':id', session.id))
+        .set(headers)
+        .expect(200);
+
+      expect(stored).toMatchObject({ scoringMode });
+      expect(created.body).not.toHaveProperty('scoringMode');
+      expect(created.body).not.toHaveProperty('scoringProtocol');
+      expect(fetched.body).not.toHaveProperty('scoringMode');
+      expect(fetched.body).not.toHaveProperty('scoringProtocol');
+    },
+  );
+
+  it('allows the version header through browser CORS preflight', async () => {
+    const response: request.Response = await request(app.getHttpServer())
+      .options(contract.session.createSession.path)
+      .set('Origin', 'http://localhost:3000')
+      .set('Access-Control-Request-Method', 'POST')
+      .set(
+        'Access-Control-Request-Headers',
+        'content-type,x-api-version,x-visitor-id',
+      )
+      .expect(204);
+
+    expect(response.headers['access-control-allow-headers']).toContain(
+      'x-api-version',
+    );
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:3000',
+    );
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+  });
+
+  it('records zero points for a modern guess arriving after the persisted deadline', async () => {
+    const session: Session = await createSoloSession({}, CLIENT_API_VERSION);
+    const client: Socket = await connectClient();
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.join,
+      payload: {
+        sessionID: session.id,
+        playerID: PlayerIdSchema.parse('guest'),
+      },
+    });
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.updateGameConfig,
+      payload: { gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 } },
+    });
+    await emitWithAck({ client, event: sessionWsEvent.startGame });
+    const stored: SessionState = SessionStateSchema.parse(
+      await app.get(RedisService).getJSON(`session:${session.id}`),
+    );
+    if (!stored.currentGame?.state.currentRound)
+      throw new Error('Missing active round');
+    stored.currentGame.state.currentRound.deadline = 0;
+    await app.get(RedisService).setJSON(`session:${session.id}`, stored);
+    const update: Promise<Session> = nextSessionUpdate(client);
+
+    const ack: unknown = await emitWithAck({
+      client,
+      event: sessionWsEvent.submitGuess,
+      payload: { guess: { coordinates: { lat: 48.8566, lng: 2.3522 } } },
+    });
+
+    expect(ack).toEqual({ success: true });
+    expect(
+      (await update).currentGame?.state.currentRound?.playersGuesses?.[
+        PlayerIdSchema.parse('guest')
+      ],
+    ).toEqual(defaultGuess);
+  });
+
   it('rejects a second player joining a solo session', async () => {
-    const session: Session = await createSoloSession({}, 'server-scoring');
+    const session: Session = await createSoloSession({}, CLIENT_API_VERSION);
     const soloClient: Socket = await connectClient();
     await emitWithAck({
       client: soloClient,
       event: sessionWsEvent.join,
       payload: {
         sessionID: session.id,
-        scoringProtocol: 'server-scoring',
         playerID: PlayerIdSchema.parse('guest'),
       },
     });
@@ -399,7 +540,6 @@ describe('Solo session over the session channel', () => {
       event: sessionWsEvent.join,
       payload: {
         sessionID: session.id,
-        scoringProtocol: 'server-scoring',
         playerID: PlayerIdSchema.parse('intruder'),
       },
     });
@@ -410,23 +550,28 @@ describe('Solo session over the session channel', () => {
     });
   });
 
-  it.each<Session['scoringProtocol']>([undefined, 'server-scoring'])(
+  it.each<number | undefined>([undefined, 6, CLIENT_API_VERSION])(
     'rejects joining and reconnecting across protocol boundaries for %s sessions',
-    async (scoringProtocol) => {
-      const session: Session = await createSoloSession({}, scoringProtocol);
-      const owner: Socket = await connectClient();
+    async (clientApiVersion) => {
+      const session: Session = await createSoloSession({}, clientApiVersion);
+      const owner: Socket = await connectClient({
+        auth: { apiVersion: clientApiVersion },
+      });
       const playerID: PlayerId = PlayerIdSchema.parse('guest');
       const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
         await emitWithAck({
           client: owner,
           event: sessionWsEvent.join,
-          payload: { sessionID: session.id, playerID, scoringProtocol },
+          payload: { sessionID: session.id, playerID },
         }),
       );
-      const intruder: Socket = await connectClient();
-      const mismatchedProtocol: Session['scoringProtocol'] = scoringProtocol
-        ? undefined
-        : 'server-scoring';
+      const mismatchedVersion: number | undefined =
+        clientApiVersion === CLIENT_API_VERSION
+          ? undefined
+          : CLIENT_API_VERSION;
+      const intruder: Socket = await connectClient({
+        auth: { apiVersion: mismatchedVersion },
+      });
 
       const joined: unknown = await emitWithAck({
         client: intruder,
@@ -434,7 +579,6 @@ describe('Solo session over the session channel', () => {
         payload: {
           sessionID: session.id,
           playerID: PlayerIdSchema.parse('intruder'),
-          scoringProtocol: mismatchedProtocol,
         },
       });
       const reconnected: unknown = await emitWithAck({
@@ -444,10 +588,29 @@ describe('Solo session over the session channel', () => {
           sessionID: session.id,
           playerID,
           reconnectToken,
-          scoringProtocol: mismatchedProtocol,
         },
       });
 
+      const mismatchedHeaders: Record<string, string> =
+        mismatchedVersion === undefined
+          ? {}
+          : { [API_VERSION_HEADER_NAME]: String(mismatchedVersion) };
+      const fetched: request.Response = await request(app.getHttpServer())
+        .get(contract.session.getSession.path.replace(':id', session.id))
+        .set(mismatchedHeaders)
+        .expect(400);
+      expect(fetched.body).toMatchObject({
+        code: ErrorCode.BAD_REQUEST,
+        message: expect.stringContaining('Créez une nouvelle session'),
+      });
+      expect(JSON.stringify(fetched.body)).not.toContain('world_location');
+      const persisted: unknown = await app
+        .get(RedisService)
+        .getJSON(`session:${session.id}`);
+      expect(persisted).toMatchObject({
+        scoringMode:
+          clientApiVersion === CLIENT_API_VERSION ? 'server' : 'legacy',
+      });
       expect(joined).toMatchObject({
         success: false,
         error: { statusCode: 400, code: ErrorCode.BAD_REQUEST },
@@ -471,7 +634,9 @@ describe('Solo session over the session channel', () => {
 
   it('continues an old Redis game with complete HTTP and WS objects and client-calculated scores', async () => {
     const session: Session = await createSoloSession({}, undefined);
-    const owner: Socket = await connectClient();
+    const owner: Socket = await connectClient({
+      auth: { apiVersion: undefined },
+    });
     const playerID: PlayerId = PlayerIdSchema.parse('guest');
     const { reconnectToken }: SessionJoinAck = SessionJoinAckSchema.parse(
       await emitWithAck({
@@ -492,12 +657,18 @@ describe('Solo session over the session channel', () => {
     expect(JSON.stringify(started)).toContain('world_location');
     const oldState: Session = SessionSchema.parse(started);
     delete oldState.serverTime;
-    delete oldState.scoringProtocol;
     if (!oldState.currentGame?.state.currentRound)
       throw new Error('Missing active round');
     delete oldState.currentGame.state.guessObjects;
     delete oldState.currentGame.state.currentRound.deadline;
     await app.get(RedisService).setJSON(`session:${session.id}`, oldState);
+    await request(app.getHttpServer())
+      .get(contract.session.getSession.path.replace(':id', session.id))
+      .set(API_VERSION_HEADER_NAME, String(CLIENT_API_VERSION))
+      .expect(400);
+    expect(
+      await app.get(RedisService).getJSON(`session:${session.id}`),
+    ).not.toHaveProperty('scoringMode');
     const fetched: request.Response = await request(app.getHttpServer())
       .get(contract.session.getSession.path.replace(':id', session.id))
       .expect(200);
@@ -505,7 +676,9 @@ describe('Solo session over the session channel', () => {
       SessionSchema.parse(fetched.body).currentGame?.state.guessObjects,
     ).toHaveLength(2);
     expect(JSON.stringify(fetched.body)).toContain('world_location');
-    const restored: Socket = await connectClient();
+    const restored: Socket = await connectClient({
+      auth: { apiVersion: undefined },
+    });
     const reconnectUpdate: Promise<Session> = nextSessionUpdate(restored);
     await emitWithAck({
       client: restored,
@@ -560,7 +733,8 @@ describe('Solo session over the session channel', () => {
     const replayUpdate: Promise<Session> = nextSessionUpdate(restored);
     await emitWithAck({ client: restored, event: sessionWsEvent.playAgain });
     const replayed: Session = await replayUpdate;
-    expect(replayed.scoringProtocol).toBeUndefined();
+    expect(replayed).not.toHaveProperty('scoringProtocol');
+    expect(replayed).not.toHaveProperty('scoringMode');
     expect(replayed.currentGame?.state.guessObjects).toHaveLength(2);
     expect(replayed.currentGame?.state.currentRound?.status).toBe(
       RoundStatus.GUESSING,

@@ -26,6 +26,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { CurrentUser } from '../auth/current-auth-session.decorator';
+import { ClientApiVersion } from '../common/decorators/client-api-version.decorator';
 import { VisitorId as CurrentVisitorId } from '../common/decorators/visitor-id.decorator';
 import { WsMessage } from '../common/decorators/ws-message.decorator';
 import { DefaultExceptionFilter } from '../common/filters/default-exception.filter';
@@ -99,12 +100,7 @@ export class SessionGateway
   }
 
   private broadcastSession(session: Session): void {
-    this.io
-      .to(session.id)
-      .emit(
-        sessionWsServerEvent.update,
-        this.sessionService.toClientSession(session),
-      );
+    this.io.to(session.id).emit(sessionWsServerEvent.update, session);
   }
 
   private enrichGame(session: Session): void {
@@ -123,10 +119,10 @@ export class SessionGateway
   async handleJoin(
     @ConnectedSocket() socket: AppSocket,
     @CurrentUser() user: User | undefined,
+    @ClientApiVersion() clientApiVersion: number | undefined,
     @MessageBody() {
       sessionID,
       playerID,
-      scoringProtocol,
     }: WsPayload<typeof sessionWsChannel, 'join'>,
   ): Promise<SessionJoinAck> {
     this.wideEventService.enrichBusinessContext({
@@ -139,7 +135,7 @@ export class SessionGateway
         sessionID,
         playerID,
         user,
-        scoringProtocol,
+        clientApiVersion,
       });
     await this.attachPlayer({ socket, sessionID, playerID });
     this.broadcastSession(session);
@@ -222,7 +218,7 @@ export class SessionGateway
       playerID,
       sessionID,
       guess,
-      scoringProtocol: 'server-scoring',
+      submissionMode: 'server',
     });
     this.enrichGame(session);
     this.broadcastSession(session);
@@ -266,11 +262,11 @@ export class SessionGateway
   async reconnect(
     @ConnectedSocket() socket: AppSocket,
     @CurrentUser() user: User | undefined,
+    @ClientApiVersion() clientApiVersion: number | undefined,
     @MessageBody() {
       sessionID,
       playerID,
       reconnectToken,
-      scoringProtocol,
     }: WsPayload<typeof sessionWsChannel, 'reconnect'>,
   ): Promise<void> {
     this.wideEventService.enrichBusinessContext({
@@ -283,7 +279,7 @@ export class SessionGateway
       playerID,
       reconnectToken,
       user,
-      scoringProtocol,
+      clientApiVersion,
     });
     this.enrichGame(session);
     await this.attachPlayer({ socket, sessionID, playerID });

@@ -8,6 +8,15 @@ import {
   ManifestSchema,
 } from './version-manifest.schema';
 
+export const API_VERSION_HEADER_NAME: string = 'X-Api-Version';
+
+export function parseClientApiVersion(value: unknown): number | undefined {
+  if (typeof value !== 'number' && typeof value !== 'string') return undefined;
+  if (typeof value === 'string' && !/^[1-9]\d*$/.test(value)) return undefined;
+  const version: number = Number(value);
+  return Number.isSafeInteger(version) && version > 0 ? version : undefined;
+}
+
 export const API_MIN_SUPPORTED_VERSION_HEADER_NAME =
   'X-Api-Min-Supported-Version';
 export const API_CURRENT_VERSION_HEADER_NAME = 'X-Api-Current-Version';
@@ -24,7 +33,10 @@ export function isApiVersionOutdated(
   return currentVersion < minSupportedVersion;
 }
 
-const defaultManifest = ManifestSchema.parse(manifestJson);
+const defaultManifest: Manifest = ManifestSchema.parse(manifestJson);
+export const CLIENT_API_VERSION: number = Math.max(
+  ...defaultManifest.versions.map((entry) => entry.versionNumber),
+);
 const defaultCompatPolicy = CompatPolicySchema.parse(compatPolicyJson);
 
 export function getApiVersionInfo(

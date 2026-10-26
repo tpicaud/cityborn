@@ -18,7 +18,6 @@ import {
   type SessionPlayer,
   type SessionReconnectToken,
   SessionReconnectTokenSchema,
-  SessionSchema,
   SessionStatus,
   type User,
 } from '@cityborn/api';
@@ -43,6 +42,7 @@ import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
 } from './session-presence-timing';
+import { type SessionState, SessionStateSchema } from './session-state';
 
 export type JoinedSession = {
   session: Session;
@@ -83,12 +83,15 @@ export class SessionService {
   async create({
     mode,
     visitorId,
-    scoringProtocol,
-  }: CreateSession & { visitorId?: string }): Promise<Session> {
-    const newSession: Session = {
+    clientApiVersion,
+  }: CreateSession & {
+    visitorId?: string;
+    clientApiVersion?: number;
+  }): Promise<Session> {
+    const newSession: SessionState = {
       id: await this.generateUniqueSessionID(),
       hostID: '',
-      scoringProtocol,
+      scoringMode: this.scoringModeForVersion(clientApiVersion),
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
@@ -109,26 +112,34 @@ export class SessionService {
       );
     }
 
-    return newSession;
+    return this.toClientSession(newSession);
   }
 
-  async getById(sessionID: SessionId): Promise<Session> {
-    return this.toClientSession(await this.requireSession(sessionID));
+  async getById({
+    sessionID,
+    clientApiVersion,
+  }: {
+    sessionID: SessionId;
+    clientApiVersion?: number;
+  }): Promise<Session> {
+    const session: SessionState = await this.requireSession(sessionID);
+    this.assertClientCompatibility({ session, clientApiVersion });
+    return this.toClientSession(session);
   }
 
   async join({
     sessionID,
     playerID,
     user,
-    scoringProtocol,
+    clientApiVersion,
   }: {
     sessionID: SessionId;
     playerID: PlayerId;
     user?: User;
-    scoringProtocol?: Session['scoringProtocol'];
+    clientApiVersion?: number;
   }): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
-      this.assertScoringProtocol({ session, scoringProtocol });
+      this.assertClientCompatibility({ session, clientApiVersion });
       if (session.mode === SessionMode.SOLO && session.players.length > 0)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
@@ -166,7 +177,7 @@ export class SessionService {
       const reconnectToken: SessionReconnectToken | undefined = isGuest
         ? await this.issueReconnectToken(sessionID, playerID)
         : undefined;
-      return { session, reconnectToken };
+      return { session: this.toClientSession(session), reconnectToken };
     });
   }
 
@@ -198,7 +209,7 @@ export class SessionService {
         });
 
       session.hostID = newHost.username;
-      return session;
+      return this.toClientSession(session);
     });
   }
 
@@ -221,7 +232,7 @@ export class SessionService {
         });
 
       session.gameConfig = gameConfig;
-      return session;
+      return this.toClientSession(session);
     });
   }
 
@@ -252,7 +263,7 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
-      return session;
+      return this.toClientSession(session);
     });
   }
 
@@ -264,16 +275,21 @@ export class SessionService {
     playerID,
     sessionID,
     guess,
-    scoringProtocol,
+    submissionMode,
   }: {
     playerID: PlayerId;
     sessionID: SessionId;
     guess: Guess | GuessSubmission;
-    scoringProtocol?: Session['scoringProtocol'];
+    submissionMode?: SessionState['scoringMode'];
   }): Promise<Session> {
     const receivedAt: number = Date.now();
     return await this.updateSession(sessionID, async (session) => {
-      this.assertScoringProtocol({ session, scoringProtocol });
+      if (session.scoringMode !== (submissionMode ?? 'legacy'))
+        throw new BadRequestException({
+          code: ErrorCode.BAD_REQUEST,
+          message:
+            'Cette session nécessite une version compatible du jeu. Créez une nouvelle session.',
+        });
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -309,21 +325,22 @@ export class SessionService {
         .filter((player) => player.connected)
         .map((player) => player.username);
 
-      session.currentGame = scoringProtocol
-        ? this.gameService.applyGuess({
-            game,
-            playerID,
-            submission: guess,
-            connectedPlayerIds: connectedPlayerUsernames,
-            receivedAt,
-          })
-        : applyGuess(
-            game,
-            playerID,
-            GuessSchema.parse(guess),
-            connectedPlayerUsernames,
-          );
-      return session;
+      session.currentGame =
+        session.scoringMode === 'server'
+          ? this.gameService.applyGuess({
+              game,
+              playerID,
+              submission: guess,
+              connectedPlayerIds: connectedPlayerUsernames,
+              receivedAt,
+            })
+          : applyGuess(
+              game,
+              playerID,
+              GuessSchema.parse(guess),
+              connectedPlayerUsernames,
+            );
+      return this.toClientSession(session);
     });
   }
 
@@ -352,7 +369,7 @@ export class SessionService {
 
       if (!isGameOver) {
         session.currentGame = updatedGame;
-        return session;
+        return this.toClientSession(session);
       }
 
       await this.gameService.endGame(
@@ -362,13 +379,13 @@ export class SessionService {
         visitorId,
       );
 
-      const finishedGameSession: Session = {
+      const finishedGameSession: SessionState = {
         ...session,
         currentGame: updatedGame,
       };
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
-      return finishedGameSession;
+      return this.toClientSession(finishedGameSession);
     });
   }
 
@@ -426,16 +443,16 @@ export class SessionService {
     playerID,
     reconnectToken,
     user,
-    scoringProtocol,
+    clientApiVersion,
   }: {
     sessionID: SessionId;
     playerID: PlayerId;
     reconnectToken: SessionReconnectToken | undefined;
     user?: User;
-    scoringProtocol?: Session['scoringProtocol'];
+    clientApiVersion?: number;
   }): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
-      this.assertScoringProtocol({ session, scoringProtocol });
+      this.assertClientCompatibility({ session, clientApiVersion });
       const players = session.players;
 
       const playerIndex = players.findIndex(
@@ -458,7 +475,7 @@ export class SessionService {
 
       if (session.hostID === '') session.hostID = playerID;
 
-      return session;
+      return this.toClientSession(session);
     });
   }
 
@@ -483,7 +500,7 @@ export class SessionService {
     sessionID: SessionId;
     presentPlayerIDs: PlayerId[];
   }): Promise<Session | null> {
-    const storedSession: Session | null = await this.getSession(sessionID);
+    const storedSession: SessionState | null = await this.getSession(sessionID);
     if (!storedSession) {
       this.playerAbsenceStarts.delete(sessionID);
       return null;
@@ -532,7 +549,7 @@ export class SessionService {
       if (session.hostID === '')
         session.hostID =
           session.players.find((player) => player.connected)?.username ?? '';
-      return session;
+      return this.toClientSession(session);
     });
   }
 
@@ -542,13 +559,13 @@ export class SessionService {
 
   private async updateSession<Result>(
     sessionID: SessionId,
-    update: (session: Session) => Promise<Result>,
+    update: (session: SessionState) => Promise<Result>,
   ): Promise<Result> {
     return await this.lockService.withLock(
       this.getKey(sessionID),
       this.LOCK_TTL,
       async () => {
-        const session: Session = await this.requireSession(sessionID);
+        const session: SessionState = await this.requireSession(sessionID);
         const result: Result = await update(session);
         await this.saveSession(session);
         return result;
@@ -556,8 +573,8 @@ export class SessionService {
     );
   }
 
-  private async requireSession(sessionID: SessionId): Promise<Session> {
-    const session: Session | null = await this.getSession(sessionID);
+  private async requireSession(sessionID: SessionId): Promise<SessionState> {
+    const session: SessionState | null = await this.getSession(sessionID);
     if (session) return session;
 
     throw new NotFoundException({
@@ -566,14 +583,14 @@ export class SessionService {
     });
   }
 
-  private async getSession(sessionID: SessionId): Promise<Session | null> {
+  private async getSession(sessionID: SessionId): Promise<SessionState | null> {
     const storedSession = await this.redisService.getJSON<unknown>(
       this.getKey(sessionID),
     );
     if (!storedSession) return null;
-    const session: Session = SessionSchema.parse(storedSession);
+    const session: SessionState = SessionStateSchema.parse(storedSession);
     if (
-      !session.scoringProtocol &&
+      session.scoringMode === 'legacy' &&
       session.currentGame &&
       !session.currentGame.state.guessObjects
     ) {
@@ -585,7 +602,7 @@ export class SessionService {
   }
 
   private async saveSession(
-    session: Session,
+    session: SessionState,
     ttl: number = this.TTL,
   ): Promise<void> {
     await Promise.all([
@@ -714,14 +731,23 @@ export class SessionService {
     return this.generateUniqueSessionID(remainingAttempts - 1);
   }
 
-  private assertScoringProtocol({
+  private scoringModeForVersion(
+    clientApiVersion: number | undefined,
+  ): SessionState['scoringMode'] {
+    return clientApiVersion !== undefined && clientApiVersion >= 7
+      ? 'server'
+      : 'legacy';
+  }
+
+  private assertClientCompatibility({
     session,
-    scoringProtocol,
+    clientApiVersion,
   }: {
-    session: Session;
-    scoringProtocol: Session['scoringProtocol'];
+    session: SessionState;
+    clientApiVersion: number | undefined;
   }): void {
-    if (session.scoringProtocol === scoringProtocol) return;
+    if (session.scoringMode === this.scoringModeForVersion(clientApiVersion))
+      return;
     throw new BadRequestException({
       code: ErrorCode.BAD_REQUEST,
       message:
@@ -729,12 +755,13 @@ export class SessionService {
     });
   }
 
-  toClientSession(session: Session): Session {
+  private toClientSession(session: SessionState): Session {
+    const { scoringMode, ...publicSession }: SessionState = session;
     return {
-      ...session,
+      ...publicSession,
       serverTime: Date.now(),
       currentGame: session.currentGame
-        ? session.scoringProtocol
+        ? scoringMode === 'server'
           ? this.gameService.toClientGame(session.currentGame)
           : session.currentGame
         : undefined,

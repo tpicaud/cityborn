@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it, type TestContext } from 'node:test';
 import { setImmediate } from 'node:timers/promises';
 import {
+  API_VERSION_HEADER_NAME,
   type ApiError,
   ApiResponseError,
   type AppContract,
   buildUser,
+  CLIENT_API_VERSION,
   contract,
   ErrorCode,
   type User,
@@ -208,6 +210,16 @@ describe('createCookieContractClient', () => {
           init?.credentials,
       ),
       ['include', 'include', 'include'],
+    );
+    assert.deepEqual(
+      calls.map(({ init }: FetchCall) =>
+        new Headers(init?.headers).get(API_VERSION_HEADER_NAME),
+      ),
+      [
+        String(CLIENT_API_VERSION),
+        String(CLIENT_API_VERSION),
+        String(CLIENT_API_VERSION),
+      ],
     );
   });
 

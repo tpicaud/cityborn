@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  ApiResponseError,
   buildSession,
   contract,
+  ErrorCode,
   PlayerIdSchema,
   type Session,
   SessionIdSchema,
   SessionMode,
   type sessionWsChannel,
-  UserFacingError,
 } from '@cityborn/api';
 import { initClient } from '@ts-rest/core';
 import type { WsChannelConnection } from '../../ws/wsChannelConnection';
@@ -63,8 +64,8 @@ describe('SessionChannel.onSessionUpdate', () => {
   });
 });
 
-describe('SessionChannel scoring protocol', () => {
-  it('announces server scoring on join and reconnection and submits only the modern event', () => {
+describe('createSessionChannel', () => {
+  it('keeps membership payloads free of scoring metadata and submits the modern event', () => {
     const { connection, emissions }: SubscriptionRecorder =
       createSubscriptionRecorder();
     const channel: SessionChannel = createSessionChannel(connection);
@@ -81,7 +82,6 @@ describe('SessionChannel scoring protocol', () => {
         {
           sessionID: 'session-1',
           playerID: 'guest',
-          scoringProtocol: 'server-scoring',
         },
       ],
       [
@@ -90,7 +90,6 @@ describe('SessionChannel scoring protocol', () => {
           sessionID: 'session-1',
           playerID: 'guest',
           reconnectToken: undefined,
-          scoringProtocol: 'server-scoring',
         },
       ],
       ['session:submitGuess', { guess: { coordinates: { lat: 48, lng: 2 } } }],
@@ -99,11 +98,9 @@ describe('SessionChannel scoring protocol', () => {
 });
 
 describe('SessionApi.createSession', () => {
-  it('creates server-scored sessions by default', async () => {
+  it('creates sessions without scoring metadata', async () => {
     const requests: unknown[] = [];
-    const session: Session = buildSession({
-      scoringProtocol: 'server-scoring',
-    });
+    const session: Session = buildSession();
     const api: SessionApi = createSessionApi(
       initClient(contract, {
         baseUrl: 'https://cityborn.test',
@@ -120,7 +117,6 @@ describe('SessionApi.createSession', () => {
     assert.deepEqual(requests, [
       JSON.stringify({
         mode: SessionMode.SOLO,
-        scoringProtocol: 'server-scoring',
       }),
     ]);
   });
@@ -134,8 +130,13 @@ describe('SessionApi.fetchSession', () => {
         baseUrl: 'https://cityborn.test',
         baseHeaders: {},
         api: async () => ({
-          status: 200,
-          body: session,
+          status: 400,
+          body: {
+            statusCode: 400,
+            code: ErrorCode.BAD_REQUEST,
+            message:
+              'Cette session nécessite une version compatible du jeu. Créez une nouvelle session.',
+          },
           headers: new Headers(),
         }),
       }),
@@ -144,15 +145,13 @@ describe('SessionApi.fetchSession', () => {
     await assert.rejects(
       api.fetchSession(session.id),
       (error: unknown) =>
-        error instanceof UserFacingError &&
+        error instanceof ApiResponseError &&
         error.message.includes('Créez une nouvelle session'),
     );
   });
 
   it('loads a server-scored session', async () => {
-    const session: Session = buildSession({
-      scoringProtocol: 'server-scoring',
-    });
+    const session: Session = buildSession();
     const api: SessionApi = createSessionApi(
       initClient(contract, {
         baseUrl: 'https://cityborn.test',

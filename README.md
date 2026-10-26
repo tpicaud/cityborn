@@ -72,16 +72,16 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 
 ## Déroulement des manches
 
-Les clients actuels créent des sessions `server-scoring`. Le serveur y conserve
+Les builds API v7 et suivantes créent des sessions à calcul serveur. Le serveur conserve
 les localisations et calcule les scores à partir des seules
 coordonnées envoyées par les joueurs. Les clients reçoivent les réponses au passage
 en résultats de chaque manche. Une échéance serveur inclut le décompte initial de
 3 secondes et le timer configuré ; une tolérance réseau de 1 seconde suit cette
 échéance. Une réponse tardive ou sans clic rapporte zéro point.
 
-Les anciennes builds conservent les sessions sans protocole déclaré et l’événement
+Les anciennes builds conservent leurs sessions legacy et l’événement
 `session:guess` déprécié, avec objets complets et résultats calculés côté client.
-`session:submitGuess` est réservé aux sessions `server-scoring`. Les protocoles ne
+`session:submitGuess` est réservé aux sessions à calcul serveur. Les versions ne
 se mélangent ni à la connexion ni à la reconnexion ; les anciennes sessions Redis
 sont reprises avec leurs objets rechargés par identifiant, sans réinitialisation.
 
@@ -185,6 +185,20 @@ les contrats historiques et suivent le même contrôle que les autres captures.
 Le contrôle reste structurel : une réponse de même forme dont le contenu ou le
 comportement change exige toujours une review. Le handshake et le sens métier des
 messages restent eux aussi hors du contrôle automatique.
+
+Chaque build embarque le numéro du manifeste API dans `X-Api-Version` (HTTP) et
+`auth.apiVersion` (handshake WebSocket), cookies et bearer compris. Une valeur
+absente ou malformée est traitée comme une ancienne build ; un entier sûr positif
+à partir de 7, versions futures comprises, prend en charge le calcul serveur.
+Le serveur fixe ce choix à la création et le conserve dans son état Redis privé.
+Une session sans ce marqueur reste legacy ; HTTP, join et reconnexion refusent une
+build incompatible avant de retourner des données ou de rejoindre la room.
+Le score et les réponses d'une session moderne ne dépendent jamais de la version
+d'une requête ultérieure.
+
+La v6 draft conserve son ancien contrat. `generate:openapi:draft -- --new-draft`
+réserve une nouvelle version sans réécrire les captures précédentes ; la v7 porte
+le calcul serveur. Le prochain déploiement staging actualise ce nouveau draft.
 
 ### Organisation
 

@@ -23,6 +23,7 @@ type VersioningResult =
 
 export type VersionDocumentsOptions = {
   mode: 'draft' | 'release';
+  newDraft?: boolean;
   versionsDir: string;
   documents: { http: OpenAPIObject; ws: OpenAPIObject };
   now?: Date;
@@ -42,6 +43,7 @@ function normalizedDocument(document: VersionDocument | OpenAPIObject): string {
 
 export function versionDocuments({
   mode,
+  newDraft = false,
   versionsDir,
   documents,
   now = new Date(),
@@ -54,10 +56,13 @@ export function versionDocuments({
   const latestEntry: ManifestEntry | undefined = [...manifest.versions].sort(
     (a, b) => b.versionNumber - a.versionNumber,
   )[0];
-  const updatingDraft: boolean = latestEntry?.draft === true;
-  const versionNumber: number = latestEntry?.draft
-    ? latestEntry.versionNumber
-    : (latestEntry?.versionNumber ?? 0) + 1;
+  if (newDraft && mode !== 'draft')
+    throw new Error('A new draft requires draft mode');
+  const updatingDraft: boolean = latestEntry?.draft === true && !newDraft;
+  const versionNumber: number =
+    updatingDraft && latestEntry
+      ? latestEntry.versionNumber
+      : (latestEntry?.versionNumber ?? 0) + 1;
   const previousFilenames:
     | ReturnType<typeof versionDocumentFilenames>
     | undefined = latestEntry
@@ -75,7 +80,7 @@ export function versionDocuments({
     normalizedDocument(previousHttp) !== normalizedDocument(documents.http) ||
     normalizedDocument(previousWs) !== normalizedDocument(documents.ws);
 
-  if (!changed && !(mode === 'release' && latestEntry?.draft)) {
+  if (!changed && !newDraft && !(mode === 'release' && latestEntry?.draft)) {
     return { changed: false };
   }
 
@@ -103,9 +108,10 @@ export function versionDocuments({
 
   writeDocument({ file: filenames.http, document: documents.http });
   writeDocument({ file: filenames.ws, document: documents.ws });
-  const entry: ManifestEntry = latestEntry?.draft
-    ? latestEntry
-    : { versionNumber, releasedAt: now.toISOString() };
+  const entry: ManifestEntry =
+    updatingDraft && latestEntry
+      ? latestEntry
+      : { versionNumber, releasedAt: now.toISOString() };
   entry.releasedAt = now.toISOString();
   if (mode === 'draft') entry.draft = true;
   if (mode === 'release') delete entry.draft;

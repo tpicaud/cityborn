@@ -12,7 +12,6 @@ import {
   type sessionWsChannel,
   sessionWsEvent,
   sessionWsServerEvent,
-  UserFacingError,
   unwrapApiResponse,
 } from '@cityborn/api';
 import type { ContractClient } from '../../api/contractClient';
@@ -41,7 +40,7 @@ export function createSessionApi(
     async createSession(data) {
       return unwrapApiResponse(
         await contractClient.session.createSession({
-          body: { ...data, scoringProtocol: 'server-scoring' },
+          body: data,
         }),
       );
     },
@@ -50,10 +49,6 @@ export function createSessionApi(
       const session: Session = unwrapApiResponse(
         await contractClient.session.getSession({ params: { id } }),
       );
-      if (session.scoringProtocol !== 'server-scoring')
-        throw new UserFacingError(
-          'Cette session utilise une ancienne version du jeu. Créez une nouvelle session.',
-        );
       return session;
     },
   };
@@ -78,14 +73,12 @@ export function createSessionChannel(
     join(membership) {
       return connection.emit(sessionWsEvent.join, {
         ...membership,
-        scoringProtocol: 'server-scoring',
       });
     },
 
     async reconnect(reconnection) {
       await connection.emit(sessionWsEvent.reconnect, {
         ...reconnection,
-        scoringProtocol: 'server-scoring',
       });
     },
 

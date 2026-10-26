@@ -32,13 +32,14 @@ import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
+import type { SessionState } from './session-state';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
   PlayerIdSchema.parse(value);
 const sessionId: (value: string) => SessionId = (value: string) =>
   SessionIdSchema.parse(value);
 
-function buildSessionService(session: Session | null) {
+function buildSessionService(session: Session | SessionState | null) {
   const redisService: DeepMocked<RedisService> = createMock<RedisService>();
   redisService.getJSON.mockResolvedValue(session);
   redisService.setJSON.mockImplementation(async (_key, storedSession) => {
@@ -57,6 +58,7 @@ function buildSessionService(session: Session | null) {
 
   const idService: DeepMocked<IdService> = createMock<IdService>();
   const gameService: DeepMocked<GameService> = createMock<GameService>();
+  gameService.toClientGame.mockImplementation((game) => game);
   gameService.restoreGuessObjects.mockImplementation(async (game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
 
@@ -103,7 +105,7 @@ describe('SessionService.create', () => {
     });
     expect(redisService.setJSON).toHaveBeenCalledWith(
       'session:new-session',
-      result,
+      expect.objectContaining({ id: result.id, scoringMode: 'legacy' }),
       600,
     );
     expect(eventService.trackEvent).toHaveBeenCalledWith(
@@ -134,7 +136,7 @@ describe('SessionService.create', () => {
     });
     expect(redisService.setJSON).toHaveBeenCalledWith(
       'session:solo-session',
-      result,
+      expect.objectContaining({ id: result.id, scoringMode: 'legacy' }),
       600,
     );
   });
@@ -164,7 +166,9 @@ describe('SessionService lobby operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      await expect(sessionService.getById(session.id)).resolves.toStrictEqual({
+      await expect(
+        sessionService.getById({ sessionID: session.id }),
+      ).resolves.toStrictEqual({
         ...session,
         serverTime: expect.any(Number),
         currentGame: undefined,
@@ -176,7 +180,7 @@ describe('SessionService lobby operations', () => {
         buildSessionService(null);
 
       await expect(
-        sessionService.getById(sessionId('missing')),
+        sessionService.getById({ sessionID: sessionId('missing') }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_NOT_FOUND },
       });
@@ -406,7 +410,7 @@ describe('SessionService game operations', () => {
       );
 
       expect(result.status).toBe(SessionStatus.IN_GAME);
-      expect(result.currentGame).toBe(startedGame);
+      expect(result.currentGame).toEqual(startedGame);
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
         expect.objectContaining({ currentGame: startedGame }),
@@ -433,11 +437,10 @@ describe('SessionService game operations', () => {
         state: buildGameState({ currentRound: buildRound() }),
       });
       const updatedGame: Game = buildGame({ id: game.id });
-      const session: Session = buildSession({
-        status: SessionStatus.IN_GAME,
-        scoringProtocol: 'server-scoring',
-        currentGame: game,
-      });
+      const session: SessionState = {
+        ...buildSession({ status: SessionStatus.IN_GAME, currentGame: game }),
+        scoringMode: 'server',
+      };
       const {
         sessionService,
         redisService,
@@ -449,7 +452,7 @@ describe('SessionService game operations', () => {
         playerID: playerId('host'),
         sessionID: session.id,
         guess: defaultGuess,
-        scoringProtocol: 'server-scoring',
+        submissionMode: 'server',
       });
 
       expect(gameService.applyGuess).toHaveBeenCalledWith({
@@ -459,7 +462,7 @@ describe('SessionService game operations', () => {
         connectedPlayerIds: [playerId('host'), playerId('bob')],
         receivedAt: expect.any(Number),
       });
-      expect(result.currentGame).toBe(updatedGame);
+      expect(result.currentGame).toEqual(updatedGame);
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });
 
@@ -975,8 +978,8 @@ describe('SessionService session lock', () => {
   });
 });
 
-describe('SessionService.toClientSession', () => {
-  it('timestamps lobby snapshots without changing the persisted session', () => {
+describe('SessionService.getById snapshots', () => {
+  it('timestamps lobby snapshots without changing the persisted session', async () => {
     const session: Session = buildSession();
     const { sessionService }: ReturnType<typeof buildSessionService> =
       buildSessionService(session);
@@ -984,14 +987,16 @@ describe('SessionService.toClientSession', () => {
       .spyOn(Date, 'now')
       .mockReturnValue(100000);
 
-    const clientSession: Session = sessionService.toClientSession(session);
+    const clientSession: Session = await sessionService.getById({
+      sessionID: session.id,
+    });
 
     expect(clientSession.serverTime).toBe(100000);
     expect(session.serverTime).toBeUndefined();
     serverTime.mockRestore();
   });
 
-  it('timestamps game snapshots with the unchanged server deadline', () => {
+  it('timestamps game snapshots with the unchanged server deadline', async () => {
     const game: Game = buildGame({
       state: buildGameState({ currentRound: buildRound({ deadline: 125000 }) }),
     });
@@ -1005,7 +1010,9 @@ describe('SessionService.toClientSession', () => {
       .spyOn(Date, 'now')
       .mockReturnValue(120000);
 
-    const clientSession: Session = sessionService.toClientSession(session);
+    const clientSession: Session = await sessionService.getById({
+      sessionID: session.id,
+    });
 
     expect(clientSession.serverTime).toBe(120000);
     expect(clientSession.currentGame?.state.currentRound?.deadline).toBe(

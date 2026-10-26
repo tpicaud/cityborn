@@ -1,4 +1,10 @@
-import { ApiResponseError, ErrorCode, parseApiError } from '@cityborn/api';
+import {
+  API_VERSION_HEADER_NAME,
+  ApiResponseError,
+  CLIENT_API_VERSION,
+  ErrorCode,
+  parseApiError,
+} from '@cityborn/api';
 import type { ApiFetcherArgs, AppRouteMutation } from '@ts-rest/core';
 import type {
   AuthRouteResponse,
@@ -62,6 +68,7 @@ export class AuthFetch {
     const headers: Record<string, string> = {
       ...this.baseHeaders,
       ...extra,
+      [API_VERSION_HEADER_NAME]: String(CLIENT_API_VERSION),
     };
 
     const visitorId = await this.getVisitorId?.();

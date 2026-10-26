@@ -43,6 +43,70 @@ function readManifest(directory: string): Manifest {
 const documents: Documents = { http: document('HTTP'), ws: document('WS') };
 
 describe('versionDocuments', () => {
+  it('reserves a new draft and preserves the preceding snapshots and metadata', (t) => {
+    const versionsDir: string = workspace(t);
+    versionDocuments({ mode: 'draft', versionsDir, documents });
+    const previousManifest: Manifest = readManifest(versionsDir);
+    const previousHttp: string = readFileSync(
+      join(versionsDir, 'v1-api.json'),
+      'utf-8',
+    );
+    const previousWs: string = readFileSync(
+      join(versionsDir, 'v1-ws.json'),
+      'utf-8',
+    );
+
+    const result: VersioningResult = versionDocuments({
+      mode: 'draft',
+      newDraft: true,
+      versionsDir,
+      documents,
+    });
+    const repeated: VersioningResult = versionDocuments({
+      mode: 'draft',
+      versionsDir,
+      documents,
+    });
+
+    assert.deepEqual(result, { changed: true, versionNumber: 2 });
+    assert.deepEqual(repeated, { changed: false });
+    assert.deepEqual(
+      readManifest(versionsDir).versions[0],
+      previousManifest.versions[0],
+    );
+    assert.equal(
+      readFileSync(join(versionsDir, 'v1-api.json'), 'utf-8'),
+      previousHttp,
+    );
+    assert.equal(
+      readFileSync(join(versionsDir, 'v1-ws.json'), 'utf-8'),
+      previousWs,
+    );
+    assert.match(
+      readFileSync(join(versionsDir, 'v2-api.json'), 'utf-8'),
+      /"version": "v2"/,
+    );
+    assert.match(
+      readFileSync(join(versionsDir, 'v2-ws.json'), 'utf-8'),
+      /"version": "v2"/,
+    );
+  });
+
+  it('rejects reserving a new draft in release mode', (t) => {
+    const versionsDir: string = workspace(t);
+
+    assert.throws(
+      () =>
+        versionDocuments({
+          mode: 'release',
+          newDraft: true,
+          versionsDir,
+          documents,
+        }),
+      /requires draft mode/,
+    );
+  });
+
   it('creates both protocol snapshots and a common manifest entry', (t) => {
     const versionsDir: string = workspace(t);
 
