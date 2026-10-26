@@ -50,7 +50,7 @@ export type RunCompatCheckOptions = {
   versionsDir: string;
   currentSpecFile: string;
   currentWsSpecFile: string;
-  errIgnoreFile?: string;
+  acceptedChangesFile?: string;
   now?: Date;
 };
 
@@ -69,12 +69,12 @@ function checkUntilBreaking({
   const http: DiffResult = diffBreaking({
     baseFile: join(options.versionsDir, filenames.http),
     revisionFile: options.currentSpecFile,
-    errIgnoreFile: options.errIgnoreFile,
+    acceptedChangesFile: options.acceptedChangesFile,
   });
   const ws: DiffResult = diffBreaking({
     baseFile: join(options.versionsDir, filenames.ws),
     revisionFile: options.currentWsSpecFile,
-    errIgnoreFile: options.errIgnoreFile,
+    acceptedChangesFile: options.acceptedChangesFile,
   });
   const result: VersionCheckResult = {
     entry,

@@ -7,26 +7,74 @@ function formatChange(change: VersionCheckResult['changes'][number]): string {
   return `    - [${change.protocol}] [${change.id}]${location ? ` ${location}:` : ''} ${change.text}`;
 }
 
-function changeKey(change: VersionCheckResult['changes'][number]): string {
-  return `${change.protocol}|${change.id}|${change.operation ?? ''}|${change.path ?? ''}`;
+type AcceptedChangeSummary = {
+  protocol: VersionCheckResult['changes'][number]['protocol'];
+  id: string;
+  reason: string;
+  count: number;
+};
+
+function formatAcceptedChanges(
+  changes: VersionCheckResult['changes'],
+): string[] {
+  const summaries: AcceptedChangeSummary[] = changes.reduce<
+    AcceptedChangeSummary[]
+  >((current, change) => {
+    const reason: string = change.acceptanceReason ?? 'Accepted by policy.';
+    const existing: AcceptedChangeSummary | undefined = current.find(
+      (summary) =>
+        summary.protocol === change.protocol &&
+        summary.id === change.id &&
+        summary.reason === reason,
+    );
+    if (existing === undefined) {
+      current.push({
+        protocol: change.protocol,
+        id: change.id,
+        reason,
+        count: 1,
+      });
+      return current;
+    }
+    return current.map((summary) =>
+      summary === existing ? { ...summary, count: summary.count + 1 } : summary,
+    );
+  }, []);
+  if (summaries.length === 0) return [];
+  return [
+    `    Accepted changes (${changes.length}):`,
+    ...summaries.map(
+      (summary) =>
+        `      - [${summary.protocol}] [${summary.id}] ${summary.count} occurrence(s): ${summary.reason}`,
+    ),
+  ];
 }
 
-function formatNonBreaking(report: CompatReport): string[] {
-  const changes: VersionCheckResult['changes'] = report.checked.flatMap(
-    (result) => result.changes,
+function formatResult(result: VersionCheckResult): string[] {
+  const errors: VersionCheckResult['changes'] = result.changes.filter(
+    (change) => change.severity === 'error',
   );
-  const uniqueChanges: VersionCheckResult['changes'] = changes.filter(
-    (change, index) =>
-      changes.findIndex(
-        (candidate) => changeKey(candidate) === changeKey(change),
-      ) === index,
+  const warnings: VersionCheckResult['changes'] = result.changes.filter(
+    (change) => change.severity === 'warning',
   );
-  if (uniqueChanges.length === 0) return [];
+  const accepted: VersionCheckResult['changes'] = result.changes.filter(
+    (change) => change.severity === 'accepted',
+  );
 
   return [
-    '',
-    `Non-breaking changes worth reviewing (${uniqueChanges.length}):`,
-    ...uniqueChanges.map(formatChange),
+    result.breaking
+      ? `  ❌ v${result.entry.versionNumber}: BROKEN`
+      : `  ✅ v${result.entry.versionNumber}: COMPATIBLE`,
+    ...(errors.length === 0
+      ? []
+      : [`    Errors (${errors.length}):`, ...errors.map(formatChange)]),
+    ...(warnings.length === 0
+      ? []
+      : [
+          `    Warnings requiring review (${warnings.length}):`,
+          ...warnings.map(formatChange),
+        ]),
+    ...formatAcceptedChanges(accepted),
   ];
 }
 
@@ -45,16 +93,8 @@ function formatDeprecated(report: CompatReport): string[] {
 }
 
 export function formatHumanSummary(report: CompatReport): string {
-  const lines: string[] = report.checked.flatMap((result) =>
-    result.breaking
-      ? [
-          `  ❌ v${result.entry.versionNumber}: BROKEN`,
-          ...result.changes.map(formatChange),
-        ]
-      : [`  ✅ v${result.entry.versionNumber}: OK`],
-  );
+  const lines: string[] = report.checked.flatMap(formatResult);
 
-  lines.push(...formatNonBreaking(report));
   lines.push(...formatDeprecated(report));
   lines.push('');
   lines.push(

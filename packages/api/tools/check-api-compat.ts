@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getOpenApiDocument } from '../openapi/http/generate-openapi';
 import { getWsOpenApiDocument } from '../openapi/ws/generate-ws-openapi';
+import { compatExitCode } from './compat/exit-code';
 import { OasdiffNotFoundError } from './compat/oasdiff-runner';
 import { formatHumanSummary, toJsonReport } from './compat/report';
 import { runCompatCheck } from './compat/run-compat-check';
@@ -23,14 +24,19 @@ function main(): number {
     const currentWsSpecFile: string = join(temporaryDir, 'ws.json');
     writeFileSync(currentSpecFile, JSON.stringify(getOpenApiDocument()));
     writeFileSync(currentWsSpecFile, JSON.stringify(getWsOpenApiDocument()));
-    const errIgnoreFile: string = join(toolsDir, 'compat/err-ignore.txt');
+    const acceptedChangesFile: string = join(
+      toolsDir,
+      'compat/accepted-changes.json',
+    );
     const report: CompatReport = runCompatCheck({
       policyFile: join(openapiDir, 'compat-policy.json'),
       manifestFile: join(openapiDir, 'versions/versions-manifest.json'),
       versionsDir: join(openapiDir, 'versions'),
       currentSpecFile,
       currentWsSpecFile,
-      errIgnoreFile: existsSync(errIgnoreFile) ? errIgnoreFile : undefined,
+      acceptedChangesFile: existsSync(acceptedChangesFile)
+        ? acceptedChangesFile
+        : undefined,
     });
 
     console.log(formatHumanSummary(report));
@@ -38,7 +44,7 @@ function main(): number {
       writeFileSync(jsonOutputFile, toJsonReport(report));
       console.log(`\nJSON report written to ${jsonOutputFile}`);
     }
-    return report.brokenAt ? 1 : 0;
+    return compatExitCode(report);
   } finally {
     rmSync(temporaryDir, { recursive: true, force: true });
   }
