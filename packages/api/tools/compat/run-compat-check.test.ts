@@ -9,8 +9,10 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, type TestContext } from 'node:test';
+import { initContract } from '@ts-rest/core';
+import { generateOpenApi } from '@ts-rest/open-api';
 import type { OpenAPIObject } from 'openapi3-ts';
-import { z } from 'zod';
+import { type AnyZodObject, z } from 'zod';
 import { getWsOpenApiDocument } from '../../openapi/ws/generate-ws-openapi';
 import type { WsChannel, WsServerEvent } from '../../src/ws/channel';
 import { formatHumanSummary, toJsonReport } from './report';
@@ -37,7 +39,85 @@ const httpDocument: OpenAPIObject = {
   paths: { '/health': { get: { responses: { 200: { description: 'OK' } } } } },
 };
 
-type CompatFixture = RunCompatCheckOptions & { errIgnoreFile: string };
+function getHttpDocument(body: AnyZodObject): OpenAPIObject {
+  const contractBuilder: ReturnType<typeof initContract> = initContract();
+  return generateOpenApi(
+    contractBuilder.router({
+      guess: {
+        method: 'POST',
+        path: '/session/guess',
+        body,
+        responses: { 200: z.object({ accepted: z.boolean() }) },
+      },
+    }),
+    { info: { title: 'HTTP', version: 'v2' } },
+  );
+}
+
+function getWsDocument(payload: AnyZodObject): OpenAPIObject {
+  const channel: WsChannel = {
+    ...baselineChannel,
+    clientToServer: {
+      ...baselineChannel.clientToServer,
+      guess: { payload },
+    },
+  };
+  return getWsOpenApiDocument({
+    channels: [channel],
+    sharedServerEvents: sharedEvents,
+  });
+}
+
+function historicalGuessPayload(): AnyZodObject {
+  return z.object({
+    guess: z.object({
+      coordinates: z.object({ lat: z.number(), lng: z.number() }),
+      distance: z.number(),
+      points: z.number(),
+      win: z.boolean(),
+    }),
+  });
+}
+
+function narrowedGuessPayload(): AnyZodObject {
+  return z.object({
+    guess: z
+      .object({
+        coordinates: z.object({
+          lat: z.number().min(-90).max(90),
+          lng: z.number().min(-180).max(180),
+        }),
+      })
+      .strict(),
+  });
+}
+
+function writeSupportedDocuments({
+  options,
+  http,
+  ws,
+}: {
+  options: CompatFixture;
+  http: OpenAPIObject;
+  ws: OpenAPIObject;
+}): void {
+  const versions: number[] = [1, 2];
+  versions.forEach((version) => {
+    writeFileSync(
+      join(options.versionsDir, `v${version}-api.json`),
+      JSON.stringify(http),
+    );
+    writeFileSync(
+      join(options.versionsDir, `v${version}-ws.json`),
+      JSON.stringify(ws),
+    );
+  });
+}
+
+type CompatFixture = RunCompatCheckOptions & {
+  errIgnoreFile: string;
+  acceptedWarningsFile: string;
+};
 
 function fixture(t: TestContext): CompatFixture {
   const directory: string = mkdtempSync(join(tmpdir(), 'ws-compat-'));
@@ -49,6 +129,7 @@ function fixture(t: TestContext): CompatFixture {
     currentSpecFile: join(directory, 'http-current.json'),
     currentWsSpecFile: join(directory, 'ws-current.json'),
     errIgnoreFile: join(directory, 'err-ignore.txt'),
+    acceptedWarningsFile: join(directory, 'accepted-warnings.json'),
     now: new Date('2026-10-23T00:00:00.000Z'),
   };
   writeFileSync(
@@ -82,6 +163,7 @@ function fixture(t: TestContext): CompatFixture {
   writeFileSync(join(directory, 'v2-ws.json'), JSON.stringify(wsDocument));
   writeFileSync(options.currentWsSpecFile, JSON.stringify(wsDocument));
   writeFileSync(options.errIgnoreFile, '');
+  writeFileSync(options.acceptedWarningsFile, '[]');
   return options;
 }
 
@@ -115,7 +197,10 @@ describe('runCompatCheck', () => {
       ],
       skippedDeprecated: [],
     });
-    assert.match(formatHumanSummary(report), /✅ v2: OK\n {2}✅ v1: OK/);
+    assert.match(
+      formatHumanSummary(report),
+      /✅ v2: COMPATIBLE\n {2}✅ v1: COMPATIBLE/,
+    );
   });
 
   it('compares synthetic empty snapshots with the current WS contract', (t) => {
@@ -277,6 +362,11 @@ describe('runCompatCheck', () => {
 
   it('accepts optional request fields and additional events', (t) => {
     const options: CompatFixture = fixture(t);
+    const baselineHttpPayload: AnyZodObject = z.object({ name: z.string() });
+    const currentHttpPayload: AnyZodObject = z.object({
+      name: z.string(),
+      optional: z.string().optional(),
+    });
     const channel: WsChannel = {
       ...baselineChannel,
       clientToServer: {
@@ -292,6 +382,18 @@ describe('runCompatCheck', () => {
       },
       serverToClient: { ...baselineChannel.serverToClient, started: {} },
     };
+    writeSupportedDocuments({
+      options,
+      http: getHttpDocument(baselineHttpPayload),
+      ws: getWsOpenApiDocument({
+        channels: [baselineChannel],
+        sharedServerEvents: sharedEvents,
+      }),
+    });
+    writeFileSync(
+      options.currentSpecFile,
+      JSON.stringify(getHttpDocument(currentHttpPayload)),
+    );
     writeFileSync(
       options.currentWsSpecFile,
       JSON.stringify(
@@ -306,6 +408,156 @@ describe('runCompatCheck', () => {
 
     assert.equal(report.brokenAt, undefined);
     assert.equal(report.checked.length, 2);
+  });
+
+  it('rejects the historical guess payload narrowing for HTTP and WS', (t) => {
+    const options: CompatFixture = fixture(t);
+    const baselinePayload: AnyZodObject = historicalGuessPayload();
+    const currentPayload: AnyZodObject = narrowedGuessPayload();
+    writeSupportedDocuments({
+      options,
+      http: getHttpDocument(baselinePayload),
+      ws: getWsDocument(baselinePayload),
+    });
+    writeFileSync(
+      options.currentSpecFile,
+      JSON.stringify(getHttpDocument(currentPayload)),
+    );
+    writeFileSync(
+      options.currentWsSpecFile,
+      JSON.stringify(getWsDocument(currentPayload)),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+    const changes: NonNullable<CompatReport['brokenAt']>['changes'] =
+      report.brokenAt?.changes ?? [];
+    const summary: string = formatHumanSummary(report);
+    const jsonReport: string = toJsonReport(report);
+    const protocols: Array<'HTTP' | 'WS'> = ['HTTP', 'WS'];
+
+    assert.equal(report.brokenAt?.entry.versionNumber, 2);
+    protocols.forEach((protocol) => {
+      const protocolChanges: typeof changes = changes.filter(
+        (change) => change.protocol === protocol,
+      );
+      assert.deepEqual(
+        protocolChanges
+          .filter((change) => change.id === 'request-property-removed')
+          .map((change) => change.text),
+        [
+          'removed the request property `guess/distance`',
+          'removed the request property `guess/points`',
+          'removed the request property `guess/win`',
+        ],
+      );
+      assert.equal(
+        protocolChanges.filter(
+          (change) =>
+            change.id === 'request-property-min-set' ||
+            change.id === 'request-property-max-set',
+        ).length,
+        4,
+      );
+      assert.ok(
+        protocolChanges.some(
+          (change) => change.id === 'request-schema-became-strict',
+        ),
+      );
+    });
+    assert.match(summary, /Warnings requiring review/);
+    assert.match(summary, /guess\/distance/);
+    assert.match(summary, /guess\/points/);
+    assert.match(summary, /guess\/win/);
+    assert.match(jsonReport, /"severity": "warning"/);
+    assert.match(jsonReport, /"severity": "error"/);
+  });
+
+  it('rejects strict request schemas without other structural changes', (t) => {
+    const options: CompatFixture = fixture(t);
+    const baselinePayload: AnyZodObject = z.object({
+      payload: z.object({ value: z.string() }),
+    });
+    const currentPayload: AnyZodObject = z.object({
+      payload: z.object({ value: z.string() }).strict(),
+    });
+    writeSupportedDocuments({
+      options,
+      http: getHttpDocument(baselinePayload),
+      ws: getWsDocument(baselinePayload),
+    });
+    writeFileSync(
+      options.currentSpecFile,
+      JSON.stringify(getHttpDocument(currentPayload)),
+    );
+    writeFileSync(
+      options.currentWsSpecFile,
+      JSON.stringify(getWsDocument(currentPayload)),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+    const strictChanges: NonNullable<CompatReport['brokenAt']>['changes'] =
+      report.brokenAt?.changes.filter(
+        (change) => change.id === 'request-schema-became-strict',
+      ) ?? [];
+
+    assert.deepEqual(
+      strictChanges.map((change) => change.protocol),
+      ['HTTP', 'WS'],
+    );
+    assert.ok(
+      strictChanges.every(
+        (change) =>
+          change.text ===
+          'the request property `payload` now rejects additional properties',
+      ),
+    );
+  });
+
+  it('reports configured warning exceptions as accepted changes', (t) => {
+    const options: CompatFixture = fixture(t);
+    const baselinePayload: AnyZodObject = z.object({
+      kept: z.string(),
+      removed: z.string(),
+    });
+    const currentPayload: AnyZodObject = z.object({ kept: z.string() });
+    const acceptedWarnings: Array<{
+      id: string;
+      text: string;
+      reason: string;
+    }> = [
+      {
+        id: 'request-property-removed',
+        text: 'removed the request property `removed`',
+        reason: 'Test clients never sent this field.',
+      },
+    ];
+    writeSupportedDocuments({
+      options,
+      http: getHttpDocument(baselinePayload),
+      ws: getWsDocument(baselinePayload),
+    });
+    writeFileSync(
+      options.currentSpecFile,
+      JSON.stringify(getHttpDocument(currentPayload)),
+    );
+    writeFileSync(
+      options.currentWsSpecFile,
+      JSON.stringify(getWsDocument(currentPayload)),
+    );
+    writeFileSync(
+      options.acceptedWarningsFile,
+      JSON.stringify(acceptedWarnings),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+    const changes: CompatReport['checked'][number]['changes'] =
+      report.checked.flatMap((result) => result.changes);
+
+    assert.equal(report.brokenAt, undefined);
+    assert.ok(changes.length > 0);
+    assert.ok(changes.every((change) => change.severity === 'accepted'));
+    assert.match(formatHumanSummary(report), /Accepted changes/);
+    assert.match(formatHumanSummary(report), /Test clients never sent/);
   });
 
   it('combines HTTP and WS failures in one report', (t) => {

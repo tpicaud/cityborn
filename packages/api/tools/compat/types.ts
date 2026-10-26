@@ -4,6 +4,8 @@ export type OasdiffChange = {
   id: string;
   text: string;
   level: number;
+  severity: 'error' | 'warning' | 'accepted';
+  acceptanceReason?: string;
   operation?: string;
   path?: string;
   source?: string;

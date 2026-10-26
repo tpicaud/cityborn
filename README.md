@@ -153,6 +153,10 @@ En cas d'échec de connexion : vérifier que le téléphone et la machine sont s
 `pnpm check:api-compat` compare les contrats HTTP et WebSocket aux versions
 encore supportées avec oasdiff 1.26.1, également requis par les tests de
 `packages/api`. Installer ce binaire sur le `PATH` avant de lancer ces commandes.
+Les erreurs et avertissements oasdiff non acceptés font échouer le contrôle ; les
+exceptions historiques de `accepted-warnings.json` restent visibles dans les
+sorties avec leur justification. Le contrôle complète oasdiff pour détecter un
+payload d'entrée qui passe à `additionalProperties: false`.
 
 Les commandes `generate:openapi:draft` et `generate:openapi:release` de
 `packages/api` versionnent ensemble `v<n>-api.json` et `v<n>-ws.json` dès que
@@ -163,8 +167,9 @@ la même politique de support. Les captures WebSocket réelles commencent à la 
 les versions v1 à v5 contiennent des documents vides explicitement marqués comme synthétiques, car
 aucune capture WebSocket n’existait alors. Ces documents ne représentent pas
 les contrats historiques et suivent le même contrôle que les autres captures.
-Le handshake et le sens métier des messages restent hors du contrôle de
-compatibilité des schémas.
+Le contrôle reste structurel : une réponse de même forme dont le contenu ou le
+comportement change exige toujours une review. Le handshake et le sens métier des
+messages restent eux aussi hors du contrôle automatique.
 
 ### Organisation
 

@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { findRequestSchemaTightenings } from './request-schema-check';
 import type { OasdiffChange } from './types';
 
 const INSTALL_HINT =
@@ -26,7 +28,7 @@ export type DiffResult = {
   changes: OasdiffChange[];
 };
 
-const OasdiffChangesSchema = z.array(
+const RawOasdiffChangesSchema = z.array(
   z.object({
     id: z.string(),
     text: z.string(),
@@ -37,14 +39,87 @@ const OasdiffChangesSchema = z.array(
   }),
 );
 
+const AcceptedWarningsSchema = z.array(
+  z.object({
+    id: z.string(),
+    operation: z.string().optional(),
+    path: z.string().optional(),
+    text: z.string().optional(),
+    textIncludes: z.string().optional(),
+    reason: z.string(),
+  }),
+);
+
+type RawOasdiffChange = z.infer<typeof RawOasdiffChangesSchema>[number];
+type AcceptedWarning = z.infer<typeof AcceptedWarningsSchema>[number];
+
+function loadAcceptedWarnings(file?: string): AcceptedWarning[] {
+  if (file === undefined) return [];
+  const raw: unknown = JSON.parse(readFileSync(file, 'utf-8'));
+  return AcceptedWarningsSchema.parse(raw);
+}
+
+function acceptedWarningReason({
+  change,
+  acceptedWarnings,
+}: {
+  change: RawOasdiffChange;
+  acceptedWarnings: AcceptedWarning[];
+}): string | undefined {
+  if (change.level !== 2) return undefined;
+  return acceptedWarnings.find(
+    (accepted) =>
+      accepted.id === change.id &&
+      (accepted.operation === undefined ||
+        accepted.operation === change.operation) &&
+      (accepted.path === undefined || accepted.path === change.path) &&
+      (accepted.text === undefined || accepted.text === change.text) &&
+      (accepted.textIncludes === undefined ||
+        change.text.includes(accepted.textIncludes)),
+  )?.reason;
+}
+
+function classifyChange({
+  change,
+  acceptedWarnings,
+}: {
+  change: RawOasdiffChange;
+  acceptedWarnings: AcceptedWarning[];
+}): OasdiffChange {
+  const acceptanceReason: string | undefined = acceptedWarningReason({
+    change,
+    acceptedWarnings,
+  });
+  if (acceptanceReason !== undefined) {
+    return {
+      ...change,
+      severity: 'accepted',
+      acceptanceReason,
+    };
+  }
+  if (change.level < 2) {
+    return {
+      ...change,
+      severity: 'accepted',
+      acceptanceReason: 'oasdiff classifies this change as informational.',
+    };
+  }
+  return {
+    ...change,
+    severity: change.level >= 3 ? 'error' : 'warning',
+  };
+}
+
 export function diffBreaking({
   baseFile,
   revisionFile,
   errIgnoreFile,
+  acceptedWarningsFile,
 }: {
   baseFile: string;
   revisionFile: string;
   errIgnoreFile?: string;
+  acceptedWarningsFile?: string;
 }): DiffResult {
   const result = spawnSync(
     'oasdiff',
@@ -53,7 +128,7 @@ export function diffBreaking({
       '--format',
       'json',
       '--fail-on',
-      'ERR',
+      'WARN',
       ...(errIgnoreFile ? ['--err-ignore', errIgnoreFile] : []),
       baseFile,
       revisionFile,
@@ -72,8 +147,17 @@ export function diffBreaking({
   }
 
   const stdout = result.stdout.trim();
-  const changes: OasdiffChange[] = stdout
-    ? OasdiffChangesSchema.parse(JSON.parse(stdout))
+  const rawChanges: RawOasdiffChange[] = stdout
+    ? RawOasdiffChangesSchema.parse(JSON.parse(stdout))
     : [];
-  return { breaking: result.status === 1, changes };
+  const acceptedWarnings: AcceptedWarning[] =
+    loadAcceptedWarnings(acceptedWarningsFile);
+  const changes: OasdiffChange[] = [
+    ...rawChanges.map((change) => classifyChange({ change, acceptedWarnings })),
+    ...findRequestSchemaTightenings({ baseFile, revisionFile }),
+  ];
+  return {
+    breaking: changes.some((change) => change.severity !== 'accepted'),
+    changes,
+  };
 }
