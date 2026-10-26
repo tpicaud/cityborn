@@ -42,7 +42,12 @@ jobs:
     name: Deploy Frontend
     needs:
       - build-frontend
-    if: ${{ !failure() && !cancelled() && inputs.frontendHasChanged == 'true' }}
+      - deploy-backend
+    if: >-
+      ${{ !failure() && !cancelled() &&
+          inputs.frontendHasChanged == 'true' &&
+          needs.build-frontend.result == 'success' &&
+          (inputs.backendHasChanged != 'true' || needs.deploy-backend.result == 'success') }}
     uses: ./.github/workflows/deploy-to-vercel.yml
     secrets: inherit
     with:
