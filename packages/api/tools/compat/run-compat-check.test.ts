@@ -68,6 +68,35 @@ function getWsDocument(payload: AnyZodObject): OpenAPIObject {
   });
 }
 
+function getCodeResponseDocument(enumValues: string[]): OpenAPIObject {
+  return {
+    openapi: '3.0.2',
+    info: { title: 'HTTP', version: 'v2' },
+    paths: {
+      '/business': {
+        get: {
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', enum: enumValues },
+                    },
+                    required: ['code'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
 function historicalGuessPayload(): AnyZodObject {
   return z.object({
     guess: z.object({
@@ -114,10 +143,7 @@ function writeSupportedDocuments({
   });
 }
 
-type CompatFixture = RunCompatCheckOptions & {
-  errIgnoreFile: string;
-  acceptedWarningsFile: string;
-};
+type CompatFixture = RunCompatCheckOptions & { acceptedChangesFile: string };
 
 function fixture(t: TestContext): CompatFixture {
   const directory: string = mkdtempSync(join(tmpdir(), 'ws-compat-'));
@@ -128,8 +154,7 @@ function fixture(t: TestContext): CompatFixture {
     versionsDir: directory,
     currentSpecFile: join(directory, 'http-current.json'),
     currentWsSpecFile: join(directory, 'ws-current.json'),
-    errIgnoreFile: join(directory, 'err-ignore.txt'),
-    acceptedWarningsFile: join(directory, 'accepted-warnings.json'),
+    acceptedChangesFile: join(directory, 'accepted-changes.json'),
     now: new Date('2026-10-23T00:00:00.000Z'),
   };
   writeFileSync(
@@ -162,8 +187,7 @@ function fixture(t: TestContext): CompatFixture {
   writeFileSync(join(directory, 'v1-ws.json'), JSON.stringify(wsDocument));
   writeFileSync(join(directory, 'v2-ws.json'), JSON.stringify(wsDocument));
   writeFileSync(options.currentWsSpecFile, JSON.stringify(wsDocument));
-  writeFileSync(options.errIgnoreFile, '');
-  writeFileSync(options.acceptedWarningsFile, '[]');
+  writeFileSync(options.acceptedChangesFile, '[]');
   return options;
 }
 
@@ -520,7 +544,7 @@ describe('runCompatCheck', () => {
       removed: z.string(),
     });
     const currentPayload: AnyZodObject = z.object({ kept: z.string() });
-    const acceptedWarnings: Array<{
+    const acceptedChanges: Array<{
       id: string;
       text: string;
       reason: string;
@@ -544,10 +568,7 @@ describe('runCompatCheck', () => {
       options.currentWsSpecFile,
       JSON.stringify(getWsDocument(currentPayload)),
     );
-    writeFileSync(
-      options.acceptedWarningsFile,
-      JSON.stringify(acceptedWarnings),
-    );
+    writeFileSync(options.acceptedChangesFile, JSON.stringify(acceptedChanges));
 
     const report: CompatReport = runCompatCheck(options);
     const changes: CompatReport['checked'][number]['changes'] =
@@ -558,6 +579,50 @@ describe('runCompatCheck', () => {
     assert.ok(changes.every((change) => change.severity === 'accepted'));
     assert.match(formatHumanSummary(report), /Accepted changes/);
     assert.match(formatHumanSummary(report), /Test clients never sent/);
+  });
+
+  it('rejects an accepted code enum warning outside the API error schema', (t) => {
+    const options: CompatFixture = fixture(t);
+    const baselineHttp: OpenAPIObject = getCodeResponseDocument(['FIRST']);
+    const currentHttp: OpenAPIObject = getCodeResponseDocument([
+      'FIRST',
+      'SECOND',
+    ]);
+    const wsDocument: OpenAPIObject = getWsOpenApiDocument({
+      channels: [baselineChannel],
+      sharedServerEvents: sharedEvents,
+    });
+    writeSupportedDocuments({
+      options,
+      http: baselineHttp,
+      ws: wsDocument,
+    });
+    writeFileSync(options.currentSpecFile, JSON.stringify(currentHttp));
+    writeFileSync(options.currentWsSpecFile, JSON.stringify(wsDocument));
+    writeFileSync(
+      options.acceptedChangesFile,
+      JSON.stringify([
+        {
+          id: 'response-property-enum-value-added',
+          textIncludes: '`code` response property',
+          responseSchema: 'api-error',
+          reason: 'Published clients normalize unknown API error codes.',
+        },
+      ]),
+    );
+
+    const report: CompatReport = runCompatCheck(options);
+    const changes: CompatReport['checked'][number]['changes'] =
+      report.brokenAt?.changes ?? [];
+
+    assert.equal(report.brokenAt?.entry.versionNumber, 2);
+    assert.ok(
+      changes.some(
+        (change) =>
+          change.id === 'response-property-enum-value-added' &&
+          change.severity === 'warning',
+      ),
+    );
   });
 
   it('combines HTTP and WS failures in one report', (t) => {
@@ -583,7 +648,7 @@ describe('runCompatCheck', () => {
     assert.match(summary, /Breaking change detected against v2/);
   });
 
-  it('uses the common ignore file for WS changes', (t) => {
+  it('reports accepted WS errors with their justification', (t) => {
     const options: CompatFixture = fixture(t);
     writeFileSync(
       options.currentWsSpecFile,
@@ -595,13 +660,27 @@ describe('runCompatCheck', () => {
       ),
     );
     writeFileSync(
-      options.errIgnoreFile,
-      'POST /ws/session/join api path removed without deprecation\n',
+      options.acceptedChangesFile,
+      JSON.stringify([
+        {
+          id: 'api-path-removed-without-deprecation',
+          operation: 'POST',
+          path: '/ws/session/join',
+          text: 'api path removed without deprecation',
+          reason: 'The test client does not use this event.',
+        },
+      ]),
     );
 
     const report: CompatReport = runCompatCheck(options);
+    const summary: string = formatHumanSummary(report);
+    const jsonReport: string = toJsonReport(report);
 
     assert.equal(report.brokenAt, undefined);
+    assert.match(summary, /Accepted changes/);
+    assert.match(summary, /The test client does not use this event/);
+    assert.match(jsonReport, /"severity": "accepted"/);
+    assert.match(jsonReport, /The test client does not use this event/);
   });
 
   it('uses the same version retirement floor for HTTP and WS', (t) => {

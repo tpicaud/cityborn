@@ -1,0 +1,120 @@
+[
+  {
+    "id": "response-property-enum-value-added",
+    "textIncludes": "`code` response property",
+    "responseSchema": "api-error",
+    "reason": "Published clients normalize unknown API error codes to UNKNOWN_ERROR."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "GET",
+    "path": "/auth/me",
+    "text": "removed the optional property `relations` from the response with the `200` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "POST",
+    "path": "/auth/refresh",
+    "text": "removed the optional property `user/relations` from the response with the `200` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "POST",
+    "path": "/auth/sign-in",
+    "text": "removed the optional property `user/relations` from the response with the `200` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "POST",
+    "path": "/auth/sign-in-with-apple",
+    "text": "removed the optional property `user/relations` from the response with the `200` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "POST",
+    "path": "/auth/sign-in-with-google",
+    "text": "removed the optional property `user/relations` from the response with the `200` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "response-optional-property-removed",
+    "operation": "POST",
+    "path": "/auth/sign-up",
+    "text": "removed the optional property `user/relations` from the response with the `201` status",
+    "reason": "The removed relations field was never populated by the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "GET",
+    "path": "/admin/category/",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "POST",
+    "path": "/admin/category/",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "GET",
+    "path": "/admin/category/tree",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "DELETE",
+    "path": "/admin/category/{id}",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "GET",
+    "path": "/admin/category/{id}",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "PUT",
+    "path": "/admin/category/{id}",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "operation": "GET",
+    "path": "/admin/category/{id}/full",
+    "text": "api path removed without deprecation",
+    "reason": "Only the back-office used this renamed route, and it is deployed with the backend."
+  },
+  {
+    "id": "request-property-pattern-added",
+    "operation": "POST",
+    "path": "/auth/sign-up",
+    "text": "added the pattern `^(?=.*[A-Z])(?=.*\\d).+$` to the request property `password`",
+    "reason": "Published clients already enforced this uppercase-and-digit password pattern before the API did."
+  },
+  {
+    "id": "response-required-property-removed",
+    "operation": "GET",
+    "path": "/guess-object/",
+    "text": "removed the required property `items/world_location` from the response with the `200` status",
+    "reason": "The removed full route was shadowed at runtime, so clients only received world_location_preview."
+  },
+  {
+    "id": "response-required-property-removed",
+    "operation": "GET",
+    "path": "/guess-object/{id}",
+    "text": "removed the required property `world_location` from the response with the `200` status",
+    "reason": "The removed full route was shadowed at runtime, so clients only received world_location_preview."
+  }
+]

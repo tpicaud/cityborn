@@ -154,7 +154,7 @@ En cas d'échec de connexion : vérifier que le téléphone et la machine sont s
 encore supportées avec oasdiff 1.26.1, également requis par les tests de
 `packages/api`. Installer ce binaire sur le `PATH` avant de lancer ces commandes.
 Les erreurs et avertissements oasdiff non acceptés font échouer le contrôle ; les
-exceptions historiques de `accepted-warnings.json` restent visibles dans les
+exceptions historiques de `accepted-changes.json` restent visibles dans les
 sorties avec leur justification. Le contrôle complète oasdiff pour détecter un
 payload d'entrée qui passe à `additionalProperties: false`.
 

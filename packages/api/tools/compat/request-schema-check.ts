@@ -43,6 +43,49 @@ function readDocument(file: string): JsonValue {
   return JsonValueSchema.parse(raw);
 }
 
+function equalJsonValues(left: JsonValue, right: JsonValue): boolean {
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length &&
+      left.every((value, index) => equalJsonValues(value, right[index]))
+    );
+  }
+  if (isJsonObject(left) && isJsonObject(right)) {
+    const leftEntries: Array<[string, JsonValue]> = Object.entries(left);
+    const rightEntries: Array<[string, JsonValue]> = Object.entries(right);
+    return (
+      leftEntries.length === rightEntries.length &&
+      leftEntries.every(
+        ([key, value]) =>
+          right[key] !== undefined && equalJsonValues(value, right[key]),
+      )
+    );
+  }
+  return left === right;
+}
+
+function pairChangedArrayValues({
+  base,
+  revision,
+}: {
+  base: JsonValue[];
+  revision: JsonValue[];
+}): Array<{ base: JsonValue; revision: JsonValue | undefined }> {
+  const unmatchedRevision: JsonValue[] = [...revision];
+  const unmatchedBase: JsonValue[] = base.filter((baseValue) => {
+    const unchangedIndex: number = unmatchedRevision.findIndex(
+      (revisionValue) => equalJsonValues(baseValue, revisionValue),
+    );
+    if (unchangedIndex === -1) return true;
+    unmatchedRevision.splice(unchangedIndex, 1);
+    return false;
+  });
+  return unmatchedBase.map((baseValue, index) => ({
+    base: baseValue,
+    revision: unmatchedRevision[index],
+  }));
+}
+
 function requestSchemaName(segments: string[]): string {
   const propertyNames: string[] = segments.flatMap((segment, index) =>
     segment === 'properties' && segments[index + 1] !== undefined
@@ -64,12 +107,13 @@ function findStrictSchemas({
   segments: string[];
 }): string[] {
   if (Array.isArray(base) && Array.isArray(revision)) {
-    return base.flatMap((value, index) =>
-      findStrictSchemas({
-        base: value,
-        revision: revision[index],
-        segments: [...segments, String(index)],
-      }),
+    return pairChangedArrayValues({ base, revision }).flatMap(
+      ({ base: baseValue, revision: revisionValue }, index) =>
+        findStrictSchemas({
+          base: baseValue,
+          revision: revisionValue,
+          segments: [...segments, String(index)],
+        }),
     );
   }
   if (!isJsonObject(base) || !isJsonObject(revision)) return [];

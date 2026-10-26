@@ -39,35 +39,157 @@ const RawOasdiffChangesSchema = z.array(
   }),
 );
 
-const AcceptedWarningsSchema = z.array(
+const AcceptedChangesSchema = z.array(
   z.object({
     id: z.string(),
     operation: z.string().optional(),
     path: z.string().optional(),
     text: z.string().optional(),
     textIncludes: z.string().optional(),
+    responseSchema: z.enum(['api-error']).optional(),
     reason: z.string(),
   }),
 );
 
 type RawOasdiffChange = z.infer<typeof RawOasdiffChangesSchema>[number];
-type AcceptedWarning = z.infer<typeof AcceptedWarningsSchema>[number];
+type AcceptedChange = z.infer<typeof AcceptedChangesSchema>[number];
 
-function loadAcceptedWarnings(file?: string): AcceptedWarning[] {
+function loadAcceptedChanges(file?: string): AcceptedChange[] {
   if (file === undefined) return [];
   const raw: unknown = JSON.parse(readFileSync(file, 'utf-8'));
-  return AcceptedWarningsSchema.parse(raw);
+  return AcceptedChangesSchema.parse(raw);
 }
 
-function acceptedWarningReason({
+function hasExactKeys({
+  value,
+  keys,
+}: {
+  value: { [key: string]: JsonValue };
+  keys: string[];
+}): boolean {
+  const valueKeys: string[] = Object.keys(value).sort();
+  const expectedKeys: string[] = [...keys].sort();
+  return (
+    valueKeys.length === expectedKeys.length &&
+    valueKeys.every((key, index) => key === expectedKeys[index])
+  );
+}
+
+type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    z.null(),
+    z.boolean(),
+    z.number(),
+    z.string(),
+    z.array(JsonValueSchema),
+    z.record(JsonValueSchema),
+  ]),
+);
+
+function isJsonObject(
+  value: JsonValue | undefined,
+): value is { [key: string]: JsonValue } {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringSchema(value: JsonValue | undefined): boolean {
+  return isJsonObject(value) && value.type === 'string';
+}
+
+function isApiErrorFieldErrorsSchema(value: JsonValue | undefined): boolean {
+  if (!isJsonObject(value) || value.type !== 'array') return false;
+  const items: JsonValue | undefined = value.items;
+  if (!isJsonObject(items) || items.type !== 'object') return false;
+  const properties: JsonValue | undefined = items.properties;
+  const required: JsonValue | undefined = items.required;
+  return (
+    isJsonObject(properties) &&
+    hasExactKeys({ value: properties, keys: ['message', 'path'] }) &&
+    isStringSchema(properties.path) &&
+    isStringSchema(properties.message) &&
+    Array.isArray(required) &&
+    required.length === 2 &&
+    required.includes('path') &&
+    required.includes('message')
+  );
+}
+
+function isApiErrorSchema(value: JsonValue | undefined): boolean {
+  if (!isJsonObject(value) || value.type !== 'object') return false;
+  const properties: JsonValue | undefined = value.properties;
+  const required: JsonValue | undefined = value.required;
+  if (!isJsonObject(properties) || !Array.isArray(required)) return false;
+  const code: JsonValue | undefined = properties.code;
+  const statusCode: JsonValue | undefined = properties.statusCode;
+  return (
+    hasExactKeys({
+      value: properties,
+      keys: ['code', 'fieldErrors', 'message', 'statusCode'],
+    }) &&
+    isJsonObject(code) &&
+    code.type === 'string' &&
+    Array.isArray(code.enum) &&
+    code.enum.every((enumValue) => typeof enumValue === 'string') &&
+    isJsonObject(statusCode) &&
+    statusCode.type === 'integer' &&
+    isStringSchema(properties.message) &&
+    isApiErrorFieldErrorsSchema(properties.fieldErrors) &&
+    required.length === 3 &&
+    required.includes('code') &&
+    required.includes('statusCode') &&
+    required.includes('message')
+  );
+}
+
+function responseSchema({
   change,
-  acceptedWarnings,
+  revisionDocument,
 }: {
   change: RawOasdiffChange;
-  acceptedWarnings: AcceptedWarning[];
+  revisionDocument: JsonValue;
+}): JsonValue | undefined {
+  if (change.operation === undefined || change.path === undefined) {
+    return undefined;
+  }
+  const statusMatch: RegExpMatchArray | null =
+    change.text.match(/status `([^`]+)`/);
+  const status: string | undefined = statusMatch?.[1];
+  if (status === undefined || !isJsonObject(revisionDocument)) return undefined;
+  const paths: JsonValue | undefined = revisionDocument.paths;
+  if (!isJsonObject(paths)) return undefined;
+  const pathItem: JsonValue | undefined = paths[change.path];
+  if (!isJsonObject(pathItem)) return undefined;
+  const operation: JsonValue | undefined =
+    pathItem[change.operation.toLowerCase()];
+  if (!isJsonObject(operation)) return undefined;
+  const responses: JsonValue | undefined = operation.responses;
+  if (!isJsonObject(responses)) return undefined;
+  const response: JsonValue | undefined = responses[status];
+  if (!isJsonObject(response)) return undefined;
+  const content: JsonValue | undefined = response.content;
+  if (!isJsonObject(content)) return undefined;
+  const mediaType: JsonValue | undefined = content['application/json'];
+  return isJsonObject(mediaType) ? mediaType.schema : undefined;
+}
+
+function acceptedChangeReason({
+  change,
+  acceptedChanges,
+  revisionDocument,
+}: {
+  change: RawOasdiffChange;
+  acceptedChanges: AcceptedChange[];
+  revisionDocument: JsonValue;
 }): string | undefined {
-  if (change.level !== 2) return undefined;
-  return acceptedWarnings.find(
+  return acceptedChanges.find(
     (accepted) =>
       accepted.id === change.id &&
       (accepted.operation === undefined ||
@@ -75,20 +197,26 @@ function acceptedWarningReason({
       (accepted.path === undefined || accepted.path === change.path) &&
       (accepted.text === undefined || accepted.text === change.text) &&
       (accepted.textIncludes === undefined ||
-        change.text.includes(accepted.textIncludes)),
+        change.text.includes(accepted.textIncludes)) &&
+      (accepted.responseSchema === undefined ||
+        (accepted.responseSchema === 'api-error' &&
+          isApiErrorSchema(responseSchema({ change, revisionDocument })))),
   )?.reason;
 }
 
 function classifyChange({
   change,
-  acceptedWarnings,
+  acceptedChanges,
+  revisionDocument,
 }: {
   change: RawOasdiffChange;
-  acceptedWarnings: AcceptedWarning[];
+  acceptedChanges: AcceptedChange[];
+  revisionDocument: JsonValue;
 }): OasdiffChange {
-  const acceptanceReason: string | undefined = acceptedWarningReason({
+  const acceptanceReason: string | undefined = acceptedChangeReason({
     change,
-    acceptedWarnings,
+    acceptedChanges,
+    revisionDocument,
   });
   if (acceptanceReason !== undefined) {
     return {
@@ -113,13 +241,11 @@ function classifyChange({
 export function diffBreaking({
   baseFile,
   revisionFile,
-  errIgnoreFile,
-  acceptedWarningsFile,
+  acceptedChangesFile,
 }: {
   baseFile: string;
   revisionFile: string;
-  errIgnoreFile?: string;
-  acceptedWarningsFile?: string;
+  acceptedChangesFile?: string;
 }): DiffResult {
   const result = spawnSync(
     'oasdiff',
@@ -129,7 +255,6 @@ export function diffBreaking({
       'json',
       '--fail-on',
       'WARN',
-      ...(errIgnoreFile ? ['--err-ignore', errIgnoreFile] : []),
       baseFile,
       revisionFile,
     ],
@@ -150,10 +275,14 @@ export function diffBreaking({
   const rawChanges: RawOasdiffChange[] = stdout
     ? RawOasdiffChangesSchema.parse(JSON.parse(stdout))
     : [];
-  const acceptedWarnings: AcceptedWarning[] =
-    loadAcceptedWarnings(acceptedWarningsFile);
+  const acceptedChanges: AcceptedChange[] =
+    loadAcceptedChanges(acceptedChangesFile);
+  const revisionRaw: unknown = JSON.parse(readFileSync(revisionFile, 'utf-8'));
+  const revisionDocument: JsonValue = JsonValueSchema.parse(revisionRaw);
   const changes: OasdiffChange[] = [
-    ...rawChanges.map((change) => classifyChange({ change, acceptedWarnings })),
+    ...rawChanges.map((change) =>
+      classifyChange({ change, acceptedChanges, revisionDocument }),
+    ),
     ...findRequestSchemaTightenings({ baseFile, revisionFile }),
   ];
   return {

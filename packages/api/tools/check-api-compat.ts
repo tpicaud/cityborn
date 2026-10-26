@@ -24,10 +24,9 @@ function main(): number {
     const currentWsSpecFile: string = join(temporaryDir, 'ws.json');
     writeFileSync(currentSpecFile, JSON.stringify(getOpenApiDocument()));
     writeFileSync(currentWsSpecFile, JSON.stringify(getWsOpenApiDocument()));
-    const errIgnoreFile: string = join(toolsDir, 'compat/err-ignore.txt');
-    const acceptedWarningsFile: string = join(
+    const acceptedChangesFile: string = join(
       toolsDir,
-      'compat/accepted-warnings.json',
+      'compat/accepted-changes.json',
     );
     const report: CompatReport = runCompatCheck({
       policyFile: join(openapiDir, 'compat-policy.json'),
@@ -35,9 +34,8 @@ function main(): number {
       versionsDir: join(openapiDir, 'versions'),
       currentSpecFile,
       currentWsSpecFile,
-      errIgnoreFile: existsSync(errIgnoreFile) ? errIgnoreFile : undefined,
-      acceptedWarningsFile: existsSync(acceptedWarningsFile)
-        ? acceptedWarningsFile
+      acceptedChangesFile: existsSync(acceptedChangesFile)
+        ? acceptedChangesFile
         : undefined,
     });
 
