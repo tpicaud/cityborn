@@ -2,11 +2,22 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { type Coord, type GuessSubmission, RoundStatus } from '@cityborn/api';
 import {
+  countdownSecondsLeft,
   createTimedOutGuess,
   type RoundDisplayState,
   shouldShowRoundOverlay,
   synchronizeRoundDisplayState,
 } from './gameRound';
+
+describe('countdownSecondsLeft', () => {
+  it('keeps only the remaining countdown on a resumed round', () => {
+    assert.equal(countdownSecondsLeft({ endAt: 3000, now: 2200 }), 1);
+  });
+
+  it('ends immediately when the countdown deadline has passed', () => {
+    assert.equal(countdownSecondsLeft({ endAt: 3000, now: 5000 }), 0);
+  });
+});
 
 describe('createTimedOutGuess', () => {
   it('submits the coordinates of the pre-guess without a calculated score', () => {

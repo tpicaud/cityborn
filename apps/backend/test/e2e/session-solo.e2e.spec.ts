@@ -38,7 +38,7 @@ import { SessionGateway } from '../../src/session/session.gateway';
 import {
   type SessionState,
   SessionStateSchema,
-} from '../../src/session/session-state';
+} from '../../src/session/session-game-protocol';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
 

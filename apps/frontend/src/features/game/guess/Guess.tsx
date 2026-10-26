@@ -40,7 +40,10 @@ export default function Guess({
       </div>
 
       {gameRound.showCountdown && (
-        <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
+        <RoundCountdown
+          endAt={gameRound.countdownEndsAt}
+          onCountdownEnd={gameRound.handleCountdownEnd}
+        />
       )}
 
       {gameRound.showOverlay && (

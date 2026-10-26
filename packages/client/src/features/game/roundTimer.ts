@@ -1,11 +1,12 @@
 'use client';
 
+import { roundCountdownInMilliseconds } from '@cityborn/core';
 import { useEffect, useRef, useState } from 'react';
 import type { ServerClock } from '../../shared/serverClock/serverClock';
 import { useServerClock } from '../../shared/serverClock/serverClockContext';
+import { countdownSecondsLeft } from './gameRound';
 
 const roundTimerTickInMilliseconds = 10;
-const countdownTickInMilliseconds = 1000;
 const runningOutThresholdInSeconds = 5;
 
 export type RoundTimerOptions = {
@@ -75,7 +76,7 @@ export function useRoundTimer({
 }
 
 export type CountdownOptions = {
-  initialCount?: number;
+  endAt?: number;
   onCountdownEnd: () => void;
 };
 
@@ -84,23 +85,43 @@ export type Countdown = {
 };
 
 export function useCountdown({
-  initialCount = 3,
+  endAt,
   onCountdownEnd,
 }: CountdownOptions): Countdown {
-  const [count, setCount] = useState<number>(initialCount);
+  const serverClock: ServerClock = useServerClock();
+  const [count, setCount] = useState<number>(
+    Math.ceil(roundCountdownInMilliseconds / 1000),
+  );
+  const onCountdownEndRef = useRef<() => void>(onCountdownEnd);
+  onCountdownEndRef.current = onCountdownEnd;
 
   useEffect(() => {
-    if (count <= 0) {
-      onCountdownEnd();
-      return;
-    }
+    const localEndAt: number =
+      serverClock.localDeadline(endAt) ??
+      performance.now() + roundCountdownInMilliseconds;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    const timeoutId = setTimeout(
-      () => setCount((previousCount) => previousCount - 1),
-      countdownTickInMilliseconds,
-    );
+    const updateCount = (): void => {
+      const now: number = performance.now();
+      const remainingMilliseconds: number = Math.max(0, localEndAt - now);
+      const nextCount: number = countdownSecondsLeft({
+        endAt: localEndAt,
+        now,
+      });
+      setCount(nextCount);
+      if (nextCount === 0) {
+        onCountdownEndRef.current();
+        return;
+      }
+      timeoutId = setTimeout(
+        updateCount,
+        Math.max(1, Math.ceil(remainingMilliseconds - (nextCount - 1) * 1000)),
+      );
+    };
+
+    updateCount();
     return () => clearTimeout(timeoutId);
-  }, [count, onCountdownEnd]);
+  }, [endAt, serverClock]);
 
   return { count };
 }

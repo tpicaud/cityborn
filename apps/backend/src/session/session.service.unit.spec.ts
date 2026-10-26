@@ -31,8 +31,11 @@ import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
+import {
+  SessionGameProtocol,
+  type SessionState,
+} from './session-game-protocol';
 import { sessionPresenceTiming } from './session-presence-timing';
-import type { SessionState } from './session-state';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
   PlayerIdSchema.parse(value);
@@ -61,12 +64,16 @@ function buildSessionService(session: Session | SessionState | null) {
   gameService.toClientGame.mockImplementation((game) => game);
   gameService.restoreGuessObjects.mockImplementation(async (game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
+  const sessionGameProtocol: SessionGameProtocol = new SessionGameProtocol(
+    gameService,
+  );
 
   const sessionService: SessionService = new SessionService(
     redisService,
     lockService,
     idService,
     gameService,
+    sessionGameProtocol,
     eventService,
     sessionPresenceTiming,
   );
@@ -451,14 +458,13 @@ describe('SessionService game operations', () => {
       const result: Session = await sessionService.handleGuess({
         playerID: playerId('host'),
         sessionID: session.id,
-        guess: defaultGuess,
-        submissionMode: 'server',
+        submission: { mode: 'server', guess: {} },
       });
 
       expect(gameService.applyGuess).toHaveBeenCalledWith({
         game,
         playerID: playerId('host'),
-        submission: defaultGuess,
+        submission: {},
         connectedPlayerIds: [playerId('host'), playerId('bob')],
         receivedAt: expect.any(Number),
       });
@@ -483,7 +489,7 @@ describe('SessionService game operations', () => {
         sessionService.handleGuess({
           playerID: playerId('host'),
           sessionID: session.id,
-          guess: defaultGuess,
+          submission: { mode: 'legacy', guess: defaultGuess },
         }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED },

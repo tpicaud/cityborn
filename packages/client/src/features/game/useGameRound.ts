@@ -22,6 +22,7 @@ export type GameRoundOptions = {
 export type GameRound = {
   mapProps: MapProps;
   preGuess: Coord | undefined;
+  countdownEndsAt: number | undefined;
   showCountdown: boolean;
   showOverlay: boolean;
   handleCountdownEnd: () => void;
@@ -55,6 +56,10 @@ export function useGameRound({
     useGuess(handleGuess);
   const [state, setState] = useState<RoundDisplayState>('countdown');
   const roundStatus = game.state.currentRound?.status;
+  const countdownEndsAt: number | undefined =
+    game.state.currentRound?.deadline === undefined
+      ? undefined
+      : game.state.currentRound.deadline - game.config.timer * 1000;
 
   useEffect(() => {
     const synchronizedDisplayState = synchronizeRoundDisplayState(roundStatus);
@@ -85,6 +90,7 @@ export function useGameRound({
   return {
     mapProps,
     preGuess,
+    countdownEndsAt,
     showCountdown: state === 'countdown',
     showOverlay: shouldShowRoundOverlay(state, roundStatus),
     handleCountdownEnd,

@@ -37,7 +37,10 @@ const Guess: React.FC<GuessProps> = ({
 
       {gameRound.showCountdown && (
         <View className="absolute inset-0 z-20">
-          <RoundCountdown onCountdownEnd={gameRound.handleCountdownEnd} />
+          <RoundCountdown
+            endAt={gameRound.countdownEndsAt}
+            onCountdownEnd={gameRound.handleCountdownEnd}
+          />
         </View>
       )}
 

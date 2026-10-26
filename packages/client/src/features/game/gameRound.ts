@@ -8,6 +8,16 @@ import {
 export type RoundDisplayState = 'countdown' | 'guessing' | 'results';
 type RoundStatusValue = NonNullable<Game['state']['currentRound']>['status'];
 
+export function countdownSecondsLeft({
+  endAt,
+  now,
+}: {
+  endAt: number;
+  now: number;
+}): number {
+  return Math.max(0, Math.ceil((endAt - now) / 1000));
+}
+
 export function createTimedOutGuess(
   preGuess: Coord | undefined,
 ): GuessSubmission {

@@ -22,6 +22,7 @@ import {
   beginGame,
   createGuess,
   resolveNextRound,
+  roundCountdownInMilliseconds,
 } from '@cityborn/core';
 import { Injectable } from '@nestjs/common';
 import { EventService } from '../event/event.service';
@@ -37,7 +38,6 @@ export type CreateGameParams = {
   visitorId?: string;
 };
 
-const roundCountdownMs: number = 3000;
 const roundNetworkToleranceMs: number = 1000;
 
 @Injectable()
@@ -253,7 +253,10 @@ export class GameService {
         ...game.state,
         currentRound: {
           ...game.state.currentRound,
-          deadline: Date.now() + roundCountdownMs + game.config.timer * 1000,
+          deadline:
+            Date.now() +
+            roundCountdownInMilliseconds +
+            game.config.timer * 1000,
         },
       },
     };

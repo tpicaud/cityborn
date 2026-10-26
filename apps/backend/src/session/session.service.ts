@@ -5,9 +5,6 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
-  type Guess,
-  GuessSchema,
-  type GuessSubmission,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -21,9 +18,7 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
-import { applyGuess } from '@cityborn/core';
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -39,10 +34,15 @@ import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
 import { RedisService } from '../redis/redis.service';
 import {
+  SessionGameProtocol,
+  type SessionGuess,
+  type SessionState,
+  SessionStateSchema,
+} from './session-game-protocol';
+import {
   SESSION_PRESENCE_TIMING,
   type SessionPresenceTiming,
 } from './session-presence-timing';
-import { type SessionState, SessionStateSchema } from './session-state';
 
 export type JoinedSession = {
   session: Session;
@@ -63,6 +63,7 @@ export class SessionService {
     private readonly lockService: LockService,
     private readonly idService: IdService,
     private readonly gameService: GameService,
+    private readonly sessionGameProtocol: SessionGameProtocol,
     private readonly eventService: EventService,
     @Inject(SESSION_PRESENCE_TIMING)
     private readonly sessionPresenceTiming: SessionPresenceTiming,
@@ -91,7 +92,7 @@ export class SessionService {
     const newSession: SessionState = {
       id: await this.generateUniqueSessionID(),
       hostID: '',
-      scoringMode: this.scoringModeForVersion(clientApiVersion),
+      scoringMode: this.sessionGameProtocol.modeForVersion(clientApiVersion),
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       gameConfig: defaultGameConfig,
@@ -112,7 +113,7 @@ export class SessionService {
       );
     }
 
-    return this.toClientSession(newSession);
+    return this.sessionGameProtocol.toClientSession(newSession);
   }
 
   async getById({
@@ -123,8 +124,11 @@ export class SessionService {
     clientApiVersion?: number;
   }): Promise<Session> {
     const session: SessionState = await this.requireSession(sessionID);
-    this.assertClientCompatibility({ session, clientApiVersion });
-    return this.toClientSession(session);
+    this.sessionGameProtocol.assertClientCompatibility({
+      session,
+      clientApiVersion,
+    });
+    return this.sessionGameProtocol.toClientSession(session);
   }
 
   async join({
@@ -139,7 +143,10 @@ export class SessionService {
     clientApiVersion?: number;
   }): Promise<JoinedSession> {
     return await this.updateSession(sessionID, async (session) => {
-      this.assertClientCompatibility({ session, clientApiVersion });
+      this.sessionGameProtocol.assertClientCompatibility({
+        session,
+        clientApiVersion,
+      });
       if (session.mode === SessionMode.SOLO && session.players.length > 0)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_SOLO_NOT_JOINABLE,
@@ -177,7 +184,10 @@ export class SessionService {
       const reconnectToken: SessionReconnectToken | undefined = isGuest
         ? await this.issueReconnectToken(sessionID, playerID)
         : undefined;
-      return { session: this.toClientSession(session), reconnectToken };
+      return {
+        session: this.sessionGameProtocol.toClientSession(session),
+        reconnectToken,
+      };
     });
   }
 
@@ -209,7 +219,7 @@ export class SessionService {
         });
 
       session.hostID = newHost.username;
-      return this.toClientSession(session);
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -232,7 +242,7 @@ export class SessionService {
         });
 
       session.gameConfig = gameConfig;
-      return this.toClientSession(session);
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -263,7 +273,7 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
-      return this.toClientSession(session);
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -274,22 +284,14 @@ export class SessionService {
   async handleGuess({
     playerID,
     sessionID,
-    guess,
-    submissionMode,
+    submission,
   }: {
     playerID: PlayerId;
     sessionID: SessionId;
-    guess: Guess | GuessSubmission;
-    submissionMode?: SessionState['scoringMode'];
+    submission: SessionGuess;
   }): Promise<Session> {
     const receivedAt: number = Date.now();
     return await this.updateSession(sessionID, async (session) => {
-      if (session.scoringMode !== (submissionMode ?? 'legacy'))
-        throw new BadRequestException({
-          code: ErrorCode.BAD_REQUEST,
-          message:
-            'Cette session nécessite une version compatible du jeu. Créez une nouvelle session.',
-        });
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -325,22 +327,15 @@ export class SessionService {
         .filter((player) => player.connected)
         .map((player) => player.username);
 
-      session.currentGame =
-        session.scoringMode === 'server'
-          ? this.gameService.applyGuess({
-              game,
-              playerID,
-              submission: guess,
-              connectedPlayerIds: connectedPlayerUsernames,
-              receivedAt,
-            })
-          : applyGuess(
-              game,
-              playerID,
-              GuessSchema.parse(guess),
-              connectedPlayerUsernames,
-            );
-      return this.toClientSession(session);
+      session.currentGame = this.sessionGameProtocol.applyGuess({
+        session,
+        game,
+        playerID,
+        submission,
+        connectedPlayerIds: connectedPlayerUsernames,
+        receivedAt,
+      });
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -369,7 +364,7 @@ export class SessionService {
 
       if (!isGameOver) {
         session.currentGame = updatedGame;
-        return this.toClientSession(session);
+        return this.sessionGameProtocol.toClientSession(session);
       }
 
       await this.gameService.endGame(
@@ -385,7 +380,7 @@ export class SessionService {
       };
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
-      return this.toClientSession(finishedGameSession);
+      return this.sessionGameProtocol.toClientSession(finishedGameSession);
     });
   }
 
@@ -452,7 +447,10 @@ export class SessionService {
     clientApiVersion?: number;
   }): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
-      this.assertClientCompatibility({ session, clientApiVersion });
+      this.sessionGameProtocol.assertClientCompatibility({
+        session,
+        clientApiVersion,
+      });
       const players = session.players;
 
       const playerIndex = players.findIndex(
@@ -475,7 +473,7 @@ export class SessionService {
 
       if (session.hostID === '') session.hostID = playerID;
 
-      return this.toClientSession(session);
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -549,7 +547,7 @@ export class SessionService {
       if (session.hostID === '')
         session.hostID =
           session.players.find((player) => player.connected)?.username ?? '';
-      return this.toClientSession(session);
+      return this.sessionGameProtocol.toClientSession(session);
     });
   }
 
@@ -589,16 +587,7 @@ export class SessionService {
     );
     if (!storedSession) return null;
     const session: SessionState = SessionStateSchema.parse(storedSession);
-    if (
-      session.scoringMode === 'legacy' &&
-      session.currentGame &&
-      !session.currentGame.state.guessObjects
-    ) {
-      session.currentGame = await this.gameService.restoreGuessObjects(
-        session.currentGame,
-      );
-    }
-    return session;
+    return await this.sessionGameProtocol.restoreLegacyGame(session);
   }
 
   private async saveSession(
@@ -729,42 +718,5 @@ export class SessionService {
     );
     if (!(await this.getSession(candidateId))) return candidateId;
     return this.generateUniqueSessionID(remainingAttempts - 1);
-  }
-
-  private scoringModeForVersion(
-    clientApiVersion: number | undefined,
-  ): SessionState['scoringMode'] {
-    return clientApiVersion !== undefined && clientApiVersion >= 7
-      ? 'server'
-      : 'legacy';
-  }
-
-  private assertClientCompatibility({
-    session,
-    clientApiVersion,
-  }: {
-    session: SessionState;
-    clientApiVersion: number | undefined;
-  }): void {
-    if (session.scoringMode === this.scoringModeForVersion(clientApiVersion))
-      return;
-    throw new BadRequestException({
-      code: ErrorCode.BAD_REQUEST,
-      message:
-        'Cette session nécessite une version compatible du jeu. Créez une nouvelle session.',
-    });
-  }
-
-  private toClientSession(session: SessionState): Session {
-    const { scoringMode, ...publicSession }: SessionState = session;
-    return {
-      ...publicSession,
-      serverTime: Date.now(),
-      currentGame: session.currentGame
-        ? scoringMode === 'server'
-          ? this.gameService.toClientGame(session.currentGame)
-          : session.currentGame
-        : undefined,
-    };
   }
 }

@@ -9,6 +9,7 @@ import { RedisModule } from '../redis/redis.module';
 import { SessionController } from './session.controller';
 import { SessionGateway } from './session.gateway';
 import { SessionService } from './session.service';
+import { SessionGameProtocol } from './session-game-protocol';
 import {
   SESSION_PRESENCE_TIMING,
   sessionPresenceTiming,
@@ -27,6 +28,7 @@ import {
   providers: [
     { provide: SESSION_PRESENCE_TIMING, useValue: sessionPresenceTiming },
     SessionService,
+    SessionGameProtocol,
     GameService,
     SessionGateway,
   ],

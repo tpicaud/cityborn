@@ -202,7 +202,7 @@ export class SessionGateway
     const session = await this.sessionService.handleGuess({
       playerID,
       sessionID,
-      guess,
+      submission: { mode: 'legacy', guess },
     });
     this.enrichGame(session);
     this.broadcastSession(session);
@@ -217,8 +217,7 @@ export class SessionGateway
     const session: Session = await this.sessionService.handleGuess({
       playerID,
       sessionID,
-      guess,
-      submissionMode: 'server',
+      submission: { mode: 'server', guess },
     });
     this.enrichGame(session);
     this.broadcastSession(session);

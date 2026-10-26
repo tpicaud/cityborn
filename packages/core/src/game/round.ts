@@ -10,6 +10,8 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 
+export const roundCountdownInMilliseconds: number = 3000;
+
 export function beginGame(game: Game): Game {
   return {
     ...game,
