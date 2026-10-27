@@ -12,6 +12,7 @@ export const ManifestEntrySchema = z
     versionNumber: z.number(),
     releasedAt: z.string(),
     draft: z.boolean().optional(),
+    supersededAt: z.string().optional(),
     deprecatedAt: z.string().optional(),
     deprecationReason: z.string().min(1).optional(),
   })
@@ -23,7 +24,10 @@ export const ManifestEntrySchema = z
       message:
         'deprecationReason is required when deprecatedAt is set (explain why it is safe to stop supporting this version).',
     },
-  );
+  )
+  .refine((entry) => !entry.draft || entry.supersededAt === undefined, {
+    message: 'A superseded version cannot remain a draft.',
+  });
 
 export type ManifestEntry = z.infer<typeof ManifestEntrySchema>;
 

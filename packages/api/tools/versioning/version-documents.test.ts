@@ -43,10 +43,11 @@ function readManifest(directory: string): Manifest {
 const documents: Documents = { http: document('HTTP'), ws: document('WS') };
 
 describe('versionDocuments', () => {
-  it('reserves a new draft and preserves the preceding snapshots and metadata', (t) => {
+  it('supersedes the previous draft without changing its snapshots', (t) => {
     const versionsDir: string = workspace(t);
     versionDocuments({ mode: 'draft', versionsDir, documents });
     const previousManifest: Manifest = readManifest(versionsDir);
+    const supersededAt: string = '2026-10-26T07:47:20.697Z';
     const previousHttp: string = readFileSync(
       join(versionsDir, 'v1-api.json'),
       'utf-8',
@@ -61,6 +62,7 @@ describe('versionDocuments', () => {
       newDraft: true,
       versionsDir,
       documents,
+      now: new Date(supersededAt),
     });
     const repeated: VersioningResult = versionDocuments({
       mode: 'draft',
@@ -70,10 +72,12 @@ describe('versionDocuments', () => {
 
     assert.deepEqual(result, { changed: true, versionNumber: 2 });
     assert.deepEqual(repeated, { changed: false });
-    assert.deepEqual(
-      readManifest(versionsDir).versions[0],
-      previousManifest.versions[0],
-    );
+    assert.deepEqual(readManifest(versionsDir).versions[0], {
+      versionNumber: 1,
+      releasedAt: previousManifest.versions[0].releasedAt,
+      supersededAt,
+    });
+    assert.equal(readManifest(versionsDir).versions[1].draft, true);
     assert.equal(
       readFileSync(join(versionsDir, 'v1-api.json'), 'utf-8'),
       previousHttp,
@@ -90,6 +94,19 @@ describe('versionDocuments', () => {
       readFileSync(join(versionsDir, 'v2-ws.json'), 'utf-8'),
       /"version": "v2"/,
     );
+
+    const released: VersioningResult = versionDocuments({
+      mode: 'release',
+      versionsDir,
+      documents,
+    });
+    assert.deepEqual(released, { changed: true, versionNumber: 2 });
+    assert.deepEqual(readManifest(versionsDir).versions[0], {
+      versionNumber: 1,
+      releasedAt: previousManifest.versions[0].releasedAt,
+      supersededAt,
+    });
+    assert.equal(readManifest(versionsDir).versions[1].draft, undefined);
   });
 
   it('rejects reserving a new draft in release mode', (t) => {

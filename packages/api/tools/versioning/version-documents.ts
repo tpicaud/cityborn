@@ -108,6 +108,10 @@ export function versionDocuments({
 
   writeDocument({ file: filenames.http, document: documents.http });
   writeDocument({ file: filenames.ws, document: documents.ws });
+  if (newDraft && latestEntry?.draft) {
+    delete latestEntry.draft;
+    latestEntry.supersededAt = now.toISOString();
+  }
   const entry: ManifestEntry =
     updatingDraft && latestEntry
       ? latestEntry

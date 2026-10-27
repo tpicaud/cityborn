@@ -176,9 +176,10 @@ payload d'entrée qui passe à `additionalProperties: false`.
 Les commandes `generate:openapi:draft` et `generate:openapi:release` de
 `packages/api` versionnent ensemble `v<n>-api.json` et `v<n>-ws.json` dès que
 l'un des contrats change. Le manifeste commun porte uniquement le numéro de
-version, la date, le statut draft et les éventuelles informations de dépréciation ;
-les deux noms de fichiers se déduisent du numéro de version. Les captures partagent
-la même politique de support. Les captures WebSocket réelles commencent à la v6 ;
+version, la date, le statut draft ou remplacé et les éventuelles informations
+de dépréciation ; les deux noms de fichiers se déduisent du numéro de version.
+Les captures partagent la même politique de support. Les captures WebSocket
+réelles commencent à la v6 ;
 les versions v1 à v5 contiennent des documents vides explicitement marqués comme synthétiques, car
 aucune capture WebSocket n’existait alors. Ces documents ne représentent pas
 les contrats historiques et suivent le même contrôle que les autres captures.
@@ -196,8 +197,10 @@ build incompatible avant de retourner des données ou de rejoindre la room.
 Le score et les réponses d'une session moderne ne dépendent jamais de la version
 d'une requête ultérieure.
 
-La v6 draft conserve son ancien contrat. `generate:openapi:draft -- --new-draft`
-réserve une nouvelle version sans réécrire les captures précédentes ; la v7 porte
+La v6, ancien draft du staging, conserve son contrat avec le statut remplacé
+et reste soumise au contrôle de compatibilité pendant sa fenêtre de support.
+`generate:openapi:draft -- --new-draft` réserve une nouvelle version sans
+réécrire les captures précédentes ; la v7 porte
 le calcul serveur. Le prochain déploiement staging actualise ce nouveau draft.
 
 ### Organisation
