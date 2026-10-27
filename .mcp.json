@@ -3,6 +3,10 @@
     "axiom": {
       "type": "http",
       "url": "https://mcp.axiom.co/mcp"
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
     }
   }
 }
