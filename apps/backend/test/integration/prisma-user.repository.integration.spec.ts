@@ -262,6 +262,100 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findCredentialsByEmail', () => {
+    it.each(['ali_e@example.com', 'a%lice@example.com'])(
+      'does not interpret pattern characters in %s as email wildcards',
+      async (email: string) => {
+        const user: User = buildUser({ email: 'alice@example.com' });
+        await userRepository.create({
+          email: user.email,
+          username: user.username,
+          type: 'email',
+          password: 'hash',
+        });
+
+        const credentials: UserCredentials | null =
+          await userRepository.findCredentialsByEmail(email);
+
+        expect(credentials).toBeNull();
+      },
+    );
+
+    it('finds a literal underscore despite casing without matching another address', async () => {
+      const user: User = buildUser({ email: 'Alice_1@Example.com' });
+      const otherUser: User = buildUser({
+        email: 'AliceX1@Example.com',
+        username: 'other',
+      });
+      await userRepository.create({
+        email: user.email,
+        username: user.username,
+        type: 'email',
+        password: 'literal-hash',
+      });
+      await userRepository.create({
+        email: otherUser.email,
+        username: otherUser.username,
+        type: 'email',
+        password: 'other-hash',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByEmail('alice_1@example.com');
+
+      expect(credentials).toMatchObject({
+        passwordHash: 'literal-hash',
+        authSession: { user: { email: 'Alice_1@Example.com' } },
+      });
+    });
+
+    it('finds credentials despite email casing and preserves the stored address', async () => {
+      const user: User = buildUser({ email: 'Alice@Example.com' });
+      await userRepository.create({
+        email: user.email,
+        username: user.username,
+        type: 'email',
+        password: 'hash',
+      });
+
+      const credentials: UserCredentials | null =
+        await userRepository.findCredentialsByEmail('alice@example.com');
+
+      expect(credentials).toMatchObject({
+        passwordHash: 'hash',
+        authSession: { user: { email: 'Alice@Example.com' } },
+      });
+    });
+
+    it('retains exact matches and refuses an ambiguous case-insensitive fallback', async () => {
+      const first: User = buildUser({ email: 'Alice@Example.com' });
+      const second: User = buildUser({
+        email: 'ALICE@EXAMPLE.COM',
+        username: 'second',
+      });
+      await userRepository.create({
+        email: first.email,
+        username: first.username,
+        type: 'email',
+        password: 'first-hash',
+      });
+      await userRepository.create({
+        email: second.email,
+        username: second.username,
+        type: 'email',
+        password: 'second-hash',
+      });
+
+      expect(
+        await userRepository.findCredentialsByEmail('Alice@Example.com'),
+      ).toMatchObject({ passwordHash: 'first-hash' });
+      expect(
+        await userRepository.findCredentialsByEmail('ALICE@EXAMPLE.COM'),
+      ).toMatchObject({ passwordHash: 'second-hash' });
+      expect(
+        await userRepository.findCredentialsByEmail('alice@example.com'),
+      ).toBeNull();
+    });
+
     it('matches only the email and retains unverified credentials', async () => {
       const user: User = buildUser({ isVerified: false });
       await userRepository.create({

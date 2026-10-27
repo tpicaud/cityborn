@@ -70,6 +70,60 @@ describe('Password reset over HTTP and WebSocket', () => {
     await app?.close();
   });
 
+  it('invalidates a previously emailed link when the signed-in user changes the password', async () => {
+    const user: User = buildUser({ email: 'Alice@Example.com' });
+    const prismaService: PrismaService = app.get(PrismaService);
+    await prismaService.user.create({
+      data: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        type: 'email',
+        password: await hash('OldPass1', 10),
+      },
+    });
+    const signInResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password: 'OldPass1' })
+      .expect(200);
+    const authResponse: AuthResponse = AuthResponseSchema.parse(
+      signInResponse.body,
+    );
+    const sent: Promise<SendMailOptions> = new Promise((resolve) => {
+      mailService.sendMail.mockImplementationOnce(async (options) => {
+        resolve(options);
+      });
+    });
+    await request(app.getHttpServer())
+      .post(contract.auth.requestPasswordReset.path)
+      .send({ email: 'alice@example.com' })
+      .expect(200)
+      .expect({ message: PASSWORD_RESET_REQUEST_MESSAGE });
+    const mail: SendMailOptions = await sent;
+    const link: string = mail.text?.match(/https?:\/\/[^\s]+/)?.[0] ?? '';
+    const token: string =
+      new URLSearchParams(new URL(link).hash.slice(1)).get('token') ?? '';
+
+    await request(app.getHttpServer())
+      .patch(contract.auth.updatePassword.path)
+      .set('Authorization', `Bearer ${authResponse.access_token}`)
+      .send({ currentPassword: 'OldPass1', newPassword: 'NewPass1' })
+      .expect(200);
+    const resetResponse: request.Response = await request(app.getHttpServer())
+      .post(contract.auth.resetPassword.path)
+      .send({ token, password: 'ResetPass1', confirmPassword: 'ResetPass1' })
+      .expect(401);
+
+    expect(resetResponse.body).toMatchObject({
+      code: ErrorCode.USER_INVALID_TOKEN,
+    });
+    expect(await prismaService.passwordResetToken.count()).toBe(0);
+    await request(app.getHttpServer())
+      .post(contract.auth.signIn.path)
+      .send({ identifier: user.email, password: 'NewPass1' })
+      .expect(200);
+  });
+
   it('changes a password without verification or automatic sign-in and revokes existing sessions', async () => {
     const user: User = buildUser({ isVerified: false });
     const prismaService: PrismaService = app.get(PrismaService);

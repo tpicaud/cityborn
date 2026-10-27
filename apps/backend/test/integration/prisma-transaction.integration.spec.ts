@@ -23,9 +23,13 @@ import {
 } from '@cityborn/api';
 import { createMock } from '@golevelup/ts-jest';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import type { User as PrismaUser } from '@prisma/client';
 import { compare } from 'bcrypt';
-import { PASSWORD_RESET_REPOSITORY } from '../../src/auth/repositories/password-reset.repository';
+import {
+  PASSWORD_RESET_REPOSITORY,
+  type PasswordResetRepository,
+} from '../../src/auth/repositories/password-reset.repository';
 import { PrismaPasswordResetRepository } from '../../src/auth/repositories/prisma-password-reset.repository';
 import { PasswordResetService } from '../../src/auth/services/password-reset.service';
 import { WideEventService } from '../../src/common/wide-event/wide-event.service';
@@ -37,7 +41,10 @@ import { MailService } from '../../src/mail/mail.service';
 import { PackService } from '../../src/pack/pack.service';
 import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
 import { PrismaPackRepository } from '../../src/pack/repositories/prisma-pack.repository';
-import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
+import {
+  PrismaClsModule,
+  type PrismaTransactionHost,
+} from '../../src/prisma/prisma-cls.module';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
 import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
@@ -194,6 +201,127 @@ describe('Prisma transactions', () => {
   });
 
   describe('UserService', () => {
+    describe('updatePassword', () => {
+      it('restores the password and reset link when the auth version update fails', async () => {
+        const user: User = buildUser();
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: 'hash',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        jest
+          .spyOn(userRepository, 'incrementAuthVersion')
+          .mockRejectedValueOnce(new Error('write failed'));
+
+        await expect(
+          userService.updatePassword(user.id, 'new-hash'),
+        ).rejects.toThrow('write failed');
+
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({ password: 'old-hash', authVersion: 0 });
+        expect(
+          await prisma.passwordResetToken.findUnique({
+            where: { userId: user.id },
+          }),
+        ).toMatchObject({ tokenHash: 'hash' });
+      });
+
+      it('rejects stale token issuance and consumption racing a password change', async () => {
+        const user: User = buildUser();
+        const tokenHash: string = createHash('sha256')
+          .update('token')
+          .digest('hex');
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            type: 'email',
+            password: 'old-hash',
+          },
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash,
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        const txHost: PrismaTransactionHost = module.get(TransactionHost);
+        const repository: PasswordResetRepository = module.get(
+          PASSWORD_RESET_REPOSITORY,
+        );
+        let releaseUpdate: () => void = () => {};
+        const released: Promise<void> = new Promise((resolve) => {
+          releaseUpdate = resolve;
+        });
+        let confirmUpdate: () => void = () => {};
+        const updated: Promise<void> = new Promise((resolve) => {
+          confirmUpdate = resolve;
+        });
+        const update: Promise<void> = txHost.withTransaction(async () => {
+          await userService.updatePassword(user.id, 'new-hash');
+          confirmUpdate();
+          await released;
+        });
+        await updated;
+        const issuance: Promise<boolean> = repository.replaceToken({
+          userId: user.id,
+          authVersion: 0,
+          tokenHash: 'stale-hash',
+          expiresAt: new Date('2099-01-01'),
+        });
+        const consumption: Promise<User['id'] | null> = repository.consumeToken(
+          {
+            tokenHash,
+            now: new Date(),
+          },
+        );
+        async function waitForBlockedOperations(
+          remainingAttempts: number,
+        ): Promise<void> {
+          const waiting: { count: bigint }[] = await prisma.$queryRaw`
+            SELECT count(*) AS count FROM pg_stat_activity
+            WHERE datname = current_database() AND usename = current_user
+              AND wait_event_type = 'Lock' AND query LIKE '%WITH locked_user AS (%'
+          `;
+          if (waiting[0]?.count === 2n) return;
+          if (remainingAttempts === 0)
+            throw new Error(
+              'Reset operations did not wait for the password update',
+            );
+          await new Promise<void>((resolve) => setTimeout(resolve, 10));
+          await waitForBlockedOperations(remainingAttempts - 1);
+        }
+
+        try {
+          await waitForBlockedOperations(100);
+        } finally {
+          releaseUpdate();
+        }
+        await update;
+
+        expect(await issuance).toBe(false);
+        expect(await consumption).toBeNull();
+        expect(
+          await prisma.user.findUnique({ where: { id: user.id } }),
+        ).toMatchObject({ password: 'new-hash', authVersion: 1 });
+        expect(await prisma.passwordResetToken.count()).toBe(0);
+      });
+    });
+
     describe('verifyEmail', () => {
       it('keeps a user unverified and retains the token when token cleanup fails', async () => {
         const userData: User = buildUser({ isVerified: false });

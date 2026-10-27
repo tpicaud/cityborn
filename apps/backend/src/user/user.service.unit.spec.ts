@@ -309,7 +309,7 @@ describe('UserService verification tokens', () => {
   });
 });
 
-describe('UserService.findPasswordResetUser', () => {
+describe('UserService.findPasswordResetAuthSession', () => {
   it('accepts an unverified account with a password', async () => {
     const { userRepository, userService }: ReturnType<typeof buildUserService> =
       buildUserService();
@@ -320,8 +320,8 @@ describe('UserService.findPasswordResetUser', () => {
     });
 
     await expect(
-      userService.findPasswordResetUser(user.email),
-    ).resolves.toEqual(user);
+      userService.findPasswordResetAuthSession(user.email),
+    ).resolves.toEqual({ user, authVersion: 0 });
 
     expect(userRepository.findCredentialsByEmail).toHaveBeenCalledWith(
       user.email,
@@ -345,7 +345,7 @@ describe('UserService.findPasswordResetUser', () => {
       );
 
       await expect(
-        userService.findPasswordResetUser('unknown@cityborn.test'),
+        userService.findPasswordResetAuthSession('unknown@cityborn.test'),
       ).resolves.toBeNull();
     },
   );

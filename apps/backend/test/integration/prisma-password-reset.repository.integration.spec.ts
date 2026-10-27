@@ -25,6 +25,30 @@ describe('PrismaPasswordResetRepository', () => {
   });
 
   describe('replaceToken', () => {
+    it('refuses a token issued from an earlier password version', async () => {
+      const user: User = buildUser();
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          type: 'email',
+          password: 'new-hash',
+          authVersion: 1,
+        },
+      });
+
+      const stored: boolean = await passwordResetRepository.replaceToken({
+        userId: user.id,
+        authVersion: 0,
+        tokenHash: 'stale-hash',
+        expiresAt: new Date('2099-01-01'),
+      });
+
+      expect(stored).toBe(false);
+      expect(await prisma.passwordResetToken.count()).toBe(0);
+    });
+
     it('invalidates the previous link and leaves one token per account', async () => {
       const user: User = buildUser();
       await prisma.user.create({
@@ -39,12 +63,14 @@ describe('PrismaPasswordResetRepository', () => {
       });
       await passwordResetRepository.replaceToken({
         userId: user.id,
+        authVersion: 0,
         tokenHash: 'old-hash',
         expiresAt: new Date('2099-01-01'),
       });
 
       await passwordResetRepository.replaceToken({
         userId: user.id,
+        authVersion: 0,
         tokenHash: 'new-hash',
         expiresAt: new Date('2099-01-02'),
       });
@@ -82,6 +108,7 @@ describe('PrismaPasswordResetRepository', () => {
       });
       await passwordResetRepository.replaceToken({
         userId: user.id,
+        authVersion: 0,
         tokenHash: 'hash',
         expiresAt: new Date('2099-01-01'),
       });
@@ -121,6 +148,7 @@ describe('PrismaPasswordResetRepository', () => {
       });
       await passwordResetRepository.replaceToken({
         userId: user.id,
+        authVersion: 0,
         tokenHash: 'hash',
         expiresAt: expiration,
       });
