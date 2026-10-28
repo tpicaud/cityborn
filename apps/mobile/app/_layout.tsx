@@ -5,10 +5,12 @@ import 'react-native-get-random-values';
 import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
+import { tamaguiConfig } from '@cityborn/design-system';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TamaguiProvider } from 'tamagui';
 import ForceUpdateDialog from '@/components/ForceUpdateDialog';
 import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
@@ -24,17 +26,19 @@ installFrenchZodErrorMap();
 
 export default function RootLayout() {
   return (
-    <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
-      <ApiProvider
-        contractClient={contractClient}
-        authApi={authApi}
-        appFocus={appFocus}
-      >
-        <WsProvider createSocket={createSocketConnection}>
-          <RootLayoutContent />
-        </WsProvider>
-      </ApiProvider>
-    </ErrorReporterProvider>
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+      <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
+        <ApiProvider
+          contractClient={contractClient}
+          authApi={authApi}
+          appFocus={appFocus}
+        >
+          <WsProvider createSocket={createSocketConnection}>
+            <RootLayoutContent />
+          </WsProvider>
+        </ApiProvider>
+      </ErrorReporterProvider>
+    </TamaguiProvider>
   );
 }
 

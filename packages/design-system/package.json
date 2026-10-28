@@ -4,7 +4,13 @@
   "description": "",
   "main": "index.ts",
   "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./cityborn-theme.css": "./cityborn-theme.css",
+    "./tamagui.config": "./tamagui.config.ts"
+  },
   "scripts": {
+    "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check ."
@@ -12,6 +18,12 @@
   "author": "Tom Picaud",
   "packageManager": "pnpm@10.33.2",
   "devDependencies": {
+    "@types/react": "19.2.14",
+    "tamagui": "3.1.6",
     "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "tamagui": "3.1.6"
   }
 }
