@@ -284,6 +284,7 @@ describe('GameService.applyGuess', () => {
         win: true,
       },
     });
+    expect(game.state.revealedGuessObjects).toEqual([]);
   });
 
   it('records a guess without coordinates as the default guess', async () => {

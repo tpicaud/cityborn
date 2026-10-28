@@ -512,6 +512,26 @@ describe('SessionService game operations', () => {
       );
     });
 
+    it('scores the coordinates when no round deadline is stored', async () => {
+      const session: Session = buildSession({ currentGame: guessingGame });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      redisService.get.mockResolvedValue(null);
+
+      await sessionService.submitGuess({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        guess: { coordinates: { lat: 48.85, lng: 2.35 } },
+      });
+
+      expect(gameService.applyGuess).toHaveBeenCalledWith(
+        expect.objectContaining({ coordinates: { lat: 48.85, lng: 2.35 } }),
+      );
+    });
+
     it('rejects a guess from a disconnected player', async () => {
       const session: Session = buildSession({
         currentGame: guessingGame,
