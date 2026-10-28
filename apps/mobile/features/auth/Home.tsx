@@ -6,6 +6,7 @@ import {
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
+import { PrimaryButton } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { Image, Pressable } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -79,11 +80,8 @@ export default function Home() {
           </View>
         ) : (
           <View className="flex flex-col w-full items-center justify-between gap-6">
-            <Button
-              color="primary"
-              variant="outlined"
+            <PrimaryButton
               label="CONNEXION"
-              size="large"
               onPress={() => router.navigate('/auth/sign-in')}
             />
             <Button

@@ -68,6 +68,7 @@
       "!**/dist/",
       "!**/build/",
       "!**/coverage/",
+      "!!**/tamagui.generated.css",
       "!packages/api/openapi/versions",
       "!.agents/skills/axiom-building-dashboards",
       "!!**/node_modules"
