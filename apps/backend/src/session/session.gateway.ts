@@ -207,7 +207,7 @@ export class SessionGateway
     @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'submitGuess'>,
   ): Promise<void> {
     const { playerID, sessionID } = this.resolvePlayer(socket);
-    const session = await this.sessionService.submitGuess({
+    const session: Session = await this.sessionService.submitGuess({
       playerID,
       sessionID,
       guess,

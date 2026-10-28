@@ -12,6 +12,7 @@ import {
   type GuessObjectId,
   type PlayerId,
   type PlayerResults,
+  type Round,
   RoundStatus,
   SessionMode,
   type SessionPlayer,
@@ -161,7 +162,7 @@ export class GameService {
     coordinates: Coord | undefined;
     connectedPlayerIDs: PlayerId[];
   }): Promise<Game> {
-    const currentRound = game.state.currentRound;
+    const currentRound: Round | undefined = game.state.currentRound;
     if (!currentRound) return game;
 
     const guessObject: FullGuessObject = await this.requireGuessObject(

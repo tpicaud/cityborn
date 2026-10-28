@@ -8,6 +8,7 @@ import {
   PlayerIdSchema,
   type PlayerResults,
   type Result,
+  type Round,
   RoundStatus,
 } from '@cityborn/api';
 
@@ -145,7 +146,7 @@ export function resolveNextRound(game: Game): {
 }
 
 export function hideGuessingRoundGuesses(game: Game): Game {
-  const currentRound = game.state.currentRound;
+  const currentRound: Round | undefined = game.state.currentRound;
   if (
     currentRound?.status !== RoundStatus.GUESSING ||
     !currentRound.playersGuesses

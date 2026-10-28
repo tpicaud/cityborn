@@ -52,7 +52,7 @@ export function buildFullGuessObject(
 export function buildGuessObjectWithoutLocation(
   overrides: Partial<z.input<typeof BaseGuessObjectSchema>> = {},
 ): GuessObjectWithoutLocation {
-  const guessObject = buildGuessObject();
+  const guessObject: GuessObject = buildGuessObject();
 
   return BaseGuessObjectSchema.parse({
     id: guessObject.id,

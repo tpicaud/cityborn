@@ -3,6 +3,7 @@ import type {
   FullGuessObject,
   Game,
   Guess,
+  GuessObjectId,
   GuessObjectWithoutLocation,
   PlayerId,
 } from '@cityborn/api';
@@ -28,7 +29,8 @@ export type RoundResult = {
 export function currentGuessObject(
   game: Game,
 ): GuessObjectWithoutLocation | undefined {
-  const guessObjectID = game.state.currentRound?.guessObjectId;
+  const guessObjectID: GuessObjectId | undefined =
+    game.state.currentRound?.guessObjectId;
   return game.state.guessObjectsWithoutLocation?.find(
     ({ id }) => id === guessObjectID,
   );
@@ -37,7 +39,8 @@ export function currentGuessObject(
 export function currentRevealedGuessObject(
   game: Game,
 ): FullGuessObject | undefined {
-  const guessObjectID = game.state.currentRound?.guessObjectId;
+  const guessObjectID: GuessObjectId | undefined =
+    game.state.currentRound?.guessObjectId;
   return game.state.revealedGuessObjects?.find(
     ({ id }) => id === guessObjectID,
   );
