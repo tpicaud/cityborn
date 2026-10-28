@@ -1,7 +1,7 @@
 import type {
   CreateSession,
   GameConfig,
-  Guess,
+  GuessSubmission,
   PlayerId,
   Session,
   SessionId,
@@ -57,7 +57,7 @@ export type SessionChannel = {
   updateHost: (newHostID: PlayerId) => Promise<void>;
   updateGameConfig: (gameConfig: GameConfig) => Promise<void>;
   startGame: () => Promise<void>;
-  guess: (guess: Guess) => Promise<void>;
+  submitGuess: (guess: GuessSubmission) => Promise<void>;
   nextRound: () => Promise<void>;
   playAgain: () => Promise<void>;
   onSessionUpdate: (listener: SessionUpdateListener) => () => void;
@@ -87,8 +87,8 @@ export function createSessionChannel(
       await connection.emit(sessionWsEvent.startGame);
     },
 
-    async guess(guess) {
-      await connection.emit(sessionWsEvent.guess, { guess });
+    async submitGuess(guess) {
+      await connection.emit(sessionWsEvent.submitGuess, { guess });
     },
 
     async nextRound() {

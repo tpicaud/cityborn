@@ -154,13 +154,10 @@ export function hideGuessingRoundGuesses(game: Game): Game {
 
   const playersGuesses: Record<PlayerId, Guess> = Object.keys(
     currentRound.playersGuesses,
-  ).reduce<Record<PlayerId, Guess>>(
-    (hiddenGuesses, rawPlayerId) => {
-      hiddenGuesses[PlayerIdSchema.parse(rawPlayerId)] = defaultGuess;
-      return hiddenGuesses;
-    },
-    {},
-  );
+  ).reduce<Record<PlayerId, Guess>>((hiddenGuesses, rawPlayerId) => {
+    hiddenGuesses[PlayerIdSchema.parse(rawPlayerId)] = defaultGuess;
+    return hiddenGuesses;
+  }, {});
 
   return {
     ...game,

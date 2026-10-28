@@ -1,4 +1,11 @@
-import type { FullGuessObject, Game, Guess, PlayerId } from '@cityborn/api';
+import type {
+  Coord,
+  FullGuessObject,
+  Game,
+  Guess,
+  GuessObjectWithoutLocation,
+  PlayerId,
+} from '@cityborn/api';
 import { PlayerIdSchema, RoundStatus } from '@cityborn/api';
 
 export type RoundGuessOutcome =
@@ -18,15 +25,28 @@ export type RoundResult = {
   otherPlayersPoints: PlayerRoundPoints[];
 };
 
-export function currentGuessObject(game: Game): FullGuessObject | undefined {
+export function currentGuessObject(
+  game: Game,
+): GuessObjectWithoutLocation | undefined {
   const guessObjectID = game.state.currentRound?.guessObjectId;
-  return game.state.guessObjects?.find(({ id }) => id === guessObjectID);
+  return game.state.guessObjectsWithoutLocation?.find(
+    ({ id }) => id === guessObjectID,
+  );
+}
+
+export function currentRevealedGuessObject(
+  game: Game,
+): FullGuessObject | undefined {
+  const guessObjectID = game.state.currentRound?.guessObjectId;
+  return game.state.revealedGuessObjects?.find(
+    ({ id }) => id === guessObjectID,
+  );
 }
 
 export function canSubmitGuess(
   game: Game,
   localPlayerID: PlayerId,
-  preGuess: Guess | undefined,
+  preGuess: Coord | undefined,
 ): boolean {
   const currentRound = game.state.currentRound;
   return (
@@ -47,7 +67,8 @@ export function createRoundResult(
   localPlayerID: PlayerId,
 ): RoundResult | undefined {
   const currentRound = game.state.currentRound;
-  const guessObject: FullGuessObject | undefined = currentGuessObject(game);
+  const guessObject: FullGuessObject | undefined =
+    currentRevealedGuessObject(game);
   const playersGuesses = currentRound?.playersGuesses;
   const localGuess: Guess | undefined = playersGuesses?.[localPlayerID];
   if (

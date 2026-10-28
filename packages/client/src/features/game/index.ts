@@ -4,6 +4,7 @@ export {
   canSubmitGuess,
   createRoundResult,
   currentGuessObject,
+  currentRevealedGuessObject,
   formatDistanceInKm,
   type RoundGuessOutcome,
   type RoundResult,

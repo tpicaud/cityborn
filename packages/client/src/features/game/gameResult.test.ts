@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  buildFullGuessObject,
   buildGame,
   buildGameState,
+  buildGuessObjectWithoutLocation,
   type Game,
   GameStatus,
   type GuessObjectId,
@@ -24,8 +24,11 @@ describe('createGameResults', () => {
       status: GameStatus.IN_RESULTS,
       state: buildGameState({
         guessObjectsIds: [firstObjectID, secondObjectID],
-        guessObjects: [
-          buildFullGuessObject({ id: firstObjectID, name: 'Ada Lovelace' }),
+        guessObjectsWithoutLocation: [
+          buildGuessObjectWithoutLocation({
+            id: firstObjectID,
+            name: 'Ada Lovelace',
+          }),
         ],
         results: {
           [localPlayerID]: {
