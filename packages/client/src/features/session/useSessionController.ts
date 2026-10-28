@@ -36,6 +36,7 @@ import {
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
@@ -215,7 +216,7 @@ export function useSessionController({
     await requireOpenedSessionChannel({
       sessionChannel,
       action: 'Guess',
-    }).submitGuess(coordinates ? { coordinates } : {});
+    }).submitGuess(createGuessSubmission(coordinates));
   };
 
   const nextRound = async () => {
