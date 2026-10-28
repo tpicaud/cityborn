@@ -77,6 +77,7 @@ function createFakeClient({
       signUp: unexpectedCall,
       register: unexpectedCall,
       renewVerificationEmail: unexpectedCall,
+      updateEmail: unexpectedCall,
       signIn: unexpectedCall,
       signInWithGoogle: unexpectedCall,
       signInWithApple: unexpectedCall,

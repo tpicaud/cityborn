@@ -326,7 +326,7 @@ describe('UserService verification tokens', () => {
   });
 
   describe('verifyEmail', () => {
-    it('deletes and rejects an expired token', async () => {
+    it('retains and rejects an expired token so its owner can request another link', async () => {
       const {
         emailVerificationTokenRepository,
         userService,
@@ -342,11 +342,11 @@ describe('UserService verification tokens', () => {
       );
 
       await expect(userService.verifyEmail('expired')).rejects.toMatchObject({
-        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN },
       });
       expect(
-        emailVerificationTokenRepository.deleteVerificationToken,
-      ).toHaveBeenCalledWith('token-id');
+        emailVerificationTokenRepository.deleteVerificationTokensByUserId,
+      ).not.toHaveBeenCalled();
     });
 
     it('verifies the user and removes its tokens', async () => {

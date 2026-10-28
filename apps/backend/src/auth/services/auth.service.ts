@@ -93,11 +93,12 @@ export class AuthService {
     const { email, username, password }: CreateUser = registration;
 
     await this.rateLimitService.consumeAccountEmail({ email, clientIp });
-    await this.userService.assertUsernameAvailable(username);
     const passwordHash: string = await hashPassword(password);
 
     const existingUser: User | null = await this.userService.findByEmail(email);
     if (existingUser) {
+      if (existingUser.username !== username)
+        await this.userService.assertUsernameAvailable(username);
       this.sendMailInBackground({
         operation: 'send_existing_account_email',
         userId: existingUser.id,
@@ -110,6 +111,7 @@ export class AuthService {
       return;
     }
 
+    await this.userService.assertUsernameAvailable(username);
     await this.createEmailAccount({ email, username, passwordHash, visitorId });
   }
 
@@ -348,9 +350,15 @@ export class AuthService {
     await this.sendVerificationEmail(user, verificationEmailCooldown);
   }
 
-  async updateEmail(user: User, { email }: UpdateEmail): Promise<User> {
+  async updateEmail({
+    user,
+    email,
+  }: UpdateEmail & { user: User }): Promise<User> {
     await this.rateLimitService.consumeEmailChange(user.id);
-    const updatedUser: User = await this.userService.updateEmail(user, email);
+    const updatedUser: User = await this.userService.updateEmail({
+      user,
+      email,
+    });
     if (updatedUser.email !== user.email) {
       void this.sendVerificationEmail(updatedUser).catch((error: unknown) => {
         this.wideEventService.recordOperationError(error, {

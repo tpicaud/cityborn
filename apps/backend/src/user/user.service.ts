@@ -239,7 +239,7 @@ export class UserService {
         message: 'Email verification token is expired',
       });
 
-    return this.completeEmailVerification(token.userId);
+    return this.verifyEmailOwnership(token.userId);
   }
 
   async findVerificationTokenOwner(verificationToken: string): Promise<User> {
@@ -257,7 +257,7 @@ export class UserService {
   }
 
   @Transactional()
-  private async completeEmailVerification(userId: UserId): Promise<User> {
+  async verifyEmailOwnership(userId: UserId): Promise<User> {
     const user = await this.userRepository.markEmailVerified(userId);
     await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       userId,

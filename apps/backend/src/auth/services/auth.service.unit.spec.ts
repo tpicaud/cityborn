@@ -260,12 +260,17 @@ describe('AuthService.register', () => {
     );
     mailService.sendMail.mockResolvedValue(undefined);
 
-    await authService.register(registration, 'visitor-1');
+    await authService.register({
+      registration,
+      visitorId: 'visitor-1',
+      clientIp: '203.0.113.7',
+    });
     await new Promise<void>((resolve) => setImmediate(resolve));
 
-    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
-      unverifiedUser.email,
-    );
+    expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith({
+      email: unverifiedUser.email,
+      clientIp: '203.0.113.7',
+    });
     expect(userService.createUser).toHaveBeenCalledWith({
       email: unverifiedUser.email,
       username: unverifiedUser.username,
@@ -303,7 +308,11 @@ describe('AuthService.register', () => {
     mailService.sendMail.mockResolvedValue(undefined);
 
     await expect(
-      authService.register(registration, 'visitor-1'),
+      authService.register({
+        registration,
+        visitorId: 'visitor-1',
+        clientIp: '203.0.113.7',
+      }),
     ).resolves.toBeUndefined();
 
     expect(userService.createUser).not.toHaveBeenCalled();
@@ -313,6 +322,32 @@ describe('AuthService.register', () => {
         to: existingUser.email,
         subject: 'Vous avez déjà un compte Cityborn',
       }),
+    );
+  });
+
+  it('accepts a taken address with its own existing username', async () => {
+    const existingUser: User = buildUser({ isVerified: false });
+    const registration: CreateUser = {
+      email: existingUser.email,
+      username: existingUser.username,
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(existingUser);
+    mailService.sendMail.mockResolvedValue(undefined);
+
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).resolves.toBeUndefined();
+
+    expect(userService.assertUsernameAvailable).not.toHaveBeenCalled();
+    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: existingUser.email }),
     );
   });
 
@@ -333,9 +368,9 @@ describe('AuthService.register', () => {
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.assertUsernameAvailable.mockRejectedValue(usernameTaken);
 
-    await expect(authService.register(registration)).rejects.toBe(
-      usernameTaken,
-    );
+    await expect(
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+    ).rejects.toBe(usernameTaken);
 
     expect(userService.createUser).not.toHaveBeenCalled();
     expect(mailService.sendMail).not.toHaveBeenCalled();
@@ -670,18 +705,17 @@ describe('AuthService account operations', () => {
       );
       mailService.sendMail.mockResolvedValue(undefined);
 
-      const result: User = await authService.updateEmail(user, {
+      const result: User = await authService.updateEmail({
+        user,
         email: 'fixed@cityborn.test',
       });
       await new Promise<void>((resolve) => setImmediate(resolve));
 
-      expect(rateLimitService.consumeAccountEmail).toHaveBeenCalledWith(
-        user.id,
-      );
-      expect(userService.updateEmail).toHaveBeenCalledWith(
+      expect(rateLimitService.consumeEmailChange).toHaveBeenCalledWith(user.id);
+      expect(userService.updateEmail).toHaveBeenCalledWith({
         user,
-        'fixed@cityborn.test',
-      );
+        email: 'fixed@cityborn.test',
+      });
       expect(mailService.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({ to: 'fixed@cityborn.test' }),
       );

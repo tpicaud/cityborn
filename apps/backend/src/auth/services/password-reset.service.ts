@@ -1,5 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { ErrorCode, type ResetPassword, type UserId } from '@cityborn/api';
+import {
+  ErrorCode,
+  type ResetPassword,
+  type User,
+  type UserId,
+} from '@cityborn/api';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
@@ -104,7 +109,10 @@ export class PasswordResetService {
       userId,
       passwordHash,
     );
-    return { user: credentials.authSession.user, authVersion };
+    const user: User = credentials.authSession.user.isVerified
+      ? credentials.authSession.user
+      : await this.userService.verifyEmailOwnership(userId);
+    return { user, authVersion };
   }
 
   private async sendResetEmail(email: string): Promise<void> {

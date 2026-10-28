@@ -6,6 +6,11 @@
     "reason": "Published clients normalize unknown API error codes to UNKNOWN_ERROR."
   },
   {
+    "id": "response-property-enum-value-added",
+    "textIncludes": "`oneOf[subschema #2]/error/code` response property",
+    "reason": "Published WS clients normalize unknown acknowledgement error codes to UNKNOWN_ERROR."
+  },
+  {
     "id": "response-optional-property-removed",
     "operation": "GET",
     "path": "/auth/me",

@@ -9,6 +9,7 @@ import type {
   SignIn,
   SignInWithApple,
   SignInWithGoogle,
+  UpdateEmail,
   UpdatePassword,
   User,
   VerifyEmailData,

@@ -117,7 +117,7 @@ export class AuthController {
       },
       updateEmail: async ({ body }) => ({
         status: 200 as const,
-        body: await this.authService.updateEmail(user, body),
+        body: await this.authService.updateEmail({ user, ...body }),
       }),
     });
   }

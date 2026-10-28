@@ -1,70 +1,51 @@
+import { existsSync } from 'node:fs';
 import { buildMailOptions } from './email-templates';
 import type { SendMailOptions } from './providers/mail.provider';
 
 describe('buildMailOptions', () => {
-  it('links the verification email to the verification page with its token', () => {
-    const mailOptions: SendMailOptions = buildMailOptions(
-      'verification-email',
-      {
-        email: 'alice@cityborn.test',
-        frontendUrl: 'https://cityborn.test',
-        verificationToken: 'verification-token',
-        username: 'alice',
-      },
-    );
+  it('links an existing account email to sign in and password reset', () => {
+    const mail: SendMailOptions = buildMailOptions('existing-account-email', {
+      email: 'alice@cityborn.test',
+      frontendUrl: 'https://cityborn.test',
+      username: '<alice>',
+    });
 
-    expect(mailOptions.to).toBe('alice@cityborn.test');
-    expect(mailOptions.text).toContain(
-      'https://cityborn.test/verify-email?verification_token=verification-token',
-    );
-  });
-
-  it('links the password reset email to the reset page with its token and validity', () => {
-    const mailOptions: SendMailOptions = buildMailOptions(
-      'password-reset-email',
-      {
-        email: 'alice@cityborn.test',
-        frontendUrl: 'https://cityborn.test',
-        passwordResetToken: 'reset-token',
-        username: 'alice',
-        validityMinutes: 60,
-      },
-    );
-
-    expect(mailOptions.text).toContain(
-      'https://cityborn.test/reset-password?token=reset-token',
-    );
-    expect(mailOptions.text).toContain('valable pendant 60 minutes');
-  });
-
-  it('gives the existing account email the sign-in and password reset links', () => {
-    const mailOptions: SendMailOptions = buildMailOptions(
-      'existing-account-email',
-      {
-        email: 'alice@cityborn.test',
-        frontendUrl: 'https://cityborn.test',
-        username: 'alice',
-      },
-    );
-
-    expect(mailOptions.text).toContain('Me connecter : https://cityborn.test/');
-    expect(mailOptions.text).toContain(
+    expect(mail.to).toBe('alice@cityborn.test');
+    expect(mail.text).toContain('Me connecter : https://cityborn.test/');
+    expect(mail.text).toContain(
       'Réinitialiser mon mot de passe : https://cityborn.test/forgot-password',
     );
+    expect(mail.html).toContain('&lt;alice&gt;');
+    expect(mail.html).not.toContain('<alice>');
   });
 
-  it('escapes the username in the HTML body', () => {
-    const mailOptions: SendMailOptions = buildMailOptions(
-      'verification-email',
-      {
-        email: 'alice@cityborn.test',
-        frontendUrl: 'https://cityborn.test',
-        verificationToken: 'verification-token',
-        username: '<alice>',
-      },
-    );
+  it('keeps the reset token in the link fragment and escapes user text in HTML', () => {
+    const mail: SendMailOptions = buildMailOptions('password-reset', {
+      email: 'user@cityborn.test',
+      username: '<img src=x>',
+      token: 'secret',
+      frontendUrl: 'https://cityborn.test',
+      validityDurationMinutes: 30,
+    });
+    const link: string = mail.text?.match(/https?:\/\/[^\s]+/)?.[0] ?? '';
 
-    expect(mailOptions.html).toContain('&lt;alice&gt;');
-    expect(mailOptions.html).not.toContain('<alice>');
+    expect(new URL(link).pathname).toBe('/reset-password');
+    expect(new URL(link).search).toBe('');
+    expect(new URL(link).hash).toBe('#token=secret');
+    expect(mail.html).toContain('&lt;img src=x&gt;');
+    expect(mail.html).not.toContain('<img src=x>');
+    expect(mail.html).toContain('30 minutes');
+  });
+
+  it('attaches the readable logo when running from sources', () => {
+    const mail: SendMailOptions = buildMailOptions('password-changed', {
+      email: 'user@cityborn.test',
+      username: 'Player',
+    });
+
+    expect(mail.attachments).toHaveLength(1);
+    expect(
+      mail.attachments?.every((attachment) => existsSync(attachment.path)),
+    ).toBe(true);
   });
 });

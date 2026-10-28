@@ -13,6 +13,7 @@ import {
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UpdateEmailSchema,
   UpdatePasswordSchema,
   VerifyEmailDataSchema,
 } from './auth.schema';

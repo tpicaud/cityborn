@@ -31,6 +31,7 @@ import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
+import type { UserService } from '../user/user.service';
 import { type JoinedSession, SessionService } from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
 
@@ -60,6 +61,8 @@ function buildSessionService(session: Session | null) {
   const gameService: DeepMocked<GameService> = createMock<GameService>();
   gameService.hideGuessingRoundGuesses.mockImplementation((game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
+  const userService: DeepMocked<UserService> = createMock<UserService>();
+  userService.existsByUsername.mockResolvedValue(false);
 
   const sessionService: SessionService = new SessionService(
     redisService,
@@ -67,6 +70,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
+    userService,
     sessionPresenceTiming,
   );
 
@@ -77,6 +81,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
+    userService,
   };
 }
 
@@ -197,6 +202,24 @@ describe('SessionService lobby operations', () => {
   });
 
   describe('join', () => {
+    it('rejects a guest name reserved by an account', async () => {
+      const session: Session = buildSession({ players: [] });
+      const {
+        sessionService,
+        userService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      userService.existsByUsername.mockResolvedValue(true);
+
+      await expect(
+        sessionService.join(session.id, playerId('alice')),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_PLAYER_NAME_RESERVED },
+      });
+
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
     it('adds the first player as host', async () => {
       const session: Session = buildSession({ hostID: '', players: [] });
       const user: User = buildUser({ username: playerId('alice') });
