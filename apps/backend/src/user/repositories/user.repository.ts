@@ -26,6 +26,7 @@ export interface UserRepository {
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
   findById(id: UserId): Promise<User | null>;
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
+  findCredentialsByEmail(email: string): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
   findCredentialsByIdentifier(
     identifier: string,

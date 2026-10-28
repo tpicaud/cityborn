@@ -22,12 +22,12 @@
     },
     {
       "versionNumber": 6,
-      "releasedAt": "2026-10-25T16:42:38.434Z",
-      "supersededAt": "2026-10-26T07:47:20.697Z"
+      "releasedAt": "2026-10-28T07:53:03.577Z",
+      "supersededAt": "2026-10-28T07:59:40.866Z"
     },
     {
       "versionNumber": 7,
-      "releasedAt": "2026-10-26T07:47:20.697Z",
+      "releasedAt": "2026-10-28T07:59:40.866Z",
       "draft": true
     }
   ]

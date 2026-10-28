@@ -22,6 +22,7 @@ enum UserRole {
 }
 
 model User {
+  passwordResetToken PasswordResetToken?
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique
   username   String    @unique
@@ -36,6 +37,13 @@ model User {
 
   tokens      EmailVerificationToken[]
   gameRecords GameRecord[]             @relation("GameRecordUsers")
+}
+
+model PasswordResetToken {
+  userId String @id @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  expiresAt DateTime
 }
 
 model EmailVerificationToken {

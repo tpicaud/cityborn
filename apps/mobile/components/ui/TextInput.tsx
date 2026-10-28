@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import {
   TextInput as NativeTextInput,
   type TextInputProps,
@@ -5,6 +6,7 @@ import {
 import { cn } from '@/lib/classNames';
 
 type InputProps = TextInputProps & {
+  ref?: Ref<NativeTextInput>;
   className?: string;
   error?: boolean;
 };
