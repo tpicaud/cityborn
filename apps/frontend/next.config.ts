@@ -5,7 +5,12 @@ export default function createNextConfig(phase: string): NextConfig {
     output: 'export',
     images: { unoptimized: true },
     reactStrictMode: false,
-    transpilePackages: ['@cityborn/api', '@cityborn/core', '@cityborn/client'],
+    transpilePackages: [
+      '@cityborn/api',
+      '@cityborn/core',
+      '@cityborn/client',
+      '@cityborn/design-system',
+    ],
     compiler: {
       removeConsole: process.env.NODE_ENV === 'production',
     },
