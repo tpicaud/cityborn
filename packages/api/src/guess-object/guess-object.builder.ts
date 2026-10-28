@@ -1,12 +1,14 @@
 import type { z } from 'zod';
 import { buildWorldLocation } from '../world-location/world-location.builder';
 import {
+  BaseGuessObjectSchema,
   type FullGuessObject,
   FullGuessObjectSchema,
   type GuessObject,
   type GuessObjectDraft,
   GuessObjectDraftSchema,
   GuessObjectSchema,
+  type GuessObjectWithoutLocation,
 } from './guess-object.schema';
 
 export function buildGuessObject(
@@ -43,6 +45,22 @@ export function buildFullGuessObject(
     short_description: guessObject.short_description,
     source: guessObject.source,
     world_location: buildWorldLocation(),
+    ...overrides,
+  });
+}
+
+export function buildGuessObjectWithoutLocation(
+  overrides: Partial<z.input<typeof BaseGuessObjectSchema>> = {},
+): GuessObjectWithoutLocation {
+  const guessObject = buildGuessObject();
+
+  return BaseGuessObjectSchema.parse({
+    id: guessObject.id,
+    name: guessObject.name,
+    image: guessObject.image,
+    description: guessObject.description,
+    short_description: guessObject.short_description,
+    source: guessObject.source,
     ...overrides,
   });
 }

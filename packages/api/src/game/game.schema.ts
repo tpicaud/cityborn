@@ -1,6 +1,7 @@
 import { extendApi } from '@anatine/zod-openapi';
 import { z } from 'zod';
 import {
+  BaseGuessObjectSchema,
   FullGuessObjectSchema,
   GuessObjectIdSchema,
 } from '../guess-object/guess-object.schema';
@@ -36,6 +37,18 @@ export const CoordSchema = z.object({
   lat: z.number(),
   lng: z.number(),
 });
+
+export const GuessSubmissionSchema = z
+  .object({
+    coordinates: z
+      .object({
+        lat: z.number().finite().min(-90).max(90),
+        lng: z.number().finite().min(-180).max(180),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 
 export const GuessSchema = z.object({
   coordinates: CoordSchema,
@@ -95,7 +108,15 @@ export const GameStateSchema = z.object({
   guessObjectsIds: z.array(GuessObjectIdSchema),
   results: PlayerResultsByIdSchema,
   currentRound: RoundSchema.optional(),
+  /**
+   * @deprecated Utiliser `guessObjectsWithoutLocation` et
+   * `revealedGuessObjects` à la place. Conservé pour les builds mobile
+   * publiées avant le calcul des scores côté serveur.
+   * @deprecatedSince 2026-10-28
+   */
   guessObjects: z.array(FullGuessObjectSchema).optional(),
+  guessObjectsWithoutLocation: z.array(BaseGuessObjectSchema).optional(),
+  revealedGuessObjects: z.array(FullGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({
@@ -121,6 +142,7 @@ export const defaultGameConfig: Readonly<GameConfig> = {
 
 export type GameConfigPack = z.infer<typeof GameConfigPackSchema>;
 export type Coord = z.infer<typeof CoordSchema>;
+export type GuessSubmission = z.infer<typeof GuessSubmissionSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 export type GameConfigChanges = Partial<Omit<GameConfig, 'categories'>>;
