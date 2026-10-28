@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '../../public/tamagui.generated.css';
 import Script from 'next/script';
 import { AppProviders } from './providers';
 
