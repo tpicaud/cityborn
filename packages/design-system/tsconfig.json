@@ -1,5 +1,6 @@
 {
   "extends": "../../tsconfig.package.json",
-  "include": ["src", "index.ts"],
+  "compilerOptions": { "jsx": "react-jsx" },
+  "include": ["src", "index.ts", "tamagui.config.ts"],
   "exclude": ["node_modules"]
 }
