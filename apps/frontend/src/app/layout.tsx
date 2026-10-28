@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '../../public/tamagui.generated.css';
 import { AppProviders } from './providers';
 
 export const metadata: Metadata = {

@@ -6,6 +6,7 @@ import {
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
+import { PrimaryButton } from '@cityborn/design-system';
 import { Typography } from '@mui/material';
 import Image from 'next/image';
 import Button from '@/components/ui/buttons/Button';
@@ -66,14 +67,7 @@ export default function Home({
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center justify-center w-full">
-          <Button
-            variant="contained"
-            color="primary"
-            className="text-white px-6 w-full rounded"
-            onClick={openSignIn}
-          >
-            <p className="px-3">Connexion</p>
-          </Button>
+          <PrimaryButton label="Connexion" onPress={openSignIn} />
           <Button
             variant="contained"
             color="primary"

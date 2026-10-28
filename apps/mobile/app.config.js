@@ -77,6 +77,10 @@ export default {
       policy: 'appVersion',
     },
 
+    autolinking: {
+      include: ['tamagui'],
+    },
+
     scripts: {
       dev: 'APP_VARIANT=development npx expo start',
     },
@@ -136,6 +140,7 @@ export default {
     experiments: {
       typedRoutes: true,
       reactCompiler: true,
+      autolinkingModuleResolution: true,
     },
   },
 };

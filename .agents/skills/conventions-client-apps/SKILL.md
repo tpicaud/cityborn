@@ -23,6 +23,12 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 - Un écran mobile qui reste monté hors focus (onglet) passe `useIsFocused()` au hook de sa feature.
 - Une page du frontend ou du back-office : lire [la référence Next](references/next.md).
 
+## UI partagée
+
+- Un composant destiné au frontend et au mobile vit dans `@cityborn/design-system` et utilise Tamagui.
+- Chaque app consommatrice fournit ses propres instances de React et de Tamagui au design system.
+- Pour modifier la configuration ou le build de l'UI partagée, lire [la référence Tamagui](references/tamagui.md).
+
 ## Critère de fin
 
 - Chaque fichier ajouté vit dans le routing, sa feature ou le socle de l'app.

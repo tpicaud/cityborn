@@ -1,5 +1,6 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativewind } = require('nativewind/metro');
+const { withTamagui } = require('@tamagui/cli/metro');
 const path = require('node:path');
 
 const projectRoot = __dirname;
@@ -22,4 +23,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-module.exports = withNativewind(config);
+module.exports = withNativewind(withTamagui(config));
