@@ -5,12 +5,19 @@ import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class RateLimitService {
+  private readonly passwordResetLimiter: RateLimiterRedis;
   private readonly httpLimiter: RateLimiterRedis;
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
   private readonly failedSignInLimiter: RateLimiterRedis;
 
   constructor(private readonly redisService: RedisService) {
+    this.passwordResetLimiter = new RateLimiterRedis({
+      storeClient: this.redisService.redisClient,
+      keyPrefix: 'rl:password-reset:ip',
+      points: 5,
+      duration: 15 * 60,
+    });
     this.httpLimiter = new RateLimiterRedis({
       storeClient: this.redisService.redisClient,
       keyPrefix: 'rl:http',
@@ -34,6 +41,18 @@ export class RateLimitService {
       keyPrefix: 'rl:auth:failed-sign-in',
       points: 10,
       duration: 15 * 60,
+    });
+  }
+
+  async consumePasswordReset(ip: string): Promise<RateLimiterRes> {
+    return this.passwordResetLimiter.consume(ip);
+  }
+
+  async reservePasswordResetEmail(emailHash: string): Promise<boolean> {
+    return this.redisService.setIfAbsent({
+      key: `rl:password-reset:email:${emailHash}`,
+      value: '1',
+      ttlSeconds: 180,
     });
   }
 

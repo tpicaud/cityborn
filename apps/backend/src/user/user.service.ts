@@ -61,6 +61,14 @@ export class UserService {
     return this.userRepository.findCredentialsById(userId);
   }
 
+  async findPasswordResetAuthSession(
+    email: string,
+  ): Promise<AuthSession | null> {
+    const credentials: UserCredentials | null =
+      await this.userRepository.findCredentialsByEmail(email);
+    return credentials?.passwordHash ? credentials.authSession : null;
+  }
+
   async findByIdentifier(identifier: string): Promise<User | null> {
     return this.userRepository.findByIdentifier(identifier);
   }

@@ -11,6 +11,13 @@ export {
   useCurrentUserLoad,
 } from './authContext';
 export {
+  type PasswordResetFlow,
+  type PasswordResetFlowOptions,
+  type PasswordResetRequestFlow,
+  usePasswordResetFlow,
+  usePasswordResetRequestFlow,
+} from './passwordReset';
+export {
   type IdentityProviderSignIn,
   type IdentityProviderSignInOptions,
   type SignInFlow,

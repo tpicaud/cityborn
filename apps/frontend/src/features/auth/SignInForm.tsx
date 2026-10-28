@@ -4,6 +4,7 @@ import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import Button from '@/components/ui/buttons/Button';
 import { SignInWithGoogleButton } from './GoogleSignIn';
+import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInForm = () => {
   const {
@@ -46,6 +47,8 @@ export const SignInForm = () => {
       <Button variant="contained" type="submit" loading={isSubmitting}>
         Se connecter
       </Button>
+
+      <RequestPasswordResetDialog />
 
       <div className="flex flex-row gap-3 items-center w-full">
         <div className="flex-1 h-px bg-black rounded-full"></div>

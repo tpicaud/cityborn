@@ -308,3 +308,45 @@ describe('UserService verification tokens', () => {
     });
   });
 });
+
+describe('UserService.findPasswordResetAuthSession', () => {
+  it('accepts an unverified account with a password', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    userRepository.findCredentialsByEmail.mockResolvedValue({
+      authSession: { user, authVersion: 0 },
+      passwordHash: 'hash',
+    });
+
+    await expect(
+      userService.findPasswordResetAuthSession(user.email),
+    ).resolves.toEqual({ user, authVersion: 0 });
+
+    expect(userRepository.findCredentialsByEmail).toHaveBeenCalledWith(
+      user.email,
+    );
+  });
+
+  it.each([null, { passwordHash: null }])(
+    'excludes an unknown or passwordless account',
+    async (credentials) => {
+      const {
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      userRepository.findCredentialsByEmail.mockResolvedValue(
+        credentials
+          ? {
+              authSession: { user: buildUser(), authVersion: 0 },
+              passwordHash: null,
+            }
+          : null,
+      );
+
+      await expect(
+        userService.findPasswordResetAuthSession('unknown@cityborn.test'),
+      ).resolves.toBeNull();
+    },
+  );
+});
