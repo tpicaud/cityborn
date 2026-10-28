@@ -1,6 +1,7 @@
 import {
   BaseGuessObjectSchema,
   defaultGuess,
+  ErrorCode,
   type FullGuessObject,
   type Game,
   type GameConfig,
@@ -11,6 +12,7 @@ import {
   type GuessObjectId,
   type GuessSubmission,
   type PlayerId,
+  PlayerIdSchema,
   type PlayerResults,
   type Round,
   RoundStatus,
@@ -24,7 +26,7 @@ import {
   resolveNextRound,
   roundCountdownInMilliseconds,
 } from '@cityborn/core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameRecordService } from '../game-record/game-record.service';
@@ -177,6 +179,26 @@ export class GameService {
     return applyGuess(game, playerID, guess, connectedPlayerIds);
   }
 
+  expireRound({ game, now }: { game: Game; now: number }): Game {
+    const round: Round | undefined = game.state.currentRound;
+    if (
+      game.status !== GameStatus.IN_GAME ||
+      round?.status !== RoundStatus.GUESSING ||
+      round.deadline === undefined ||
+      now <= round.deadline + roundNetworkToleranceMs
+    )
+      return game;
+
+    const playerIds: PlayerId[] = Object.keys(game.state.results).map((id) =>
+      PlayerIdSchema.parse(id),
+    );
+    return playerIds.reduce(
+      (currentGame, playerId) =>
+        applyGuess(currentGame, playerId, defaultGuess, playerIds),
+      game,
+    );
+  }
+
   resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {
     if (game.state.currentRound?.status !== RoundStatus.SHOWING_RESULTS)
       return { game, isGameOver: false };
@@ -204,9 +226,38 @@ export class GameService {
     };
   }
 
-  toClientGame(game: Game): Game {
+  toClientGame({
+    game,
+    publicGuessObjectIds,
+  }: {
+    game: Game;
+    publicGuessObjectIds: GuessObjectId[];
+  }): Game {
     const round: Round | undefined = game.state.currentRound;
     const objects: FullGuessObject[] = game.state.guessObjects ?? [];
+    const aliases: GuessObjectId[] = publicGuessObjectIds;
+    if (
+      aliases.length !== game.state.guessObjectsIds.length ||
+      new Set(aliases).size !== aliases.length ||
+      new Set(game.state.guessObjectsIds).size !==
+        game.state.guessObjectsIds.length
+    )
+      throw new InternalServerErrorException({
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'Invalid public answer ID mapping',
+      });
+    const aliasByAnswerId: Map<GuessObjectId, GuessObjectId> = new Map(
+      game.state.guessObjectsIds.map((id, index) => [id, aliases[index]]),
+    );
+    const publicIdFor: (id: GuessObjectId) => GuessObjectId = (id) => {
+      const alias: GuessObjectId | undefined = aliasByAnswerId.get(id);
+      if (!alias)
+        throw new InternalServerErrorException({
+          code: ErrorCode.UNKNOWN_ERROR,
+          message: 'Missing public answer ID',
+        });
+      return alias;
+    };
     const currentIndex: number = game.state.guessObjectsIds.indexOf(
       round?.guessObjectId ?? game.state.guessObjectsIds[0],
     );
@@ -225,14 +276,32 @@ export class GameService {
       ...game,
       state: {
         ...game.state,
-        guessObjectPreviews: objects.map((object) =>
-          BaseGuessObjectSchema.parse(object),
+        guessObjectsIds: aliases,
+        guessObjectPreviews: objects.map((object) => ({
+          ...BaseGuessObjectSchema.parse(object),
+          id: publicIdFor(object.id),
+        })),
+        guessObjects: objects
+          .filter(({ id }) => revealedIds.has(id))
+          .map((object) => ({ ...object, id: publicIdFor(object.id) })),
+        results: Object.fromEntries(
+          Object.entries(game.state.results).map(
+            ([playerId, playerResults]) => [
+              playerId,
+              {
+                results: playerResults.results.map((result) => ({
+                  ...result,
+                  guessObjectId: publicIdFor(result.guessObjectId),
+                })),
+              },
+            ],
+          ),
         ),
-        guessObjects: objects.filter(({ id }) => revealedIds.has(id)),
         currentRound:
           round?.status === RoundStatus.GUESSING
             ? {
                 ...round,
+                guessObjectId: publicIdFor(round.guessObjectId),
                 playersGuesses: Object.fromEntries(
                   Object.keys(round.playersGuesses ?? {}).map((playerID) => [
                     playerID,
@@ -240,7 +309,10 @@ export class GameService {
                   ]),
                 ),
               }
-            : round,
+            : round && {
+                ...round,
+                guessObjectId: publicIdFor(round.guessObjectId),
+              },
       },
     };
   }

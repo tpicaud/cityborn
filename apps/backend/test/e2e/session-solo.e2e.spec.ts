@@ -284,6 +284,9 @@ describe('Solo session over the session channel', () => {
     expect(reconnected.currentGame?.state.currentRound?.deadline).toBe(
       started.currentGame?.state.currentRound?.deadline,
     );
+    expect(reconnected.currentGame?.state.guessObjectsIds).toEqual(
+      started.currentGame?.state.guessObjectsIds,
+    );
     const forgedAck: unknown = await emitWithAck({
       client,
       event: sessionWsEvent.submitGuess,
@@ -521,6 +524,110 @@ describe('Solo session over the session channel', () => {
       ],
     ).toEqual(defaultGuess);
   });
+
+  it('does not expose answer locations through public guess-object routes', async () => {
+    const session: Session = await createSoloSession({}, CLIENT_API_VERSION);
+    const client: Socket = await connectClient();
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.join,
+      payload: {
+        sessionID: session.id,
+        playerID: PlayerIdSchema.parse('guest'),
+      },
+    });
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.updateGameConfig,
+      payload: { gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 } },
+    });
+    const startUpdate: Promise<Session> = nextSessionUpdate(client);
+    await emitWithAck({ client, event: sessionWsEvent.startGame });
+    const started: Session = await startUpdate;
+    const stored: SessionState = SessionStateSchema.parse(
+      await app.get(RedisService).getJSON(`session:${session.id}`),
+    );
+    const realIds: string[] = stored.currentGame?.state.guessObjectsIds ?? [];
+    const publicIds: string[] =
+      started.currentGame?.state.guessObjectsIds ?? [];
+    const currentPublicId: string | undefined =
+      started.currentGame?.state.currentRound?.guessObjectId;
+    if (realIds.length !== 2 || publicIds.length !== 2 || !currentPublicId)
+      throw new Error('Missing answer IDs');
+
+    const byId: request.Response = await request(app.getHttpServer())
+      .get(
+        contract.guessObjects.getGuessObject.path.replace(
+          ':id',
+          currentPublicId,
+        ),
+      )
+      .expect(404);
+    const byList: request.Response = await request(app.getHttpServer())
+      .get(contract.guessObjects.getGuessObjects.path)
+      .query({ guessObjectsIds: publicIds.join(',') })
+      .expect(200);
+    const realAnswer: request.Response = await request(app.getHttpServer())
+      .get(contract.guessObjects.getGuessObject.path.replace(':id', realIds[0]))
+      .expect(200);
+
+    expect(publicIds).not.toEqual(realIds);
+    expect(JSON.stringify(started)).not.toContain(realIds[0]);
+    expect(JSON.stringify(started)).not.toContain(realIds[1]);
+    expect(
+      started.currentGame?.state.guessObjectPreviews?.map(({ id }) => id),
+    ).toEqual(publicIds);
+    expect(started.currentGame?.state.currentRound?.guessObjectId).toBe(
+      publicIds[0],
+    );
+    expect(byId.body).not.toHaveProperty('world_location_preview');
+    expect(byList.body).toEqual([]);
+    expect(realAnswer.body.world_location_preview).toHaveProperty('name');
+  });
+
+  it('expires a round without a guess event and broadcasts default results', async () => {
+    const session: Session = await createSoloSession({}, CLIENT_API_VERSION);
+    const client: Socket = await connectClient();
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.join,
+      payload: {
+        sessionID: session.id,
+        playerID: PlayerIdSchema.parse('guest'),
+      },
+    });
+    await emitWithAck({
+      client,
+      event: sessionWsEvent.updateGameConfig,
+      payload: { gameConfig: { packs: [pack], timer: 25, nbOfObjects: 2 } },
+    });
+    await emitWithAck({ client, event: sessionWsEvent.startGame });
+    const stored: SessionState = SessionStateSchema.parse(
+      await app.get(RedisService).getJSON(`session:${session.id}`),
+    );
+    if (!stored.currentGame?.state.currentRound)
+      throw new Error('Missing active round');
+    stored.currentGame.state.currentRound.deadline = 0;
+    await app.get(RedisService).setJSON(`session:${session.id}`, stored);
+    const resultUpdate: Promise<Session> = nextSessionUpdate(client);
+
+    const revealed: Session = await resultUpdate;
+
+    expect(revealed.currentGame?.state.currentRound?.status).toBe(
+      RoundStatus.SHOWING_RESULTS,
+    );
+    expect(
+      revealed.currentGame?.state.currentRound?.playersGuesses?.[
+        PlayerIdSchema.parse('guest')
+      ],
+    ).toEqual(defaultGuess);
+    const nextUpdate: Promise<Session> = nextSessionUpdate(client);
+    await emitWithAck({ client, event: sessionWsEvent.nextRound });
+    const next: Session = await nextUpdate;
+    expect(
+      next.currentGame?.state.results[PlayerIdSchema.parse('guest')].results,
+    ).toMatchObject([{ points: 0, distance: -1 }]);
+  }, 15000);
 
   it('rejects a second player joining a solo session', async () => {
     const session: Session = await createSoloSession({}, CLIENT_API_VERSION);

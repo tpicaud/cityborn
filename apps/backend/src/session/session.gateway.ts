@@ -318,6 +318,9 @@ export class SessionGateway
     presentPlayers: SocketPlayer[];
   }): Promise<void> {
     try {
+      const expiredRound: Session | null =
+        await this.sessionService.reconcileRoundExpiration(sessionID);
+      if (expiredRound) this.broadcastSession(expiredRound);
       const session: Session | null =
         await this.sessionService.reconcilePlayerPresence({
           sessionID,

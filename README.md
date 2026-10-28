@@ -75,9 +75,12 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 Les builds API v7 et suivantes créent des sessions à calcul serveur. Le serveur conserve
 les localisations et calcule les scores à partir des seules
 coordonnées envoyées par les joueurs. Les clients reçoivent les réponses au passage
-en résultats de chaque manche. Une échéance serveur inclut le décompte initial de
+en résultats de chaque manche. Les identifiants d'objets transmis pendant la partie
+sont des alias propres à cette partie ; les identifiants réels restent dans l'état serveur.
+Une échéance serveur inclut le décompte initial de
 3 secondes et le timer configuré ; une tolérance réseau de 1 seconde suit cette
-échéance. Une réponse tardive ou sans clic rapporte zéro point.
+échéance. Le serveur clôt la manche à son expiration, même sans réponse, et attribue
+zéro point aux joueurs sans clic ou ayant répondu trop tard.
 
 Les anciennes builds conservent leurs sessions legacy et l’événement
 `session:guess` déprécié, avec objets complets et résultats calculés côté client.

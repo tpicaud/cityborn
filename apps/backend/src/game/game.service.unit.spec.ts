@@ -2,6 +2,7 @@ import type {
   FullGuessObject,
   Game,
   GameConfig,
+  GuessObjectId,
   OnlinePlayer,
 } from '@cityborn/api';
 import {
@@ -13,6 +14,7 @@ import {
   defaultGuess,
   GameRecordIdSchema,
   GameStatus,
+  GuessObjectIdSchema,
   PlayerIdSchema,
   RoundStatus,
   SessionMode,
@@ -411,10 +413,29 @@ describe('GameService.toClientGame', () => {
         },
       });
 
-      const publicGame: Game = gameService.toClientGame(game);
+      const publicIds: GuessObjectId[] = [
+        GuessObjectIdSchema.parse('public-first'),
+        GuessObjectIdSchema.parse('public-second'),
+      ];
+      const publicGame: Game = gameService.toClientGame({
+        game,
+        publicGuessObjectIds: publicIds,
+      });
 
-      expect(publicGame.state.guessObjects).toEqual(answers.slice(0, revealed));
+      expect(publicGame.state.guessObjectsIds).toEqual(publicIds);
+      expect(publicGame.state.currentRound?.guessObjectId).toBe(
+        publicIds[roundIndex],
+      );
+      expect(publicGame.state.guessObjects).toEqual(
+        answers.slice(0, revealed).map((answer, index) => ({
+          ...answer,
+          id: publicIds[index],
+        })),
+      );
       expect(publicGame.state.guessObjectPreviews).toHaveLength(2);
+      expect(publicGame.state.guessObjectPreviews?.map(({ id }) => id)).toEqual(
+        publicIds,
+      );
       expect(
         JSON.stringify(publicGame.state.guessObjectPreviews),
       ).not.toContain('world_location');
@@ -437,7 +458,10 @@ describe('GameService.toClientGame', () => {
       },
     });
 
-    const publicGame: Game = gameService.toClientGame(game);
+    const publicGame: Game = gameService.toClientGame({
+      game,
+      publicGuessObjectIds: [GuessObjectIdSchema.parse('public-object-1')],
+    });
 
     expect(publicGame.state.currentRound?.playersGuesses).toEqual({
       host: defaultGuess,
@@ -446,6 +470,128 @@ describe('GameService.toClientGame', () => {
       game.state.currentRound?.playersGuesses?.[PlayerIdSchema.parse('host')]
         .points,
     ).toBe(987);
+  });
+
+  it('maps recorded result references to public IDs without changing the stored game', () => {
+    const { gameService }: ReturnType<typeof buildGameService> =
+      buildGameService();
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [GuessObjectIdSchema.parse('answer')],
+        results: {
+          host: {
+            results: [
+              {
+                guessObjectId: GuessObjectIdSchema.parse('answer'),
+                points: 0,
+                distance: -1,
+              },
+            ],
+          },
+        },
+        currentRound: {
+          status: RoundStatus.SHOWING_RESULTS,
+          guessObjectId: GuessObjectIdSchema.parse('answer'),
+        },
+      },
+    });
+
+    const publicGame: Game = gameService.toClientGame({
+      game,
+      publicGuessObjectIds: [GuessObjectIdSchema.parse('public-answer')],
+    });
+
+    expect(
+      publicGame.state.results[PlayerIdSchema.parse('host')].results[0]
+        .guessObjectId,
+    ).toBe('public-answer');
+    expect(
+      game.state.results[PlayerIdSchema.parse('host')].results[0].guessObjectId,
+    ).toBe('answer');
+  });
+
+  it('rejects an incomplete or duplicate public answer mapping', () => {
+    const { gameService }: ReturnType<typeof buildGameService> =
+      buildGameService();
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [
+          GuessObjectIdSchema.parse('first'),
+          GuessObjectIdSchema.parse('second'),
+        ],
+        results: {},
+      },
+    });
+
+    expect(() =>
+      gameService.toClientGame({
+        game,
+        publicGuessObjectIds: [GuessObjectIdSchema.parse('public-first')],
+      }),
+    ).toThrow('Invalid public answer ID mapping');
+    expect(() =>
+      gameService.toClientGame({
+        game,
+        publicGuessObjectIds: [
+          GuessObjectIdSchema.parse('same'),
+          GuessObjectIdSchema.parse('same'),
+        ],
+      }),
+    ).toThrow('Invalid public answer ID mapping');
+  });
+
+  it('rejects a public projection whose round refers to an absent answer', () => {
+    const { gameService }: ReturnType<typeof buildGameService> =
+      buildGameService();
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [GuessObjectIdSchema.parse('answer')],
+        results: {},
+        currentRound: {
+          status: RoundStatus.GUESSING,
+          guessObjectId: GuessObjectIdSchema.parse('absent'),
+        },
+      },
+    });
+
+    expect(() =>
+      gameService.toClientGame({
+        game,
+        publicGuessObjectIds: [GuessObjectIdSchema.parse('public-answer')],
+      }),
+    ).toThrow('Missing public answer ID');
+  });
+});
+
+describe('GameService.expireRound', () => {
+  it('records default guesses for every missing player after the network tolerance', () => {
+    const { gameService }: ReturnType<typeof buildGameService> =
+      buildGameService();
+    const game: Game = buildGame({
+      state: {
+        guessObjectsIds: [GuessObjectIdSchema.parse('answer')],
+        results: {
+          host: { results: [] },
+          guest: { results: [] },
+        },
+        currentRound: {
+          status: RoundStatus.GUESSING,
+          guessObjectId: GuessObjectIdSchema.parse('answer'),
+          deadline: 1000,
+          playersGuesses: {},
+        },
+      },
+    });
+
+    const beforeTolerance: Game = gameService.expireRound({ game, now: 2000 });
+    const expired: Game = gameService.expireRound({ game, now: 2001 });
+
+    expect(beforeTolerance).toBe(game);
+    expect(expired.state.currentRound).toMatchObject({
+      status: RoundStatus.SHOWING_RESULTS,
+      playersGuesses: { host: defaultGuess, guest: defaultGuess },
+    });
+    expect(game.state.currentRound?.status).toBe(RoundStatus.GUESSING);
   });
 });
 

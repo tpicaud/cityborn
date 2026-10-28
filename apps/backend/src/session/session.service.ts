@@ -1,10 +1,16 @@
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createHash,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from 'node:crypto';
 import {
   type CreateSession,
   defaultGameConfig,
   ErrorCode,
   type Game,
   type GameConfig,
+  GuessObjectIdSchema,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -273,6 +279,11 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
+      if (session.scoringMode === 'server') {
+        session.publicGuessObjectIds = game.state.guessObjectsIds.map(() =>
+          GuessObjectIdSchema.parse(randomUUID()),
+        );
+      }
       return this.sessionGameProtocol.toClientSession(session);
     });
   }
@@ -489,6 +500,31 @@ export class SessionService {
       -1,
     );
     return sessionIDs.map((sessionID) => SessionIdSchema.parse(sessionID));
+  }
+
+  async reconcileRoundExpiration(
+    sessionID: SessionId,
+  ): Promise<Session | null> {
+    const storedSession: SessionState | null = await this.getSession(sessionID);
+    if (!storedSession?.currentGame) return null;
+    if (
+      this.gameService.expireRound({
+        game: storedSession.currentGame,
+        now: Date.now(),
+      }) === storedSession.currentGame
+    )
+      return null;
+
+    return await this.updateSession(sessionID, async (session) => {
+      if (!session.currentGame) return null;
+      const expiredGame: Game = this.gameService.expireRound({
+        game: session.currentGame,
+        now: Date.now(),
+      });
+      if (expiredGame === session.currentGame) return null;
+      session.currentGame = expiredGame;
+      return this.sessionGameProtocol.toClientSession(session);
+    });
   }
 
   async reconcilePlayerPresence({

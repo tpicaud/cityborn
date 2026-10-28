@@ -15,6 +15,7 @@ import {
   buildUser,
   defaultGuess,
   ErrorCode,
+  GuessObjectIdSchema,
   PlayerIdSchema,
   type Session,
   SessionIdSchema,
@@ -61,7 +62,7 @@ function buildSessionService(session: Session | SessionState | null) {
 
   const idService: DeepMocked<IdService> = createMock<IdService>();
   const gameService: DeepMocked<GameService> = createMock<GameService>();
-  gameService.toClientGame.mockImplementation((game) => game);
+  gameService.toClientGame.mockImplementation(({ game }) => game);
   gameService.restoreGuessObjects.mockImplementation(async (game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
   const sessionGameProtocol: SessionGameProtocol = new SessionGameProtocol(
@@ -447,6 +448,7 @@ describe('SessionService game operations', () => {
       const session: SessionState = {
         ...buildSession({ status: SessionStatus.IN_GAME, currentGame: game }),
         scoringMode: 'server',
+        publicGuessObjectIds: [GuessObjectIdSchema.parse('public-answer')],
       };
       const {
         sessionService,

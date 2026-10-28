@@ -2,18 +2,24 @@ import {
   ErrorCode,
   type Game,
   type Guess,
+  GuessObjectIdSchema,
   type GuessSubmission,
   type PlayerId,
   type Session,
   SessionSchema,
 } from '@cityborn/api';
 import { applyGuess } from '@cityborn/core';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { GameService } from '../game/game.service';
 
 export const SessionStateSchema = SessionSchema.extend({
   scoringMode: z.enum(['legacy', 'server']).default('legacy'),
+  publicGuessObjectIds: z.array(GuessObjectIdSchema).optional(),
 });
 
 export type SessionState = z.infer<typeof SessionStateSchema>;
@@ -88,15 +94,27 @@ export class SessionGameProtocol {
   }
 
   toClientSession(session: SessionState): Session {
-    const { scoringMode, ...publicSession }: SessionState = session;
+    const {
+      scoringMode,
+      publicGuessObjectIds,
+      ...publicSession
+    }: SessionState = session;
+    let projectedGame: Game | undefined = session.currentGame;
+    if (scoringMode === 'server' && projectedGame) {
+      if (!publicGuessObjectIds)
+        throw new InternalServerErrorException({
+          code: ErrorCode.UNKNOWN_ERROR,
+          message: 'Modern game has no public answer IDs',
+        });
+      projectedGame = this.gameService.toClientGame({
+        game: projectedGame,
+        publicGuessObjectIds,
+      });
+    }
     return {
       ...publicSession,
       serverTime: Date.now(),
-      currentGame: session.currentGame
-        ? scoringMode === 'server'
-          ? this.gameService.toClientGame(session.currentGame)
-          : session.currentGame
-        : undefined,
+      currentGame: projectedGame,
     };
   }
 
