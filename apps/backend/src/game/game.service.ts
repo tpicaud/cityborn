@@ -1,22 +1,31 @@
 import {
+  type Coord,
+  defaultGuess,
+  ErrorCode,
+  type FullGuessObject,
   type Game,
   type GameConfig,
   type GameId,
   GameIdSchema,
   GameStatus,
   type Guess,
+  type GuessObjectId,
   type PlayerId,
   type PlayerResults,
+  RoundStatus,
   SessionMode,
   type SessionPlayer,
 } from '@cityborn/api';
 import {
   applyGuess,
   beginGame,
+  createGuess,
+  hideGuessingRoundGuesses,
   resolveNextRound,
+  revealGuessObject,
   toLightGame,
 } from '@cityborn/core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameRecordService } from '../game-record/game-record.service';
@@ -65,6 +74,11 @@ export class GameService {
           {} satisfies Record<PlayerId, PlayerResults>,
         ),
         guessObjects: guessObjects,
+        guessObjectsWithoutLocation: guessObjects.map(
+          ({ world_location, ...guessObjectWithoutLocation }) =>
+            guessObjectWithoutLocation,
+        ),
+        revealedGuessObjects: [],
       },
     };
 
@@ -136,13 +150,43 @@ export class GameService {
     return beginGame(game);
   }
 
-  applyGuess(
-    game: Game,
-    playerID: PlayerId,
-    guess: Guess,
-    connectedPlayerIds: PlayerId[],
-  ): Game {
-    return applyGuess(game, playerID, guess, connectedPlayerIds);
+  async applyGuess({
+    game,
+    playerID,
+    coordinates,
+    connectedPlayerIDs,
+  }: {
+    game: Game;
+    playerID: PlayerId;
+    coordinates: Coord | undefined;
+    connectedPlayerIDs: PlayerId[];
+  }): Promise<Game> {
+    const currentRound = game.state.currentRound;
+    if (!currentRound) return game;
+
+    const guessObject: FullGuessObject = await this.requireGuessObject(
+      currentRound.guessObjectId,
+    );
+    const guess: Guess = coordinates
+      ? createGuess(guessObject, coordinates)
+      : defaultGuess;
+    const guessedGame: Game = applyGuess(
+      game,
+      playerID,
+      guess,
+      connectedPlayerIDs,
+    );
+    const isRoundRevealed: boolean =
+      currentRound.status === RoundStatus.GUESSING &&
+      guessedGame.state.currentRound?.status === RoundStatus.SHOWING_RESULTS;
+
+    return isRoundRevealed
+      ? revealGuessObject({ game: guessedGame, guessObject })
+      : guessedGame;
+  }
+
+  hideGuessingRoundGuesses(game: Game): Game {
+    return hideGuessingRoundGuesses(game);
   }
 
   resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {
@@ -151,6 +195,19 @@ export class GameService {
 
   toLightGame(game: Game): Game {
     return toLightGame(game);
+  }
+
+  private async requireGuessObject(
+    guessObjectId: GuessObjectId,
+  ): Promise<FullGuessObject> {
+    const [guessObject]: FullGuessObject[] =
+      await this.guessObjectService.findFullBy({ ids: [guessObjectId] });
+    if (guessObject) return guessObject;
+
+    throw new NotFoundException({
+      code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+      message: 'Guess object of the current round not found',
+    });
   }
 
   private async generateUniqueGameID(): Promise<GameId> {

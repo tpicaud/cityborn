@@ -2,10 +2,12 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   type CreateSession,
   defaultGameConfig,
+  defaultGuess,
   ErrorCode,
   type Game,
   type GameConfig,
   type Guess,
+  type GuessSubmission,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -20,6 +22,7 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
+import { roundCountdownInSeconds } from '@cityborn/core';
 import {
   ConflictException,
   ForbiddenException,
@@ -50,6 +53,7 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 10 * 60;
   private readonly LOCK_TTL = 2000;
+  private readonly ROUND_NETWORK_TOLERANCE_MS = 2000;
   private readonly sessionExpirationsKey = 'session-expirations';
   private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
     new Map();
@@ -70,6 +74,10 @@ export class SessionService {
 
   private getReconnectTokenHashesKey(id: SessionId): string {
     return `${this.getKey(id)}:reconnect-token-hashes`;
+  }
+
+  private getRoundDeadlineKey(id: SessionId): string {
+    return `${this.getKey(id)}:round-deadline`;
   }
 
   ////////////////////
@@ -107,7 +115,7 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return await this.requireSession(sessionID);
+    return this.publishSession(await this.requireSession(sessionID));
   }
 
   async join(
@@ -217,7 +225,7 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updatePublishedSession(sessionID, async (session) => {
       if (session.currentGame)
         throw new ForbiddenException({
           code: ErrorCode.SESSION_ALREADY_IN_GAME,
@@ -239,6 +247,7 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
+      await this.startRoundClock({ sessionID, timer: game.config.timer });
       return session;
     });
   }
@@ -252,7 +261,25 @@ export class SessionService {
     sessionID: SessionId,
     guess: Guess,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    const isGuessWithoutClick: boolean =
+      guess.distance === defaultGuess.distance;
+    return await this.submitGuess({
+      playerID,
+      sessionID,
+      guess: isGuessWithoutClick ? {} : { coordinates: guess.coordinates },
+    });
+  }
+
+  async submitGuess({
+    playerID,
+    sessionID,
+    guess,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    guess: GuessSubmission;
+  }): Promise<Session> {
+    return await this.updatePublishedSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -284,16 +311,17 @@ export class SessionService {
           message: `No active round on current game`,
         });
 
-      const connectedPlayerUsernames = session.players
+      const connectedPlayerIDs: PlayerId[] = session.players
         .filter((player) => player.connected)
         .map((player) => player.username);
+      const isLate: boolean = await this.isPastRoundDeadline(sessionID);
 
-      session.currentGame = this.gameService.applyGuess(
+      session.currentGame = await this.gameService.applyGuess({
         game,
         playerID,
-        guess,
-        connectedPlayerUsernames,
-      );
+        coordinates: isLate ? undefined : guess.coordinates,
+        connectedPlayerIDs,
+      });
       return session;
     });
   }
@@ -303,7 +331,7 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updatePublishedSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({
           code: ErrorCode.SESSION_NO_CURRENT_GAME,
@@ -323,6 +351,7 @@ export class SessionService {
 
       if (!isGameOver) {
         session.currentGame = updatedGame;
+        await this.startRoundClock({ sessionID, timer: game.config.timer });
         return session;
       }
 
@@ -398,7 +427,7 @@ export class SessionService {
     reconnectToken: SessionReconnectToken | undefined,
     user?: User,
   ): Promise<Session> {
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updatePublishedSession(sessionID, async (session) => {
       const players = session.players;
 
       const playerIndex = players.findIndex(
@@ -481,7 +510,7 @@ export class SessionService {
     );
     if (departedPlayerIDs.length === 0 && !hasReturnedPlayer) return null;
 
-    return await this.updateSession(sessionID, async (session) => {
+    return await this.updatePublishedSession(sessionID, async (session) => {
       session.players.forEach((player) => {
         if (presentPlayerIDs.includes(player.username)) {
           player.connected = true;
@@ -519,6 +548,24 @@ export class SessionService {
     );
   }
 
+  private async updatePublishedSession(
+    sessionID: SessionId,
+    update: (session: Session) => Promise<Session>,
+  ): Promise<Session> {
+    return this.publishSession(await this.updateSession(sessionID, update));
+  }
+
+  private publishSession(session: Session): Session {
+    if (!session.currentGame) return session;
+
+    return {
+      ...session,
+      currentGame: this.gameService.hideGuessingRoundGuesses(
+        session.currentGame,
+      ),
+    };
+  }
+
   private async requireSession(sessionID: SessionId): Promise<Session> {
     const session: Session | null = await this.getSession(sessionID);
     if (session) return session;
@@ -551,12 +598,38 @@ export class SessionService {
         this.getReconnectTokenHashesKey(session.id),
         ttl,
       ),
+      this.redisService.expire(this.getRoundDeadlineKey(session.id), ttl),
       this.redisService.redisClient.zadd(
         this.sessionExpirationsKey,
         Date.now() + ttl * 1000,
         session.id,
       ),
     ]);
+  }
+
+  private async startRoundClock({
+    sessionID,
+    timer,
+  }: {
+    sessionID: SessionId;
+    timer: number;
+  }): Promise<void> {
+    const roundDeadline: number =
+      Date.now() +
+      (roundCountdownInSeconds + timer) * 1000 +
+      this.ROUND_NETWORK_TOLERANCE_MS;
+    await this.redisService.set(
+      this.getRoundDeadlineKey(sessionID),
+      String(roundDeadline),
+      this.TTL,
+    );
+  }
+
+  private async isPastRoundDeadline(sessionID: SessionId): Promise<boolean> {
+    const roundDeadline: string | null = await this.redisService.get(
+      this.getRoundDeadlineKey(sessionID),
+    );
+    return roundDeadline !== null && Date.now() > Number(roundDeadline);
   }
 
   private async issueReconnectToken(

@@ -1,5 +1,6 @@
 import {
   defaultGuess,
+  type FullGuessObject,
   type Game,
   GameStatus,
   type Guess,
@@ -9,6 +10,8 @@ import {
   type Result,
   RoundStatus,
 } from '@cityborn/api';
+
+export const roundCountdownInSeconds: number = 3;
 
 export function beginGame(game: Game): Game {
   return {
@@ -138,5 +141,51 @@ export function resolveNextRound(game: Game): {
       },
     },
     isGameOver: false,
+  };
+}
+
+export function hideGuessingRoundGuesses(game: Game): Game {
+  const currentRound = game.state.currentRound;
+  if (
+    currentRound?.status !== RoundStatus.GUESSING ||
+    !currentRound.playersGuesses
+  )
+    return game;
+
+  const playersGuesses: Record<PlayerId, Guess> = Object.keys(
+    currentRound.playersGuesses,
+  ).reduce<Record<PlayerId, Guess>>(
+    (hiddenGuesses, rawPlayerId) => {
+      hiddenGuesses[PlayerIdSchema.parse(rawPlayerId)] = defaultGuess;
+      return hiddenGuesses;
+    },
+    {},
+  );
+
+  return {
+    ...game,
+    state: {
+      ...game.state,
+      currentRound: { ...currentRound, playersGuesses },
+    },
+  };
+}
+
+export function revealGuessObject({
+  game,
+  guessObject,
+}: {
+  game: Game;
+  guessObject: FullGuessObject;
+}): Game {
+  return {
+    ...game,
+    state: {
+      ...game.state,
+      revealedGuessObjects: [
+        ...(game.state.revealedGuessObjects ?? []),
+        guessObject,
+      ],
+    },
   };
 }
