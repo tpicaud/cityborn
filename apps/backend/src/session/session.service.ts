@@ -115,7 +115,7 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return this.toPlayerVisibleSession(await this.requireSession(sessionID));
+    return this.hideRoundGuesses(await this.requireSession(sessionID));
   }
 
   async join(
@@ -225,33 +225,30 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updatePlayerVisibleSession({
-      sessionID,
-      update: async (session) => {
-        if (session.currentGame)
-          throw new ForbiddenException({
-            code: ErrorCode.SESSION_ALREADY_IN_GAME,
-            message: `Session already in game`,
-          });
-
-        if (session.hostID !== playerID)
-          throw new ForbiddenException({
-            code: ErrorCode.SESSION_FORBIDDEN_HOST,
-            message: `Player is not the host`,
-          });
-
-        const game = await this.gameService.createGame({
-          gameConfig: session.gameConfig,
-          players: session.players,
-          mode: session.mode,
-          visitorId,
+    return await this.updateSession(sessionID, async (session) => {
+      if (session.currentGame)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_ALREADY_IN_GAME,
+          message: `Session already in game`,
         });
 
-        session.status = SessionStatus.IN_GAME;
-        session.currentGame = this.gameService.beginGame(game);
-        await this.startRoundClock({ sessionID, timer: game.config.timer });
-        return session;
-      },
+      if (session.hostID !== playerID)
+        throw new ForbiddenException({
+          code: ErrorCode.SESSION_FORBIDDEN_HOST,
+          message: `Player is not the host`,
+        });
+
+      const game = await this.gameService.createGame({
+        gameConfig: session.gameConfig,
+        players: session.players,
+        mode: session.mode,
+        visitorId,
+      });
+
+      session.status = SessionStatus.IN_GAME;
+      session.currentGame = this.gameService.beginGame(game);
+      await this.startRoundClock({ sessionID, timer: game.config.timer });
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -282,53 +279,50 @@ export class SessionService {
     sessionID: SessionId;
     guess: GuessSubmission;
   }): Promise<Session> {
-    return await this.updatePlayerVisibleSession({
-      sessionID,
-      update: async (session) => {
-        if (!session.currentGame)
-          throw new NotFoundException({
-            code: ErrorCode.SESSION_NO_CURRENT_GAME,
-            message: `No current game in this session`,
-          });
-        const game = session.currentGame;
-
-        const playerExists = session.players.some(
-          (player) => player.username === playerID,
-        );
-        if (!playerExists)
-          throw new NotFoundException({
-            code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-            message: `Player not found in session`,
-          });
-
-        const playerConnected = session.players.some(
-          (player) => player.username === playerID && player.connected,
-        );
-        if (!playerConnected)
-          throw new UnauthorizedException({
-            code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED,
-            message: `Player is not connected`,
-          });
-
-        if (!game.state.currentRound)
-          throw new UnauthorizedException({
-            code: ErrorCode.GAME_NO_ACTIVE_ROUND,
-            message: `No active round on current game`,
-          });
-
-        const connectedPlayerIDs: PlayerId[] = session.players
-          .filter((player) => player.connected)
-          .map((player) => player.username);
-        const isLate: boolean = await this.isPastRoundDeadline(sessionID);
-
-        session.currentGame = await this.gameService.applyGuess({
-          game,
-          playerID,
-          coordinates: isLate ? undefined : guess.coordinates,
-          connectedPlayerIDs,
+    return await this.updateSession(sessionID, async (session) => {
+      if (!session.currentGame)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_NO_CURRENT_GAME,
+          message: `No current game in this session`,
         });
-        return session;
-      },
+      const game = session.currentGame;
+
+      const playerExists = session.players.some(
+        (player) => player.username === playerID,
+      );
+      if (!playerExists)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+          message: `Player not found in session`,
+        });
+
+      const playerConnected = session.players.some(
+        (player) => player.username === playerID && player.connected,
+      );
+      if (!playerConnected)
+        throw new UnauthorizedException({
+          code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED,
+          message: `Player is not connected`,
+        });
+
+      if (!game.state.currentRound)
+        throw new UnauthorizedException({
+          code: ErrorCode.GAME_NO_ACTIVE_ROUND,
+          message: `No active round on current game`,
+        });
+
+      const connectedPlayerIDs: PlayerId[] = session.players
+        .filter((player) => player.connected)
+        .map((player) => player.username);
+      const isLate: boolean = await this.isPastRoundDeadline(sessionID);
+
+      session.currentGame = await this.gameService.applyGuess({
+        game,
+        playerID,
+        coordinates: isLate ? undefined : guess.coordinates,
+        connectedPlayerIDs,
+      });
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -337,47 +331,44 @@ export class SessionService {
     sessionID: SessionId,
     visitorId?: string,
   ): Promise<Session> {
-    return await this.updatePlayerVisibleSession({
-      sessionID,
-      update: async (session) => {
-        if (!session.currentGame)
-          throw new NotFoundException({
-            code: ErrorCode.SESSION_NO_CURRENT_GAME,
-            message: `No current game in this session`,
-          });
-        const game = session.currentGame;
+    return await this.updateSession(sessionID, async (session) => {
+      if (!session.currentGame)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_NO_CURRENT_GAME,
+          message: `No current game in this session`,
+        });
+      const game = session.currentGame;
 
-        if (session.hostID !== playerID) {
-          throw new UnauthorizedException({
-            code: ErrorCode.SESSION_FORBIDDEN_HOST,
-            message: `Player is not the host`,
-          });
-        }
+      if (session.hostID !== playerID) {
+        throw new UnauthorizedException({
+          code: ErrorCode.SESSION_FORBIDDEN_HOST,
+          message: `Player is not the host`,
+        });
+      }
 
-        const { game: updatedGame, isGameOver } =
-          this.gameService.resolveNextRound(game);
+      const { game: updatedGame, isGameOver } =
+        this.gameService.resolveNextRound(game);
 
-        if (!isGameOver) {
-          session.currentGame = updatedGame;
-          await this.startRoundClock({ sessionID, timer: game.config.timer });
-          return session;
-        }
+      if (!isGameOver) {
+        session.currentGame = updatedGame;
+        await this.startRoundClock({ sessionID, timer: game.config.timer });
+        return this.hideRoundGuesses(session);
+      }
 
-        await this.gameService.endGame(
-          updatedGame,
-          session.players,
-          session.mode,
-          visitorId,
-        );
+      await this.gameService.endGame(
+        updatedGame,
+        session.players,
+        session.mode,
+        visitorId,
+      );
 
-        const finishedGameSession: Session = {
-          ...session,
-          currentGame: updatedGame,
-        };
-        session.status = SessionStatus.IN_LOBBY;
-        session.currentGame = undefined;
-        return finishedGameSession;
-      },
+      const finishedGameSession: Session = {
+        ...session,
+        currentGame: updatedGame,
+      };
+      session.status = SessionStatus.IN_LOBBY;
+      session.currentGame = undefined;
+      return this.hideRoundGuesses(finishedGameSession);
     });
   }
 
@@ -436,33 +427,30 @@ export class SessionService {
     reconnectToken: SessionReconnectToken | undefined,
     user?: User,
   ): Promise<Session> {
-    return await this.updatePlayerVisibleSession({
-      sessionID,
-      update: async (session) => {
-        const players = session.players;
+    return await this.updateSession(sessionID, async (session) => {
+      const players = session.players;
 
-        const playerIndex = players.findIndex(
-          (player) => player.username === playerID,
-        );
-        if (playerIndex === -1)
-          throw new NotFoundException({
-            code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
-            message: `Player not found in session`,
-          });
+      const playerIndex = players.findIndex(
+        (player) => player.username === playerID,
+      );
+      if (playerIndex === -1)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+          message: `Player not found in session`,
+        });
 
-        await this.assertReconnectingPlayerIdentity(
-          sessionID,
-          players[playerIndex],
-          reconnectToken,
-          user,
-        );
+      await this.assertReconnectingPlayerIdentity(
+        sessionID,
+        players[playerIndex],
+        reconnectToken,
+        user,
+      );
 
-        players[playerIndex].connected = true;
+      players[playerIndex].connected = true;
 
-        if (session.hostID === '') session.hostID = playerID;
+      if (session.hostID === '') session.hostID = playerID;
 
-        return session;
-      },
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -522,24 +510,21 @@ export class SessionService {
     );
     if (departedPlayerIDs.length === 0 && !hasReturnedPlayer) return null;
 
-    return await this.updatePlayerVisibleSession({
-      sessionID,
-      update: async (session) => {
-        session.players.forEach((player) => {
-          if (presentPlayerIDs.includes(player.username)) {
-            player.connected = true;
-            return;
-          }
-          if (!departedPlayerIDs.includes(player.username)) return;
+    return await this.updateSession(sessionID, async (session) => {
+      session.players.forEach((player) => {
+        if (presentPlayerIDs.includes(player.username)) {
+          player.connected = true;
+          return;
+        }
+        if (!departedPlayerIDs.includes(player.username)) return;
 
-          player.connected = false;
-          this.reassignHostAfterRemoval(session, player.username);
-        });
-        if (session.hostID === '')
-          session.hostID =
-            session.players.find((player) => player.connected)?.username ?? '';
-        return session;
-      },
+        player.connected = false;
+        this.reassignHostAfterRemoval(session, player.username);
+      });
+      if (session.hostID === '')
+        session.hostID =
+          session.players.find((player) => player.connected)?.username ?? '';
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -563,19 +548,7 @@ export class SessionService {
     );
   }
 
-  private async updatePlayerVisibleSession({
-    sessionID,
-    update,
-  }: {
-    sessionID: SessionId;
-    update: (session: Session) => Promise<Session>;
-  }): Promise<Session> {
-    return this.toPlayerVisibleSession(
-      await this.updateSession(sessionID, update),
-    );
-  }
-
-  private toPlayerVisibleSession(session: Session): Session {
+  private hideRoundGuesses(session: Session): Session {
     if (!session.currentGame) return session;
 
     return {
