@@ -36,7 +36,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.CONNECTION_NOT_FOUND]: 'Aucune connexion trouvée pour ce socket.',
 
   // Session
-  [ErrorCode.SESSION_NOT_FOUND]: "La session n'existe pas.",
+  [ErrorCode.SESSION_NOT_FOUND]: "Cette partie n'existe plus",
   [ErrorCode.SESSION_PLAYER_NOT_FOUND]:
     "Le joueur n'existe pas dans la session.",
   [ErrorCode.SESSION_PLAYER_NOT_CONNECTED]: "Le joueur n'est pas connecté.",
@@ -48,7 +48,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "Le joueur n'est pas le host de la session.",
   [ErrorCode.SESSION_NO_CURRENT_GAME]:
     'Aucune partie en cours pour la session.',
-  [ErrorCode.SESSION_ALREADY_IN_GAME]: 'La session a déjà une partie en cours.',
+  [ErrorCode.SESSION_ALREADY_IN_GAME]: 'La partie a déjà commencé',
   [ErrorCode.SESSION_RECONNECT_FORBIDDEN]:
     'Impossible de reprendre la place de ce joueur dans la session.',
   [ErrorCode.SESSION_SOLO_NOT_JOINABLE]:

@@ -192,3 +192,5 @@ cityborn/
 ```
 
 [Réinitialisation du mot de passe](docs/password-reset.md).
+
+[Invitations à une partie multijoueur](docs/multiplayer-invitations.md).
