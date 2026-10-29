@@ -190,7 +190,7 @@ describe('UserService.updateEmail', () => {
     expect(userRepository.updateEmail).not.toHaveBeenCalled();
   });
 
-  it('persists the new address and invalidates the pending verification links', async () => {
+  it('persists the new address and invalidates verification and reset links', async () => {
     const {
       emailVerificationTokenRepository,
       userRepository,
@@ -214,6 +214,26 @@ describe('UserService.updateEmail', () => {
     expect(
       emailVerificationTokenRepository.deleteVerificationTokensByUserId,
     ).toHaveBeenCalledWith(user.id);
+    expect(
+      userRepository.deletePasswordResetTokensByUserId,
+    ).toHaveBeenCalledWith(user.id);
+  });
+
+  it('rejects an address change after concurrent verification', async () => {
+    const { userRepository, userService }: ReturnType<typeof buildUserService> =
+      buildUserService();
+    const user: User = buildUser({ isVerified: false });
+    userRepository.updateEmail.mockResolvedValue(null);
+    userRepository.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      userService.updateEmail({ user, email: 'fixed@cityborn.test' }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED },
+    });
+    expect(
+      userRepository.deletePasswordResetTokensByUserId,
+    ).not.toHaveBeenCalled();
   });
 });
 
@@ -287,6 +307,7 @@ describe('UserService verification tokens', () => {
       const verificationToken: EmailVerificationToken = {
         id: 'token-id',
         userId: userId('user-1'),
+        email: 'alice@cityborn.test',
         expiresAt: new Date(Date.now() + 60_000),
         createdAt: new Date(),
       };
@@ -295,7 +316,11 @@ describe('UserService verification tokens', () => {
       );
 
       await expect(
-        userService.createEmailVerificationToken(userId('user-1'), 60_000),
+        userService.createEmailVerificationToken({
+          userId: userId('user-1'),
+          email: 'alice@cityborn.test',
+          cooldownMs: 60_000,
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON },
       });
@@ -310,10 +335,11 @@ describe('UserService verification tokens', () => {
         null,
       );
 
-      const token: string = await userService.createEmailVerificationToken(
-        userId('user-1'),
-        60_000,
-      );
+      const token: string = await userService.createEmailVerificationToken({
+        userId: userId('user-1'),
+        email: 'alice@cityborn.test',
+        cooldownMs: 60_000,
+      });
 
       expect(token).toMatch(/^[a-f0-9]{64}$/);
       expect(
@@ -321,7 +347,9 @@ describe('UserService verification tokens', () => {
       ).toHaveBeenCalledWith(userId('user-1'));
       expect(
         emailVerificationTokenRepository.createVerificationToken,
-      ).toHaveBeenCalled();
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'alice@cityborn.test' }),
+      );
     });
   });
 
@@ -329,16 +357,21 @@ describe('UserService verification tokens', () => {
     it('retains and rejects an expired token so its owner can request another link', async () => {
       const {
         emailVerificationTokenRepository,
+        userRepository,
         userService,
       }: ReturnType<typeof buildUserService> = buildUserService();
       const expiredToken: EmailVerificationToken = {
         id: 'token-id',
         userId: userId('user-1'),
+        email: 'alice@cityborn.test',
         expiresAt: new Date(Date.now() - 1),
         createdAt: new Date(),
       };
       emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
         expiredToken,
+      );
+      userRepository.lockById.mockResolvedValue(
+        buildUser({ id: expiredToken.userId, email: expiredToken.email }),
       );
 
       await expect(userService.verifyEmail('expired')).rejects.toMatchObject({
@@ -358,13 +391,15 @@ describe('UserService verification tokens', () => {
       const user: User = buildUser();
       const verificationToken: EmailVerificationToken = {
         id: 'token-id',
-        userId: userId('user-1'),
+        userId: user.id,
+        email: user.email,
         expiresAt: new Date(Date.now() + 60_000),
         createdAt: new Date(),
       };
       emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
         verificationToken,
       );
+      userRepository.lockById.mockResolvedValue(user);
       userRepository.markEmailVerified.mockResolvedValue(user);
 
       await expect(
@@ -373,6 +408,61 @@ describe('UserService verification tokens', () => {
       expect(
         emailVerificationTokenRepository.deleteVerificationTokensByUserId,
       ).toHaveBeenCalledWith(verificationToken.userId);
+    });
+
+    it('rejects a token removed during an address change', async () => {
+      const {
+        emailVerificationTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser({
+        isVerified: false,
+        email: 'fixed@cityborn.test',
+      });
+      const token: EmailVerificationToken = {
+        id: 'token-id',
+        userId: user.id,
+        email: 'old@cityborn.test',
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      emailVerificationTokenRepository.findVerificationToken
+        .mockResolvedValueOnce(token)
+        .mockResolvedValueOnce(null);
+      userRepository.lockById.mockResolvedValue(user);
+
+      await expect(userService.verifyEmail('old-token')).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+      });
+
+      expect(userRepository.markEmailVerified).not.toHaveBeenCalled();
+    });
+
+    it('rejects a token bound to a different address', async () => {
+      const {
+        emailVerificationTokenRepository,
+        userRepository,
+        userService,
+      }: ReturnType<typeof buildUserService> = buildUserService();
+      const user: User = buildUser({ email: 'fixed@cityborn.test' });
+      const token: EmailVerificationToken = {
+        id: 'token-id',
+        userId: user.id,
+        email: 'old@cityborn.test',
+        expiresAt: new Date(Date.now() + 60_000),
+        createdAt: new Date(),
+      };
+      emailVerificationTokenRepository.findVerificationToken.mockResolvedValue(
+        token,
+      );
+      userRepository.lockById.mockResolvedValue(user);
+
+      await expect(userService.verifyEmail('old-token')).rejects.toMatchObject({
+        response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+      });
+
+      expect(userRepository.markEmailVerified).not.toHaveBeenCalled();
     });
   });
 });

@@ -7,6 +7,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { User as PrismaUser } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
@@ -28,6 +29,24 @@ export class PrismaUserRepository implements UserRepository {
     return UserMapper.toUser(user);
   }
 
+  async createOrFindByEmail(
+    data: CreateUserData,
+  ): Promise<{ user: User; created: boolean }> {
+    try {
+      const user: User = await this.create(data);
+      return { user, created: true };
+    } catch (error: unknown) {
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== 'P2002'
+      )
+        throw error;
+      const user: User | null = await this.findByEmail(data.email);
+      if (!user) throw error;
+      return { user, created: false };
+    }
+  }
+
   async delete(user_id: UserId): Promise<void> {
     await this.txHost.tx.user.delete({ where: { id: user_id } });
   }
@@ -41,6 +60,14 @@ export class PrismaUserRepository implements UserRepository {
 
   async findById(id: UserId): Promise<User | null> {
     const user = await this.txHost.tx.user.findUnique({ where: { id } });
+    return user ? UserMapper.toUser(user) : null;
+  }
+
+  async lockById(id: UserId): Promise<User | null> {
+    const users: PrismaUser[] = await this.txHost.tx.$queryRaw`
+      SELECT * FROM "User" WHERE id = ${id}::uuid FOR UPDATE
+    `;
+    const user: PrismaUser | undefined = users[0];
     return user ? UserMapper.toUser(user) : null;
   }
 
@@ -140,12 +167,17 @@ export class PrismaUserRepository implements UserRepository {
   }: {
     userId: UserId;
     email: string;
-  }): Promise<User> {
-    const user: PrismaUser = await this.txHost.tx.user.update({
-      where: { id: userId },
+  }): Promise<User | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: { id: userId, isVerified: false },
       data: { email },
     });
-    return UserMapper.toUser(user);
+    if (updated.count === 0) return null;
+    return this.findById(userId);
+  }
+
+  async deletePasswordResetTokensByUserId(userId: UserId): Promise<void> {
+    await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
   }
 
   async updatePassword(userId: UserId, passwordHash: string): Promise<void> {

@@ -48,6 +48,7 @@ export class PrismaEmailVerificationTokenRepository
     await this.txHost.tx.emailVerificationToken.create({
       data: {
         token: data.token,
+        email: data.email,
         expiresAt: data.expiresAt,
         user: {
           connect: { id: data.userId },

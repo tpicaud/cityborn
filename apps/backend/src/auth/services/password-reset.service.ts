@@ -125,6 +125,7 @@ export class PasswordResetService {
       const token: string = randomBytes(32).toString('hex');
       const stored: boolean = await this.passwordResetRepository.replaceToken({
         userId: authSession.user.id,
+        email: authSession.user.email,
         authVersion: authSession.authVersion,
         tokenHash: this.hash(token),
         expiresAt: new Date(

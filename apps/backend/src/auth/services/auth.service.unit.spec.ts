@@ -254,7 +254,10 @@ describe('AuthService.register', () => {
       rateLimitService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.findByEmail.mockResolvedValue(null);
-    userService.createUser.mockResolvedValue(unverifiedUser);
+    userService.createUserOrFindByEmail.mockResolvedValue({
+      user: unverifiedUser,
+      created: true,
+    });
     userService.createEmailVerificationToken.mockResolvedValue(
       'verification-token',
     );
@@ -271,7 +274,7 @@ describe('AuthService.register', () => {
       email: unverifiedUser.email,
       clientIp: '203.0.113.7',
     });
-    expect(userService.createUser).toHaveBeenCalledWith({
+    expect(userService.createUserOrFindByEmail).toHaveBeenCalledWith({
       email: unverifiedUser.email,
       username: unverifiedUser.username,
       type: 'email',
@@ -305,6 +308,9 @@ describe('AuthService.register', () => {
       mailService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
     userService.findByEmail.mockResolvedValue(existingUser);
+    userService.assertUsernameAvailable.mockRejectedValue(
+      new Error('username already taken'),
+    );
     mailService.sendMail.mockResolvedValue(undefined);
 
     await expect(
@@ -315,7 +321,8 @@ describe('AuthService.register', () => {
       }),
     ).resolves.toBeUndefined();
 
-    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(userService.createUserOrFindByEmail).not.toHaveBeenCalled();
+    expect(userService.assertUsernameAvailable).not.toHaveBeenCalled();
     expect(eventService.trackEvent).not.toHaveBeenCalled();
     expect(mailService.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -345,9 +352,46 @@ describe('AuthService.register', () => {
     ).resolves.toBeUndefined();
 
     expect(userService.assertUsernameAvailable).not.toHaveBeenCalled();
-    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(userService.createUserOrFindByEmail).not.toHaveBeenCalled();
     expect(mailService.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({ to: existingUser.email }),
+    );
+  });
+
+  it('accepts two concurrent registrations for the same address', async () => {
+    const user: User = buildUser({ isVerified: false });
+    const registration: CreateUser = {
+      email: user.email,
+      username: user.username,
+      password: 'plain-password',
+    };
+    const {
+      authService,
+      userService,
+      mailService,
+    }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
+    userService.createUserOrFindByEmail
+      .mockResolvedValueOnce({ user, created: true })
+      .mockResolvedValueOnce({ user, created: false });
+    userService.createEmailVerificationToken.mockResolvedValue(
+      'verification-token',
+    );
+
+    const results: PromiseSettledResult<void>[] = await Promise.allSettled([
+      authService.register({ registration, clientIp: '203.0.113.7' }),
+      authService.register({ registration, clientIp: '203.0.113.8' }),
+    ]);
+
+    expect(results.map((result) => result.status)).toEqual([
+      'fulfilled',
+      'fulfilled',
+    ]);
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: user.email,
+        subject: 'Vous avez déjà un compte Cityborn',
+      }),
     );
   });
 
@@ -366,13 +410,14 @@ describe('AuthService.register', () => {
       userService,
       mailService,
     }: ReturnType<typeof buildAuthService> = buildAuthService();
+    userService.findByEmail.mockResolvedValue(null);
     userService.assertUsernameAvailable.mockRejectedValue(usernameTaken);
 
     await expect(
       authService.register({ registration, clientIp: '203.0.113.7' }),
     ).rejects.toBe(usernameTaken);
 
-    expect(userService.createUser).not.toHaveBeenCalled();
+    expect(userService.createUserOrFindByEmail).not.toHaveBeenCalled();
     expect(mailService.sendMail).not.toHaveBeenCalled();
   });
 });
@@ -772,10 +817,11 @@ describe('AuthService account operations', () => {
 
       await authService.resendVerificationEmail(unverifiedUser);
 
-      expect(userService.createEmailVerificationToken).toHaveBeenCalledWith(
-        '00000000-0000-4000-8000-000000000001',
-        180000,
-      );
+      expect(userService.createEmailVerificationToken).toHaveBeenCalledWith({
+        userId: '00000000-0000-4000-8000-000000000001',
+        email: unverifiedUser.email,
+        cooldownMs: 180000,
+      });
       expect(mailService.sendMail).toHaveBeenCalledTimes(1);
     });
   });

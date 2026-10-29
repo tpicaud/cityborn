@@ -48,6 +48,12 @@ export class UserService {
     return this.userRepository.create(data);
   }
 
+  async createUserOrFindByEmail(
+    data: CreateUserData,
+  ): Promise<{ user: User; created: boolean }> {
+    return this.userRepository.createOrFindByEmail(data);
+  }
+
   async deleteUser(user_id: UserId): Promise<void> {
     await this.userRepository.delete(user_id);
   }
@@ -146,13 +152,19 @@ export class UserService {
         message: 'Email already taken',
       });
 
-    const updatedUser: User = await this.userRepository.updateEmail({
+    const updatedUser: User | null = await this.userRepository.updateEmail({
       userId: user.id,
       email,
     });
+    if (!updatedUser)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
+        message: 'A verified email cannot be changed',
+      });
     await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       user.id,
     );
+    await this.userRepository.deletePasswordResetTokensByUserId(user.id);
     return updatedUser;
   }
 
@@ -189,10 +201,15 @@ export class UserService {
   }
 
   @Transactional()
-  async createEmailVerificationToken(
-    userId: UserId,
-    cooldownMs?: number,
-  ): Promise<string> {
+  async createEmailVerificationToken({
+    userId,
+    email,
+    cooldownMs,
+  }: {
+    userId: UserId;
+    email: string;
+    cooldownMs?: number;
+  }): Promise<string> {
     if (cooldownMs) {
       const existingToken =
         await this.emailVerificationTokenRepository.findLatestVerificationToken(
@@ -218,6 +235,7 @@ export class UserService {
     );
     await this.emailVerificationTokenRepository.createVerificationToken({
       userId,
+      email,
       token,
       expiresAt,
     });
@@ -225,6 +243,7 @@ export class UserService {
     return token;
   }
 
+  @Transactional()
   async verifyEmail(verificationToken: string): Promise<User> {
     const token: EmailVerificationToken | null =
       await this.emailVerificationTokenRepository.findVerificationToken(
@@ -233,13 +252,27 @@ export class UserService {
 
     if (!token) throw invalidVerificationTokenException();
 
-    if (token.expiresAt < new Date())
+    const user: User | null = await this.userRepository.lockById(token.userId);
+    if (!user) throw invalidVerificationTokenException();
+
+    const currentToken: EmailVerificationToken | null =
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
+    if (
+      !currentToken ||
+      currentToken.userId !== user.id ||
+      currentToken.email !== user.email
+    )
+      throw invalidVerificationTokenException();
+
+    if (currentToken.expiresAt < new Date())
       throw new UnauthorizedException({
         code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN,
         message: 'Email verification token is expired',
       });
 
-    return this.verifyEmailOwnership(token.userId);
+    return this.verifyEmailOwnership(user.id);
   }
 
   async findVerificationTokenOwner(verificationToken: string): Promise<User> {

@@ -97,22 +97,46 @@ export class AuthService {
 
     const existingUser: User | null = await this.userService.findByEmail(email);
     if (existingUser) {
-      if (existingUser.username !== username)
-        await this.userService.assertUsernameAvailable(username);
-      this.sendMailInBackground({
-        operation: 'send_existing_account_email',
-        userId: existingUser.id,
-        mailOptions: buildMailOptions('existing-account-email', {
-          email: existingUser.email,
-          frontendUrl: this.httpConfig.frontendUrl,
-          username: existingUser.username,
-        }),
-      });
+      this.notifyExistingAccount(existingUser);
       return;
     }
 
-    await this.userService.assertUsernameAvailable(username);
-    await this.createEmailAccount({ email, username, passwordHash, visitorId });
+    try {
+      await this.userService.assertUsernameAvailable(username);
+    } catch (error: unknown) {
+      const concurrentUser: User | null =
+        await this.userService.findByEmail(email);
+      if (!concurrentUser) throw error;
+      this.notifyExistingAccount(concurrentUser);
+      return;
+    }
+    const result: { user: User; created: boolean } =
+      await this.userService.createUserOrFindByEmail({
+        email,
+        username,
+        type: 'email',
+        password: passwordHash,
+      });
+    if (!result.created) {
+      this.notifyExistingAccount(result.user);
+      return;
+    }
+    await this.completeEmailAccountCreation({
+      user: result.user,
+      visitorId,
+    });
+  }
+
+  private notifyExistingAccount(existingUser: User): void {
+    this.sendMailInBackground({
+      operation: 'send_existing_account_email',
+      userId: existingUser.id,
+      mailOptions: buildMailOptions('existing-account-email', {
+        email: existingUser.email,
+        frontendUrl: this.httpConfig.frontendUrl,
+        username: existingUser.username,
+      }),
+    });
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -397,6 +421,18 @@ export class AuthService {
       password: passwordHash,
     });
 
+    await this.completeEmailAccountCreation({ user, visitorId });
+
+    return user;
+  }
+
+  private async completeEmailAccountCreation({
+    user,
+    visitorId,
+  }: {
+    user: User;
+    visitorId?: string;
+  }): Promise<void> {
     void this.sendVerificationEmail(user).catch((error: unknown) => {
       this.wideEventService.recordOperationError(error, {
         domain: 'auth',
@@ -416,8 +452,6 @@ export class AuthService {
         }),
       );
     }
-
-    return user;
   }
 
   private sendMailInBackground({
@@ -447,10 +481,11 @@ export class AuthService {
     resendCooldownMs?: number,
   ): Promise<void> {
     const verificationToken =
-      await this.userService.createEmailVerificationToken(
-        UserIdSchema.parse(user.id),
-        resendCooldownMs,
-      );
+      await this.userService.createEmailVerificationToken({
+        userId: UserIdSchema.parse(user.id),
+        email: user.email,
+        cooldownMs: resendCooldownMs,
+      });
     await this.mailService.sendMail(
       buildMailOptions('verification-email', {
         email: user.email,

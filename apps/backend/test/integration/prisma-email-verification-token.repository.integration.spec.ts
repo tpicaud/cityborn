@@ -35,6 +35,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
       const user: User = buildUser();
       const tokenData: CreateEmailVerificationToken = {
         userId: user.id,
+        email: user.email,
         token: 'verification-token',
         expiresAt: new Date('2099-01-01'),
       };
@@ -55,6 +56,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
         }),
       ).toMatchObject({
         userId: user.id,
+        email: user.email,
         expiresAt: tokenData.expiresAt,
       });
     });
@@ -74,6 +76,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
       await prisma.emailVerificationToken.create({
         data: {
           userId: user.id,
+          email: user.email,
           token: 'older-token',
           expiresAt: new Date('2098-01-01'),
           createdAt: new Date('2026-01-01'),
@@ -82,6 +85,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
       const expiresAt: Date = new Date('2099-01-01');
       await tokenRepository.createVerificationToken({
         userId: user.id,
+        email: user.email,
         token: 'newer-token',
         expiresAt,
       });
@@ -119,12 +123,14 @@ describe('PrismaEmailVerificationTokenRepository', () => {
         data: [
           {
             userId: user.id,
+            email: user.email,
             token: 'user-token',
             expiresAt: new Date('2099-01-01'),
             createdAt: new Date('2026-01-01'),
           },
           {
             userId: otherUser.id,
+            email: otherUser.email,
             token: 'other-token',
             expiresAt: new Date('2099-01-01'),
             createdAt: new Date('2026-01-02'),
@@ -152,6 +158,7 @@ describe('PrismaEmailVerificationTokenRepository', () => {
       });
       await tokenRepository.createVerificationToken({
         userId: user.id,
+        email: user.email,
         token: 'verification-token',
         expiresAt: new Date('2099-01-01'),
       });
@@ -196,11 +203,13 @@ describe('PrismaEmailVerificationTokenRepository', () => {
       });
       await tokenRepository.createVerificationToken({
         userId: firstUser.id,
+        email: firstUser.email,
         token: 'first-token',
         expiresAt: new Date('2099-01-01'),
       });
       await tokenRepository.createVerificationToken({
         userId: otherUser.id,
+        email: otherUser.email,
         token: 'other-token',
         expiresAt: new Date('2099-01-01'),
       });

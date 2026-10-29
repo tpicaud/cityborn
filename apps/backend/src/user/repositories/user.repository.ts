@@ -22,9 +22,13 @@ export type UnverifiedAccountReclaim = {
 
 export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
+  createOrFindByEmail(
+    data: CreateUserData,
+  ): Promise<{ user: User; created: boolean }>;
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
   findById(id: UserId): Promise<User | null>;
+  lockById(id: UserId): Promise<User | null>;
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findCredentialsByEmail(email: string): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
@@ -40,7 +44,11 @@ export interface UserRepository {
   ): Promise<Pick<User, 'username' | 'email'> | null>;
   markEmailVerified(userId: UserId): Promise<User>;
   updateUsername(userId: UserId, username: Username): Promise<User>;
-  updateEmail(emailUpdate: { userId: UserId; email: string }): Promise<User>;
+  updateEmail(emailUpdate: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null>;
+  deletePasswordResetTokensByUserId(userId: UserId): Promise<void>;
   updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
   reclaimUnverifiedAccount(

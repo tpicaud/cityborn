@@ -181,6 +181,7 @@ describe('PasswordResetService.request', () => {
     expect(token).toMatch(/^[a-f0-9]{64}$/);
     expect(passwordResetRepository.replaceToken).toHaveBeenCalledWith({
       userId: user.id,
+      email: user.email,
       authVersion: 0,
       tokenHash: createHash('sha256').update(token).digest('hex'),
       expiresAt: expect.any(Date),
