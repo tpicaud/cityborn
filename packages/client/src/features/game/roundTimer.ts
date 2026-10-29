@@ -1,5 +1,6 @@
 'use client';
 
+import { roundCountdownInSeconds } from '@cityborn/core';
 import { useEffect, useRef, useState } from 'react';
 
 const roundTimerTickInMilliseconds = 10;
@@ -72,7 +73,7 @@ export type Countdown = {
 };
 
 export function useCountdown({
-  initialCount = 3,
+  initialCount = roundCountdownInSeconds,
   onCountdownEnd,
 }: CountdownOptions): Countdown {
   const [count, setCount] = useState<number>(initialCount);

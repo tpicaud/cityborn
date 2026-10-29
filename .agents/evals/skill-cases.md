@@ -13,7 +13,7 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Renomme le champ `durationMs` des wide events. » | `conventions-backend` seulement |
 | « Ajoute un dashboard Axiom des connexions WebSocket. » | `conventions-backend`, `axiom-building-dashboards` |
 | « Teste toutes les branches de `SessionService.updateHost`. » | `conventions-testing` |
-| « Ajoute un test pour `mergeSessionUpdate` dans `@cityborn/client`. » | `conventions-testing` |
+| « Ajoute un test pour `isHostOf` dans `@cityborn/client`. » | `conventions-testing` |
 | « Ajoute à `@cityborn/client` le chargement du classement. » | `conventions-client` |
 | « Signale « Objet non valide » quand le brouillon de l'éditeur de pack est vide. » | `conventions-client` |
 | « Ajoute l'écran de classement au frontend et au mobile. » | `conventions-client-apps`, `conventions-client` |

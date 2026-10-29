@@ -1,8 +1,8 @@
 'use client';
 
 import type {
+  Coord,
   GameConfigChanges,
-  Guess,
   PlayerId,
   Session,
   SessionId,
@@ -36,10 +36,11 @@ import {
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
-import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
+import { isHostOf, withStatus } from './sessionState';
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
@@ -56,7 +57,7 @@ export type SessionController = {
   updateHost: (newHostID: PlayerId) => Promise<void>;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
-  guess: (guess: Guess) => Promise<void>;
+  guess: (coordinates: Coord | undefined) => Promise<void>;
   nextRound: () => Promise<void>;
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
@@ -127,7 +128,7 @@ export function useSessionController({
   useEffect(
     () =>
       sessionChannel?.onSessionUpdate((incoming: Session) => {
-        setSession((previous) => mergeSessionUpdate(previous, incoming));
+        setSession(incoming);
       }),
     [sessionChannel],
   );
@@ -210,12 +211,12 @@ export function useSessionController({
     }).startGame();
   };
 
-  const guess = async (playerGuess: Guess) => {
+  const guess = async (coordinates: Coord | undefined) => {
     requireGame('Guess');
     await requireOpenedSessionChannel({
       sessionChannel,
       action: 'Guess',
-    }).guess(playerGuess);
+    }).submitGuess(createGuessSubmission(coordinates));
   };
 
   const nextRound = async () => {

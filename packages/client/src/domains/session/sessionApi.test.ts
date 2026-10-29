@@ -4,17 +4,22 @@ import type { Session, sessionWsChannel } from '@cityborn/api';
 import type { WsChannelConnection } from '../../ws/wsChannelConnection';
 import { createSessionChannel, type SessionChannel } from './sessionApi';
 
-type SubscriptionRecorder = {
+type ConnectionRecorder = {
   connection: WsChannelConnection<typeof sessionWsChannel>;
+  emissions: unknown[][];
   subscriptions: unknown[][];
   unsubscriptions: unknown[][];
 };
 
-function createSubscriptionRecorder(): SubscriptionRecorder {
+function createConnectionRecorder(): ConnectionRecorder {
+  const emissions: unknown[][] = [];
   const subscriptions: unknown[][] = [];
   const unsubscriptions: unknown[][] = [];
   const connection: WsChannelConnection<typeof sessionWsChannel> = {
-    emit: () => new Promise(() => {}),
+    emit: (event, ...payload) => {
+      emissions.push([event, ...payload]);
+      return new Promise(() => {});
+    },
     on: (event, listener) => {
       subscriptions.push([event, listener]);
     },
@@ -22,13 +27,30 @@ function createSubscriptionRecorder(): SubscriptionRecorder {
       unsubscriptions.push([event, listener]);
     },
   };
-  return { connection, subscriptions, unsubscriptions };
+  return { connection, emissions, subscriptions, unsubscriptions };
 }
+
+describe('SessionChannel.submitGuess', () => {
+  it('emits the guess submission on the submitGuess event', () => {
+    const { connection, emissions }: ConnectionRecorder =
+      createConnectionRecorder();
+    const sessionChannel: SessionChannel = createSessionChannel(connection);
+
+    void sessionChannel.submitGuess({ coordinates: { lat: 48.85, lng: 2.35 } });
+
+    assert.deepEqual(emissions, [
+      [
+        'session:submitGuess',
+        { guess: { coordinates: { lat: 48.85, lng: 2.35 } } },
+      ],
+    ]);
+  });
+});
 
 describe('SessionChannel.onSessionUpdate', () => {
   it('detaches the session update listener it attached', () => {
-    const { connection, subscriptions, unsubscriptions }: SubscriptionRecorder =
-      createSubscriptionRecorder();
+    const { connection, subscriptions, unsubscriptions }: ConnectionRecorder =
+      createConnectionRecorder();
     const sessionChannel: SessionChannel = createSessionChannel(connection);
     const handleSessionUpdate: (session: Session) => void = () => {};
     const unsubscribe: () => void =

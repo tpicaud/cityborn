@@ -8,6 +8,8 @@ import {
   type GameConfig,
   type GameConfigPack,
   GameConfigSchema,
+  type GuessSubmission,
+  GuessSubmissionSchema,
 } from './game.schema';
 
 const monuments: GameConfigPack = {
@@ -126,5 +128,30 @@ describe('applyGameConfigChanges', () => {
       timer: 45,
       nbOfObjects: 6,
     });
+  });
+});
+
+describe('GuessSubmissionSchema', () => {
+  it('accepts a guess without coordinates', () => {
+    const guess: GuessSubmission = GuessSubmissionSchema.parse({});
+
+    assert.deepEqual(guess, {});
+  });
+
+  it('rejects a guess announcing its points', () => {
+    const result: z.SafeParseReturnType<unknown, GuessSubmission> =
+      GuessSubmissionSchema.safeParse({
+        coordinates: { lat: 48.85, lng: 2.35 },
+        points: 1000,
+      });
+
+    assert.equal(result.success, false);
+  });
+
+  it('rejects coordinates outside the globe', () => {
+    const result: z.SafeParseReturnType<unknown, GuessSubmission> =
+      GuessSubmissionSchema.safeParse({ coordinates: { lat: 91, lng: 2.35 } });
+
+    assert.equal(result.success, false);
   });
 });

@@ -1,4 +1,8 @@
 import {
+  type Coord,
+  defaultGuess,
+  ErrorCode,
+  type FullGuessObject,
   type Game,
   type GameConfig,
   type GameId,
@@ -7,16 +11,22 @@ import {
   type Guess,
   type PlayerId,
   type PlayerResults,
+  type Round,
+  RoundStatus,
   SessionMode,
   type SessionPlayer,
 } from '@cityborn/api';
 import {
   applyGuess,
   beginGame,
+  createGuess,
+  hideGuessingRoundGuesses,
   resolveNextRound,
+  revealGuessObject,
+  roundGuessObjectIds,
   toLightGame,
 } from '@cityborn/core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventService } from '../event/event.service';
 import { createEvent } from '../event/event.types';
 import { GameRecordService } from '../game-record/game-record.service';
@@ -65,6 +75,9 @@ export class GameService {
           {} satisfies Record<PlayerId, PlayerResults>,
         ),
         guessObjects: guessObjects,
+        roundGuessObjects: guessObjects.map(
+          ({ world_location, source, ...roundGuessObject }) => roundGuessObject,
+        ),
       },
     };
 
@@ -99,7 +112,7 @@ export class GameService {
         mode,
         gameConfig: game.config,
         players,
-        guessObjectsIds: game.state.guessObjectsIds,
+        guessObjectsIds: roundGuessObjectIds(game),
         results: game.state.results,
       },
       players.flatMap((player) =>
@@ -136,13 +149,51 @@ export class GameService {
     return beginGame(game);
   }
 
-  applyGuess(
-    game: Game,
-    playerID: PlayerId,
-    guess: Guess,
-    connectedPlayerIds: PlayerId[],
-  ): Game {
-    return applyGuess(game, playerID, guess, connectedPlayerIds);
+  async applyGuess({
+    game,
+    playerID,
+    coordinates,
+    connectedPlayerIDs,
+  }: {
+    game: Game;
+    playerID: PlayerId;
+    coordinates: Coord | undefined;
+    connectedPlayerIDs: PlayerId[];
+  }): Promise<Game> {
+    const currentRound: Round | undefined = game.state.currentRound;
+    if (!currentRound) return game;
+
+    const [guessObject]: FullGuessObject[] =
+      await this.guessObjectService.findFullBy({
+        ids: [currentRound.guessObjectId],
+      });
+    if (!guessObject) {
+      throw new NotFoundException({
+        code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+        message: 'Guess object of the current round not found',
+      });
+    }
+
+    const guess: Guess = coordinates
+      ? createGuess(guessObject, coordinates)
+      : defaultGuess;
+    const guessedGame: Game = applyGuess(
+      game,
+      playerID,
+      guess,
+      connectedPlayerIDs,
+    );
+    const isRoundRevealed: boolean =
+      currentRound.status === RoundStatus.GUESSING &&
+      guessedGame.state.currentRound?.status === RoundStatus.SHOWING_RESULTS;
+
+    return isRoundRevealed
+      ? revealGuessObject({ game: guessedGame, guessObject })
+      : guessedGame;
+  }
+
+  hideGuessingRoundGuesses(game: Game): Game {
+    return hideGuessingRoundGuesses(game);
   }
 
   resolveNextRound(game: Game): { game: Game; isGameOver: boolean } {

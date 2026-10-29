@@ -4,9 +4,11 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
-import type { MapProps } from '@cityborn/client/game';
 import {
-  createGuess,
+  currentRevealedGuessObject,
+  type MapProps,
+} from '@cityborn/client/game';
+import {
   type GuessObjectArea,
   guessObjectArea,
   guessObjectCenter,
@@ -25,7 +27,7 @@ import MapView, {
 
 type RoundMapProps = Omit<MapProps, 'game'> & {
   currentRound: Round;
-  guessObject: FullGuessObject;
+  revealedGuessObject: FullGuessObject | undefined;
 };
 
 function toLatLng(coord: Coord): LatLng {
@@ -44,18 +46,14 @@ function areaOuterRings(area: GuessObjectArea): Position[][] {
 export default function GameMap({ mapProps }: { mapProps: MapProps }) {
   const { game, ...roundMapProps } = mapProps;
   const currentRound: Round | undefined = game.state.currentRound;
-  const guessObject: FullGuessObject | undefined =
-    game.state.guessObjects?.find(
-      ({ id }) => id === currentRound?.guessObjectId,
-    );
 
-  if (!currentRound || !guessObject) return null;
+  if (!currentRound) return null;
 
   return (
     <RoundMap
       {...roundMapProps}
       currentRound={currentRound}
-      guessObject={guessObject}
+      revealedGuessObject={currentRevealedGuessObject(game)}
     />
   );
 }
@@ -67,12 +65,12 @@ function RoundMap({
   localPlayerID,
   handlePreGuess,
   currentRound,
-  guessObject,
+  revealedGuessObject,
 }: RoundMapProps) {
   const mapRef = useRef<MapView>(null);
-  const answer: Coord = useMemo(
-    () => guessObjectCenter(guessObject),
-    [guessObject],
+  const answer: Coord | undefined = useMemo(
+    () => revealedGuessObject && guessObjectCenter(revealedGuessObject),
+    [revealedGuessObject],
   );
   const localGuess = currentRound.playersGuesses?.[localPlayerID];
 
@@ -81,10 +79,10 @@ function RoundMap({
   }): void => {
     if (currentRound.status !== RoundStatus.GUESSING || localGuess) return;
     const { latitude, longitude } = event.nativeEvent.coordinate;
-    handlePreGuess(createGuess(guessObject, { lat: latitude, lng: longitude }));
+    handlePreGuess({ lat: latitude, lng: longitude });
   };
 
-  const renderArea = () => {
+  const renderArea = (guessObject: FullGuessObject) => {
     const area: GuessObjectArea | undefined = guessObjectArea(guessObject);
     if (!area) return null;
 
@@ -116,7 +114,7 @@ function RoundMap({
     />
   );
 
-  const renderOtherPlayers = () => {
+  const renderOtherPlayers = (answer: Coord) => {
     const guesses = currentRound.playersGuesses
       ? Object.entries(currentRound.playersGuesses).filter(
           ([playerID]) => playerID !== localPlayerID,
@@ -148,7 +146,7 @@ function RoundMap({
   };
 
   const focusMap = useCallback(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !answer) return;
 
     const coords: LatLng[] = [{ latitude: answer.lat, longitude: answer.lng }];
 
@@ -183,7 +181,7 @@ function RoundMap({
   return (
     <View style={{ flex: 1 }}>
       <MapView
-        key={guessObject.id}
+        key={currentRound.guessObjectId}
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
@@ -206,40 +204,33 @@ function RoundMap({
         onPoiClick={handleMapPress}
         onPress={handleMapPress}
       >
-        {preGuess && preGuess.distance !== -1 && (
-          <Marker
-            coordinate={{
-              latitude: preGuess.coordinates.lat,
-              longitude: preGuess.coordinates.lng,
-            }}
-            tappable={false}
-          />
+        {preGuess && (
+          <Marker coordinate={toLatLng(preGuess)} tappable={false} />
         )}
 
-        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <Marker
-            coordinate={toLatLng(answer)}
-            anchor={{ x: 0.5, y: 0.5 }}
-            tappable={false}
-          >
-            <Image
-              source={require('../../../assets/maps/answer_marker.png')}
-              style={{ width: 32, height: 32 }}
-              resizeMode="contain"
-            />
-          </Marker>
-        )}
-
-        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <>
-            {localGuess &&
-              localGuess.distance !== -1 &&
-              !localGuess.win &&
-              renderLine(localGuess.coordinates, answer, true)}
-            {renderOtherPlayers()}
-            {renderArea()}
-          </>
-        )}
+        {currentRound.status === RoundStatus.SHOWING_RESULTS &&
+          revealedGuessObject &&
+          answer && (
+            <>
+              <Marker
+                coordinate={toLatLng(answer)}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tappable={false}
+              >
+                <Image
+                  source={require('../../../assets/maps/answer_marker.png')}
+                  style={{ width: 32, height: 32 }}
+                  resizeMode="contain"
+                />
+              </Marker>
+              {localGuess &&
+                localGuess.distance !== -1 &&
+                !localGuess.win &&
+                renderLine(localGuess.coordinates, answer, true)}
+              {renderOtherPlayers(answer)}
+              {renderArea(revealedGuessObject)}
+            </>
+          )}
       </MapView>
     </View>
   );

@@ -1,43 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildGuess, type Guess, RoundStatus } from '@cityborn/api';
+import { RoundStatus } from '@cityborn/api';
 import {
-  createTimedOutGuess,
   type RoundDisplayState,
   shouldShowRoundOverlay,
   synchronizeRoundDisplayState,
 } from './gameRound';
-
-describe('createTimedOutGuess', () => {
-  it('keeps the pre-guess', () => {
-    const preGuess: Guess = buildGuess({
-      coordinates: { lat: 48.85, lng: 2.35 },
-      distance: 10,
-      points: 900,
-      win: false,
-    });
-
-    const timedOutGuess: Guess = createTimedOutGuess(preGuess);
-
-    assert.deepEqual(timedOutGuess, {
-      coordinates: { lat: 48.85, lng: 2.35 },
-      distance: 10,
-      points: 900,
-      win: false,
-    });
-  });
-
-  it('falls back to an empty guess without a pre-guess', () => {
-    const timedOutGuess: Guess = createTimedOutGuess(undefined);
-
-    assert.deepEqual(timedOutGuess, {
-      coordinates: { lat: 0, lng: 0 },
-      distance: -1,
-      points: 0,
-      win: false,
-    });
-  });
-});
 
 describe('synchronizeRoundDisplayState', () => {
   it('shows the results of a round showing its results', () => {

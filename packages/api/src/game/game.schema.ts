@@ -37,6 +37,18 @@ export const CoordSchema = z.object({
   lng: z.number(),
 });
 
+export const GuessSubmissionSchema = z
+  .object({
+    coordinates: z
+      .object({
+        lat: z.number().finite().min(-90).max(90),
+        lng: z.number().finite().min(-180).max(180),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
 export const GuessSchema = z.object({
   coordinates: CoordSchema,
   distance: z.number(),
@@ -91,11 +103,26 @@ export const RoundSchema = z.object({
   playersGuesses: PlayerGuessesSchema.optional(),
 });
 
+export const RoundGuessObjectSchema = FullGuessObjectSchema.partial({
+  world_location: true,
+});
+
 export const GameStateSchema = z.object({
+  /**
+   * @deprecated Utiliser l'ordre de `roundGuessObjects` à la place. Conservé
+   * pour les builds mobile publiées avant le calcul des scores côté serveur.
+   * @deprecatedSince 2026-10-29
+   */
   guessObjectsIds: z.array(GuessObjectIdSchema),
   results: PlayerResultsByIdSchema,
   currentRound: RoundSchema.optional(),
+  /**
+   * @deprecated Utiliser `roundGuessObjects` à la place. Conservé pour les
+   * builds mobile publiées avant le calcul des scores côté serveur.
+   * @deprecatedSince 2026-10-28
+   */
   guessObjects: z.array(FullGuessObjectSchema).optional(),
+  roundGuessObjects: z.array(RoundGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({
@@ -121,10 +148,12 @@ export const defaultGameConfig: Readonly<GameConfig> = {
 
 export type GameConfigPack = z.infer<typeof GameConfigPackSchema>;
 export type Coord = z.infer<typeof CoordSchema>;
+export type GuessSubmission = z.infer<typeof GuessSubmissionSchema>;
 export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 export type GameConfigChanges = Partial<Omit<GameConfig, 'categories'>>;
 export type Round = z.infer<typeof RoundSchema>;
+export type RoundGuessObject = z.infer<typeof RoundGuessObjectSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;
 export type Game = z.infer<typeof GameSchema>;
 

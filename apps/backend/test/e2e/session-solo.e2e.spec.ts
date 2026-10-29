@@ -1,5 +1,4 @@
 import {
-  buildGuess,
   buildPack,
   buildTheme,
   buildUser,
@@ -183,8 +182,8 @@ describe('Solo session over the session channel', () => {
     const guessUpdate: Promise<Session> = nextSessionUpdate(client);
     await emitWithAck({
       client,
-      event: sessionWsEvent.guess,
-      payload: { guess: buildGuess() },
+      event: sessionWsEvent.submitGuess,
+      payload: { guess: { coordinates: { lat: 48.85, lng: 2.35 } } },
     });
     await guessUpdate;
     const nextRoundUpdate: Promise<Session> = nextSessionUpdate(client);

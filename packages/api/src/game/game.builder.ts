@@ -1,4 +1,6 @@
 import type { z } from 'zod';
+import { buildFullGuessObject } from '../guess-object/guess-object.builder';
+import type { FullGuessObject } from '../guess-object/guess-object.schema';
 import {
   defaultGameConfig,
   type Game,
@@ -11,6 +13,8 @@ import {
   type Guess,
   GuessSchema,
   type Round,
+  type RoundGuessObject,
+  RoundGuessObjectSchema,
   RoundSchema,
   RoundStatus,
 } from './game.schema';
@@ -54,6 +58,15 @@ export function buildRound(
     guessObjectId: 'guess-object-1',
     ...overrides,
   });
+}
+
+export function buildRoundGuessObject(
+  overrides: Partial<z.input<typeof RoundGuessObjectSchema>> = {},
+): RoundGuessObject {
+  const { world_location, source, ...guessObject }: FullGuessObject =
+    buildFullGuessObject();
+
+  return RoundGuessObjectSchema.parse({ ...guessObject, ...overrides });
 }
 
 export function buildGameState(

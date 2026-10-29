@@ -28,8 +28,8 @@ export type GameResults = {
 
 function getGuessObjectName(game: Game, guessObjectID: GuessObjectId): string {
   return (
-    game.state.guessObjects?.find(({ id }) => id === guessObjectID)?.name ??
-    guessObjectID
+    game.state.roundGuessObjects?.find(({ id }) => id === guessObjectID)
+      ?.name ?? guessObjectID
   );
 }
 

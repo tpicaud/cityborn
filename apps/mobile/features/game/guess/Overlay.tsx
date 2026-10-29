@@ -1,8 +1,8 @@
 import {
-  type FullGuessObject,
+  type Coord,
   type Game,
-  type Guess,
   type PlayerId,
+  type RoundGuessObject,
   RoundStatus,
 } from '@cityborn/api';
 import {
@@ -25,10 +25,10 @@ import Timer from './Timer';
 
 type OverlayProps = {
   localPlayerID: PlayerId;
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   game: Game;
   isHost: boolean;
-  handleGuess: (value: Guess) => Promise<void>;
+  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
   handleIsTimeUp: () => void;
   handleNextRound: () => Promise<void>;
 };
@@ -109,7 +109,7 @@ export default function Overlay({
 }: OverlayProps) {
   const [hasGuessed, setHasGuessed] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
-  const guessObject: FullGuessObject | undefined = currentGuessObject(game);
+  const guessObject: RoundGuessObject | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
     game,
     localPlayerID,
