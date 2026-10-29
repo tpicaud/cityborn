@@ -4,38 +4,31 @@ import {
   ApiResponseError,
   ErrorCode,
   resolveErrorMessage,
-  type sessionWsChannel,
+  sessionWsEvent,
 } from '@cityborn/api';
-import {
-  createSessionChannel,
-  type SessionChannel,
-} from '../../domains/session/sessionApi';
-import type { WsChannelConnection } from '../../ws/wsChannelConnection';
+import type { SessionChannel } from '../../domains/session/sessionApi';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 
-const idleConnection: WsChannelConnection<typeof sessionWsChannel> = {
+const idleChannel: SessionChannel = {
   emit: () => new Promise(() => {}),
-  on: () => {},
-  off: () => {},
+  on: () => () => {},
 };
 
 describe('requireOpenedSessionChannel', () => {
   it('returns the opened session channel', () => {
-    const sessionChannel: SessionChannel = createSessionChannel(idleConnection);
-
     const openedChannel: SessionChannel = requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Starting game',
+      sessionChannel: idleChannel,
+      event: sessionWsEvent.startGame,
     });
 
-    assert.equal(openedChannel, sessionChannel);
+    assert.equal(openedChannel, idleChannel);
   });
 
   it('rejects with the real-time connection message when no channel is opened', () => {
     const requirement: () => SessionChannel = () =>
       requireOpenedSessionChannel({
         sessionChannel: null,
-        action: 'Starting game',
+        event: sessionWsEvent.startGame,
       });
 
     assert.throws(requirement, (error: unknown) => {

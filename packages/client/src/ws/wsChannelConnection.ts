@@ -17,23 +17,17 @@ export interface WsChannelConnection<Definition extends WsChannel> {
   on<Name extends WsChannelServerEventName<Definition>>(
     event: Name,
     listener: WsServerToClientEvents[Name],
-  ): void;
-  off<Name extends WsChannelServerEventName<Definition>>(
-    event: Name,
-    listener: WsServerToClientEvents[Name],
-  ): void;
+  ): () => void;
 }
 
-export function toWsChannelConnection(
+export function toWsChannelConnection<Definition extends WsChannel>(
   socket: SocketConnection,
-): WsChannelConnection<WsChannel> {
+): WsChannelConnection<Definition> {
   return {
     emit: createWsEmit({ connection: socket }),
     on: (event, listener) => {
       socket.on(event, listener);
-    },
-    off: (event, listener) => {
-      socket.off(event, listener);
+      return () => socket.off(event, listener);
     },
   };
 }
