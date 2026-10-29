@@ -17,7 +17,7 @@ Travailler dans le worktree transmis, déjà sur la branche liée à l'issue.
 
 ## Compte rendu final
 
-Donner l'URL de la PR draft, dont la description porte le rapport de livraison.
+Donner l'URL de la PR draft, dont la description porte le rapport de livraison, et chaque vérification en échec ou non exécutée, avec la raison.
 
 ## Critère de fin
 

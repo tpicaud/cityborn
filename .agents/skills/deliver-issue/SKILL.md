@@ -50,14 +50,14 @@ Si au moins un finding est dans le périmètre de l'issue, transmettre au sous-a
 - charger les skills de conventions des périmètres touchés ;
 - traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
 - vérifier chaque correctif ;
-- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur la section « Review automatique » et les findings de « Pistes ».
+- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur les findings hors périmètre de « Pistes ».
 
-Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne.
+Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne, puis chaque vérification en échec ou non exécutée, avec la raison.
 
-Dans tous les cas, écrire ensuite dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`, la section « Review automatique » et ajouter à « Pistes » les findings hors périmètre.
+Dans tous les cas, ajouter ensuite les findings hors périmètre à « Pistes » dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`.
 
-L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la description de la PR contient la section « Review automatique ».
+L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que « Pistes » liste chaque finding hors périmètre.
 
 ## Compte rendu final
 
-Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter que les étapes ont tourné sans sous-agent.
+Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter les vérifications en échec ou non exécutées et que les étapes ont tourné sans sous-agent.
