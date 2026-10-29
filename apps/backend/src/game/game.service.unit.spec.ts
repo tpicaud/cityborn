@@ -96,7 +96,6 @@ describe('GameService.createGame', () => {
         image: guessObject.image,
         description: guessObject.description,
         short_description: guessObject.short_description,
-        source: guessObject.source,
       },
     ]);
     expect(eventService.trackEvent).toHaveBeenCalledWith({
@@ -244,8 +243,11 @@ describe('GameService.applyGuess', () => {
     }),
   });
 
-  const { world_location, ...hiddenGuessObjectBornInParis }: FullGuessObject =
-    guessObjectBornInParis;
+  const {
+    world_location,
+    source,
+    ...hiddenGuessObjectBornInParis
+  }: FullGuessObject = guessObjectBornInParis;
 
   function buildGuessingGame(): Game {
     return buildGame({

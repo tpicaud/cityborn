@@ -543,9 +543,9 @@ describe('Session gateway over a real socket', () => {
     });
     const hiddenGuessObjects: RoundGuessObject[] | undefined =
       roundSession.currentGame?.state.roundGuessObjects;
-    expect(hiddenGuessObjects).toEqual([
-      expect.not.objectContaining({ world_location: expect.anything() }),
-    ]);
+    expect(hiddenGuessObjects).toHaveLength(1);
+    expect(hiddenGuessObjects?.[0]).not.toHaveProperty('world_location');
+    expect(hiddenGuessObjects?.[0]).not.toHaveProperty('source');
     const revealedGuessObjects: RoundGuessObject[] | undefined =
       resultsSession.currentGame?.state.roundGuessObjects;
     expect(revealedGuessObjects).toMatchObject([

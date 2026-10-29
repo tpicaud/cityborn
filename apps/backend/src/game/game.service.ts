@@ -77,7 +77,7 @@ export class GameService {
         ),
         guessObjects: guessObjects,
         roundGuessObjects: guessObjects.map(
-          ({ world_location, ...roundGuessObject }) => roundGuessObject,
+          ({ world_location, source, ...roundGuessObject }) => roundGuessObject,
         ),
       },
     };

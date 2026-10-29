@@ -63,7 +63,7 @@ export function buildRound(
 export function buildRoundGuessObject(
   overrides: Partial<z.input<typeof RoundGuessObjectSchema>> = {},
 ): RoundGuessObject {
-  const { world_location, ...guessObject }: FullGuessObject =
+  const { world_location, source, ...guessObject }: FullGuessObject =
     buildFullGuessObject();
 
   return RoundGuessObjectSchema.parse({ ...guessObject, ...overrides });
