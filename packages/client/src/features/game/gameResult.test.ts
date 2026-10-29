@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import {
   buildGame,
   buildGameState,
-  buildGuessObjectWithoutLocation,
+  buildRoundGuessObject,
   type Game,
   GameStatus,
   type GuessObjectId,
@@ -24,8 +24,8 @@ describe('createGameResults', () => {
       status: GameStatus.IN_RESULTS,
       state: buildGameState({
         guessObjectsIds: [firstObjectID, secondObjectID],
-        guessObjectsWithoutLocation: [
-          buildGuessObjectWithoutLocation({
+        roundGuessObjects: [
+          buildRoundGuessObject({
             id: firstObjectID,
             name: 'Ada Lovelace',
           }),

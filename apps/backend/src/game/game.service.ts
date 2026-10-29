@@ -24,6 +24,7 @@ import {
   hideGuessingRoundGuesses,
   resolveNextRound,
   revealGuessObject,
+  roundGuessObjectIds,
   toLightGame,
 } from '@cityborn/core';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -75,11 +76,9 @@ export class GameService {
           {} satisfies Record<PlayerId, PlayerResults>,
         ),
         guessObjects: guessObjects,
-        guessObjectsWithoutLocation: guessObjects.map(
-          ({ world_location, ...guessObjectWithoutLocation }) =>
-            guessObjectWithoutLocation,
+        roundGuessObjects: guessObjects.map(
+          ({ world_location, ...roundGuessObject }) => roundGuessObject,
         ),
-        revealedGuessObjects: [],
       },
     };
 
@@ -114,7 +113,7 @@ export class GameService {
         mode,
         gameConfig: game.config,
         players,
-        guessObjectsIds: game.state.guessObjectsIds,
+        guessObjectsIds: roundGuessObjectIds(game),
         results: game.state.results,
       },
       players.flatMap((player) =>

@@ -6,6 +6,7 @@ import {
   buildGameState,
   buildGuess,
   buildRound,
+  buildRoundGuessObject,
   type Coord,
   defaultGuess,
   type Game,
@@ -39,7 +40,7 @@ function buildGameInRound({
   return buildGame({
     state: buildGameState({
       guessObjectsIds: [guessObjectID],
-      revealedGuessObjects: [buildFullGuessObject({ id: guessObjectID })],
+      roundGuessObjects: [buildFullGuessObject({ id: guessObjectID })],
       currentRound: buildRound({
         status,
         guessObjectId: guessObjectID,
@@ -95,7 +96,10 @@ describe('createRoundResult', () => {
     });
     const game: Game = {
       ...roundGame,
-      state: { ...roundGame.state, revealedGuessObjects: [] },
+      state: {
+        ...roundGame.state,
+        roundGuessObjects: [buildRoundGuessObject({ id: guessObjectID })],
+      },
     };
 
     const roundResult: RoundResult | undefined = createRoundResult(

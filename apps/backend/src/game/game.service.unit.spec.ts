@@ -87,10 +87,9 @@ describe('GameService.createGame', () => {
       state: {
         guessObjectsIds: [guessObject.id],
         results: { host: { results: [] }, bob: { results: [] } },
-        revealedGuessObjects: [],
       },
     });
-    expect(game.state.guessObjectsWithoutLocation).toEqual([
+    expect(game.state.roundGuessObjects).toEqual([
       {
         id: guessObject.id,
         name: guessObject.name,
@@ -245,12 +244,15 @@ describe('GameService.applyGuess', () => {
     }),
   });
 
+  const { world_location, ...hiddenGuessObjectBornInParis }: FullGuessObject =
+    guessObjectBornInParis;
+
   function buildGuessingGame(): Game {
     return buildGame({
       state: buildGameState({
         guessObjectsIds: ['object-1'],
         results: { alice: { results: [] }, bob: { results: [] } },
-        revealedGuessObjects: [],
+        roundGuessObjects: [hiddenGuessObjectBornInParis],
         currentRound: buildRound({
           guessObjectId: 'object-1',
           playersGuesses: {},
@@ -284,7 +286,9 @@ describe('GameService.applyGuess', () => {
         win: true,
       },
     });
-    expect(game.state.revealedGuessObjects).toEqual([]);
+    expect(game.state.roundGuessObjects).toEqual([
+      hiddenGuessObjectBornInParis,
+    ]);
   });
 
   it('records a guess without coordinates as the default guess', async () => {
@@ -332,7 +336,7 @@ describe('GameService.applyGuess', () => {
     });
 
     expect(game.state.currentRound?.status).toBe(RoundStatus.SHOWING_RESULTS);
-    expect(game.state.revealedGuessObjects).toEqual([guessObjectBornInParis]);
+    expect(game.state.roundGuessObjects).toEqual([guessObjectBornInParis]);
   });
 
   it('rejects a guess when the guess object of the round no longer exists', async () => {

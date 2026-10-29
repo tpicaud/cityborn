@@ -1,7 +1,6 @@
 import { extendApi } from '@anatine/zod-openapi';
 import { z } from 'zod';
 import {
-  BaseGuessObjectSchema,
   FullGuessObjectSchema,
   GuessObjectIdSchema,
 } from '../guess-object/guess-object.schema';
@@ -104,19 +103,26 @@ export const RoundSchema = z.object({
   playersGuesses: PlayerGuessesSchema.optional(),
 });
 
+export const RoundGuessObjectSchema = FullGuessObjectSchema.partial({
+  world_location: true,
+});
+
 export const GameStateSchema = z.object({
+  /**
+   * @deprecated Utiliser l'ordre de `roundGuessObjects` à la place. Conservé
+   * pour les builds mobile publiées avant le calcul des scores côté serveur.
+   * @deprecatedSince 2026-10-29
+   */
   guessObjectsIds: z.array(GuessObjectIdSchema),
   results: PlayerResultsByIdSchema,
   currentRound: RoundSchema.optional(),
   /**
-   * @deprecated Utiliser `guessObjectsWithoutLocation` et
-   * `revealedGuessObjects` à la place. Conservé pour les builds mobile
-   * publiées avant le calcul des scores côté serveur.
+   * @deprecated Utiliser `roundGuessObjects` à la place. Conservé pour les
+   * builds mobile publiées avant le calcul des scores côté serveur.
    * @deprecatedSince 2026-10-28
    */
   guessObjects: z.array(FullGuessObjectSchema).optional(),
-  guessObjectsWithoutLocation: z.array(BaseGuessObjectSchema).optional(),
-  revealedGuessObjects: z.array(FullGuessObjectSchema).optional(),
+  roundGuessObjects: z.array(RoundGuessObjectSchema).optional(),
 });
 
 export const GameSchema = z.object({
@@ -147,6 +153,7 @@ export type Guess = z.infer<typeof GuessSchema>;
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 export type GameConfigChanges = Partial<Omit<GameConfig, 'categories'>>;
 export type Round = z.infer<typeof RoundSchema>;
+export type RoundGuessObject = z.infer<typeof RoundGuessObjectSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;
 export type Game = z.infer<typeof GameSchema>;
 

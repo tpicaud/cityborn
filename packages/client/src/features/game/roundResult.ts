@@ -4,8 +4,9 @@ import type {
   Game,
   Guess,
   GuessObjectId,
-  GuessObjectWithoutLocation,
   PlayerId,
+  RoundGuessObject,
+  WorldLocation,
 } from '@cityborn/api';
 import { PlayerIdSchema, RoundStatus } from '@cityborn/api';
 
@@ -26,24 +27,20 @@ export type RoundResult = {
   otherPlayersPoints: PlayerRoundPoints[];
 };
 
-export function currentGuessObject(
-  game: Game,
-): GuessObjectWithoutLocation | undefined {
+export function currentGuessObject(game: Game): RoundGuessObject | undefined {
   const guessObjectID: GuessObjectId | undefined =
     game.state.currentRound?.guessObjectId;
-  return game.state.guessObjectsWithoutLocation?.find(
-    ({ id }) => id === guessObjectID,
-  );
+  return game.state.roundGuessObjects?.find(({ id }) => id === guessObjectID);
 }
 
 export function currentRevealedGuessObject(
   game: Game,
 ): FullGuessObject | undefined {
-  const guessObjectID: GuessObjectId | undefined =
-    game.state.currentRound?.guessObjectId;
-  return game.state.revealedGuessObjects?.find(
-    ({ id }) => id === guessObjectID,
-  );
+  const guessObject: RoundGuessObject | undefined = currentGuessObject(game);
+  const worldLocation: WorldLocation | undefined = guessObject?.world_location;
+  return guessObject && worldLocation
+    ? { ...guessObject, world_location: worldLocation }
+    : undefined;
 }
 
 export function canSubmitGuess(

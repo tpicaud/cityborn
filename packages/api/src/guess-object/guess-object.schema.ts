@@ -68,7 +68,6 @@ export const PatchGuessObjectSchema = BaseGuessObjectSchema.omit({
     world_location_id: WorldLocationIdSchema.optional(),
   });
 
-export type GuessObjectWithoutLocation = z.infer<typeof BaseGuessObjectSchema>;
 export type GuessObject = z.infer<typeof GuessObjectSchema>;
 export type FullGuessObject = z.infer<typeof FullGuessObjectSchema>;
 export type GuessObjectDraft = z.infer<typeof GuessObjectDraftSchema>;

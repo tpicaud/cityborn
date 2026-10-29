@@ -4,6 +4,7 @@ import {
   type Game,
   GameStatus,
   type Guess,
+  type GuessObjectId,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -14,6 +15,13 @@ import {
 
 export const roundCountdownInSeconds: number = 3;
 
+export function roundGuessObjectIds(game: Game): GuessObjectId[] {
+  return (
+    game.state.roundGuessObjects?.map(({ id }) => id) ??
+    game.state.guessObjectsIds
+  );
+}
+
 export function beginGame(game: Game): Game {
   return {
     ...game,
@@ -22,7 +30,7 @@ export function beginGame(game: Game): Game {
       ...game.state,
       currentRound: {
         status: RoundStatus.GUESSING,
-        guessObjectId: game.state.guessObjectsIds[0],
+        guessObjectId: roundGuessObjectIds(game)[0],
         playersGuesses: {},
       },
     },
@@ -112,12 +120,13 @@ export function resolveNextRound(game: Game): {
   isGameOver: boolean;
 } {
   const results = aggregateGameResults(game);
+  const guessObjectIds: GuessObjectId[] = roundGuessObjectIds(game);
   const currentGuessObjectId = game.state.currentRound?.guessObjectId;
   const currentIndex = currentGuessObjectId
-    ? game.state.guessObjectsIds.indexOf(currentGuessObjectId)
+    ? guessObjectIds.indexOf(currentGuessObjectId)
     : -1;
 
-  if (currentIndex + 1 >= game.state.guessObjectsIds.length) {
+  if (currentIndex + 1 >= guessObjectIds.length) {
     return {
       game: {
         ...game,
@@ -136,7 +145,7 @@ export function resolveNextRound(game: Game): {
         results,
         currentRound: {
           status: RoundStatus.GUESSING,
-          guessObjectId: game.state.guessObjectsIds[currentIndex + 1],
+          guessObjectId: guessObjectIds[currentIndex + 1],
           playersGuesses: {},
         },
       },
@@ -180,10 +189,12 @@ export function revealGuessObject({
     ...game,
     state: {
       ...game.state,
-      revealedGuessObjects: [
-        ...(game.state.revealedGuessObjects ?? []),
-        guessObject,
-      ],
+      roundGuessObjects: game.state.roundGuessObjects?.map(
+        (roundGuessObject) =>
+          roundGuessObject.id === guessObject.id
+            ? guessObject
+            : roundGuessObject,
+      ),
     },
   };
 }

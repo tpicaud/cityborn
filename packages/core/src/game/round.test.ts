@@ -6,14 +6,20 @@ import {
   buildGameState,
   buildGuess,
   buildRound,
+  buildRoundGuessObject,
   defaultGuess,
   type FullGuessObject,
   type Game,
   type PlayerId,
   PlayerIdSchema,
+  type RoundGuessObject,
   RoundStatus,
 } from '@cityborn/api';
-import { hideGuessingRoundGuesses, revealGuessObject } from './round';
+import {
+  hideGuessingRoundGuesses,
+  revealGuessObject,
+  roundGuessObjectIds,
+} from './round';
 
 const alice: PlayerId = PlayerIdSchema.parse('alice');
 const bob: PlayerId = PlayerIdSchema.parse('bob');
@@ -56,15 +62,20 @@ describe('hideGuessingRoundGuesses', () => {
 });
 
 describe('revealGuessObject', () => {
-  it('appends the guess object to the revealed guess objects', () => {
-    const playedGuessObject: FullGuessObject = buildFullGuessObject({
+  it('adds the location to the guess object of the round only', () => {
+    const currentGuessObject: FullGuessObject = buildFullGuessObject({
       id: 'object-1',
     });
-    const currentGuessObject: FullGuessObject = buildFullGuessObject({
+    const nextGuessObject: RoundGuessObject = buildRoundGuessObject({
       id: 'object-2',
     });
     const game: Game = buildGame({
-      state: buildGameState({ revealedGuessObjects: [playedGuessObject] }),
+      state: buildGameState({
+        roundGuessObjects: [
+          buildRoundGuessObject({ id: 'object-1' }),
+          nextGuessObject,
+        ],
+      }),
     });
 
     const revealedGame: Game = revealGuessObject({
@@ -72,9 +83,30 @@ describe('revealGuessObject', () => {
       guessObject: currentGuessObject,
     });
 
-    assert.deepEqual(revealedGame.state.revealedGuessObjects, [
-      playedGuessObject,
+    assert.deepEqual(revealedGame.state.roundGuessObjects, [
       currentGuessObject,
+      nextGuessObject,
     ]);
+  });
+});
+
+describe('roundGuessObjectIds', () => {
+  it('reads the round order from the round guess objects', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        guessObjectsIds: ['object-1', 'object-2'],
+        roundGuessObjects: [buildRoundGuessObject({ id: 'object-2' })],
+      }),
+    });
+
+    assert.deepEqual(roundGuessObjectIds(game), ['object-2']);
+  });
+
+  it('falls back to the guess object ids of a game started before deploy', () => {
+    const game: Game = buildGame({
+      state: buildGameState({ guessObjectsIds: ['object-1', 'object-2'] }),
+    });
+
+    assert.deepEqual(roundGuessObjectIds(game), ['object-1', 'object-2']);
   });
 });

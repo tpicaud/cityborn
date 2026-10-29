@@ -1,8 +1,8 @@
 import type {
-  FullGuessObject,
   GameConfigPack,
   Pack,
   PlayerId,
+  RoundGuessObject,
   Session,
   SessionJoinAck,
   Theme,
@@ -541,8 +541,13 @@ describe('Session gateway over a real socket', () => {
         },
       },
     });
-    const revealedGuessObjects: FullGuessObject[] | undefined =
-      resultsSession.currentGame?.state.revealedGuessObjects;
+    const hiddenGuessObjects: RoundGuessObject[] | undefined =
+      roundSession.currentGame?.state.roundGuessObjects;
+    expect(hiddenGuessObjects).toEqual([
+      expect.not.objectContaining({ world_location: expect.anything() }),
+    ]);
+    const revealedGuessObjects: RoundGuessObject[] | undefined =
+      resultsSession.currentGame?.state.roundGuessObjects;
     expect(revealedGuessObjects).toMatchObject([
       { name: 'Tour Eiffel', world_location: { centroid: location.centroid } },
     ]);

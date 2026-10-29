@@ -1,8 +1,8 @@
 import {
   type Coord,
   type Game,
-  type GuessObjectWithoutLocation,
   type PlayerId,
+  type RoundGuessObject,
   RoundStatus,
 } from '@cityborn/api';
 import {
@@ -109,8 +109,7 @@ export default function Overlay({
 }: OverlayProps) {
   const [hasGuessed, setHasGuessed] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
-  const guessObject: GuessObjectWithoutLocation | undefined =
-    currentGuessObject(game);
+  const guessObject: RoundGuessObject | undefined = currentGuessObject(game);
   const roundResult: RoundResult | undefined = createRoundResult(
     game,
     localPlayerID,
