@@ -184,6 +184,7 @@ jobs:
     env:
       NEXT_PUBLIC_GOOGLE_MAP_API_KEY: dummy-key
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: dummy-client-id
+      NEXT_PUBLIC_WEB_APP_URL: https://cityborn.example.com
       NEXT_PUBLIC_REST_BACKEND_URL: https://api.example.com
       NEXT_PUBLIC_WEBSOCKET_BACKEND_URL: wss://ws.example.com
     steps:
