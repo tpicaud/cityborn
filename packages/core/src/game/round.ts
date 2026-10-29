@@ -148,6 +148,9 @@ export function resolveNextRound(game: Game): {
           guessObjectId: guessObjectIds[currentIndex + 1],
           playersGuesses: {},
         },
+        roundGuessObjects: game.state.roundGuessObjects?.map(
+          ({ world_location, source, ...roundGuessObject }) => roundGuessObject,
+        ),
       },
     },
     isGameOver: false,

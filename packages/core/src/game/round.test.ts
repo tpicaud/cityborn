@@ -17,6 +17,7 @@ import {
 } from '@cityborn/api';
 import {
   hideGuessingRoundGuesses,
+  resolveNextRound,
   revealGuessObject,
   roundGuessObjectIds,
 } from './round';
@@ -86,6 +87,30 @@ describe('revealGuessObject', () => {
     assert.deepEqual(revealedGame.state.roundGuessObjects, [
       currentGuessObject,
       nextGuessObject,
+    ]);
+  });
+});
+
+describe('resolveNextRound', () => {
+  it('hides the location of the played guess object in the next round', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        roundGuessObjects: [
+          buildFullGuessObject({ id: 'object-1' }),
+          buildRoundGuessObject({ id: 'object-2' }),
+        ],
+        currentRound: buildRound({
+          status: RoundStatus.SHOWING_RESULTS,
+          guessObjectId: 'object-1',
+        }),
+      }),
+    });
+
+    const { game: nextRoundGame }: { game: Game } = resolveNextRound(game);
+
+    assert.deepEqual(nextRoundGame.state.roundGuessObjects, [
+      buildRoundGuessObject({ id: 'object-1' }),
+      buildRoundGuessObject({ id: 'object-2' }),
     ]);
   });
 });
