@@ -20612,6 +20612,116 @@
                                   "world_location"
                                 ]
                               }
+                            },
+                            "roundGuessObjects": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "short_description": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "object",
+                                    "properties": {
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "external_id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "provider",
+                                      "external_id"
+                                    ]
+                                  },
+                                  "world_location": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "osm_type": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "display_name": {
+                                        "type": "string"
+                                      },
+                                      "addresstype": {
+                                        "type": "string"
+                                      },
+                                      "centroid": {},
+                                      "source": {
+                                        "type": "object",
+                                        "properties": {
+                                          "provider": {
+                                            "type": "string"
+                                          },
+                                          "external_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                          }
+                                        },
+                                        "required": [
+                                          "provider"
+                                        ]
+                                      },
+                                      "geometry": {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "Point",
+                                              "Polygon",
+                                              "MultiPolygon"
+                                            ]
+                                          },
+                                          "coordinates": {
+                                            "type": "array",
+                                            "items": {
+                                              "nullable": true
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "coordinates"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "osm_type",
+                                      "name",
+                                      "display_name",
+                                      "centroid",
+                                      "source",
+                                      "geometry"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name"
+                                ]
+                              }
                             }
                           },
                           "required": [
@@ -21801,6 +21911,116 @@
                                   "world_location"
                                 ]
                               }
+                            },
+                            "roundGuessObjects": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "short_description": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "object",
+                                    "properties": {
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "external_id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "provider",
+                                      "external_id"
+                                    ]
+                                  },
+                                  "world_location": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "osm_type": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "display_name": {
+                                        "type": "string"
+                                      },
+                                      "addresstype": {
+                                        "type": "string"
+                                      },
+                                      "centroid": {},
+                                      "source": {
+                                        "type": "object",
+                                        "properties": {
+                                          "provider": {
+                                            "type": "string"
+                                          },
+                                          "external_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                          }
+                                        },
+                                        "required": [
+                                          "provider"
+                                        ]
+                                      },
+                                      "geometry": {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "Point",
+                                              "Polygon",
+                                              "MultiPolygon"
+                                            ]
+                                          },
+                                          "coordinates": {
+                                            "type": "array",
+                                            "items": {
+                                              "nullable": true
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "coordinates"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "osm_type",
+                                      "name",
+                                      "display_name",
+                                      "centroid",
+                                      "source",
+                                      "geometry"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name"
+                                ]
+                              }
                             }
                           },
                           "required": [
@@ -22981,6 +23201,116 @@
                                 "world_location"
                               ]
                             }
+                          },
+                          "roundGuessObjects": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "short_description": {
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "type": "object",
+                                  "properties": {
+                                    "provider": {
+                                      "type": "string"
+                                    },
+                                    "external_id": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "provider",
+                                    "external_id"
+                                  ]
+                                },
+                                "world_location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "osm_type": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "display_name": {
+                                      "type": "string"
+                                    },
+                                    "addresstype": {
+                                      "type": "string"
+                                    },
+                                    "centroid": {},
+                                    "source": {
+                                      "type": "object",
+                                      "properties": {
+                                        "provider": {
+                                          "type": "string"
+                                        },
+                                        "external_id": {
+                                          "type": "string",
+                                          "nullable": true
+                                        }
+                                      },
+                                      "required": [
+                                        "provider"
+                                      ]
+                                    },
+                                    "geometry": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "Point",
+                                            "Polygon",
+                                            "MultiPolygon"
+                                          ]
+                                        },
+                                        "coordinates": {
+                                          "type": "array",
+                                          "items": {
+                                            "nullable": true
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "coordinates"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "osm_type",
+                                    "name",
+                                    "display_name",
+                                    "centroid",
+                                    "source",
+                                    "geometry"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -23312,6 +23642,116 @@
                               "id",
                               "name",
                               "world_location"
+                            ]
+                          }
+                        },
+                        "roundGuessObjects": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "short_description": {
+                                "type": "string"
+                              },
+                              "source": {
+                                "type": "object",
+                                "properties": {
+                                  "provider": {
+                                    "type": "string"
+                                  },
+                                  "external_id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "provider",
+                                  "external_id"
+                                ]
+                              },
+                              "world_location": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "osm_type": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "display_name": {
+                                    "type": "string"
+                                  },
+                                  "addresstype": {
+                                    "type": "string"
+                                  },
+                                  "centroid": {},
+                                  "source": {
+                                    "type": "object",
+                                    "properties": {
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "external_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                      }
+                                    },
+                                    "required": [
+                                      "provider"
+                                    ]
+                                  },
+                                  "geometry": {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "Point",
+                                          "Polygon",
+                                          "MultiPolygon"
+                                        ]
+                                      },
+                                      "coordinates": {
+                                        "type": "array",
+                                        "items": {
+                                          "nullable": true
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "coordinates"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "osm_type",
+                                  "name",
+                                  "display_name",
+                                  "centroid",
+                                  "source",
+                                  "geometry"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
                             ]
                           }
                         }
@@ -24373,6 +24813,116 @@
                               "status",
                               "guessObjectId"
                             ]
+                          },
+                          "roundGuessObjects": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "short_description": {
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "type": "object",
+                                  "properties": {
+                                    "provider": {
+                                      "type": "string"
+                                    },
+                                    "external_id": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "provider",
+                                    "external_id"
+                                  ]
+                                },
+                                "world_location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "osm_type": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "display_name": {
+                                      "type": "string"
+                                    },
+                                    "addresstype": {
+                                      "type": "string"
+                                    },
+                                    "centroid": {},
+                                    "source": {
+                                      "type": "object",
+                                      "properties": {
+                                        "provider": {
+                                          "type": "string"
+                                        },
+                                        "external_id": {
+                                          "type": "string",
+                                          "nullable": true
+                                        }
+                                      },
+                                      "required": [
+                                        "provider"
+                                      ]
+                                    },
+                                    "geometry": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "Point",
+                                            "Polygon",
+                                            "MultiPolygon"
+                                          ]
+                                        },
+                                        "coordinates": {
+                                          "type": "array",
+                                          "items": {
+                                            "nullable": true
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "coordinates"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "osm_type",
+                                    "name",
+                                    "display_name",
+                                    "centroid",
+                                    "source",
+                                    "geometry"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -25455,6 +26005,116 @@
                               "status",
                               "guessObjectId"
                             ]
+                          },
+                          "roundGuessObjects": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "short_description": {
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "type": "object",
+                                  "properties": {
+                                    "provider": {
+                                      "type": "string"
+                                    },
+                                    "external_id": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "provider",
+                                    "external_id"
+                                  ]
+                                },
+                                "world_location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "osm_type": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "display_name": {
+                                      "type": "string"
+                                    },
+                                    "addresstype": {
+                                      "type": "string"
+                                    },
+                                    "centroid": {},
+                                    "source": {
+                                      "type": "object",
+                                      "properties": {
+                                        "provider": {
+                                          "type": "string"
+                                        },
+                                        "external_id": {
+                                          "type": "string",
+                                          "nullable": true
+                                        }
+                                      },
+                                      "required": [
+                                        "provider"
+                                      ]
+                                    },
+                                    "geometry": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "Point",
+                                            "Polygon",
+                                            "MultiPolygon"
+                                          ]
+                                        },
+                                        "coordinates": {
+                                          "type": "array",
+                                          "items": {
+                                            "nullable": true
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "coordinates"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "osm_type",
+                                    "name",
+                                    "display_name",
+                                    "centroid",
+                                    "source",
+                                    "geometry"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -30791,6 +31451,7 @@
     },
     "/guess-object/": {
       "get": {
+        "deprecated": true,
         "tags": [
           "GuessObjects"
         ],
@@ -31593,6 +32254,7 @@
     },
     "/guess-object/{id}": {
       "get": {
+        "deprecated": true,
         "tags": [
           "GuessObjects"
         ],
