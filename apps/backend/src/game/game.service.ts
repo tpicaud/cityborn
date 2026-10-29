@@ -9,7 +9,6 @@ import {
   GameIdSchema,
   GameStatus,
   type Guess,
-  type GuessObjectId,
   type PlayerId,
   type PlayerResults,
   type Round,
@@ -164,9 +163,17 @@ export class GameService {
     const currentRound: Round | undefined = game.state.currentRound;
     if (!currentRound) return game;
 
-    const guessObject: FullGuessObject = await this.requireGuessObject(
-      currentRound.guessObjectId,
-    );
+    const [guessObject]: FullGuessObject[] =
+      await this.guessObjectService.findFullBy({
+        ids: [currentRound.guessObjectId],
+      });
+    if (!guessObject) {
+      throw new NotFoundException({
+        code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+        message: 'Guess object of the current round not found',
+      });
+    }
+
     const guess: Guess = coordinates
       ? createGuess(guessObject, coordinates)
       : defaultGuess;
@@ -195,19 +202,6 @@ export class GameService {
 
   toLightGame(game: Game): Game {
     return toLightGame(game);
-  }
-
-  private async requireGuessObject(
-    guessObjectId: GuessObjectId,
-  ): Promise<FullGuessObject> {
-    const [guessObject]: FullGuessObject[] =
-      await this.guessObjectService.findFullBy({ ids: [guessObjectId] });
-    if (guessObject) return guessObject;
-
-    throw new NotFoundException({
-      code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
-      message: 'Guess object of the current round not found',
-    });
   }
 
   private async generateUniqueGameID(): Promise<GameId> {
