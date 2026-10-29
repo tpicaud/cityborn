@@ -35,6 +35,7 @@ const cookieAuthContract = c.router(
      */
     signUp: {
       method: 'POST',
+      deprecated: true,
       path: '/sign-up',
       body: CreateUserSchema,
       responses: { 201: UserSchema },
@@ -99,6 +100,7 @@ export const authContract = c.router(
      */
     signUp: {
       method: 'POST',
+      deprecated: true,
       path: '/sign-up',
       body: CreateUserSchema,
       responses: { 201: AuthResponseSchema },
