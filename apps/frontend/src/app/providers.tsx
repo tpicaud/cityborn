@@ -22,7 +22,7 @@ type AppProvidersProps = {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
         <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
           <ApiProvider contractClient={contractClient} authApi={authApi}>
             <WsProvider createSocket={createSocketConnection}>
