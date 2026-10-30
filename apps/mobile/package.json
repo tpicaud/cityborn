@@ -2,6 +2,13 @@
   "name": "cityborn-mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "expo": {
+    "autolinking": {
+      "include": [
+        "tamagui"
+      ]
+    }
+  },
   "scripts": {
     "dev": "pnpm check-env:client:development && expo start",
     "prebuild": "dotenv -c development -- expo prebuild --clean",
