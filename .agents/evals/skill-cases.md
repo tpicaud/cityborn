@@ -15,6 +15,7 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « Ajoute à `@cityborn/client` le chargement du classement. » | `conventions-client` |
 | « Ajoute l'écran de classement au frontend et au mobile. » | `conventions-client-apps`, `conventions-client` |
 | « Ajoute au frontend une page publique `/player/<username>`. » | `conventions-client-apps` |
+| « Ajoute un composant `Card` au design system. » | `conventions-client-apps` |
 | « Ajoute la variable `SENTRY_DSN` au backend. » | `conventions-environment` |
 | « Rédige une issue pour le bug de reconnexion. » | `manage-issue` |
 | « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `manage-issue`, puis `grilling` avant le brouillon |
