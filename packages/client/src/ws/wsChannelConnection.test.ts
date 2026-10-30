@@ -58,15 +58,18 @@ function createRecordedSocket(): RecordedSocket {
 }
 
 describe('toWsChannelConnection', () => {
-  it('attaches and detaches the same listener on the socket', () => {
+  it('detaches the listener it attached on the socket', () => {
     const { socket, subscriptions, unsubscriptions }: RecordedSocket =
       createRecordedSocket();
     const connection: WsChannelConnection<WsChannel> =
       toWsChannelConnection(socket);
     const handleSessionUpdate: (session: Session) => void = () => {};
+    const unsubscribe: () => void = connection.on(
+      sessionWsServerEvent.update,
+      handleSessionUpdate,
+    );
 
-    connection.on(sessionWsServerEvent.update, handleSessionUpdate);
-    connection.off(sessionWsServerEvent.update, handleSessionUpdate);
+    unsubscribe();
 
     assert.deepEqual(subscriptions, [['session:update', handleSessionUpdate]]);
     assert.deepEqual(unsubscriptions, [
