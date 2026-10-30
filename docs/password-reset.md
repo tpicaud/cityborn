@@ -1,34 +1,15 @@
 # Réinitialisation du mot de passe
 
-Le frontend statique et le mobile demandent directement le lien au backend Nest via `POST /auth/request-password-reset`, depuis le port `AuthApi` partagé. La finalisation se fait sur la page publique web `/reset-password`. Le jeton arrive dans le fragment `#token=…` : il ne figure ni dans l’URL HTTP de la page, ni dans le Referer. La page le transmet uniquement dans le corps de la soumission de réinitialisation.
+Le web et le mobile demandent un lien via `POST /auth/request-password-reset` ; le mot de passe se change sur la page web `/reset-password#token=…`. Le jeton reste dans le fragment pour n’apparaître ni dans les logs HTTP ni dans le Referer.
 
-La réponse de demande est identique pour une adresse inconnue, un compte social sans mot de passe et un compte éligible. La recherche et l’envoi sont asynchrones, après la réservation Redis commune à toutes les adresses. Les échecs produisent les événements `send_password_reset_email` ou `send_password_changed_email`. Les erreurs de ces opérations sont signalées sans reprendre le message brut, le corps du mail ni le jeton. Ces envois utilisent le même service d’e-mail que la vérification d’adresse ; ils ne disposent pas d’une file durable.
+Valider un nouveau mot de passe vérifie un compte non vérifié et incrémente `User.authVersion` : toutes les sessions antérieures, HTTP comme WebSocket, sont révoquées.
 
-La réservation par adresse dure 180 secondes et ne prolonge pas son délai en cas de nouvelle demande refusée. Le compteur IP autorise cinq demandes dans une fenêtre de 900 secondes. Les adresses sont hachées dans les clés Redis. Le navigateur appelle directement `NEXT_PUBLIC_REST_BACKEND_URL` ; le frontend ne relaie aucun en-tête IP. Le backend détermine l’IP avec sa configuration Express existante (`trust proxy = 1`). Le proxy d’entrée doit donc remplacer ou compléter `X-Forwarded-For` avec l’adresse réelle du client ; une chaîne de proxies différente doit adapter cette configuration.
+## Exploitation
 
-## Données et sessions
+- **Quotas** : un lien par adresse toutes les 3 minutes, 5 demandes par IP sur 15 minutes.
+- **IP client** : le backend lit `X-Forwarded-For` avec `trust proxy = 1`. Le proxy d’entrée doit y placer l’adresse réelle du client, sinon le quota par IP vise le proxy.
+- **E-mails** : aucune file durable. Un échec d’envoi est seulement tracé (`send_password_reset_email`, `send_password_changed_email`) ; l’utilisateur redemande un lien.
 
-La réinitialisation réutilise `User.authVersion` et les services de révocation communs à l’authentification. `PasswordResetToken` conserve les demandes de réinitialisation. Un compte possède au plus un jeton de réinitialisation, stocké en SHA-256 et valable 30 minutes. Le jeton de vérification d’adresse est indépendant jusqu’à la validation du nouveau mot de passe.
+## Test mobile en local
 
-La suppression conditionnelle du jeton, l’appel à `UserService.updatePassword` et la vérification d’un compte non vérifié partagent une transaction. Le mot de passe est haché, `authVersion` est incrémenté et les anciens liens de vérification d’adresse sont supprimés. Une validation concurrente perdante ne peut ni modifier le mot de passe, ni réutiliser le lien.
-
-Les JWT d’accès et de renouvellement, transmis par bearer ou par cookies, transportent l’`authVersion` observée lors de l’authentification. Les JWT antérieurs à la migration correspondent à la version zéro, ce qui conserve les sessions existantes jusqu’à une réinitialisation. Les guards HTTP et le middleware de handshake commun vérifient la version persistée via `AuthTokenService`. Après commit, les échecs de connexion du compte sont effacés via `RateLimitService.clearFailedSignIns` pour permettre l’utilisation immédiate du nouveau mot de passe. Les quotas d’envoi de liens restent inchangés. Si le nettoyage Redis échoue, l’événement `clear_password_reset_failed_sign_ins` conserve un diagnostic sûr et la révocation des sockets ainsi que l’envoi de confirmation sont quand même déclenchés ; la transaction déjà validée reste acquise. `AuthenticatedSocketService.disconnectOlderSessions` déconnecte les sockets des anciennes versions via l’adaptateur Redis. Le handshake rejoint les rooms d’authentification puis vérifie à nouveau la version pour couvrir une réinitialisation concurrente avec sa connexion. Les messages attendent la fin de l’authentification initiale.
-
-La seule migration ajoutée crée `PasswordResetToken` ; le compteur `authVersion` et son infrastructure sont ceux de main.
-
-## Recette manuelle web et mobile
-
-Utiliser une boîte e-mail de test et un compte avec mot de passe. Garder une session authentifiée ouverte dans une autre fenêtre ou sur un autre appareil.
-
-Pour le test mobile local, conserver `FRONTEND_URL=http://localhost:3000` dans `apps/backend/.env`. Lancer `pnpm dev:mobile`, puis `pnpm frontend:dev` dans un autre terminal depuis la racine du projet si le frontend ne tourne pas déjà. Demander le lien depuis l’application mobile, ouvrir l’e-mail et changer le mot de passe sur l’ordinateur de développement, puis tester la reconnexion dans l’application mobile. Après un changement de `FRONTEND_URL`, redémarrer le backend et demander un nouveau lien.
-
-1. Sur chaque formulaire de connexion, ouvrir « Mot de passe oublié ? ». Vérifier le champ e-mail, les erreurs de saisie, le chargement, la désactivation pendant l’envoi et la fermeture de la modale, y compris avec le clavier mobile ouvert.
-2. Demander un lien pour un compte avec mot de passe, puis une adresse inconnue et un compte exclusivement Google/Apple. Vérifier le même message public. Seul le compte avec mot de passe reçoit le lien.
-3. Vérifier la mise en page et les libellés de l’e-mail sur ordinateur et téléphone. Pour la recette locale, ouvrir le lien sur l’ordinateur de développement, puis recharger la page : le lien reste utilisable tant qu’aucun mot de passe n’a été validé. Vérifier aussi la page aux dimensions d’un écran mobile avec le mode responsive du navigateur.
-4. Vérifier les erreurs pour un mot de passe trop court, trop long, sans majuscule ou chiffre, et pour deux champs différents. Couper le réseau puis réessayer après rétablissement.
-5. Valider : vérifier le message de succès, l’e-mail de confirmation sans mot de passe, le bouton « Retour à l’accueil » et la mention de reconnexion mobile. Sur le web, revenir à l’accueil puis ouvrir « Connexion ». L’ancien mot de passe et les anciennes sessions doivent être refusés ; le nouveau doit fonctionner. Un compte non vérifié devient vérifié et ses anciens liens de vérification ne fonctionnent plus.
-6. Dans le même onglet, passer d’un lien à un autre pendant la soumission du formulaire : les champs sont vidés, seul le lien courant détermine l’écran. Tester également le retour arrière. Réouvrir le lien consommé, un lien expiré ou `/reset-password` sans fragment. Sans jeton, vérifier le message dès l’ouverture ; pour un jeton invalide, expiré ou consommé, le vérifier après soumission. Vérifier la possibilité de redemander un lien et le bouton « Retour à l’accueil », qui permet ensuite d’ouvrir « Connexion ».
-7. Bloquer la connexion avec dix mots de passe incorrects, puis terminer une réinitialisation : le nouveau mot de passe permet de se connecter immédiatement.
-8. Demander deux liens à moins de trois minutes d’intervalle : un seul e-mail est envoyé et le premier lien reste valide. Après trois minutes, demander un nouveau lien : le précédent devient invalide. Une sixième demande sur la même IP en quinze minutes renvoie la limite, quelle que soit l’adresse.
-
-Les tests automatiques couvrent les règles métier, les limites Redis, la concurrence et le rollback PostgreSQL, les validations serveur, ainsi que le parcours HTTP et la déconnexion d’une socket réelle. Les interfaces et la livraison réelle via le fournisseur d’e-mail nécessitent cette recette manuelle.
+Garder `FRONTEND_URL=http://localhost:3000` dans `apps/backend/.env` et lancer `pnpm frontend:dev` à côté de `pnpm dev:mobile`. Le lien reçu s’ouvre sur l’ordinateur de développement ; la reconnexion se teste ensuite dans l’app. Après un changement de `FRONTEND_URL`, redémarrer le backend et redemander un lien.
