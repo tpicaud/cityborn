@@ -24,6 +24,7 @@ Monorepo pnpm/turbo, TypeScript partout. Ce fichier ne porte que le contexte tra
 
 S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle technique.
 
+- **Simplicité** : les règles de découpage servent la lisibilité ; à architecture respectée, la solution la plus simple l'emporte.
 - **Module profond** : un module (service, hook, sous-dossier) couvre une responsabilité entière derrière une surface publique courte ; ses étapes, dépendances et configuration restent privées.
   - Symptôme : l'appelant transmet un secret, un client d'infrastructure ou une option interne.
   - Symptôme : un export que seul son propre fichier lit.
