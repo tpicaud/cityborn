@@ -26,7 +26,7 @@ installFrenchZodErrorMap();
 
 export default function RootLayout() {
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
       <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
         <ApiProvider
           contractClient={contractClient}
