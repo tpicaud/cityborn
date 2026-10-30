@@ -3,7 +3,6 @@
 import { type Session, SessionIdSchema, SessionMode } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
@@ -14,7 +13,6 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import { joinableSessionPath, sessionPath } from './sessionPath';
 
 const sessionCodeLength: number = 6;
@@ -53,8 +51,6 @@ export type SessionLauncher = {
   playSolo: () => Promise<void>;
   playMulti: () => Promise<void>;
   joinSession: FormSubmitHandler;
-  authenticationRequired: boolean;
-  dismissAuthenticationRequired: () => void;
 };
 
 const joinSessionFormDefaultValues: JoinSessionFormInput = { code: '' };
@@ -65,9 +61,6 @@ export function useSessionLauncher({
   const { sessionApi }: DomainApis = useDomainApis();
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
-  const { user }: CurrentUser = useCurrentUser();
-  const [authenticationRequired, setAuthenticationRequired] =
-    useState<boolean>(false);
   const joinSessionForm: JoinSessionForm = useForm<
     JoinSessionFormInput,
     undefined,
@@ -89,11 +82,6 @@ export function useSessionLauncher({
   };
 
   const playMulti: () => Promise<void> = async (): Promise<void> => {
-    if (!user) {
-      setAuthenticationRequired(true);
-      return;
-    }
-
     await openNewSession(SessionMode.MULTI);
   };
 
@@ -115,7 +103,5 @@ export function useSessionLauncher({
     playSolo: () => openNewSession(SessionMode.SOLO),
     playMulti,
     joinSession: joinSessionForm.handleSubmit(joinSession),
-    authenticationRequired,
-    dismissAuthenticationRequired: () => setAuthenticationRequired(false),
   };
 }

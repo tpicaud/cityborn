@@ -75,6 +75,8 @@ function createFakeClient({
         ...cookieRoutes,
       },
       signUp: unexpectedCall,
+      renewVerificationEmail: unexpectedCall,
+      updateEmail: unexpectedCall,
       signIn: unexpectedCall,
       signInWithGoogle: unexpectedCall,
       signInWithApple: unexpectedCall,

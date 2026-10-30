@@ -13,11 +13,13 @@ export class PrismaPasswordResetRepository implements PasswordResetRepository {
 
   async replaceToken({
     userId,
+    email,
     authVersion,
     tokenHash,
     expiresAt,
   }: {
     userId: UserId;
+    email: string;
     authVersion: AuthVersion;
     tokenHash: string;
     expiresAt: Date;
@@ -25,7 +27,8 @@ export class PrismaPasswordResetRepository implements PasswordResetRepository {
     const tokens: { userId: string }[] = await this.txHost.tx.$queryRaw`
       WITH locked_user AS (
         SELECT id FROM "User"
-        WHERE id = ${userId}::uuid AND "authVersion" = ${authVersion}
+        WHERE id = ${userId}::uuid AND email = ${email}
+          AND "authVersion" = ${authVersion}
         FOR UPDATE
       )
       INSERT INTO "PasswordResetToken" ("userId", "tokenHash", "expiresAt")

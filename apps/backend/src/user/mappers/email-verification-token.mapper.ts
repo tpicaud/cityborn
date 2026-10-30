@@ -9,6 +9,7 @@ export const EmailVerificationTokenMapper = {
     return {
       id: prismaToken.id,
       userId: UserIdSchema.parse(prismaToken.userId),
+      email: prismaToken.email,
       expiresAt: prismaToken.expiresAt,
       createdAt: prismaToken.createdAt,
     };

@@ -6,6 +6,7 @@ import {
   type SignIn,
   type SignInWithApple,
   type SignInWithGoogle,
+  type UpdateEmail,
   type UpdatePassword,
   type User,
   type UserId,
@@ -18,7 +19,6 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -71,17 +71,12 @@ export class AuthService {
 
     const hash: string = await hashPassword(password);
 
-    const user = await this.userService.createUser({
+    const user: User = await this.userService.createUser({
       email,
       username,
       type: 'email',
       password: hash,
     });
-    if (!user)
-      throw new InternalServerErrorException({
-        code: ErrorCode.UNKNOWN_ERROR,
-        message: `Error creating user in database`,
-      });
 
     void this.sendVerificationEmail(user).catch((error: unknown) => {
       this.wideEventService.recordOperationError(error, {
@@ -333,6 +328,36 @@ export class AuthService {
     await this.sendVerificationEmail(user, verificationEmailCooldown);
   }
 
+  async renewVerificationEmail({
+    verification_token,
+  }: VerifyEmailData): Promise<void> {
+    const user: User =
+      await this.userService.findVerificationTokenOwner(verification_token);
+    if (user.isVerified) return;
+    await this.sendVerificationEmail(user, verificationEmailCooldown);
+  }
+
+  async updateEmail({
+    user,
+    email,
+  }: UpdateEmail & { user: User }): Promise<User> {
+    await this.rateLimitService.consumeEmailChange(user.id);
+    const updatedUser: User = await this.userService.updateEmail({
+      user,
+      email,
+    });
+    if (updatedUser.email !== user.email) {
+      void this.sendVerificationEmail(updatedUser).catch((error: unknown) => {
+        this.wideEventService.recordOperationError(error, {
+          domain: 'auth',
+          operation: 'send_verification_email',
+          userId: updatedUser.id,
+        });
+      });
+    }
+    return updatedUser;
+  }
+
   async verifyEmail(verifyEmailData: VerifyEmailData): Promise<PublicUser> {
     const user = await this.userService.verifyEmail(
       verifyEmailData.verification_token,
@@ -350,10 +375,11 @@ export class AuthService {
     resendCooldownMs?: number,
   ): Promise<void> {
     const verificationToken =
-      await this.userService.createEmailVerificationToken(
-        UserIdSchema.parse(user.id),
-        resendCooldownMs,
-      );
+      await this.userService.createEmailVerificationToken({
+        userId: UserIdSchema.parse(user.id),
+        email: user.email,
+        cooldownMs: resendCooldownMs,
+      });
     await this.mailService.sendMail(
       buildMailOptions('verification-email', {
         email: user.email,

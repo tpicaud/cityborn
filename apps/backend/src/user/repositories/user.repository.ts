@@ -28,6 +28,7 @@ export interface UserRepository {
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findCredentialsByEmail(email: string): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
   findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null>;
@@ -37,8 +38,16 @@ export interface UserRepository {
     username: Username,
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null>;
-  markEmailVerified(userId: UserId): Promise<User>;
+  markEmailVerified(emailOwnership: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null>;
   updateUsername(userId: UserId, username: Username): Promise<User>;
+  updateEmail(emailUpdate: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null>;
+  deletePasswordResetTokensByUserId(userId: UserId): Promise<void>;
   updatePassword(userId: UserId, passwordHash: string): Promise<void>;
   incrementAuthVersion(userId: UserId): Promise<AuthVersion>;
   reclaimUnverifiedAccount(

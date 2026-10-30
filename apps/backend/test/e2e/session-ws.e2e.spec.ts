@@ -15,11 +15,13 @@ import {
   buildTheme,
   buildUser,
   buildWorldLocation,
+  contract,
   defaultGuess,
   ErrorCode,
   PlayerIdSchema,
   RoundStatus,
   SessionJoinAckSchema,
+  SessionMode,
   SessionSchema,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -32,6 +34,7 @@ import {
   type Socket,
   type SocketOptions,
 } from 'socket.io-client';
+import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
@@ -182,6 +185,32 @@ describe('Session gateway over a real socket', () => {
       ...session.players,
       { username: playerID, isGuest: true, connected: true },
     ]);
+  });
+
+  it('lets a guest create a multi session and join it with a guest name', async () => {
+    const creation: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createSession.path)
+      .send({ mode: SessionMode.MULTI })
+      .expect(201);
+    const session: Session = SessionSchema.parse(creation.body);
+    const client: Socket = await connectClient();
+    const playerID: PlayerId = PlayerIdSchema.parse('guest');
+    const broadcast: Promise<unknown> = nextEvent(
+      client,
+      sessionWsServerEvent.update,
+    );
+
+    const ack: unknown = await emitWithAck(client, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID,
+    });
+
+    expect(ack).toEqual({ success: true, reconnectToken: expect.any(String) });
+    expect(SessionSchema.parse(await broadcast)).toMatchObject({
+      id: session.id,
+      mode: SessionMode.MULTI,
+      players: [{ username: playerID, isGuest: true, connected: true }],
+    });
   });
 
   it('authenticates a reconnect and broadcasts the disconnection with a new host after the grace period', async () => {

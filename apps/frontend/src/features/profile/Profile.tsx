@@ -39,6 +39,12 @@ export const Profile = ({ user }: { user: User }) => {
     startUsernameEdit,
     cancelUsernameEdit,
     submitUsername,
+    emailForm,
+    isEditingEmail,
+    isEmailUpdated,
+    startEmailEdit,
+    cancelEmailEdit,
+    submitEmail,
     passwordForm,
     isPasswordDialogOpen,
     isPasswordUpdated,
@@ -115,9 +121,61 @@ export const Profile = ({ user }: { user: User }) => {
             </>
           )}
         </Box>
-        <Typography>
-          <strong>Email :</strong> {user.email}
-        </Typography>
+        <Box
+          component="form"
+          onSubmit={submitEmail}
+          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+        >
+          {isEditingEmail ? (
+            <>
+              <TextField
+                type="email"
+                label="Email"
+                size="small"
+                {...emailForm.register('email')}
+                error={!!emailForm.formState.errors.email}
+                helperText={emailForm.formState.errors.email?.message}
+              />
+              <IconButton
+                type="submit"
+                aria-label="Valider l'adresse e-mail"
+                disabled={emailForm.formState.isSubmitting}
+              >
+                <CheckIcon />
+              </IconButton>
+              <IconButton
+                type="button"
+                aria-label="Annuler la correction de l'adresse e-mail"
+                onClick={cancelEmailEdit}
+              >
+                <CloseIcon />
+              </IconButton>
+            </>
+          ) : (
+            <>
+              <Typography sx={{ flex: 1, overflowWrap: 'anywhere' }}>
+                <strong>Email :</strong> {user.email}
+              </Typography>
+              {!user.isVerified && (
+                <IconButton
+                  type="button"
+                  aria-label="Corriger l'adresse e-mail"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    startEmailEdit();
+                  }}
+                >
+                  <EditIcon />
+                </IconButton>
+              )}
+            </>
+          )}
+        </Box>
+        {isEmailUpdated && (
+          <Alert severity="success">
+            Un lien de vérification a été envoyé à ta nouvelle adresse.
+          </Alert>
+        )}
         {user.type === 'email' && (
           <Button variant="outlined" onClick={openPasswordDialog}>
             Modifier mon mot de passe

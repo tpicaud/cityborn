@@ -25,12 +25,14 @@ const publicAuthRoutes = c.router({
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
   verifyEmail: contract.auth.verifyEmail,
+  renewVerificationEmail: contract.auth.renewVerificationEmail,
 });
 
 const protectedAuthRoutes = c.router({
   me: contract.auth.me,
   deleteUser: contract.auth.deleteUser,
   resendVerificationEmail: contract.auth.resendVerificationEmail,
+  updateEmail: contract.auth.updateEmail,
 });
 
 const refreshRoutes = c.router({
@@ -81,6 +83,10 @@ export class AuthController {
         status: 200 as const,
         body: await this.authService.verifyEmail(body),
       }),
+      renewVerificationEmail: async ({ body }) => {
+        await this.authService.renewVerificationEmail(body);
+        return { status: 202 as const, body: {} };
+      },
     });
   }
 
@@ -100,6 +106,10 @@ export class AuthController {
         await this.authService.resendVerificationEmail(user);
         return { status: 200 as const, body: {} };
       },
+      updateEmail: async ({ body }) => ({
+        status: 200 as const,
+        body: await this.authService.updateEmail({ user, ...body }),
+      }),
     });
   }
 

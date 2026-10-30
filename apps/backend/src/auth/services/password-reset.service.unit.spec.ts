@@ -181,6 +181,7 @@ describe('PasswordResetService.request', () => {
     expect(token).toMatch(/^[a-f0-9]{64}$/);
     expect(passwordResetRepository.replaceToken).toHaveBeenCalledWith({
       userId: user.id,
+      email: user.email,
       authVersion: 0,
       tokenHash: createHash('sha256').update(token).digest('hex'),
       expiresAt: expect.any(Date),
@@ -240,6 +241,56 @@ describe('PasswordResetService.reset', () => {
     password: 'NewPass1',
     confirmPassword: 'NewPass1',
   };
+
+  it('verifies an unverified account and revokes older sessions after reset', async () => {
+    const {
+      passwordResetService,
+      passwordResetRepository,
+      userService,
+      authenticatedSocketService,
+    }: ReturnType<typeof createPasswordResetService> =
+      createPasswordResetService();
+    const user: User = buildUser({ isVerified: false });
+    passwordResetRepository.consumeToken.mockResolvedValue(user.id);
+    userService.findCredentialsById.mockResolvedValue({
+      authSession: { user, authVersion: 2 },
+      passwordHash: 'old-hash',
+    });
+    userService.updatePassword.mockResolvedValue(3);
+    userService.verifyEmailOwnership.mockResolvedValue(
+      buildUser({ ...user, isVerified: true }),
+    );
+
+    await passwordResetService.reset(resetPassword);
+
+    expect(userService.verifyEmailOwnership).toHaveBeenCalledWith({
+      userId: user.id,
+      email: user.email,
+    });
+    expect(
+      authenticatedSocketService.disconnectOlderSessions,
+    ).toHaveBeenCalledWith(user.id, 3);
+  });
+
+  it('keeps a verified account verified without repeating email verification', async () => {
+    const {
+      passwordResetService,
+      passwordResetRepository,
+      userService,
+    }: ReturnType<typeof createPasswordResetService> =
+      createPasswordResetService();
+    const user: User = buildUser({ isVerified: true });
+    passwordResetRepository.consumeToken.mockResolvedValue(user.id);
+    userService.findCredentialsById.mockResolvedValue({
+      authSession: { user, authVersion: 2 },
+      passwordHash: 'old-hash',
+    });
+    userService.updatePassword.mockResolvedValue(3);
+
+    await passwordResetService.reset(resetPassword);
+
+    expect(userService.verifyEmailOwnership).not.toHaveBeenCalled();
+  });
 
   it('rejects a missing, expired or consumed token without changing the password', async () => {
     const {

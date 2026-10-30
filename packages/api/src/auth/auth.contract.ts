@@ -13,6 +13,7 @@ import {
   SignInSchema,
   SignInWithAppleSchema,
   SignInWithGoogleSchema,
+  UpdateEmailSchema,
   UpdatePasswordSchema,
   VerifyEmailDataSchema,
 } from './auth.schema';
@@ -122,6 +123,12 @@ export const authContract = c.router(
       body: VerifyEmailDataSchema,
       responses: { 200: PublicUserSchema },
     },
+    renewVerificationEmail: {
+      method: 'POST',
+      path: '/renew-verification-email',
+      body: VerifyEmailDataSchema,
+      responses: { 202: emptyResponseSchema },
+    },
     deleteUser: {
       method: 'POST',
       path: '/delete-user',
@@ -133,6 +140,12 @@ export const authContract = c.router(
       path: '/password',
       body: UpdatePasswordSchema,
       responses: { 200: AuthResponseSchema },
+    },
+    updateEmail: {
+      method: 'PATCH',
+      path: '/email',
+      body: UpdateEmailSchema,
+      responses: { 200: UserSchema },
     },
     signOut: {
       method: 'POST',

@@ -10,6 +10,7 @@ export class RateLimitService {
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
   private readonly failedSignInLimiter: RateLimiterRedis;
+  private readonly emailChangeLimiter: RateLimiterRedis;
 
   constructor(private readonly redisService: RedisService) {
     this.passwordResetLimiter = new RateLimiterRedis({
@@ -42,6 +43,12 @@ export class RateLimitService {
       points: 10,
       duration: 15 * 60,
     });
+    this.emailChangeLimiter = new RateLimiterRedis({
+      storeClient: this.redisService.redisClient,
+      keyPrefix: 'rl:auth:email-change',
+      points: 5,
+      duration: 60 * 60,
+    });
   }
 
   async consumePasswordReset(ip: string): Promise<RateLimiterRes> {
@@ -66,6 +73,10 @@ export class RateLimitService {
 
   async consumeWsMessage(key: string): Promise<RateLimiterRes> {
     return this.wsMessageLimiter.consume(key);
+  }
+
+  async consumeEmailChange(userId: UserId): Promise<void> {
+    await this.emailChangeLimiter.consume(userId);
   }
 
   async assertSignInAllowed(userId: UserId): Promise<void> {
