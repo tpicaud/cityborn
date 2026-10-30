@@ -34,6 +34,7 @@
     "@cityborn/client": "workspace:*",
     "@cityborn/core": "workspace:*",
     "@cityborn/design-system": "workspace:*",
+    "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo/config-plugins": "^57.0.6",
     "@expo/vector-icons": "^15.1.1",
     "@hookform/resolvers": "^5.9.1",

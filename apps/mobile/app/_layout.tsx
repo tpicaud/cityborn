@@ -6,7 +6,15 @@ import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
 import { tamaguiConfig } from '@cityborn/design-system';
+import {
+  Fredoka_400Regular,
+  Fredoka_500Medium,
+  Fredoka_600SemiBold,
+  Fredoka_700Bold,
+} from '@expo-google-fonts/fredoka';
+import { useFonts } from 'expo-font';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -23,8 +31,22 @@ import { appFocus } from '@/lib/appFocus';
 import { createSocketConnection } from '@/lib/socket';
 
 installFrenchZodErrorMap();
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded, fontsError]: [boolean, Error | null] = useFonts({
+    Fredoka_400Regular,
+    Fredoka_500Medium,
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontsError) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontsError]);
+
+  if (!fontsLoaded && !fontsError) return null;
+
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
       <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
