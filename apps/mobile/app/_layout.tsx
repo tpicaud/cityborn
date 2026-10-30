@@ -6,7 +6,9 @@ import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
 import { tamaguiConfig } from '@cityborn/design-system';
+import { useFonts } from 'expo-font';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -23,10 +25,25 @@ import { appFocus } from '@/lib/appFocus';
 import { createSocketConnection } from '@/lib/socket';
 
 installFrenchZodErrorMap();
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded, fontsError]: [boolean, Error | null] = useFonts({
+    Fredoka: require('@cityborn/design-system/assets/fonts/Fredoka_400Regular.ttf'),
+    Fredoka_400Regular: require('@cityborn/design-system/assets/fonts/Fredoka_400Regular.ttf'),
+    Fredoka_500Medium: require('@cityborn/design-system/assets/fonts/Fredoka_500Medium.ttf'),
+    Fredoka_600SemiBold: require('@cityborn/design-system/assets/fonts/Fredoka_600SemiBold.ttf'),
+    Fredoka_700Bold: require('@cityborn/design-system/assets/fonts/Fredoka_700Bold.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontsError) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontsError]);
+
+  if (!fontsLoaded && !fontsError) return null;
+
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
       <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
         <ApiProvider
           contractClient={contractClient}

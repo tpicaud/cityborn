@@ -184,7 +184,7 @@ cityborn/
 │   ├── api/             # Contrats API, schémas et types partagés
 │   ├── client/          # Code partagé entre les clients
 │   ├── core/            # Logique partagée backend et clients
-│   └── design-system/   # Composants Tamagui partagés
+│   └── design-system/   # Tokens, thème, assets et composants Tamagui partagés
 ├── docs/                # Documentation technique
 ├── infra/               # Infrastructure
 ├── lint-rules/          # Règles Biome du monorepo (plugins GritQL)
