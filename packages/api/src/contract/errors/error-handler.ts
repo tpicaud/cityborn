@@ -21,16 +21,12 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "Le compte Google n'est pas vérifié.",
   [ErrorCode.USER_REFRESH_FAILED]:
     'Session expirée. Veuillez vous reconnecter.',
-  [ErrorCode.USER_NOT_VERIFIED]:
-    "Le compte n'est pas vérifié. Veuillez faire vérifier votre adresse mail.",
   [ErrorCode.USER_TOKEN_MISSING]: 'Token manquant. Veuillez vous reconnecter.',
   [ErrorCode.USER_INVALID_TOKEN]: 'Token invalide. Veuillez vous reconnecter.',
   [ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN]:
     'Le lien de vérification a expiré ou est invalide.',
   [ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN]:
     'Le lien de vérification a expiré.',
-  [ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED]:
-    'Vous devez posséder un compte utilisateur vérifié.',
   [ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON]:
     'Veuillez patienter 3 minutes avant de demander un nouveau mail de vérification.',
   [ErrorCode.USER_NOT_ADMIN]: 'Accès réservé aux administrateurs.',
@@ -46,8 +42,6 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.SESSION_PLAYER_NOT_CONNECTED]: "Le joueur n'est pas connecté.",
   [ErrorCode.SESSION_PLAYER_ALREADY_EXISTS]:
     'Le joueur existe déjà dans la session.',
-  [ErrorCode.SESSION_PLAYER_NAME_RESERVED]:
-    'Ce pseudo appartient à un compte Cityborn. Choisissez-en un autre.',
   [ErrorCode.SESSION_CREATION_FAILED]:
     'Erreur lors de la création de la session. Veuillez réessayer.',
   [ErrorCode.SESSION_FORBIDDEN_HOST]:
