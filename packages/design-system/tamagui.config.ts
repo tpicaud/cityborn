@@ -1,15 +1,19 @@
 import { animations } from '@tamagui/config/animations-css';
 import { createV6Config } from '@tamagui/config/v6';
-import { createPaletteThemes, shades } from '@tamagui/config/v6-builder';
 import { createTamagui } from 'tamagui';
-import { colors } from './src/colors';
+import { palette } from './src/palette';
+import { shadows } from './src/shadows';
+import { fonts } from './src/typography';
+
+const v6Config = createV6Config(palette);
 
 export const tamaguiConfig = createTamagui({
-  ...createV6Config(
-    createPaletteThemes({
-      brand: shades.map((shade) => colors.primary[shade]),
-    }),
-  ),
+  ...v6Config,
+  fonts,
+  tokens: {
+    ...v6Config.tokens,
+    boxShadow: { ...v6Config.tokens.boxShadow, ...shadows },
+  },
   animations,
 });
 
