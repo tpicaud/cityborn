@@ -37,6 +37,15 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/design-system/assets/**"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
     }
   ],
   "formatter": {
