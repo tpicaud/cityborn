@@ -27,7 +27,7 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 
 - Un composant destiné au frontend et au mobile vit dans `@cityborn/design-system` et utilise Tamagui.
 - Chaque app consommatrice fournit ses propres instances de React et de Tamagui au design system.
-- Pour modifier la configuration ou le build de l'UI partagée, lire [la référence Tamagui](references/tamagui.md).
+- Pour écrire un composant Tamagui ou modifier la configuration ou le build de l'UI partagée, lire [la référence Tamagui](references/tamagui.md).
 
 ## Critère de fin
 
