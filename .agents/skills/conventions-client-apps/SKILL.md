@@ -1,6 +1,6 @@
 ---
 name: conventions-client-apps
-description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/back-office). À utiliser pour ajouter ou modifier un écran, une page, un composant, le routing, le câblage de l'API ou l'implémentation d'un port plateforme."
+description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/back-office) et de leur design system. À utiliser pour ajouter ou modifier un écran, une page, un composant, partagé compris, le routing, le câblage de l'API ou l'implémentation d'un port plateforme."
 ---
 
 # Conventions des apps clientes
@@ -26,8 +26,7 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 ## UI partagée
 
 - Un composant destiné au frontend et au mobile vit dans `@cityborn/design-system` et utilise Tamagui.
-- Chaque app consommatrice fournit ses propres instances de React et de Tamagui au design system.
-- Pour écrire un composant Tamagui ou modifier la configuration ou le build de l'UI partagée, lire [la référence Tamagui](references/tamagui.md).
+- Un composant Tamagui, la configuration ou le build de l'UI partagée : lire [la référence Tamagui](references/tamagui.md).
 
 ## Critère de fin
 
