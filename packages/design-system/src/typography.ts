@@ -2,10 +2,17 @@ import { withTailwindTypeScale } from '@tamagui/config/v6';
 import { createFont, isWeb } from 'tamagui';
 
 const figmaTextSizes = {
+  'page-title': 83,
+  'hero-title': 42,
   h1: 32,
+  'cta-large': 26,
+  cta: 22,
+  'section-title': 22,
   h2: 18,
+  'card-title': 13,
   'p-title': 12,
   'p-simple': 12,
+  'card-caption': 10,
 } as const;
 
 const fredoka = createFont(
@@ -14,10 +21,17 @@ const fredoka = createFont(
     size: figmaTextSizes,
     lineHeight: figmaTextSizes,
     weight: {
+      'page-title': '700',
+      'hero-title': '700',
       h1: '700',
+      'cta-large': '700',
+      cta: '700',
+      'section-title': '700',
       h2: '600',
+      'card-title': '600',
       'p-title': '700',
       'p-simple': '500',
+      'card-caption': '400',
       xs: '400',
     },
     letterSpacing: { h1: 0 },
