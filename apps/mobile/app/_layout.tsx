@@ -29,6 +29,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontsError]: [boolean, Error | null] = useFonts({
+    Fredoka: require('@cityborn/design-system/assets/fonts/Fredoka_400Regular.ttf'),
     Fredoka_400Regular: require('@cityborn/design-system/assets/fonts/Fredoka_400Regular.ttf'),
     Fredoka_500Medium: require('@cityborn/design-system/assets/fonts/Fredoka_500Medium.ttf'),
     Fredoka_600SemiBold: require('@cityborn/design-system/assets/fonts/Fredoka_600SemiBold.ttf'),
