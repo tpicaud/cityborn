@@ -5,7 +5,7 @@ import 'react-native-get-random-values';
 import { installFrenchZodErrorMap } from '@cityborn/api';
 import { ApiProvider, ErrorReporterProvider } from '@cityborn/client';
 import { WsProvider } from '@cityborn/client/ws';
-import { tamaguiConfig } from '@cityborn/design-system';
+import { CommonIconsProvider, tamaguiConfig } from '@cityborn/design-system';
 import { useFonts } from 'expo-font';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider } from 'tamagui';
+import { CommonIconImage } from '@/components/CommonIconImage';
 import ForceUpdateDialog from '@/components/ForceUpdateDialog';
 import CustomHeader from '@/components/ui/CustomHeader';
 import ErrorDialog from '@/components/ui/ErrorDialog';
@@ -43,19 +44,21 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontsError) return null;
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
-      <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
-        <ApiProvider
-          contractClient={contractClient}
-          authApi={authApi}
-          appFocus={appFocus}
-        >
-          <WsProvider createSocket={createSocketConnection}>
-            <RootLayoutContent />
-          </WsProvider>
-        </ApiProvider>
-      </ErrorReporterProvider>
-    </TamaguiProvider>
+    <CommonIconsProvider image={CommonIconImage}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
+        <ErrorReporterProvider ErrorDialogComponent={ErrorDialog}>
+          <ApiProvider
+            contractClient={contractClient}
+            authApi={authApi}
+            appFocus={appFocus}
+          >
+            <WsProvider createSocket={createSocketConnection}>
+              <RootLayoutContent />
+            </WsProvider>
+          </ApiProvider>
+        </ErrorReporterProvider>
+      </TamaguiProvider>
+    </CommonIconsProvider>
   );
 }
 
