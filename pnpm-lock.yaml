@@ -504,9 +504,6 @@ importers:
       '@cityborn/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@expo-google-fonts/fredoka':
-        specifier: ^0.4.1
-        version: 0.4.1
       '@expo/config-plugins':
         specifier: ^57.0.6
         version: 57.0.6(typescript@6.0.3)
@@ -1716,9 +1713,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@expo-google-fonts/fredoka@0.4.1':
-    resolution: {integrity: sha512-px3uHDidG1RI7mMAjfKQktK9yZoVn/Uvqgp1G/Zkd6ZN9flXFxhUoPDRZdcCj2knFvkKmlvOx96SD3j4fxq7ig==}
 
   '@expo-google-fonts/material-symbols@0.4.42':
     resolution: {integrity: sha512-KZmHZRcthJ3KFZZlpzHjopA9guZgWR9fb3uVZlTR0BNlvG2pw1bnYBCpkze2PB0vRllwGhAM7lWXsfmcWCbXYg==}
@@ -12170,8 +12164,6 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.1':
     optional: true
-
-  '@expo-google-fonts/fredoka@0.4.1': {}
 
   '@expo-google-fonts/material-symbols@0.4.42': {}
 
