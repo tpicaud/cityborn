@@ -77,10 +77,6 @@ export default {
       policy: 'appVersion',
     },
 
-    autolinking: {
-      include: ['tamagui'],
-    },
-
     scripts: {
       dev: 'APP_VARIANT=development npx expo start',
     },

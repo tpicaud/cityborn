@@ -23,27 +23,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (
-    moduleName === 'react' ||
-    moduleName.startsWith('react/') ||
-    moduleName === 'tamagui' ||
-    moduleName.startsWith('tamagui/')
-  ) {
-    return context.resolveRequest(
-      {
-        ...context,
-        disableHierarchicalLookup: true,
-        nodeModulesPaths: config.resolver.nodeModulesPaths,
-      },
-      moduleName,
-      platform,
-    );
-  }
-
-  return context.resolveRequest(context, moduleName, platform);
-};
-
 const nativewindConfig = withNativewind(withTamagui(config));
 const resolveWithNativewind = nativewindConfig.resolver.resolveRequest;
 const tamaguiPackagesPath = `${path.sep}node_modules${path.sep}@tamagui${path.sep}`;
