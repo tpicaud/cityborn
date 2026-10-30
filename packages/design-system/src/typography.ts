@@ -1,5 +1,5 @@
 import { withTailwindTypeScale } from '@tamagui/config/v6';
-import { createFont } from 'tamagui';
+import { createFont, isWeb } from 'tamagui';
 
 const figmaTextSizes = {
   h1: 32,
@@ -10,7 +10,7 @@ const figmaTextSizes = {
 
 const fredoka = createFont(
   withTailwindTypeScale({
-    family: 'Fredoka',
+    family: isWeb ? 'Fredoka, system-ui, sans-serif' : 'Fredoka',
     size: figmaTextSizes,
     lineHeight: figmaTextSizes,
     weight: {
