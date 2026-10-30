@@ -1,55 +1,16 @@
-import { createFont, createTamagui, createTokens } from 'tamagui';
+import { animations } from '@tamagui/config/animations-css';
+import { createV6Config } from '@tamagui/config/v6';
+import { createPaletteThemes, shades } from '@tamagui/config/v6-builder';
+import { createTamagui } from 'tamagui';
 import { colors } from './src/colors';
 
-const sizes: Record<string, number> = {
-  1: 4,
-  2: 8,
-  3: 12,
-  4: 16,
-  5: 20,
-  6: 24,
-  7: 28,
-  8: 32,
-  9: 36,
-  10: 40,
-};
-
 export const tamaguiConfig = createTamagui({
-  tokens: createTokens({
-    size: sizes,
-    space: sizes,
-    radius: { 1: 4, 2: 8, 3: 12, 4: 16 },
-    zIndex: { 1: 0 },
-    color: {
-      primary: colors.primary.DEFAULT,
-      white: '#ffffff',
-      black: '#171717',
-    },
-  }),
-  fonts: {
-    body: createFont({
-      family: 'System',
-      size: {
-        1: 12,
-        2: 14,
-        3: 16,
-        4: 18,
-        5: 20,
-        6: 22,
-        7: 24,
-        8: 26,
-        9: 28,
-        10: 30,
-      },
+  ...createV6Config(
+    createPaletteThemes({
+      brand: shades.map((shade) => colors.primary[shade]),
     }),
-  },
-  themes: {
-    light: {
-      background: '#ffffff',
-      color: '#171717',
-      borderColor: '#d4d4d4',
-    },
-  },
+  ),
+  animations,
 });
 
 export type TamaguiConfig = typeof tamaguiConfig;
