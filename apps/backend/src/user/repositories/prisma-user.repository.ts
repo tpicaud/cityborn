@@ -44,14 +44,6 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toUser(user) : null;
   }
 
-  async lockById(id: UserId): Promise<User | null> {
-    const users: PrismaUser[] = await this.txHost.tx.$queryRaw`
-      SELECT * FROM "User" WHERE id = ${id}::uuid FOR UPDATE
-    `;
-    const user: PrismaUser | undefined = users[0];
-    return user ? UserMapper.toUser(user) : null;
-  }
-
   async findCredentialsById(id: UserId): Promise<UserCredentials | null> {
     const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
       where: { id },
@@ -126,12 +118,19 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async markEmailVerified(userId: UserId): Promise<User> {
-    const user = await this.txHost.tx.user.update({
-      where: { id: userId },
+  async markEmailVerified({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: { id: userId, email },
       data: { isVerified: true },
     });
-    return UserMapper.toUser(user);
+    if (updated.count === 0) return null;
+    return this.findById(userId);
   }
 
   async updateUsername(userId: UserId, username: Username): Promise<User> {

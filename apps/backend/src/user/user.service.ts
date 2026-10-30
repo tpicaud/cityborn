@@ -229,7 +229,6 @@ export class UserService {
     return token;
   }
 
-  @Transactional()
   async verifyEmail(verificationToken: string): Promise<User> {
     const token: EmailVerificationToken | null =
       await this.emailVerificationTokenRepository.findVerificationToken(
@@ -238,27 +237,19 @@ export class UserService {
 
     if (!token) throw invalidVerificationTokenException();
 
-    const user: User | null = await this.userRepository.lockById(token.userId);
-    if (!user) throw invalidVerificationTokenException();
-
-    const currentToken: EmailVerificationToken | null =
-      await this.emailVerificationTokenRepository.findVerificationToken(
-        verificationToken,
-      );
-    if (
-      !currentToken ||
-      currentToken.userId !== user.id ||
-      currentToken.email !== user.email
-    )
-      throw invalidVerificationTokenException();
-
-    if (currentToken.expiresAt < new Date())
+    if (token.expiresAt < new Date())
       throw new UnauthorizedException({
         code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN,
         message: 'Email verification token is expired',
       });
 
-    return this.verifyEmailOwnership(user.id);
+    const user: User | null = await this.verifyEmailOwnership({
+      userId: token.userId,
+      email: token.email,
+    });
+    if (!user) throw invalidVerificationTokenException();
+
+    return user;
   }
 
   async findVerificationTokenOwner(verificationToken: string): Promise<User> {
@@ -276,8 +267,18 @@ export class UserService {
   }
 
   @Transactional()
-  async verifyEmailOwnership(userId: UserId): Promise<User> {
-    const user = await this.userRepository.markEmailVerified(userId);
+  async verifyEmailOwnership({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null> {
+    const user: User | null = await this.userRepository.markEmailVerified({
+      userId,
+      email,
+    });
+    if (!user) return null;
     await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       userId,
     );

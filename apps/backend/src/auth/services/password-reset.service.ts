@@ -111,7 +111,10 @@ export class PasswordResetService {
     );
     const user: User = credentials.authSession.user.isVerified
       ? credentials.authSession.user
-      : await this.userService.verifyEmailOwnership(userId);
+      : ((await this.userService.verifyEmailOwnership({
+          userId,
+          email: credentials.authSession.user.email,
+        })) ?? this.rejectToken());
     return { user, authVersion };
   }
 

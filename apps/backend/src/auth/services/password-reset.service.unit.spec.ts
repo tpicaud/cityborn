@@ -263,7 +263,10 @@ describe('PasswordResetService.reset', () => {
 
     await passwordResetService.reset(resetPassword);
 
-    expect(userService.verifyEmailOwnership).toHaveBeenCalledWith(user.id);
+    expect(userService.verifyEmailOwnership).toHaveBeenCalledWith({
+      userId: user.id,
+      email: user.email,
+    });
     expect(
       authenticatedSocketService.disconnectOlderSessions,
     ).toHaveBeenCalledWith(user.id, 3);

@@ -25,7 +25,6 @@ export interface UserRepository {
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
   findById(id: UserId): Promise<User | null>;
-  lockById(id: UserId): Promise<User | null>;
   findCredentialsById(id: UserId): Promise<UserCredentials | null>;
   findCredentialsByEmail(email: string): Promise<UserCredentials | null>;
   findByIdentifier(identifier: string): Promise<User | null>;
@@ -39,7 +38,10 @@ export interface UserRepository {
     username: Username,
     email: string,
   ): Promise<Pick<User, 'username' | 'email'> | null>;
-  markEmailVerified(userId: UserId): Promise<User>;
+  markEmailVerified(emailOwnership: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null>;
   updateUsername(userId: UserId, username: Username): Promise<User>;
   updateEmail(emailUpdate: {
     userId: UserId;

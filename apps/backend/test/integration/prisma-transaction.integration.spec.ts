@@ -424,27 +424,28 @@ describe('Prisma transactions', () => {
           token: 'verification-token',
           expiresAt: new Date('2099-01-01'),
         });
-        const lockUser: typeof userRepository.lockById =
-          userRepository.lockById.bind(userRepository);
+        const deleteTokens: typeof tokenRepository.deleteVerificationTokensByUserId =
+          tokenRepository.deleteVerificationTokensByUserId.bind(
+            tokenRepository,
+          );
         let continueVerification: () => void = () => {};
         const canContinue: Promise<void> = new Promise((resolve) => {
           continueVerification = resolve;
         });
-        let userLocked: () => void = () => {};
-        const locked: Promise<void> = new Promise((resolve) => {
-          userLocked = resolve;
+        let userVerified: () => void = () => {};
+        const verified: Promise<void> = new Promise((resolve) => {
+          userVerified = resolve;
         });
         jest
-          .spyOn(userRepository, 'lockById')
+          .spyOn(tokenRepository, 'deleteVerificationTokensByUserId')
           .mockImplementationOnce(async (id) => {
-            const lockedUser: User | null = await lockUser(id);
-            userLocked();
+            userVerified();
             await canContinue;
-            return lockedUser;
+            await deleteTokens(id);
           });
         const verification: Promise<User> =
           userService.verifyEmail('verification-token');
-        await locked;
+        await verified;
 
         const update: Promise<User> = userService.updateEmail({
           user,
