@@ -1,8 +1,33 @@
 import type { Metadata } from 'next';
+import type { NextFontWithVariable } from 'next/dist/compiled/@next/font';
+import localFont from 'next/font/local';
 import './globals.css';
 import '../../public/tamagui.generated.css';
 import Script from 'next/script';
 import { AppProviders } from './providers';
+
+const fredoka: NextFontWithVariable = localFont({
+  src: [
+    {
+      path: '../../../../packages/design-system/assets/fonts/Fredoka_400Regular.woff2',
+      weight: '400',
+    },
+    {
+      path: '../../../../packages/design-system/assets/fonts/Fredoka_500Medium.woff2',
+      weight: '500',
+    },
+    {
+      path: '../../../../packages/design-system/assets/fonts/Fredoka_600SemiBold.woff2',
+      weight: '600',
+    },
+    {
+      path: '../../../../packages/design-system/assets/fonts/Fredoka_700Bold.woff2',
+      weight: '700',
+    },
+  ],
+  display: 'swap',
+  variable: '--font-fredoka',
+});
 
 export const metadata: Metadata = {
   title: 'CityBorn',
@@ -15,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="h-full">
+    <html lang="fr" className={`h-full ${fredoka.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
