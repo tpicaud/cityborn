@@ -6,6 +6,7 @@
   "types": "index.ts",
   "exports": {
     ".": "./index.ts",
+    "./assets/*": "./assets/*",
     "./cityborn-theme.css": "./cityborn-theme.css",
     "./tamagui.config": "./tamagui.config.ts"
   },
