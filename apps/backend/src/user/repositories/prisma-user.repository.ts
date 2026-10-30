@@ -7,7 +7,6 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { User as PrismaUser } from '@prisma/client';
-import { Prisma } from '@prisma/client';
 import type { AuthSession, AuthVersion } from '../../common/types/auth-session';
 import type { PrismaTransactionHost } from '../../prisma/prisma-cls.module';
 import { UserMapper } from '../user.mapper';
@@ -27,24 +26,6 @@ export class PrismaUserRepository implements UserRepository {
   async create(data: CreateUserData): Promise<User> {
     const user = await this.txHost.tx.user.create({ data });
     return UserMapper.toUser(user);
-  }
-
-  async createOrFindByEmail(
-    data: CreateUserData,
-  ): Promise<{ user: User; created: boolean }> {
-    try {
-      const user: User = await this.create(data);
-      return { user, created: true };
-    } catch (error: unknown) {
-      if (
-        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
-        error.code !== 'P2002'
-      )
-        throw error;
-      const user: User | null = await this.findByEmail(data.email);
-      if (!user) throw error;
-      return { user, created: false };
-    }
   }
 
   async delete(user_id: UserId): Promise<void> {

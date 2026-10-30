@@ -29,7 +29,6 @@ import { EventService } from '../../event/event.service';
 import { createEvent } from '../../event/event.types';
 import { buildMailOptions } from '../../mail/email-templates';
 import { MailService } from '../../mail/mail.service';
-import type { SendMailOptions } from '../../mail/providers/mail.provider';
 import { RateLimitService } from '../../rate-limit/rate-limit.service';
 import type {
   UnverifiedAccountReclaim,
@@ -70,73 +69,37 @@ export class AuthService {
 
     await this.userService.validateIdentifiers(username, email);
 
-    const user: User = await this.createEmailAccount({
+    const hash: string = await hashPassword(password);
+
+    const user: User = await this.userService.createUser({
       email,
       username,
-      passwordHash: await hashPassword(password),
-      visitorId,
+      type: 'email',
+      password: hash,
     });
+
+    void this.sendVerificationEmail(user).catch((error: unknown) => {
+      this.wideEventService.recordOperationError(error, {
+        domain: 'auth',
+        operation: 'send_verification_email',
+        userId: user.id,
+      });
+    });
+
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'user_signed_up',
+          visitorId,
+          properties: {
+            method: 'email',
+          },
+        }),
+      );
+    }
 
     const authSession: AuthSession = { user, authVersion: 0 };
     return this.createAuthResponse(authSession);
-  }
-
-  async register({
-    registration,
-    visitorId,
-    clientIp,
-  }: {
-    registration: CreateUser;
-    visitorId?: string;
-    clientIp: string;
-  }): Promise<void> {
-    const { email, username, password }: CreateUser = registration;
-
-    await this.rateLimitService.consumeAccountEmail({ email, clientIp });
-    const passwordHash: string = await hashPassword(password);
-
-    const existingUser: User | null = await this.userService.findByEmail(email);
-    if (existingUser) {
-      this.notifyExistingAccount(existingUser);
-      return;
-    }
-
-    try {
-      await this.userService.assertUsernameAvailable(username);
-    } catch (error: unknown) {
-      const concurrentUser: User | null =
-        await this.userService.findByEmail(email);
-      if (!concurrentUser) throw error;
-      this.notifyExistingAccount(concurrentUser);
-      return;
-    }
-    const result: { user: User; created: boolean } =
-      await this.userService.createUserOrFindByEmail({
-        email,
-        username,
-        type: 'email',
-        password: passwordHash,
-      });
-    if (!result.created) {
-      this.notifyExistingAccount(result.user);
-      return;
-    }
-    await this.completeEmailAccountCreation({
-      user: result.user,
-      visitorId,
-    });
-  }
-
-  private notifyExistingAccount(existingUser: User): void {
-    this.sendMailInBackground({
-      operation: 'send_existing_account_email',
-      userId: existingUser.id,
-      mailOptions: buildMailOptions('existing-account-email', {
-        email: existingUser.email,
-        frontendUrl: this.httpConfig.frontendUrl,
-        username: existingUser.username,
-      }),
-    });
   }
 
   async signIn(dto: SignIn, visitorId?: string): Promise<AuthResponse> {
@@ -401,75 +364,6 @@ export class AuthService {
     );
 
     return { id: user.id, username: user.username };
-  }
-
-  private async createEmailAccount({
-    email,
-    username,
-    passwordHash,
-    visitorId,
-  }: {
-    email: string;
-    username: Username;
-    passwordHash: string;
-    visitorId?: string;
-  }): Promise<User> {
-    const user: User = await this.userService.createUser({
-      email,
-      username,
-      type: 'email',
-      password: passwordHash,
-    });
-
-    await this.completeEmailAccountCreation({ user, visitorId });
-
-    return user;
-  }
-
-  private async completeEmailAccountCreation({
-    user,
-    visitorId,
-  }: {
-    user: User;
-    visitorId?: string;
-  }): Promise<void> {
-    void this.sendVerificationEmail(user).catch((error: unknown) => {
-      this.wideEventService.recordOperationError(error, {
-        domain: 'auth',
-        operation: 'send_verification_email',
-        userId: user.id,
-      });
-    });
-
-    if (visitorId) {
-      await this.eventService.trackEvent(
-        createEvent({
-          name: 'user_signed_up',
-          visitorId,
-          properties: {
-            method: 'email',
-          },
-        }),
-      );
-    }
-  }
-
-  private sendMailInBackground({
-    operation,
-    userId,
-    mailOptions,
-  }: {
-    operation: string;
-    userId: UserId;
-    mailOptions: SendMailOptions;
-  }): void {
-    void this.mailService.sendMail(mailOptions).catch((error: unknown) => {
-      this.wideEventService.recordOperationError(error, {
-        domain: 'auth',
-        operation,
-        userId,
-      });
-    });
   }
 
   private async sendVerificationEmail(

@@ -9,7 +9,7 @@ import {
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { setCurrentUser } from '../../domains/auth/authQueries';
@@ -33,6 +33,8 @@ type SignInCompletion = (signInRequest: Promise<User>) => Promise<void>;
 
 export type SignInFlowOptions = SignInCompletionOptions;
 
+export type SignUpFlowOptions = SignInCompletionOptions;
+
 export type IdentityProviderSignInOptions = SignInCompletionOptions;
 
 export type SignInFlow = {
@@ -43,7 +45,6 @@ export type SignInFlow = {
 export type SignUpFlow = {
   form: UseFormReturn<SignUpFormInput, undefined, SignUpFormValues>;
   submit: FormSubmitHandler;
-  registeredEmail: string | null;
 };
 
 export type IdentityProviderSignIn = {
@@ -100,10 +101,11 @@ export function useSignInFlow({
   };
 }
 
-export function useSignUpFlow(): SignUpFlow {
+export function useSignUpFlow({
+  onSignedIn,
+}: SignUpFlowOptions = {}): SignUpFlow {
   const { authApi }: DomainApis = useDomainApis();
-  const { reportError }: ErrorReporter = useErrorReporter();
-  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const completeSignIn: SignInCompletion = useSignInCompletion({ onSignedIn });
   const form: UseFormReturn<SignUpFormInput, undefined, SignUpFormValues> =
     useForm<SignUpFormInput, undefined, SignUpFormValues>({
       resolver: zodResolver(SignUpFormSchema),
@@ -112,15 +114,9 @@ export function useSignUpFlow(): SignUpFlow {
 
   return {
     form,
-    submit: form.handleSubmit(async (values) => {
-      try {
-        await authApi.register(toCreateUser(values));
-        setRegisteredEmail(values.email);
-      } catch (error: unknown) {
-        reportError(error);
-      }
-    }),
-    registeredEmail,
+    submit: form.handleSubmit((values) =>
+      completeSignIn(authApi.signUp(toCreateUser(values))),
+    ),
   };
 }
 

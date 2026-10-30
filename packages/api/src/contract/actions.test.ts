@@ -61,7 +61,6 @@ describe('httpActionRoutes', () => {
       'auth.deleteUser',
       'auth.me',
       'auth.refresh',
-      'auth.register',
       'auth.renewVerificationEmail',
       'auth.requestPasswordReset',
       'auth.resendVerificationEmail',

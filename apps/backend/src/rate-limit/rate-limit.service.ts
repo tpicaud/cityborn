@@ -10,8 +10,6 @@ export class RateLimitService {
   private readonly wsConnectionLimiter: RateLimiterRedis;
   private readonly wsMessageLimiter: RateLimiterRedis;
   private readonly failedSignInLimiter: RateLimiterRedis;
-  private readonly accountEmailRequesterLimiter: RateLimiterRedis;
-  private readonly accountEmailRecipientLimiter: RateLimiterRedis;
   private readonly emailChangeLimiter: RateLimiterRedis;
 
   constructor(private readonly redisService: RedisService) {
@@ -45,18 +43,6 @@ export class RateLimitService {
       points: 10,
       duration: 15 * 60,
     });
-    this.accountEmailRequesterLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
-      keyPrefix: 'rl:auth:account-email:requester',
-      points: 5,
-      duration: 60 * 60,
-    });
-    this.accountEmailRecipientLimiter = new RateLimiterRedis({
-      storeClient: this.redisService.redisClient,
-      keyPrefix: 'rl:auth:account-email:recipient',
-      points: 20,
-      duration: 60 * 60,
-    });
     this.emailChangeLimiter = new RateLimiterRedis({
       storeClient: this.redisService.redisClient,
       keyPrefix: 'rl:auth:email-change',
@@ -87,18 +73,6 @@ export class RateLimitService {
 
   async consumeWsMessage(key: string): Promise<RateLimiterRes> {
     return this.wsMessageLimiter.consume(key);
-  }
-
-  async consumeAccountEmail({
-    email,
-    clientIp,
-  }: {
-    email: string;
-    clientIp: string;
-  }): Promise<void> {
-    const recipient: string = email.toLowerCase();
-    await this.accountEmailRequesterLimiter.consume(`${clientIp}:${recipient}`);
-    await this.accountEmailRecipientLimiter.consume(recipient);
   }
 
   async consumeEmailChange(userId: UserId): Promise<void> {

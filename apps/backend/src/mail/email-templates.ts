@@ -29,8 +29,7 @@ type ActionEmailParams = {
   introduction: string;
   actionUrl: URL;
   actionLabel: string;
-  validityDuration?: string;
-  secondaryAction?: { label: string; url: URL };
+  validityDuration: string;
 };
 
 const buildEmailTemplateHeader = ({
@@ -103,11 +102,6 @@ type MailTemplateParams = {
     validityDurationMinutes: number;
   };
   'password-changed': { email: string; username: string };
-  'existing-account-email': {
-    email: string;
-    frontendUrl: string;
-    username: string;
-  };
 };
 
 type BuildMailOptionsArgs = {
@@ -127,8 +121,6 @@ export function buildMailOptions(
       return buildPasswordChangedEmail(args[1]);
     case 'verification-email':
       return buildVerificationEmail(args[1]);
-    case 'existing-account-email':
-      return buildExistingAccountEmail(args[1]);
   }
 }
 
@@ -260,11 +252,7 @@ function buildActionEmail(params: ActionEmailParams): SendMailOptions {
                         </tr>
                       </table>
 
-                      ${params.secondaryAction ? `<p style="margin:20px 0 0; text-align:center; font-size:15px; line-height:22px;"><a href="${escapeHtml(params.secondaryAction.url.toString())}" style="color:#008988; font-weight:700; text-decoration:underline;">${escapeHtml(params.secondaryAction.label)}</a></p>` : ''}
-
-                      ${
-                        params.validityDuration
-                          ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:30px;">
                         <tr>
                           <td style="padding:16px 18px; background-color:#ecfffc; border-left:4px solid #7efaed; border-radius:8px;">
                             <p style="margin:0; color:#486262; font-size:14px; line-height:22px;">
@@ -272,9 +260,7 @@ function buildActionEmail(params: ActionEmailParams): SendMailOptions {
                             </p>
                           </td>
                         </tr>
-                      </table>`
-                          : ''
-                      }
+                      </table>
 
                       <p style="margin:28px 0 0; color:#6d7f7f; font-size:13px; line-height:21px;">
                         Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :
@@ -320,29 +306,6 @@ function buildPasswordResetEmail(
     actionUrl: url,
     actionLabel: 'Réinitialiser mon mot de passe',
     validityDuration,
-  });
-}
-
-function buildExistingAccountEmail({
-  email,
-  frontendUrl,
-  username,
-}: MailTemplateParams['existing-account-email']): SendMailOptions {
-  const signInUrl: URL = new URL('/', frontendUrl);
-  const passwordResetUrl: URL = new URL('/forgot-password', frontendUrl);
-  return buildActionEmail({
-    email,
-    subject: 'Vous avez déjà un compte Cityborn',
-    text: `Bonjour ${username},\n\nUne inscription à Cityborn a été demandée avec votre adresse e-mail, mais un compte existe déjà pour cette adresse.\n\nMe connecter : ${signInUrl.toString()}\nRéinitialiser mon mot de passe : ${passwordResetUrl.toString()}\n\nSi vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.`,
-    preheader: 'Une inscription a été tentée avec votre adresse e-mail.',
-    title: `Bonjour ${username},`,
-    introduction: `Un compte Cityborn existe déjà pour cette adresse. Connectez-vous avec votre pseudo ${username} ou votre adresse e-mail.`,
-    actionUrl: signInUrl,
-    actionLabel: 'Me connecter',
-    secondaryAction: {
-      label: 'Réinitialiser mon mot de passe',
-      url: passwordResetUrl,
-    },
   });
 }
 

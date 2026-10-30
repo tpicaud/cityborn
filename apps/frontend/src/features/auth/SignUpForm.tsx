@@ -1,43 +1,17 @@
 'use client';
 
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignUpForm = ({ openSignIn }: { openSignIn: () => void }) => {
+export const SignUpForm = () => {
   const {
     form: {
       register,
       formState: { errors, isSubmitting },
     },
     submit,
-    registeredEmail,
   }: SignUpFlow = useSignUpFlow();
-
-  if (registeredEmail)
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-          maxWidth: 300,
-          textAlign: 'center',
-        }}
-      >
-        <MarkEmailReadIcon color="primary" sx={{ fontSize: 40 }} />
-        <Typography variant="h5">Vérifie tes e-mails</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Un e-mail vient d'être envoyé à <b>{registeredEmail}</b>. Suis le lien
-          qu'il contient pour continuer.
-        </Typography>
-        <Button variant="contained" onClick={openSignIn}>
-          Se connecter
-        </Button>
-      </Box>
-    );
 
   return (
     <Box

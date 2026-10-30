@@ -1,9 +1,9 @@
 import type { User } from '@cityborn/api';
 import { contract, PASSWORD_RESET_REQUEST_MESSAGE } from '@cityborn/api';
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, Req, UseGuards } from '@nestjs/common';
 import { initContract } from '@ts-rest/core';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { ClientIp } from '../../common/decorators/client-ip.decorator';
+import type { Request } from 'express';
 import { VisitorId } from '../../common/decorators/visitor-id.decorator';
 import type { AuthSession } from '../../common/types/auth-session';
 import {
@@ -21,7 +21,6 @@ const publicAuthRoutes = c.router({
   requestPasswordReset: contract.auth.requestPasswordReset,
   resetPassword: contract.auth.resetPassword,
   signUp: contract.auth.signUp,
-  register: contract.auth.register,
   signIn: contract.auth.signIn,
   signInWithGoogle: contract.auth.signInWithGoogle,
   signInWithApple: contract.auth.signInWithApple,
@@ -48,12 +47,12 @@ export class AuthController {
   ) {}
 
   @TsRestHandler(publicAuthRoutes)
-  async handler(@ClientIp() clientIp: string, @VisitorId() visitorId?: string) {
+  async handler(@Req() request: Request, @VisitorId() visitorId?: string) {
     return tsRestHandler(publicAuthRoutes, {
       requestPasswordReset: async ({ body }) => {
         await this.passwordResetService.request({
           email: body.email,
-          ip: clientIp,
+          ip: request.ip ?? request.socket.remoteAddress ?? 'unknown',
         });
         return {
           status: 200 as const,
@@ -68,14 +67,6 @@ export class AuthController {
         status: 201 as const,
         body: await this.authService.signUp(body, visitorId),
       }),
-      register: async ({ body }) => {
-        await this.authService.register({
-          registration: body,
-          visitorId,
-          clientIp,
-        });
-        return { status: 202 as const, body: {} };
-      },
       signIn: async ({ body }) => ({
         status: 200 as const,
         body: await this.authService.signIn(body, visitorId),

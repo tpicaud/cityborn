@@ -28,14 +28,8 @@ const cookieAuthContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: UserSchema },
     },
-    /**
-     * @deprecated Utiliser `auth.register` à la place. Conservé pour les
-     * builds web publiées avant l'inscription sans connexion immédiate.
-     * @deprecatedSince 2026-10-23
-     */
     signUp: {
       method: 'POST',
-      deprecated: true,
       path: '/sign-up',
       body: CreateUserSchema,
       responses: { 201: UserSchema },
@@ -93,23 +87,11 @@ export const authContract = c.router(
       body: emptyRequestBodySchema,
       responses: { 200: AuthResponseSchema },
     },
-    /**
-     * @deprecated Utiliser `register` à la place. Conservé pour les builds
-     * mobile publiées avant l'inscription sans connexion immédiate.
-     * @deprecatedSince 2026-10-23
-     */
     signUp: {
       method: 'POST',
-      deprecated: true,
       path: '/sign-up',
       body: CreateUserSchema,
       responses: { 201: AuthResponseSchema },
-    },
-    register: {
-      method: 'POST',
-      path: '/register',
-      body: CreateUserSchema,
-      responses: { 202: emptyResponseSchema },
     },
     signIn: {
       method: 'POST',

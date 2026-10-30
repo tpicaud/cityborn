@@ -55,30 +55,6 @@ describe('PrismaUserRepository', () => {
     });
   });
 
-  describe('createOrFindByEmail', () => {
-    it('returns one new and one existing account for concurrent requests', async () => {
-      const user: User = buildUser({ isVerified: false });
-      const data: CreateUserData = {
-        email: user.email,
-        username: user.username,
-        type: 'email',
-        password: 'hash',
-      };
-
-      const results: { user: User; created: boolean }[] = await Promise.all([
-        userRepository.createOrFindByEmail(data),
-        userRepository.createOrFindByEmail(data),
-      ]);
-
-      expect(results.map((result) => result.created).sort()).toEqual([
-        false,
-        true,
-      ]);
-      expect(results[0]?.user.id).toBe(results[1]?.user.id);
-      expect(await infrastructure.prisma.user.count()).toBe(1);
-    });
-  });
-
   describe('delete', () => {
     it('removes the requested user', async () => {
       const userData: User = buildUser();

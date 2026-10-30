@@ -22,9 +22,6 @@ export type UnverifiedAccountReclaim = {
 
 export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
-  createOrFindByEmail(
-    data: CreateUserData,
-  ): Promise<{ user: User; created: boolean }>;
   delete(user_id: UserId): Promise<void>;
   findAuthSessionById(id: UserId): Promise<AuthSession | null>;
   findById(id: UserId): Promise<User | null>;

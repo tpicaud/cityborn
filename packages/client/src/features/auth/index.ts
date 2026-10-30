@@ -23,6 +23,7 @@ export {
   type SignInFlow,
   type SignInFlowOptions,
   type SignUpFlow,
+  type SignUpFlowOptions,
   useIdentityProviderSignIn,
   useSignInFlow,
   useSignUpFlow,

@@ -1,11 +1,9 @@
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
-import { colors } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Button from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { SignInWithAppleButton } from './AppleSignIn';
@@ -19,30 +17,9 @@ export const SignUpForm = () => {
       formState: { errors, isSubmitting },
     },
     submit,
-    registeredEmail,
-  }: SignUpFlow = useSignUpFlow();
-
-  if (registeredEmail)
-    return (
-      <View className="flex-1 flex-col gap-6 items-center justify-center w-70 self-center">
-        <Icon name="mail_outline" size={48} color={colors.primary[500]} />
-        <Text className="text-2xl font-bold text-foreground text-center">
-          VÉRIFIE TES E-MAILS
-        </Text>
-        <Text className="text-center">
-          Un e-mail vient d'être envoyé à{' '}
-          <Text className="font-bold">{registeredEmail}</Text>. Suis le lien
-          qu'il contient pour continuer.
-        </Text>
-        <Button
-          variant="filled"
-          color="primary"
-          size="large"
-          label="SE CONNECTER"
-          onPress={() => router.replace('/auth/sign-in')}
-        />
-      </View>
-    );
+  }: SignUpFlow = useSignUpFlow({
+    onSignedIn: () => router.dismissTo('/'),
+  });
 
   return (
     <KeyboardAwareScrollView

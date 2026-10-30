@@ -48,12 +48,6 @@ export class UserService {
     return this.userRepository.create(data);
   }
 
-  async createUserOrFindByEmail(
-    data: CreateUserData,
-  ): Promise<{ user: User; created: boolean }> {
-    return this.userRepository.createOrFindByEmail(data);
-  }
-
   async deleteUser(user_id: UserId): Promise<void> {
     await this.userRepository.delete(user_id);
   }
@@ -106,11 +100,9 @@ export class UserService {
     return this.userRepository.findByAppleId(appleUserId);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findByEmail(email);
-  }
+  async updateUsername(user: User, username: Username): Promise<User> {
+    if (user.username === username) return user;
 
-  async assertUsernameAvailable(username: Username): Promise<void> {
     const usernameExists: boolean =
       await this.userRepository.existsByUsername(username);
     if (usernameExists)
@@ -118,12 +110,6 @@ export class UserService {
         code: ErrorCode.USER_USERNAME_ALREADY_EXISTS,
         message: 'Username already exists',
       });
-  }
-
-  async updateUsername(user: User, username: Username): Promise<User> {
-    if (user.username === username) return user;
-
-    await this.assertUsernameAvailable(username);
 
     return this.userRepository.updateUsername(user.id, username);
   }

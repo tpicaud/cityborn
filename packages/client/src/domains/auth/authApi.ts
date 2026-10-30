@@ -26,7 +26,7 @@ export interface AuthApi {
   resetPassword(data: ResetPassword): Promise<void>;
   getCurrentUser(): Promise<User | null>;
   signIn(data: SignIn): Promise<User>;
-  register(data: CreateUser): Promise<void>;
+  signUp(data: CreateUser): Promise<User>;
   signInWithGoogle(data: SignInWithGoogle): Promise<User>;
   signInWithApple(data: SignInWithApple): Promise<User>;
   signOut(): Promise<void>;
@@ -42,6 +42,7 @@ interface AuthCredentialsStrategy
   extends Pick<
     AuthApi,
     | 'signIn'
+    | 'signUp'
     | 'signInWithGoogle'
     | 'signInWithApple'
     | 'signOut'
@@ -81,14 +82,11 @@ function buildAuthApi(
     },
 
     signIn: credentialsStrategy.signIn,
+    signUp: credentialsStrategy.signUp,
     signInWithGoogle: credentialsStrategy.signInWithGoogle,
     signInWithApple: credentialsStrategy.signInWithApple,
     signOut: credentialsStrategy.signOut,
     updatePassword: credentialsStrategy.updatePassword,
-
-    async register(data) {
-      unwrapApiResponse(await contractClient.auth.register({ body: data }));
-    },
 
     async deleteUser() {
       unwrapApiResponse(await contractClient.auth.deleteUser({ body: {} }));
@@ -147,6 +145,12 @@ function createBearerCredentialsStrategy(
       );
     },
 
+    async signUp(data) {
+      return storeTokens(
+        unwrapApiResponse(await contractClient.auth.signUp({ body: data })),
+      );
+    },
+
     async signInWithGoogle(data) {
       return storeTokens(
         unwrapApiResponse(
@@ -197,6 +201,12 @@ function createCookieCredentialsStrategy(
     async signIn(data) {
       return unwrapApiResponse(
         await contractClient.auth.cookie.signIn({ body: data }),
+      );
+    },
+
+    async signUp(data) {
+      return unwrapApiResponse(
+        await contractClient.auth.cookie.signUp({ body: data }),
       );
     },
 
