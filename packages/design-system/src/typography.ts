@@ -17,7 +17,9 @@ const figmaTextSizes = {
 
 const fredoka = createFont(
   withTailwindTypeScale({
-    family: isWeb ? 'Fredoka, system-ui, sans-serif' : 'Fredoka',
+    family: isWeb
+      ? 'var(--font-fredoka, Fredoka), system-ui, sans-serif'
+      : 'Fredoka',
     size: figmaTextSizes,
     lineHeight: figmaTextSizes,
     weight: {
