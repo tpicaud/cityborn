@@ -8,7 +8,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import { CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import Link from 'next/link';
 import { type ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -64,28 +64,30 @@ export function VerifyEmail() {
     verificationStatusContents[status];
 
   return (
-    <>
-      {icon}
-      <Typography variant="h5">{title}</Typography>
-      <Typography variant="body2" color="text.secondary">
-        {message}
-      </Typography>
+    <main className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+      <Box className="flex flex-col items-center gap-4 bg-white border border-slate-200 shadow-xl rounded-2xl p-6 max-w-sm w-full text-center">
+        {icon}
+        <Typography variant="h5">{title}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {message}
+        </Typography>
 
-      {status === 'expired' && (
-        <LoadingButton variant="contained" onClick={renew}>
-          Renvoyer un lien
-        </LoadingButton>
-      )}
+        {status === 'expired' && (
+          <LoadingButton variant="contained" onClick={renew}>
+            Renvoyer un lien
+          </LoadingButton>
+        )}
 
-      {status !== 'verifying' && (
-        <Button
-          variant={status === 'expired' ? 'text' : 'contained'}
-          LinkComponent={Link}
-          href="/"
-        >
-          Retour à l'accueil
-        </Button>
-      )}
-    </>
+        {status !== 'verifying' && (
+          <Button
+            variant={status === 'expired' ? 'text' : 'contained'}
+            LinkComponent={Link}
+            href="/"
+          >
+            Retour à l'accueil
+          </Button>
+        )}
+      </Box>
+    </main>
   );
 }
