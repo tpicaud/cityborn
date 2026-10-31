@@ -16,6 +16,7 @@
     "@ariakit/react": "^0.4.26",
     "@cityborn/api": "workspace:*",
     "@cityborn/client": "workspace:*",
+    "@cityborn/design-system": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.9.1",
