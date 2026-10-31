@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Dialog, styled, View } from 'tamagui';
-import { IconButton } from './icon-button/IconButton';
+import { IconButton } from './IconButton';
 import { verticalGradient } from './palette';
 
 type PopupTone = 'blue' | 'night';
