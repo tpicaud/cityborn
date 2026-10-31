@@ -6,10 +6,10 @@ import {
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
-import { PrimaryButton } from '@cityborn/design-system';
+import { Button } from '@cityborn/design-system';
 import { Typography } from '@mui/material';
 import Image from 'next/image';
-import Button from '@/components/ui/buttons/Button';
+import LegacyButton from '@/components/ui/buttons/Button';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 
 export default function Home({
@@ -67,15 +67,15 @@ export default function Home({
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center justify-center w-full">
-          <PrimaryButton label="Connexion" onPress={openSignIn} />
-          <Button
+          <Button label="Connexion" onPress={openSignIn} />
+          <LegacyButton
             variant="contained"
             color="primary"
             className="text-white px-6 w-full rounded"
             onClick={openSignUp}
           >
             <p className="px-3">Inscription</p>
-          </Button>
+          </LegacyButton>
         </div>
       )}
     </>
