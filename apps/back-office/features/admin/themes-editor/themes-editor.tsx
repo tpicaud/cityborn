@@ -11,7 +11,8 @@ export function ThemesEditor() {
   const { creationForm, state }: ThemesManagement = editor;
   const isBusy: boolean =
     creationForm.formState.isSubmitting ||
-    editor.renameForm.formState.isSubmitting ||
+    editor.editForm.formState.isSubmitting ||
+    editor.isMoving ||
     editor.isDeleting;
   const creationError: string | undefined =
     creationForm.formState.errors.name?.message ??
@@ -62,12 +63,14 @@ export function ThemesEditor() {
         <Loader />
       ) : (
         <ul aria-label="Thèmes" className="flex flex-col gap-3 max-w-3xl">
-          {editor.themes.map((theme) => (
+          {editor.themes.map((theme, index) => (
             <ThemeRow
               key={theme.id}
               theme={theme}
               editor={editor}
               isBusy={isBusy}
+              isFirst={index === 0}
+              isLast={index === editor.themes.length - 1}
             />
           ))}
         </ul>

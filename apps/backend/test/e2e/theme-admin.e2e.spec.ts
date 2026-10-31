@@ -4,6 +4,7 @@ import {
   contract,
   ErrorCode,
   type Theme,
+  ThemeIcon,
   ThemeSchema,
   type User,
 } from '@cityborn/api';
@@ -50,6 +51,7 @@ describe('Theme admin routes', () => {
     expect(ThemeSchema.parse(renamedResponse.body)).toEqual({
       id: theme.id,
       name: 'Films',
+      icon: ThemeIcon.EDUCATION,
     });
     await expect(
       app.get(PrismaService).theme.findUnique({ where: { id: theme.id } }),

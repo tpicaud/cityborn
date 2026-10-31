@@ -5,6 +5,7 @@ import {
 } from '../protocol/payload.schema';
 import {
   AdminThemesSchema,
+  MoveThemeSchema,
   SaveThemeSchema,
   ThemeIdParamSchema,
   ThemeSchema,
@@ -30,6 +31,13 @@ export const themeAdminContract = c.router(
       pathParams: ThemeIdParamSchema,
       body: SaveThemeSchema,
       responses: { 200: ThemeSchema },
+    },
+    moveTheme: {
+      method: 'POST',
+      path: '/:id/move',
+      pathParams: ThemeIdParamSchema,
+      body: MoveThemeSchema,
+      responses: { 200: AdminThemesSchema },
     },
     deleteTheme: {
       method: 'DELETE',

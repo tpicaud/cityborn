@@ -373,5 +373,38 @@ describe('PrismaPackRepository', () => {
         { id: root.id, name: 'Countries', children: [{ id: child.id }] },
       ]);
     });
+
+    it('omits unpublished sub-packs beneath published packs', async () => {
+      const rootData: CreatePack = buildCreatePack({
+        name: 'Countries',
+        isPublished: true,
+      });
+      const root: Pack = await packRepository.create(rootData);
+      const childData: CreatePack = buildCreatePack({
+        name: 'France',
+        parentId: root.id,
+      });
+      const child: Pack = await packRepository.create(childData);
+      const hiddenChildData: CreatePack = buildCreatePack({
+        name: 'Spain',
+        parentId: root.id,
+        isPublished: false,
+      });
+      await packRepository.create(hiddenChildData);
+      const hiddenGrandchildData: CreatePack = buildCreatePack({
+        name: 'Paris',
+        parentId: child.id,
+        isPublished: false,
+      });
+      await packRepository.create(hiddenGrandchildData);
+
+      const tree: PackTree[] = await packRepository.findTree({
+        isPublished: true,
+      });
+
+      expect(tree).toMatchObject([
+        { id: root.id, children: [{ id: child.id, children: [] }] },
+      ]);
+    });
   });
 });
