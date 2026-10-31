@@ -25,7 +25,8 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
 
 ## Écrans
 
-- Un écran joueur se compose dans le gabarit d'écran du design system : fond, titre, bouton retour, zones sûres du haut et des côtés ; la barre d'onglets porte la zone sûre du bas.
+- Un écran joueur se compose dans le gabarit d'écran du design system.
+- Un écran affiché sans barre d'onglets porte lui-même la zone sûre du bas.
 - Adaptation d'un écran :
   - téléphone : valeurs des maquettes téléphone, sans condition de média ;
   - tablette : valeurs des maquettes tablette sous le média `md`, sur le web comme sur le mobile ;
