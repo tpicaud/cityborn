@@ -15,12 +15,10 @@ import {
   usePackSelection,
   usePlayerNameForm,
 } from '@cityborn/client/session';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -36,6 +34,7 @@ import IconButton from '@/components/ui/buttons/IconButton';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
+import { PackThemeFilters } from './PackThemeFilters';
 
 type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;
@@ -77,11 +76,10 @@ export const Lobby = ({
   const navigation = useNavigation();
   const {
     isLoading: isLoadingPacks,
-    selectedPath,
-    currentNodes,
-    currentName,
-    openPack,
-    goBack,
+    themes,
+    selectedTheme,
+    selectTheme,
+    packs,
     playPack,
   }: PackSelection = usePackSelection({
     session,
@@ -208,16 +206,14 @@ export const Lobby = ({
                   : 'w-full sm:w-[300px] md:w-[400px] max-w-full sm:shrink-0 flex flex-col gap-3'
               }
             >
-              <div className="flex items-center gap-1">
-                {selectedPath.length > 0 && (
-                  <IconButton size="small" onClick={goBack}>
-                    <ArrowBackIcon fontSize="small" />
-                  </IconButton>
-                )}
-                <Typography variant="subtitle1" noWrap>
-                  {currentName ?? 'Packs'}
-                </Typography>
-              </div>
+              <PackThemeFilters
+                themes={themes}
+                selectedTheme={selectedTheme}
+                selectTheme={selectTheme}
+              />
+              <Typography variant="subtitle1" noWrap>
+                {selectedTheme?.name ?? 'Packs'}
+              </Typography>
               <Box
                 sx={{
                   border: '1px solid',
@@ -227,9 +223,9 @@ export const Lobby = ({
                   overflowY: 'auto',
                 }}
               >
-                {currentNodes.map((node) => (
+                {packs.map((pack) => (
                   <Box
-                    key={node.id}
+                    key={pack.id}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -252,29 +248,17 @@ export const Lobby = ({
                         overflowWrap: 'break-word',
                       }}
                     >
-                      {node.name}
+                      {pack.name}
                     </Typography>
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <LoadingButton
-                        size="small"
-                        variant="contained"
-                        disabled={!isHost}
-                        onClick={() => playPack(node)}
-                        sx={{ width: 96, fontSize: '0.7rem' }}
-                      >
-                        Jouer
-                      </LoadingButton>
-                      {node.children.length > 0 && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => openPack(node)}
-                          sx={{ width: 96, fontSize: '0.7rem' }}
-                        >
-                          Sous-packs
-                        </Button>
-                      )}
-                    </div>
+                    <LoadingButton
+                      size="small"
+                      variant="contained"
+                      disabled={!isHost}
+                      onClick={() => playPack(pack)}
+                      sx={{ width: 96, fontSize: '0.7rem', flexShrink: 0 }}
+                    >
+                      Jouer
+                    </LoadingButton>
                   </Box>
                 ))}
               </Box>

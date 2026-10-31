@@ -27,10 +27,11 @@ export type ThemesManagement = ThemeMutations & {
   themes: AdminTheme[];
   state: ThemeEditorState;
   creationForm: UseFormReturn<SaveTheme>;
-  renameForm: UseFormReturn<SaveTheme>;
-  startRenaming: (theme: AdminTheme) => void;
+  editionForm: UseFormReturn<SaveTheme>;
+  startEditing: (theme: AdminTheme) => void;
   confirmDeletion: (id: ThemeId) => void;
   cancel: () => void;
+  isMoving: boolean;
   isDeleting: boolean;
   isLoading: boolean;
   loadError: string | null;
@@ -48,12 +49,13 @@ export function useThemesManagement(): ThemesManagement {
     themeEditorReducer,
     initialThemeEditorState,
   );
+  const [isMoving, setIsMoving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const creationForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  const renameForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
+  const editionForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
@@ -62,15 +64,16 @@ export function useThemesManagement(): ThemesManagement {
     themes,
     state,
     creationForm,
-    renameForm,
+    editionForm,
+    isMoving,
     isDeleting,
     isLoading: query.isPending,
     loadError: query.isError ? resolveErrorMessage(query.error) : null,
     reload: () => {
       query.refetch();
     },
-    startRenaming: (theme) => {
-      renameForm.reset({ name: theme.name });
+    startEditing: (theme) => {
+      editionForm.reset({ name: theme.name, icon: theme.icon });
       dispatch({ type: 'edit', id: theme.id });
     },
     confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),
@@ -81,8 +84,9 @@ export function useThemesManagement(): ThemesManagement {
       themes,
       editedThemeId: state.editedThemeId,
       creationForm,
-      renameForm,
+      editionForm,
       dispatch,
+      setIsMoving,
       setIsDeleting,
     }),
   };

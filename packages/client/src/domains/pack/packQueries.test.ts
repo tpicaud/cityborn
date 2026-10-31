@@ -51,7 +51,7 @@ function createFakePackApi({
   getPacks = unexpectedCall,
 }: PackReads): PackApi {
   return {
-    getPackTrees: unexpectedCall,
+    getPublishedPacks: unexpectedCall,
     getPacks,
     getFullPack,
     createPack: unexpectedCall,
