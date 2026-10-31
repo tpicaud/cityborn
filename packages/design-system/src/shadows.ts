@@ -13,3 +13,7 @@ export const shadows = {
   card: '0 4px 12px 0 rgba(0, 0, 0, 0.28)',
   panel: '0 11px 16.7px 0 rgba(0, 0, 0, 0.29)',
 } as const;
+
+export const textShadows = {
+  'screen-title': '0 5px 9.6px rgba(0, 0, 0, 0.25)',
+} as const;
