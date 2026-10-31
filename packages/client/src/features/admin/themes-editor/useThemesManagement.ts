@@ -27,7 +27,7 @@ export type ThemesManagement = ThemeMutations & {
   themes: AdminTheme[];
   state: ThemeEditorState;
   creationForm: UseFormReturn<SaveTheme>;
-  editionForm: UseFormReturn<SaveTheme>;
+  editForm: UseFormReturn<SaveTheme>;
   startEditing: (theme: AdminTheme) => void;
   confirmDeletion: (id: ThemeId) => void;
   cancel: () => void;
@@ -55,7 +55,7 @@ export function useThemesManagement(): ThemesManagement {
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  const editionForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
+  const editForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
@@ -64,7 +64,7 @@ export function useThemesManagement(): ThemesManagement {
     themes,
     state,
     creationForm,
-    editionForm,
+    editForm,
     isMoving,
     isDeleting,
     isLoading: query.isPending,
@@ -73,7 +73,7 @@ export function useThemesManagement(): ThemesManagement {
       query.refetch();
     },
     startEditing: (theme) => {
-      editionForm.reset({ name: theme.name, icon: theme.icon });
+      editForm.reset({ name: theme.name, icon: theme.icon });
       dispatch({ type: 'edit', id: theme.id });
     },
     confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),
@@ -84,7 +84,7 @@ export function useThemesManagement(): ThemesManagement {
       themes,
       editedThemeId: state.editedThemeId,
       creationForm,
-      editionForm,
+      editForm,
       dispatch,
       setIsMoving,
       setIsDeleting,
