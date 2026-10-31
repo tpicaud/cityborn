@@ -16,6 +16,7 @@ import {
   usePlayerNameForm,
 } from '@cityborn/client/session';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import 'leaflet/dist/leaflet.css';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
