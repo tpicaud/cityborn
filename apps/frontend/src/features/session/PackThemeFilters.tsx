@@ -48,11 +48,8 @@ export function PackThemeFilters({
   selectTheme,
 }: PackThemeFiltersProps) {
   return (
-    <div
-      role="group"
-      aria-label="Filtrer les packs par thème"
-      className="flex gap-2 overflow-x-auto pb-1"
-    >
+    <fieldset className="flex min-w-0 gap-2 overflow-x-auto pb-1">
+      <legend className="sr-only">Filtrer les packs par thème</legend>
       <ThemeFilter
         label="Tous"
         isSelected={selectedTheme === undefined}
@@ -67,6 +64,6 @@ export function PackThemeFilters({
           onSelect={() => selectTheme(theme.id)}
         />
       ))}
-    </div>
+    </fieldset>
   );
 }
