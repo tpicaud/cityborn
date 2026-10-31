@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { styled, Text, View } from 'tamagui';
+import { styled } from 'tamagui';
+import { Caption } from './Caption';
+import { PressableFrame } from './PressableFrame';
 import { verticalGradient } from './palette';
 
 type FilterTagProps = {
@@ -9,10 +11,7 @@ type FilterTagProps = {
   icon?: ReactNode;
 };
 
-const FilterTagFrame = styled(View, {
-  role: 'button',
-  render: <button type="button" />,
-  tabIndex: 0,
+const FilterTagFrame = styled(PressableFrame, {
   flexDirection: 'row',
   items: 'center',
   justify: 'center',
@@ -21,11 +20,7 @@ const FilterTagFrame = styled(View, {
   py: '2',
   rounded: '8',
   borderWidth: '1',
-  cursor: 'web:pointer',
   opacity: 'press:0.8',
-  outlineColor: 'focus-visible:white',
-  outlineStyle: 'focus-visible:solid',
-  outlineWidth: 'focus-visible:2px',
   variants: {
     selected: {
       true: {
@@ -41,11 +36,7 @@ const FilterTagFrame = styled(View, {
   } as const,
 });
 
-const FilterTagLabel = styled(Text, {
-  fontFamily: 'body',
-  fontSize: '2',
-  lineHeight: '2',
-  fontWeight: '500',
+const FilterTagLabel = styled(Caption, {
   color: 'white',
   select: 'none',
 });
