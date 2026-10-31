@@ -1,4 +1,11 @@
-import { buildTheme, ErrorCode, type Theme } from '@cityborn/api';
+import {
+  type AdminTheme,
+  buildAdminTheme,
+  buildTheme,
+  ErrorCode,
+  type Theme,
+  ThemeMoveDirection,
+} from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
 import {
   ThemeHasPacksError,
@@ -167,5 +174,86 @@ describe('ThemeService.delete', () => {
     await themeService.delete(theme.id);
 
     expect(themeRepository.delete).toHaveBeenCalledWith(theme.id);
+  });
+});
+describe('ThemeService.move', () => {
+  const sport: AdminTheme = buildAdminTheme({
+    id: '00000000-0000-4000-8000-000000000050',
+    name: 'Sport',
+    isDefault: false,
+  });
+  const music: AdminTheme = buildAdminTheme({
+    id: '00000000-0000-4000-8000-000000000051',
+    name: 'Musique',
+    isDefault: false,
+  });
+  const miscellaneous: AdminTheme = buildAdminTheme();
+
+  it('swaps a theme with the previous one', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
+
+    const themes: AdminTheme[] = await themeService.move({
+      id: music.id,
+      direction: ThemeMoveDirection.UP,
+    });
+
+    expect(themes).toEqual([music, sport, miscellaneous]);
+    expect(themeRepository.reorder).toHaveBeenCalledWith([
+      music.id,
+      sport.id,
+      miscellaneous.id,
+    ]);
+  });
+
+  it('swaps a theme with the next one', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport, music, miscellaneous]);
+
+    const themes: AdminTheme[] = await themeService.move({
+      id: music.id,
+      direction: ThemeMoveDirection.DOWN,
+    });
+
+    expect(themes).toEqual([sport, miscellaneous, music]);
+    expect(themeRepository.reorder).toHaveBeenCalledWith([
+      sport.id,
+      miscellaneous.id,
+      music.id,
+    ]);
+  });
+
+  it('keeps the order when the theme is already at the edge', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport, music]);
+
+    const themes: AdminTheme[] = await themeService.move({
+      id: sport.id,
+      direction: ThemeMoveDirection.UP,
+    });
+
+    expect(themes).toEqual([sport, music]);
+    expect(themeRepository.reorder).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown theme', async () => {
+    const {
+      themeRepository,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    themeRepository.findAll.mockResolvedValue([sport]);
+
+    await expect(
+      themeService.move({ id: music.id, direction: ThemeMoveDirection.DOWN }),
+    ).rejects.toMatchObject({ response: { code: ErrorCode.THEME_NOT_FOUND } });
   });
 });

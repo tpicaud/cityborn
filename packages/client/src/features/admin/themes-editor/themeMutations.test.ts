@@ -199,7 +199,7 @@ describe('createThemeMutations', () => {
         updateTheme: async ({ id, theme }) => {
           assert.equal(id, sport.id);
           assert.deepEqual(theme, { name: 'Art' });
-          return { id, name: theme.name };
+          return { id, name: theme.name, icon: sport.icon };
         },
       },
     });
