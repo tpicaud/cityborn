@@ -61,17 +61,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="components"
-        options={{
-          title: 'Composants',
-          href: null,
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Icon size={24} name="components_fill" color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }
