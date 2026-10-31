@@ -30,6 +30,8 @@ const componentColors = {
   'row-fill': 'rgba(0, 0, 0, 0.06)',
   'row-fill-press': 'rgba(255, 255, 255, 0.06)',
   scrim: 'rgba(0, 0, 0, 0.6)',
+  'tab-highlight-fill': 'rgba(26, 255, 217, 0.09)',
+  'tab-highlight-border': 'rgba(26, 255, 217, 0.48)',
 } as const;
 
 type GradientStops = readonly [string, string];

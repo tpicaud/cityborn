@@ -1,11 +1,11 @@
 import type { ComponentType } from 'react';
-import { styled } from 'tamagui';
-import { PressableFrame } from '../PressableFrame';
+import { styled, View } from 'tamagui';
 import {
+  type AssetImageProps,
   type CommonIcon,
-  type CommonIconImageProps,
-  useCommonIconImage,
-} from './commonIcons';
+  useAssetImage,
+} from './assetImage';
+import { PressableFrame } from './PressableFrame';
 
 type IconSize = {
   width: number;
@@ -35,13 +35,14 @@ const IconButtonFrame = styled(PressableFrame, {
 });
 
 export function IconButton({ icon, label, onPress }: IconButtonProps) {
-  const CommonIconImage: ComponentType<CommonIconImageProps> =
-    useCommonIconImage();
+  const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
   const { width, height }: IconSize = iconSizes[icon];
 
   return (
     <IconButtonFrame aria-label={label} onPress={onPress}>
-      <CommonIconImage icon={icon} width={width} height={height} />
+      <View w={width} h={height}>
+        <AssetImage asset={`common/${icon}`} />
+      </View>
     </IconButtonFrame>
   );
 }
