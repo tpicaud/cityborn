@@ -1,4 +1,5 @@
 import { Spinner, styled, Text, View } from 'tamagui';
+import { PressableFrame } from './PressableFrame';
 import { verticalGradient } from './palette';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary';
@@ -19,7 +20,7 @@ const ButtonSocket = styled(View, {
   rounded: '3xl',
   variants: {
     variant: {
-      primary: { pb: 4 },
+      primary: { pb: '1' },
       secondary: { pb: 3 },
       tertiary: { pb: 3 },
     },
@@ -29,26 +30,18 @@ const ButtonSocket = styled(View, {
   } as const,
 });
 
-const ButtonFace = styled(View, {
-  role: 'button',
-  render: <button type="button" />,
-  tabIndex: 0,
+const ButtonFace = styled(PressableFrame, {
   items: 'center',
   justify: 'center',
   px: '8',
   rounded: '8',
-  borderWidth: '0',
-  cursor: 'web:pointer',
-  outlineColor: 'focus-visible:white',
-  outlineStyle: 'focus-visible:solid',
-  outlineWidth: 'focus-visible:2px',
   variants: {
     variant: {
       primary: {
         py: '5',
         backgroundImage: verticalGradient('cta-orange'),
         boxShadow: 'relief-orange press:relief-pressed',
-        y: 'press:4px',
+        y: 'press:1',
       },
       secondary: {
         py: '3.5',
