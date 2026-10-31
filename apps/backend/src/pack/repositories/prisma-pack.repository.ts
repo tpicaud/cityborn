@@ -15,13 +15,29 @@ import type { PackFilter, PackRepository } from './pack.repository';
 
 const TREE_DEPTH = 6;
 
+type PackPublicationWhere = { isPublished?: boolean };
+
 type PackChildrenInclude = {
-  children: true | { include: PackChildrenInclude };
+  children: {
+    where: PackPublicationWhere;
+    include?: PackChildrenInclude;
+  };
 };
 
-function buildChildrenInclude(depth: number): PackChildrenInclude {
-  if (depth <= 1) return { children: true };
-  return { children: { include: buildChildrenInclude(depth - 1) } };
+function buildChildrenInclude({
+  depth,
+  where,
+}: {
+  depth: number;
+  where: PackPublicationWhere;
+}): PackChildrenInclude {
+  if (depth <= 1) return { children: { where } };
+  return {
+    children: {
+      where,
+      include: buildChildrenInclude({ depth: depth - 1, where }),
+    },
+  };
 }
 
 @Injectable()
@@ -31,14 +47,13 @@ export class PrismaPackRepository implements PackRepository {
   ) {}
 
   async findTree(filter: Pick<PackFilter, 'isPublished'>): Promise<PackTree[]> {
+    const where: PackPublicationWhere =
+      filter.isPublished !== undefined
+        ? { isPublished: filter.isPublished }
+        : {};
     const roots = await this.txHost.tx.pack.findMany({
-      where: {
-        parentId: null,
-        ...(filter.isPublished !== undefined && {
-          isPublished: filter.isPublished,
-        }),
-      },
-      include: buildChildrenInclude(TREE_DEPTH),
+      where: { parentId: null, ...where },
+      include: buildChildrenInclude({ depth: TREE_DEPTH, where }),
     });
     return PackMapper.toPackTrees(roots);
   }
