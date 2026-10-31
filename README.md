@@ -22,6 +22,29 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 Renseigner ensuite les variables requises dans les fichiers `.env` (demander les valeurs sensibles à l'équipe).
 
+### Worktrees
+
+Depuis un worktree secondaire, lancer la préparation avant de développer :
+
+```bash
+<checkout-principal>/scripts/setup-worktree.sh "$PWD"
+```
+
+Le checkout principal est la première entrée de `git worktree list`.
+Le script conserve les `.env` déjà présents et copie seulement les manquants
+ignorés par Git depuis ce checkout. Les `.env` des apps qui possèdent un
+`.env.example` doivent ensuite être présents, sinon la préparation échoue.
+Il exécute toujours `pnpm install`, même si `node_modules` existe déjà.
+Un échec bloque le développement ; configurer les fichiers manquants ou corriger
+l'installation, puis relancer. `--skip-install` permet seulement la copie et la
+vérification des fichiers ; cette option ne valide pas la préparation complète.
+
+Le workflow `deliver-issue` réutilise le worktree secondaire courant et y utilise
+la branche liée à l'issue. Depuis le checkout principal, il réutilise le worktree
+de cette branche ou en crée un, en préservant le principal. Une branche occupée
+ailleurs depuis un worktree secondaire, ou des changements locaux dans le
+worktree retenu, bloquent la préparation sans opération forcée.
+
 ## Lancement
 
 1. Démarrer PostgreSQL et Redis, puis appliquer les migrations :

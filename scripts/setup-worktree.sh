@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Prépare un worktree Cityborn : copie les fichiers .env du checkout principal
-# (main local) puis installe les dépendances.
 set -euo pipefail
 
 usage() {
@@ -8,7 +6,8 @@ usage() {
 Usage: scripts/setup-worktree.sh [chemin_du_worktree] [--skip-install]
 
 Sans argument, prépare le worktree courant.
-  - copie les fichiers .env ignorés par git depuis le checkout principal
+  - conserve les .env présents et copie seulement les manquants depuis le principal
+  - vérifie les .env requis des apps
   - exécute `pnpm install` dans le worktree (sauf --skip-install)
 USAGE
 }
@@ -54,23 +53,43 @@ fi
 echo "Worktree    : $target_root"
 echo "Source .env : $main_root"
 
+env_files="$(git -C "$main_root" ls-files --others --ignored --exclude-standard \
+  -- ':(glob).env' ':(glob).env.*' ':(glob)**/.env' ':(glob)**/.env.*')"
+
 copied=0
 while IFS= read -r env_file; do
   case "$env_file" in
+    "") continue ;;
     */) continue ;;
     *node_modules/*) continue ;;
   esac
+  if [ -e "$target_root/$env_file" ] || [ -L "$target_root/$env_file" ]; then
+    echo "  conservé $env_file"
+    continue
+  fi
   mkdir -p "$target_root/$(dirname "$env_file")"
   cp -p "$main_root/$env_file" "$target_root/$env_file"
   echo "  copié $env_file"
   copied=$((copied + 1))
-done < <(
-  git -C "$main_root" ls-files --others --ignored --exclude-standard \
-    -- ':(glob).env' ':(glob).env.*' ':(glob)**/.env' ':(glob)**/.env.*' 2>/dev/null
-)
+done <<< "$env_files"
 
 if [ "$copied" -eq 0 ]; then
-  echo "Aucun fichier .env trouvé dans $main_root." >&2
+  echo "Aucun fichier .env à copier depuis $main_root." >&2
+fi
+
+required_examples="$(git -C "$target_root" ls-files -- ':(glob)apps/*/.env.example')"
+missing_env=false
+while IFS= read -r example; do
+  [ -n "$example" ] || continue
+  required_env="${example%.example}"
+  if [ ! -f "$target_root/$required_env" ]; then
+    echo "Fichier requis manquant : $required_env ; le configurer avant de développer." >&2
+    missing_env=true
+  fi
+done <<< "$required_examples"
+
+if [ "$missing_env" = true ]; then
+  exit 1
 fi
 
 if [ "$skip_install" = true ]; then

@@ -9,16 +9,9 @@ Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte 
 
 ## Préparer le worktree
 
-L'orchestrateur prépare lui-même la branche liée à l'issue et son worktree, avant tout sous-agent : le checkout courant garde sa branche et ses changements.
+Appliquer [la préparation](references/prepare.md) avant tout sous-agent, quelle que soit l'origine du checkout.
 
-1. Résoudre l'issue exacte à partir de son numéro ou de son URL.
-2. Exécuter `git fetch --all --prune`, puis trouver la branche que GitHub associe à l'issue : `gh issue develop <numéro> --list` ; une branche locale au nom proche ne compte pas. Sans branche liée, la créer avec `gh issue develop <numéro> --base main` et relancer le fetch.
-3. Réutiliser le worktree où `git worktree list` montre la branche liée ; sinon en créer un avec `git worktree add <checkout principal>/.claude/worktrees/issue-<numéro> <branche liée>`, où le checkout principal est la première entrée de `git worktree list`, puis exécuter `./scripts/setup-worktree.sh <worktree>` et signaler un échec tel quel.
-4. Rebaser la branche liée sur `origin/main`, sauf si le worktree contient des changements ou si le rebase réécrit des commits publiés : présenter alors l'état et demander. Résoudre seul un conflit seulement si la résolution découle clairement de l'issue et du code actuel ; sinon laisser le rebase en cours et demander une décision.
-
-Si l'utilisateur demande de travailler dans un checkout précis, ce checkout remplace le worktree et garde sa branche : appliquer les étapes 1, 2, puis 4 si c'est la branche liée, sinon le signaler avant tout sous-agent.
-
-La préparation est terminée quand le worktree est sur la branche liée, rebasée ou avec sa divergence présentée, et prêt à l'emploi.
+La préparation est terminée quand le worktree retenu utilise la branche liée, que sa base est vérifiée, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
 
 ## Lancer un sous-agent
 
