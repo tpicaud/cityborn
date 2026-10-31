@@ -15,14 +15,43 @@ const ctaFrameColors = {
   'cta-backdrop': 'rgba(0, 0, 0, 0.35)',
 } as const;
 
+const componentColors = {
+  'panel-fill': 'rgba(1, 43, 55, 0.51)',
+  'panel-edge': '#107599',
+  'panel-edge-faded': 'rgba(16, 117, 153, 0.5)',
+  'field-fill': 'rgba(0, 0, 0, 0.08)',
+  'field-border': 'rgba(255, 255, 255, 0.15)',
+  'field-placeholder': 'rgba(255, 255, 255, 0.24)',
+  'tag-fill': 'rgba(0, 0, 0, 0.21)',
+  'tag-border': 'rgba(255, 255, 255, 0.39)',
+  'badge-fill': 'rgba(0, 0, 0, 0.45)',
+  'badge-text': 'rgba(255, 255, 255, 0.68)',
+  'progress-track': 'rgba(16, 42, 43, 0.61)',
+  'row-fill': 'rgba(0, 0, 0, 0.06)',
+  'row-fill-press': 'rgba(255, 255, 255, 0.06)',
+  scrim: 'rgba(0, 0, 0, 0.6)',
+} as const;
+
 type GradientStops = readonly [string, string];
+
+const orangeGradientStart: string = '#FF9840';
 
 export const gradients = {
   'dark-blue': ['#006DA4', '#003D7A'],
-  orange: ['#FF9840', '#FF6200'],
+  night: ['#002D52', figmaColors['dark-blue']],
+  orange: [orangeGradientStart, '#FF6200'],
+  'cta-orange': [orangeGradientStart, figmaColors['cta-orange']],
   blue: [figmaColors['common-blue'], '#008ABC'],
   yellow: ['#FFD505', '#FFAE00'],
+  green: ['#7BFF61', '#00D540'],
 } as const satisfies Record<string, GradientStops>;
+
+type GradientName = keyof typeof gradients;
+
+export function verticalGradient(name: GradientName): string {
+  const [top, bottom]: GradientStops = gradients[name];
+  return `linear-gradient(180deg, ${top}, ${bottom})`;
+}
 
 const surface = [
   '#FFFFFF',
@@ -60,5 +89,6 @@ export const palette = {
     ...paletteThemes.colorTokens,
     ...figmaColors,
     ...ctaFrameColors,
+    ...componentColors,
   },
 };
