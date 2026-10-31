@@ -144,3 +144,17 @@ export function TabBarItem({ icon, label, active, onPress }: TabBarItemProps) {
     </TabBarItemFrame>
   );
 }
+
+type TabLayoutProps = {
+  tabBar: ReactNode;
+  children: ReactNode;
+};
+
+export function TabLayout({ tabBar, children }: TabLayoutProps) {
+  return (
+    <View h="100%">
+      <View flex={1}>{children}</View>
+      {tabBar}
+    </View>
+  );
+}
