@@ -5,6 +5,7 @@
 - `tamagui` et les paquets `@tamagui/*` partagent une seule version dans le monorepo.
 - La configuration commune part de `@tamagui/config/v6` et de la palette du design system.
 - Un composant partagé se style par les thèmes, variantes et tokens de la configuration, sans couleur ni dimension brute.
+- Seule exception : une mesure relevée telle quelle sur la maquette (boîte d'un asset, largeur d'une maquette) s'écrit en pixels, dans une constante nommée du composant qui la lit.
 - Une police de la configuration porte une échelle de tailles chiffrée, plus les tailles `xs`…`9xl` que lit le sizing des composants Tamagui.
 - Un style de texte des maquettes (titre, CTA, légende) devient un composant `styled` du design system qui pointe une taille de l'échelle.
 - Un asset partagé (logo, fond, icône) s'exporte du Figma dans les `assets/` du design system ; l'app l'importe par le sous-chemin `@cityborn/design-system/assets/`.
