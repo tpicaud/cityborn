@@ -40,7 +40,7 @@ const ScreenTitle = styled(Text, {
   lineHeight: '10 md:11',
   fontWeight: '700',
   color: 'white',
-  textShadow: '0 5px 9.6px rgba(0, 0, 0, 0.25)',
+  textShadow: 'screen-title',
 });
 
 export function Screen({ title, onBack, children }: ScreenProps) {
