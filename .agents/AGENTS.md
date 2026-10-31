@@ -79,7 +79,6 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 - Créer une nouvelle migration Prisma (`pnpm db:migrate`) plutôt que modifier une migration appliquée ou mergée.
 - Laisser intacts les `overrides` de `pnpm-workspace.yaml` : la plupart corrigent des CVE.
-- Demander un test manuel de l'UI plutôt que lancer le front ou le mobile.
 
 ## Maintenir ce guide
 
