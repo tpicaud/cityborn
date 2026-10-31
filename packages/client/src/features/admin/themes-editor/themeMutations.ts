@@ -38,7 +38,7 @@ export function createThemeMutations({
   themes,
   editedThemeId,
   creationForm,
-  editionForm,
+  editForm,
   dispatch,
   setIsMoving,
   setIsDeleting,
@@ -48,7 +48,7 @@ export function createThemeMutations({
   themes: AdminTheme[];
   editedThemeId: ThemeId | null;
   creationForm: ThemeForm;
-  editionForm: ThemeForm;
+  editForm: ThemeForm;
   dispatch: (action: Parameters<typeof themeEditorReducer>[1]) => void;
   setIsMoving: (isMoving: boolean) => void;
   setIsDeleting: (isDeleting: boolean) => void;
@@ -77,7 +77,7 @@ export function createThemeMutations({
         });
       }
     }),
-    updateTheme: editionForm.handleSubmit(async (data: SaveTheme) => {
+    updateTheme: editForm.handleSubmit(async (data: SaveTheme) => {
       const id: ThemeId | null = editedThemeId;
       if (!id) return;
       try {

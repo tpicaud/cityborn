@@ -11,7 +11,7 @@ export function ThemesEditor() {
   const { creationForm, state }: ThemesManagement = editor;
   const isBusy: boolean =
     creationForm.formState.isSubmitting ||
-    editor.editionForm.formState.isSubmitting ||
+    editor.editForm.formState.isSubmitting ||
     editor.isMoving ||
     editor.isDeleting;
   const creationError: string | undefined =

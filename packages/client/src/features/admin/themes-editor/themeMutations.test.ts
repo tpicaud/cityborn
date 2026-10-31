@@ -27,7 +27,7 @@ type ManagementFixture = {
   queryClient: QueryClient;
   themeKey: QueryKey;
   creationForm: ThemeForm;
-  editionForm: ThemeForm;
+  editForm: ThemeForm;
   mutations: ThemeMutations;
   state: ThemeEditorState;
   movingStates: boolean[];
@@ -94,11 +94,11 @@ function createManagementFixture({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  const editionForm: ThemeForm = createFormControl<SaveTheme>({
+  const editForm: ThemeForm = createFormControl<SaveTheme>({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  [creationForm, editionForm].forEach((form: ThemeForm) => {
+  [creationForm, editForm].forEach((form: ThemeForm) => {
     context.after(
       form.subscribe({
         formState: { values: true },
@@ -115,7 +115,7 @@ function createManagementFixture({
     themes,
     editedThemeId: state.editedThemeId,
     creationForm,
-    editionForm,
+    editForm,
     dispatch: (action) => {
       currentState = themeEditorReducer(currentState, action);
     },
@@ -126,7 +126,7 @@ function createManagementFixture({
     queryClient,
     themeKey,
     creationForm,
-    editionForm,
+    editForm,
     mutations,
     get state() {
       return currentState;
@@ -211,8 +211,8 @@ describe('createThemeMutations', () => {
         },
       },
     });
-    fixture.editionForm.setValue('name', 'Art');
-    fixture.editionForm.setValue('icon', ThemeIcon.CINEMA);
+    fixture.editForm.setValue('name', 'Art');
+    fixture.editForm.setValue('icon', ThemeIcon.CINEMA);
 
     await fixture.mutations.updateTheme();
 
@@ -235,7 +235,7 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the edition input and row open after a rejected update', async (context: TestContext) => {
+  it('keeps the edit input and row open after a rejected update', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       state: { ...initialThemeEditorState, editedThemeId: sport.id },
@@ -245,11 +245,11 @@ describe('createThemeMutations', () => {
         },
       },
     });
-    fixture.editionForm.setValue('name', 'divers');
+    fixture.editForm.setValue('name', 'divers');
 
     await fixture.mutations.updateTheme();
 
-    assert.equal(fixture.editionForm.getValues('name'), 'divers');
+    assert.equal(fixture.editForm.getValues('name'), 'divers');
     assert.equal(fixture.state.editedThemeId, sport.id);
     assert.equal(fixture.state.rowErrors[sport.id], 'Ce thème existe déjà');
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [

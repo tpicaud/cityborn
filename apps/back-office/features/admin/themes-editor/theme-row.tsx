@@ -27,13 +27,13 @@ export function ThemeRow({
 }) {
   const isEditing: boolean = editor.state.editedThemeId === theme.id;
   useEffect(() => {
-    if (isEditing) editor.editionForm.setFocus('name');
-  }, [isEditing, editor.editionForm]);
+    if (isEditing) editor.editForm.setFocus('name');
+  }, [isEditing, editor.editForm]);
   const isConfirming: boolean = editor.state.deletionThemeId === theme.id;
   const error: string | undefined =
     (isEditing
-      ? (editor.editionForm.formState.errors.name?.message ??
-        editor.editionForm.formState.errors.icon?.message)
+      ? (editor.editForm.formState.errors.name?.message ??
+        editor.editForm.formState.errors.icon?.message)
       : undefined) ?? editor.state.rowErrors[theme.id];
   const errorId: string = `theme-error-${theme.id}`;
   return (
@@ -55,7 +55,7 @@ export function ThemeRow({
           </label>
           <input
             id={`theme-name-${theme.id}`}
-            {...editor.editionForm.register('name')}
+            {...editor.editForm.register('name')}
             disabled={isBusy}
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
@@ -71,7 +71,7 @@ export function ThemeRow({
                 <input
                   type="radio"
                   value={icon}
-                  {...editor.editionForm.register('icon')}
+                  {...editor.editForm.register('icon')}
                   disabled={isBusy}
                   className="sr-only"
                 />
