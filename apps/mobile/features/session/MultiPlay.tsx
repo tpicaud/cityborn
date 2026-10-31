@@ -1,3 +1,4 @@
+import type { Navigation } from '@cityborn/client/platform';
 import {
   formatSessionCodeInput,
   type SessionLauncher,
@@ -10,14 +11,13 @@ import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { useNavigation } from '@/lib/navigation';
 
-export default function Play() {
-  const navigation = useNavigation();
+export default function MultiPlay() {
+  const navigation: Navigation = useNavigation();
   const {
     joinSessionForm: {
       control,
       formState: { errors, isSubmitting },
     },
-    playSolo,
     playMulti,
     joinSession,
   }: SessionLauncher = useSessionLauncher({ navigation });
@@ -70,22 +70,13 @@ export default function Play() {
 
           <View className="h-[45%] flex w-full justify-start items-center gap-4">
             <Text className="text-2xl">Créer</Text>
-            <View className="flex flex-col w-full items-center gap-4">
-              <Button
-                color="primary"
-                variant="filled"
-                label="SOLO"
-                size="large"
-                onPress={playSolo}
-              />
-              <Button
-                color="primary"
-                variant="filled"
-                label="MULTI"
-                size="large"
-                onPress={playMulti}
-              />
-            </View>
+            <Button
+              color="primary"
+              variant="filled"
+              label="MULTI"
+              size="large"
+              onPress={playMulti}
+            />
           </View>
         </View>
       </View>

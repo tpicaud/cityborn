@@ -7,7 +7,7 @@ export default function SessionScreen() {
   const { sessionID }: { sessionID: string } = useLocalSearchParams();
 
   return (
-    <ScreenLayout fullBleed>
+    <ScreenLayout>
       <Session sessionID={SessionIdSchema.parse(sessionID)} />
     </ScreenLayout>
   );

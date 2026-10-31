@@ -6,32 +6,23 @@ import {
   type SessionLauncher,
   useSessionLauncher,
 } from '@cityborn/client/session';
-import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
-import { Typography } from '@mui/material';
-import Link from 'next/link';
 import { Controller } from 'react-hook-form';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import { useNavigation } from '@/lib/navigation';
 
-export default function Play() {
+export default function MultiPlay() {
   const navigation: Navigation = useNavigation();
   const {
     joinSessionForm: {
       control,
       formState: { errors },
     },
-    playSolo,
     playMulti,
     joinSession,
   }: SessionLauncher = useSessionLauncher({ navigation });
 
   return (
     <div className="flex flex-col gap-2 items-center justify-center w-full">
-      <div className="flex flex-row gap-3 items-center w-full">
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-        <Typography variant="h6">Jouer</Typography>
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-      </div>
       <form onSubmit={joinSession} className="flex flex-col gap-1 w-full">
         <div className="flex flex-row gap-2 items-center justify-center w-full">
           <Controller
@@ -70,38 +61,14 @@ export default function Play() {
           </p>
         )}
       </form>
-      <div className="flex flex-row gap-2 items-center justify-between w-full">
-        <LoadingButton
-          variant="contained"
-          color="primary"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-          onClick={playSolo}
-        >
-          <b>SOLO</b>
-        </LoadingButton>
-        <LoadingButton
-          variant="contained"
-          color="primary"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-          onClick={playMulti}
-        >
-          <b>MULTI</b>
-        </LoadingButton>
-      </div>
-      <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-        <a
-          href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
-          className="text-sm text-gray-600 hover:underline"
-        >
-          Nous contacter
-        </a>
-        <Link
-          href="/terms-and-policies"
-          className="text-sm text-gray-600 hover:underline text-center"
-        >
-          Politiques et conditions
-        </Link>
-      </footer>
+      <LoadingButton
+        variant="contained"
+        color="primary"
+        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
+        onClick={playMulti}
+      >
+        <b>MULTI</b>
+      </LoadingButton>
     </div>
   );
 }
