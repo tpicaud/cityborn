@@ -1,4 +1,5 @@
-import { Input, styled, Text, View } from 'tamagui';
+import { Input, styled, View } from 'tamagui';
+import { Caption } from './Caption';
 
 type TextFieldProps = {
   value: string;
@@ -26,15 +27,14 @@ const TextFieldInput = styled(Input, {
     invalid: {
       true: { borderColor: 'common-red' },
     },
+    dimmed: {
+      true: { opacity: 0.5 },
+    },
   } as const,
 });
 
-const TextFieldError = styled(Text, {
+const TextFieldError = styled(Caption, {
   px: '4',
-  fontFamily: 'body',
-  fontSize: '2',
-  lineHeight: '2',
-  fontWeight: '500',
   color: 'common-red',
 });
 
@@ -53,9 +53,9 @@ export function TextField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="field-placeholder"
-        secureTextEntry={secureTextEntry}
         type={secureTextEntry ? 'password' : 'text'}
         disabled={disabled}
+        dimmed={disabled}
         invalid={error !== undefined}
         aria-invalid={error !== undefined}
       />

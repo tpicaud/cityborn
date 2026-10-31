@@ -78,7 +78,7 @@ export function Popup({
     >
       <Dialog.Portal>
         <PopupOverlay key="overlay" />
-        <PopupFrame key="content" tone={tone}>
+        <PopupFrame key="content" tone={tone} aria-describedby={undefined}>
           <PopupTitle>{title}</PopupTitle>
           <View position="absolute" t="3" r="3">
             <IconButton icon="close" label="Fermer" onPress={onClose} />
