@@ -3,6 +3,7 @@ import {
   type AdminTheme,
   AdminThemeSchema,
   type Theme,
+  ThemeIcon,
   ThemeSchema,
 } from './theme.schema';
 
@@ -12,6 +13,7 @@ export function buildTheme(
   return ThemeSchema.parse({
     id: '244b803a-63aa-460a-a40d-4eea0ec2be50',
     name: 'Divers',
+    icon: ThemeIcon.EDUCATION,
     ...overrides,
   });
 }

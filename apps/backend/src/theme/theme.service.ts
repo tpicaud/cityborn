@@ -4,6 +4,7 @@ import {
   type SaveTheme,
   type Theme,
   type ThemeId,
+  ThemeMoveDirection,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -28,13 +29,12 @@ export class ThemeService {
   async findAll(): Promise<AdminTheme[]> {
     return this.themeRepository.findAll();
   }
+  async findPlayable(): Promise<Theme[]> {
+    return this.themeRepository.findPlayable();
+  }
   async findById(id: ThemeId): Promise<Theme> {
     const theme: Theme | null = await this.themeRepository.findById(id);
-    if (!theme)
-      throw new NotFoundException({
-        code: ErrorCode.THEME_NOT_FOUND,
-        message: 'Theme not found',
-      });
+    if (!theme) throw this.themeNotFound();
     return theme;
   }
   async create(data: SaveTheme): Promise<Theme> {
@@ -49,6 +49,30 @@ export class ThemeService {
   }): Promise<Theme> {
     await this.findById(id);
     return this.save(() => this.themeRepository.update({ id, theme }));
+  }
+  @Transactional()
+  async move({
+    id,
+    direction,
+  }: {
+    id: ThemeId;
+    direction: ThemeMoveDirection;
+  }): Promise<AdminTheme[]> {
+    const themes: AdminTheme[] = await this.themeRepository.findAll();
+    const index: number = themes.findIndex((theme) => theme.id === id);
+    const movedTheme: AdminTheme | undefined = themes[index];
+    if (!movedTheme) throw this.themeNotFound();
+    const targetIndex: number =
+      direction === ThemeMoveDirection.UP ? index - 1 : index + 1;
+    const targetTheme: AdminTheme | undefined = themes[targetIndex];
+    if (!targetTheme) return themes;
+    const reorderedThemes: AdminTheme[] = themes
+      .with(index, targetTheme)
+      .with(targetIndex, movedTheme);
+    await this.themeRepository.reorder(
+      reorderedThemes.map((theme) => theme.id),
+    );
+    return reorderedThemes;
   }
   @Transactional()
   async delete(id: ThemeId): Promise<void> {
@@ -73,6 +97,12 @@ export class ThemeService {
         });
       throw error;
     }
+  }
+  private themeNotFound(): NotFoundException {
+    return new NotFoundException({
+      code: ErrorCode.THEME_NOT_FOUND,
+      message: 'Theme not found',
+    });
   }
   private async save(write: () => Promise<Theme>): Promise<Theme> {
     try {
