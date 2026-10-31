@@ -73,7 +73,7 @@ export default function Home() {
                 variant="filled"
                 label="JOUER"
                 size="large"
-                onPress={() => router.navigate('/(tabs)/play')}
+                onPress={() => router.navigate('/collection')}
               />
               <LegacyButton
                 variant="default"
@@ -86,7 +86,7 @@ export default function Home() {
           <View className="flex flex-col w-full items-center justify-between gap-6">
             <Button
               label="CONNEXION"
-              onPress={() => router.navigate('/auth/sign-in')}
+              onPress={() => router.navigate('/profile')}
             />
             <LegacyButton
               color="primary"
@@ -98,7 +98,7 @@ export default function Home() {
             <LegacyButton
               variant="default"
               label="Joue sans compte"
-              onPress={() => router.navigate('/(tabs)/play')}
+              onPress={() => router.navigate('/collection')}
             />
           </View>
         )}

@@ -4,8 +4,10 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import type { Navigation } from '@cityborn/client/platform';
 import { useEffect, useRef, useState } from 'react';
 import { frontendClientConfig } from '@/config/client';
+import { useNavigation } from '@/lib/navigation';
 
 type GoogleCredentialResponse = { credential: string };
 
@@ -31,8 +33,11 @@ declare global {
 }
 
 export function SignInWithGoogleButton() {
+  const navigation: Navigation = useNavigation();
   const { signInWithGoogle }: IdentityProviderSignIn =
-    useIdentityProviderSignIn();
+    useIdentityProviderSignIn({
+      onSignedIn: () => navigation.returnTo('/'),
+    });
   const googleButtonContainer = useRef<HTMLDivElement>(null);
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
 

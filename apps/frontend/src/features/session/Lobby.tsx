@@ -15,6 +15,7 @@ import {
   usePackSelection,
   usePlayerNameForm,
 } from '@cityborn/client/session';
+import 'leaflet/dist/leaflet.css';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
