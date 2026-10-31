@@ -7,6 +7,7 @@ const phoneMockupRatio: number = 402 / 874;
 const tabletMockupRatio: number = 1024 / 1366;
 
 const Frame = styled(View, {
+  position: 'relative',
   flex: 1,
   h: '100%',
   backgroundColor: 'mid-blue',
@@ -19,6 +20,11 @@ const Backdrop = styled(View, {
   l: '0',
   r: '0',
   pointerEvents: 'none',
+});
+
+const Content = styled(View, {
+  position: 'relative',
+  flex: 1,
 });
 
 type ScreenFrameProps = {
@@ -36,7 +42,7 @@ export function ScreenFrame({ children }: ScreenFrameProps) {
       <Backdrop aspectRatio={tabletMockupRatio} display="none md:flex">
         <AssetImage asset="backgrounds/tablet" />
       </Backdrop>
-      {children}
+      <Content>{children}</Content>
     </Frame>
   );
 }
