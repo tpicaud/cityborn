@@ -1,4 +1,5 @@
-import { styled, Text, View } from 'tamagui';
+import { styled, View } from 'tamagui';
+import { Caption } from './Caption';
 
 type BadgeProps = {
   label: string;
@@ -12,11 +13,7 @@ const BadgeFrame = styled(View, {
   backgroundColor: 'badge-fill',
 });
 
-const BadgeLabel = styled(Text, {
-  fontFamily: 'body',
-  fontSize: '2',
-  lineHeight: '2',
-  fontWeight: '500',
+const BadgeLabel = styled(Caption, {
   color: 'badge-text',
   select: 'none',
 });
