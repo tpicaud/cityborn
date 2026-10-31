@@ -1,4 +1,5 @@
 import type { User } from '@cityborn/api';
+import type { Navigation } from '@cityborn/client/platform';
 import {
   type ProfileEditor,
   type ProfileGames,
@@ -30,8 +31,11 @@ import {
   Typography,
 } from '@mui/material';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
+import SignOutButton from '@/features/auth/SignOutButton';
+import { useNavigation } from '@/lib/navigation';
 
 export const Profile = ({ user }: { user: User }) => {
+  const navigation: Navigation = useNavigation();
   const { games, isLoading }: ProfileGames = useProfileGames();
   const {
     usernameForm,
@@ -69,6 +73,9 @@ export const Profile = ({ user }: { user: User }) => {
         overflow: 'auto',
       }}
     >
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <SignOutButton onSignedOut={() => navigation.returnTo('/')} />
+      </Box>
       <Typography variant="h5" align="center">
         Profil
       </Typography>
