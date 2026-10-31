@@ -1,5 +1,6 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativewind } = require('nativewind/metro');
+const { withTamagui } = require('@tamagui/cli/metro');
 const path = require('node:path');
 
 const projectRoot = __dirname;
@@ -22,4 +23,19 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-module.exports = withNativewind(config);
+const nativewindConfig = withNativewind(withTamagui(config));
+const resolveWithNativewind = nativewindConfig.resolver.resolveRequest;
+const tamaguiPackagesPath = `${path.sep}node_modules${path.sep}@tamagui${path.sep}`;
+
+nativewindConfig.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (
+    moduleName === 'react-native' &&
+    context.originModulePath.includes(tamaguiPackagesPath)
+  ) {
+    return context.resolveRequest(context, moduleName, platform);
+  }
+
+  return resolveWithNativewind(context, moduleName, platform);
+};
+
+module.exports = nativewindConfig;

@@ -137,6 +137,7 @@ export default {
     experiments: {
       typedRoutes: true,
       reactCompiler: true,
+      autolinkingModuleResolution: true,
     },
   },
 };

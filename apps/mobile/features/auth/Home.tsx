@@ -6,9 +6,10 @@ import {
   useVerificationEmailResend,
   type VerificationEmailResend,
 } from '@cityborn/client/auth';
+import { Button } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
 import { Image, Pressable } from 'react-native';
-import Button from '@/components/ui/Button';
+import LegacyButton from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { cn } from '@/lib/classNames';
@@ -67,36 +68,37 @@ export default function Home() {
             )}
 
             <View className="flex flex-col gap-6 items-center justify-center">
-              <Button
+              <LegacyButton
                 color="primary"
                 variant="filled"
                 label="JOUER"
                 size="large"
-                onPress={() => router.navigate('/(tabs)/play')}
+                onPress={() => router.navigate('/collection')}
               />
-              <Button variant="default" label="Déconnexion" onPress={signOut} />
+              <LegacyButton
+                variant="default"
+                label="Déconnexion"
+                onPress={signOut}
+              />
             </View>
           </View>
         ) : (
           <View className="flex flex-col w-full items-center justify-between gap-6">
             <Button
-              color="primary"
-              variant="outlined"
               label="CONNEXION"
-              size="large"
-              onPress={() => router.navigate('/auth/sign-in')}
+              onPress={() => router.navigate('/profile')}
             />
-            <Button
+            <LegacyButton
               color="primary"
               variant="filled"
               label="INSCRIPTION"
               size="large"
               onPress={() => router.navigate('/auth/sign-up')}
             />
-            <Button
+            <LegacyButton
               variant="default"
               label="Joue sans compte"
-              onPress={() => router.navigate('/(tabs)/play')}
+              onPress={() => router.navigate('/collection')}
             />
           </View>
         )}

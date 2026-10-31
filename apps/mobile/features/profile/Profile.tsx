@@ -1,16 +1,15 @@
-import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
-import { type CurrentUser, useCurrentUser } from '@cityborn/client/auth';
+import type { User } from '@cityborn/api';
 import {
   type ProfileEditor,
   type ProfileGames,
   useProfileEditor,
   useProfileGames,
 } from '@cityborn/client/profile';
-import { CITYBORN_CONTACT_EMAIL, formatDate } from '@cityborn/core';
+import { formatDate } from '@cityborn/core';
 import { colors } from '@cityborn/design-system';
 import { useIsFocused, useRouter } from 'expo-router';
 import { Controller } from 'react-hook-form';
-import { Linking, Pressable, ScrollView } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Dialog from '@/components/ui/Dialog';
@@ -19,10 +18,12 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 
-export default function Profile() {
-  const { user }: CurrentUser = useCurrentUser();
+type ProfileProps = {
+  user: User;
+};
+
+export default function Profile({ user }: ProfileProps) {
   const router = useRouter();
-  const { reportError }: ErrorReporter = useErrorReporter();
   const isScreenFocused: boolean = useIsFocused();
   const { games, isLoading }: ProfileGames = useProfileGames({
     isScreenFocused,
@@ -53,246 +54,189 @@ export default function Profile() {
     onAccountDeleted: () => router.navigate('/'),
   });
 
-  const openProfileFooterLink = async (url: string): Promise<void> => {
-    try {
-      await Linking.openURL(url);
-    } catch (error) {
-      reportError(error);
-    }
-  };
-
   return (
     <View className="flex-1">
-      {!user ? (
-        <View className="flex-1 flex justify-center items-center">
-          <View className="flex flex-col w-full items-center justify-between gap-4 mt-10">
-            <Text className="text-2xl mb-6">Tu n'es pas connecté !</Text>
-            <Button
-              color="primary"
-              variant="outlined"
-              label="CONNEXION"
-              size="large"
-              onPress={() => router.navigate('/auth/sign-in')}
-            />
-            <Button
-              color="primary"
-              variant="filled"
-              label="INSCRIPTION"
-              size="large"
-              onPress={() => router.navigate('/auth/sign-up')}
-            />
-          </View>
-        </View>
-      ) : (
-        <View className="flex-1 gap-8 mt-10">
-          <View className="flex-1 gap-4">
-            {isEditingUsername ? (
-              <View className="flex-row items-center justify-center gap-2 py-10">
-                <View className="w-52 gap-1">
-                  <Controller
-                    control={usernameForm.control}
-                    name="username"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        placeholder="Pseudo"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="none"
-                        error={!!usernameForm.formState.errors.username}
-                        className="w-52"
-                      />
-                    )}
-                  />
-                  {usernameForm.formState.errors.username && (
-                    <Text className="px-4 text-xs leading-4 text-destructive-500">
-                      {usernameForm.formState.errors.username.message}
-                    </Text>
+      <View className="flex-1 gap-8 mt-10">
+        <View className="flex-1 gap-4">
+          {isEditingUsername ? (
+            <View className="flex-row items-center justify-center gap-2 py-10">
+              <View className="w-52 gap-1">
+                <Controller
+                  control={usernameForm.control}
+                  name="username"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Pseudo"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
+                      error={!!usernameForm.formState.errors.username}
+                      className="w-52"
+                    />
                   )}
-                </View>
-                <Pressable
-                  accessibilityLabel="Valider le pseudo"
-                  onPress={submitUsername}
-                >
-                  <Icon name="check_outline" size={28} />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Annuler la modification du pseudo"
-                  onPress={cancelUsernameEdit}
-                >
-                  <Icon name="close_outline" size={28} />
-                </Pressable>
-              </View>
-            ) : (
-              <View className="flex-row items-center justify-center gap-2 py-15 pb-8">
-                <Text className="text-5xl font-bold text-center">
-                  {user.username}
-                </Text>
-                <Pressable
-                  accessibilityLabel="Modifier le pseudo"
-                  onPress={startUsernameEdit}
-                >
-                  <Icon name="edit_outline" size={28} />
-                </Pressable>
-              </View>
-            )}
-            <Card>
-              <View className="grid grid-cols-2 gap-6 bg-transparent">
-                <View className="flex flex-col justify-center items-center bg-transparent">
-                  <Text className="font-bold text-foreground-on-primary">
-                    Email
-                  </Text>
-                  <Text className="text-foreground-on-primary">
-                    {user.email}
-                  </Text>
-                </View>
-                <View className="flex flex-col justify-center items-center bg-transparent">
-                  <Text className="font-bold text-foreground-on-primary">
-                    Status
-                  </Text>
-                  <Text
-                    className={
-                      user.isVerified
-                        ? 'text-foreground-on-primary'
-                        : 'text-destructive-500'
-                    }
-                  >
-                    {user.isVerified ? 'Email vérifié' : 'Email non vérifié'}
-                  </Text>
-                </View>
-              </View>
-            </Card>
-            {isEditingEmail ? (
-              <View className="flex-row items-center justify-center gap-2">
-                <View className="w-60 gap-1">
-                  <Controller
-                    control={emailForm.control}
-                    name="email"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        placeholder="Email"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        error={!!emailForm.formState.errors.email}
-                      />
-                    )}
-                  />
-                  {emailForm.formState.errors.email && (
-                    <Text className="px-4 text-xs leading-4 text-destructive-500">
-                      {emailForm.formState.errors.email.message}
-                    </Text>
-                  )}
-                </View>
-                <Pressable
-                  accessibilityLabel="Valider l'adresse e-mail"
-                  disabled={emailForm.formState.isSubmitting}
-                  onPress={submitEmail}
-                >
-                  <Icon name="check_outline" size={28} />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Annuler la correction de l'adresse e-mail"
-                  onPress={cancelEmailEdit}
-                >
-                  <Icon name="close_outline" size={28} />
-                </Pressable>
-              </View>
-            ) : (
-              !user.isVerified && (
-                <Button
-                  variant="default"
-                  label="Corriger mon adresse e-mail"
-                  className="self-center"
-                  onPress={startEmailEdit}
                 />
-              )
-            )}
-            {isEmailUpdated && (
-              <Text className="text-center text-primary-500">
-                Un lien de vérification a été envoyé à ta nouvelle adresse.
+                {usernameForm.formState.errors.username && (
+                  <Text className="px-4 text-xs leading-4 text-destructive-500">
+                    {usernameForm.formState.errors.username.message}
+                  </Text>
+                )}
+              </View>
+              <Pressable
+                accessibilityLabel="Valider le pseudo"
+                onPress={submitUsername}
+              >
+                <Icon name="check_outline" size={28} />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="Annuler la modification du pseudo"
+                onPress={cancelUsernameEdit}
+              >
+                <Icon name="close_outline" size={28} />
+              </Pressable>
+            </View>
+          ) : (
+            <View className="flex-row items-center justify-center gap-2 py-15 pb-8">
+              <Text className="text-5xl font-bold text-center">
+                {user.username}
               </Text>
-            )}
-            {user.type === 'email' && (
+              <Pressable
+                accessibilityLabel="Modifier le pseudo"
+                onPress={startUsernameEdit}
+              >
+                <Icon name="edit_outline" size={28} />
+              </Pressable>
+            </View>
+          )}
+          <Card>
+            <View className="grid grid-cols-2 gap-6 bg-transparent">
+              <View className="flex flex-col justify-center items-center bg-transparent">
+                <Text className="font-bold text-foreground-on-primary">
+                  Email
+                </Text>
+                <Text className="text-foreground-on-primary">{user.email}</Text>
+              </View>
+              <View className="flex flex-col justify-center items-center bg-transparent">
+                <Text className="font-bold text-foreground-on-primary">
+                  Status
+                </Text>
+                <Text
+                  className={
+                    user.isVerified
+                      ? 'text-foreground-on-primary'
+                      : 'text-destructive-500'
+                  }
+                >
+                  {user.isVerified ? 'Email vérifié' : 'Email non vérifié'}
+                </Text>
+              </View>
+            </View>
+          </Card>
+          {isEditingEmail ? (
+            <View className="flex-row items-center justify-center gap-2">
+              <View className="w-60 gap-1">
+                <Controller
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Email"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      error={!!emailForm.formState.errors.email}
+                    />
+                  )}
+                />
+                {emailForm.formState.errors.email && (
+                  <Text className="px-4 text-xs leading-4 text-destructive-500">
+                    {emailForm.formState.errors.email.message}
+                  </Text>
+                )}
+              </View>
+              <Pressable
+                accessibilityLabel="Valider l'adresse e-mail"
+                disabled={emailForm.formState.isSubmitting}
+                onPress={submitEmail}
+              >
+                <Icon name="check_outline" size={28} />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="Annuler la correction de l'adresse e-mail"
+                onPress={cancelEmailEdit}
+              >
+                <Icon name="close_outline" size={28} />
+              </Pressable>
+            </View>
+          ) : (
+            !user.isVerified && (
               <Button
                 variant="default"
-                label="Modifier mon mot de passe"
+                label="Corriger mon adresse e-mail"
                 className="self-center"
-                onPress={openPasswordDialog}
+                onPress={startEmailEdit}
               />
-            )}
+            )
+          )}
+          {isEmailUpdated && (
+            <Text className="text-center text-primary-500">
+              Un lien de vérification a été envoyé à ta nouvelle adresse.
+            </Text>
+          )}
+          {user.type === 'email' && (
             <Button
               variant="default"
-              label="Supprimer mon compte"
+              label="Modifier mon mot de passe"
               className="self-center"
-              onPress={openDeleteAccountDialog}
+              onPress={openPasswordDialog}
             />
-          </View>
-          <View className="flex-1">
-            <Text className="text-center text-xl font-bold mb-2">
-              Historique des parties
-            </Text>
-            <View className="flex-1 border-t rounded-xl overflow-y-auto p-0">
-              {isLoading ? (
-                <View className="self-center">
-                  <LoaderIcon />
-                </View>
-              ) : games.length === 0 ? (
-                <Text className="text-center mt-2 text-neutral-600 italic">
-                  Aucune partie trouvée.
-                </Text>
-              ) : (
-                <ScrollView
-                  className="flex-1 p-2"
-                  contentContainerStyle={{ paddingBottom: 8 }}
-                >
-                  {games.map(({ gameRecord, localPlayerPoints }) => (
-                    <View
-                      key={gameRecord.id}
-                      className="flex flex-row justify-between items-center p-4 border border-b rounded-xl mb-2"
-                    >
-                      <View className="flex flex-col justify-between items-start">
-                        <Text>{gameRecord.mode}</Text>
-                        <Text>{formatDate(gameRecord.createdAt)}</Text>
-                      </View>
-                      <View className="flex flex-col justify-between items-center">
-                        <Text className="font-bold">{localPlayerPoints}</Text>
-                        <Text>pts</Text>
-                      </View>
+          )}
+          <Button
+            variant="default"
+            label="Supprimer mon compte"
+            className="self-center"
+            onPress={openDeleteAccountDialog}
+          />
+        </View>
+        <View className="flex-1">
+          <Text className="text-center text-xl font-bold mb-2">
+            Historique des parties
+          </Text>
+          <View className="flex-1 border-t rounded-xl overflow-y-auto p-0">
+            {isLoading ? (
+              <View className="self-center">
+                <LoaderIcon />
+              </View>
+            ) : games.length === 0 ? (
+              <Text className="text-center mt-2 text-neutral-600 italic">
+                Aucune partie trouvée.
+              </Text>
+            ) : (
+              <ScrollView
+                className="flex-1 p-2"
+                contentContainerStyle={{ paddingBottom: 8 }}
+              >
+                {games.map(({ gameRecord, localPlayerPoints }) => (
+                  <View
+                    key={gameRecord.id}
+                    className="flex flex-row justify-between items-center p-4 border border-b rounded-xl mb-2"
+                  >
+                    <View className="flex flex-col justify-between items-start">
+                      <Text>{gameRecord.mode}</Text>
+                      <Text>{formatDate(gameRecord.createdAt)}</Text>
                     </View>
-                  ))}
-                </ScrollView>
-              )}
-            </View>
+                    <View className="flex flex-col justify-between items-center">
+                      <Text className="font-bold">{localPlayerPoints}</Text>
+                      <Text>pts</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
           </View>
         </View>
-      )}
-
-      <View className="shrink-0 flex-row flex-wrap justify-center gap-x-4 border-t border-neutral-200 py-2">
-        <Pressable
-          accessibilityRole="link"
-          className="min-h-11 justify-center"
-          onPress={() =>
-            openProfileFooterLink(`mailto:${CITYBORN_CONTACT_EMAIL}`)
-          }
-        >
-          <Text className="text-sm text-neutral-600 underline">
-            Nous contacter
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="link"
-          className="min-h-11 justify-center"
-          onPress={() =>
-            openProfileFooterLink('https://www.cityborn.app/terms-and-policies')
-          }
-        >
-          <Text className="text-sm text-neutral-600 underline">
-            Politiques et conditions
-          </Text>
-        </Pressable>
       </View>
 
       <Dialog

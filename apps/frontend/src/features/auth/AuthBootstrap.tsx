@@ -5,9 +5,9 @@ import {
   type CurrentUserLoad,
   useCurrentUserLoad,
 } from '@cityborn/client/auth';
+import { LoadingScreen } from '@cityborn/design-system';
 import type { ReactNode } from 'react';
 import Button from '@/components/ui/buttons/Button';
-import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 
 type AuthBootstrapProps = {
   children: ReactNode;
@@ -17,7 +17,7 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
   const { currentUserState, retry }: CurrentUserLoad = useCurrentUserLoad();
 
   if (currentUserState.status === 'loading') {
-    return <LoadingDialog message="Chargement de l'utilisateur" />;
+    return <LoadingScreen />;
   }
 
   if (currentUserState.status === 'failed') {
