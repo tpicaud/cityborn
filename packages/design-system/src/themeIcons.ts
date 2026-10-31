@@ -1,4 +1,4 @@
-export type ThemeIconName = 'BASKETBALL' | 'MUSIC' | 'CINEMA' | 'EDUCATION';
+type ThemeIconName = 'BASKETBALL' | 'MUSIC' | 'CINEMA' | 'EDUCATION';
 
 export const themeIconViewBox: string = '0 0 24 24';
 
