@@ -1,19 +1,24 @@
 'use client';
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
+import type { Navigation } from '@cityborn/client/platform';
 import { Box, FormControl, TextField, Typography } from '@mui/material';
 import Button from '@/components/ui/buttons/Button';
+import { useNavigation } from '@/lib/navigation';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export const SignInForm = () => {
+  const navigation: Navigation = useNavigation();
   const {
     form: {
       register,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignInFlow();
+  }: SignInFlow = useSignInFlow({
+    onSignedIn: () => navigation.returnTo('/'),
+  });
 
   return (
     <Box
