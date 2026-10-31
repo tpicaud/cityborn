@@ -24,7 +24,7 @@ Le checkout principal conserve sa branche et ses fichiers quand un worktree seco
 
 ## Préparer l'environnement
 
-1. Exécuter `<checkout principal>/scripts/setup-worktree.sh <chemin absolu du worktree retenu>` même si les `.env` ou `node_modules` existent déjà. Pour un checkout principal explicitement demandé, conserver ses `.env`, vérifier les `.env` des apps décrits dans le README, puis y exécuter `pnpm install` directement.
+1. Exécuter `<worktree retenu>/scripts/setup-worktree.sh <chemin absolu du worktree retenu>` même si les `.env` ou `node_modules` existent déjà. Pour un checkout principal explicitement demandé, conserver ses `.env`, vérifier les `.env` des apps décrits dans le README, puis y exécuter `pnpm install` directement.
 2. Vérifier le succès du script : il conserve les `.env` présents, copie les manquants depuis le principal, vérifie les `.env` requis des apps et exécute `pnpm install`. L'option `--skip-install` ne valide pas cette préparation.
 3. En cas d'échec, rendre `statut: blocked` avec la commande, la cause et l'état du checkout ; aucun développement ni sous-agent de développement ne démarre.
 4. Après réussite seulement, transmettre le chemin absolu et la branche liée au développeur.

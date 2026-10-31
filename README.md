@@ -27,7 +27,7 @@ Renseigner ensuite les variables requises dans les fichiers `.env` (demander les
 Depuis un worktree secondaire, lancer la préparation avant de développer :
 
 ```bash
-<checkout-principal>/scripts/setup-worktree.sh "$PWD"
+./scripts/setup-worktree.sh "$PWD"
 ```
 
 Le checkout principal est la première entrée de `git worktree list`.
