@@ -19,9 +19,11 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Ajoute l'écran de classement au frontend et au mobile. » | `conventions-client-apps`, `conventions-client` |
 | « Ajoute au frontend une page publique `/player/<username>`. » | `conventions-client-apps` |
 | « Ajoute la variable `SENTRY_DSN` au backend. » | `conventions-environment` |
-| « Rédige une issue pour le bug de reconnexion. » | `write-issue` |
-| « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `write-issue`, puis `grilling` avant le brouillon |
-| « Aide-moi à planifier le partage d'une partie multi. » | `write-issue`, puis `grilling` avant le brouillon |
+| « Rédige une issue pour le bug de reconnexion. » | `manage-issue` |
+| « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `manage-issue`, puis `grilling` avant le brouillon |
+| « Aide-moi à planifier le partage d'une partie multi. » | `manage-issue`, puis `grilling` avant le brouillon |
+| « Explique-moi ce que demande l'issue #400. » | `manage-issue` |
+| « Ajoute un commentaire sur l'issue #410 pour préciser ce qui est hors périmètre. » | `manage-issue` |
 | « Développe-moi l'issue #123. » | `deliver-issue` |
 | « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
 | « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |

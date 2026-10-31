@@ -9,8 +9,12 @@ assignees: ''
 
 ## 🎯 Objectif de la feature
 
-*<-- objectif-->*
+<!-- Le besoin du joueur ou de l'admin auquel la feature répond -->
 
 ## 📜 Description de la feature
 
-*<-- description de la feature -->*
+<!-- Le parcours vécu, étape par étape, et les règles qu'il suit -->
+
+## 🚫 Hors périmètre
+
+<!-- Ce que la feature ne fait pas -->

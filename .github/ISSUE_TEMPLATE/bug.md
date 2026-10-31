@@ -9,15 +9,20 @@ assignees: ''
 
 ## 🐛​ Description du problème identifié
 
-*<-- Décrire ici le problème rencontré -->*
+<!-- Ce que voit le joueur ou l'admin, et à quelle fréquence -->
 
-<!-- Étapes pour reproduire le comportement:
+## 🔁 Étapes pour reproduire
+
+<!--
 1. Aller sur '...'
 2. Cliquer sur '...'
-3. Scroller sur '...'
-4. Il y a l'erreur '...'
+3. Constater '...'
 -->
+
+## 📱 Plateforme
+
+<!-- Web, mobile (iOS ou Android) ou back-office -->
 
 ## 🎯 Comportement attendu
 
-*<-- Décrire ici le comportement attendu -->*
+<!-- Ce qui devrait se passer à la place -->

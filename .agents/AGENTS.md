@@ -69,8 +69,9 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 - **Paramètre objet** : dès deux valeurs, un seul objet déstructuré dans la signature, typé en ligne sauf s'il est exporté ou partagé ; une signature imposée par un framework reste positionnelle.
 - **Itération** : méthodes de tableau et `Promise.all`, récursion pour l'asynchrone séquentiel.
 
-## Commits & PR
+## Issues, commits & PR
 
+- **Issue** : la rédiger, la commenter ou l'expliquer suit le skill `manage-issue`, dont le template de l'issue fixe la façon d'en parler.
 - **Commit** : une seule ligne courte, en anglais, au format Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`…), sans corps ni signature.
 - **PR** : publiée en draft, titre au format `#<num_issue> - <titre_issue>`.
 
