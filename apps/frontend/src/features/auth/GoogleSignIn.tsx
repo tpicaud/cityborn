@@ -4,10 +4,12 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import type { Navigation } from '@cityborn/client/platform';
 import { Typography } from '@mui/material';
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { frontendClientConfig } from '@/config/client';
+import { useNavigation } from '@/lib/navigation';
 
 type GoogleIdentityScriptStatus = 'loading' | 'ready' | 'failed';
 
@@ -43,8 +45,11 @@ export function SignInWithGoogleButton({
 }: {
   text: 'signin_with' | 'signup_with';
 }) {
+  const navigation: Navigation = useNavigation();
   const { signInWithGoogle }: IdentityProviderSignIn =
-    useIdentityProviderSignIn();
+    useIdentityProviderSignIn({
+      onSignedIn: () => navigation.returnTo('/'),
+    });
   const googleButtonContainer = useRef<HTMLDivElement>(null);
   const [scriptStatus, setScriptStatus] =
     useState<GoogleIdentityScriptStatus>('loading');
