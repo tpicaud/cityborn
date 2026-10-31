@@ -16,7 +16,7 @@ type PackDeletion = {
   packId: PackId;
 };
 
-const packTreesCacheDurationMs: number = 60 * 60 * 1000;
+const publishedPacksCacheDurationMs: number = 60 * 60 * 1000;
 
 const packsQueryKeyRoot: QueryKey = ['admin', 'packs'];
 
@@ -26,12 +26,12 @@ function fullPackQueryKey(packId: PackId): QueryKey {
   return [...packsQueryKeyRoot, 'full', packId];
 }
 
-export function packTreesQueryOptions(packApi: PackApi) {
+export function publishedPacksQueryOptions(packApi: PackApi) {
   return queryOptions({
-    queryKey: ['pack', 'trees'],
-    queryFn: () => packApi.getPackTrees(),
-    staleTime: packTreesCacheDurationMs,
-    gcTime: packTreesCacheDurationMs,
+    queryKey: ['pack', 'published'],
+    queryFn: () => packApi.getPublishedPacks(),
+    staleTime: publishedPacksCacheDurationMs,
+    gcTime: publishedPacksCacheDurationMs,
     retry: false,
     meta: { reportsError: true },
   });

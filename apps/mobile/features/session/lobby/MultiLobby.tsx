@@ -18,6 +18,7 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { PackThemeFilters } from './PackThemeFilters';
 
 type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
@@ -40,11 +41,10 @@ export function MultiLobby({
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const {
     isLoading: isLoadingPacks,
-    selectedPath,
-    currentNodes,
-    currentName,
-    openPack,
-    goBack,
+    themes,
+    selectedTheme,
+    selectTheme,
+    packs,
     playPack,
   }: PackSelection = usePackSelection({
     session,
@@ -113,50 +113,33 @@ export function MultiLobby({
         </View>
 
         <View className="flex flex-col gap-2 w-full">
-          <View className="flex-row items-center gap-1">
-            {selectedPath.length > 0 && (
-              <Pressable onPress={goBack}>
-                <Icon
-                  name="chevron_back_outline"
-                  size={20}
-                  color={colors.primary[500]}
-                />
-              </Pressable>
-            )}
-            <Text className="text-xl">{currentName ?? 'Packs'}</Text>
-          </View>
+          <PackThemeFilters
+            themes={themes}
+            selectedTheme={selectedTheme}
+            selectTheme={selectTheme}
+          />
+          <Text className="text-xl">{selectedTheme?.name ?? 'Packs'}</Text>
           <View className="w-full h-[1px] bg-foreground mt-[-6] mb-1"></View>
-          {currentNodes.length === 0 ? (
+          {packs.length === 0 ? (
             <Text>Aucun pack disponible</Text>
           ) : (
             <ScrollView className="max-h-80">
               <View className="flex flex-col gap-2 w-full">
-                {currentNodes.map((node) => (
+                {packs.map((pack) => (
                   <View
-                    key={node.id}
+                    key={pack.id}
                     className="flex-row items-center justify-between gap-3 py-2 border-b border-foreground/10"
                   >
                     <Text className="flex-1 text-lg font-semibold">
-                      {node.name}
+                      {pack.name}
                     </Text>
-                    <View className="flex-col gap-1">
-                      <Button
-                        size="small"
-                        label="Jouer"
-                        disabled={!isHost}
-                        onPress={() => playPack(node)}
-                        className="w-24 h-9 px-0"
-                      />
-                      {node.children.length > 0 && (
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          label="Sous-packs"
-                          onPress={() => openPack(node)}
-                          className="w-24 h-9 px-0"
-                        />
-                      )}
-                    </View>
+                    <Button
+                      size="small"
+                      label="Jouer"
+                      disabled={!isHost}
+                      onPress={() => playPack(pack)}
+                      className="w-24 h-9 px-0"
+                    />
                   </View>
                 ))}
               </View>

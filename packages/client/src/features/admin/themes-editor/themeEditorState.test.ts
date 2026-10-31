@@ -9,7 +9,7 @@ import {
 
 const id: ThemeId = buildTheme().id;
 describe('themeEditorReducer', () => {
-  it('keeps a failed rename open and associates its error with the row', () => {
+  it('keeps a failed update open and associates its error with the row', () => {
     const editing: ThemeEditorState = themeEditorReducer(
       initialThemeEditorState,
       { type: 'edit', id },
