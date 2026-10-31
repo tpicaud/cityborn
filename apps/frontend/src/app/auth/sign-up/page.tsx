@@ -10,7 +10,7 @@ export default function SignUpPage() {
   const navigation: Navigation = useNavigation();
 
   return (
-    <Screen onBack={navigation.back}>
+    <Screen onBack={() => navigation.returnTo('/')}>
       <LegacyCard>
         <SignUpForm />
       </LegacyCard>
