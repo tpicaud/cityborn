@@ -8,23 +8,21 @@ import {
 } from '@cityborn/client/auth';
 import { Button } from '@cityborn/design-system';
 import { Typography } from '@mui/material';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import LegacyButton from '@/components/ui/buttons/Button';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
+import { LegalLinks } from '@/features/legal-information/LegalLinks';
 
-export default function Home({
-  openSignIn,
-  openSignUp,
-}: {
-  openSignIn: () => void;
-  openSignUp: () => void;
-}) {
+export default function Home() {
+  const router: AppRouterInstance = useRouter();
   const { user }: CurrentUser = useCurrentUser();
   const verificationEmailResend: VerificationEmailResend =
     useVerificationEmailResend();
 
   return (
-    <>
+    <div className="flex flex-col items-center gap-5">
       <div className="relative flex flex-col gap-1 items-center w-full">
         <Image
           src="/logo.png"
@@ -67,17 +65,19 @@ export default function Home({
         </div>
       ) : (
         <div className="flex flex-row gap-2 items-center justify-center w-full">
-          <Button label="Connexion" onPress={openSignIn} />
+          <Button label="Connexion" onPress={() => router.push('/profile')} />
           <LegacyButton
             variant="contained"
             color="primary"
             className="text-white px-6 w-full rounded"
-            onClick={openSignUp}
+            onClick={() => router.push('/auth/sign-up')}
           >
             <p className="px-3">Inscription</p>
           </LegacyButton>
         </div>
       )}
-    </>
+
+      <LegalLinks />
+    </div>
   );
 }

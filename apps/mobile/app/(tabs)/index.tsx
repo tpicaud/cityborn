@@ -1,10 +1,13 @@
-import ScreenLayout from '@/components/ScreenLayout';
+import { Screen } from '@cityborn/design-system';
+import { LegacyCard } from '@/components/ui/LegacyCard';
 import Home from '@/features/auth/Home';
 
 export default function HomeScreen() {
   return (
-    <ScreenLayout>
-      <Home />
-    </ScreenLayout>
+    <Screen>
+      <LegacyCard>
+        <Home />
+      </LegacyCard>
+    </Screen>
   );
 }
