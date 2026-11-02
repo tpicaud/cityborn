@@ -23,17 +23,8 @@ cas, il n'y a rien à copier.
 <worktree cible>/scripts/setup-worktree.sh $ARGUMENTS
 ```
 
-Le script :
-
-1. résout la racine du worktree cible et celle du checkout principal
-   (`git worktree list --porcelain`, première entrée) ;
-2. conserve les `.env` présents et copie seulement les fichiers manquants ignorés
-   par Git depuis le checkout principal, dans la même arborescence ;
-3. vérifie les `.env` requis par les `.env.example` des apps ;
-4. exécute `pnpm install` dans le worktree, même si `node_modules` existe déjà.
-
-Option `--skip-install` pour copier et vérifier les `.env` sans installer les
-dépendances ; cette option ne valide pas la préparation complète.
+Lancer le script depuis le worktree cible, même si ses `.env` et `node_modules`
+existent déjà ; `--skip-install` ne valide pas la préparation complète.
 
 ## Étape 3 — Rendre compte
 

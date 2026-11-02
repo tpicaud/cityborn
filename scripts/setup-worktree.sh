@@ -54,7 +54,7 @@ echo "Worktree    : $target_root"
 echo "Source .env : $main_root"
 
 env_files="$(git -C "$main_root" ls-files --others --ignored --exclude-standard \
-  -- ':(glob).env' ':(glob).env.*' ':(glob)**/.env' ':(glob)**/.env.*')"
+  -- ':(glob).env' ':(glob).env.*' ':(glob)**/.env' ':(glob)**/.env.*' 2>/dev/null)"
 
 copied=0
 while IFS= read -r env_file; do

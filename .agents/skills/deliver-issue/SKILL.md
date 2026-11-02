@@ -11,7 +11,7 @@ Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte 
 
 Appliquer [la préparation](references/prepare.md) avant tout sous-agent, quelle que soit l'origine du checkout.
 
-La préparation est terminée quand le worktree retenu utilise la branche liée, que sa base est vérifiée, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
+La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur `origin/main`, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
 
 ## Lancer un sous-agent
 
