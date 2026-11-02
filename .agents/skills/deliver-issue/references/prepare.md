@@ -1,6 +1,6 @@
 # Préparer le développement
 
-L'orchestrateur réalise cette préparation avant de transmettre le worktree au développeur. Le checkout principal, première entrée de `git worktree list --porcelain`, conserve sa branche et ses fichiers.
+L'orchestrateur réalise cette préparation avant de transmettre le worktree au développeur. Aucun développement n'a lieu sur le checkout principal, première entrée de `git worktree list --porcelain`.
 
 ## Retenir le worktree et la branche
 
@@ -10,7 +10,7 @@ L'orchestrateur réalise cette préparation avant de transmettre le worktree au 
    - le worktree secondaire qui porte déjà la branche liée, où que l'on soit : l'issue y a déjà été traitée et le travail reprend là ;
    - sinon le checkout courant, s'il est secondaire, quelle que soit sa branche ou l'outil qui l'a créé ;
    - sinon un nouveau worktree au chemin `<checkout principal>/.claude/worktrees/issue-<numéro>`.
-4. Si la branche liée est sur le checkout principal, bloquer et le rapporter.
+4. Si la branche liée est sur le checkout principal, l'y libérer : sans changements locaux, le ramener sur `main` avec `git -C <checkout principal> switch main` ; sinon présenter ses changements et demander une décision.
 5. Dans un worktree retenu existant, lire `git status --porcelain`. En présence de changements locaux, présenter la branche et les fichiers puis demander une décision ; les conserver tels quels, sans stash, reset ni nettoyage.
 6. Placer le worktree retenu sur la branche liée :
    - worktree existant sur une autre branche : `git switch <branche liée>` ;
