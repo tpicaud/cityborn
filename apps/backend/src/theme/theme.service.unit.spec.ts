@@ -4,9 +4,13 @@ import {
   buildTheme,
   ErrorCode,
   type Theme,
+  type ThemeIconName,
+  ThemeIconNameSchema,
   ThemeMoveDirection,
 } from '@cityborn/api';
 import { createMock, type DeepMocked } from '@golevelup/ts-jest';
+import type { IconifyService } from '../iconify/iconify.service';
+import { defaultThemeIcon } from './default-theme';
 import {
   ThemeHasPacksError,
   ThemeNameAlreadyExistsError,
@@ -17,10 +21,20 @@ import { ThemeService } from './theme.service';
 function buildThemeService() {
   const themeRepository: DeepMocked<ThemeRepository> =
     createMock<ThemeRepository>();
-  const themeService: ThemeService = new ThemeService(themeRepository);
+  const iconifyService: DeepMocked<IconifyService> =
+    createMock<IconifyService>();
+  const themeService: ThemeService = new ThemeService(
+    themeRepository,
+    iconifyService,
+  );
 
-  return { themeRepository, themeService };
+  return { themeRepository, iconifyService, themeService };
 }
+
+const musicIconName: ThemeIconName = ThemeIconNameSchema.parse(
+  'boxicons:music-alt-filled',
+);
+const musicIconSvg: string = '<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>';
 
 describe('ThemeService.findById', () => {
   it('returns the requested theme', async () => {
@@ -61,6 +75,51 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 describe('ThemeService.create', () => {
+  it('gives the default icon to a theme created without icon', async () => {
+    const {
+      themeRepository,
+      iconifyService,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+
+    await themeService.create({ name: 'Cinéma' });
+
+    expect(themeRepository.create).toHaveBeenCalledWith({
+      name: 'Cinéma',
+      icon: defaultThemeIcon,
+    });
+    expect(iconifyService.findSvg).not.toHaveBeenCalled();
+  });
+  it('stores the Iconify drawing of the chosen icon', async () => {
+    const {
+      themeRepository,
+      iconifyService,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    iconifyService.findSvg.mockResolvedValue(musicIconSvg);
+
+    await themeService.create({ name: 'Musique', icon: musicIconName });
+
+    expect(themeRepository.create).toHaveBeenCalledWith({
+      name: 'Musique',
+      icon: { name: musicIconName, svg: musicIconSvg },
+    });
+  });
+  it('rejects an icon unknown to Iconify', async () => {
+    const {
+      themeRepository,
+      iconifyService,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    iconifyService.findSvg.mockResolvedValue(null);
+
+    await expect(
+      themeService.create({ name: 'Musique', icon: musicIconName }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.THEME_ICON_NOT_FOUND },
+    });
+    expect(themeRepository.create).not.toHaveBeenCalled();
+  });
   it('translates a name conflict', async () => {
     const {
       themeRepository,
@@ -74,6 +133,49 @@ describe('ThemeService.create', () => {
   });
 });
 describe('ThemeService.update', () => {
+  it('replaces the icon with its Iconify drawing', async () => {
+    const {
+      themeRepository,
+      iconifyService,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    const theme: Theme = buildTheme();
+    themeRepository.findById.mockResolvedValue(theme);
+    iconifyService.findSvg.mockResolvedValue(musicIconSvg);
+
+    await themeService.update({
+      id: theme.id,
+      theme: { name: theme.name, icon: musicIconName },
+    });
+
+    expect(themeRepository.update).toHaveBeenCalledWith({
+      id: theme.id,
+      theme: {
+        name: theme.name,
+        icon: { name: musicIconName, svg: musicIconSvg },
+      },
+    });
+  });
+  it('keeps the stored drawing when the icon is unchanged', async () => {
+    const {
+      themeRepository,
+      iconifyService,
+      themeService,
+    }: ReturnType<typeof buildThemeService> = buildThemeService();
+    const theme: Theme = buildTheme();
+    themeRepository.findById.mockResolvedValue(theme);
+
+    await themeService.update({
+      id: theme.id,
+      theme: { name: 'Autres', icon: theme.icon.name },
+    });
+
+    expect(iconifyService.findSvg).not.toHaveBeenCalled();
+    expect(themeRepository.update).toHaveBeenCalledWith({
+      id: theme.id,
+      theme: { name: 'Autres', icon: undefined },
+    });
+  });
   it('allows renaming the default theme', async () => {
     const {
       themeRepository,

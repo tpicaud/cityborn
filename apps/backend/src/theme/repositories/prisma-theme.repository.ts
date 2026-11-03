@@ -1,4 +1,4 @@
-import type { AdminTheme, SaveTheme, Theme, ThemeId } from '@cityborn/api';
+import type { AdminTheme, Theme, ThemeIcon, ThemeId } from '@cityborn/api';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma, type Theme as PrismaTheme } from '@prisma/client';
@@ -46,7 +46,7 @@ export class PrismaThemeRepository implements ThemeRepository {
     });
     return theme ? ThemeMapper.toTheme(theme) : null;
   }
-  async create(data: SaveTheme): Promise<Theme> {
+  async create(data: { name: string; icon: ThemeIcon }): Promise<Theme> {
     return this.save(async () => {
       const lastPosition: number | null = (
         await this.txHost.tx.theme.aggregate({ _max: { position: true } })
@@ -61,7 +61,7 @@ export class PrismaThemeRepository implements ThemeRepository {
     theme,
   }: {
     id: ThemeId;
-    theme: SaveTheme;
+    theme: { name: string; icon?: ThemeIcon };
   }): Promise<Theme> {
     return this.save(() =>
       this.txHost.tx.theme.update({ where: { id }, data: theme }),

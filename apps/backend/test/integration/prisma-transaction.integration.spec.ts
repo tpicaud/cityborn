@@ -37,6 +37,7 @@ import { HTTP_CONFIG } from '../../src/config/config.module';
 import { GuessObjectService } from '../../src/guess-object/guess-object.service';
 import { GUESS_OBJECT_REPOSITORY } from '../../src/guess-object/repositories/guess-object.repository';
 import { PrismaGuessObjectRepository } from '../../src/guess-object/repositories/prisma-guess-object.repository';
+import { IconifyService } from '../../src/iconify/iconify.service';
 import { MailService } from '../../src/mail/mail.service';
 import { PackService } from '../../src/pack/pack.service';
 import { PACK_REPOSITORY } from '../../src/pack/repositories/pack.repository';
@@ -98,6 +99,7 @@ describe('Prisma transactions', () => {
         },
         { provide: WideEventService, useValue: createMock<WideEventService>() },
         { provide: MailService, useValue: createMock<MailService>() },
+        { provide: IconifyService, useValue: createMock<IconifyService>() },
         {
           provide: HTTP_CONFIG,
           useValue: { frontendUrl: 'http://localhost:3000' },

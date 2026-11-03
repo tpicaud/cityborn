@@ -4,13 +4,13 @@ import {
   contract,
   ErrorCode,
   type Theme,
-  ThemeIcon,
   ThemeSchema,
   type User,
 } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { defaultThemeIcon } from '../../src/theme/default-theme';
 import { createAccessToken } from '../support/createAccessToken';
 import { createTestApp } from '../support/createTestApp';
 
@@ -51,7 +51,7 @@ describe('Theme admin routes', () => {
     expect(ThemeSchema.parse(renamedResponse.body)).toEqual({
       id: theme.id,
       name: 'Films',
-      icon: ThemeIcon.EDUCATION,
+      icon: defaultThemeIcon,
     });
     await expect(
       app.get(PrismaService).theme.findUnique({ where: { id: theme.id } }),

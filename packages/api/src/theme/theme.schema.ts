@@ -4,14 +4,23 @@ export const ThemeIdSchema = z.string().uuid().brand<'ThemeId'>();
 
 export type ThemeId = z.infer<typeof ThemeIdSchema>;
 
-export enum ThemeIcon {
-  BASKETBALL = 'BASKETBALL',
-  MUSIC = 'MUSIC',
-  CINEMA = 'CINEMA',
-  EDUCATION = 'EDUCATION',
-}
+export const ThemeIconNameSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    'Identifiant Iconify invalide, par exemple fluent:sport-basketball-24-filled',
+  )
+  .brand<'ThemeIconName'>();
 
-export const ThemeIconSchema = z.nativeEnum(ThemeIcon);
+export type ThemeIconName = z.infer<typeof ThemeIconNameSchema>;
+
+export const ThemeIconSchema = z.object({
+  name: ThemeIconNameSchema,
+  svg: z.string(),
+});
+
+export type ThemeIcon = z.infer<typeof ThemeIconSchema>;
 
 export const ThemeSchema = z.object({
   id: ThemeIdSchema,
@@ -35,7 +44,7 @@ export const ThemeNameSchema = z
   .max(40, 'Le nom ne peut pas dépasser 40 caractères');
 export const SaveThemeSchema = z.object({
   name: ThemeNameSchema,
-  icon: ThemeIconSchema.optional(),
+  icon: ThemeIconNameSchema.optional(),
 });
 export const ThemeIdParamSchema = z.object({ id: ThemeIdSchema });
 

@@ -1,5 +1,5 @@
-import type { AdminTheme, Theme } from '@cityborn/api';
-import { buildTheme, ThemeIcon } from '@cityborn/api';
+import type { AdminTheme, Theme, ThemeIcon } from '@cityborn/api';
+import { buildTheme, ThemeIconSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { Pack as PrismaPack } from '@prisma/client';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
@@ -9,6 +9,12 @@ import {
   ThemeNameAlreadyExistsError,
 } from '../../src/theme/repositories/theme.repository';
 import { createTestInfrastructure } from '../support/infrastructure';
+
+const { icon }: Theme = buildTheme();
+const basketballIcon: ThemeIcon = ThemeIconSchema.parse({
+  name: 'fluent:sport-basketball-24-filled',
+  svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>',
+});
 
 describe('PrismaThemeRepository', () => {
   const infrastructure: ReturnType<typeof createTestInfrastructure> =
@@ -86,12 +92,11 @@ describe('PrismaThemeRepository', () => {
       const sportTheme: Theme = buildTheme({
         id: '00000000-0000-4000-8000-000000000050',
         name: 'Sport',
-        icon: ThemeIcon.BASKETBALL,
+        icon: basketballIcon,
       });
       const musicTheme: Theme = buildTheme({
         id: '00000000-0000-4000-8000-000000000051',
         name: 'Musique',
-        icon: ThemeIcon.MUSIC,
       });
       const hiddenTheme: Theme = buildTheme({
         id: '00000000-0000-4000-8000-000000000052',
@@ -126,43 +131,49 @@ describe('PrismaThemeRepository', () => {
     });
   });
   describe('create', () => {
-    it('places a new theme after the last one with the default icon', async () => {
+    it('places a new theme after the last one', async () => {
       await prisma.theme.create({
         data: { ...buildTheme({ name: 'Sport' }), position: 4 },
       });
 
-      const theme: Theme = await themeRepository.create({ name: 'Cinéma' });
-
-      expect(theme).toMatchObject({
+      const theme: Theme = await themeRepository.create({
         name: 'Cinéma',
-        icon: ThemeIcon.EDUCATION,
+        icon,
       });
+
+      expect(theme).toMatchObject({ name: 'Cinéma', icon });
       await expect(
         prisma.theme.findUnique({ where: { id: theme.id } }),
       ).resolves.toMatchObject({ position: 5 });
     });
     it('rejects a name differing only by case', async () => {
-      await themeRepository.create({ name: 'Sport' });
+      await themeRepository.create({ name: 'Sport', icon });
 
       await expect(
-        themeRepository.create({ name: 'sport' }),
+        themeRepository.create({ name: 'sport', icon }),
       ).rejects.toBeInstanceOf(ThemeNameAlreadyExistsError);
     });
   });
   describe('update', () => {
     it('changes the icon without changing the name', async () => {
-      const theme: Theme = await themeRepository.create({ name: 'Sport' });
+      const theme: Theme = await themeRepository.create({
+        name: 'Sport',
+        icon,
+      });
 
       await expect(
         themeRepository.update({
           id: theme.id,
-          theme: { name: 'Sport', icon: ThemeIcon.BASKETBALL },
+          theme: { name: 'Sport', icon: basketballIcon },
         }),
-      ).resolves.toEqual({ ...theme, icon: ThemeIcon.BASKETBALL });
+      ).resolves.toEqual({ ...theme, icon: basketballIcon });
     });
     it('rejects renaming to an existing name with different case', async () => {
-      await themeRepository.create({ name: 'Sport' });
-      const theme: Theme = await themeRepository.create({ name: 'Musique' });
+      await themeRepository.create({ name: 'Sport', icon });
+      const theme: Theme = await themeRepository.create({
+        name: 'Musique',
+        icon,
+      });
 
       await expect(
         themeRepository.update({ id: theme.id, theme: { name: 'SPORT' } }),
@@ -170,7 +181,10 @@ describe('PrismaThemeRepository', () => {
       await expect(themeRepository.findById(theme.id)).resolves.toEqual(theme);
     });
     it('allows changing only the case of its own name', async () => {
-      const theme: Theme = await themeRepository.create({ name: 'Sport' });
+      const theme: Theme = await themeRepository.create({
+        name: 'Sport',
+        icon,
+      });
 
       await expect(
         themeRepository.update({ id: theme.id, theme: { name: 'SPORT' } }),
@@ -179,9 +193,18 @@ describe('PrismaThemeRepository', () => {
   });
   describe('reorder', () => {
     it('positions themes in the given order', async () => {
-      const sport: Theme = await themeRepository.create({ name: 'Sport' });
-      const music: Theme = await themeRepository.create({ name: 'Musique' });
-      const cinema: Theme = await themeRepository.create({ name: 'Cinéma' });
+      const sport: Theme = await themeRepository.create({
+        name: 'Sport',
+        icon,
+      });
+      const music: Theme = await themeRepository.create({
+        name: 'Musique',
+        icon,
+      });
+      const cinema: Theme = await themeRepository.create({
+        name: 'Cinéma',
+        icon,
+      });
 
       await themeRepository.reorder([cinema.id, sport.id, music.id]);
 
@@ -195,7 +218,10 @@ describe('PrismaThemeRepository', () => {
   });
   describe('delete', () => {
     it('preserves an attached theme', async () => {
-      const theme: Theme = await themeRepository.create({ name: 'Sport' });
+      const theme: Theme = await themeRepository.create({
+        name: 'Sport',
+        icon,
+      });
       await prisma.pack.create({ data: { name: 'Parent', themeId: theme.id } });
 
       await expect(themeRepository.delete(theme.id)).rejects.toBeInstanceOf(
@@ -204,7 +230,10 @@ describe('PrismaThemeRepository', () => {
       await expect(themeRepository.findById(theme.id)).resolves.toEqual(theme);
     });
     it('removes an unused theme', async () => {
-      const theme: Theme = await themeRepository.create({ name: 'Sport' });
+      const theme: Theme = await themeRepository.create({
+        name: 'Sport',
+        icon,
+      });
 
       await themeRepository.delete(theme.id);
 

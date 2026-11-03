@@ -119,18 +119,11 @@ model GuessObject {
   packs             Pack[]        @relation("PackGuessObjects")
 }
 
-enum ThemeIcon {
-  BASKETBALL
-  MUSIC
-  CINEMA
-  EDUCATION
-}
-
 model Theme {
-  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String
-  icon     ThemeIcon @default(EDUCATION)
-  position Int       @default(0)
+  icon     Json
+  position Int    @default(0)
 
   packs Pack[]
 }

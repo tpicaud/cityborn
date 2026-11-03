@@ -3,6 +3,8 @@ import {
   ErrorCode,
   type SaveTheme,
   type Theme,
+  type ThemeIcon,
+  type ThemeIconName,
   type ThemeId,
   ThemeMoveDirection,
 } from '@cityborn/api';
@@ -14,7 +16,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { defaultThemeId } from './default-theme';
+import { IconifyService } from '../iconify/iconify.service';
+import { defaultThemeIcon, defaultThemeId } from './default-theme';
 import {
   THEME_REPOSITORY,
   ThemeHasPacksError,
@@ -25,6 +28,7 @@ import {
 export class ThemeService {
   constructor(
     @Inject(THEME_REPOSITORY) private readonly themeRepository: ThemeRepository,
+    private readonly iconifyService: IconifyService,
   ) {}
   async findAll(): Promise<AdminTheme[]> {
     return this.themeRepository.findAll();
@@ -37,8 +41,13 @@ export class ThemeService {
     if (!theme) throw this.themeNotFound();
     return theme;
   }
-  async create(data: SaveTheme): Promise<Theme> {
-    return this.save(() => this.themeRepository.create(data));
+  async create({ name, icon }: SaveTheme): Promise<Theme> {
+    const themeIcon: ThemeIcon = icon
+      ? await this.findIcon(icon)
+      : defaultThemeIcon;
+    return this.save(() =>
+      this.themeRepository.create({ name, icon: themeIcon }),
+    );
   }
   async update({
     id,
@@ -47,8 +56,14 @@ export class ThemeService {
     id: ThemeId;
     theme: SaveTheme;
   }): Promise<Theme> {
-    await this.findById(id);
-    return this.save(() => this.themeRepository.update({ id, theme }));
+    const currentTheme: Theme = await this.findById(id);
+    const icon: ThemeIcon | undefined =
+      theme.icon && theme.icon !== currentTheme.icon.name
+        ? await this.findIcon(theme.icon)
+        : undefined;
+    return this.save(() =>
+      this.themeRepository.update({ id, theme: { name: theme.name, icon } }),
+    );
   }
   @Transactional()
   async move({
@@ -97,6 +112,15 @@ export class ThemeService {
         });
       throw error;
     }
+  }
+  private async findIcon(name: ThemeIconName): Promise<ThemeIcon> {
+    const svg: string | null = await this.iconifyService.findSvg(name);
+    if (svg === null)
+      throw new BadRequestException({
+        code: ErrorCode.THEME_ICON_NOT_FOUND,
+        message: 'Theme icon not found on Iconify',
+      });
+    return { name, svg };
   }
   private themeNotFound(): NotFoundException {
     return new NotFoundException({
