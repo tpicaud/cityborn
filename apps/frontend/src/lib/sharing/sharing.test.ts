@@ -12,9 +12,17 @@ const originalNavigator: PropertyDescriptor | undefined =
   Object.getOwnPropertyDescriptor(globalThis, 'navigator');
 
 function setNavigator(
-  value: Pick<Navigator, 'share' | 'clipboard'> | Pick<Navigator, 'clipboard'>,
+  value: Pick<Navigator, 'clipboard'> &
+    Partial<Pick<Navigator, 'share' | 'userAgent' | 'maxTouchPoints'>>,
 ): void {
-  Object.defineProperty(globalThis, 'navigator', { value, configurable: true });
+  Object.defineProperty(globalThis, 'navigator', {
+    value: {
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      maxTouchPoints: 0,
+      ...value,
+    },
+    configurable: true,
+  });
 }
 
 function clipboard(writeText: (text: string) => Promise<void>): Clipboard {
@@ -38,7 +46,7 @@ afterEach(() => {
 });
 
 describe('sharing.share', () => {
-  it('copies only the link when browser sharing is unavailable', async () => {
+  it('copies only the link on desktop when browser sharing is unavailable', async () => {
     const writeText: Mock<Clipboard['writeText']> = mock.fn<
       Clipboard['writeText']
     >(async (_text: string) => {});
@@ -52,28 +60,115 @@ describe('sharing.share', () => {
     ]);
   });
 
-  it('passes the message and link to the browser directly from the action', async () => {
-    const share: Mock<Navigator['share']> = mock.fn<Navigator['share']>(
-      async (_data: ShareData) => {},
-    );
+  const desktopBrowsers: Pick<Navigator, 'userAgent' | 'maxTouchPoints'>[] = [
+    {
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      maxTouchPoints: 0,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      maxTouchPoints: 10,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      maxTouchPoints: 0,
+    },
+  ];
+
+  desktopBrowsers.forEach(({ userAgent, maxTouchPoints }) => {
+    it(`copies only the link on desktop despite browser sharing with ${maxTouchPoints} touch points and ${userAgent}`, async () => {
+      const share: Mock<Navigator['share']> = mock.fn<Navigator['share']>(
+        async (_data: ShareData) => {},
+      );
+      const writeText: Mock<Clipboard['writeText']> = mock.fn<
+        Clipboard['writeText']
+      >(async (_text: string) => {});
+      setNavigator({
+        share,
+        clipboard: clipboard(writeText),
+        userAgent,
+        maxTouchPoints,
+      });
+
+      const result: SharingResult = await sharing.share(invitation);
+
+      assert.equal(result, 'copied');
+      assert.deepEqual(writeText.mock.calls[0]?.arguments, [
+        'https://cityborn.app/session/multi/123456',
+      ]);
+      assert.equal(share.mock.callCount(), 0);
+    });
+  });
+
+  const mobileBrowsers: Pick<Navigator, 'userAgent' | 'maxTouchPoints'>[] = [
+    {
+      userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Mobile',
+      maxTouchPoints: 5,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (Linux; Android 14; SM-X710)',
+      maxTouchPoints: 5,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+      maxTouchPoints: 5,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)',
+      maxTouchPoints: 5,
+    },
+    {
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      maxTouchPoints: 5,
+    },
+  ];
+
+  mobileBrowsers.forEach(({ userAgent, maxTouchPoints }) => {
+    it(`shares the message and link directly from the action on ${userAgent}`, async () => {
+      const share: Mock<Navigator['share']> = mock.fn<Navigator['share']>(
+        async (_data: ShareData) => {},
+      );
+      const writeText: Mock<Clipboard['writeText']> = mock.fn<
+        Clipboard['writeText']
+      >(async (_text: string) => {});
+      setNavigator({
+        share,
+        clipboard: clipboard(writeText),
+        userAgent,
+        maxTouchPoints,
+      });
+
+      const pending: Promise<SharingResult> = sharing.share(invitation);
+      assert.equal(share.mock.callCount(), 1);
+      const result: SharingResult = await pending;
+
+      assert.equal(result, 'shared');
+      assert.deepEqual(share.mock.calls[0]?.arguments, [
+        {
+          title: 'Cityborn',
+          text: 'Rejoins ma partie sur Cityborn ! Code : 123456',
+          url: 'https://cityborn.app/session/multi/123456',
+        },
+      ]);
+      assert.equal(writeText.mock.callCount(), 0);
+    });
+  });
+
+  it('copies only the link on mobile when browser sharing is unavailable', async () => {
     const writeText: Mock<Clipboard['writeText']> = mock.fn<
       Clipboard['writeText']
     >(async (_text: string) => {});
-    setNavigator({ share, clipboard: clipboard(writeText) });
+    setNavigator({
+      clipboard: clipboard(writeText),
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+    });
 
-    const pending: Promise<SharingResult> = sharing.share(invitation);
-    assert.equal(share.mock.callCount(), 1);
-    const result: SharingResult = await pending;
+    const result: SharingResult = await sharing.share(invitation);
 
-    assert.equal(result, 'shared');
-    assert.deepEqual(share.mock.calls[0]?.arguments, [
-      {
-        title: 'Cityborn',
-        text: 'Rejoins ma partie sur Cityborn ! Code : 123456',
-        url: 'https://cityborn.app/session/multi/123456',
-      },
+    assert.equal(result, 'copied');
+    assert.deepEqual(writeText.mock.calls[0]?.arguments, [
+      'https://cityborn.app/session/multi/123456',
     ]);
-    assert.equal(writeText.mock.callCount(), 0);
   });
 
   it('returns a cancellation without copying the link', async () => {
@@ -85,7 +180,11 @@ describe('sharing.share', () => {
     const writeText: Mock<Clipboard['writeText']> = mock.fn<
       Clipboard['writeText']
     >(async (_text: string) => {});
-    setNavigator({ share, clipboard: clipboard(writeText) });
+    setNavigator({
+      share,
+      clipboard: clipboard(writeText),
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+    });
 
     const result: SharingResult = await sharing.share(invitation);
 
@@ -103,7 +202,11 @@ describe('sharing.share', () => {
     const writeText: Mock<Clipboard['writeText']> = mock.fn<
       Clipboard['writeText']
     >(async (_text: string) => {});
-    setNavigator({ share, clipboard: clipboard(writeText) });
+    setNavigator({
+      share,
+      clipboard: clipboard(writeText),
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+    });
 
     await assert.rejects(sharing.share(invitation), failure);
     assert.equal(writeText.mock.callCount(), 0);
