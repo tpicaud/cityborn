@@ -9,7 +9,7 @@ export function selectThemePacks({
 }): Pack[] {
   return packs
     .filter((pack: Pack) => themeId === undefined || pack.themeId === themeId)
-    .toSorted((first: Pack, second: Pack) =>
+    .sort((first: Pack, second: Pack) =>
       first.name.localeCompare(second.name, 'fr'),
     );
 }
