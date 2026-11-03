@@ -1,12 +1,8 @@
 import type { Theme, ThemeIcon } from '@cityborn/api';
 import type { PackSelection } from '@cityborn/client/session';
-import {
-  colors,
-  themeIconPaths,
-  themeIconViewBox,
-} from '@cityborn/design-system';
+import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { Text } from '@/components/ui/native/NativeComponents';
 import { cn } from '@/lib/classNames';
 
@@ -16,13 +12,7 @@ type PackThemeFiltersProps = Pick<
 >;
 
 function ThemeIconGlyph({ icon, color }: { icon: ThemeIcon; color: string }) {
-  return (
-    <Svg viewBox={themeIconViewBox} width={16} height={16} fill={color}>
-      {themeIconPaths[icon].map((path: string) => (
-        <Path key={path} d={path} />
-      ))}
-    </Svg>
-  );
+  return <SvgXml xml={icon.svg} width={16} height={16} color={color} />;
 }
 
 function ThemeFilter({

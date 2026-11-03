@@ -1,20 +1,31 @@
 import type { Theme, ThemeIcon } from '@cityborn/api';
 import type { PackSelection } from '@cityborn/client/session';
-import { themeIconPaths, themeIconViewBox } from '@cityborn/design-system';
-import { Chip, SvgIcon } from '@mui/material';
+import { Chip } from '@mui/material';
 
 type PackThemeFiltersProps = Pick<
   PackSelection,
   'themes' | 'selectedTheme' | 'selectTheme'
 >;
 
-function ThemeIconGlyph({ icon }: { icon: ThemeIcon }) {
+function ThemeIconGlyph({
+  icon,
+  className,
+}: {
+  icon: ThemeIcon;
+  className?: string;
+}) {
   return (
-    <SvgIcon viewBox={themeIconViewBox} fontSize="small">
-      {themeIconPaths[icon].map((path: string) => (
-        <path key={path} d={path} />
-      ))}
-    </SvgIcon>
+    <span
+      aria-hidden="true"
+      className={className}
+      style={{
+        display: 'inline-block',
+        width: 18,
+        height: 18,
+        backgroundColor: 'currentColor',
+        mask: `url("data:image/svg+xml,${encodeURIComponent(icon.svg)}") center / contain no-repeat`,
+      }}
+    />
   );
 }
 
