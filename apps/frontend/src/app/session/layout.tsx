@@ -14,12 +14,9 @@ export const metadata: Metadata = {
     siteName: 'Cityborn',
     images: [
       {
-        url: new URL(
-          '/IconKitchen-Output/web/icon-512.png',
-          frontendClientConfig.webAppUrl,
-        ).href,
-        width: 512,
-        height: 512,
+        url: new URL('/logo.png', frontendClientConfig.webAppUrl).href,
+        width: 1024,
+        height: 1024,
         alt: 'Cityborn',
       },
     ],
