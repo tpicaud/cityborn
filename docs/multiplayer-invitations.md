@@ -1,6 +1,8 @@
 # Invitations à une partie multijoueur
 
-Depuis le lobby, le bouton « Inviter » partage un message contenant le code de la partie et un lien web. Sur le web, si le navigateur ne propose pas le partage, seul le lien est copié dans le presse-papiers. Le code peut aussi être copié séparément. Les liens ouvrent le web ; l’ouverture directe dans l’application native reste à traiter dans l’issue #399.
+Depuis le lobby, le bouton principal « Inviter » copie uniquement le lien de la partie sur un navigateur d’ordinateur, même si celui-ci propose le partage. Sur un navigateur de téléphone ou de tablette et dans l’application mobile, il ouvre le partage natif avec un message contenant le code de la partie et un lien web. Si le navigateur mobile ne propose pas le partage, seul le lien est copié dans le presse-papiers. Le code peut aussi être copié séparément. Les liens ouvrent le web ; l’ouverture directe dans l’application native reste à traiter dans l’issue #399.
+
+Le navigateur mobile est reconnu par son agent utilisateur Android, iPhone ou iPad. Pour iPadOS avec un agent utilisateur d’ordinateur, la combinaison d’un agent utilisateur Macintosh et de plusieurs points tactiles sert d’heuristique. La taille de la fenêtre et le tactile seul ne déclenchent pas le partage mobile sur un ordinateur.
 
 L’aperçu Open Graph est générique : il présente Cityborn, sans données propres à la partie.
 
@@ -24,7 +26,7 @@ Un invité peut se reconnecter après une coupure réseau tant que l’écran re
 
 Utiliser deux participants et une partie multijoueur en attente. Pour une recette locale sur la même machine, ouvrir le lien dans une autre fenêtre du navigateur. Pour un téléphone ou un autre ordinateur, appliquer la configuration réseau ci-dessus et garder le frontend accessible.
 
-1. Depuis le lobby web puis mobile, utiliser « Inviter ». Vérifier le message, le code et le lien ; annuler le partage puis réessayer. Sur un navigateur sans partage, vérifier la copie du lien, puis tester la copie séparée du code.
+1. Depuis le lobby sur ordinateur, utiliser « Inviter » et vérifier que seul le lien est copié, sans fenêtre de partage, y compris avec un navigateur proposant le partage et dans une petite fenêtre. Sur un navigateur de téléphone ou de tablette puis dans l’application mobile, vérifier le message, le code et le lien du partage natif ; annuler puis réessayer. Sur un navigateur mobile sans partage, vérifier la copie du lien. Tester la copie séparée du code et un échec du presse-papiers suivi d’un nouvel essai : aucun succès ne doit être annoncé après l’échec.
 2. Ouvrir le lien côté destinataire et rejoindre la bonne partie. Vérifier que le web utilise l’origine courante, y compris en preview, et que le mobile partage le frontend associé à son backend.
 3. Avec un compte déjà participant, fermer puis rouvrir le lien : sa place est restaurée. Refaire après le démarrage de la partie et vérifier qu’un nouvel arrivant est refusé.
 4. Avec un invité, couper puis rétablir le réseau sans fermer l’écran : sa place est conservée. Recharger ou fermer l’écran, puis rouvrir le lien : sa place n’est plus restaurée par un jeton mémorisé.

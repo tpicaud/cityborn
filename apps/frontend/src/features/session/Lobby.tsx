@@ -154,7 +154,13 @@ export const Lobby = ({
               />
 
               {localPlayerID && (
-                <LoadingButton onClick={invite}>Inviter</LoadingButton>
+                <LoadingButton
+                  variant="contained"
+                  color="primary"
+                  onClick={invite}
+                >
+                  Inviter
+                </LoadingButton>
               )}
               {result === 'copied' && (
                 <Typography variant="caption" color="success.main">
