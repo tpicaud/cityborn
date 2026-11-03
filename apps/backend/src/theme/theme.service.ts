@@ -16,7 +16,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { IconifyService } from '../iconify/iconify.service';
+import { IconService } from '../icon/icon.service';
 import { defaultThemeIcon, defaultThemeId } from './default-theme';
 import {
   THEME_REPOSITORY,
@@ -28,7 +28,7 @@ import {
 export class ThemeService {
   constructor(
     @Inject(THEME_REPOSITORY) private readonly themeRepository: ThemeRepository,
-    private readonly iconifyService: IconifyService,
+    private readonly iconService: IconService,
   ) {}
   async findAll(): Promise<AdminTheme[]> {
     return this.themeRepository.findAll();
@@ -114,11 +114,11 @@ export class ThemeService {
     }
   }
   private async findIcon(name: ThemeIconName): Promise<ThemeIcon> {
-    const svg: string | null = await this.iconifyService.findSvg(name);
+    const svg: string | null = await this.iconService.findSvg(name);
     if (svg === null)
       throw new BadRequestException({
         code: ErrorCode.THEME_ICON_NOT_FOUND,
-        message: 'Theme icon not found on Iconify',
+        message: 'Theme icon not found',
       });
     return { name, svg };
   }

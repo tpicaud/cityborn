@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { USER_AGENT } from '../common/constants';
+import { USER_AGENT } from '../../common/constants';
+import type { IconProvider } from './icon.provider';
 
 @Injectable()
-export class IconifyService {
+export class IconifyIconProvider implements IconProvider {
   private readonly ICONIFY_API_URL = 'https://api.iconify.design';
 
   async findSvg(iconName: string): Promise<string | null> {

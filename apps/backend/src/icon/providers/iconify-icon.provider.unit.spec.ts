@@ -1,8 +1,8 @@
 import type { DeepMocked } from '@golevelup/ts-jest';
 import { createMock } from '@golevelup/ts-jest';
-import { IconifyService } from './iconify.service';
+import { IconifyIconProvider } from './iconify-icon.provider';
 
-describe('IconifyService', () => {
+describe('IconifyIconProvider', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -18,9 +18,10 @@ describe('IconifyService', () => {
       const fetchSpy: jest.SpyInstance = jest
         .spyOn(global, 'fetch')
         .mockResolvedValue(response);
-      const iconifyService: IconifyService = new IconifyService();
+      const iconifyIconProvider: IconifyIconProvider =
+        new IconifyIconProvider();
 
-      const foundSvg: string | null = await iconifyService.findSvg(
+      const foundSvg: string | null = await iconifyIconProvider.findSvg(
         'boxicons:music-alt-filled',
       );
 
@@ -37,10 +38,11 @@ describe('IconifyService', () => {
         status: 404,
       });
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const iconifyService: IconifyService = new IconifyService();
+      const iconifyIconProvider: IconifyIconProvider =
+        new IconifyIconProvider();
 
       const foundSvg: string | null =
-        await iconifyService.findSvg('boxicons:unknown');
+        await iconifyIconProvider.findSvg('boxicons:unknown');
 
       expect(foundSvg).toBeNull();
     });
@@ -52,10 +54,11 @@ describe('IconifyService', () => {
         statusText: 'Unavailable',
       });
       jest.spyOn(global, 'fetch').mockResolvedValue(response);
-      const iconifyService: IconifyService = new IconifyService();
+      const iconifyIconProvider: IconifyIconProvider =
+        new IconifyIconProvider();
 
       await expect(
-        iconifyService.findSvg('boxicons:music-alt-filled'),
+        iconifyIconProvider.findSvg('boxicons:music-alt-filled'),
       ).rejects.toThrow('Iconify icon fetch failed: Unavailable');
     });
   });
