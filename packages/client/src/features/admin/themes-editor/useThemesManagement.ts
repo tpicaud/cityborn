@@ -22,12 +22,16 @@ import {
   type ThemeEditorState,
   themeEditorReducer,
 } from './themeEditorState';
-import { createThemeMutations, type ThemeMutations } from './themeMutations';
+import {
+  createThemeMutations,
+  type ThemeFormInput,
+  type ThemeMutations,
+} from './themeMutations';
 export type ThemesManagement = ThemeMutations & {
   themes: AdminTheme[];
   state: ThemeEditorState;
-  creationForm: UseFormReturn<SaveTheme>;
-  editForm: UseFormReturn<SaveTheme>;
+  creationForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme>;
+  editForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme>;
   startEditing: (theme: AdminTheme) => void;
   confirmDeletion: (id: ThemeId) => void;
   cancel: () => void;
@@ -51,11 +55,16 @@ export function useThemesManagement(): ThemesManagement {
   );
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const creationForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
-    resolver: zodResolver(SaveThemeSchema),
-    defaultValues: { name: '' },
-  });
-  const editForm: UseFormReturn<SaveTheme> = useForm<SaveTheme>({
+  const creationForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme> =
+    useForm<ThemeFormInput, undefined, SaveTheme>({
+      resolver: zodResolver(SaveThemeSchema),
+      defaultValues: { name: '' },
+    });
+  const editForm: UseFormReturn<ThemeFormInput, undefined, SaveTheme> = useForm<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
@@ -73,7 +82,7 @@ export function useThemesManagement(): ThemesManagement {
       query.refetch();
     },
     startEditing: (theme) => {
-      editForm.reset({ name: theme.name, icon: theme.icon });
+      editForm.reset({ name: theme.name, icon: theme.icon.name });
       dispatch({ type: 'edit', id: theme.id });
     },
     confirmDeletion: (id) => dispatch({ type: 'confirmDeletion', id }),

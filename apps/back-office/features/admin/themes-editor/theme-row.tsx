@@ -1,16 +1,9 @@
-import { type AdminTheme, ThemeIcon, ThemeMoveDirection } from '@cityborn/api';
+import { type AdminTheme, ThemeMoveDirection } from '@cityborn/api';
 import type { ThemesManagement } from '@cityborn/client/admin';
 import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { ThemeIconGlyph } from './theme-icon-glyph';
-
-const themeIconLabels: Record<ThemeIcon, string> = {
-  [ThemeIcon.BASKETBALL]: 'Ballon de basket',
-  [ThemeIcon.MUSIC]: 'Note de musique',
-  [ThemeIcon.CINEMA]: 'Caméra',
-  [ThemeIcon.EDUCATION]: 'Toque de diplômé',
-};
+import { IconifyIconPreview, ThemeIconGlyph } from './theme-icon-glyph';
 
 export function ThemeRow({
   theme,
@@ -61,25 +54,31 @@ export function ThemeRow({
             aria-describedby={error ? errorId : undefined}
             className="min-w-0 flex-1 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2"
           />
-          <fieldset className="flex gap-1">
-            <legend className="sr-only">Icône du thème</legend>
-            {Object.values(ThemeIcon).map((icon: ThemeIcon) => (
-              <label
-                key={icon}
-                className="cursor-pointer rounded-md border border-zinc-600 p-2 has-checked:border-sky-400 has-checked:text-sky-300 has-focus-visible:ring-2 has-focus-visible:ring-sky-400"
-              >
-                <input
-                  type="radio"
-                  value={icon}
-                  {...editor.editForm.register('icon')}
-                  disabled={isBusy}
-                  className="sr-only"
-                />
-                <ThemeIconGlyph icon={icon} />
-                <span className="sr-only">{themeIconLabels[icon]}</span>
-              </label>
-            ))}
-          </fieldset>
+          <label htmlFor={`theme-icon-${theme.id}`} className="sr-only">
+            Icône Iconify du thème
+          </label>
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2">
+            <IconifyIconPreview
+              iconName={editor.editForm.watch('icon') ?? ''}
+            />
+            <input
+              id={`theme-icon-${theme.id}`}
+              {...editor.editForm.register('icon')}
+              disabled={isBusy}
+              placeholder="fluent:sport-basketball-24-filled"
+              aria-invalid={!!error}
+              aria-describedby={error ? errorId : undefined}
+              className="min-w-0 flex-1 bg-transparent outline-none"
+            />
+          </div>
+          <a
+            href="https://icon-sets.iconify.design/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-sky-300 underline"
+          >
+            Parcourir Iconify
+          </a>
           <Button type="submit" disabled={isBusy} aria-label="Valider le thème">
             <Check size={18} />
           </Button>

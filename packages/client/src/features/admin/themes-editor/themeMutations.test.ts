@@ -7,7 +7,8 @@ import {
   ErrorCode,
   type SaveTheme,
   SaveThemeSchema,
-  ThemeIcon,
+  type ThemeIcon,
+  ThemeIconSchema,
   ThemeMoveDirection,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,9 +21,19 @@ import {
   type ThemeEditorState,
   themeEditorReducer,
 } from './themeEditorState';
-import { createThemeMutations, type ThemeMutations } from './themeMutations';
+import {
+  createThemeMutations,
+  type ThemeFormInput,
+  type ThemeMutations,
+} from './themeMutations';
 
-type ThemeForm = ReturnType<typeof createFormControl<SaveTheme>>;
+type ThemeForm = ReturnType<
+  typeof createFormControl<ThemeFormInput, undefined, SaveTheme>
+>;
+const cinemaIcon: ThemeIcon = ThemeIconSchema.parse({
+  name: 'boxicons:video-cinema-filled',
+  svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"/>',
+});
 type ManagementFixture = {
   queryClient: QueryClient;
   themeKey: QueryKey;
@@ -90,11 +101,19 @@ function createManagementFixture({
   queryClient.setQueryData(themeKey, themes);
   queryClient.setQueryData(packListKey, []);
   queryClient.setQueryData(fullPackKey, {});
-  const creationForm: ThemeForm = createFormControl<SaveTheme>({
+  const creationForm: ThemeForm = createFormControl<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  const editForm: ThemeForm = createFormControl<SaveTheme>({
+  const editForm: ThemeForm = createFormControl<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
@@ -206,19 +225,19 @@ describe('createThemeMutations', () => {
       themeApi: {
         updateTheme: async ({ id, theme }) => {
           assert.equal(id, sport.id);
-          assert.deepEqual(theme, { name: 'Art', icon: ThemeIcon.CINEMA });
-          return { id, name: theme.name, icon: ThemeIcon.CINEMA };
+          assert.deepEqual(theme, { name: 'Art', icon: cinemaIcon.name });
+          return { id, name: theme.name, icon: cinemaIcon };
         },
       },
     });
     fixture.editForm.setValue('name', 'Art');
-    fixture.editForm.setValue('icon', ThemeIcon.CINEMA);
+    fixture.editForm.setValue('icon', cinemaIcon.name);
 
     await fixture.mutations.updateTheme();
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
       divers,
-      { ...sport, name: 'Art', icon: ThemeIcon.CINEMA, packCount: 3 },
+      { ...sport, name: 'Art', icon: cinemaIcon, packCount: 3 },
     ]);
     assert.equal(fixture.state.editedThemeId, null);
     assert.equal(

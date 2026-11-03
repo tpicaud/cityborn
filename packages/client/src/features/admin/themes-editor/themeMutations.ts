@@ -4,6 +4,7 @@ import {
   ErrorCode,
   resolveErrorMessage,
   type SaveTheme,
+  type SaveThemeSchema,
   type Theme,
   type ThemeId,
   type ThemeMoveDirection,
@@ -11,6 +12,7 @@ import {
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
+import type { z } from 'zod';
 import { invalidatePacks } from '../../../domains/pack/packQueries';
 import type { ThemeApi } from '../../../domains/theme/themeApi';
 import {
@@ -30,7 +32,12 @@ export type ThemeMutations = {
   deleteTheme: (theme: AdminTheme) => Promise<void>;
 };
 
-type ThemeForm = Pick<UseFormReturn<SaveTheme>, 'handleSubmit' | 'reset'>;
+export type ThemeFormInput = z.input<typeof SaveThemeSchema>;
+
+type ThemeForm = Pick<
+  UseFormReturn<ThemeFormInput, undefined, SaveTheme>,
+  'handleSubmit' | 'reset'
+>;
 
 export function createThemeMutations({
   themeApi,
