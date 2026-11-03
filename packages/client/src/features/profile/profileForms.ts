@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  type UpdateEmail,
+  UpdateEmailSchema,
   type UpdatePassword,
   UpdatePasswordSchema,
   type UpdateUsername,
@@ -36,6 +38,8 @@ export type UsernameForm = UseFormReturn<
   UpdateUsername
 >;
 
+export type EmailForm = UseFormReturn<UpdateEmail>;
+
 export type ChangePasswordForm = UseFormReturn<
   ChangePasswordFormInput,
   undefined,
@@ -46,6 +50,13 @@ export function useUsernameForm(username: string): UsernameForm {
   return useForm<UsernameFormInput, undefined, UpdateUsername>({
     resolver: zodResolver(UpdateUsernameSchema),
     defaultValues: { username },
+  });
+}
+
+export function useEmailForm(email: string): EmailForm {
+  return useForm<UpdateEmail>({
+    resolver: zodResolver(UpdateEmailSchema),
+    defaultValues: { email },
   });
 }
 

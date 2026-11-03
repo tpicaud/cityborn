@@ -48,16 +48,13 @@ export class PrismaEmailVerificationTokenRepository
     await this.txHost.tx.emailVerificationToken.create({
       data: {
         token: data.token,
+        email: data.email,
         expiresAt: data.expiresAt,
         user: {
           connect: { id: data.userId },
         },
       },
     });
-  }
-
-  async deleteVerificationToken(id: string): Promise<void> {
-    await this.txHost.tx.emailVerificationToken.delete({ where: { id } });
   }
 
   async deleteVerificationTokensByUserId(userId: UserId): Promise<void> {

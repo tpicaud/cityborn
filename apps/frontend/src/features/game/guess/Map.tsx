@@ -8,9 +8,11 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
-import type { MapProps } from '@cityborn/client/game';
 import {
-  createGuess,
+  currentRevealedGuessObject,
+  type MapProps,
+} from '@cityborn/client/game';
+import {
   type GuessObjectArea,
   guessObjectArea,
   guessObjectCenter,
@@ -36,11 +38,10 @@ const GameMap: React.FC<GameMapProps> = ({
   mapProps: { center, zoom, preGuess, localPlayerID, game, handlePreGuess },
 }) => {
   const currentRound = game.state.currentRound;
-  const guessObject = (game.state.guessObjects ?? []).find(
-    (obj) => obj.id === currentRound?.guessObjectId,
-  );
+  const revealedGuessObject: FullGuessObject | undefined =
+    currentRevealedGuessObject(game);
 
-  if (!currentRound || !guessObject) {
+  if (!currentRound) {
     return null;
   }
 
@@ -67,14 +68,14 @@ const GameMap: React.FC<GameMapProps> = ({
 
   const handleMapClick = (event: MapMouseEvent) => {
     if (!event.detail.latLng) return;
-    handlePreGuess(createGuess(guessObject, event.detail.latLng));
+    handlePreGuess(event.detail.latLng);
   };
 
   return (
     <APIProvider apiKey={googleMapsApiKey}>
       <GoogleMap
         id="map"
-        key={guessObject.id}
+        key={currentRound.guessObjectId}
         {...mapOptions}
         onClick={(event) => {
           if (
@@ -85,27 +86,26 @@ const GameMap: React.FC<GameMapProps> = ({
           }
         }}
       >
-        {preGuess &&
-          preGuess.distance !== -1 &&
-          currentRound.status === RoundStatus.GUESSING && (
-            <AdvancedMarker position={preGuess.coordinates} />
-          )}
-
-        {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <>
-            <AnswerDisplay guessObject={guessObject} />
-            <LocalPlayerGuess
-              currentRound={currentRound}
-              guessObject={guessObject}
-              localPlayerID={localPlayerID}
-            />
-            <OtherPlayersGuesses
-              currentRound={currentRound}
-              guessObject={guessObject}
-              localPlayerID={localPlayerID}
-            />
-          </>
+        {preGuess && currentRound.status === RoundStatus.GUESSING && (
+          <AdvancedMarker position={preGuess} />
         )}
+
+        {currentRound.status === RoundStatus.SHOWING_RESULTS &&
+          revealedGuessObject && (
+            <>
+              <AnswerDisplay guessObject={revealedGuessObject} />
+              <LocalPlayerGuess
+                currentRound={currentRound}
+                guessObject={revealedGuessObject}
+                localPlayerID={localPlayerID}
+              />
+              <OtherPlayersGuesses
+                currentRound={currentRound}
+                guessObject={revealedGuessObject}
+                localPlayerID={localPlayerID}
+              />
+            </>
+          )}
         <ResetMap
           guessObjectId={currentRound.guessObjectId}
           center={mapOptions.defaultCenter}

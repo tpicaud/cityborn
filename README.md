@@ -22,6 +22,16 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 Renseigner ensuite les variables requises dans les fichiers `.env` (demander les valeurs sensibles à l'équipe).
 
+### Worktrees
+
+Dans un worktree secondaire, préparer l'environnement avant de développer :
+
+```bash
+./scripts/setup-worktree.sh
+```
+
+Le script copie depuis le checkout principal les `.env` absents du worktree, vérifie ceux des apps puis lance `pnpm install` ; `--help` détaille les options.
+
 ## Lancement
 
 1. Démarrer PostgreSQL et Redis, puis appliquer les migrations :

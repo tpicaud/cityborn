@@ -3,14 +3,23 @@ import type {
   Game,
   GameConfig,
   OnlinePlayer,
+  PlayerId,
 } from '@cityborn/api';
 import {
   buildFullGuessObject,
   buildGame,
   buildGameConfig,
+  buildGameState,
+  buildGuess,
   buildPlayer,
+  buildRound,
+  buildWorldLocation,
+  defaultGuess,
+  ErrorCode,
   GameRecordIdSchema,
   GameStatus,
+  PlayerIdSchema,
+  RoundStatus,
   SessionMode,
 } from '@cityborn/api';
 import type { DeepMocked } from '@golevelup/ts-jest';
@@ -80,6 +89,15 @@ describe('GameService.createGame', () => {
         results: { host: { results: [] }, bob: { results: [] } },
       },
     });
+    expect(game.state.roundGuessObjects).toEqual([
+      {
+        id: guessObject.id,
+        name: guessObject.name,
+        image: guessObject.image,
+        description: guessObject.description,
+        short_description: guessObject.short_description,
+      },
+    ]);
     expect(eventService.trackEvent).toHaveBeenCalledWith({
       name: 'game_started',
       visitorId: 'visitor-1',
@@ -200,6 +218,146 @@ describe('GameService.endGame', () => {
     await gameService.endGame(game, players, SessionMode.SOLO);
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe('GameService.applyGuess', () => {
+  const alice: PlayerId = PlayerIdSchema.parse('alice');
+  const bob: PlayerId = PlayerIdSchema.parse('bob');
+  const guessObjectBornInParis: FullGuessObject = buildFullGuessObject({
+    id: 'object-1',
+    world_location: buildWorldLocation({
+      centroid: [48.85, 2.35],
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [2.2, 48.8],
+            [2.5, 48.8],
+            [2.5, 48.9],
+            [2.2, 48.9],
+            [2.2, 48.8],
+          ],
+        ],
+      },
+    }),
+  });
+
+  const {
+    world_location,
+    source,
+    ...hiddenGuessObjectBornInParis
+  }: FullGuessObject = guessObjectBornInParis;
+
+  function buildGuessingGame(): Game {
+    return buildGame({
+      state: buildGameState({
+        guessObjectsIds: ['object-1'],
+        results: { alice: { results: [] }, bob: { results: [] } },
+        roundGuessObjects: [hiddenGuessObjectBornInParis],
+        currentRound: buildRound({
+          guessObjectId: 'object-1',
+          playersGuesses: {},
+        }),
+      }),
+    });
+  }
+
+  it('scores the coordinates against the guess object of the current round', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([guessObjectBornInParis]);
+
+    const game: Game = await gameService.applyGuess({
+      game: buildGuessingGame(),
+      playerID: alice,
+      coordinates: { lat: 48.86, lng: 2.3 },
+      connectedPlayerIDs: [alice, bob],
+    });
+
+    expect(guessObjectService.findFullBy).toHaveBeenCalledWith({
+      ids: ['object-1'],
+    });
+    expect(game.state.currentRound?.playersGuesses).toEqual({
+      alice: {
+        coordinates: { lat: 48.86, lng: 2.3 },
+        distance: 0,
+        points: 1000,
+        win: true,
+      },
+    });
+    expect(game.state.roundGuessObjects).toEqual([
+      hiddenGuessObjectBornInParis,
+    ]);
+  });
+
+  it('records a guess without coordinates as the default guess', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([guessObjectBornInParis]);
+
+    const game: Game = await gameService.applyGuess({
+      game: buildGuessingGame(),
+      playerID: alice,
+      coordinates: undefined,
+      connectedPlayerIDs: [alice, bob],
+    });
+
+    expect(game.state.currentRound?.playersGuesses).toEqual({
+      alice: defaultGuess,
+    });
+  });
+
+  it('reveals the guess object when the last connected player guesses', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([guessObjectBornInParis]);
+    const guessingGame: Game = buildGuessingGame();
+    const gameWithAliceGuess: Game = buildGame({
+      ...guessingGame,
+      state: buildGameState({
+        ...guessingGame.state,
+        currentRound: buildRound({
+          guessObjectId: 'object-1',
+          playersGuesses: { alice: buildGuess() },
+        }),
+      }),
+    });
+
+    const game: Game = await gameService.applyGuess({
+      game: gameWithAliceGuess,
+      playerID: bob,
+      coordinates: undefined,
+      connectedPlayerIDs: [alice, bob],
+    });
+
+    expect(game.state.currentRound?.status).toBe(RoundStatus.SHOWING_RESULTS);
+    expect(game.state.roundGuessObjects).toEqual([guessObjectBornInParis]);
+  });
+
+  it('rejects a guess when the guess object of the round no longer exists', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([]);
+
+    await expect(
+      gameService.applyGuess({
+        game: buildGuessingGame(),
+        playerID: alice,
+        coordinates: { lat: 48.86, lng: 2.3 },
+        connectedPlayerIDs: [alice, bob],
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.GUESS_OBJECTS_NOT_FOUND },
+    });
   });
 });
 

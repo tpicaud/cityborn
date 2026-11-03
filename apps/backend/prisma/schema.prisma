@@ -49,6 +49,7 @@ model PasswordResetToken {
 model EmailVerificationToken {
   id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   token String @unique
+  email String
 
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id])

@@ -7,6 +7,7 @@ export const EMAIL_VERIFICATION_TOKEN_REPOSITORY = Symbol(
 export type EmailVerificationToken = {
   id: string;
   userId: UserId;
+  email: string;
   expiresAt: Date;
   createdAt: Date;
 };
@@ -16,6 +17,7 @@ export type CreateEmailVerificationToken = Pick<
   'userId' | 'expiresAt'
 > & {
   token: string;
+  email: string;
 };
 
 export interface EmailVerificationTokenRepository {
@@ -26,6 +28,5 @@ export interface EmailVerificationTokenRepository {
     verificationToken: string,
   ): Promise<EmailVerificationToken | null>;
   createVerificationToken(data: CreateEmailVerificationToken): Promise<void>;
-  deleteVerificationToken(id: string): Promise<void>;
   deleteVerificationTokensByUserId(userId: UserId): Promise<void>;
 }

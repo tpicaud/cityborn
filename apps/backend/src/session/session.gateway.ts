@@ -201,6 +201,21 @@ export class SessionGateway
     this.broadcastSession(session);
   }
 
+  @WsMessage(sessionWsChannel, 'submitGuess')
+  async submitGuess(
+    @ConnectedSocket() socket: AppSocket,
+    @MessageBody() { guess }: WsPayload<typeof sessionWsChannel, 'submitGuess'>,
+  ): Promise<void> {
+    const { playerID, sessionID } = this.resolvePlayer(socket);
+    const session: Session = await this.sessionService.submitGuess({
+      playerID,
+      sessionID,
+      guess,
+    });
+    this.enrichGame(session);
+    this.broadcastSession(session);
+  }
+
   @WsMessage(sessionWsChannel, 'nextRound')
   async handleNextRound(
     @ConnectedSocket() socket: AppSocket,

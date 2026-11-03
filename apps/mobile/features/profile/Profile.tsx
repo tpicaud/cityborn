@@ -33,6 +33,12 @@ export default function Profile() {
     startUsernameEdit,
     cancelUsernameEdit,
     submitUsername,
+    emailForm,
+    isEditingEmail,
+    isEmailUpdated,
+    startEmailEdit,
+    cancelEmailEdit,
+    submitEmail,
     passwordForm,
     isPasswordDialogOpen,
     isPasswordUpdated,
@@ -156,6 +162,59 @@ export default function Profile() {
                 </View>
               </View>
             </Card>
+            {isEditingEmail ? (
+              <View className="flex-row items-center justify-center gap-2">
+                <View className="w-60 gap-1">
+                  <Controller
+                    control={emailForm.control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        placeholder="Email"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        error={!!emailForm.formState.errors.email}
+                      />
+                    )}
+                  />
+                  {emailForm.formState.errors.email && (
+                    <Text className="px-4 text-xs leading-4 text-destructive-500">
+                      {emailForm.formState.errors.email.message}
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  accessibilityLabel="Valider l'adresse e-mail"
+                  disabled={emailForm.formState.isSubmitting}
+                  onPress={submitEmail}
+                >
+                  <Icon name="check_outline" size={28} />
+                </Pressable>
+                <Pressable
+                  accessibilityLabel="Annuler la correction de l'adresse e-mail"
+                  onPress={cancelEmailEdit}
+                >
+                  <Icon name="close_outline" size={28} />
+                </Pressable>
+              </View>
+            ) : (
+              !user.isVerified && (
+                <Button
+                  variant="default"
+                  label="Corriger mon adresse e-mail"
+                  className="self-center"
+                  onPress={startEmailEdit}
+                />
+              )
+            )}
+            {isEmailUpdated && (
+              <Text className="text-center text-primary-500">
+                Un lien de vérification a été envoyé à ta nouvelle adresse.
+              </Text>
+            )}
             {user.type === 'email' && (
               <Button
                 variant="default"

@@ -72,6 +72,13 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toUser(user) : null;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    const user: PrismaUser | null = await this.txHost.tx.user.findUnique({
+      where: { email },
+    });
+    return user ? UserMapper.toUser(user) : null;
+  }
+
   async findCredentialsByIdentifier(
     identifier: string,
   ): Promise<UserCredentials | null> {
@@ -111,12 +118,19 @@ export class PrismaUserRepository implements UserRepository {
       : null;
   }
 
-  async markEmailVerified(userId: UserId): Promise<User> {
-    const user = await this.txHost.tx.user.update({
-      where: { id: userId },
+  async markEmailVerified({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: { id: userId, email },
       data: { isVerified: true },
     });
-    return UserMapper.toUser(user);
+    if (updated.count === 0) return null;
+    return this.findById(userId);
   }
 
   async updateUsername(userId: UserId, username: Username): Promise<User> {
@@ -125,6 +139,25 @@ export class PrismaUserRepository implements UserRepository {
       data: { username },
     });
     return UserMapper.toUser(user);
+  }
+
+  async updateEmail({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null> {
+    const updated: { count: number } = await this.txHost.tx.user.updateMany({
+      where: { id: userId, isVerified: false },
+      data: { email },
+    });
+    if (updated.count === 0) return null;
+    return this.findById(userId);
+  }
+
+  async deletePasswordResetTokensByUserId(userId: UserId): Promise<void> {
+    await this.txHost.tx.passwordResetToken.deleteMany({ where: { userId } });
   }
 
   async updatePassword(userId: UserId, passwordHash: string): Promise<void> {

@@ -6,6 +6,7 @@ export const PASSWORD_RESET_REPOSITORY = Symbol('PASSWORD_RESET_REPOSITORY');
 export interface PasswordResetRepository {
   replaceToken(data: {
     userId: UserId;
+    email: string;
     authVersion: AuthVersion;
     tokenHash: string;
     expiresAt: Date;

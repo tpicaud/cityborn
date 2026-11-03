@@ -26,31 +26,31 @@ import {
 } from './wsConnection';
 import { useSocketFactory } from './wsProvider';
 
-export type WsChannelState<Channel> = {
-  channel: Channel | null;
+export type WsChannelState<Definition extends WsChannel> = {
+  channel: WsChannelConnection<Definition> | null;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
 };
 
-type WsChannelOptions<Channel> = {
-  createChannel: (connection: WsChannelConnection<WsChannel>) => Channel;
-  restoreChannel: (channel: Channel) => Promise<void>;
+type WsChannelOptions<Definition extends WsChannel> = {
+  restoreChannel: (channel: WsChannelConnection<Definition>) => Promise<void>;
   refreshAuthentication: () => Promise<void>;
 };
 
-type WsChannelCallbacks<Channel> = WsChannelOptions<Channel> & {
-  reportError: ReportError;
-};
+type WsChannelCallbacks<Definition extends WsChannel> =
+  WsChannelOptions<Definition> & {
+    reportError: ReportError;
+  };
 
 const CONNECTION_FAILED_MESSAGE = 'La connexion au serveur a échoué';
 
-export function useWsChannel<Channel>({
-  createChannel,
+export function useWsChannel<Definition extends WsChannel>({
   restoreChannel,
   refreshAuthentication,
-}: WsChannelOptions<Channel>): WsChannelState<Channel> {
+}: WsChannelOptions<Definition>): WsChannelState<Definition> {
   const createSocket: SocketFactory = useSocketFactory();
-  const [channel, setChannel] = useState<Channel | null>(null);
+  const [channel, setChannel] =
+    useState<WsChannelConnection<Definition> | null>(null);
   const [connectionStatus, setConnectionStatus] =
     useState<WsConnectionStatus>('connecting');
   const retryConnectionRef: RefObject<() => void> = useRef<() => void>(
@@ -59,13 +59,12 @@ export function useWsChannel<Channel>({
 
   const { reportError }: ErrorReporter = useErrorReporter();
 
-  const callbacks: RefObject<WsChannelCallbacks<Channel>> = useRef<
-    WsChannelCallbacks<Channel>
-  >({ createChannel, restoreChannel, refreshAuthentication, reportError });
+  const callbacks: RefObject<WsChannelCallbacks<Definition>> = useRef<
+    WsChannelCallbacks<Definition>
+  >({ restoreChannel, refreshAuthentication, reportError });
 
   useEffect(() => {
     callbacks.current = {
-      createChannel,
       restoreChannel,
       refreshAuthentication,
       reportError,
@@ -93,9 +92,8 @@ export function useWsChannel<Channel>({
           openedSocket = createdSocket;
           createdSocket.on(WS_ERROR_EVENT, handleWsError);
 
-          const openedChannel: Channel = callbacks.current.createChannel(
-            toWsChannelConnection(createdSocket),
-          );
+          const openedChannel: WsChannelConnection<Definition> =
+            toWsChannelConnection(createdSocket);
 
           const createdSupervision: WsConnectionSupervision =
             superviseWsConnection({

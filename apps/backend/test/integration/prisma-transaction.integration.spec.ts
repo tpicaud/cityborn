@@ -279,6 +279,7 @@ describe('Prisma transactions', () => {
         await updated;
         const issuance: Promise<boolean> = repository.replaceToken({
           userId: user.id,
+          email: user.email,
           authVersion: 0,
           tokenHash: 'stale-hash',
           expiresAt: new Date('2099-01-01'),
@@ -322,7 +323,146 @@ describe('Prisma transactions', () => {
       });
     });
 
+    describe('updateEmail', () => {
+      it('invalidates reset and verification links with the address change', async () => {
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          password: 'hash',
+        });
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: 'old-reset-hash',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
+        await tokenRepository.createVerificationToken({
+          userId: user.id,
+          email: user.email,
+          token: 'old-verification-token',
+          expiresAt: new Date('2099-01-01'),
+        });
+
+        const updated: User = await userService.updateEmail({
+          user,
+          email: 'fixed@cityborn.test',
+        });
+
+        expect(updated.email).toBe('fixed@cityborn.test');
+        expect(await prisma.passwordResetToken.count()).toBe(0);
+        expect(await prisma.emailVerificationToken.count()).toBe(0);
+      });
+    });
+
     describe('verifyEmail', () => {
+      it('rejects an old token when the address changes after token lookup', async () => {
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          isVerified: false,
+        });
+        await tokenRepository.createVerificationToken({
+          userId: user.id,
+          email: user.email,
+          token: 'old-token',
+          expiresAt: new Date('2099-01-01'),
+        });
+        const findToken: typeof tokenRepository.findVerificationToken =
+          tokenRepository.findVerificationToken.bind(tokenRepository);
+        let continueVerification: () => void = () => {};
+        const canContinue: Promise<void> = new Promise((resolve) => {
+          continueVerification = resolve;
+        });
+        let tokenRead: () => void = () => {};
+        const read: Promise<void> = new Promise((resolve) => {
+          tokenRead = resolve;
+        });
+        jest
+          .spyOn(tokenRepository, 'findVerificationToken')
+          .mockImplementationOnce(async (token) => {
+            const found: Awaited<ReturnType<typeof findToken>> =
+              await findToken(token);
+            tokenRead();
+            await canContinue;
+            return found;
+          });
+        const verification: Promise<User> =
+          userService.verifyEmail('old-token');
+        await read;
+
+        await userService.updateEmail({
+          user,
+          email: 'fixed@cityborn.test',
+        });
+        continueVerification();
+
+        await expect(verification).rejects.toMatchObject({
+          response: { code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN },
+        });
+        expect(await userRepository.findById(user.id)).toMatchObject({
+          email: 'fixed@cityborn.test',
+          isVerified: false,
+        });
+      });
+
+      it('rejects an address change after concurrent verification', async () => {
+        const userData: User = buildUser({ isVerified: false });
+        const user: User = await userRepository.create({
+          email: userData.email,
+          username: userData.username,
+          type: 'email',
+          isVerified: false,
+        });
+        await tokenRepository.createVerificationToken({
+          userId: user.id,
+          email: user.email,
+          token: 'verification-token',
+          expiresAt: new Date('2099-01-01'),
+        });
+        const deleteTokens: typeof tokenRepository.deleteVerificationTokensByUserId =
+          tokenRepository.deleteVerificationTokensByUserId.bind(
+            tokenRepository,
+          );
+        let continueVerification: () => void = () => {};
+        const canContinue: Promise<void> = new Promise((resolve) => {
+          continueVerification = resolve;
+        });
+        let userVerified: () => void = () => {};
+        const verified: Promise<void> = new Promise((resolve) => {
+          userVerified = resolve;
+        });
+        jest
+          .spyOn(tokenRepository, 'deleteVerificationTokensByUserId')
+          .mockImplementationOnce(async (id) => {
+            userVerified();
+            await canContinue;
+            await deleteTokens(id);
+          });
+        const verification: Promise<User> =
+          userService.verifyEmail('verification-token');
+        await verified;
+
+        const update: Promise<User> = userService.updateEmail({
+          user,
+          email: 'fixed@cityborn.test',
+        });
+        continueVerification();
+        await verification;
+
+        await expect(update).rejects.toMatchObject({
+          response: { code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED },
+        });
+        expect(await userRepository.findById(user.id)).toMatchObject({
+          email: user.email,
+          isVerified: true,
+        });
+      });
+
       it('keeps a user unverified and retains the token when token cleanup fails', async () => {
         const userData: User = buildUser({ isVerified: false });
         const user: User = await userRepository.create({
@@ -333,6 +473,7 @@ describe('Prisma transactions', () => {
         });
         await tokenRepository.createVerificationToken({
           userId: user.id,
+          email: user.email,
           token: 'verification-token',
           expiresAt: new Date('2099-01-01'),
         });
@@ -427,6 +568,14 @@ describe('Prisma transactions', () => {
             expiresAt: new Date('2099-01-01'),
           },
         });
+        await prisma.emailVerificationToken.create({
+          data: {
+            userId: user.id,
+            email: user.email,
+            token: 'verification-token',
+            expiresAt: new Date('2099-01-01'),
+          },
+        });
 
         const firstReset: ResetPassword = {
           token: 'token',
@@ -467,7 +616,7 @@ describe('Prisma transactions', () => {
         });
         expect(updatedUser).toMatchObject({
           authVersion: 1,
-          isVerified: false,
+          isVerified: true,
         });
         expect(
           await compare(
@@ -478,6 +627,11 @@ describe('Prisma transactions', () => {
           ),
         ).toBe(true);
         expect(await prisma.passwordResetToken.count()).toBe(0);
+        expect(
+          await prisma.emailVerificationToken.count({
+            where: { userId: user.id },
+          }),
+        ).toBe(0);
       });
 
       it('clears the sign-in lock after committing while preserving reset quotas', async () => {

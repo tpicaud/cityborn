@@ -9,4 +9,4 @@ assignees: ''
 
 ## 🛠️ Description de la tâche technique
 
-*<-- description de la tâche technique -->*
+<!-- Description de la tâche technique -->

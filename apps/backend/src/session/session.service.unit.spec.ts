@@ -9,6 +9,7 @@ import {
   buildGame,
   buildGameConfig,
   buildGameState,
+  buildGuess,
   buildPlayer,
   buildRound,
   buildSession,
@@ -57,6 +58,7 @@ function buildSessionService(session: Session | null) {
 
   const idService: DeepMocked<IdService> = createMock<IdService>();
   const gameService: DeepMocked<GameService> = createMock<GameService>();
+  gameService.hideGuessingRoundGuesses.mockImplementation((game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
 
   const sessionService: SessionService = new SessionService(
@@ -166,6 +168,20 @@ describe('SessionService lobby operations', () => {
       await expect(sessionService.getById(session.id)).resolves.toStrictEqual(
         session,
       );
+    });
+
+    it('hides the guesses of the round in progress', async () => {
+      const session: Session = buildSession({ currentGame: buildGame() });
+      const hiddenGame: Game = buildGame({ id: 'hidden-game' });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.hideGuessingRoundGuesses.mockReturnValue(hiddenGame);
+
+      const result: Session = await sessionService.getById(session.id);
+
+      expect(result.currentGame).toBe(hiddenGame);
     });
 
     it('rejects a missing session', async () => {
@@ -404,6 +420,27 @@ describe('SessionService game operations', () => {
       );
     });
 
+    it('sets the round deadline after the countdown, the timer and the network tolerance', async () => {
+      const session: Session = buildSession();
+      const game: Game = buildGame({ config: buildGameConfig({ timer: 25 }) });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.createGame.mockResolvedValue(game);
+      gameService.beginGame.mockReturnValue(game);
+      jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+      await sessionService.startGame(playerId('host'), session.id);
+
+      expect(redisService.set).toHaveBeenCalledWith(
+        `session:${session.id}:round-deadline`,
+        '1030000',
+        600,
+      );
+    });
+
     it('rejects starting a second game', async () => {
       const session: Session = buildSession({ currentGame: buildGame() });
       const { sessionService }: ReturnType<typeof buildSessionService> =
@@ -417,45 +454,87 @@ describe('SessionService game operations', () => {
     });
   });
 
-  describe('handleGuess', () => {
-    it('applies a guess from a connected player', async () => {
-      const game: Game = buildGame({
-        state: buildGameState({ currentRound: buildRound() }),
-      });
-      const updatedGame: Game = buildGame({ id: game.id });
+  describe('submitGuess', () => {
+    const guessingGame: Game = buildGame({
+      state: buildGameState({ currentRound: buildRound() }),
+    });
+
+    it('scores the coordinates of a connected player on the server', async () => {
+      const updatedGame: Game = buildGame({ id: guessingGame.id });
       const session: Session = buildSession({
         status: SessionStatus.IN_GAME,
-        currentGame: game,
+        currentGame: guessingGame,
       });
       const {
         sessionService,
         redisService,
         gameService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
-      gameService.applyGuess.mockReturnValue(updatedGame);
+      gameService.applyGuess.mockResolvedValue(updatedGame);
 
-      const result: Session = await sessionService.handleGuess(
-        playerId('host'),
-        session.id,
-        defaultGuess,
-      );
+      const result: Session = await sessionService.submitGuess({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        guess: { coordinates: { lat: 48.85, lng: 2.35 } },
+      });
 
-      expect(gameService.applyGuess).toHaveBeenCalledWith(
-        game,
-        playerId('host'),
-        defaultGuess,
-        [playerId('host'), playerId('bob')],
-      );
+      expect(gameService.applyGuess).toHaveBeenCalledWith({
+        game: guessingGame,
+        playerID: playerId('host'),
+        coordinates: { lat: 48.85, lng: 2.35 },
+        connectedPlayerIDs: [playerId('host'), playerId('bob')],
+      });
       expect(result.currentGame).toBe(updatedGame);
       expect(redisService.setJSON).toHaveBeenCalledTimes(1);
     });
 
-    it('rejects a guess from a disconnected player', async () => {
-      const game: Game = buildGame({
-        state: buildGameState({ currentRound: buildRound() }),
+    it('scores a guess received after the round deadline as a guess without coordinates', async () => {
+      const session: Session = buildSession({ currentGame: guessingGame });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      redisService.get.mockResolvedValue('1000000');
+      jest.spyOn(Date, 'now').mockReturnValue(1_000_001);
+
+      await sessionService.submitGuess({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        guess: { coordinates: { lat: 48.85, lng: 2.35 } },
       });
+
+      expect(redisService.get).toHaveBeenCalledWith(
+        `session:${session.id}:round-deadline`,
+      );
+      expect(gameService.applyGuess).toHaveBeenCalledWith(
+        expect.objectContaining({ coordinates: undefined }),
+      );
+    });
+
+    it('scores the coordinates when no round deadline is stored', async () => {
+      const session: Session = buildSession({ currentGame: guessingGame });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      redisService.get.mockResolvedValue(null);
+
+      await sessionService.submitGuess({
+        playerID: playerId('host'),
+        sessionID: session.id,
+        guess: { coordinates: { lat: 48.85, lng: 2.35 } },
+      });
+
+      expect(gameService.applyGuess).toHaveBeenCalledWith(
+        expect.objectContaining({ coordinates: { lat: 48.85, lng: 2.35 } }),
+      );
+    });
+
+    it('rejects a guess from a disconnected player', async () => {
       const session: Session = buildSession({
-        currentGame: game,
+        currentGame: guessingGame,
         players: [
           buildPlayer({ username: playerId('host'), connected: false }),
         ],
@@ -464,10 +543,65 @@ describe('SessionService game operations', () => {
         buildSessionService(session);
 
       await expect(
-        sessionService.handleGuess(playerId('host'), session.id, defaultGuess),
+        sessionService.submitGuess({
+          playerID: playerId('host'),
+          sessionID: session.id,
+          guess: {},
+        }),
       ).rejects.toMatchObject({
         response: { code: ErrorCode.SESSION_PLAYER_NOT_CONNECTED },
       });
+    });
+  });
+
+  describe('handleGuess', () => {
+    it('scores a legacy guess from its coordinates and ignores its announced points', async () => {
+      const session: Session = buildSession({
+        currentGame: buildGame({
+          state: buildGameState({ currentRound: buildRound() }),
+        }),
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.handleGuess(
+        playerId('host'),
+        session.id,
+        buildGuess({
+          coordinates: { lat: 45.76, lng: 4.83 },
+          distance: 0,
+          points: 1000,
+          win: true,
+        }),
+      );
+
+      expect(gameService.applyGuess).toHaveBeenCalledWith(
+        expect.objectContaining({ coordinates: { lat: 45.76, lng: 4.83 } }),
+      );
+    });
+
+    it('scores a legacy guess sent without a click as a guess without coordinates', async () => {
+      const session: Session = buildSession({
+        currentGame: buildGame({
+          state: buildGameState({ currentRound: buildRound() }),
+        }),
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.handleGuess(
+        playerId('host'),
+        session.id,
+        defaultGuess,
+      );
+
+      expect(gameService.applyGuess).toHaveBeenCalledWith(
+        expect.objectContaining({ coordinates: undefined }),
+      );
     });
   });
 
@@ -511,6 +645,29 @@ describe('SessionService game operations', () => {
         600,
       );
       expect(result.currentGame).toBe(completedGame);
+    });
+
+    it('sets the deadline of the next round', async () => {
+      const game: Game = buildGame({ config: buildGameConfig({ timer: 40 }) });
+      const session: Session = buildSession({ currentGame: game });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.resolveNextRound.mockReturnValue({
+        game,
+        isGameOver: false,
+      });
+      jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+      await sessionService.handleNextRound(playerId('host'), session.id);
+
+      expect(redisService.set).toHaveBeenCalledWith(
+        `session:${session.id}:round-deadline`,
+        '1045000',
+        600,
+      );
     });
   });
 

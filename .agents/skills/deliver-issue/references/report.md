@@ -6,15 +6,17 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 
 - Chaque mise à jour part de la description actuelle de la PR et la ramène à l'état de la branche au dernier commit, sans historique des passages précédents.
 - Suivre le [gabarit](#gabarit), dans son ordre, en remplaçant chaque texte d'exemple ; omettre une section vide.
-- Le rapport est télégraphique : une bullet tient en une phrase courte, environ 120 caractères.
-- « Comment ça marche » tient en cinq bullets au plus ; les autres sections listent chaque élément.
-- Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique.
+- Le rapport est télégraphique : une phrase tient en environ 120 caractères.
+- Un symbole ou un fichier n'y figure que s'il situe une pièce clé du changement ou une surface publique, un par phrase au plus.
 
 ## Sections
 
-- **Critères de l'issue** : une bullet par critère d'acceptation, satisfait ou non.
+- **Critères non satisfaits** : un critère d'acceptation qui attend seulement un test manuel va dans « Tests manuels attendus ».
+- **Comment ça marche** : quelques phrases de prose, complétées au besoin de bullets pour les étapes du flux ; cinq phrases ou bullets au plus. Quand le flux traverse au moins trois acteurs, comme client, serveur et Redis, un diagramme de séquence Mermaid peut remplacer les bullets.
+- **Décisions prises**, **Déploiement** et **Tests manuels attendus** : chaque bullet commence par un libellé court en gras qui nomme son sujet ; dans « Décisions prises », les points liés partagent une bullet.
+- **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `✅ RAS`.
 - **Tests manuels attendus** : seulement quand l'UI est touchée.
-- **Review automatique** : le décompte compte tous les findings ; le tableau ne liste que ceux du périmètre, les autres vont dans « Pistes ». Sans finding dans le périmètre, le tableau laisse place à `Aucun finding dans le périmètre.`
+- Les autres sections listent chaque élément.
 
 ## Gabarit
 
@@ -23,46 +25,32 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 
 Une ou deux phrases : le comportement ou la structure obtenus.
 
-## Critères de l'issue
+## Critères non satisfaits
 
-- ✅ Critère satisfait.
-- ❌ Critère non satisfait : pourquoi.
+- ❌ Critère de l'issue : pourquoi.
 
 ## Comment ça marche
 
-- Une bullet par pièce ou étape, dans l'ordre du flux.
+Une ou deux phrases sur le principe du changement.
 
-## À trancher
+- Une bullet par étape du flux, quand l'ordre compte.
 
-- Décision prise hors des consignes de l'issue, plutôt que l'alternative : raison.
+## Décisions prises
 
-## Risques et déploiement
-
-- Contrat, comportement, migration, clients déployés ou variable d'environnement touchés : action attendue au déploiement.
-
-## Vérifications
-
-- ✅ Vérifications réussies, nommées sur une ligne.
-- ❌ Vérification en échec : l'échec.
-- ⚠️ Vérification non exécutée : la raison.
-
-## Tests manuels attendus
-
-- [ ] Scénario → résultat attendu.
-
-## Review automatique
-
-🔴 0 bloquant · 🟠 1 majeur · 🟡 2 mineurs
-
-| ID | Gravité | Constat | Suite |
-|---|---|---|---|
-| `F1` | 🟠 | Le constat de la review. | ✅ Le correctif. |
-| `F2` | 🟡 | Le constat de la review. | ❌ La raison du rejet. |
+- **Choix en quelques mots** : fait hors des consignes de l'issue, plutôt que l'alternative ; raison, et sa contrepartie s'il en a une.
 
 ## Pistes
 
-- 🟡 `F3` Finding hors périmètre : ce qu'il y a à voir.
-- Problème constaté hors périmètre : ce qu'il y a à voir.
+- Problème hors périmètre : ce qu'il y a à voir.
+
+## Déploiement
+
+- [ ] **Migration, variable d'environnement, donnée Redis ou configuration d'hébergement** : l'action attendue.
+- **Effet de transition** : ce que vivent les clients déployés, les sessions en cours ou les données existantes.
+
+## Tests manuels attendus
+
+- [ ] **Plateforme et mode** : scénario → résultat attendu.
 
 Closes #<numéro>
 ```

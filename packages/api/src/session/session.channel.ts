@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { GameConfigSchema, GuessSchema } from '../game/game.schema';
+import {
+  GameConfigSchema,
+  GuessSchema,
+  GuessSubmissionSchema,
+} from '../game/game.schema';
 import { PlayerIdSchema } from '../player/player.schema';
 import {
   type WsChannel,
@@ -36,7 +40,15 @@ export const sessionWsChannel = {
     updateHost: { payload: z.object({ newHostID: PlayerIdSchema }) },
     updateGameConfig: { payload: z.object({ gameConfig: GameConfigSchema }) },
     startGame: {},
-    guess: { payload: z.object({ guess: GuessSchema }) },
+    /**
+     * @deprecated Utiliser `submitGuess` à la place. Conservé pour les builds
+     * mobile publiées avant le calcul des scores côté serveur.
+     * @deprecatedSince 2026-10-28
+     */
+    guess: { payload: z.object({ guess: GuessSchema }), deprecated: true },
+    submitGuess: {
+      payload: z.object({ guess: GuessSubmissionSchema }).strict(),
+    },
     nextRound: {},
     playAgain: {},
   },
@@ -52,6 +64,7 @@ export const sessionWsEvent = {
   updateGameConfig: wsEventName(sessionWsChannel, 'updateGameConfig'),
   startGame: wsEventName(sessionWsChannel, 'startGame'),
   guess: wsEventName(sessionWsChannel, 'guess'),
+  submitGuess: wsEventName(sessionWsChannel, 'submitGuess'),
   nextRound: wsEventName(sessionWsChannel, 'nextRound'),
   playAgain: wsEventName(sessionWsChannel, 'playAgain'),
 } satisfies WsClientEventNames<typeof sessionWsChannel>;

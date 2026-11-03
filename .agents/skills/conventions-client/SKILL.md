@@ -8,11 +8,12 @@ description: "Conventions de packages/client (@cityborn/client). À utiliser pou
 ## Organisation
 
 - `domains/<domaine>/` porte l'accès à un domaine du contrat, sous le même nom que dans `@cityborn/api` :
-  - `<domaine>Api.ts` : le port et sa factory, seul fichier qui appelle le contrat de ce domaine ;
+  - `<domaine>Api.ts` : le port HTTP et sa factory, seul fichier qui appelle le contrat HTTP de ce domaine, et le type du port WebSocket ;
   - `<domaine>Queries.ts` : les clés, les `queryOptions` et les mises à jour du cache.
 - `features/<feature>/` porte le comportement d'une feature des apps : hooks, formulaires, transformations pures, contrats de vue. Une feature compose des domaines.
 - Le socle technique porte le transport HTTP, le transport WebSocket, les ports plateforme et les providers transverses.
 - La connexion WebSocket appartient au socle : une feature obtient le port WebSocket d'un domaine par le hook `use<Domaine>Channel` de ce domaine, qui ouvre la connexion le temps de l'écran et rejoue à chaque connexion la restauration fournie par la feature.
+- Le port WebSocket d'un domaine est la connexion du socle typée par le channel de ce domaine : une feature émet et écoute les events du contrat par ce port, sans méthode recopiée par event.
 
 ## Surface publique
 

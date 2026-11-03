@@ -8,22 +8,6 @@ export function calculateTotalPoints(results: PlayerResults): number {
   return results.results.reduce((acc, result) => acc + result.points, 0);
 }
 
-export function reconcileGuessObjects(
-  localGame: Game | undefined,
-  incomingGame: Game | undefined,
-): Game | undefined {
-  if (!incomingGame) return undefined;
-
-  return {
-    ...incomingGame,
-    state: {
-      ...incomingGame.state,
-      guessObjects:
-        incomingGame.state.guessObjects ?? localGame?.state.guessObjects,
-    },
-  };
-}
-
 export function toLightGame(game: Game): Game {
   const { guessObjects, ...restState } = game.state;
 

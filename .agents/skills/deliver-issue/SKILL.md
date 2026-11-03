@@ -9,16 +9,9 @@ Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte 
 
 ## Préparer le worktree
 
-L'orchestrateur prépare lui-même la branche liée à l'issue et son worktree, avant tout sous-agent : le checkout courant garde sa branche et ses changements.
+Appliquer [la préparation](references/prepare.md) avant tout sous-agent, quelle que soit l'origine du checkout.
 
-1. Résoudre l'issue exacte à partir de son numéro ou de son URL.
-2. Exécuter `git fetch --all --prune`, puis trouver la branche que GitHub associe à l'issue : `gh issue develop <numéro> --list` ; une branche locale au nom proche ne compte pas. Sans branche liée, la créer avec `gh issue develop <numéro> --base main` et relancer le fetch.
-3. Réutiliser le worktree où `git worktree list` montre la branche liée ; sinon en créer un avec `git worktree add <checkout principal>/.claude/worktrees/issue-<numéro> <branche liée>`, où le checkout principal est la première entrée de `git worktree list`, puis exécuter `./scripts/setup-worktree.sh <worktree>` et signaler un échec tel quel.
-4. Rebaser la branche liée sur `origin/main`, sauf si le worktree contient des changements ou si le rebase réécrit des commits publiés : présenter alors l'état et demander. Résoudre seul un conflit seulement si la résolution découle clairement de l'issue et du code actuel ; sinon laisser le rebase en cours et demander une décision.
-
-Si l'utilisateur demande de travailler dans un checkout précis, ce checkout remplace le worktree et garde sa branche : appliquer les étapes 1, 2, puis 4 si c'est la branche liée, sinon le signaler avant tout sous-agent.
-
-La préparation est terminée quand le worktree est sur la branche liée, rebasée ou avec sa divergence présentée, et prêt à l'emploi.
+La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur `origin/main`, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
 
 ## Lancer un sous-agent
 
@@ -50,14 +43,14 @@ Si au moins un finding est dans le périmètre de l'issue, transmettre au sous-a
 - charger les skills de conventions des périmètres touchés ;
 - traiter chaque finding : le corriger, ou le rejeter avec une justification tirée du code ;
 - vérifier chaque correctif ;
-- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur la section « Review automatique » et les findings de « Pistes ».
+- livrer selon la section « Livrer » de `.agents/skills/deliver-issue/references/develop.md`, en laissant à l'orchestrateur les findings hors périmètre de « Pistes ».
 
-Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne.
+Son rapport donne, pour chaque finding, son statut et le correctif ou la raison du rejet, en une ligne, puis chaque vérification en échec ou non exécutée, avec la raison.
 
-Dans tous les cas, écrire ensuite dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`, la section « Review automatique » et ajouter à « Pistes » les findings hors périmètre.
+Dans tous les cas, ajouter ensuite les findings hors périmètre à « Pistes » dans la description de la PR, selon `.agents/skills/deliver-issue/references/report.md`.
 
-L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que la description de la PR contient la section « Review automatique ».
+L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que « Pistes » liste chaque finding hors périmètre.
 
 ## Compte rendu final
 
-Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter que les étapes ont tourné sans sous-agent.
+Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter les vérifications en échec ou non exécutées et que les étapes ont tourné sans sous-agent.

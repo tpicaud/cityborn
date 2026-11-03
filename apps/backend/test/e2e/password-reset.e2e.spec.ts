@@ -124,7 +124,7 @@ describe('Password reset over HTTP and WebSocket', () => {
       .expect(200);
   });
 
-  it('changes a password without verification or automatic sign-in and revokes existing sessions', async () => {
+  it('verifies the account without automatic sign-in and revokes existing sessions', async () => {
     const user: User = buildUser({ isVerified: false });
     const prismaService: PrismaService = app.get(PrismaService);
     await prismaService.user.create({
@@ -207,7 +207,7 @@ describe('Password reset over HTTP and WebSocket', () => {
     expect(resetResponse.headers['set-cookie']).toBeUndefined();
     expect(
       await prismaService.user.findUnique({ where: { id: user.id } }),
-    ).toMatchObject({ authVersion: 1, isVerified: false });
+    ).toMatchObject({ authVersion: 1, isVerified: true });
     await webAgent.get(contract.auth.me.path).expect(401);
     await webAgent
       .post(contract.auth.cookie.refresh.path)
@@ -247,7 +247,7 @@ describe('Password reset over HTTP and WebSocket', () => {
       .post(contract.auth.resetPassword.path)
       .send({ token, password: 'AgainPass1', confirmPassword: 'AgainPass1' })
       .expect(401);
-    expect(newAuthResponse.user.isVerified).toBe(false);
+    expect(newAuthResponse.user.isVerified).toBe(true);
     expect(mailService.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: 'Votre mot de passe Cityborn a été modifié',

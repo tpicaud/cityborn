@@ -2,6 +2,7 @@ import type {
   GameConfigPack,
   Pack,
   PlayerId,
+  RoundGuessObject,
   Session,
   SessionJoinAck,
   Theme,
@@ -14,9 +15,13 @@ import {
   buildTheme,
   buildUser,
   buildWorldLocation,
+  contract,
+  defaultGuess,
   ErrorCode,
   PlayerIdSchema,
+  RoundStatus,
   SessionJoinAckSchema,
+  SessionMode,
   SessionSchema,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -29,6 +34,7 @@ import {
   type Socket,
   type SocketOptions,
 } from 'socket.io-client';
+import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { RateLimitService } from '../../src/rate-limit/rate-limit.service';
 import { RedisService } from '../../src/redis/redis.service';
@@ -179,6 +185,32 @@ describe('Session gateway over a real socket', () => {
       ...session.players,
       { username: playerID, isGuest: true, connected: true },
     ]);
+  });
+
+  it('lets a guest create a multi session and join it with a guest name', async () => {
+    const creation: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createSession.path)
+      .send({ mode: SessionMode.MULTI })
+      .expect(201);
+    const session: Session = SessionSchema.parse(creation.body);
+    const client: Socket = await connectClient();
+    const playerID: PlayerId = PlayerIdSchema.parse('guest');
+    const broadcast: Promise<unknown> = nextEvent(
+      client,
+      sessionWsServerEvent.update,
+    );
+
+    const ack: unknown = await emitWithAck(client, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID,
+    });
+
+    expect(ack).toEqual({ success: true, reconnectToken: expect.any(String) });
+    expect(SessionSchema.parse(await broadcast)).toMatchObject({
+      id: session.id,
+      mode: SessionMode.MULTI,
+      players: [{ username: playerID, isGuest: true, connected: true }],
+    });
   });
 
   it('authenticates a reconnect and broadcasts the disconnection with a new host after the grace period', async () => {
@@ -436,5 +468,117 @@ describe('Session gateway over a real socket', () => {
         state: { guessObjects: [{ name: 'Tour Eiffel' }] },
       },
     });
+  });
+
+  it('rejects a submitted guess announcing its points', async () => {
+    const client: Socket = await connectClient();
+
+    const ack: unknown = await emitWithAck(client, sessionWsEvent.submitGuess, {
+      guess: { coordinates: { lat: 48.85, lng: 2.35 }, points: 1000 },
+    });
+
+    expect(ack).toMatchObject({
+      success: false,
+      error: { statusCode: 400, code: ErrorCode.BAD_REQUEST },
+    });
+  });
+
+  it('hides the guesses during the round and reveals the scores computed by the server', async () => {
+    const prismaService: PrismaService = app.get(PrismaService);
+    const location: WorldLocation = buildWorldLocation();
+    await prismaService.worldLocation.create({
+      data: {
+        id: location.id,
+        osm_type: location.osm_type,
+        external_id: location.source.external_id,
+        name: location.name,
+        display_name: location.display_name,
+        centroid: location.centroid,
+        source: location.source,
+        geometry: {
+          create: { data: { type: 'Point', coordinates: [2.3522, 48.8566] } },
+        },
+      },
+    });
+    const theme: Theme = buildTheme();
+    await prismaService.theme.create({ data: theme });
+    const pack: Pack = buildPack({ themeId: theme.id });
+    await prismaService.pack.create({
+      data: {
+        id: pack.id,
+        name: pack.name,
+        isPublished: pack.isPublished,
+        themeId: pack.themeId,
+        guessObjects: {
+          create: { name: 'Tour Eiffel', world_location_id: location.id },
+        },
+      },
+    });
+    const session: Session = buildSession({ hostID: '', players: [] });
+    await app.get(RedisService).setJSON(`session:${session.id}`, session);
+    const hostID: PlayerId = PlayerIdSchema.parse('carol');
+    const legacyPlayerID: PlayerId = PlayerIdSchema.parse('dave');
+    const hostClient: Socket = await connectClient();
+    const legacyClient: Socket = await connectClient();
+    await emitWithAck(hostClient, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID: hostID,
+    });
+    await emitWithAck(legacyClient, sessionWsEvent.join, {
+      sessionID: session.id,
+      playerID: legacyPlayerID,
+    });
+    await emitWithAck(hostClient, sessionWsEvent.updateGameConfig, {
+      gameConfig: { packs: [pack], timer: 25, nbOfObjects: 1 },
+    });
+    await emitWithAck(hostClient, sessionWsEvent.startGame);
+    const roundBroadcast: Promise<unknown> = nextEvent(
+      hostClient,
+      sessionWsServerEvent.update,
+    );
+
+    await emitWithAck(hostClient, sessionWsEvent.submitGuess, {
+      guess: { coordinates: { lat: 48.8566, lng: 2.3522 } },
+    });
+    const roundSession: Session = SessionSchema.parse(await roundBroadcast);
+    const resultsBroadcast: Promise<unknown> = nextEvent(
+      hostClient,
+      sessionWsServerEvent.update,
+    );
+    await emitWithAck(legacyClient, sessionWsEvent.guess, {
+      guess: {
+        coordinates: { lat: -48.8566, lng: -177.6478 },
+        distance: 0,
+        points: 1000,
+        win: true,
+      },
+    });
+    const resultsSession: Session = SessionSchema.parse(await resultsBroadcast);
+
+    expect(roundSession.currentGame?.state.currentRound).toMatchObject({
+      status: RoundStatus.GUESSING,
+      playersGuesses: { [hostID]: defaultGuess },
+    });
+    expect(resultsSession.currentGame?.state.currentRound).toMatchObject({
+      status: RoundStatus.SHOWING_RESULTS,
+      playersGuesses: {
+        [hostID]: { distance: 0, points: 1000, win: false },
+        [legacyPlayerID]: {
+          coordinates: { lat: -48.8566, lng: -177.6478 },
+          points: 0,
+          win: false,
+        },
+      },
+    });
+    const hiddenGuessObjects: RoundGuessObject[] | undefined =
+      roundSession.currentGame?.state.roundGuessObjects;
+    expect(hiddenGuessObjects).toHaveLength(1);
+    expect(hiddenGuessObjects?.[0]).not.toHaveProperty('world_location');
+    expect(hiddenGuessObjects?.[0]).not.toHaveProperty('source');
+    const revealedGuessObjects: RoundGuessObject[] | undefined =
+      resultsSession.currentGame?.state.roundGuessObjects;
+    expect(revealedGuessObjects).toMatchObject([
+      { name: 'Tour Eiffel', world_location: { centroid: location.centroid } },
+    ]);
   });
 });

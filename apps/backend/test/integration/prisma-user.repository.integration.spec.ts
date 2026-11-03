@@ -172,6 +172,24 @@ describe('PrismaUserRepository', () => {
     });
   });
 
+  describe('findByEmail', () => {
+    it('finds a user by email but not by username', async () => {
+      const userData: User = buildUser();
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+      });
+
+      const byEmail: User | null =
+        await userRepository.findByEmail('host@cityborn.test');
+      const byUsername: User | null = await userRepository.findByEmail('host');
+
+      expect(byEmail).toMatchObject({ id: user.id });
+      expect(byUsername).toBeNull();
+    });
+  });
+
   describe('findByIdentifiers', () => {
     it('finds an existing user by either username or email', async () => {
       const userData: User = buildUser();
@@ -399,7 +417,7 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('markEmailVerified', () => {
-    it('persists email verification', async () => {
+    it('persists email verification for the current address', async () => {
       const userData: User = buildUser({ isVerified: false });
       const user: User = await userRepository.create({
         email: userData.email,
@@ -408,11 +426,34 @@ describe('PrismaUserRepository', () => {
         isVerified: userData.isVerified,
       });
 
-      const verified: User = await userRepository.markEmailVerified(user.id);
+      const verified: User | null = await userRepository.markEmailVerified({
+        userId: user.id,
+        email: user.email,
+      });
 
-      expect(verified.isVerified).toBe(true);
+      expect(verified?.isVerified).toBe(true);
       expect(await userRepository.findById(user.id)).toMatchObject({
         isVerified: true,
+      });
+    });
+
+    it('leaves the account unverified for another address', async () => {
+      const userData: User = buildUser({ isVerified: false });
+      const user: User = await userRepository.create({
+        email: userData.email,
+        username: userData.username,
+        type: userData.type,
+        isVerified: userData.isVerified,
+      });
+
+      const verified: User | null = await userRepository.markEmailVerified({
+        userId: user.id,
+        email: 'old@cityborn.test',
+      });
+
+      expect(verified).toBeNull();
+      expect(await userRepository.findById(user.id)).toMatchObject({
+        isVerified: false,
       });
     });
   });

@@ -1,8 +1,8 @@
 'use client';
 
 import type {
+  Coord,
   GameConfigChanges,
-  Guess,
   PlayerId,
   Session,
   SessionId,
@@ -14,6 +14,9 @@ import {
   ErrorCode,
   GameStatus,
   SessionStatus,
+  type sessionWsChannel,
+  sessionWsEvent,
+  sessionWsServerEvent,
 } from '@cityborn/api';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
@@ -40,10 +43,11 @@ import {
   isSessionEntryRejected,
   type JoinedSessionPlayer,
 } from './admission/sessionAdmission';
+import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
-import { isHostOf, mergeSessionUpdate, withStatus } from './sessionState';
+import { isHostOf, withStatus } from './sessionState';
 
 type SessionAdmission =
   | { status: 'idle' | 'pending' | 'rejected' }
@@ -65,7 +69,7 @@ export type SessionController = {
   updateHost: (newHostID: PlayerId) => Promise<void>;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
-  guess: (guess: Guess) => Promise<void>;
+  guess: (coordinates: Coord | undefined) => Promise<void>;
   nextRound: () => Promise<void>;
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
@@ -99,7 +103,7 @@ export function useSessionController({
       const player: JoinedSessionPlayer | null = joinedPlayer.current;
       if (!player) return;
       try {
-        await restoredChannel.reconnect({
+        await restoredChannel.emit(sessionWsEvent.reconnect, {
           sessionID,
           playerID: player.playerID,
           reconnectToken: player.reconnectToken,
@@ -117,7 +121,9 @@ export function useSessionController({
     channel: sessionChannel,
     connectionStatus,
     retryConnection,
-  }: WsChannelState<SessionChannel> = useSessionChannel({ restoreSession });
+  }: WsChannelState<typeof sessionWsChannel> = useSessionChannel({
+    restoreSession,
+  });
 
   useEffect(() => {
     const loadSession = async (): Promise<void> => {
@@ -144,9 +150,18 @@ export function useSessionController({
 
   useEffect(
     () =>
-      sessionChannel?.onSessionUpdate((incoming: Session) => {
-        setSession((previous) => mergeSessionUpdate(previous, incoming));
+      sessionChannel?.on(sessionWsServerEvent.update, (incoming: Session) => {
+        setSession(incoming);
       }),
+    [sessionChannel],
+  );
+
+  const emit: SessionChannel['emit'] = useCallback(
+    (event, ...payload) =>
+      requireOpenedSessionChannel({ sessionChannel, event }).emit(
+        event,
+        ...payload,
+      ),
     [sessionChannel],
   );
 
@@ -156,17 +171,12 @@ export function useSessionController({
         throw new Error(
           'Joining session failed: session or player not initialized',
         );
-      const openedChannel: SessionChannel = requireOpenedSessionChannel({
-        sessionChannel,
-        action: 'Joining session',
-      });
-
       joinAttempted.current = true;
       setAdmission({ status: 'pending' });
       try {
         const admittedPlayer: JoinedSessionPlayer = await admitSessionPlayer({
           session,
-          channel: openedChannel,
+          channel: { emit },
           playerID,
           userId: user?.id,
         });
@@ -177,7 +187,7 @@ export function useSessionController({
         throw error;
       }
     },
-    [session, sessionChannel, user?.id],
+    [session, emit, user?.id],
   );
 
   useEffect(() => {
@@ -235,58 +245,45 @@ export function useSessionController({
     }
   };
 
-  const requireSession = (action: string): Session => {
-    if (!session) throw new Error(`${action} failed: session not initialized`);
+  const requireSession = (operation: string): Session => {
+    if (!session)
+      throw new Error(`${operation} failed: session not initialized`);
     return session;
   };
 
-  const requireGame = (action: string): Session => {
-    const current = requireSession(action);
+  const requireGame = (operation: string): Session => {
+    const current = requireSession(operation);
     if (!current.currentGame)
-      throw new Error(`${action} failed: session or game not initialized`);
+      throw new Error(`${operation} failed: session or game not initialized`);
     return current;
   };
 
   const updateHost = async (newHostID: PlayerId) => {
-    requireSession('Updating host');
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Updating host',
-    }).updateHost(newHostID);
+    await emit(sessionWsEvent.updateHost, { newHostID });
   };
 
   const updateGameConfig = async (changes: GameConfigChanges) => {
     const current = requireSession('Updating game config');
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Updating game config',
-    }).updateGameConfig(
-      applyGameConfigChanges({ gameConfig: current.gameConfig, changes }),
-    );
+    await emit(sessionWsEvent.updateGameConfig, {
+      gameConfig: applyGameConfigChanges({
+        gameConfig: current.gameConfig,
+        changes,
+      }),
+    });
   };
 
   const startGame = async () => {
-    requireSession('Starting game');
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Starting game',
-    }).startGame();
+    await emit(sessionWsEvent.startGame);
   };
 
-  const guess = async (playerGuess: Guess) => {
-    requireGame('Guess');
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Guess',
-    }).guess(playerGuess);
+  const guess = async (coordinates: Coord | undefined) => {
+    await emit(sessionWsEvent.submitGuess, {
+      guess: createGuessSubmission(coordinates),
+    });
   };
 
   const nextRound = async () => {
-    requireGame('Next round');
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Next round',
-    }).nextRound();
+    await emit(sessionWsEvent.nextRound);
   };
 
   const endGame = async () => {
@@ -297,10 +294,7 @@ export function useSessionController({
   const playAgain = async () => {
     const current = requireGame('Playing again');
     if (!isHostOf(current, localPlayerID)) return;
-    await requireOpenedSessionChannel({
-      sessionChannel,
-      action: 'Playing again',
-    }).playAgain();
+    await emit(sessionWsEvent.playAgain);
   };
 
   const exitGame = async () => {

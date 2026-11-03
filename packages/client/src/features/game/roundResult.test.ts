@@ -6,6 +6,8 @@ import {
   buildGameState,
   buildGuess,
   buildRound,
+  buildRoundGuessObject,
+  type Coord,
   defaultGuess,
   type Game,
   type Guess,
@@ -26,6 +28,7 @@ const otherPlayerID: PlayerId = PlayerIdSchema.parse('other-player');
 const guessObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-1');
 
 const missedGuess: Guess = buildGuess({ distance: 391.42, points: 676 });
+const preGuess: Coord = { lat: 45.76, lng: 4.83 };
 
 function buildGameInRound({
   status,
@@ -37,7 +40,7 @@ function buildGameInRound({
   return buildGame({
     state: buildGameState({
       guessObjectsIds: [guessObjectID],
-      guessObjects: [buildFullGuessObject({ id: guessObjectID })],
+      roundGuessObjects: [buildFullGuessObject({ id: guessObjectID })],
       currentRound: buildRound({
         status,
         guessObjectId: guessObjectID,
@@ -86,6 +89,27 @@ describe('createRoundResult', () => {
     assert.deepEqual(roundResult?.localOutcome, { kind: 'timedOut' });
   });
 
+  it('returns no result until the server reveals the guess object', () => {
+    const roundGame: Game = buildGameInRound({
+      status: RoundStatus.SHOWING_RESULTS,
+      playersGuesses: { [localPlayerID]: missedGuess },
+    });
+    const game: Game = {
+      ...roundGame,
+      state: {
+        ...roundGame.state,
+        roundGuessObjects: [buildRoundGuessObject({ id: guessObjectID })],
+      },
+    };
+
+    const roundResult: RoundResult | undefined = createRoundResult(
+      game,
+      localPlayerID,
+    );
+
+    assert.equal(roundResult, undefined);
+  });
+
   it('returns no result while players are guessing', () => {
     const game: Game = buildGameInRound({
       status: RoundStatus.GUESSING,
@@ -105,7 +129,7 @@ describe('canSubmitGuess', () => {
   it('accepts a pre-guess during a round the player has not guessed yet', () => {
     const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
 
     assert.equal(canSubmit, true);
   });
@@ -124,7 +148,7 @@ describe('canSubmitGuess', () => {
       playersGuesses: { [localPlayerID]: missedGuess },
     });
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, missedGuess);
+    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
 
     assert.equal(canSubmit, false);
   });

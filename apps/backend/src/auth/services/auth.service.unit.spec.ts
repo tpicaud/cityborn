@@ -546,6 +546,63 @@ describe('AuthService account operations', () => {
     });
   });
 
+  describe('updateEmail', () => {
+    it('sends a verification link to the corrected address', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const updatedUser: User = buildUser({
+        isVerified: false,
+        email: 'fixed@cityborn.test',
+      });
+      const {
+        authService,
+        userService,
+        mailService,
+        rateLimitService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(updatedUser);
+      userService.createEmailVerificationToken.mockResolvedValue(
+        'verification-token',
+      );
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      const result: User = await authService.updateEmail({
+        user,
+        email: 'fixed@cityborn.test',
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(rateLimitService.consumeEmailChange).toHaveBeenCalledWith(user.id);
+      expect(userService.updateEmail).toHaveBeenCalledWith({
+        user,
+        email: 'fixed@cityborn.test',
+      });
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'fixed@cityborn.test' }),
+      );
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('sends no verification link when the address is unchanged', async () => {
+      const user: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.updateEmail.mockResolvedValue(user);
+
+      const result: User = await authService.updateEmail({
+        user,
+        email: user.email,
+      });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(userService.createEmailVerificationToken).not.toHaveBeenCalled();
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
+  });
+
   describe('resendVerificationEmail', () => {
     it('does not resend verification to a verified user', async () => {
       const {
@@ -575,11 +632,57 @@ describe('AuthService account operations', () => {
 
       await authService.resendVerificationEmail(unverifiedUser);
 
-      expect(userService.createEmailVerificationToken).toHaveBeenCalledWith(
-        '00000000-0000-4000-8000-000000000001',
-        180000,
-      );
+      expect(userService.createEmailVerificationToken).toHaveBeenCalledWith({
+        userId: '00000000-0000-4000-8000-000000000001',
+        email: unverifiedUser.email,
+        cooldownMs: 180000,
+      });
       expect(mailService.sendMail).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('renewVerificationEmail', () => {
+    it('sends a new link to the unverified owner of the token', async () => {
+      const owner: User = buildUser({ isVerified: false });
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(owner);
+      userService.createEmailVerificationToken.mockResolvedValue('fresh-token');
+      mailService.sendMail.mockResolvedValue(undefined);
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(userService.findVerificationTokenOwner).toHaveBeenCalledWith(
+        'expired-token',
+      );
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: owner.email,
+          text: expect.stringContaining('verification_token=fresh-token'),
+        }),
+      );
+    });
+
+    it('sends nothing to an already verified owner', async () => {
+      const {
+        authService,
+        userService,
+        mailService,
+      }: ReturnType<typeof buildAuthService> = buildAuthService();
+      userService.findVerificationTokenOwner.mockResolvedValue(
+        buildUser({ isVerified: true }),
+      );
+
+      await authService.renewVerificationEmail({
+        verification_token: 'expired-token',
+      });
+
+      expect(mailService.sendMail).not.toHaveBeenCalled();
     });
   });
 

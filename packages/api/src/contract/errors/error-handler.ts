@@ -13,20 +13,20 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "Le nom d'utilisateur est déjà pris.",
   [ErrorCode.USER_EMAIL_ALREADY_TAKEN]:
     "L'adresse mail est déjà utilisée pour un autre compte.",
+  [ErrorCode.USER_EMAIL_ALREADY_VERIFIED]:
+    "L'adresse mail est déjà vérifiée et ne peut plus être modifiée.",
   [ErrorCode.USER_NOT_VANILLA_ACCOUNT]:
     "Vous n'avez pas de compte Cityborn. Êtes-vous sûr que ce n'est pas un compte d'un autre fournisseur ? (e.g. Google)",
   [ErrorCode.USER_GOOGLE_EMAIL_NOT_VERIFIED]:
     "Le compte Google n'est pas vérifié.",
   [ErrorCode.USER_REFRESH_FAILED]:
     'Session expirée. Veuillez vous reconnecter.',
-  [ErrorCode.USER_NOT_VERIFIED]:
-    "Le compte n'est pas vérifié. Veuillez faire vérifier votre adresse mail.",
   [ErrorCode.USER_TOKEN_MISSING]: 'Token manquant. Veuillez vous reconnecter.',
   [ErrorCode.USER_INVALID_TOKEN]: 'Token invalide. Veuillez vous reconnecter.',
   [ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN]:
     'Le lien de vérification a expiré ou est invalide.',
-  [ErrorCode.USER_NO_ACCOUNT_OR_NOT_VERIFIED]:
-    'Vous devez posséder un compte utilisateur vérifié.',
+  [ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN]:
+    'Le lien de vérification a expiré.',
   [ErrorCode.USER_VERIFICATION_EMAIL_RESEND_TOO_SOON]:
     'Veuillez patienter 3 minutes avant de demander un nouveau mail de vérification.',
   [ErrorCode.USER_NOT_ADMIN]: 'Accès réservé aux administrateurs.',

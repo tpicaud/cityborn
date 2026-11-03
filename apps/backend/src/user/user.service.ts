@@ -8,6 +8,7 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -16,6 +17,7 @@ import { Transactional } from '@nestjs-cls/transactional';
 import type { AuthSession, AuthVersion } from '../common/types/auth-session';
 import {
   EMAIL_VERIFICATION_TOKEN_REPOSITORY,
+  type EmailVerificationToken,
   type EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import {
@@ -25,6 +27,13 @@ import {
   type UserCredentials,
   type UserRepository,
 } from './repositories/user.repository';
+
+function invalidVerificationTokenException(): UnauthorizedException {
+  return new UnauthorizedException({
+    code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
+    message: 'Email verification token is invalid',
+  });
+}
 
 @Injectable()
 export class UserService {
@@ -106,6 +115,46 @@ export class UserService {
   }
 
   @Transactional()
+  async updateEmail({
+    user,
+    email,
+  }: {
+    user: User;
+    email: string;
+  }): Promise<User> {
+    if (user.isVerified)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
+        message: 'A verified email cannot be changed',
+      });
+
+    if (user.email === email) return user;
+
+    const emailOwner: User | null =
+      await this.userRepository.findByEmail(email);
+    if (emailOwner)
+      throw new ConflictException({
+        code: ErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        message: 'Email already taken',
+      });
+
+    const updatedUser: User | null = await this.userRepository.updateEmail({
+      userId: user.id,
+      email,
+    });
+    if (!updatedUser)
+      throw new ForbiddenException({
+        code: ErrorCode.USER_EMAIL_ALREADY_VERIFIED,
+        message: 'A verified email cannot be changed',
+      });
+    await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
+      user.id,
+    );
+    await this.userRepository.deletePasswordResetTokensByUserId(user.id);
+    return updatedUser;
+  }
+
+  @Transactional()
   async updatePassword(
     userId: UserId,
     passwordHash: string,
@@ -138,10 +187,15 @@ export class UserService {
   }
 
   @Transactional()
-  async createEmailVerificationToken(
-    userId: UserId,
-    cooldownMs?: number,
-  ): Promise<string> {
+  async createEmailVerificationToken({
+    userId,
+    email,
+    cooldownMs,
+  }: {
+    userId: UserId;
+    email: string;
+    cooldownMs?: number;
+  }): Promise<string> {
     if (cooldownMs) {
       const existingToken =
         await this.emailVerificationTokenRepository.findLatestVerificationToken(
@@ -167,6 +221,7 @@ export class UserService {
     );
     await this.emailVerificationTokenRepository.createVerificationToken({
       userId,
+      email,
       token,
       expiresAt,
     });
@@ -175,30 +230,55 @@ export class UserService {
   }
 
   async verifyEmail(verificationToken: string): Promise<User> {
-    const token =
+    const token: EmailVerificationToken | null =
       await this.emailVerificationTokenRepository.findVerificationToken(
         verificationToken,
       );
 
-    if (!token || token.expiresAt < new Date()) {
-      if (token) {
-        await this.emailVerificationTokenRepository.deleteVerificationToken(
-          token.id,
-        );
-      }
+    if (!token) throw invalidVerificationTokenException();
 
+    if (token.expiresAt < new Date())
       throw new UnauthorizedException({
-        code: ErrorCode.USER_VERIFICATION_EMAIL_INVALID_TOKEN,
-        message: 'Email verification token is invalid or expired',
+        code: ErrorCode.USER_VERIFICATION_EMAIL_EXPIRED_TOKEN,
+        message: 'Email verification token is expired',
       });
-    }
 
-    return this.completeEmailVerification(token.userId);
+    const user: User | null = await this.verifyEmailOwnership({
+      userId: token.userId,
+      email: token.email,
+    });
+    if (!user) throw invalidVerificationTokenException();
+
+    return user;
+  }
+
+  async findVerificationTokenOwner(verificationToken: string): Promise<User> {
+    const token: EmailVerificationToken | null =
+      await this.emailVerificationTokenRepository.findVerificationToken(
+        verificationToken,
+      );
+    const owner: User | null = token
+      ? await this.userRepository.findById(token.userId)
+      : null;
+
+    if (!owner) throw invalidVerificationTokenException();
+
+    return owner;
   }
 
   @Transactional()
-  private async completeEmailVerification(userId: UserId): Promise<User> {
-    const user = await this.userRepository.markEmailVerified(userId);
+  async verifyEmailOwnership({
+    userId,
+    email,
+  }: {
+    userId: UserId;
+    email: string;
+  }): Promise<User | null> {
+    const user: User | null = await this.userRepository.markEmailVerified({
+      userId,
+      email,
+    });
+    if (!user) return null;
     await this.emailVerificationTokenRepository.deleteVerificationTokensByUserId(
       userId,
     );

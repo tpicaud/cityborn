@@ -1,10 +1,10 @@
-import type { Coord, Game, Guess, PlayerId } from '@cityborn/api';
+import type { Coord, Game, PlayerId } from '@cityborn/api';
 
 export type GameComponentProps = {
   localPlayerID: PlayerId | undefined;
   isHost: boolean;
   game: Game;
-  handleGuess: (guess: Guess) => Promise<void>;
+  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
   handleNextRound: () => Promise<void>;
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
@@ -14,8 +14,8 @@ export type GameComponentProps = {
 export type MapProps = {
   center: Coord;
   zoom: number;
-  preGuess: Guess | undefined;
+  preGuess: Coord | undefined;
   game: Game;
   localPlayerID: PlayerId;
-  handlePreGuess: (value: Guess) => void;
+  handlePreGuess: (coordinates: Coord) => void;
 };

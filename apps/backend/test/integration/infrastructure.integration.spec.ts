@@ -36,6 +36,7 @@ describe('Test infrastructure', () => {
           tokens: {
             create: {
               token: 'infrastructure-token',
+              email: userData.email,
               expiresAt: new Date('2099-01-01'),
             },
           },

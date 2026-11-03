@@ -2,10 +2,12 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   type CreateSession,
   defaultGameConfig,
+  defaultGuess,
   ErrorCode,
   type Game,
   type GameConfig,
   type Guess,
+  type GuessSubmission,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -20,6 +22,7 @@ import {
   SessionStatus,
   type User,
 } from '@cityborn/api';
+import { roundCountdownInSeconds } from '@cityborn/core';
 import {
   ConflictException,
   ForbiddenException,
@@ -50,6 +53,7 @@ export class SessionService {
   private readonly prefix = 'session:';
   private readonly TTL = 10 * 60;
   private readonly LOCK_TTL = 2000;
+  private readonly ROUND_NETWORK_TOLERANCE_MS = 2000;
   private readonly sessionExpirationsKey = 'session-expirations';
   private readonly playerAbsenceStarts: Map<SessionId, Map<PlayerId, number>> =
     new Map();
@@ -70,6 +74,10 @@ export class SessionService {
 
   private getReconnectTokenHashesKey(id: SessionId): string {
     return `${this.getKey(id)}:reconnect-token-hashes`;
+  }
+
+  private getRoundDeadlineKey(id: SessionId): string {
+    return `${this.getKey(id)}:round-deadline`;
   }
 
   ////////////////////
@@ -107,7 +115,7 @@ export class SessionService {
   }
 
   async getById(sessionID: SessionId): Promise<Session> {
-    return await this.requireSession(sessionID);
+    return this.hideRoundGuesses(await this.requireSession(sessionID));
   }
 
   async join(
@@ -239,7 +247,8 @@ export class SessionService {
 
       session.status = SessionStatus.IN_GAME;
       session.currentGame = this.gameService.beginGame(game);
-      return session;
+      await this.startRoundClock({ sessionID, timer: game.config.timer });
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -252,6 +261,24 @@ export class SessionService {
     sessionID: SessionId,
     guess: Guess,
   ): Promise<Session> {
+    const isGuessWithoutClick: boolean =
+      guess.distance === defaultGuess.distance;
+    return await this.submitGuess({
+      playerID,
+      sessionID,
+      guess: isGuessWithoutClick ? {} : { coordinates: guess.coordinates },
+    });
+  }
+
+  async submitGuess({
+    playerID,
+    sessionID,
+    guess,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    guess: GuessSubmission;
+  }): Promise<Session> {
     return await this.updateSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({
@@ -284,17 +311,18 @@ export class SessionService {
           message: `No active round on current game`,
         });
 
-      const connectedPlayerUsernames = session.players
+      const connectedPlayerIDs: PlayerId[] = session.players
         .filter((player) => player.connected)
         .map((player) => player.username);
+      const isLate: boolean = await this.isPastRoundDeadline(sessionID);
 
-      session.currentGame = this.gameService.applyGuess(
+      session.currentGame = await this.gameService.applyGuess({
         game,
         playerID,
-        guess,
-        connectedPlayerUsernames,
-      );
-      return session;
+        coordinates: isLate ? undefined : guess.coordinates,
+        connectedPlayerIDs,
+      });
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -323,7 +351,8 @@ export class SessionService {
 
       if (!isGameOver) {
         session.currentGame = updatedGame;
-        return session;
+        await this.startRoundClock({ sessionID, timer: game.config.timer });
+        return this.hideRoundGuesses(session);
       }
 
       await this.gameService.endGame(
@@ -339,7 +368,7 @@ export class SessionService {
       };
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
-      return finishedGameSession;
+      return this.hideRoundGuesses(finishedGameSession);
     });
   }
 
@@ -421,7 +450,7 @@ export class SessionService {
 
       if (session.hostID === '') session.hostID = playerID;
 
-      return session;
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -495,7 +524,7 @@ export class SessionService {
       if (session.hostID === '')
         session.hostID =
           session.players.find((player) => player.connected)?.username ?? '';
-      return session;
+      return this.hideRoundGuesses(session);
     });
   }
 
@@ -517,6 +546,17 @@ export class SessionService {
         return result;
       },
     );
+  }
+
+  private hideRoundGuesses(session: Session): Session {
+    if (!session.currentGame) return session;
+
+    return {
+      ...session,
+      currentGame: this.gameService.hideGuessingRoundGuesses(
+        session.currentGame,
+      ),
+    };
   }
 
   private async requireSession(sessionID: SessionId): Promise<Session> {
@@ -551,12 +591,38 @@ export class SessionService {
         this.getReconnectTokenHashesKey(session.id),
         ttl,
       ),
+      this.redisService.expire(this.getRoundDeadlineKey(session.id), ttl),
       this.redisService.redisClient.zadd(
         this.sessionExpirationsKey,
         Date.now() + ttl * 1000,
         session.id,
       ),
     ]);
+  }
+
+  private async startRoundClock({
+    sessionID,
+    timer,
+  }: {
+    sessionID: SessionId;
+    timer: number;
+  }): Promise<void> {
+    const roundDeadline: number =
+      Date.now() +
+      (roundCountdownInSeconds + timer) * 1000 +
+      this.ROUND_NETWORK_TOLERANCE_MS;
+    await this.redisService.set(
+      this.getRoundDeadlineKey(sessionID),
+      String(roundDeadline),
+      this.TTL,
+    );
+  }
+
+  private async isPastRoundDeadline(sessionID: SessionId): Promise<boolean> {
+    const roundDeadline: string | null = await this.redisService.get(
+      this.getRoundDeadlineKey(sessionID),
+    );
+    return roundDeadline !== null && Date.now() > Number(roundDeadline);
   }
 
   private async issueReconnectToken(
