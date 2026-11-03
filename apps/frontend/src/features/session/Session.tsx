@@ -28,8 +28,11 @@ export default function Session({ sessionID }: SessionProps) {
 
   return (
     <>
-      {sessionController.session.status === SessionStatus.IN_GAME &&
-      sessionController.session.currentGame ? (
+      {sessionController.isAdmitting ? (
+        <LoadingDialog message="Connexion à la partie" />
+      ) : sessionController.localPlayerID &&
+        sessionController.session.status === SessionStatus.IN_GAME &&
+        sessionController.session.currentGame ? (
         <Game
           localPlayerID={sessionController.localPlayerID}
           isHost={sessionController.isHost}

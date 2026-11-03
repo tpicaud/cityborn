@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check .",
-    "test": "tsx --test 'src/**/*.test.ts'"
+    "test": "node --experimental-test-module-mocks --import tsx --test 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

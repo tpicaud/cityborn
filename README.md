@@ -73,8 +73,11 @@ Le script copie depuis le checkout principal les `.env` absents du worktree, vé
    l'URL `NEXT_PUBLIC_REST_BACKEND_URL` configurée dans `apps/frontend/.env` et
    `apps/back-office/.env` (`http://localhost:4000` par défaut). Le frontend
    ouvre le WebSocket à `NEXT_PUBLIC_WEBSOCKET_BACKEND_URL` (`ws://localhost:4000`
-   par défaut) : cette URL doit désigner le même nom d'hôte que l'API REST, car
-   les cookies d'authentification ne sont envoyés qu'à cet hôte. Le backend
+   par défaut) : cette URL doit désigner le même nom d'hôte que l'API REST. En
+   développement HTTP, ouvrir le frontend avec ce même hôte (`localhost` pour
+   les trois URL sur le PC, ou l'adresse réseau pour les trois URL depuis un
+   autre appareil) : les cookies d'authentification `SameSite=Lax` ne sont pas
+   envoyés entre `localhost` et une adresse IP locale. Le backend
    autorise l'origine du frontend via `CORS_ORIGIN` et celle du back-office via
    `BACK_OFFICE_ORIGIN` ; les deux sont obligatoires en production.
 
@@ -202,3 +205,5 @@ cityborn/
 ```
 
 [Réinitialisation du mot de passe](docs/password-reset.md).
+
+[Invitations à une partie multijoueur](docs/multiplayer-invitations.md).

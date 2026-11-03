@@ -1,3 +1,8 @@
+export {
+  type SessionInvitation,
+  type SessionInvitationOptions,
+  useSessionInvitation,
+} from './invitation/useSessionInvitation';
 export { type PlayerNameForm, usePlayerNameForm } from './playerNameForm';
 export {
   formatSessionCodeInput,

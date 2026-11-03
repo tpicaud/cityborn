@@ -3,13 +3,13 @@ import {
   type PackSelection,
   type PlayerNameForm,
   playerConnectionStatus,
+  type SessionInvitation,
   sortPlayersConnectedFirst,
   usePackSelection,
   usePlayerNameForm,
+  useSessionInvitation,
 } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
-import * as Clipboard from 'expo-clipboard';
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Pressable, ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -18,6 +18,7 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { sharing } from '@/lib/sharing/sharing';
 
 type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
@@ -36,7 +37,8 @@ export function MultiLobby({
   handleStartGame,
   handleJoinSession,
 }: MultiLobbyProps) {
-  const [copied, setCopied] = useState(false);
+  const { invite, copyCode, result, codeCopied }: SessionInvitation =
+    useSessionInvitation({ session, sharing });
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const {
     isLoading: isLoadingPacks,
@@ -57,12 +59,6 @@ export function MultiLobby({
     handleJoinSession(playerID),
   );
 
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(session.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   if (isLoadingPacks) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -80,18 +76,19 @@ export function MultiLobby({
           <Text className="text-xl">Code</Text>
           <View className="flex flex-row items-center justify-center gap-2 h-14 bg-background w-auto rounded-xl py-1 px-5 border">
             <Text className="text-xl text-center">{session.id}</Text>
-            {copied ? (
-              <Text className="text-green-600">Copié !</Text>
-            ) : (
-              <Pressable onPress={handleCopy}>
-                <Icon
-                  size={20}
-                  name="clipboard_fill"
-                  color={colors.primary[500]}
-                />
-              </Pressable>
-            )}
+            <Pressable onPress={copyCode} accessibilityLabel="Copier le code">
+              <Icon
+                size={20}
+                name="clipboard_fill"
+                color={colors.primary[500]}
+              />
+            </Pressable>
           </View>
+          {codeCopied && <Text className="text-green-600">Code copié !</Text>}
+          {localPlayerID && <Button label="Inviter" onPress={invite} />}
+          {result === 'copied' && (
+            <Text className="text-green-600">Lien copié !</Text>
+          )}
         </View>
 
         <View className="flex flex-col gap-2 w-full">
