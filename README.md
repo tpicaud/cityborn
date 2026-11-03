@@ -106,9 +106,13 @@ back-office suffit à mettre à jour l'interface. Un compte `player` connecté a
 back-office voit un message d'accès refusé.
 
 Le dashboard propose les sections Packs et Thèmes. Les administrateurs peuvent
-créer et renommer les thèmes, choisir leur icône, régler leur ordre d'affichage
-chez les joueurs, consulter leur nombre de packs et supprimer les thèmes
-inutilisés ; le thème par défaut reste protégé même après renommage.
+créer et renommer les thèmes, choisir leur icône en collant son identifiant
+[Iconify](https://icon-sets.iconify.design/) (par exemple
+`fluent:sport-basketball-24-filled`), régler leur ordre d'affichage chez les
+joueurs, consulter leur nombre de packs et supprimer les thèmes inutilisés ; le
+thème par défaut reste protégé même après renommage. Le backend télécharge le
+dessin de l'icône à l'enregistrement : les apps joueur ne dépendent pas
+d'Iconify.
 
 ## Mobile
 
