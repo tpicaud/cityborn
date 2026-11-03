@@ -158,6 +158,7 @@ export const Lobby = ({
                   variant="contained"
                   color="primary"
                   onClick={invite}
+                  sx={{ mt: 1 }}
                 >
                   Inviter
                 </LoadingButton>
