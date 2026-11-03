@@ -11,12 +11,15 @@ import {
   type SessionJoinAck,
   SessionReconnectTokenSchema,
   SessionStatus,
+  sessionWsEvent,
 } from '@cityborn/api';
 import type {
   SessionApi,
   SessionChannel,
 } from '../../domains/session/sessionApi';
 import type { Navigation } from '../../platform/navigation';
+import type { SocketConnection } from '../../ws/socketConnection';
+import { createWsEmit } from '../../ws/wsEmit';
 import type { SessionController } from './useSessionController';
 
 type Effect = () => undefined | (() => void);
@@ -43,16 +46,32 @@ const navigation: Navigation = { returnTo, push: () => {}, back: () => {} };
 const sessionApi: Pick<SessionApi, 'fetchSession'> = {
   fetchSession: async () => session,
 };
+const connection: SocketConnection = {
+  connected: true,
+  active: true,
+  connect: () => {},
+  disconnect: () => {},
+  emit: (event, ...args) => {
+    const respond: unknown = args[args.length - 1];
+    if (typeof respond !== 'function') return;
+    if (event !== sessionWsEvent.join) return respond({ success: true });
+    joinResult.then(
+      (acknowledgement) => respond({ success: true, ...acknowledgement }),
+      (error: unknown) =>
+        respond({
+          success: false,
+          error: error instanceof ApiResponseError ? error.apiError : error,
+        }),
+    );
+  },
+  on: () => {},
+  off: () => {},
+  onReconnection: () => {},
+  offReconnection: () => {},
+};
 const channel: SessionChannel = {
-  join: async () => joinResult,
-  reconnect: async () => {},
-  updateHost: async () => {},
-  updateGameConfig: async () => {},
-  startGame: async () => {},
-  guess: async () => {},
-  nextRound: async () => {},
-  playAgain: async () => {},
-  onSessionUpdate(listener) {
+  emit: createWsEmit({ connection }),
+  on: (_event, listener) => {
     onSessionUpdate = listener;
     return () => {
       onSessionUpdate = () => {};

@@ -8,6 +8,7 @@ import {
   type SessionPlayer,
   type SessionReconnectToken,
   SessionStatus,
+  sessionWsEvent,
   type UserId,
 } from '@cityborn/api';
 import type { SessionChannel } from '../../../domains/session/sessionApi';
@@ -31,7 +32,7 @@ function returningSessionPlayer({
 
 type AdmitSessionPlayerOptions = {
   session: Session;
-  channel: Pick<SessionChannel, 'join' | 'reconnect'>;
+  channel: Pick<SessionChannel, 'emit'>;
   playerID: PlayerId;
   userId: UserId | undefined;
 };
@@ -47,7 +48,7 @@ export async function admitSessionPlayer({
     userId,
   });
   if (returningPlayer) {
-    await channel.reconnect({
+    await channel.emit(sessionWsEvent.reconnect, {
       sessionID: session.id,
       playerID: returningPlayer.username,
       reconnectToken: undefined,
@@ -61,10 +62,13 @@ export async function admitSessionPlayer({
       message: 'Session already in game',
     });
   }
-  const { reconnectToken }: SessionJoinAck = await channel.join({
-    sessionID: session.id,
-    playerID,
-  });
+  const { reconnectToken }: SessionJoinAck = await channel.emit(
+    sessionWsEvent.join,
+    {
+      sessionID: session.id,
+      playerID,
+    },
+  );
   return { playerID, reconnectToken };
 }
 

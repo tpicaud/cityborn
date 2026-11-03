@@ -8,12 +8,16 @@ import {
   type PlayerId,
   PlayerIdSchema,
   type Session,
+  type SessionJoinAck,
   SessionReconnectTokenSchema,
   SessionStatus,
+  sessionWsEvent,
   type UserId,
   UserIdSchema,
 } from '@cityborn/api';
 import type { SessionChannel } from '../../../domains/session/sessionApi';
+import type { SocketConnection } from '../../../ws/socketConnection';
+import { createWsEmit } from '../../../ws/wsEmit';
 import {
   admitSessionPlayer,
   isSessionEntryRejected,
@@ -23,13 +27,27 @@ import {
 const userId: UserId = UserIdSchema.parse('user-1');
 const playerID: PlayerId = PlayerIdSchema.parse('friend');
 
-function createChannel(): Pick<SessionChannel, 'join' | 'reconnect'> {
-  return {
-    join: mock.fn(async () => ({
-      reconnectToken: SessionReconnectTokenSchema.parse('guest-token'),
-    })),
-    reconnect: mock.fn(async () => {}),
+function createChannel(
+  acknowledgement: SessionJoinAck = {
+    reconnectToken: SessionReconnectTokenSchema.parse('guest-token'),
+  },
+): Pick<SessionChannel, 'emit'> {
+  const connection: SocketConnection = {
+    connected: true,
+    active: true,
+    connect: () => {},
+    disconnect: () => {},
+    emit: (_event, ...args) => {
+      const respond: unknown = args[args.length - 1];
+      if (typeof respond === 'function')
+        respond({ success: true, ...acknowledgement });
+    },
+    on: () => {},
+    off: () => {},
+    onReconnection: () => {},
+    offReconnection: () => {},
   };
+  return { emit: createWsEmit({ connection }) };
 }
 
 describe('admitSessionPlayer', () => {
@@ -38,11 +56,8 @@ describe('admitSessionPlayer', () => {
       status: SessionStatus.IN_GAME,
       players: [buildPlayer({ username: 'friend', id: userId, isGuest: true })],
     });
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    const reconnect: Mock<SessionChannel['reconnect']> = mock.method(
-      channel,
-      'reconnect',
-    );
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId }),
@@ -50,7 +65,7 @@ describe('admitSessionPlayer', () => {
         error instanceof ApiResponseError &&
         error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(reconnect.mock.callCount(), 0);
+    assert.equal(emit.mock.callCount(), 0);
   });
 
   it('does not restore an account by nickname when the requester is anonymous', async () => {
@@ -58,11 +73,8 @@ describe('admitSessionPlayer', () => {
       status: SessionStatus.IN_GAME,
       players: [buildPlayer({ username: 'friend', id: userId })],
     });
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    const reconnect: Mock<SessionChannel['reconnect']> = mock.method(
-      channel,
-      'reconnect',
-    );
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId: undefined }),
@@ -70,15 +82,11 @@ describe('admitSessionPlayer', () => {
         error instanceof ApiResponseError &&
         error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(reconnect.mock.callCount(), 0);
+    assert.equal(emit.mock.callCount(), 0);
   });
   it('joins a new guest and keeps the reconnect token in memory', async () => {
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    const join: Mock<SessionChannel['join']> = mock.method(channel, 'join');
-    const reconnect: Mock<SessionChannel['reconnect']> = mock.method(
-      channel,
-      'reconnect',
-    );
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     const joined: JoinedSessionPlayer = await admitSessionPlayer({
       session: buildSession(),
@@ -91,21 +99,16 @@ describe('admitSessionPlayer', () => {
       playerID: 'friend',
       reconnectToken: 'guest-token',
     });
-    assert.deepEqual(join.mock.calls[0]?.arguments, [
+    assert.deepEqual(emit.mock.calls[0]?.arguments, [
+      sessionWsEvent.join,
       { sessionID: 'session-1', playerID: 'friend' },
     ]);
-    assert.equal(reconnect.mock.callCount(), 0);
+    assert.equal(emit.mock.callCount(), 1);
   });
 
   it('joins an account that is not already a participant', async () => {
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    const join: Mock<SessionChannel['join']> = mock.method(
-      channel,
-      'join',
-      async () => ({
-        reconnectToken: undefined,
-      }),
-    );
+    const channel: Pick<SessionChannel, 'emit'> = createChannel({});
+    const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     const joined: JoinedSessionPlayer = await admitSessionPlayer({
       session: buildSession(),
@@ -115,7 +118,7 @@ describe('admitSessionPlayer', () => {
     });
 
     assert.deepEqual(joined, { playerID: 'friend', reconnectToken: undefined });
-    assert.equal(join.mock.callCount(), 1);
+    assert.equal(emit.mock.callCount(), 1);
   });
 
   it('restores the account in the lobby or during the game after backend validation', async () => {
@@ -125,13 +128,8 @@ describe('admitSessionPlayer', () => {
           status,
           players: [buildPlayer({ username: 'old-name', id: userId })],
         });
-        const channel: Pick<SessionChannel, 'join' | 'reconnect'> =
-          createChannel();
-        const reconnect: Mock<SessionChannel['reconnect']> = mock.method(
-          channel,
-          'reconnect',
-        );
-        const join: Mock<SessionChannel['join']> = mock.method(channel, 'join');
+        const channel: Pick<SessionChannel, 'emit'> = createChannel();
+        const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
         const joined: JoinedSessionPlayer = await admitSessionPlayer({
           session,
@@ -144,22 +142,23 @@ describe('admitSessionPlayer', () => {
           playerID: 'old-name',
           reconnectToken: undefined,
         });
-        assert.deepEqual(reconnect.mock.calls[0]?.arguments, [
+        assert.deepEqual(emit.mock.calls[0]?.arguments, [
+          sessionWsEvent.reconnect,
           {
             sessionID: 'session-1',
             playerID: 'old-name',
             reconnectToken: undefined,
           },
         ]);
-        assert.equal(join.mock.callCount(), 0);
+        assert.equal(emit.mock.callCount(), 1);
       }),
     );
   });
 
   it('does not admit an account when the backend rejects its restoration', async () => {
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
     const rejection: Error = new Error('identity rejected');
-    mock.method(channel, 'reconnect', async () => {
+    mock.method(channel, 'emit', async () => {
       throw rejection;
     });
     const session: Session = buildSession({
@@ -178,8 +177,8 @@ describe('admitSessionPlayer', () => {
       status: SessionStatus.IN_GAME,
       players: [buildPlayer({ username: 'friend', id: 'someone-else' })],
     });
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    const join: Mock<SessionChannel['join']> = mock.method(channel, 'join');
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId }),
@@ -187,7 +186,7 @@ describe('admitSessionPlayer', () => {
         error instanceof ApiResponseError &&
         error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(join.mock.callCount(), 0);
+    assert.equal(emit.mock.callCount(), 0);
   });
 
   it('propagates a game starting while the guest enters a nickname', async () => {
@@ -196,8 +195,8 @@ describe('admitSessionPlayer', () => {
       statusCode: 403,
       message: 'game started',
     });
-    const channel: Pick<SessionChannel, 'join' | 'reconnect'> = createChannel();
-    mock.method(channel, 'join', async () => {
+    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    mock.method(channel, 'emit', async () => {
       throw rejection;
     });
 
