@@ -6,16 +6,14 @@ import type {
   PlayerId,
   Session,
   SessionId,
-  SessionJoinAck,
-  SessionReconnectToken,
   UserId,
 } from '@cityborn/api';
 import {
+  ApiResponseError,
   applyGameConfigChanges,
   ErrorCode,
   GameStatus,
   isApiError,
-  SessionMode,
   SessionStatus,
   type sessionWsChannel,
   sessionWsEvent,
@@ -42,12 +40,21 @@ import {
 import type { WsChannelState } from '../../ws/useWsChannel';
 import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
+import {
+  admitSessionPlayer,
+  isSessionEntryRejected,
+  type JoinedSessionPlayer,
+} from './admission/sessionAdmission';
 import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
 import { isHostOf, withStatus } from './sessionState';
 import { usePlayerDepartures } from './usePlayerDepartures';
+
+type SessionAdmission =
+  | { status: 'idle' | 'pending' | 'rejected' }
+  | { status: 'admitted'; playerID: PlayerId };
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
@@ -57,6 +64,7 @@ export type SessionControllerOptions = {
 export type SessionController = {
   session: Session | undefined;
   localPlayerID: PlayerId | undefined;
+  isAdmitting: boolean;
   isHost: boolean;
   isLaunchingQuickPlay: boolean;
   connectionStatus: WsConnectionStatus;
@@ -77,11 +85,6 @@ export type SessionController = {
 
 const kickedFromLobbyMessage: string =
   "L'hôte t'a sorti du lobby. Tu peux revenir avec le code, s'il veut bien de toi.";
-
-type JoinedPlayer = {
-  playerID: PlayerId;
-  reconnectToken: SessionReconnectToken | undefined;
-};
 
 export async function enterSession({
   session,
@@ -123,14 +126,19 @@ export function useSessionController({
   const queryClient: QueryClient = useQueryClient();
   const { reportError }: ErrorReporter = useErrorReporter();
   const [session, setSession] = useState<Session>();
-  const [joinedPlayerID, setJoinedPlayerID] = useState<PlayerId>();
   const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
     useState<boolean>(true);
+  const [admission, setAdmission] = useState<SessionAdmission>({
+    status: 'idle',
+  });
   const localPlayerID: PlayerId | undefined =
-    joinedPlayerID ??
-    presetPlayerID({ mode: session?.mode, username: user?.username });
-  const joinedPlayer: RefObject<JoinedPlayer | null> =
-    useRef<JoinedPlayer | null>(null);
+    admission.status === 'admitted' ? admission.playerID : undefined;
+  const automaticPlayerID: PlayerId | undefined = presetPlayerID({
+    mode: session?.mode,
+    username: user?.username,
+  });
+  const joinedPlayer: RefObject<JoinedSessionPlayer | null> =
+    useRef<JoinedSessionPlayer | null>(null);
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
   const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
 
@@ -142,20 +150,26 @@ export function useSessionController({
 
   const restoreSession = useCallback(
     async (restoredChannel: SessionChannel) => {
-      const player: JoinedPlayer | null = joinedPlayer.current;
+      const player: JoinedSessionPlayer | null = joinedPlayer.current;
       if (!player) return;
-      await reconnectJoinedPlayer({
-        reconnect: async () => {
-          await restoredChannel.emit(sessionWsEvent.reconnect, {
-            sessionID,
-            playerID: player.playerID,
-            reconnectToken: player.reconnectToken,
-          });
-        },
-        leaveKickedSession,
-      });
+      try {
+        await reconnectJoinedPlayer({
+          reconnect: async () => {
+            await restoredChannel.emit(sessionWsEvent.reconnect, {
+              sessionID,
+              playerID: player.playerID,
+              reconnectToken: player.reconnectToken,
+            });
+          },
+          leaveKickedSession,
+        });
+      } catch (error: unknown) {
+        if (!isSessionEntryRejected(error)) throw error;
+        reportError(error);
+        navigation.returnTo('/');
+      }
     },
-    [sessionID, leaveKickedSession],
+    [sessionID, leaveKickedSession, reportError, navigation],
   );
 
   const {
@@ -171,7 +185,10 @@ export function useSessionController({
       try {
         setSession(await sessionApi.fetchSession(sessionID));
       } catch (error: unknown) {
-        reportError(error);
+        reportError(
+          error,
+          'Impossible de charger la partie. Vérifiez votre connexion et réessayez.',
+        );
         navigation.returnTo('/');
       }
     };
@@ -215,17 +232,22 @@ export function useSessionController({
           'Joining session failed: session or player not initialized',
         );
       joinAttempted.current = true;
-      const joinAck: SessionJoinAck = await emit(sessionWsEvent.join, {
-        sessionID: session.id,
-        playerID,
-      });
-      joinedPlayer.current = {
-        playerID,
-        reconnectToken: joinAck.reconnectToken,
-      };
-      setJoinedPlayerID(playerID);
+      setAdmission({ status: 'pending' });
+      try {
+        const admittedPlayer: JoinedSessionPlayer = await admitSessionPlayer({
+          session,
+          channel: { emit },
+          playerID,
+          userId: user?.id,
+        });
+        joinedPlayer.current = admittedPlayer;
+        setAdmission({ status: 'admitted', playerID: admittedPlayer.playerID });
+      } catch (error: unknown) {
+        setAdmission({ status: 'rejected' });
+        throw error;
+      }
     },
-    [session, emit],
+    [session, emit, user?.id],
   );
 
   const startGame: SessionController['startGame'] = useCallback(async () => {
@@ -236,26 +258,59 @@ export function useSessionController({
     if (
       connectionStatus !== 'connected' ||
       !session ||
-      !localPlayerID ||
+      !automaticPlayerID ||
       joinAttempted.current
     )
       return;
 
-    enterSession({ session, playerID: localPlayerID, join, startGame })
+    enterSession({ session, playerID: automaticPlayerID, join, startGame })
       .catch((error: unknown) => {
-        reportError(error);
-        if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+        reportError(
+          error,
+          'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
+        );
+        navigation.returnTo('/');
       })
       .finally(() => setIsQuickPlayLaunchPending(false));
   }, [
     connectionStatus,
     session,
-    localPlayerID,
+    automaticPlayerID,
     join,
     startGame,
     reportError,
     navigation,
   ]);
+
+  useEffect(() => {
+    if (
+      !session ||
+      admission.status !== 'idle' ||
+      automaticPlayerID ||
+      session.status !== SessionStatus.IN_GAME
+    )
+      return;
+    reportError(
+      new ApiResponseError({
+        code: ErrorCode.SESSION_ALREADY_IN_GAME,
+        statusCode: 403,
+        message: 'Session already in game',
+      }),
+    );
+    navigation.returnTo('/');
+  }, [session, admission.status, automaticPlayerID, reportError, navigation]);
+
+  const joinFromPlayerName = async (playerID: PlayerId): Promise<void> => {
+    try {
+      await join(playerID);
+    } catch (error: unknown) {
+      reportError(
+        error,
+        'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
+      );
+      if (isSessionEntryRejected(error)) navigation.returnTo('/');
+    }
+  };
 
   const requireSession = (operation: string): Session => {
     if (!session)
@@ -324,12 +379,18 @@ export function useSessionController({
   return {
     session,
     localPlayerID,
+    isAdmitting:
+      !localPlayerID &&
+      (admission.status === 'pending' ||
+        !!automaticPlayerID ||
+        session?.status === SessionStatus.IN_GAME ||
+        !!session?.currentGame),
     isHost: isHostOf(session, localPlayerID),
     isLaunchingQuickPlay:
       isQuickPlayLaunchPending && session?.quickPlay === true,
     connectionStatus,
     retryConnection,
-    join: reportActionErrors({ action: join, reportError }),
+    join: joinFromPlayerName,
     updateHost: reportActionErrors({ action: updateHost, reportError }),
     kickPlayer: reportActionErrors({ action: kickPlayer, reportError }),
     updateGameConfig: reportActionErrors({
