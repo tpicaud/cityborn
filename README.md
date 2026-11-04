@@ -45,8 +45,8 @@ Le script copie depuis le checkout principal les `.env` absents du worktree, vé
    réapplique les migrations puis lance la seed de développement
    (`apps/backend/prisma/seed/`). Relancée seule avec
    `pnpm backend exec prisma db seed`, la seed met à jour ses données sans
-   créer de doublon. Elle crée un thème avec deux packs publiés de deux
-   personnalités chacun, et deux comptes vérifiés :
+   créer de doublon. Elle crée un thème avec deux packs publiés et illustrés de
+   deux personnalités chacun, et deux comptes vérifiés :
 
    | Identifiant | Mot de passe | Rôle |
    |---|---|---|
@@ -113,6 +113,11 @@ joueurs, consulter leur nombre de packs et supprimer les thèmes inutilisés ; l
 thème par défaut reste protégé même après renommage. Le backend télécharge le
 dessin de l'icône à l'enregistrement : les apps joueur ne dépendent pas
 d'Iconify.
+
+Chaque pack porte un visuel, renseigné en collant le lien de l'image et
+prévisualisé dans le formulaire et la liste des packs. Un pack sans visuel
+s'enregistre mais ne se publie pas. Les apps joueur affichent le visuel en
+carré et le remplacent par un visuel neutre s'il ne se charge pas.
 
 ## Mobile
 
