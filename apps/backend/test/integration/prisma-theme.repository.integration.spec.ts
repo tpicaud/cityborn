@@ -1,7 +1,6 @@
 import type { AdminTheme, Theme, ThemeIcon } from '@cityborn/api';
 import { buildTheme, ThemeIconSchema } from '@cityborn/api';
 import { Test, type TestingModule } from '@nestjs/testing';
-import type { Pack as PrismaPack } from '@prisma/client';
 import { PrismaClsModule } from '../../src/prisma/prisma-cls.module';
 import { PrismaThemeRepository } from '../../src/theme/repositories/prisma-theme.repository';
 import {
@@ -64,19 +63,11 @@ describe('PrismaThemeRepository', () => {
       ]);
     });
 
-    it('counts published and hidden packs including sub-packs', async () => {
+    it('counts published and hidden packs', async () => {
       const theme: Theme = buildTheme();
       await prisma.theme.create({ data: theme });
-      const parent: PrismaPack = await prisma.pack.create({
-        data: { name: 'Parent', themeId: theme.id, isPublished: true },
-      });
       await prisma.pack.create({
-        data: {
-          name: 'Child',
-          parentId: parent.id,
-          themeId: theme.id,
-          isPublished: false,
-        },
+        data: { name: 'Published', themeId: theme.id, isPublished: true },
       });
       await prisma.pack.create({
         data: { name: 'Hidden', themeId: theme.id, isPublished: false },
@@ -84,11 +75,11 @@ describe('PrismaThemeRepository', () => {
 
       const themes: AdminTheme[] = await themeRepository.findAll();
 
-      expect(themes).toEqual([{ ...theme, packCount: 3, isDefault: true }]);
+      expect(themes).toEqual([{ ...theme, packCount: 2, isDefault: true }]);
     });
   });
   describe('findPlayable', () => {
-    it('lists by position the themes holding a published pack, sub-packs included', async () => {
+    it('lists by position the themes holding a published pack', async () => {
       const sportTheme: Theme = buildTheme({
         id: '00000000-0000-4000-8000-000000000050',
         name: 'Sport',
@@ -110,16 +101,11 @@ describe('PrismaThemeRepository', () => {
       await prisma.theme.create({ data: { ...musicTheme, position: 0 } });
       await prisma.theme.create({ data: { ...hiddenTheme, position: 2 } });
       await prisma.theme.create({ data: { ...emptyTheme, position: 3 } });
-      const hiddenParent: PrismaPack = await prisma.pack.create({
-        data: { name: 'Parent', themeId: hiddenTheme.id, isPublished: false },
+      await prisma.pack.create({
+        data: { name: 'Oscars', themeId: hiddenTheme.id, isPublished: false },
       });
       await prisma.pack.create({
-        data: {
-          name: 'Child',
-          parentId: hiddenParent.id,
-          themeId: musicTheme.id,
-          isPublished: true,
-        },
+        data: { name: 'Rock', themeId: musicTheme.id, isPublished: true },
       });
       await prisma.pack.create({
         data: { name: 'NBA', themeId: sportTheme.id, isPublished: true },
@@ -222,7 +208,7 @@ describe('PrismaThemeRepository', () => {
         name: 'Sport',
         icon,
       });
-      await prisma.pack.create({ data: { name: 'Parent', themeId: theme.id } });
+      await prisma.pack.create({ data: { name: 'NBA', themeId: theme.id } });
 
       await expect(themeRepository.delete(theme.id)).rejects.toBeInstanceOf(
         ThemeHasPacksError,

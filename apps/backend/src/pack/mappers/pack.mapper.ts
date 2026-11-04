@@ -3,8 +3,6 @@ import {
   FullPackSchema,
   type Pack,
   PackSchema,
-  type PackTree,
-  PackTreeSchema,
 } from '@cityborn/api';
 import type {
   GuessObject as PrismaGuessObject,
@@ -12,10 +10,6 @@ import type {
   WorldLocation,
 } from '@prisma/client';
 import { GuessObjectMapper } from '../../guess-object/mappers/guess-object.mapper';
-
-export type PrismaPackNode = PrismaPack & {
-  children: (PrismaPackNode | PrismaPack)[];
-};
 
 type PrismaPackWithRelations = PrismaPack & {
   guessObjects?: (PrismaGuessObject & { world_location: WorldLocation })[];
@@ -28,7 +22,6 @@ export const PackMapper = {
       name: prismaPack.name,
       isPublished: prismaPack.isPublished,
       description: prismaPack.description ?? undefined,
-      parentId: prismaPack.parentId ?? undefined,
       themeId: prismaPack.themeId,
     });
   },
@@ -43,7 +36,6 @@ export const PackMapper = {
       name: prismaPack.name,
       isPublished: prismaPack.isPublished,
       description: prismaPack.description ?? undefined,
-      parentId: prismaPack.parentId ?? undefined,
       themeId: prismaPack.themeId,
       guessObjects:
         prismaPack.guessObjects?.map((guessObject) =>
@@ -54,24 +46,5 @@ export const PackMapper = {
 
   toFullPacks(prismaPacks: PrismaPackWithRelations[]): FullPack[] {
     return prismaPacks.map((pack) => PackMapper.toFullPack(pack));
-  },
-
-  toPackTree(node: PrismaPackNode | PrismaPack): PackTree {
-    return PackTreeSchema.parse({
-      id: node.id,
-      name: node.name,
-      isPublished: node.isPublished,
-      description: node.description ?? undefined,
-      parentId: node.parentId ?? undefined,
-      themeId: node.themeId,
-      children:
-        'children' in node
-          ? node.children.map((child) => PackMapper.toPackTree(child))
-          : [],
-    });
-  },
-
-  toPackTrees(roots: PrismaPackNode[]): PackTree[] {
-    return roots.map((root) => PackMapper.toPackTree(root));
   },
 };

@@ -3,7 +3,6 @@ import type {
   FullPack,
   GuessObject,
   Pack,
-  PackTree,
   Theme,
   UpdatePack,
   WorldLocation,
@@ -134,6 +133,24 @@ describe('PrismaPackRepository', () => {
       expect(pack.themeId).toBe(miscellaneousTheme.id);
     });
 
+    it('creates a pack without the deprecated parent', async () => {
+      const parentData: CreatePack = buildCreatePack({ name: 'Countries' });
+      const parent: Pack = await packRepository.create(parentData);
+      const packData: CreatePack = buildCreatePack({
+        name: 'France',
+        parentId: parent.id,
+      });
+
+      const pack: Pack = await packRepository.create(packData);
+
+      expect(pack).toEqual({
+        id: pack.id,
+        name: 'France',
+        isPublished: packData.isPublished,
+        themeId: miscellaneousTheme.id,
+      });
+    });
+
     it('connects a guess object when creating a pack', async () => {
       const location: WorldLocation = buildWorldLocation();
       const guessObject: GuessObject = buildGuessObject();
@@ -168,37 +185,49 @@ describe('PrismaPackRepository', () => {
   });
 
   describe('update', () => {
-    it('moves a pack to another theme without changing its parent theme', async () => {
+    it('moves only the updated pack to another theme', async () => {
       const sportTheme: Theme = buildTheme({
         id: '00000000-0000-4000-8000-000000000050',
         name: 'Sport',
       });
       await prisma.theme.create({ data: sportTheme });
-      const parentData: CreatePack = buildCreatePack({ name: 'Parent' });
-      const parent: Pack = await packRepository.create(parentData);
-      const childData: CreatePack = buildCreatePack({
-        name: 'Child',
-        parentId: parent.id,
-      });
-      const child: Pack = await packRepository.create(childData);
+      const movedData: CreatePack = buildCreatePack({ name: 'NBA' });
+      const moved: Pack = await packRepository.create(movedData);
+      const keptData: CreatePack = buildCreatePack({ name: 'Monuments' });
+      const kept: Pack = await packRepository.create(keptData);
       const updateData: UpdatePack = buildUpdatePack({
-        id: child.id,
-        name: child.name,
-        parentId: parent.id,
+        id: moved.id,
+        name: moved.name,
         themeId: sportTheme.id,
       });
 
-      await packRepository.update(child.id, updateData);
+      await packRepository.update(moved.id, updateData);
 
       const packs: Pack[] = await packRepository.findBy({
-        ids: [parent.id, child.id],
+        ids: [moved.id, kept.id],
       });
       expect(packs.map(({ id, themeId }) => ({ id, themeId }))).toEqual(
         expect.arrayContaining([
-          { id: parent.id, themeId: miscellaneousTheme.id },
-          { id: child.id, themeId: sportTheme.id },
+          { id: moved.id, themeId: sportTheme.id },
+          { id: kept.id, themeId: miscellaneousTheme.id },
         ]),
       );
+    });
+
+    it('ignores the deprecated parent of an updated pack', async () => {
+      const parentData: CreatePack = buildCreatePack({ name: 'Countries' });
+      const parent: Pack = await packRepository.create(parentData);
+      const packData: CreatePack = buildCreatePack({ name: 'France' });
+      const pack: Pack = await packRepository.create(packData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: pack.id,
+        name: 'Pays de France',
+        parentId: parent.id,
+      });
+
+      const updated: Pack = await packRepository.update(pack.id, updateData);
+
+      expect(updated).toEqual({ ...pack, name: 'Pays de France' });
     });
 
     it('connects a guess object when updating a pack', async () => {
@@ -271,29 +300,6 @@ describe('PrismaPackRepository', () => {
     });
   });
 
-  describe('countChildren', () => {
-    it('counts direct children without counting grandchildren', async () => {
-      const parentData: CreatePack = buildCreatePack({
-        name: 'Parent',
-      });
-      const parent: Pack = await packRepository.create(parentData);
-      const childData: CreatePack = buildCreatePack({
-        name: 'Child',
-        parentId: parent.id,
-      });
-      const child: Pack = await packRepository.create(childData);
-      const grandchildData: CreatePack = buildCreatePack({
-        name: 'Grandchild',
-        parentId: child.id,
-      });
-      await packRepository.create(grandchildData);
-
-      const count: number = await packRepository.countChildren(parent.id);
-
-      expect(count).toBe(1);
-    });
-  });
-
   describe('countByGuessObjectId', () => {
     it('counts only packs linked to the requested guess object', async () => {
       const location: WorldLocation = buildWorldLocation();
@@ -344,67 +350,6 @@ describe('PrismaPackRepository', () => {
       await packRepository.delete(pack.id);
 
       expect(await packRepository.findBy({ ids: [pack.id] })).toEqual([]);
-    });
-  });
-
-  describe('findTree', () => {
-    it('loads nested packs beneath published roots', async () => {
-      const rootData: CreatePack = buildCreatePack({
-        name: 'Countries',
-        isPublished: true,
-      });
-      const root: Pack = await packRepository.create(rootData);
-      const childData: CreatePack = buildCreatePack({
-        name: 'France',
-        parentId: root.id,
-      });
-      const child: Pack = await packRepository.create(childData);
-      const hiddenData: CreatePack = buildCreatePack({
-        name: 'Hidden',
-        isPublished: false,
-      });
-      await packRepository.create(hiddenData);
-
-      const tree: PackTree[] = await packRepository.findTree({
-        isPublished: true,
-      });
-
-      expect(tree).toMatchObject([
-        { id: root.id, name: 'Countries', children: [{ id: child.id }] },
-      ]);
-    });
-
-    it('omits unpublished sub-packs beneath published packs', async () => {
-      const rootData: CreatePack = buildCreatePack({
-        name: 'Countries',
-        isPublished: true,
-      });
-      const root: Pack = await packRepository.create(rootData);
-      const childData: CreatePack = buildCreatePack({
-        name: 'France',
-        parentId: root.id,
-      });
-      const child: Pack = await packRepository.create(childData);
-      const hiddenChildData: CreatePack = buildCreatePack({
-        name: 'Spain',
-        parentId: root.id,
-        isPublished: false,
-      });
-      await packRepository.create(hiddenChildData);
-      const hiddenGrandchildData: CreatePack = buildCreatePack({
-        name: 'Paris',
-        parentId: child.id,
-        isPublished: false,
-      });
-      await packRepository.create(hiddenGrandchildData);
-
-      const tree: PackTree[] = await packRepository.findTree({
-        isPublished: true,
-      });
-
-      expect(tree).toMatchObject([
-        { id: root.id, children: [{ id: child.id, children: [] }] },
-      ]);
     });
   });
 });

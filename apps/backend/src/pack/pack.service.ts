@@ -8,12 +8,7 @@ import {
   type PackTree,
   type UpdatePack,
 } from '@cityborn/api';
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { ThemeService } from '../theme/theme.service';
@@ -21,6 +16,10 @@ import {
   PACK_REPOSITORY,
   type PackRepository,
 } from './repositories/pack.repository';
+
+function toLeafPackTree(pack: Pack): PackTree {
+  return { ...pack, children: [] };
+}
 
 @Injectable()
 export class PackService {
@@ -32,11 +31,13 @@ export class PackService {
   ) {}
 
   async findTrees(): Promise<PackTree[]> {
-    return this.packRepository.findTree({});
+    const packs: Pack[] = await this.findAll();
+    return packs.map(toLeafPackTree);
   }
 
   async findPublishedTrees(): Promise<PackTree[]> {
-    return this.packRepository.findTree({ isPublished: true });
+    const packs: Pack[] = await this.findPublished();
+    return packs.map(toLeafPackTree);
   }
 
   async findAll(): Promise<Pack[]> {
@@ -96,14 +97,6 @@ export class PackService {
   @Transactional()
   async delete(id: PackId): Promise<void> {
     const pack: FullPack = await this.findFullById(id);
-
-    const childrenCount: number = await this.packRepository.countChildren(id);
-    if (childrenCount > 0) {
-      throw new BadRequestException({
-        code: ErrorCode.PACK_HAS_CHILDREN,
-        message: `Pack with id ${id} has children and cannot be deleted`,
-      });
-    }
 
     await this.packRepository.delete(id);
     await this.deleteOrphanGuessObjects(

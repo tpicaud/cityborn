@@ -237,7 +237,6 @@ async function seedPack({
       name: pack.name,
       description: pack.description,
       isPublished: true,
-      parentId: null,
       themeId,
       guessObjects: { set: guessObjects },
     },
