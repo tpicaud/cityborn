@@ -18,6 +18,7 @@ export default function Play() {
       formState: { errors, isSubmitting },
     },
     playSolo,
+    launchQuickPlay,
     playMulti,
     joinSession,
   }: SessionLauncher = useSessionLauncher({ navigation });
@@ -77,6 +78,13 @@ export default function Play() {
                 label="SOLO"
                 size="large"
                 onPress={playSolo}
+              />
+              <Button
+                color="primary"
+                variant="filled"
+                label="PARTIE RAPIDE"
+                size="large"
+                onPress={launchQuickPlay}
               />
               <Button
                 color="primary"

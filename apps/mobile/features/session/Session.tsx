@@ -46,6 +46,11 @@ export default function Session({ sessionID }: SessionProps) {
           handlePlayAgain={sessionController.playAgain}
           handleExitGame={sessionController.exitGame}
         />
+      ) : sessionController.isLaunchingQuickPlay ? (
+        <View className="flex-1 items-center justify-center">
+          <LoaderIcon />
+          <Text className="text-center">Lancement de la partie</Text>
+        </View>
       ) : sessionController.session.mode === SessionMode.SOLO ? (
         <SoloLobby
           isHost={sessionController.isHost}

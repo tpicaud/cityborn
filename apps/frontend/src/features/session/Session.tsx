@@ -41,6 +41,8 @@ export default function Session({ sessionID }: SessionProps) {
           handlePlayAgain={sessionController.playAgain}
           handleExitGame={sessionController.exitGame}
         />
+      ) : sessionController.isLaunchingQuickPlay ? (
+        <LoadingDialog message="Lancement de la partie" />
       ) : (
         <Lobby
           localPlayerID={sessionController.localPlayerID}

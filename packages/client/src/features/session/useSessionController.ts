@@ -54,6 +54,7 @@ export type SessionController = {
   session: Session | undefined;
   localPlayerID: PlayerId | undefined;
   isHost: boolean;
+  isLaunchingQuickPlay: boolean;
   connectionStatus: WsConnectionStatus;
   retryConnection: () => void;
   join: (playerID: PlayerId) => Promise<void>;
@@ -72,6 +73,21 @@ type JoinedPlayer = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
+export async function enterSession({
+  session,
+  playerID,
+  join,
+  startGame,
+}: {
+  session: Pick<Session, 'quickPlay'>;
+  playerID: PlayerId;
+  join: (playerID: PlayerId) => Promise<void>;
+  startGame: () => Promise<void>;
+}): Promise<void> {
+  await join(playerID);
+  if (session.quickPlay) await startGame();
+}
+
 export function useSessionController({
   sessionID,
   navigation,
@@ -82,6 +98,8 @@ export function useSessionController({
   const { reportError }: ErrorReporter = useErrorReporter();
   const [session, setSession] = useState<Session>();
   const [joinedPlayerID, setJoinedPlayerID] = useState<PlayerId>();
+  const [isQuickPlayLaunchPending, setIsQuickPlayLaunchPending] =
+    useState<boolean>(true);
   const localPlayerID: PlayerId | undefined =
     joinedPlayerID ??
     presetPlayerID({ mode: session?.mode, username: user?.username });
@@ -167,6 +185,10 @@ export function useSessionController({
     [session, emit],
   );
 
+  const startGame = useCallback(async () => {
+    await emit(sessionWsEvent.startGame);
+  }, [emit]);
+
   useEffect(() => {
     if (
       connectionStatus !== 'connected' ||
@@ -176,11 +198,21 @@ export function useSessionController({
     )
       return;
 
-    join(localPlayerID).catch((error: unknown) => {
-      reportError(error);
-      if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
-    });
-  }, [connectionStatus, session, localPlayerID, join, reportError, navigation]);
+    enterSession({ session, playerID: localPlayerID, join, startGame })
+      .catch((error: unknown) => {
+        reportError(error);
+        if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+      })
+      .finally(() => setIsQuickPlayLaunchPending(false));
+  }, [
+    connectionStatus,
+    session,
+    localPlayerID,
+    join,
+    startGame,
+    reportError,
+    navigation,
+  ]);
 
   const requireSession = (operation: string): Session => {
     if (!session)
@@ -207,10 +239,6 @@ export function useSessionController({
         changes,
       }),
     });
-  };
-
-  const startGame = async () => {
-    await emit(sessionWsEvent.startGame);
   };
 
   const guess = async (coordinates: Coord | undefined) => {
@@ -242,6 +270,8 @@ export function useSessionController({
     session,
     localPlayerID,
     isHost: isHostOf(session, localPlayerID),
+    isLaunchingQuickPlay:
+      isQuickPlayLaunchPending && session?.quickPlay === true,
     connectionStatus,
     retryConnection,
     join: reportActionErrors({ action: join, reportError }),
