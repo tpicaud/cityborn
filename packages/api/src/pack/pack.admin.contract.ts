@@ -19,8 +19,8 @@ const c = initContract();
 export const packAdminContract = c.router(
   {
     /**
-     * @deprecated Utiliser `getAllPacks` à la place. Conservé tant que les
-     * routes `/tree` publiques restent servies.
+     * @deprecated Utiliser `getAllPacks` à la place. Conservé pour la
+     * compatibilité du contrat publié.
      * @deprecatedSince 2026-11-04
      */
     getPackTrees: {
