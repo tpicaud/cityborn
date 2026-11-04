@@ -86,6 +86,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.THEME_DEFAULT_NOT_DELETABLE]:
     'Le thème par défaut ne peut pas être supprimé.',
   [ErrorCode.THEME_NOT_FOUND]: 'Aucun thème trouvé pour cet identifiant.',
+  [ErrorCode.THEME_ICON_NOT_FOUND]: 'Cette icône est introuvable sur Iconify.',
 
   // Rate limiting
   [ErrorCode.RATE_LIMIT_EXCEEDED]:

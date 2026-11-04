@@ -7,6 +7,9 @@ import {
   ErrorCode,
   type SaveTheme,
   SaveThemeSchema,
+  type ThemeIcon,
+  ThemeIconSchema,
+  ThemeMoveDirection,
 } from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
@@ -18,16 +21,27 @@ import {
   type ThemeEditorState,
   themeEditorReducer,
 } from './themeEditorState';
-import { createThemeMutations, type ThemeMutations } from './themeMutations';
+import {
+  createThemeMutations,
+  type ThemeFormInput,
+  type ThemeMutations,
+} from './themeMutations';
 
-type ThemeForm = ReturnType<typeof createFormControl<SaveTheme>>;
+type ThemeForm = ReturnType<
+  typeof createFormControl<ThemeFormInput, undefined, SaveTheme>
+>;
+const cinemaIcon: ThemeIcon = ThemeIconSchema.parse({
+  name: 'boxicons:video-cinema-filled',
+  svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"/>',
+});
 type ManagementFixture = {
   queryClient: QueryClient;
   themeKey: QueryKey;
   creationForm: ThemeForm;
-  renameForm: ThemeForm;
+  editForm: ThemeForm;
   mutations: ThemeMutations;
   state: ThemeEditorState;
+  movingStates: boolean[];
   deletionStates: boolean[];
 };
 
@@ -73,9 +87,11 @@ function createManagementFixture({
   state?: ThemeEditorState;
 }): ManagementFixture {
   const themeApi: ThemeApi = {
+    getPlayableThemes: unexpectedCall,
     getThemes: unexpectedCall,
     createTheme: unexpectedCall,
     updateTheme: unexpectedCall,
+    moveTheme: unexpectedCall,
     deleteTheme: unexpectedCall,
     ...overrides,
   };
@@ -85,15 +101,23 @@ function createManagementFixture({
   queryClient.setQueryData(themeKey, themes);
   queryClient.setQueryData(packListKey, []);
   queryClient.setQueryData(fullPackKey, {});
-  const creationForm: ThemeForm = createFormControl<SaveTheme>({
+  const creationForm: ThemeForm = createFormControl<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  const renameForm: ThemeForm = createFormControl<SaveTheme>({
+  const editForm: ThemeForm = createFormControl<
+    ThemeFormInput,
+    undefined,
+    SaveTheme
+  >({
     resolver: zodResolver(SaveThemeSchema),
     defaultValues: { name: '' },
   });
-  [creationForm, renameForm].forEach((form: ThemeForm) => {
+  [creationForm, editForm].forEach((form: ThemeForm) => {
     context.after(
       form.subscribe({
         formState: { values: true },
@@ -102,6 +126,7 @@ function createManagementFixture({
     );
   });
   let currentState: ThemeEditorState = state;
+  const movingStates: boolean[] = [];
   const deletionStates: boolean[] = [];
   const mutations: ThemeMutations = createThemeMutations({
     themeApi,
@@ -109,27 +134,29 @@ function createManagementFixture({
     themes,
     editedThemeId: state.editedThemeId,
     creationForm,
-    renameForm,
+    editForm,
     dispatch: (action) => {
       currentState = themeEditorReducer(currentState, action);
     },
+    setIsMoving: (isMoving: boolean) => movingStates.push(isMoving),
     setIsDeleting: (isDeleting: boolean) => deletionStates.push(isDeleting),
   });
   return {
     queryClient,
     themeKey,
     creationForm,
-    renameForm,
+    editForm,
     mutations,
     get state() {
       return currentState;
     },
+    movingStates,
     deletionStates,
   };
 }
 
 describe('createThemeMutations', () => {
-  it('inserts a created theme alphabetically, clears the input and invalidates themes and packs', async (context: TestContext) => {
+  it('appends a created theme, clears the input and invalidates themes and packs', async (context: TestContext) => {
     let submitted: SaveTheme | undefined;
     const fixture: ManagementFixture = createManagementFixture({
       context,
@@ -146,9 +173,9 @@ describe('createThemeMutations', () => {
 
     assert.deepEqual(submitted, { name: 'Cinéma' });
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
-      cinema,
       divers,
       sport,
+      cinema,
     ]);
     assert.equal(fixture.creationForm.getValues('name'), '');
     assert.equal(
@@ -190,7 +217,7 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('reorders a renamed theme while retaining its metadata and invalidates packs', async (context: TestContext) => {
+  it('keeps an updated theme in place with its new name and icon, retaining its metadata, and invalidates packs', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       themes: [divers, { ...sport, packCount: 3 }],
@@ -198,18 +225,19 @@ describe('createThemeMutations', () => {
       themeApi: {
         updateTheme: async ({ id, theme }) => {
           assert.equal(id, sport.id);
-          assert.deepEqual(theme, { name: 'Art' });
-          return { id, name: theme.name };
+          assert.deepEqual(theme, { name: 'Art', icon: cinemaIcon.name });
+          return { id, name: theme.name, icon: cinemaIcon };
         },
       },
     });
-    fixture.renameForm.setValue('name', 'Art');
+    fixture.editForm.setValue('name', 'Art');
+    fixture.editForm.setValue('icon', cinemaIcon.name);
 
-    await fixture.mutations.renameTheme();
+    await fixture.mutations.updateTheme();
 
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
-      { ...sport, name: 'Art', packCount: 3 },
       divers,
+      { ...sport, name: 'Art', icon: cinemaIcon, packCount: 3 },
     ]);
     assert.equal(fixture.state.editedThemeId, null);
     assert.equal(
@@ -226,7 +254,7 @@ describe('createThemeMutations', () => {
     );
   });
 
-  it('keeps the rename input and row open after a rejected rename', async (context: TestContext) => {
+  it('keeps the edit input and row open after a rejected update', async (context: TestContext) => {
     const fixture: ManagementFixture = createManagementFixture({
       context,
       state: { ...initialThemeEditorState, editedThemeId: sport.id },
@@ -236,11 +264,11 @@ describe('createThemeMutations', () => {
         },
       },
     });
-    fixture.renameForm.setValue('name', 'divers');
+    fixture.editForm.setValue('name', 'divers');
 
-    await fixture.mutations.renameTheme();
+    await fixture.mutations.updateTheme();
 
-    assert.equal(fixture.renameForm.getValues('name'), 'divers');
+    assert.equal(fixture.editForm.getValues('name'), 'divers');
     assert.equal(fixture.state.editedThemeId, sport.id);
     assert.equal(fixture.state.rowErrors[sport.id], 'Ce thème existe déjà');
     assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
@@ -251,6 +279,62 @@ describe('createThemeMutations', () => {
       fixture.queryClient.getQueryState(packListKey)?.isInvalidated,
       false,
     );
+  });
+
+  it('shows the order returned for a moved theme and releases the moving state', async (context: TestContext) => {
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      state: {
+        ...initialThemeEditorState,
+        rowErrors: { [sport.id]: "Quelque chose s'est mal passé." },
+      },
+      themeApi: {
+        moveTheme: async ({ id, move }) => {
+          assert.equal(id, sport.id);
+          assert.deepEqual(move, { direction: ThemeMoveDirection.UP });
+          assert.deepEqual(fixture.movingStates, [true]);
+          return [sport, divers];
+        },
+      },
+    });
+
+    await fixture.mutations.moveTheme({
+      theme: sport,
+      direction: ThemeMoveDirection.UP,
+    });
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      sport,
+      divers,
+    ]);
+    assert.equal(fixture.state.rowErrors[sport.id], undefined);
+    assert.deepEqual(fixture.movingStates, [true, false]);
+  });
+
+  it('keeps the order and shows the error on the row after a rejected move', async (context: TestContext) => {
+    const fixture: ManagementFixture = createManagementFixture({
+      context,
+      themeApi: {
+        moveTheme: async () => {
+          throw new TypeError('Network request failed');
+        },
+      },
+    });
+
+    await fixture.mutations.moveTheme({
+      theme: sport,
+      direction: ThemeMoveDirection.UP,
+    });
+
+    assert.deepEqual(fixture.queryClient.getQueryData(fixture.themeKey), [
+      divers,
+      sport,
+    ]);
+    assert.equal(
+      fixture.state.rowErrors[sport.id],
+      "Quelque chose s'est mal passé.",
+    );
+    assert.deepEqual(fixture.movingStates, [true, false]);
   });
 
   it('removes a deleted theme, closes confirmation and releases the deletion state', async (context: TestContext) => {
@@ -307,7 +391,7 @@ describe('createThemeMutations', () => {
           deleteTheme: async () => {
             throw attachedPacksError;
           },
-          getThemes: async () => [refreshedSport, divers],
+          getThemes: async () => [divers, refreshedSport],
         },
       });
 

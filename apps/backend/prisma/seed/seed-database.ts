@@ -1,6 +1,7 @@
 import { type CreateUser, CreateUserSchema } from '@cityborn/api';
 import type { Prisma, PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../../src/auth/password-hashing';
+import { defaultThemeIcon } from '../../src/theme/default-theme';
 
 type Position = [number, number];
 
@@ -252,7 +253,10 @@ async function seedTheme(
   });
   return (
     existingTheme ??
-    tx.theme.create({ data: { name: SEED_THEME_NAME }, select: { id: true } })
+    tx.theme.create({
+      data: { name: SEED_THEME_NAME, icon: defaultThemeIcon },
+      select: { id: true },
+    })
   );
 }
 

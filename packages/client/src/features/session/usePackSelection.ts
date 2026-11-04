@@ -3,31 +3,29 @@
 import type {
   GameConfigChanges,
   GameConfigPack,
-  PackTree,
+  Pack,
   Session,
+  Theme,
+  ThemeId,
 } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
-import { packTreesQueryOptions } from '../../domains/pack/packQueries';
+import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
+import { playableThemesQueryOptions } from '../../domains/theme/themeQueries';
+import { selectThemePacks } from './themePacks';
 
-const noPackTrees: PackTree[] = [];
+const noPacks: Pack[] = [];
+const noThemes: Theme[] = [];
 
-function toGameConfigPack(node: PackTree): GameConfigPack {
+function toGameConfigPack(pack: Pack): GameConfigPack {
   return {
-    id: node.id,
-    name: node.name,
-    isPublished: node.isPublished,
-    description: node.description,
-    parentId: node.parentId,
+    id: pack.id,
+    name: pack.name,
+    isPublished: pack.isPublished,
+    description: pack.description,
+    parentId: pack.parentId,
   };
-}
-
-function flattenPackTree(nodes: PackTree[]): GameConfigPack[] {
-  return nodes.flatMap((node) => [
-    toGameConfigPack(node),
-    ...flattenPackTree(node.children),
-  ]);
 }
 
 export type PackSelectionOptions = {
@@ -39,12 +37,11 @@ export type PackSelectionOptions = {
 
 export type PackSelection = {
   isLoading: boolean;
-  selectedPath: PackTree[];
-  currentNodes: PackTree[];
-  currentName: string | undefined;
-  openPack: (node: PackTree) => void;
-  goBack: () => void;
-  playPack: (node: PackTree) => Promise<void>;
+  themes: Theme[];
+  selectedTheme: Theme | undefined;
+  selectTheme: (themeId: ThemeId | undefined) => void;
+  packs: Pack[];
+  playPack: (pack: Pack) => Promise<void>;
 };
 
 export function usePackSelection({
@@ -53,16 +50,32 @@ export function usePackSelection({
   updateGameConfig,
   startGame,
 }: PackSelectionOptions): PackSelection {
-  const { packApi }: DomainApis = useDomainApis();
+  const { packApi, themeApi }: DomainApis = useDomainApis();
   const {
-    data: packTrees = noPackTrees,
-    isPending: isLoading,
-  }: UseQueryResult<PackTree[]> = useQuery(packTreesQueryOptions(packApi));
-  const [selectedPath, setSelectedPath] = useState<PackTree[]>([]);
+    data: publishedPacks = noPacks,
+    isPending: isLoadingPacks,
+  }: UseQueryResult<Pack[]> = useQuery(publishedPacksQueryOptions(packApi));
+  const {
+    data: themes = noThemes,
+    isPending: isLoadingThemes,
+  }: UseQueryResult<Theme[]> = useQuery(playableThemesQueryOptions(themeApi));
+  const [selectedThemeId, setSelectedThemeId] = useState<ThemeId | undefined>(
+    undefined,
+  );
+
+  const selectedTheme: Theme | undefined = themes.find(
+    (theme: Theme) => theme.id === selectedThemeId,
+  );
+
+  const packs: Pack[] = useMemo(
+    () =>
+      selectThemePacks({ packs: publishedPacks, themeId: selectedTheme?.id }),
+    [publishedPacks, selectedTheme],
+  );
 
   const allPacks: GameConfigPack[] = useMemo(
-    () => flattenPackTree(packTrees),
-    [packTrees],
+    () => publishedPacks.map(toGameConfigPack),
+    [publishedPacks],
   );
 
   const hasPacks: boolean = session.gameConfig.packs.length > 0;
@@ -72,23 +85,17 @@ export function usePackSelection({
     updateGameConfig({ packs: allPacks });
   }, [isHost, hasPacks, allPacks, updateGameConfig]);
 
-  const currentNodes: PackTree[] =
-    selectedPath.length === 0
-      ? packTrees
-      : selectedPath[selectedPath.length - 1].children;
-
-  const playPack: PackSelection['playPack'] = async (node: PackTree) => {
-    await updateGameConfig({ packs: [toGameConfigPack(node)] });
+  const playPack: PackSelection['playPack'] = async (pack: Pack) => {
+    await updateGameConfig({ packs: [toGameConfigPack(pack)] });
     await startGame();
   };
 
   return {
-    isLoading,
-    selectedPath,
-    currentNodes,
-    currentName: selectedPath[selectedPath.length - 1]?.name,
-    openPack: (node) => setSelectedPath((path) => [...path, node]),
-    goBack: () => setSelectedPath((path) => path.slice(0, -1)),
+    isLoading: isLoadingPacks || isLoadingThemes,
+    themes,
+    selectedTheme,
+    selectTheme: setSelectedThemeId,
+    packs,
     playPack,
   };
 }

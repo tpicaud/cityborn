@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { SaveThemeSchema } from './theme.schema';
+import { SaveThemeSchema, ThemeIconNameSchema } from './theme.schema';
 
 describe('SaveThemeSchema', () => {
   it('trims a valid name', () => {
@@ -21,6 +21,24 @@ describe('SaveThemeSchema', () => {
     assert.equal(
       SaveThemeSchema.parse({ name: `  ${'a'.repeat(40)} ` }).name.length,
       40,
+    );
+  });
+});
+
+describe('ThemeIconNameSchema', () => {
+  it('trims an Iconify icon name', () => {
+    assert.equal(
+      ThemeIconNameSchema.parse('  fluent:sport-basketball-24-filled '),
+      'fluent:sport-basketball-24-filled',
+    );
+  });
+  it('rejects a name without icon set prefix', () => {
+    assert.equal(ThemeIconNameSchema.safeParse('basketball').success, false);
+  });
+  it('rejects a name that could escape the Iconify path', () => {
+    assert.equal(
+      ThemeIconNameSchema.safeParse('boxicons:../music-alt-filled').success,
+      false,
     );
   });
 });

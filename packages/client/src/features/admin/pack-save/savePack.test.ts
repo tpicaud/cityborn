@@ -26,7 +26,7 @@ function createPackApi(
   operations: Partial<Pick<PackApi, 'getPacks' | 'getFullPack' | 'updatePack'>>,
 ): PackApi {
   return {
-    getPackTrees: unexpectedCall,
+    getPublishedPacks: unexpectedCall,
     getPacks: unexpectedCall,
     getFullPack: unexpectedCall,
     createPack: unexpectedCall,
@@ -37,9 +37,11 @@ function createPackApi(
 }
 
 const themeApi: ThemeApi = {
+  getPlayableThemes: unexpectedCall,
   getThemes: unexpectedCall,
   createTheme: unexpectedCall,
   updateTheme: unexpectedCall,
+  moveTheme: unexpectedCall,
   deleteTheme: unexpectedCall,
 };
 

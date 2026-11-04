@@ -4,12 +4,15 @@ import {
   ErrorCode,
   resolveErrorMessage,
   type SaveTheme,
+  type SaveThemeSchema,
   type Theme,
   type ThemeId,
+  type ThemeMoveDirection,
   UserFacingError,
 } from '@cityborn/api';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
+import type { z } from 'zod';
 import { invalidatePacks } from '../../../domains/pack/packQueries';
 import type { ThemeApi } from '../../../domains/theme/themeApi';
 import {
@@ -21,11 +24,20 @@ import type { themeEditorReducer } from './themeEditorState';
 
 export type ThemeMutations = {
   createTheme: FormSubmitHandler;
-  renameTheme: FormSubmitHandler;
+  updateTheme: FormSubmitHandler;
+  moveTheme: (move: {
+    theme: AdminTheme;
+    direction: ThemeMoveDirection;
+  }) => Promise<void>;
   deleteTheme: (theme: AdminTheme) => Promise<void>;
 };
 
-type ThemeForm = Pick<UseFormReturn<SaveTheme>, 'handleSubmit' | 'reset'>;
+export type ThemeFormInput = z.input<typeof SaveThemeSchema>;
+
+type ThemeForm = Pick<
+  UseFormReturn<ThemeFormInput, undefined, SaveTheme>,
+  'handleSubmit' | 'reset'
+>;
 
 export function createThemeMutations({
   themeApi,
@@ -33,8 +45,9 @@ export function createThemeMutations({
   themes,
   editedThemeId,
   creationForm,
-  renameForm,
+  editForm,
   dispatch,
+  setIsMoving,
   setIsDeleting,
 }: {
   themeApi: ThemeApi;
@@ -42,8 +55,9 @@ export function createThemeMutations({
   themes: AdminTheme[];
   editedThemeId: ThemeId | null;
   creationForm: ThemeForm;
-  renameForm: ThemeForm;
+  editForm: ThemeForm;
   dispatch: (action: Parameters<typeof themeEditorReducer>[1]) => void;
+  setIsMoving: (isMoving: boolean) => void;
   setIsDeleting: (isDeleting: boolean) => void;
 }): ThemeMutations {
   const refresh: () => Promise<void> = async () => {
@@ -70,7 +84,7 @@ export function createThemeMutations({
         });
       }
     }),
-    renameTheme: renameForm.handleSubmit(async (data: SaveTheme) => {
+    updateTheme: editForm.handleSubmit(async (data: SaveTheme) => {
       const id: ThemeId | null = editedThemeId;
       if (!id) return;
       try {
@@ -87,6 +101,25 @@ export function createThemeMutations({
         dispatch({ type: 'rowError', id, message: resolveErrorMessage(error) });
       }
     }),
+    moveTheme: async ({ theme, direction }) => {
+      setIsMoving(true);
+      try {
+        const movedThemes: AdminTheme[] = await themeApi.moveTheme({
+          id: theme.id,
+          move: { direction },
+        });
+        updateThemesCache({ queryClient, themes: movedThemes });
+        dispatch({ type: 'moved', id: theme.id });
+      } catch (error: unknown) {
+        dispatch({
+          type: 'rowError',
+          id: theme.id,
+          message: resolveErrorMessage(error),
+        });
+      } finally {
+        setIsMoving(false);
+      }
+    },
     deleteTheme: async (theme) => {
       setIsDeleting(true);
       try {

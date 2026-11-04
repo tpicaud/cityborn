@@ -60,9 +60,11 @@ const themes: AdminTheme[] = [buildAdminTheme()];
 const networkError: TypeError = new TypeError('Network request failed');
 
 const loadedThemeApi: ThemeApi = {
+  getPlayableThemes: unexpectedCall,
   getThemes: async () => themes,
   createTheme: unexpectedCall,
   updateTheme: unexpectedCall,
+  moveTheme: unexpectedCall,
   deleteTheme: unexpectedCall,
 };
 
@@ -72,7 +74,7 @@ function unexpectedCall(): never {
 
 function createFakePackApi({ getFullPack, getPacks }: PackReads): PackApi {
   return {
-    getPackTrees: unexpectedCall,
+    getPublishedPacks: unexpectedCall,
     getPacks,
     getFullPack,
     createPack: unexpectedCall,

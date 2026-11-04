@@ -1,8 +1,8 @@
 import { contract } from '@cityborn/api';
 import { Controller, UseGuards } from '@nestjs/common';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { AdminGuard } from '../auth/guards/access-token.guard';
-import { ThemeService } from './theme.service';
+import { AdminGuard } from '../../auth/guards/access-token.guard';
+import { ThemeService } from '../theme.service';
 
 @UseGuards(AdminGuard)
 @Controller()
@@ -19,6 +19,13 @@ export class AdminThemeController {
       updateTheme: async ({ params, body }) => ({
         status: 200,
         body: await this.themeService.update({ id: params.id, theme: body }),
+      }),
+      moveTheme: async ({ params, body }) => ({
+        status: 200,
+        body: await this.themeService.move({
+          id: params.id,
+          direction: body.direction,
+        }),
       }),
       deleteTheme: async ({ params }) => {
         await this.themeService.delete(params.id);

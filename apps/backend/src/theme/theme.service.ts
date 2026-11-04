@@ -3,7 +3,10 @@ import {
   ErrorCode,
   type SaveTheme,
   type Theme,
+  type ThemeIcon,
+  type ThemeIconName,
   type ThemeId,
+  ThemeMoveDirection,
 } from '@cityborn/api';
 import {
   BadRequestException,
@@ -13,7 +16,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { defaultThemeId } from './default-theme';
+import { IconService } from '../icon/icon.service';
+import { defaultThemeIcon, defaultThemeId } from './default-theme';
 import {
   THEME_REPOSITORY,
   ThemeHasPacksError,
@@ -24,21 +28,26 @@ import {
 export class ThemeService {
   constructor(
     @Inject(THEME_REPOSITORY) private readonly themeRepository: ThemeRepository,
+    private readonly iconService: IconService,
   ) {}
   async findAll(): Promise<AdminTheme[]> {
     return this.themeRepository.findAll();
   }
+  async findPlayable(): Promise<Theme[]> {
+    return this.themeRepository.findPlayable();
+  }
   async findById(id: ThemeId): Promise<Theme> {
     const theme: Theme | null = await this.themeRepository.findById(id);
-    if (!theme)
-      throw new NotFoundException({
-        code: ErrorCode.THEME_NOT_FOUND,
-        message: 'Theme not found',
-      });
+    if (!theme) throw this.themeNotFound();
     return theme;
   }
-  async create(data: SaveTheme): Promise<Theme> {
-    return this.save(() => this.themeRepository.create(data));
+  async create({ name, icon }: SaveTheme): Promise<Theme> {
+    const themeIcon: ThemeIcon = icon
+      ? await this.findIcon(icon)
+      : defaultThemeIcon;
+    return this.save(() =>
+      this.themeRepository.create({ name, icon: themeIcon }),
+    );
   }
   async update({
     id,
@@ -47,8 +56,38 @@ export class ThemeService {
     id: ThemeId;
     theme: SaveTheme;
   }): Promise<Theme> {
-    await this.findById(id);
-    return this.save(() => this.themeRepository.update({ id, theme }));
+    const currentTheme: Theme = await this.findById(id);
+    const icon: ThemeIcon | undefined =
+      theme.icon && theme.icon !== currentTheme.icon.name
+        ? await this.findIcon(theme.icon)
+        : undefined;
+    return this.save(() =>
+      this.themeRepository.update({ id, theme: { name: theme.name, icon } }),
+    );
+  }
+  @Transactional()
+  async move({
+    id,
+    direction,
+  }: {
+    id: ThemeId;
+    direction: ThemeMoveDirection;
+  }): Promise<AdminTheme[]> {
+    const themes: AdminTheme[] = await this.themeRepository.findAll();
+    const index: number = themes.findIndex((theme) => theme.id === id);
+    const movedTheme: AdminTheme | undefined = themes[index];
+    if (!movedTheme) throw this.themeNotFound();
+    const targetIndex: number =
+      direction === ThemeMoveDirection.UP ? index - 1 : index + 1;
+    const targetTheme: AdminTheme | undefined = themes[targetIndex];
+    if (!targetTheme) return themes;
+    const reorderedThemes: AdminTheme[] = themes
+      .with(index, targetTheme)
+      .with(targetIndex, movedTheme);
+    await this.themeRepository.reorder(
+      reorderedThemes.map((theme) => theme.id),
+    );
+    return reorderedThemes;
   }
   @Transactional()
   async delete(id: ThemeId): Promise<void> {
@@ -73,6 +112,21 @@ export class ThemeService {
         });
       throw error;
     }
+  }
+  private async findIcon(name: ThemeIconName): Promise<ThemeIcon> {
+    const svg: string | null = await this.iconService.findSvg(name);
+    if (svg === null)
+      throw new BadRequestException({
+        code: ErrorCode.THEME_ICON_NOT_FOUND,
+        message: 'Theme icon not found',
+      });
+    return { name, svg };
+  }
+  private themeNotFound(): NotFoundException {
+    return new NotFoundException({
+      code: ErrorCode.THEME_NOT_FOUND,
+      message: 'Theme not found',
+    });
   }
   private async save(write: () => Promise<Theme>): Promise<Theme> {
     try {
