@@ -10,6 +10,7 @@ import {
   buildGameConfig,
   buildGameState,
   buildGuess,
+  buildPack,
   buildPlayer,
   buildRound,
   buildSession,
@@ -30,6 +31,7 @@ import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
+import type { PackService } from '../pack/pack.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
@@ -60,6 +62,7 @@ function buildSessionService(session: Session | null) {
   const gameService: DeepMocked<GameService> = createMock<GameService>();
   gameService.hideGuessingRoundGuesses.mockImplementation((game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
+  const packService: DeepMocked<PackService> = createMock<PackService>();
 
   const sessionService: SessionService = new SessionService(
     redisService,
@@ -67,6 +70,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
+    packService,
     sessionPresenceTiming,
   );
 
@@ -77,6 +81,7 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
+    packService,
   };
 }
 
@@ -107,12 +112,11 @@ describe('SessionService.create', () => {
       result,
       600,
     );
-    expect(eventService.trackEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'session_created',
-        visitorId: 'visitor-1',
-      }),
-    );
+    expect(eventService.trackEvent).toHaveBeenCalledWith({
+      name: 'session_created',
+      visitorId: 'visitor-1',
+      properties: { mode: SessionMode.MULTI, quickPlay: false },
+    });
   });
 
   it('creates and persists a solo session waiting for its player', async () => {
@@ -138,6 +142,43 @@ describe('SessionService.create', () => {
       result,
       600,
     );
+  });
+
+  it('creates a quick play solo session drawing from every published pack', async () => {
+    const {
+      sessionService,
+      idService,
+      eventService,
+      packService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+    idService.generateNanoId.mockReturnValue('quick-session');
+    packService.findPublished.mockResolvedValue([
+      buildPack({ id: 'pack-1', name: 'Monuments' }),
+      buildPack({ id: 'pack-2', name: 'Sportifs' }),
+    ]);
+
+    const result: Session = await sessionService.create({
+      mode: SessionMode.SOLO,
+      quickPlay: true,
+      visitorId: 'visitor-1',
+    });
+
+    expect(result).toMatchObject({
+      mode: SessionMode.SOLO,
+      status: SessionStatus.IN_LOBBY,
+      quickPlay: true,
+      players: [],
+    });
+    expect(result.gameConfig.packs).toEqual([
+      { id: 'pack-1', name: 'Monuments', isPublished: true },
+      { id: 'pack-2', name: 'Sportifs', isPublished: true },
+    ]);
+    expect(result.gameConfig.nbOfObjects).toBe(6);
+    expect(eventService.trackEvent).toHaveBeenCalledWith({
+      name: 'session_created',
+      visitorId: 'visitor-1',
+      properties: { mode: SessionMode.SOLO, quickPlay: true },
+    });
   });
 
   it('fails after three session identifier collisions', async () => {
@@ -370,6 +411,23 @@ describe('SessionService lobby operations', () => {
       expect(result.gameConfig).toEqual(gameConfig);
     });
 
+    it('turns a quick play session into a classic one', async () => {
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        quickPlay: true,
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      const result: Session = await sessionService.updateGameConfig(
+        playerId('host'),
+        session.id,
+        buildGameConfig(),
+      );
+
+      expect(result.quickPlay).toBe(false);
+    });
+
     it('rejects a game configuration update from another player', async () => {
       const session: Session = buildSession();
       const gameConfig: GameConfig = buildGameConfig();
@@ -418,6 +476,28 @@ describe('SessionService game operations', () => {
         expect.objectContaining({ currentGame: lightGame }),
         600,
       );
+    });
+
+    it('creates the game of a quick play session as a quick play', async () => {
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        quickPlay: true,
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.createGame.mockResolvedValue(buildGame());
+
+      await sessionService.startGame(playerId('host'), session.id, 'visitor-1');
+
+      expect(gameService.createGame).toHaveBeenCalledWith({
+        gameConfig: session.gameConfig,
+        players: session.players,
+        mode: SessionMode.SOLO,
+        quickPlay: true,
+        visitorId: 'visitor-1',
+      });
     });
 
     it('sets the round deadline after the countdown, the timer and the network tolerance', async () => {
@@ -630,12 +710,13 @@ describe('SessionService game operations', () => {
         'visitor-1',
       );
 
-      expect(gameService.endGame).toHaveBeenCalledWith(
-        completedGame,
-        session.players,
-        session.mode,
-        'visitor-1',
-      );
+      expect(gameService.endGame).toHaveBeenCalledWith({
+        game: completedGame,
+        players: session.players,
+        mode: session.mode,
+        quickPlay: false,
+        visitorId: 'visitor-1',
+      });
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,
         expect.objectContaining({
@@ -645,6 +726,27 @@ describe('SessionService game operations', () => {
         600,
       );
       expect(result.currentGame).toBe(completedGame);
+    });
+
+    it('ends the last game of a quick play session as a quick play', async () => {
+      const game: Game = buildGame();
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        quickPlay: true,
+        status: SessionStatus.IN_GAME,
+        currentGame: game,
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.resolveNextRound.mockReturnValue({ game, isGameOver: true });
+
+      await sessionService.handleNextRound(playerId('host'), session.id);
+
+      expect(gameService.endGame).toHaveBeenCalledWith(
+        expect.objectContaining({ mode: SessionMode.SOLO, quickPlay: true }),
+      );
     });
 
     it('sets the deadline of the next round', async () => {
@@ -693,6 +795,7 @@ describe('SessionService game operations', () => {
         gameConfig,
         players: [{ username: 'alice', isGuest: false, id: user.id }],
         mode: SessionMode.SOLO,
+        quickPlay: false,
         visitorId: 'visitor-1',
       });
     });
@@ -725,8 +828,8 @@ describe('SessionService game operations', () => {
         visitorId: 'visitor-1',
       });
 
-      expect(gameService.endGame).toHaveBeenCalledWith(
-        {
+      expect(gameService.endGame).toHaveBeenCalledWith({
+        game: {
           ...game,
           state: {
             guessObjectsIds: ['guess-1'],
@@ -739,10 +842,11 @@ describe('SessionService game operations', () => {
             },
           },
         },
-        [{ username: 'alice', isGuest: false, id: user.id }],
-        SessionMode.SOLO,
-        'visitor-1',
-      );
+        players: [{ username: 'alice', isGuest: false, id: user.id }],
+        mode: SessionMode.SOLO,
+        quickPlay: false,
+        visitorId: 'visitor-1',
+      });
     });
 
     it('records empty results for a guest whose results are missing', async () => {
@@ -763,18 +867,19 @@ describe('SessionService game operations', () => {
 
       await sessionService.finalizeClientSoloGame({ game });
 
-      expect(gameService.endGame).toHaveBeenCalledWith(
-        {
+      expect(gameService.endGame).toHaveBeenCalledWith({
+        game: {
           ...game,
           state: {
             guessObjectsIds: ['guess-1'],
             results: { guest: { results: [] } },
           },
         },
-        [{ username: 'guest', isGuest: true, id: undefined }],
-        SessionMode.SOLO,
-        undefined,
-      );
+        players: [{ username: 'guest', isGuest: true, id: undefined }],
+        mode: SessionMode.SOLO,
+        quickPlay: false,
+        visitorId: undefined,
+      });
     });
   });
 });

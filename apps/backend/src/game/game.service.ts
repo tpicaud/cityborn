@@ -37,6 +37,7 @@ export type CreateGameParams = {
   gameConfig: GameConfig;
   players: SessionPlayer[];
   mode: SessionMode;
+  quickPlay: boolean;
   visitorId?: string;
 };
 
@@ -53,6 +54,7 @@ export class GameService {
     gameConfig,
     players,
     mode,
+    quickPlay,
     visitorId,
   }: CreateGameParams): Promise<Game> {
     const guessObjects =
@@ -88,6 +90,7 @@ export class GameService {
           visitorId,
           properties: {
             mode,
+            quickPlay,
             packs: gameConfig.packs,
             numberOfPlayers:
               mode === SessionMode.SOLO
@@ -101,12 +104,19 @@ export class GameService {
     return game;
   }
 
-  async endGame(
-    game: Game,
-    players: SessionPlayer[],
-    mode: SessionMode,
-    visitorId?: string,
-  ): Promise<void> {
+  async endGame({
+    game,
+    players,
+    mode,
+    quickPlay,
+    visitorId,
+  }: {
+    game: Game;
+    players: SessionPlayer[];
+    mode: SessionMode;
+    quickPlay: boolean;
+    visitorId?: string;
+  }): Promise<void> {
     const gameRecord = await this.gameRecordService.create(
       {
         mode,
@@ -137,6 +147,7 @@ export class GameService {
           properties: {
             gameId: gameRecord.id.toString(),
             mode,
+            quickPlay,
             numberOfPlayers: Object.keys(game.state.results).length,
             average_score: averageScore,
           },

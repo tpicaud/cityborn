@@ -72,6 +72,7 @@ describe('GameService.createGame', () => {
       gameConfig,
       players,
       mode: SessionMode.MULTI,
+      quickPlay: false,
       visitorId: 'visitor-1',
     };
     guessObjectService.findShuffledGuessObjectsByGameConfig.mockResolvedValue([
@@ -103,6 +104,7 @@ describe('GameService.createGame', () => {
       visitorId: 'visitor-1',
       properties: {
         mode: SessionMode.MULTI,
+        quickPlay: false,
         packs: [],
         numberOfPlayers: 1,
       },
@@ -126,6 +128,7 @@ describe('GameService.createGame', () => {
       gameConfig,
       players: [player],
       mode: SessionMode.SOLO,
+      quickPlay: false,
     };
 
     await gameService.createGame(createGameData);
@@ -162,17 +165,29 @@ describe('GameService.endGame', () => {
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(game, players, SessionMode.MULTI, 'visitor-1');
+    await gameService.endGame({
+      game,
+      players,
+      mode: SessionMode.MULTI,
+      quickPlay: false,
+      visitorId: 'visitor-1',
+    });
 
     expect(gameRecordService.create).toHaveBeenCalledWith(
       expect.objectContaining({ mode: SessionMode.MULTI }),
       [{ id: 'user-1' }],
     );
-    expect(eventService.trackEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        properties: expect.objectContaining({ average_score: 60 }),
-      }),
-    );
+    expect(eventService.trackEvent).toHaveBeenCalledWith({
+      name: 'game_finished',
+      visitorId: 'visitor-1',
+      properties: {
+        gameId: 'game-record-1',
+        mode: SessionMode.MULTI,
+        quickPlay: false,
+        numberOfPlayers: 2,
+        average_score: 60,
+      },
+    });
   });
 
   it('tracks a zero average when no round result exists', async () => {
@@ -193,7 +208,13 @@ describe('GameService.endGame', () => {
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(game, players, SessionMode.SOLO, 'visitor-1');
+    await gameService.endGame({
+      game,
+      players,
+      mode: SessionMode.SOLO,
+      quickPlay: false,
+      visitorId: 'visitor-1',
+    });
 
     expect(eventService.trackEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -215,7 +236,12 @@ describe('GameService.endGame', () => {
       id: GameRecordIdSchema.parse('game-record-1'),
     });
 
-    await gameService.endGame(game, players, SessionMode.SOLO);
+    await gameService.endGame({
+      game,
+      players,
+      mode: SessionMode.SOLO,
+      quickPlay: false,
+    });
 
     expect(eventService.trackEvent).not.toHaveBeenCalled();
   });

@@ -1,13 +1,16 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
+  applyGameConfigChanges,
   type CreateSession,
   defaultGameConfig,
   defaultGuess,
   ErrorCode,
   type Game,
   type GameConfig,
+  type GameConfigPack,
   type Guess,
   type GuessSubmission,
+  type Pack,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -37,6 +40,7 @@ import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
+import { PackService } from '../pack/pack.service';
 import { RedisService } from '../redis/redis.service';
 import {
   SESSION_PRESENCE_TIMING,
@@ -64,6 +68,7 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
+    private readonly packService: PackService,
     @Inject(SESSION_PRESENCE_TIMING)
     private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
@@ -86,6 +91,7 @@ export class SessionService {
 
   async create({
     mode,
+    quickPlay = false,
     visitorId,
   }: CreateSession & { visitorId?: string }): Promise<Session> {
     const newSession: Session = {
@@ -93,7 +99,10 @@ export class SessionService {
       hostID: '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
-      gameConfig: defaultGameConfig,
+      quickPlay,
+      gameConfig: quickPlay
+        ? await this.buildQuickPlayGameConfig()
+        : defaultGameConfig,
       players: [],
     };
 
@@ -106,6 +115,7 @@ export class SessionService {
           visitorId,
           properties: {
             mode,
+            quickPlay,
           },
         }),
       );
@@ -216,6 +226,7 @@ export class SessionService {
         });
 
       session.gameConfig = gameConfig;
+      session.quickPlay = false;
       return session;
     });
   }
@@ -242,6 +253,7 @@ export class SessionService {
         gameConfig: session.gameConfig,
         players: session.players,
         mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
       });
 
@@ -355,12 +367,13 @@ export class SessionService {
         return this.hideRoundGuesses(session);
       }
 
-      await this.gameService.endGame(
-        updatedGame,
-        session.players,
-        session.mode,
+      await this.gameService.endGame({
+        game: updatedGame,
+        players: session.players,
+        mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
-      );
+      });
 
       const finishedGameSession: Session = {
         ...session,
@@ -385,6 +398,7 @@ export class SessionService {
       gameConfig,
       players: [this.buildSoloPlayer(user)],
       mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
     });
   }
@@ -409,12 +423,13 @@ export class SessionService {
         results: { [soloPlayer.username]: soloPlayerResults },
       },
     };
-    await this.gameService.endGame(
-      soloGame,
-      [soloPlayer],
-      SessionMode.SOLO,
+    await this.gameService.endGame({
+      game: soloGame,
+      players: [soloPlayer],
+      mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
-    );
+    });
   }
 
   ///////////////////////
@@ -710,6 +725,17 @@ export class SessionService {
     );
     session.hostID =
       connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
+  }
+
+  private async buildQuickPlayGameConfig(): Promise<GameConfig> {
+    const accessiblePacks: Pack[] = await this.packService.findPublished();
+    const packs: GameConfigPack[] = accessiblePacks.map(
+      ({ themeId, ...pack }) => pack,
+    );
+    return applyGameConfigChanges({
+      gameConfig: defaultGameConfig,
+      changes: { packs },
+    });
   }
 
   private buildSoloPlayer(user?: User): SessionPlayer {
