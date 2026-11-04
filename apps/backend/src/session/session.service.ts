@@ -729,6 +729,11 @@ export class SessionService {
 
   private async buildQuickPlayGameConfig(): Promise<GameConfig> {
     const accessiblePacks: Pack[] = await this.packService.findPublished();
+    if (accessiblePacks.length === 0)
+      throw new NotFoundException({
+        code: ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK,
+        message: 'No published pack to draw a quick play from',
+      });
     const packs: GameConfigPack[] = accessiblePacks.map(
       ({ themeId, ...pack }) => pack,
     );

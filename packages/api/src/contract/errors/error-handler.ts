@@ -53,6 +53,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Impossible de reprendre la place de ce joueur dans la session.',
   [ErrorCode.SESSION_SOLO_NOT_JOINABLE]:
     'Une session solo ne peut pas être rejointe.',
+  [ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK]:
+    "Aucun pack n'est disponible pour lancer une partie rapide.",
 
   // Game
   [ErrorCode.GAME_END_SENTENCE_NOT_FOUND]:

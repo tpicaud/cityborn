@@ -185,7 +185,7 @@ export function useSessionController({
     [session, emit],
   );
 
-  const startGame = useCallback(async () => {
+  const startGame: SessionController['startGame'] = useCallback(async () => {
     await emit(sessionWsEvent.startGame);
   }, [emit]);
 

@@ -181,6 +181,27 @@ describe('SessionService.create', () => {
     });
   });
 
+  it('rejects a quick play session when no pack is published', async () => {
+    const {
+      sessionService,
+      redisService,
+      idService,
+      packService,
+    }: ReturnType<typeof buildSessionService> = buildSessionService(null);
+    idService.generateNanoId.mockReturnValue('quick-session');
+    packService.findPublished.mockResolvedValue([]);
+
+    const creation: Promise<Session> = sessionService.create({
+      mode: SessionMode.SOLO,
+      quickPlay: true,
+    });
+
+    await expect(creation).rejects.toMatchObject({
+      response: { code: ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK },
+    });
+    expect(redisService.setJSON).not.toHaveBeenCalled();
+  });
+
   it('fails after three session identifier collisions', async () => {
     const {
       sessionService,
