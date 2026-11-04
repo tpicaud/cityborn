@@ -32,6 +32,7 @@ export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
   const router = useRouter();
   const {
     pack,
+    imagePreview,
     isSaving,
     updatePack,
     savePack,
@@ -125,7 +126,7 @@ export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
-              <PackImagePreview image={pack.image} size={96} />
+              <PackImagePreview image={imagePreview} size={96} />
             </div>
           </div>
           <div className="flex flex-col">

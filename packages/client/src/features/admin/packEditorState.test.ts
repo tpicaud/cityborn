@@ -20,6 +20,7 @@ import type { ThemeApi } from '../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
 import {
   type PackEditorState,
+  selectPackImagePreview,
   synchronizePackDraft,
   toPackEditorState,
 } from './packEditorState';
@@ -306,5 +307,44 @@ describe('synchronizePackDraft', () => {
     });
 
     assert.deepEqual(pack, nextPack);
+  });
+});
+
+describe('selectPackImagePreview', () => {
+  const storedPack: FullPack = buildFullPack({
+    ...editedPack,
+    image: 'https://example.com/stored.png',
+  });
+
+  it('previews the image typed in the draft', () => {
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...storedPack, image: 'https://example.com/typed.png' },
+      editedPack: storedPack,
+    });
+
+    assert.equal(imagePreview, 'https://example.com/typed.png');
+  });
+
+  it('previews the stored image when the draft image is cleared', () => {
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...storedPack, image: '' },
+      editedPack: storedPack,
+    });
+
+    assert.equal(imagePreview, 'https://example.com/stored.png');
+  });
+
+  it('previews no image when the pack has none', () => {
+    const packWithoutImage: FullPack = buildFullPack({
+      ...editedPack,
+      image: undefined,
+    });
+
+    const imagePreview: string | undefined = selectPackImagePreview({
+      pack: { ...packWithoutImage, image: '' },
+      editedPack: packWithoutImage,
+    });
+
+    assert.equal(imagePreview, undefined);
   });
 });

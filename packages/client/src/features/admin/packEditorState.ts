@@ -39,6 +39,16 @@ export function synchronizePackDraft({
   };
 }
 
+export function selectPackImagePreview({
+  pack,
+  editedPack,
+}: {
+  pack: FullPack;
+  editedPack: FullPack;
+}): string | undefined {
+  return pack.image || editedPack.image;
+}
+
 function hasFailedWithoutData(query: QueryObserverResult<unknown>): boolean {
   return query.data === undefined && query.isError;
 }

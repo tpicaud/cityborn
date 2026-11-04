@@ -33,6 +33,7 @@ import { saveGuessObject } from './guessObjectSave';
 import { savePack } from './pack-save/savePack';
 import {
   type PackEditorState,
+  selectPackImagePreview,
   synchronizePackDraft,
   toPackEditorState,
 } from './packEditorState';
@@ -61,6 +62,7 @@ type PackFields = Partial<
 
 export type PackEditor = {
   pack: FullPack;
+  imagePreview: string | undefined;
   isSaving: boolean;
   updatePack: (fields: PackFields) => void;
   savePack: () => Promise<void>;
@@ -258,6 +260,7 @@ export function usePackEditor({
 
   return {
     pack,
+    imagePreview: selectPackImagePreview({ pack, editedPack }),
     isSaving,
     updatePack: (fields: PackFields) =>
       setPack((currentPack: FullPack) => ({
