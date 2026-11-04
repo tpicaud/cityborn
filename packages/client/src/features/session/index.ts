@@ -12,6 +12,11 @@ export {
   sortPlayersConnectedFirst,
 } from './sessionPlayers';
 export {
+  type PackImageFallback,
+  type PackImageFallbackOptions,
+  usePackImageFallback,
+} from './usePackImageFallback';
+export {
   type PackSelection,
   type PackSelectionOptions,
   usePackSelection,

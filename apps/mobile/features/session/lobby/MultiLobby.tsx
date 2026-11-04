@@ -19,6 +19,7 @@ import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
 import { PackThemeFilters } from './PackThemeFilters';
+import { PackVisual } from './PackVisual';
 
 type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
@@ -128,6 +129,7 @@ export function MultiLobby({
                     key={pack.id}
                     className="flex-row items-center justify-between gap-3 py-2 border-b border-foreground/10"
                   >
+                    <PackVisual pack={pack} />
                     <Text className="flex-1 text-lg font-semibold">
                       {pack.name}
                     </Text>

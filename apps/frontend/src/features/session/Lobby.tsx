@@ -35,6 +35,7 @@ import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { useNavigation } from '@/lib/navigation';
 import { PackThemeFilters } from './PackThemeFilters';
+import { PackVisual } from './PackVisual';
 
 type LobbyComponentProps = {
   localPlayerID: PlayerId | undefined;
@@ -237,6 +238,7 @@ export const Lobby = ({
                       '&:last-of-type': { borderBottom: 0 },
                     }}
                   >
+                    <PackVisual pack={pack} />
                     <Typography
                       sx={{
                         fontSize: { xs: '1rem', md: '1.15rem' },
