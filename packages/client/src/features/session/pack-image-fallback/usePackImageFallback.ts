@@ -2,6 +2,7 @@
 
 import type { Pack } from '@cityborn/api';
 import { useState } from 'react';
+import { selectPackImageUrl } from './packImageUrl';
 
 export type PackImageFallbackOptions = {
   pack: Pack;
@@ -20,7 +21,7 @@ export function usePackImageFallback({
   );
 
   return {
-    imageUrl: pack.image === failedImageUrl ? undefined : pack.image,
+    imageUrl: selectPackImageUrl({ image: pack.image, failedImageUrl }),
     showNeutralImage: () => setFailedImageUrl(pack.image),
   };
 }
