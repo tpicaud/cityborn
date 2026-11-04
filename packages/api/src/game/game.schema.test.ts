@@ -62,7 +62,7 @@ describe('GameConfigSchema', () => {
     assert.deepEqual(gameConfig.categories, [capitals]);
   });
 
-  it('drops the theme of the selected packs', () => {
+  it('drops the theme and the image of the selected packs', () => {
     const themedMonuments: Pack = buildPack({
       id: monuments.id,
       name: monuments.name,

@@ -1,5 +1,6 @@
 export enum PackErrorCode {
   PACK_NOT_FOUND = 'PACK_NOT_FOUND',
+  PACK_IMAGE_REQUIRED = 'PACK_IMAGE_REQUIRED',
   /**
    * @deprecated Utiliser `PACK_NOT_FOUND` à la place. Conservé pour les
    * routes `/category` dépréciées.

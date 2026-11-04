@@ -21,6 +21,7 @@ export const PackSchema = z.object({
   name: z.string(),
   isPublished: z.boolean(),
   description: z.string().optional(),
+  image: z.string().url().optional(),
   /**
    * @deprecated Plus aucun pack n'a de parent : toujours absent. Conservé pour
    * les builds mobile publiées avant la suppression des sous-packs.

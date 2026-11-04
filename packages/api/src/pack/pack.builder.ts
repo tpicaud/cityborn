@@ -18,6 +18,7 @@ export function buildPack(
     id: '00000000-0000-4000-8000-000000000010',
     name: 'Monuments',
     isPublished: true,
+    image: 'https://example.com/monuments.png',
     themeId: buildTheme().id,
     ...overrides,
   });
@@ -41,6 +42,7 @@ export function buildCreatePack(
   return CreatePackSchema.parse({
     name: pack.name,
     isPublished: pack.isPublished,
+    image: pack.image,
     ...overrides,
   });
 }
