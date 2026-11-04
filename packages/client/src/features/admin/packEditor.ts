@@ -55,7 +55,9 @@ export type PackEditorOptions = {
   onPackDeleted: () => void;
 };
 
-type PackFields = Partial<Pick<FullPack, 'name' | 'description' | 'themeId'>>;
+type PackFields = Partial<
+  Pick<FullPack, 'name' | 'description' | 'image' | 'themeId'>
+>;
 
 export type PackEditor = {
   pack: FullPack;
@@ -148,6 +150,7 @@ export function usePackEditor({
           id: pack.id,
           name: pack.name,
           description: pack.description,
+          image: pack.image || undefined,
           themeId: pack.themeId,
           isPublished: pack.isPublished,
           ...changes,

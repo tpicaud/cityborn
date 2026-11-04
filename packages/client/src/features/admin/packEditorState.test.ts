@@ -262,6 +262,24 @@ describe('synchronizePackDraft', () => {
     assert.deepEqual(pack, { ...refreshedPack, name: 'Unsaved name' });
   });
 
+  it('keeps an unsaved image when another field is refreshed', () => {
+    const refreshedPack: FullPack = buildFullPack({
+      ...editedPack,
+      name: 'Paris refreshed',
+    });
+
+    const pack: FullPack = synchronizePackDraft({
+      pack: { ...editedPack, image: 'https://example.com/unsaved.png' },
+      loadedPack: editedPack,
+      editedPack: refreshedPack,
+    });
+
+    assert.deepEqual(pack, {
+      ...refreshedPack,
+      image: 'https://example.com/unsaved.png',
+    });
+  });
+
   it('keeps a theme selected while a refresh is in flight', () => {
     const draft: FullPack = buildFullPack({
       ...editedPack,

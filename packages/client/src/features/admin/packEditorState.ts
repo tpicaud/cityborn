@@ -28,6 +28,7 @@ export function synchronizePackDraft({
     ...(pack.description !== loadedPack.description
       ? { description: pack.description }
       : {}),
+    ...(pack.image !== loadedPack.image ? { image: pack.image } : {}),
     ...(pack.themeId !== loadedPack.themeId ? { themeId: pack.themeId } : {}),
     ...(pack.isPublished !== loadedPack.isPublished
       ? { isPublished: pack.isPublished }
