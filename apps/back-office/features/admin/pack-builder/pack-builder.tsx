@@ -3,8 +3,6 @@
 import {
   type FullPack,
   type GuessObject,
-  type Pack,
-  PackIdSchema,
   type Theme,
   ThemeIdSchema,
 } from '@cityborn/api';
@@ -26,11 +24,10 @@ import { PublishPackPopup } from './publish-pack-popup';
 
 type PackBuilderProps = {
   editedPack: FullPack;
-  packs: Pack[];
   themes: Theme[];
 };
 
-export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
+export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
   const router = useRouter();
   const {
     pack,
@@ -118,33 +115,6 @@ export function PackBuilder({ editedPack, packs, themes }: PackBuilderProps) {
           </div>
           <div className="flex flex-col">
             <div className="w-full flex flex-row gap-12">
-              <div className="h-full flex flex-col w-[40%] min-w-40">
-                <label htmlFor="parent">Parent</label>
-                <select
-                  id="parent"
-                  value={pack.parentId ?? ''}
-                  onChange={(e) =>
-                    updatePack({
-                      parentId: e.target.value
-                        ? PackIdSchema.parse(e.target.value)
-                        : null,
-                    })
-                  }
-                  className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
-                >
-                  <option value="">Aucun</option>
-                  {packs
-                    .filter((candidateParent) => candidateParent.id !== pack.id)
-                    .map((candidateParent) => (
-                      <option
-                        key={candidateParent.id}
-                        value={candidateParent.id}
-                      >
-                        {candidateParent.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
               <div className="h-full flex flex-col w-[30%] min-w-40">
                 <label htmlFor="theme">Thème</label>
                 <select

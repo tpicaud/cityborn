@@ -24,7 +24,6 @@ function toGameConfigPack(pack: Pack): GameConfigPack {
     name: pack.name,
     isPublished: pack.isPublished,
     description: pack.description,
-    parentId: pack.parentId,
   };
 }
 

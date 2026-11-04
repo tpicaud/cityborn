@@ -5,7 +5,6 @@ import {
   type GuessObject,
   type GuessObjectDraft,
   type GuessObjectId,
-  type Pack,
   type PackId,
   type Theme,
   type UpdatePack,
@@ -23,7 +22,6 @@ import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import {
   fullPackQueryOptions,
-  packsQueryOptions,
   removeDeletedPack,
 } from '../../domains/pack/packQueries';
 import { themesQueryOptions } from '../../domains/theme/themeQueries';
@@ -57,9 +55,7 @@ export type PackEditorOptions = {
   onPackDeleted: () => void;
 };
 
-type PackFields = Partial<
-  Pick<FullPack, 'name' | 'description' | 'parentId' | 'themeId'>
->;
+type PackFields = Partial<Pick<FullPack, 'name' | 'description' | 'themeId'>>;
 
 export type PackEditor = {
   pack: FullPack;
@@ -106,9 +102,6 @@ export function usePackEditorLoad({
   const fullPackQuery: UseQueryResult<FullPack | null> = useQuery(
     fullPackQueryOptions({ packApi, packId }),
   );
-  const packsQuery: UseQueryResult<Pack[]> = useQuery(
-    packsQueryOptions(packApi),
-  );
   const themesQuery: UseQueryResult<Theme[]> = useQuery(
     themesQueryOptions(themeApi),
   );
@@ -116,12 +109,10 @@ export function usePackEditorLoad({
   return {
     packEditorState: toPackEditorState({
       fullPackQuery,
-      packsQuery,
       themesQuery,
     }),
     retry: () => {
       fullPackQuery.refetch();
-      packsQuery.refetch();
       themesQuery.refetch();
     },
   };
@@ -157,7 +148,6 @@ export function usePackEditor({
           id: pack.id,
           name: pack.name,
           description: pack.description,
-          parentId: pack.parentId,
           themeId: pack.themeId,
           isPublished: pack.isPublished,
           ...changes,
