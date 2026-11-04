@@ -6,6 +6,11 @@ import {
 import { type ThemeId, ThemeIdSchema } from '../theme/theme.schema';
 
 export const PackIdSchema = z.string().brand<'PackId'>();
+/**
+ * @deprecated Plus aucun pack n'a de parent. Conservé pour le champ
+ * `parentId` déprécié.
+ * @deprecatedSince 2026-11-04
+ */
 export const PackUuidIdSchema = z.string().uuid().brand<'PackId'>();
 export const PackIdParamSchema = z.object({ id: PackIdSchema });
 
@@ -16,6 +21,11 @@ export const PackSchema = z.object({
   name: z.string(),
   isPublished: z.boolean(),
   description: z.string().optional(),
+  /**
+   * @deprecated Plus aucun pack n'a de parent : toujours absent. Conservé pour
+   * les builds mobile publiées avant la suppression des sous-packs.
+   * @deprecatedSince 2026-11-04
+   */
   parentId: PackUuidIdSchema.nullable().optional(),
   themeId: ThemeIdSchema,
 });
@@ -39,6 +49,11 @@ export const UpdatePackSchema = PackSchema.extend({
   disconnectIds: z.array(GuessObjectIdSchema).optional(),
 });
 
+/**
+ * @deprecated Utiliser `Pack` à la place. Conservé pour les routes `/tree`
+ * dépréciées.
+ * @deprecatedSince 2026-11-04
+ */
 export type PackTree = {
   id: PackId;
   name: string;
@@ -49,6 +64,11 @@ export type PackTree = {
   children: PackTree[];
 };
 
+/**
+ * @deprecated Utiliser `Pack` à la place. Conservé pour les routes `/tree`
+ * dépréciées.
+ * @deprecatedSince 2026-11-04
+ */
 export type PackTreeInput = {
   id: string;
   name: string;
@@ -59,6 +79,11 @@ export type PackTreeInput = {
   children: PackTreeInput[];
 };
 
+/**
+ * @deprecated Utiliser `PackSchema` à la place. Conservé pour les routes `/tree`
+ * dépréciées.
+ * @deprecatedSince 2026-11-04
+ */
 export const PackTreeSchema: z.ZodType<PackTree, z.ZodTypeDef, PackTreeInput> =
   z.lazy(() =>
     z.object({
@@ -71,6 +96,11 @@ export const PackTreeSchema: z.ZodType<PackTree, z.ZodTypeDef, PackTreeInput> =
       children: z.array(PackTreeSchema),
     }),
   );
+/**
+ * @deprecated Utiliser `PacksSchema` à la place. Conservé pour les routes `/tree`
+ * dépréciées.
+ * @deprecatedSince 2026-11-04
+ */
 export const PackTreesSchema = z.array(PackTreeSchema);
 
 export type Pack = z.infer<typeof PackSchema>;

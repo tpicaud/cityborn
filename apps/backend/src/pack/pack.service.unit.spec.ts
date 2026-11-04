@@ -60,32 +60,34 @@ function buildPackService() {
 }
 
 describe('PackService.findTrees', () => {
-  it('loads every pack tree', async () => {
+  it('lists every pack as a tree without children', async () => {
     const { packRepository, packService }: ReturnType<typeof buildPackService> =
       buildPackService();
-    const tree: PackTree = { ...buildPack(), children: [] };
-    packRepository.findTree.mockResolvedValue([tree]);
+    const pack: Pack = buildPack({ isPublished: false });
+    packRepository.findBy.mockResolvedValue([pack]);
 
     const trees: PackTree[] = await packService.findTrees();
 
-    expect(packRepository.findTree).toHaveBeenCalledWith({});
-    expect(trees).toEqual([tree]);
+    expect(packRepository.findBy).toHaveBeenCalledWith({});
+    expect(trees).toEqual([{ ...pack, children: [] }]);
   });
 });
 
 describe('PackService.findPublishedTrees', () => {
-  it('loads only the published pack trees', async () => {
+  it('lists every published pack as a tree without children', async () => {
     const { packRepository, packService }: ReturnType<typeof buildPackService> =
       buildPackService();
-    const tree: PackTree = { ...buildPack(), children: [] };
-    packRepository.findTree.mockResolvedValue([tree]);
+    const monuments: Pack = buildPack({ id: 'pack-1', name: 'Monuments' });
+    const museums: Pack = buildPack({ id: 'pack-2', name: 'Musées' });
+    packRepository.findBy.mockResolvedValue([monuments, museums]);
 
     const trees: PackTree[] = await packService.findPublishedTrees();
 
-    expect(packRepository.findTree).toHaveBeenCalledWith({
-      isPublished: true,
-    });
-    expect(trees).toEqual([tree]);
+    expect(packRepository.findBy).toHaveBeenCalledWith({ isPublished: true });
+    expect(trees).toEqual([
+      { ...monuments, children: [] },
+      { ...museums, children: [] },
+    ]);
   });
 });
 
@@ -319,21 +321,6 @@ describe('PackService.delete', () => {
     });
   });
 
-  it('rejects when the pack has children', async () => {
-    const { packRepository, packService }: ReturnType<typeof buildPackService> =
-      buildPackService();
-    const pack: Pack = buildPack();
-    packRepository.findFullBy.mockResolvedValue([
-      { ...pack, guessObjects: [] },
-    ]);
-    packRepository.countChildren.mockResolvedValue(1);
-
-    await expect(packService.delete(packId('pack-1'))).rejects.toMatchObject({
-      response: { code: ErrorCode.PACK_HAS_CHILDREN },
-    });
-    expect(packRepository.delete).not.toHaveBeenCalled();
-  });
-
   it('deletes the pack and only its orphaned guess objects', async () => {
     const {
       packRepository,
@@ -346,7 +333,6 @@ describe('PackService.delete', () => {
     packRepository.findFullBy.mockResolvedValue([
       { ...pack, guessObjects: [orphan, shared] },
     ]);
-    packRepository.countChildren.mockResolvedValue(0);
     packRepository.countByGuessObjectId
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(1);

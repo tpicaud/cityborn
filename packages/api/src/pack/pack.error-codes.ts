@@ -1,6 +1,5 @@
 export enum PackErrorCode {
   PACK_NOT_FOUND = 'PACK_NOT_FOUND',
-  PACK_HAS_CHILDREN = 'PACK_HAS_CHILDREN',
   /**
    * @deprecated Utiliser `PACK_NOT_FOUND` à la place. Conservé pour les
    * routes `/category` dépréciées.

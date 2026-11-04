@@ -75,8 +75,6 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 
   // Pack
   [ErrorCode.PACK_NOT_FOUND]: 'Aucun pack trouvé pour cet identifiant.',
-  [ErrorCode.PACK_HAS_CHILDREN]:
-    'Ce pack contient des sous-packs et ne peut pas être supprimé.',
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
 
