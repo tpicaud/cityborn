@@ -47,8 +47,6 @@ export function MultiLobby({
     packs,
     playPack,
   }: PackSelection = usePackSelection({
-    session,
-    isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });

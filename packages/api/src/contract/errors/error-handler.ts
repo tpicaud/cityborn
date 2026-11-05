@@ -53,14 +53,14 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Impossible de reprendre la place de ce joueur dans la session.',
   [ErrorCode.SESSION_SOLO_NOT_JOINABLE]:
     'Une session solo ne peut pas être rejointe.',
-  [ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK]:
-    "Aucun pack n'est disponible pour lancer une partie rapide.",
 
   // Game
   [ErrorCode.GAME_END_SENTENCE_NOT_FOUND]:
     'Erreur lors de la récupération de la phrase de fin.',
   [ErrorCode.GAME_NO_ACTIVE_ROUND]: 'Aucun round actif dans la partie.',
   [ErrorCode.GAME_CREATION_FAILED]: 'Erreur lors de la création de la partie.',
+  [ErrorCode.GAME_NO_PUBLISHED_PACK]:
+    "Aucun pack n'est disponible pour lancer une partie.",
 
   // Guess objects
   [ErrorCode.GUESS_OBJECTS_NOT_FOUND]: 'Aucun objet trouvé.',

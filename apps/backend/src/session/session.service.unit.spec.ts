@@ -10,11 +10,11 @@ import {
   buildGameConfig,
   buildGameState,
   buildGuess,
-  buildPack,
   buildPlayer,
   buildRound,
   buildSession,
   buildUser,
+  defaultGameConfig,
   defaultGuess,
   ErrorCode,
   PlayerIdSchema,
@@ -31,7 +31,6 @@ import type { EventService } from '../event/event.service';
 import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
-import type { PackService } from '../pack/pack.service';
 import type { RedisService } from '../redis/redis.service';
 import { type JoinedSession, SessionService } from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
@@ -62,7 +61,6 @@ function buildSessionService(session: Session | null) {
   const gameService: DeepMocked<GameService> = createMock<GameService>();
   gameService.hideGuessingRoundGuesses.mockImplementation((game) => game);
   const eventService: DeepMocked<EventService> = createMock<EventService>();
-  const packService: DeepMocked<PackService> = createMock<PackService>();
 
   const sessionService: SessionService = new SessionService(
     redisService,
@@ -70,7 +68,6 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
-    packService,
     sessionPresenceTiming,
   );
 
@@ -81,7 +78,6 @@ function buildSessionService(session: Session | null) {
     idService,
     gameService,
     eventService,
-    packService,
   };
 }
 
@@ -144,18 +140,13 @@ describe('SessionService.create', () => {
     );
   });
 
-  it('creates a quick play solo session drawing from every published pack', async () => {
+  it('creates a quick play solo session with the default game config', async () => {
     const {
       sessionService,
       idService,
       eventService,
-      packService,
     }: ReturnType<typeof buildSessionService> = buildSessionService(null);
     idService.generateNanoId.mockReturnValue('quick-session');
-    packService.findPublished.mockResolvedValue([
-      buildPack({ id: 'pack-1', name: 'Monuments' }),
-      buildPack({ id: 'pack-2', name: 'Sportifs' }),
-    ]);
 
     const result: Session = await sessionService.create({
       mode: SessionMode.SOLO,
@@ -167,39 +158,14 @@ describe('SessionService.create', () => {
       mode: SessionMode.SOLO,
       status: SessionStatus.IN_LOBBY,
       quickPlay: true,
+      gameConfig: defaultGameConfig,
       players: [],
     });
-    expect(result.gameConfig.packs).toEqual([
-      { id: 'pack-1', name: 'Monuments', isPublished: true },
-      { id: 'pack-2', name: 'Sportifs', isPublished: true },
-    ]);
-    expect(result.gameConfig.nbOfObjects).toBe(6);
     expect(eventService.trackEvent).toHaveBeenCalledWith({
       name: 'session_created',
       visitorId: 'visitor-1',
       properties: { mode: SessionMode.SOLO, quickPlay: true },
     });
-  });
-
-  it('rejects a quick play session when no pack is published', async () => {
-    const {
-      sessionService,
-      redisService,
-      idService,
-      packService,
-    }: ReturnType<typeof buildSessionService> = buildSessionService(null);
-    idService.generateNanoId.mockReturnValue('quick-session');
-    packService.findPublished.mockResolvedValue([]);
-
-    const creation: Promise<Session> = sessionService.create({
-      mode: SessionMode.SOLO,
-      quickPlay: true,
-    });
-
-    await expect(creation).rejects.toMatchObject({
-      response: { code: ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK },
-    });
-    expect(redisService.setJSON).not.toHaveBeenCalled();
   });
 
   it('fails after three session identifier collisions', async () => {

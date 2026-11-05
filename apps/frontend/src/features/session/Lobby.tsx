@@ -82,8 +82,6 @@ export const Lobby = ({
     packs,
     playPack,
   }: PackSelection = usePackSelection({
-    session,
-    isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });

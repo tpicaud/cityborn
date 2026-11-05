@@ -4,12 +4,11 @@ import type {
   GameConfigChanges,
   GameConfigPack,
   Pack,
-  Session,
   Theme,
   ThemeId,
 } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
 import { playableThemesQueryOptions } from '../../domains/theme/themeQueries';
@@ -28,8 +27,6 @@ function toGameConfigPack(pack: Pack): GameConfigPack {
 }
 
 export type PackSelectionOptions = {
-  session: Session;
-  isHost: boolean;
   updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   startGame: () => Promise<void>;
 };
@@ -44,8 +41,6 @@ export type PackSelection = {
 };
 
 export function usePackSelection({
-  session,
-  isHost,
   updateGameConfig,
   startGame,
 }: PackSelectionOptions): PackSelection {
@@ -71,18 +66,6 @@ export function usePackSelection({
       selectThemePacks({ packs: publishedPacks, themeId: selectedTheme?.id }),
     [publishedPacks, selectedTheme],
   );
-
-  const allPacks: GameConfigPack[] = useMemo(
-    () => publishedPacks.map(toGameConfigPack),
-    [publishedPacks],
-  );
-
-  const hasPacks: boolean = session.gameConfig.packs.length > 0;
-
-  useEffect(() => {
-    if (!isHost || hasPacks || allPacks.length === 0) return;
-    updateGameConfig({ packs: allPacks });
-  }, [isHost, hasPacks, allPacks, updateGameConfig]);
 
   const playPack: PackSelection['playPack'] = async (pack: Pack) => {
     await updateGameConfig({ packs: [toGameConfigPack(pack)] });

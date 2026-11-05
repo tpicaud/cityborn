@@ -5,10 +5,12 @@ import {
   type FullGuessObject,
   type Game,
   type GameConfig,
+  type GameConfigPack,
   type GameId,
   GameIdSchema,
   GameStatus,
   type Guess,
+  type Pack,
   type PlayerId,
   type PlayerResults,
   type Round,
@@ -32,6 +34,7 @@ import { createEvent } from '../event/event.types';
 import { GameRecordService } from '../game-record/game-record.service';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { IdService } from '../id/id.service';
+import { PackService } from '../pack/pack.service';
 
 export type CreateGameParams = {
   gameConfig: GameConfig;
@@ -48,6 +51,7 @@ export class GameService {
     private readonly gameRecordService: GameRecordService,
     private readonly eventService: EventService,
     private readonly idService: IdService,
+    private readonly packService: PackService,
   ) {}
 
   async createGame({
@@ -57,15 +61,16 @@ export class GameService {
     quickPlay,
     visitorId,
   }: CreateGameParams): Promise<Game> {
+    const playedConfig: GameConfig = await this.resolvePlayedPacks(gameConfig);
     const guessObjects =
       await this.guessObjectService.findShuffledGuessObjectsByGameConfig(
-        gameConfig,
+        playedConfig,
       );
     const guessObjectIds = guessObjects.map((obj) => obj.id);
 
     const game: Game = {
       id: await this.generateUniqueGameID(),
-      config: gameConfig,
+      config: playedConfig,
       status: GameStatus.STARTING,
       state: {
         guessObjectsIds: guessObjectIds,
@@ -91,7 +96,7 @@ export class GameService {
           properties: {
             mode,
             quickPlay,
-            packs: gameConfig.packs,
+            packs: playedConfig.packs,
             numberOfPlayers:
               mode === SessionMode.SOLO
                 ? players.length
@@ -213,6 +218,22 @@ export class GameService {
 
   toLightGame(game: Game): Game {
     return toLightGame(game);
+  }
+
+  private async resolvePlayedPacks(
+    gameConfig: GameConfig,
+  ): Promise<GameConfig> {
+    if (gameConfig.packs.length > 0) return gameConfig;
+    const accessiblePacks: Pack[] = await this.packService.findPublished();
+    if (accessiblePacks.length === 0)
+      throw new NotFoundException({
+        code: ErrorCode.GAME_NO_PUBLISHED_PACK,
+        message: 'No published pack to draw the game from',
+      });
+    const packs: GameConfigPack[] = accessiblePacks.map(
+      ({ themeId, ...pack }) => pack,
+    );
+    return { ...gameConfig, packs };
   }
 
   private async generateUniqueGameID(): Promise<GameId> {

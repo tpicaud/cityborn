@@ -1,16 +1,13 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
-  applyGameConfigChanges,
   type CreateSession,
   defaultGameConfig,
   defaultGuess,
   ErrorCode,
   type Game,
   type GameConfig,
-  type GameConfigPack,
   type Guess,
   type GuessSubmission,
-  type Pack,
   type PlayerId,
   PlayerIdSchema,
   type PlayerResults,
@@ -40,7 +37,6 @@ import { createEvent } from '../event/event.types';
 import { GameService } from '../game/game.service';
 import { IdService } from '../id/id.service';
 import { LockService } from '../lock/lock.service';
-import { PackService } from '../pack/pack.service';
 import { RedisService } from '../redis/redis.service';
 import {
   SESSION_PRESENCE_TIMING,
@@ -68,7 +64,6 @@ export class SessionService {
     private readonly idService: IdService,
     private readonly gameService: GameService,
     private readonly eventService: EventService,
-    private readonly packService: PackService,
     @Inject(SESSION_PRESENCE_TIMING)
     private readonly sessionPresenceTiming: SessionPresenceTiming,
   ) {}
@@ -100,9 +95,7 @@ export class SessionService {
       mode: mode,
       status: SessionStatus.IN_LOBBY,
       quickPlay,
-      gameConfig: quickPlay
-        ? await this.buildQuickPlayGameConfig()
-        : defaultGameConfig,
+      gameConfig: defaultGameConfig,
       players: [],
     };
 
@@ -725,22 +718,6 @@ export class SessionService {
     );
     session.hostID =
       connectedPlayers.length > 0 ? connectedPlayers[0].username : '';
-  }
-
-  private async buildQuickPlayGameConfig(): Promise<GameConfig> {
-    const accessiblePacks: Pack[] = await this.packService.findPublished();
-    if (accessiblePacks.length === 0)
-      throw new NotFoundException({
-        code: ErrorCode.SESSION_QUICK_PLAY_NO_PUBLISHED_PACK,
-        message: 'No published pack to draw a quick play from',
-      });
-    const packs: GameConfigPack[] = accessiblePacks.map(
-      ({ themeId, ...pack }) => pack,
-    );
-    return applyGameConfigChanges({
-      gameConfig: defaultGameConfig,
-      changes: { packs },
-    });
   }
 
   private buildSoloPlayer(user?: User): SessionPlayer {
