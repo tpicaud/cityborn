@@ -86,6 +86,7 @@ export class SessionService {
 
   async create({
     mode,
+    quickPlay = false,
     visitorId,
   }: CreateSession & { visitorId?: string }): Promise<Session> {
     const newSession: Session = {
@@ -93,6 +94,7 @@ export class SessionService {
       hostID: '',
       mode: mode,
       status: SessionStatus.IN_LOBBY,
+      quickPlay,
       gameConfig: defaultGameConfig,
       players: [],
     };
@@ -106,6 +108,7 @@ export class SessionService {
           visitorId,
           properties: {
             mode,
+            quickPlay,
           },
         }),
       );
@@ -216,6 +219,7 @@ export class SessionService {
         });
 
       session.gameConfig = gameConfig;
+      session.quickPlay = false;
       return session;
     });
   }
@@ -242,6 +246,7 @@ export class SessionService {
         gameConfig: session.gameConfig,
         players: session.players,
         mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
       });
 
@@ -355,12 +360,13 @@ export class SessionService {
         return this.hideRoundGuesses(session);
       }
 
-      await this.gameService.endGame(
-        updatedGame,
-        session.players,
-        session.mode,
+      await this.gameService.endGame({
+        game: updatedGame,
+        players: session.players,
+        mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
         visitorId,
-      );
+      });
 
       const finishedGameSession: Session = {
         ...session,
@@ -385,6 +391,7 @@ export class SessionService {
       gameConfig,
       players: [this.buildSoloPlayer(user)],
       mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
     });
   }
@@ -409,12 +416,13 @@ export class SessionService {
         results: { [soloPlayer.username]: soloPlayerResults },
       },
     };
-    await this.gameService.endGame(
-      soloGame,
-      [soloPlayer],
-      SessionMode.SOLO,
+    await this.gameService.endGame({
+      game: soloGame,
+      players: [soloPlayer],
+      mode: SessionMode.SOLO,
+      quickPlay: false,
       visitorId,
-    );
+    });
   }
 
   ///////////////////////

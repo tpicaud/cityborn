@@ -59,6 +59,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'Erreur lors de la récupération de la phrase de fin.',
   [ErrorCode.GAME_NO_ACTIVE_ROUND]: 'Aucun round actif dans la partie.',
   [ErrorCode.GAME_CREATION_FAILED]: 'Erreur lors de la création de la partie.',
+  [ErrorCode.GAME_NO_PUBLISHED_PACK]:
+    "Aucun pack n'est disponible pour lancer une partie.",
 
   // Guess objects
   [ErrorCode.GUESS_OBJECTS_NOT_FOUND]: 'Aucun objet trouvé.',

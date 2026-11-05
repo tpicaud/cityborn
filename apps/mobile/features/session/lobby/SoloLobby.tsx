@@ -27,8 +27,6 @@ export function SoloLobby({
     packs,
     playPack,
   }: PackSelection = usePackSelection({
-    session,
-    isHost,
     updateGameConfig: handleUpdateGameConfig,
     startGame: handleStartGame,
   });

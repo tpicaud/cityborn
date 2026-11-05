@@ -1,6 +1,11 @@
 'use client';
 
-import { type Session, SessionIdSchema, SessionMode } from '@cityborn/api';
+import {
+  type CreateSession,
+  type Session,
+  SessionIdSchema,
+  SessionMode,
+} from '@cityborn/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { type UseFormReturn, useForm } from 'react-hook-form';
@@ -49,6 +54,7 @@ export type SessionLauncherOptions = {
 export type SessionLauncher = {
   joinSessionForm: JoinSessionForm;
   playSolo: () => Promise<void>;
+  launchQuickPlay: () => Promise<void>;
   playMulti: () => Promise<void>;
   joinSession: FormSubmitHandler;
 };
@@ -70,19 +76,18 @@ export function useSessionLauncher({
     defaultValues: joinSessionFormDefaultValues,
   });
 
-  const openNewSession: (mode: SessionMode) => Promise<void> = async (
-    mode: SessionMode,
-  ): Promise<void> => {
-    try {
-      const session: Session = await sessionApi.createSession({ mode });
-      navigation.push(sessionPath(session));
-    } catch (error: unknown) {
-      reportError(error);
-    }
-  };
+  const openNewSession: (createSession: CreateSession) => Promise<void> =
+    async (createSession: CreateSession): Promise<void> => {
+      try {
+        const session: Session = await sessionApi.createSession(createSession);
+        navigation.push(sessionPath(session));
+      } catch (error: unknown) {
+        reportError(error);
+      }
+    };
 
   const playMulti: () => Promise<void> = async (): Promise<void> => {
-    await openNewSession(SessionMode.MULTI);
+    await openNewSession({ mode: SessionMode.MULTI });
   };
 
   const joinSession: (values: JoinSessionFormValues) => Promise<void> = async ({
@@ -100,7 +105,9 @@ export function useSessionLauncher({
 
   return {
     joinSessionForm,
-    playSolo: () => openNewSession(SessionMode.SOLO),
+    playSolo: () => openNewSession({ mode: SessionMode.SOLO }),
+    launchQuickPlay: () =>
+      openNewSession({ mode: SessionMode.SOLO, quickPlay: true }),
     playMulti,
     joinSession: joinSessionForm.handleSubmit(joinSession),
   };

@@ -10,5 +10,6 @@ import { PackRepositoryModule } from './repositories/pack-repository.module';
   imports: [PackRepositoryModule, GuessObjectModule, ThemeModule],
   controllers: [PublicPackController, AdminPackController],
   providers: [PackService],
+  exports: [PackService],
 })
 export class PackModule {}
