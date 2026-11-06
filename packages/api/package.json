@@ -13,9 +13,9 @@
     "generate:openapi:release": "tsx tools/generate-openapi-file.ts --mode=release",
     "check:compat": "tsx tools/check-api-compat.ts",
     "check:deprecations": "tsx tools/check-deprecations.ts",
-    "test": "tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
-    "test:watch": "tsx --test --watch 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
-    "test:cov": "c8 --reporter=text --reporter=lcov tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
+    "test": "tsx --test '**/*.test.ts'",
+    "test:watch": "tsx --test --watch '**/*.test.ts'",
+    "test:cov": "c8 --reporter=text --reporter=lcov tsx --test '**/*.test.ts'",
     "postinstall": "tsx tools/oasdiff/install.ts"
   },
   "dependencies": {

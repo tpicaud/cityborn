@@ -7,6 +7,8 @@ Aucune installation globale de cet outil n'est requise pour les tests ou `pnpm c
 
 `pnpm test:cov` exécute les mêmes tests et produit la couverture dans chaque package, sans seuil bloquant.
 `pnpm test:watch` lance leurs modes watch. Chaque package expose aussi ces trois commandes indépendamment.
+API, Core et Client découvrent les fichiers `**/*.test.ts` dans tout leur package.
+Le backend découvre ses tests par suffixe : `*.unit.spec.ts`, `*.integration.spec.ts` et `*.e2e.spec.ts`, quel que soit leur dossier.
 
 `pnpm test:all` ajoute l'intégration et les e2e backend. Docker et Compose doivent être disponibles.
 La commande lance ses propres conteneurs PostgreSQL/PostGIS et Redis, sur des ports locaux attribués par Docker.
@@ -14,6 +16,8 @@ Elle applique les migrations via le setup des suites, lance intégration puis e2
 Le nettoyage s'exécute après réussite, échec ou interruption SIGINT/SIGTERM, y compris si le démarrage échoue.
 Les conteneurs temporaires des tests de restauration sont étiquetés par `TEST_DOCKER_RUN_ID` et nettoyés eux aussi.
 Les services déjà présents sont conservés. Deux exécutions peuvent coexister.
+Le lanceur racine `scripts/tests/run-all.sh` coordonne la préparation des ressources, les suites et le nettoyage.
+Son `compose.yml` décrit des ressources jetables, séparées du Compose backend utilisé pour les ressources locales à ports fixes et données persistantes.
 `pnpm backend test:all` enchaîne uniquement les suites backend : unitaires, intégration puis e2e.
 Cette commande nécessite des ressources de test déjà démarrées et ne gère pas leur cycle de vie.
 
