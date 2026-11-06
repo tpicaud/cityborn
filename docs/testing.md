@@ -14,10 +14,11 @@ Elle applique les migrations via le setup des suites, lance intégration puis e2
 Le nettoyage s'exécute après réussite, échec ou interruption SIGINT/SIGTERM, y compris si le démarrage échoue.
 Les conteneurs temporaires des tests de restauration sont étiquetés par `TEST_DOCKER_RUN_ID` et nettoyés eux aussi.
 Les services déjà présents sont conservés. Deux exécutions peuvent coexister.
-`pnpm backend test:all` exécute uniquement les suites backend avec la même isolation.
+`pnpm backend test:all` enchaîne uniquement les suites backend : unitaires, intégration puis e2e.
+Cette commande nécessite des ressources de test déjà démarrées et ne gère pas leur cycle de vie.
 
-Pour un lancement ciblé, `pnpm db:test:start`, puis `pnpm test:int` ou `pnpm test:e2e`, utilisent les ressources locales habituelles.
-Ces deux suites partagent alors la même base et doivent se lancer séquentiellement.
+Pour utiliser les ressources locales habituelles, lancer `pnpm db:test:start`, puis `pnpm backend test:all`, `pnpm test:int` ou `pnpm test:e2e`.
+L'intégration et les e2e partagent alors la même base et doivent se lancer séquentiellement.
 Le lanceur exhaustif transmet ses adresses par `TEST_DATABASE_URL` et `TEST_REDIS_URL`.
 Les valeurs par défaut restent les ressources de test locales sur les ports 5433 et 6380.
 

@@ -43,11 +43,7 @@ run() {
   child=''
 }
 
-if [[ "${1:-}" == --backend ]]; then
-  run pnpm --dir apps/backend test
-else
-  run pnpm test
-fi
+run pnpm test
 run compose up -d --wait --wait-timeout 90
 database_address=$(compose port postgres 5432)
 redis_address=$(compose port redis 6379)
