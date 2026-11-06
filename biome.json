@@ -37,6 +37,15 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/design-system/assets/**"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
     }
   ],
   "formatter": {
@@ -68,6 +77,7 @@
       "!**/dist/",
       "!**/build/",
       "!**/coverage/",
+      "!!**/tamagui.generated.css",
       "!packages/api/openapi/versions",
       "!.agents/skills/axiom-building-dashboards",
       "!!**/node_modules"
