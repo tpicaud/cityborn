@@ -16,6 +16,8 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - **Décisions prises**, **Déploiement** et **Tests manuels attendus** : chaque bullet commence par un libellé court en gras qui nomme son sujet ; dans « Décisions prises », les points liés partagent une bullet.
 - **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `✅ RAS`.
 - **Tests manuels attendus** : seulement quand l'UI est touchée.
+- **Recette** : toujours présente ; SHA testé, viewport desktop, scénarios, résultats observés, anomalies et 1 à 3 captures finales liées au SHA de leur commit, ou motif explicite de non-exécution. Sans impact web : `Sans objet : aucun impact web.`
+- Une case de test manuel web est cochée seulement après exécution réussie ; les scénarios non exécutés restent décochés.
 - Les autres sections listent chaque élément.
 
 ## Gabarit
@@ -51,6 +53,13 @@ Une ou deux phrases sur le principe du changement.
 ## Tests manuels attendus
 
 - [ ] **Plateforme et mode** : scénario → résultat attendu.
+
+## Recette
+
+- **Version** : SHA testé et viewport desktop.
+- **Scénario** : parcours exécuté → résultat observé, ou anomalie.
+
+![État final du scénario](https://github.com/<owner>/<repo>/blob/<SHA-captures>/pr-<num>/capture-1.png?raw=true)
 
 Closes #<numéro>
 ```
