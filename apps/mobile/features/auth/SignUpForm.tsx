@@ -90,7 +90,12 @@ export function SignUpForm() {
             />
           )}
         />
-        <Button label="S’inscrire" onPress={submit} loading={isSubmitting} />
+        <Button
+          compact
+          label="S’inscrire"
+          onPress={submit}
+          loading={isSubmitting}
+        />
       </View>
       <TextButton
         label="Déjà un compte ? Se connecter"

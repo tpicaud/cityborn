@@ -58,7 +58,12 @@ export function SignInForm() {
             />
           )}
         />
-        <Button label="Se connecter" onPress={submit} loading={isSubmitting} />
+        <Button
+          compact
+          label="Se connecter"
+          onPress={submit}
+          loading={isSubmitting}
+        />
       </View>
       <RequestPasswordResetDialog />
       <View gap="3" self="center" w="100%" maxW="md:96">
