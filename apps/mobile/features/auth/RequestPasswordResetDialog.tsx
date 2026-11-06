@@ -9,9 +9,30 @@ import {
   TextButton,
   TextField,
 } from '@cityborn/design-system';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Controller } from 'react-hook-form';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { ScrollView, View } from 'tamagui';
+
+function PasswordResetPopupContainer({ children }: { children: ReactNode }) {
+  return (
+    <KeyboardAvoidingView
+      pointerEvents="box-none"
+      style={{ flex: 1, width: '100%' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View
+        flex={1}
+        items="center"
+        justify="center"
+        py="4"
+        pointerEvents="box-none"
+      >
+        {children}
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
 
 export function RequestPasswordResetDialog() {
   const [open, setOpen] = useState<boolean>(false);
@@ -39,8 +60,9 @@ export function RequestPasswordResetDialog() {
           if (!isSubmitting) setOpen(false);
         }}
         title="Mot de passe oublié"
+        contentContainer={PasswordResetPopupContainer}
       >
-        <ScrollView maxH="96" keyboardShouldPersistTaps="handled">
+        <ScrollView shrink={1} keyboardShouldPersistTaps="handled">
           <View gap="4">
             {message ? (
               <FormText role="status">{message}</FormText>
