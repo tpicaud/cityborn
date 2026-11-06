@@ -10,9 +10,12 @@ const fredokaSizes = {
   6: 22,
   7: 26,
   8: 32,
-  9: 42,
-  10: 83,
-  11: 99,
+  9: 34,
+  10: 42,
+  11: 48,
+  12: 66,
+  13: 83,
+  14: 99,
 } as const;
 
 const fredoka = withTailwindTypeScale({
