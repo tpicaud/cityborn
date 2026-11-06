@@ -5,7 +5,8 @@ import {
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { useEffect, useRef, useState } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
+import { Spinner, View } from 'tamagui';
 import { frontendClientConfig } from '@/config/client';
 import { useNavigation } from '@/lib/navigation';
 
@@ -20,7 +21,13 @@ type GoogleIdentityServices = {
       }) => void;
       renderButton: (
         parent: HTMLElement,
-        options: { theme?: string; size?: string; text?: string },
+        options: {
+          theme?: string;
+          size?: string;
+          text?: string;
+          shape?: string;
+          locale?: string;
+        },
       ) => void;
     };
   };
@@ -38,7 +45,8 @@ export function SignInWithGoogleButton() {
     useIdentityProviderSignIn({
       onSignedIn: () => navigation.returnTo('/'),
     });
-  const googleButtonContainer = useRef<HTMLDivElement>(null);
+  const googleButtonContainer: RefObject<HTMLDivElement | null> =
+    useRef<HTMLDivElement>(null);
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
 
   useEffect(() => {
@@ -59,38 +67,35 @@ export function SignInWithGoogleButton() {
     window.google.accounts.id.renderButton(container, {
       theme: 'outline',
       size: 'large',
-      text: 'signin_with',
+      text: 'continue_with',
+      shape: 'pill',
+      locale: 'fr',
     });
   }, [signInWithGoogle]);
 
   return (
-    <div className="relative flex justify-center items-center h-[44px] w-full">
-      <div ref={googleButtonContainer}></div>
+    <View
+      disableOptimization
+      items="center"
+      justify="center"
+      minH="11"
+      aria-busy={isSigningIn}
+    >
+      <div ref={googleButtonContainer} />
       {isSigningIn && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
-          <svg
-            aria-label="Chargement"
-            className="animate-spin h-5 w-5 text-blue-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            />
-          </svg>
-        </div>
+        <View
+          position="absolute"
+          t="0"
+          l="0"
+          r="0"
+          b="0"
+          items="center"
+          justify="center"
+          bg="panel-fill"
+        >
+          <Spinner color="white" />
+        </View>
       )}
-    </div>
+    </View>
   );
 }

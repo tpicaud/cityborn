@@ -1,114 +1,80 @@
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
-import { useRouter } from 'expo-router';
+import type { Navigation } from '@cityborn/client/platform';
+import { Button, FormText, TextField } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Button from '@/components/ui/Button';
-import { Text, View } from '@/components/ui/native/NativeComponents';
-import TextInput from '@/components/ui/TextInput';
+import { View } from 'tamagui';
+import { LegalLinks } from '@/features/legal-information/LegalLinks';
+import { useNavigation } from '@/lib/navigation';
 import { SignInWithAppleButton } from './AppleSignIn';
+import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
-export const SignInForm = () => {
-  const router = useRouter();
+export function SignInForm() {
+  const navigation: Navigation = useNavigation();
   const {
     form: {
       control,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignInFlow({
-    onSignedIn: () => router.dismissTo('/'),
-  });
-
+  }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-      enableOnAndroid
-    >
-      <View className="flex-1 flex-col gap-8 items-center w-70 self-center justify-center">
-        <Text className="text-2xl font-bold text-foreground">CONNEXION</Text>
-
-        <View className="flex-col items-center justify-center w-auto gap-0">
-          <View className="flex-col items-center justify-center gap-6">
-            <View className="w-full relative">
-              <Controller
-                control={control}
-                name="identifier"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Username"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    autoCapitalize="none"
-                    error={!!errors.identifier}
-                  />
-                )}
-              />
-              {errors.identifier && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.identifier.message}
-                </Text>
-              )}
-            </View>
-
-            <View className="w-full relative">
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Password"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    autoCapitalize="none"
-                    secureTextEntry
-                    error={!!errors.password}
-                  />
-                )}
-              />
-              {errors.password && (
-                <Text className="absolute -bottom-4 left-4 text-xs text-destructive-500">
-                  {errors.password.message}
-                </Text>
-              )}
-            </View>
-          </View>
-          <Button
-            variant="filled"
-            color="primary"
-            size="large"
-            disabled={isSubmitting}
-            label="SE CONNECTER"
-            onPress={submit}
-            className="mt-8"
-          />
-          <RequestPasswordResetDialog />
-          <Button
-            variant="default"
-            label="Pas de compte ? Inscris-toi ici !"
-            onPress={() => router.navigate('/auth/sign-up')}
-            className="mt-6"
-          />
-        </View>
-        <View className="flex flex-row items-center gap-2 w-full">
-          <View className="flex-1  h-px bg-foreground" />
-          <Text>OU</Text>
-          <View className="flex-1 h-px bg-foreground" />
-        </View>
-
-        <View className="flex flex-col gap-4 justify-center items-center">
-          <SignInWithGoogleButton />
-          {Platform.OS === 'ios' && <SignInWithAppleButton />}
-        </View>
+    <AuthScreen title="Connexion">
+      <View gap="3 md:4">
+        <Controller
+          control={control}
+          name="identifier"
+          render={({ field: { onChange, onBlur, value, ref } }) => (
+            <TextField
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              inputRef={ref}
+              placeholder="E-mail ou nom d’utilisateur"
+              autoComplete="username"
+              error={errors.identifier?.message}
+              disabled={isSubmitting}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, onBlur, value, ref } }) => (
+            <TextField
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              inputRef={ref}
+              placeholder="Mot de passe"
+              autoComplete="current-password"
+              error={errors.password?.message}
+              disabled={isSubmitting}
+              secureTextEntry
+              returnKeyType="done"
+              onSubmitEditing={() => void submit()}
+            />
+          )}
+        />
+        <Button label="Se connecter" onPress={submit} loading={isSubmitting} />
       </View>
-    </KeyboardAwareScrollView>
+      <RequestPasswordResetDialog />
+      <View gap="3" self="center" w="100%" maxW="md:96">
+        <FormText fontWeight="700">Pas encore de compte ?</FormText>
+        <Button
+          compact
+          label="S’inscrire"
+          variant="secondary"
+          onPress={() => navigation.push('/auth/sign-up')}
+        />
+      </View>
+      <View gap="4 md:6" items="center">
+        <SignInWithGoogleButton />
+        {Platform.OS === 'ios' && <SignInWithAppleButton />}
+      </View>
+      <LegalLinks onDarkBackground />
+    </AuthScreen>
   );
-};
+}

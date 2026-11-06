@@ -2,13 +2,16 @@ import {
   type PasswordResetRequestFlow,
   usePasswordResetRequestFlow,
 } from '@cityborn/client/auth';
+import {
+  Button,
+  FormText,
+  Popup,
+  TextButton,
+  TextField,
+} from '@cityborn/design-system';
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { ScrollView } from 'react-native';
-import Button from '@/components/ui/Button';
-import Dialog from '@/components/ui/Dialog';
-import { Text, View } from '@/components/ui/native/NativeComponents';
-import TextInput from '@/components/ui/TextInput';
+import { ScrollView, View } from 'tamagui';
 
 export function RequestPasswordResetDialog() {
   const [open, setOpen] = useState<boolean>(false);
@@ -21,77 +24,63 @@ export function RequestPasswordResetDialog() {
     reset,
     submit,
   }: PasswordResetRequestFlow = usePasswordResetRequestFlow();
-
   return (
     <>
-      <Button
-        variant="default"
+      <TextButton
         label="Mot de passe oublié ?"
         onPress={() => {
           reset();
           setOpen(true);
         }}
       />
-      <Dialog
-        visible={open}
+      <Popup
+        open={open}
         onClose={() => {
           if (!isSubmitting) setOpen(false);
         }}
-        title="Réinitialiser son mot de passe"
-        className="h-auto max-h-[85%]"
+        title="Mot de passe oublié"
       >
-        <ScrollView
-          style={{ width: '100%' }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="gap-4 w-full">
+        <ScrollView maxH="96" keyboardShouldPersistTaps="handled">
+          <View gap="4">
             {message ? (
-              <Text accessibilityLiveRegion="polite">{message}</Text>
+              <FormText role="status">{message}</FormText>
             ) : (
               <>
                 <Controller
                   control={control}
                   name="email"
                   render={({ field: { onChange, onBlur, value, ref } }) => (
-                    <TextInput
-                      ref={ref}
-                      className="w-full"
-                      accessibilityLabel="Adresse e-mail"
-                      placeholder="Adresse e-mail"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="email"
+                    <TextField
+                      inputRef={ref}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      error={!!errors.email}
+                      placeholder="Adresse e-mail"
+                      inputMode="email"
+                      autoComplete="email"
+                      error={errors.email?.message}
+                      disabled={isSubmitting}
+                      returnKeyType="done"
+                      onSubmitEditing={() => void submit()}
                     />
                   )}
                 />
-                {errors.email && (
-                  <Text className="text-destructive-500">
-                    {errors.email.message}
-                  </Text>
-                )}
                 <Button
-                  label="Envoyer le lien de réinitialisation"
-                  className="w-full h-auto min-h-14 py-3"
-                  disabled={isSubmitting}
+                  compact
+                  label="Envoyer le lien"
                   onPress={submit}
+                  loading={isSubmitting}
                 />
               </>
             )}
-            <Button
-              variant="ghost"
+            <TextButton
               label="Fermer"
-              className="self-center"
               disabled={isSubmitting}
               onPress={() => setOpen(false)}
             />
           </View>
         </ScrollView>
-      </Dialog>
+      </Popup>
     </>
   );
 }
