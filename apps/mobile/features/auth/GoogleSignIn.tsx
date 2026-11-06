@@ -4,11 +4,10 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import { BrandedButton } from '@cityborn/design-system';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import {
   GoogleOneTapSignIn,
-  GoogleSignInButton,
   isCancelledResponse,
   isSuccessResponse,
   type OneTapResponse,
@@ -30,12 +29,11 @@ export async function signOutFromGoogle(): Promise<void> {
 
 export const SignInWithGoogleButton = () => {
   const { reportError }: ErrorReporter = useErrorReporter();
-  const router = useRouter();
+  const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn({
       onSignedIn: () => router.dismissTo('/'),
     });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const signIn = async (): Promise<void> => {
     try {
@@ -58,22 +56,11 @@ export const SignInWithGoogleButton = () => {
     }
   };
 
-  const handlePress = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      await signIn();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <GoogleSignInButton
-      signInBehavior="none"
-      onPress={handlePress}
-      disabled={isLoading}
-      colorScheme="light"
-      size="standard"
+    <BrandedButton
+      label="Continuer avec Google"
+      icon="providers/google"
+      onPress={signIn}
     />
   );
 };

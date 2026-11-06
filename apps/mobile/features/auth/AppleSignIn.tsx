@@ -4,32 +4,30 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import { BrandedButton } from '@cityborn/design-system';
 import type { AppleAuthenticationCredential } from 'expo-apple-authentication';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { View } from 'react-native';
-import { cn } from '@/lib/classNames';
 
 export const SignInWithAppleButton = () => {
   const { reportError }: ErrorReporter = useErrorReporter();
-  const router = useRouter();
+  const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
     {
       onSignedIn: () => router.dismissTo('/'),
     },
   );
-  const [isLoading, setIsLoading] = useState(false);
 
-  const signIn = async () => {
+  const signIn = async (): Promise<void> => {
     try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
+      const credential: AppleAuthenticationCredential =
+        await AppleAuthentication.signInAsync({
+          requestedScopes: [
+            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          ],
+        });
 
       if (!credential.identityToken) {
         reportError(
@@ -38,7 +36,8 @@ export const SignInWithAppleButton = () => {
         return;
       }
 
-      const userDetails = extractAppleUserDetails(credential);
+      const userDetails: AppleUserDetails | undefined =
+        extractAppleUserDetails(credential);
 
       await signInWithApple({
         identity_token: credential.identityToken,
@@ -68,7 +67,7 @@ export const SignInWithAppleButton = () => {
 
   function handleAppleSignInError(error: unknown): void {
     if (error instanceof CodedError && error.code === 'ERR_REQUEST_CANCELED') {
-      throw error;
+      return;
     }
 
     reportError(error, 'La connexion avec Apple a échoué.');
@@ -80,25 +79,11 @@ export const SignInWithAppleButton = () => {
     given_name: string;
   };
 
-  const handlePress = async () => {
-    try {
-      setIsLoading(true);
-      await signIn();
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
-    <View className={cn(isLoading ? 'opacity-50' : 'opacity-100')}>
-      <AppleAuthentication.AppleAuthenticationButton
-        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-        buttonStyle={
-          AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE
-        }
-        cornerRadius={100}
-        style={{ width: 190, height: 42 }}
-        onPress={handlePress}
-      />
-    </View>
+    <BrandedButton
+      label="Continuer avec Apple"
+      icon="providers/apple"
+      onPress={signIn}
+    />
   );
 };

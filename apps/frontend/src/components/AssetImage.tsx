@@ -14,6 +14,8 @@ import profileIcon from '@cityborn/design-system/assets/navigation/profile.svg';
 import profilePressedIcon from '@cityborn/design-system/assets/navigation/profile-pressed.svg';
 import socialIcon from '@cityborn/design-system/assets/navigation/social.svg';
 import socialPressedIcon from '@cityborn/design-system/assets/navigation/social-pressed.svg';
+import appleIcon from '@cityborn/design-system/assets/providers/apple.svg';
+import googleIcon from '@cityborn/design-system/assets/providers/google.svg';
 import Image, { type StaticImageData } from 'next/image';
 
 const assetSources: Record<ImageAsset, StaticImageData> = {
@@ -30,6 +32,8 @@ const assetSources: Record<ImageAsset, StaticImageData> = {
   'navigation/profile-pressed': profilePressedIcon,
   'backgrounds/phone': phoneBackground,
   'backgrounds/tablet': tabletBackground,
+  'providers/google': googleIcon,
+  'providers/apple': appleIcon,
   logo,
   monogram,
 };

@@ -15,6 +15,8 @@ const assetSources: Record<ImageAsset, number> = {
   'navigation/profile-pressed': require('@cityborn/design-system/assets/navigation/profile-pressed.svg'),
   'backgrounds/phone': require('@cityborn/design-system/assets/backgrounds/phone.jpg'),
   'backgrounds/tablet': require('@cityborn/design-system/assets/backgrounds/tablet.jpg'),
+  'providers/google': require('@cityborn/design-system/assets/providers/google.svg'),
+  'providers/apple': require('@cityborn/design-system/assets/providers/apple.svg'),
   logo: require('@cityborn/design-system/assets/logo.svg'),
   monogram: require('@cityborn/design-system/assets/monogram.svg'),
 };

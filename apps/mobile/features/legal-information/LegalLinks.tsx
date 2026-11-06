@@ -1,41 +1,41 @@
-import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
-import { Linking, Pressable } from 'react-native';
-import { Text, View } from '@/components/ui/native/NativeComponents';
+import { Anchor, View } from 'tamagui';
 
-export function LegalLinks() {
-  const { reportError }: ErrorReporter = useErrorReporter();
+type LegalLinksProps = { onDarkBackground?: boolean };
 
-  const openLegalLink = async (url: string): Promise<void> => {
-    try {
-      await Linking.openURL(url);
-    } catch (error) {
-      reportError(error);
-    }
-  };
-
+export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
+  const color: 'white' | 'black' = onDarkBackground ? 'white' : 'black';
   return (
-    <View className="shrink-0 flex-row flex-wrap justify-center gap-x-4 border-t border-neutral-200 py-2">
-      <Pressable
-        accessibilityRole="link"
-        className="min-h-11 justify-center"
-        onPress={() => openLegalLink(`mailto:${CITYBORN_CONTACT_EMAIL}`)}
+    <View
+      disableOptimization
+      flexDirection="row"
+      flexWrap="wrap"
+      justify="center"
+      gap="4"
+      py="2"
+    >
+      <Anchor
+        href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
+        color={color}
+        fontFamily="body"
+        fontSize="4"
+        minH="11"
+        py="2"
+        textDecorationLine="underline"
       >
-        <Text className="text-sm text-neutral-600 underline">
-          Nous contacter
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="link"
-        className="min-h-11 justify-center"
-        onPress={() =>
-          openLegalLink('https://www.cityborn.app/terms-and-policies')
-        }
+        Nous contacter
+      </Anchor>
+      <Anchor
+        href="https://www.cityborn.app/terms-and-policies"
+        color={color}
+        fontFamily="body"
+        fontSize="4"
+        minH="11"
+        py="2"
+        textDecorationLine="underline"
       >
-        <Text className="text-sm text-neutral-600 underline">
-          Politiques et conditions
-        </Text>
-      </Pressable>
+        Politiques et conditions
+      </Anchor>
     </View>
   );
 }

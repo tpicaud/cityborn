@@ -5,9 +5,10 @@ import {
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { Typography } from '@mui/material';
+import { FormText } from '@cityborn/design-system';
 import Script from 'next/script';
-import { useEffect, useRef, useState } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
+import { Spinner, View } from 'tamagui';
 import { frontendClientConfig } from '@/config/client';
 import { useNavigation } from '@/lib/navigation';
 
@@ -19,7 +20,6 @@ type GoogleCredentialHandler = (
 
 const googleIdentityScriptUrl: string =
   'https://accounts.google.com/gsi/client';
-const googleButtonWidth: number = 300;
 
 let isGoogleIdentityInitialized: boolean = false;
 let handleGoogleCredential: GoogleCredentialHandler | null = null;
@@ -40,17 +40,14 @@ function initializeGoogleIdentity(): void {
   isGoogleIdentityInitialized = true;
 }
 
-export function SignInWithGoogleButton({
-  text,
-}: {
-  text: 'signin_with' | 'signup_with';
-}) {
+export function SignInWithGoogleButton() {
   const navigation: Navigation = useNavigation();
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn({
       onSignedIn: () => navigation.returnTo('/'),
     });
-  const googleButtonContainer = useRef<HTMLDivElement>(null);
+  const googleButtonContainer: RefObject<HTMLDivElement | null> =
+    useRef<HTMLDivElement>(null);
   const [scriptStatus, setScriptStatus] =
     useState<GoogleIdentityScriptStatus>('loading');
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
@@ -84,17 +81,23 @@ export function SignInWithGoogleButton({
       type: 'standard',
       theme: 'outline',
       size: 'large',
-      text,
+      text: 'continue_with',
+      shape: 'pill',
       locale: 'fr',
-      width: googleButtonWidth,
     });
-  }, [scriptStatus, text]);
+  }, [scriptStatus]);
 
   const settleScriptStatus: () => void = (): void =>
     setScriptStatus(isGoogleIdentityLoaded() ? 'ready' : 'failed');
 
   return (
-    <div className="relative flex justify-center items-center h-[44px] w-full">
+    <View
+      disableOptimization
+      items="center"
+      justify="center"
+      minH="11"
+      aria-busy={isSigningIn}
+    >
       <Script
         src={googleIdentityScriptUrl}
         onLoad={settleScriptStatus}
@@ -102,37 +105,26 @@ export function SignInWithGoogleButton({
         onError={() => setScriptStatus('failed')}
       />
       {scriptStatus === 'failed' ? (
-        <Typography variant="body2" color="error" align="center">
+        <FormText>
           La connexion avec Google est indisponible pour le moment.
-        </Typography>
+        </FormText>
       ) : (
         <div ref={googleButtonContainer} />
       )}
       {isSigningIn && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
-          <svg
-            aria-label="Chargement"
-            className="animate-spin h-5 w-5 text-blue-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            />
-          </svg>
-        </div>
+        <View
+          position="absolute"
+          t="0"
+          l="0"
+          r="0"
+          b="0"
+          items="center"
+          justify="center"
+          bg="panel-fill"
+        >
+          <Spinner color="white" />
+        </View>
       )}
-    </div>
+    </View>
   );
 }

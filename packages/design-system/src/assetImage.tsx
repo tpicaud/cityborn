@@ -11,7 +11,9 @@ export type ImageAsset =
   | 'backgrounds/phone'
   | 'backgrounds/tablet'
   | 'logo'
-  | 'monogram';
+  | 'monogram'
+  | 'providers/google'
+  | 'providers/apple';
 
 export type AssetImageProps = {
   asset: ImageAsset;
