@@ -1584,6 +1584,161 @@
         }
       }
     },
+    "/ws/session/leaveGame": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "USER_NOT_FOUND",
+                                "USER_USERNAME_ALREADY_EXISTS",
+                                "USER_EMAIL_ALREADY_TAKEN",
+                                "USER_EMAIL_ALREADY_VERIFIED",
+                                "USER_VERIFICATION_EMAIL_INVALID_TOKEN",
+                                "USER_VERIFICATION_EMAIL_EXPIRED_TOKEN",
+                                "USER_VERIFICATION_EMAIL_RESEND_TOO_SOON",
+                                "USER_INVALID_CREDENTIALS",
+                                "USER_CURRENT_PASSWORD_INCORRECT",
+                                "USER_NOT_VANILLA_ACCOUNT",
+                                "USER_GOOGLE_EMAIL_NOT_VERIFIED",
+                                "USER_REFRESH_FAILED",
+                                "USER_TOKEN_MISSING",
+                                "USER_INVALID_TOKEN",
+                                "USER_NOT_ADMIN",
+                                "PLAYER_NOT_FOUND",
+                                "CONNECTION_NOT_FOUND",
+                                "SESSION_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_FOUND",
+                                "SESSION_PLAYER_NOT_CONNECTED",
+                                "SESSION_PLAYER_ALREADY_EXISTS",
+                                "SESSION_CREATION_FAILED",
+                                "SESSION_FORBIDDEN_HOST",
+                                "SESSION_NO_CURRENT_GAME",
+                                "SESSION_ALREADY_IN_GAME",
+                                "SESSION_RECONNECT_FORBIDDEN",
+                                "SESSION_SOLO_NOT_JOINABLE",
+                                "GAME_END_SENTENCE_NOT_FOUND",
+                                "GAME_NO_ACTIVE_ROUND",
+                                "GAME_CREATION_FAILED",
+                                "GAME_NO_PUBLISHED_PACK",
+                                "GUESS_OBJECTS_NOT_FOUND",
+                                "GUESS_OBJECTS_GET_FAILED",
+                                "GUESS_OBJECTS_SEARCH_FAILED",
+                                "WORLD_LOCATION_SEARCH_FAILED",
+                                "WORLD_LOCATION_NOT_FOUND",
+                                "PACK_NOT_FOUND",
+                                "PACK_IMAGE_REQUIRED",
+                                "CATEGORY_NOT_FOUND",
+                                "THEME_NAME_ALREADY_EXISTS",
+                                "THEME_HAS_PACKS",
+                                "THEME_DEFAULT_NOT_DELETABLE",
+                                "THEME_NOT_FOUND",
+                                "THEME_ICON_NOT_FOUND",
+                                "RATE_LIMIT_EXCEEDED",
+                                "REDIS_GET_FAILED",
+                                "REDIS_SET_FAILED",
+                                "REDIS_DELETE_FAILED",
+                                "REDIS_EXPIRE_FAILED",
+                                "EMAIL_SEND_FAILED",
+                                "RESOURCE_ALREADY_EXISTS",
+                                "RESOURCE_NOT_FOUND",
+                                "BAD_REQUEST",
+                                "TOKEN_EXPIRED",
+                                "CSRF_ORIGIN_FORBIDDEN",
+                                "WS_NOT_CONNECTED",
+                                "WS_ACK_TIMEOUT",
+                                "UNKNOWN_ERROR"
+                              ]
+                            },
+                            "statusCode": {
+                              "type": "integer"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "fieldErrors": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "message"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "statusCode",
+                            "message"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ws/session/update": {
       "get": {
         "tags": [],
