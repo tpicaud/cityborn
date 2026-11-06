@@ -17,6 +17,7 @@ import { Icon } from '@/components/ui/Icon';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import TextInput from '@/components/ui/TextInput';
+import { SignOutButton } from '@/features/auth/SignOutButton';
 
 type ProfileProps = {
   user: User;
@@ -193,6 +194,7 @@ export default function Profile({ user }: ProfileProps) {
               onPress={openPasswordDialog}
             />
           )}
+          <SignOutButton onSignedOut={() => router.navigate('/')} />
           <Button
             variant="default"
             label="Supprimer mon compte"
