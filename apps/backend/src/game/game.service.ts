@@ -231,7 +231,7 @@ export class GameService {
         message: 'No published pack to draw the game from',
       });
     const packs: GameConfigPack[] = accessiblePacks.map(
-      ({ themeId, ...pack }) => pack,
+      ({ themeId, image, ...pack }) => pack,
     );
     return { ...gameConfig, packs };
   }

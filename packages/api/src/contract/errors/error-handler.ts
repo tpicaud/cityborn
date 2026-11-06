@@ -77,6 +77,8 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 
   // Pack
   [ErrorCode.PACK_NOT_FOUND]: 'Aucun pack trouvé pour cet identifiant.',
+  [ErrorCode.PACK_IMAGE_REQUIRED]:
+    'Ajoutez un visuel au pack avant de le publier.',
   [ErrorCode.CATEGORY_NOT_FOUND]:
     'Aucune catégorie trouvée pour cet identifiant.',
 

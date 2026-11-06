@@ -64,7 +64,7 @@ const PlayerResultsByIdSchema = z
   .record(PlayerIdSchema, PlayerResultsSchema)
   .refine(isCompleteRecord);
 
-const GameConfigPackSchema = PackSchema.omit({ themeId: true });
+const GameConfigPackSchema = PackSchema.omit({ themeId: true, image: true });
 
 const GameConfigInputSchema = z.object({
   packs: z.array(GameConfigPackSchema).optional(),

@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 import { PackThemeFilters } from './PackThemeFilters';
+import { PackVisual } from './PackVisual';
 
 type SoloLobbyProps = {
   session: Session;
@@ -59,6 +60,7 @@ export function SoloLobby({
                   key={pack.id}
                   className="flex-row items-center justify-between gap-3 py-2 border-b border-foreground/10"
                 >
+                  <PackVisual pack={pack} />
                   <Text className="flex-1 text-lg font-semibold">
                     {pack.name}
                   </Text>

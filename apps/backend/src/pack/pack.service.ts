@@ -8,7 +8,12 @@ import {
   type PackTree,
   type UpdatePack,
 } from '@cityborn/api';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { GuessObjectService } from '../guess-object/guess-object.service';
 import { ThemeService } from '../theme/theme.service';
@@ -19,6 +24,17 @@ import {
 
 function toLeafPackTree(pack: Pack): PackTree {
   return { ...pack, children: [] };
+}
+
+function ensurePublishedPackHasImage({
+  isPublished,
+  image,
+}: Pick<Pack, 'isPublished' | 'image'>): void {
+  if (!isPublished || image !== undefined) return;
+  throw new BadRequestException({
+    code: ErrorCode.PACK_IMAGE_REQUIRED,
+    message: 'A pack cannot be published without an image',
+  });
 }
 
 @Injectable()
@@ -70,10 +86,12 @@ export class PackService {
   }
 
   async create(data: CreatePack): Promise<Pack> {
+    ensurePublishedPackHasImage(data);
     return this.packRepository.create(data);
   }
 
   async update(packId: PackId, data: UpdatePack): Promise<Pack> {
+    await this.ensureUpdatedPackHasImageIfPublished({ packId, data });
     if (data.themeId !== undefined) {
       await this.themeService.findById(data.themeId);
     }
@@ -102,6 +120,18 @@ export class PackService {
     await this.deleteOrphanGuessObjects(
       pack.guessObjects.map((guessObject) => guessObject.id),
     );
+  }
+
+  private async ensureUpdatedPackHasImageIfPublished({
+    packId,
+    data,
+  }: {
+    packId: PackId;
+    data: UpdatePack;
+  }): Promise<void> {
+    if (!data.isPublished || data.image !== undefined) return;
+    const pack: Pack = await this.findById(packId);
+    ensurePublishedPackHasImage({ isPublished: true, image: pack.image });
   }
 
   private async findOne({

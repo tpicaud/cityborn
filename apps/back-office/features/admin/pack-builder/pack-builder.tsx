@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 import { GuessObjectBuilder } from '../guess-object-builder/guess-object-builder';
+import { PackImagePreview } from '../pack-image-preview';
 import { ThemeBadge } from '../theme-badge';
 import { DeletePackPopup } from './delete-pack-popup';
 import { GuessObjectsList } from './guess-objects-list';
@@ -31,6 +32,7 @@ export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
   const router = useRouter();
   const {
     pack,
+    imagePreview,
     isSaving,
     updatePack,
     savePack,
@@ -111,6 +113,20 @@ export function PackBuilder({ editedPack, themes }: PackBuilderProps) {
                   className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
                 />
               </div>
+            </div>
+            <div className="w-full flex flex-row gap-12 items-end">
+              <div className="flex flex-col flex-1 min-w-72">
+                <label htmlFor="image">Lien du visuel</label>
+                <input
+                  type="url"
+                  id="image"
+                  placeholder="e.g. https://exemple.com/logo-roland-garros.png"
+                  value={pack.image ?? ''}
+                  onChange={(e) => updatePack({ image: e.target.value })}
+                  className="bg-white text-gray-800 rounded-md mt-3 p-2 w-full"
+                />
+              </div>
+              <PackImagePreview image={imagePreview} size={96} />
             </div>
           </div>
           <div className="flex flex-col">

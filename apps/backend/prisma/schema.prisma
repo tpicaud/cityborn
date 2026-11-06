@@ -133,6 +133,7 @@ model Pack {
   name        String
   isPublished Boolean @default(false)
   description String?
+  image       String?
   themeId     String  @default("244b803a-63aa-460a-a40d-4eea0ec2be50") @db.Uuid
 
   theme        Theme         @relation(fields: [themeId], references: [id])

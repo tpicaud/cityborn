@@ -20,6 +20,7 @@ describe('PackMapper.toPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -30,8 +31,24 @@ describe('PackMapper.toPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: undefined,
+      image: undefined,
       themeId: theme.id,
     });
+  });
+
+  it('maps the stored image', () => {
+    const prismaPack: PrismaPack = {
+      id: '00000000-0000-4000-8000-000000000010',
+      name: 'Monuments',
+      isPublished: true,
+      description: null,
+      image: 'https://example.com/monuments.png',
+      themeId: theme.id,
+    };
+
+    const pack: Pack = PackMapper.toPack(prismaPack);
+
+    expect(pack.image).toBe('https://example.com/monuments.png');
   });
 });
 
@@ -42,6 +59,7 @@ describe('PackMapper.toPacks', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -63,12 +81,13 @@ describe('PackMapper.toPacks', () => {
 });
 
 describe('PackMapper.toFullPack', () => {
-  it('maps loaded guess objects', () => {
+  it('maps the stored image and loaded guess objects', () => {
     const prismaPack: PrismaPack = {
       id: '00000000-0000-4000-8000-000000000010',
       name: 'Monuments',
       isPublished: true,
       description: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -98,6 +117,7 @@ describe('PackMapper.toFullPack', () => {
     const input: Parameters<typeof PackMapper.toFullPack>[0] = {
       ...prismaPack,
       description: 'Places to visit',
+      image: 'https://example.com/monuments.png',
       guessObjects: [
         { ...prismaGuessObject, world_location: prismaWorldLocation },
       ],
@@ -107,6 +127,7 @@ describe('PackMapper.toFullPack', () => {
 
     expect(pack).toMatchObject({
       description: 'Places to visit',
+      image: 'https://example.com/monuments.png',
       guessObjects: [
         {
           id: '00000000-0000-4000-8000-000000000020',
@@ -122,6 +143,7 @@ describe('PackMapper.toFullPack', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
+      image: null,
       themeId: theme.id,
     };
 
@@ -138,6 +160,7 @@ describe('PackMapper.toFullPacks', () => {
       name: 'Monuments',
       isPublished: true,
       description: null,
+      image: null,
       themeId: theme.id,
     };
 

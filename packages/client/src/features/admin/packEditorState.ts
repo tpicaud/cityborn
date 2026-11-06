@@ -28,6 +28,7 @@ export function synchronizePackDraft({
     ...(pack.description !== loadedPack.description
       ? { description: pack.description }
       : {}),
+    ...(pack.image !== loadedPack.image ? { image: pack.image } : {}),
     ...(pack.themeId !== loadedPack.themeId ? { themeId: pack.themeId } : {}),
     ...(pack.isPublished !== loadedPack.isPublished
       ? { isPublished: pack.isPublished }
@@ -36,6 +37,16 @@ export function synchronizePackDraft({
       ? { guessObjects: pack.guessObjects }
       : {}),
   };
+}
+
+export function selectPackImagePreview({
+  pack,
+  editedPack,
+}: {
+  pack: FullPack;
+  editedPack: FullPack;
+}): string | undefined {
+  return pack.image || editedPack.image;
 }
 
 function hasFailedWithoutData(query: QueryObserverResult<unknown>): boolean {

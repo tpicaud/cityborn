@@ -147,6 +147,7 @@ describe('PrismaPackRepository', () => {
         id: pack.id,
         name: 'France',
         isPublished: packData.isPublished,
+        image: packData.image,
         themeId: miscellaneousTheme.id,
       });
     });
@@ -212,6 +213,38 @@ describe('PrismaPackRepository', () => {
           { id: kept.id, themeId: miscellaneousTheme.id },
         ]),
       );
+    });
+
+    it('replaces the image of an updated pack', async () => {
+      const packData: CreatePack = buildCreatePack({
+        image: 'https://example.com/old.png',
+      });
+      const pack: Pack = await packRepository.create(packData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: pack.id,
+        name: pack.name,
+        image: 'https://example.com/new.png',
+      });
+
+      const updated: Pack = await packRepository.update(pack.id, updateData);
+
+      expect(updated.image).toBe('https://example.com/new.png');
+    });
+
+    it('keeps the stored image when the update omits it', async () => {
+      const packData: CreatePack = buildCreatePack({
+        image: 'https://example.com/kept.png',
+      });
+      const pack: Pack = await packRepository.create(packData);
+      const updateData: UpdatePack = buildUpdatePack({
+        id: pack.id,
+        name: 'Renamed',
+        image: undefined,
+      });
+
+      const updated: Pack = await packRepository.update(pack.id, updateData);
+
+      expect(updated.image).toBe('https://example.com/kept.png');
     });
 
     it('ignores the deprecated parent of an updated pack', async () => {

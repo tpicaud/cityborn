@@ -207,6 +207,36 @@ describe('PackService.create', () => {
     await expect(packService.create(payload)).resolves.toEqual(pack);
     expect(packRepository.create).toHaveBeenCalledWith(payload);
   });
+
+  it('creates an unpublished pack without image', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const payload: CreatePack = buildCreatePack({
+      isPublished: false,
+      image: undefined,
+    });
+    packRepository.create.mockResolvedValue(
+      buildPack({ isPublished: false, image: undefined }),
+    );
+
+    await packService.create(payload);
+
+    expect(packRepository.create).toHaveBeenCalledWith(payload);
+  });
+
+  it('rejects a published pack without image', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const payload: CreatePack = buildCreatePack({
+      isPublished: true,
+      image: undefined,
+    });
+
+    await expect(packService.create(payload)).rejects.toMatchObject({
+      response: { code: ErrorCode.PACK_IMAGE_REQUIRED },
+    });
+    expect(packRepository.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('PackService.update', () => {
@@ -293,6 +323,70 @@ describe('PackService.update', () => {
       packService.update(packId('pack-1'), payload),
     ).rejects.toMatchObject({ response: { code: ErrorCode.THEME_NOT_FOUND } });
     expect(packRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('publishes a pack whose stored image the update keeps', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const storedPack: Pack = buildPack({ isPublished: false });
+    const payload: UpdatePack = buildUpdatePack({
+      isPublished: true,
+      image: undefined,
+    });
+    packRepository.findBy.mockResolvedValue([storedPack]);
+    packRepository.update.mockResolvedValue({
+      ...storedPack,
+      isPublished: true,
+    });
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(packRepository.findBy).toHaveBeenCalledWith({
+      ids: [packId('pack-1')],
+    });
+    expect(packRepository.update).toHaveBeenCalledWith(
+      packId('pack-1'),
+      payload,
+    );
+  });
+
+  it('rejects publishing a pack that has no image', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const payload: UpdatePack = buildUpdatePack({
+      isPublished: true,
+      image: undefined,
+    });
+    packRepository.findBy.mockResolvedValue([
+      buildPack({ isPublished: false, image: undefined }),
+    ]);
+
+    await expect(
+      packService.update(packId('pack-1'), payload),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.PACK_IMAGE_REQUIRED },
+    });
+    expect(packRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('saves an unpublished pack without image', async () => {
+    const { packRepository, packService }: ReturnType<typeof buildPackService> =
+      buildPackService();
+    const payload: UpdatePack = buildUpdatePack({
+      isPublished: false,
+      image: undefined,
+    });
+    packRepository.update.mockResolvedValue(
+      buildPack({ isPublished: false, image: undefined }),
+    );
+
+    await packService.update(packId('pack-1'), payload);
+
+    expect(packRepository.findBy).not.toHaveBeenCalled();
+    expect(packRepository.update).toHaveBeenCalledWith(
+      packId('pack-1'),
+      payload,
+    );
   });
 
   it('keeps the theme unchecked when the update does not change it', async () => {
