@@ -123,6 +123,21 @@ const ButtonLabel = styled(Text, {
   } as const,
 });
 
+const ButtonSpinner = styled(Spinner, {
+  position: 'absolute',
+  color: 'white',
+  variants: {
+    variant: {
+      primary: {},
+      secondary: {},
+      tertiary: {},
+      outline: {
+        color: 'outline-cta-label',
+      },
+    },
+  } as const,
+});
+
 export function Button({
   label,
   onPress,
@@ -160,12 +175,7 @@ export function Button({
         <ButtonLabel variant={variant} hidden={busy}>
           {label}
         </ButtonLabel>
-        {busy && (
-          <Spinner
-            position="absolute"
-            color={variant === 'outline' ? 'outline-cta-label' : 'white'}
-          />
-        )}
+        {busy && <ButtonSpinner variant={variant} />}
       </ButtonFace>
     </ButtonSocket>
   );
