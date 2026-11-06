@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.package.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": ["./**/*.mts"]
+}

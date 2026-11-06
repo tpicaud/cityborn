@@ -14,7 +14,8 @@
       "outputs": []
     },
     "test": {
-      "outputs": ["coverage/**"]
+      "dependsOn": ["^test:inputs"],
+      "outputs": []
     },
     "cityborn-backend#dev": {
       "cache": false,
@@ -134,7 +135,42 @@
         "RESTORE_PRODUCTION_SSL_ROOT_CERT",
         "RESTORE_PRODUCTION_PROJECT_REF"
       ]
+    },
+    "test:inputs": {
+      "dependsOn": ["^test:inputs"],
+      "outputs": []
+    },
+    "test:cov": {
+      "dependsOn": ["^test:inputs"],
+      "outputs": ["coverage/**"]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "cityborn-backend#test": {
+      "dependsOn": ["^test:inputs"],
+      "outputs": [],
+      "env": ["TEST_DATABASE_URL", "TEST_REDIS_URL"]
+    },
+    "cityborn-backend#test:cov": {
+      "dependsOn": ["^test:inputs"],
+      "outputs": ["coverage/**"],
+      "env": ["TEST_DATABASE_URL", "TEST_REDIS_URL"]
+    },
+    "//#test:scripts:watch": {
+      "cache": false,
+      "persistent": true
     }
   },
-  "globalPassThroughEnv": ["NEXT_RUNTIME"]
+  "globalPassThroughEnv": ["NEXT_RUNTIME"],
+  "globalDependencies": [
+    "tsconfig*.json",
+    "biome.json",
+    "pnpm-workspace.yaml",
+    ".npmrc",
+    "lint-rules/**",
+    "scripts/tests/**",
+    ".github/workflows/**"
+  ]
 }

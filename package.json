@@ -12,8 +12,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "typecheck": "tsc --project scripts/tests/tsconfig.json && turbo run typecheck",
+    "test": "node --test scripts/tests/*.test.mts && turbo run test",
     "dev:mobile": "turbo run dev --filter=cityborn-mobile... --filter=cityborn-back-office... --filter=cityborn-backend...",
     "dev:web": "turbo run dev --filter=cityborn-frontend... --filter=cityborn-back-office... --filter=cityborn-backend...",
     "backend": "pnpm --dir apps/backend",
@@ -44,13 +44,18 @@
     "db:test:start": "pnpm backend db:test:start",
     "db:test:stop": "pnpm backend db:test:stop",
     "test:int": "pnpm backend test:int",
-    "test:e2e": "pnpm backend test:e2e"
+    "test:e2e": "pnpm backend test:e2e",
+    "test:watch": "turbo run test:watch test:scripts:watch",
+    "test:cov": "node --test --experimental-test-coverage scripts/tests/*.test.mts && turbo run test:cov",
+    "test:all": "node scripts/tests/run-all.mts",
+    "test:scripts:watch": "node --test --watch scripts/tests/*.test.mts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^2.1.1",
     "turbo": "^2.10.0",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "@types/node": "^26.1.2"
   }
 }

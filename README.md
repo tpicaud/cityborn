@@ -7,7 +7,6 @@ Cityborn est un jeu de géographie où l'on devine le lieu de naissance de perso
 - Node.js 24
 - pnpm 10.33.2
 - Docker
-- [oasdiff](https://github.com/oasdiff/oasdiff) 1.26.1 sur le `PATH`, pour les tests de `packages/api` et `pnpm check:api-compat`
 - Pour le mobile : un téléphone iOS ou Android sur le même réseau Wi-Fi que la machine de dev
 
 ## Installation

@@ -1,13 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { oasdiffBinary } from '../oasdiff/binary';
 import { findRequestSchemaTightenings } from './request-schema-check';
 import type { OasdiffChange } from './types';
 
-const INSTALL_HINT =
-  'oasdiff CLI not found on PATH.\n' +
-  'Install it with: curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | sh\n' +
-  '(or "brew install oasdiff"). See https://oasdiff.com/docs for other options.';
+const INSTALL_HINT: string =
+  'Managed oasdiff CLI is missing. Run pnpm install to prepare it.';
 
 export class OasdiffNotFoundError extends Error {
   constructor() {
@@ -19,7 +18,7 @@ export class OasdiffNotFoundError extends Error {
 const oasdiffOutputMaxBytes: number = 64 * 1024 * 1024;
 
 export function assertOasdiffAvailable(): void {
-  const probe = spawnSync('oasdiff', ['--version'], { encoding: 'utf-8' });
+  const probe = spawnSync(oasdiffBinary, ['--version'], { encoding: 'utf-8' });
   if (probe.error || probe.status !== 0) {
     throw new OasdiffNotFoundError();
   }
@@ -250,7 +249,7 @@ export function diffBreaking({
   acceptedChangesFile?: string;
 }): DiffResult {
   const result = spawnSync(
-    'oasdiff',
+    oasdiffBinary,
     [
       'breaking',
       '--format',

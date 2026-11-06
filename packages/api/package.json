@@ -13,7 +13,10 @@
     "generate:openapi:release": "tsx tools/generate-openapi-file.ts --mode=release",
     "check:compat": "tsx tools/check-api-compat.ts",
     "check:deprecations": "tsx tools/check-deprecations.ts",
-    "test": "tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'"
+    "test": "tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
+    "test:watch": "tsx --test --watch 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
+    "test:cov": "c8 --reporter=text --reporter=lcov tsx --test 'tools/**/*.test.ts' 'openapi/**/*.test.ts' 'src/**/*.test.ts'",
+    "postinstall": "tsx tools/oasdiff/install.ts"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^1.14.2",
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "c8": "^11.0.0"
   }
 }
