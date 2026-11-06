@@ -61,7 +61,6 @@ const Actions = styled(View, {
   maxW: tabletActionsWidth,
   gap: '11 md:16',
   mt: '8 md:12',
-  mb: '8',
   px: '1.5 md:0',
 });
 
@@ -79,7 +78,7 @@ export function BrandScreen({ kicker, title, children }: BrandScreenProps) {
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
 
   return (
-    <Screen scrollable>
+    <Screen>
       <Logo role="img" aria-label="Cityborn">
         <AssetImage asset="logo" />
       </Logo>

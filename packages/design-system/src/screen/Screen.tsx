@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, styled, Text, View } from 'tamagui';
+import { styled, Text, View } from 'tamagui';
 import { IconButton } from '../IconButton';
 import { ScreenFrame } from './ScreenFrame';
 
@@ -8,7 +8,6 @@ const tabletMockupWidth: number = 1024;
 type ScreenProps = {
   title?: string;
   onBack?: () => void;
-  scrollable?: boolean;
   children: ReactNode;
 };
 
@@ -44,40 +43,25 @@ const ScreenTitle = styled(Text, {
   textShadow: 'screen-title',
 });
 
-export function Screen({
-  title,
-  onBack,
-  scrollable = false,
-  children,
-}: ScreenProps) {
+export function Screen({ title, onBack, children }: ScreenProps) {
   const hasHeader: boolean = title !== undefined || onBack !== undefined;
-
-  const column: ReactNode = (
-    <ScreenColumn>
-      {hasHeader && (
-        <View>
-          <BackSlot>
-            {onBack && (
-              <IconButton icon="back" label="Retour" onPress={onBack} />
-            )}
-          </BackSlot>
-          {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
-        </View>
-      )}
-      <View flex={1}>{children}</View>
-    </ScreenColumn>
-  );
 
   return (
     <ScreenFrame>
       <ScreenSafeArea>
-        {scrollable ? (
-          <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-            {column}
-          </ScrollView>
-        ) : (
-          column
-        )}
+        <ScreenColumn>
+          {hasHeader && (
+            <View>
+              <BackSlot>
+                {onBack && (
+                  <IconButton icon="back" label="Retour" onPress={onBack} />
+                )}
+              </BackSlot>
+              {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
+            </View>
+          )}
+          <View flex={1}>{children}</View>
+        </ScreenColumn>
       </ScreenSafeArea>
     </ScreenFrame>
   );
