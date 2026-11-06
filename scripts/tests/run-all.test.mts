@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
-import { type SpawnSyncReturns, spawnSync } from 'node:child_process';
+import {
+  type ChildProcess,
+  execFileSync,
+  type SpawnSyncReturns,
+  spawn,
+  spawnSync,
+} from 'node:child_process';
 import {
   chmodSync,
+  existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -10,6 +17,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 type Command = {
@@ -17,8 +25,51 @@ type Command = {
   args: string[];
   databaseUrl?: string;
   redisUrl?: string;
+  descendantRunning?: boolean;
 };
 type Execution = { result: SpawnSyncReturns<string>; commands: Command[] };
+type Fixture = {
+  directory: string;
+  commandLog: string;
+  env: NodeJS.ProcessEnv;
+  commands: () => Command[];
+};
+
+function fixture({
+  failure,
+  descendant,
+}: {
+  failure?: string;
+  descendant?: string;
+}): Fixture {
+  const directory: string = mkdtempSync(
+    join(tmpdir(), 'cityborn-test-runner-'),
+  );
+  const commandLog: string = join(directory, 'commands.jsonl');
+  const commandFixture: string = fileURLToPath(
+    new URL('./fixtures/command.mts', import.meta.url),
+  );
+  const quote: (value: string) => string = (value) =>
+    `'${value.replaceAll("'", "'\\''")}'`;
+  ['docker', 'pnpm'].forEach((command) => {
+    const path: string = join(directory, command);
+    writeFileSync(
+      path,
+      `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(commandFixture)} ${quote(command)} "$@" --log ${quote(commandLog)} ${failure ? `--fail ${quote(failure)}` : ''} ${descendant ? `--descendant ${quote(descendant)}` : ''}\n`,
+    );
+    chmodSync(path, 0o755);
+  });
+  return {
+    directory,
+    commandLog,
+    env: { ...process.env, PATH: `${directory}:${process.env.PATH}` },
+    commands: () =>
+      readFileSync(commandLog, 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+  };
+}
 
 function execute({
   failure,
@@ -27,24 +78,8 @@ function execute({
   failure?: string;
   backendOnly?: boolean;
 } = {}): Execution {
-  const directory: string = mkdtempSync(
-    join(tmpdir(), 'cityborn-test-runner-'),
-  );
-  const commandLog: string = join(directory, 'commands.jsonl');
-  const fixture: string = fileURLToPath(
-    new URL('./fixtures/command.mts', import.meta.url),
-  );
-  const quote: (value: string) => string = (value) =>
-    `'${value.replaceAll("'", "'\\''")}'`;
+  const prepared: Fixture = fixture({ failure });
   try {
-    ['docker', 'pnpm'].forEach((command) => {
-      const path: string = join(directory, command);
-      writeFileSync(
-        path,
-        `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(fixture)} ${quote(command)} "$@" --log ${quote(commandLog)} ${failure ? `--fail ${quote(failure)}` : ''}\n`,
-      );
-      chmodSync(path, 0o755);
-    });
     const result: SpawnSyncReturns<string> = spawnSync(
       process.execPath,
       [
@@ -54,19 +89,13 @@ function execute({
       {
         encoding: 'utf8',
         timeout: 15000,
-        env: {
-          ...process.env,
-          PATH: `${directory}:${process.env.PATH}`,
-        },
+        env: prepared.env,
       },
     );
-    const commands: Command[] = readFileSync(commandLog, 'utf8')
-      .trim()
-      .split('\n')
-      .map((line) => JSON.parse(line));
+    const commands: Command[] = prepared.commands();
     return { result, commands };
   } finally {
-    rmSync(directory, { recursive: true, force: true });
+    rmSync(prepared.directory, { recursive: true, force: true });
   }
 }
 
@@ -76,6 +105,98 @@ describe('test:all', {
       ? 'Command fixtures require a POSIX shell.'
       : false,
 }, () => {
+  ['delayed', 'ignore'].forEach((descendant) => {
+    it(`stops a descendant with ${descendant} termination before cleaning Compose after SIGTERM`, {
+      timeout: 15000,
+    }, async () => {
+      const prepared: Fixture = fixture({ descendant });
+      const launcher: ChildProcess = spawn(
+        process.execPath,
+        [fileURLToPath(new URL('./run-all.mts', import.meta.url))],
+        { env: prepared.env, stdio: ['ignore', 'ignore', 'pipe'] },
+      );
+      let stderr: string = '';
+      launcher.stderr?.setEncoding('utf8').on('data', (chunk: string) => {
+        stderr += chunk;
+      });
+      const completion: Promise<number | null> = new Promise(
+        (resolve, reject) => {
+          launcher.once('error', reject);
+          launcher.once('close', resolve);
+        },
+      );
+      let suitePid: number | undefined;
+      try {
+        const deadline: number = Date.now() + 5000;
+        async function waitForDescendant(): Promise<void> {
+          if (existsSync(`${prepared.commandLog}.pid`)) return;
+          assert.ok(
+            Date.now() < deadline,
+            stderr || 'Descendant did not start',
+          );
+          await setTimeout(25);
+          await waitForDescendant();
+        }
+        await waitForDescendant();
+        const processIds: { pid: number; parent: number } = JSON.parse(
+          readFileSync(`${prepared.commandLog}.pid`, 'utf8'),
+        );
+        suitePid = processIds.parent;
+
+        launcher.kill('SIGTERM');
+        const code: number | null = await completion;
+
+        assert.equal(code, 1, stderr);
+        const commands: Command[] = prepared.commands();
+        const cleanup: Command | undefined = commands.find((command) =>
+          command.args.includes('down'),
+        );
+        assert.ok(cleanup);
+        assert.equal(cleanup.descendantRunning, false);
+        assert.equal(
+          commands.some((command) => command.args.includes('test:e2e')),
+          false,
+        );
+        const started: Command | undefined = commands.find((command) =>
+          command.args.includes('up'),
+        );
+        assert.ok(started);
+        assert.equal(
+          cleanup.args[cleanup.args.indexOf('-p') + 1],
+          started.args[started.args.indexOf('-p') + 1],
+        );
+        const state: string = execFileSync('ps', ['-eo', 'pid=,stat='], {
+          encoding: 'utf8',
+        });
+        assert.equal(
+          state.split('\n').some((line) => {
+            const [pid, status]: string[] = line.trim().split(/\s+/);
+            return pid === String(processIds.pid) && !status?.startsWith('Z');
+          }),
+          false,
+        );
+      } finally {
+        if (suitePid !== undefined) {
+          try {
+            process.kill(-suitePid, 'SIGKILL');
+          } catch (error) {
+            if (
+              !(
+                error instanceof Error &&
+                'code' in error &&
+                error.code === 'ESRCH'
+              )
+            )
+              assert.fail(String(error));
+          }
+        }
+        if (launcher.exitCode === null) launcher.kill('SIGKILL');
+        await completion;
+        rmSync(prepared.directory, { recursive: true, force: true });
+      }
+    });
+  });
+
   it('runs shared suites then integration and e2e sequentially with isolated endpoints', () => {
     const { result, commands }: Execution = execute();
     const suites: Command[] = commands.filter(

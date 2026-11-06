@@ -1,6 +1,8 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 const root: string = fileURLToPath(new URL('../..', import.meta.url));
 const project: string = `cityborn-tests-${randomUUID()}`;
@@ -13,10 +15,64 @@ const composeArguments: string[] = [
 ];
 let activeChild: ChildProcess | undefined;
 let interrupted: NodeJS.Signals | undefined;
+let stopping: Promise<Error | undefined> | undefined;
+const executeFile: (
+  command: string,
+  args: string[],
+) => Promise<{ stdout: string; stderr: string }> = promisify(execFile);
+
+function signalGroup({
+  child,
+  signal,
+}: {
+  child: ChildProcess;
+  signal: NodeJS.Signals;
+}): void {
+  if (child.pid === undefined) return;
+  try {
+    process.kill(-child.pid, signal);
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ESRCH'))
+      throw error;
+  }
+}
+
+async function stopChild(child: ChildProcess): Promise<void> {
+  if (child.pid === undefined) return;
+  if (process.platform === 'win32') {
+    await executeFile('taskkill', ['/pid', String(child.pid), '/t', '/f']);
+    return;
+  }
+  signalGroup({ child, signal: interrupted ?? 'SIGTERM' });
+  const deadline: number = Date.now() + 5000;
+  async function waitForGroup(): Promise<void> {
+    const { stdout }: { stdout: string } = await executeFile('ps', [
+      '-eo',
+      'pgid=,stat=',
+    ]);
+    const running: boolean = stdout
+      .trim()
+      .split('\n')
+      .some((line) => {
+        const [group, state]: string[] = line.trim().split(/\s+/);
+        return group === String(child.pid) && !state?.startsWith('Z');
+      });
+    if (!running) return;
+    if (Date.now() >= deadline) signalGroup({ child, signal: 'SIGKILL' });
+    await setTimeout(25);
+    await waitForGroup();
+  }
+  await waitForGroup();
+}
 
 function interrupt(signal: NodeJS.Signals): void {
   interrupted = signal;
-  activeChild?.kill(signal);
+  if (activeChild && !stopping)
+    stopping = stopChild(activeChild).then(
+      () => undefined,
+      (error: unknown) =>
+        error instanceof Error ? error : new Error(String(error)),
+    );
 }
 
 process.on('SIGINT', interrupt);
@@ -41,6 +97,7 @@ async function run({
     const child: ChildProcess = spawn(command, args, {
       cwd: root,
       env,
+      detached: process.platform !== 'win32',
       stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
     });
     activeChild = child;
@@ -49,15 +106,25 @@ async function run({
       output += chunk;
     });
     child.once('error', reject);
-    child.once('close', (code, signal) => {
-      activeChild = undefined;
-      if (code === 0) {
-        resolve(output.trim());
-        return;
+    child.once('close', async (code, signal) => {
+      try {
+        const stopError: Error | undefined = await stopping;
+        if (stopError) throw stopError;
+        if (code === 0 && (cleanup || !interrupted)) {
+          resolve(output.trim());
+          return;
+        }
+        reject(
+          new Error(
+            `${command} ${args.join(' ')} failed (${signal ?? interrupted ?? code})`,
+          ),
+        );
+      } catch (error) {
+        reject(error);
+      } finally {
+        activeChild = undefined;
+        stopping = undefined;
       }
-      reject(
-        new Error(`${command} ${args.join(' ')} failed (${signal ?? code})`),
-      );
     });
   });
 }
