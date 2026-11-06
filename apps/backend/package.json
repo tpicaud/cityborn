@@ -18,8 +18,8 @@
     "test:all": "pnpm test && pnpm test:int && pnpm test:e2e",
     "test:cov": "jest --selectProjects unit --coverage",
     "test:watch": "jest --selectProjects unit --watch",
-    "db:start": "docker compose -f docker-compose.resources.yml up --build --remove-orphans -d",
-    "db:stop": "docker compose -f docker-compose.resources.yml down",
+    "db:start": "docker compose -p cityborn_resources -f docker-compose.resources.yml up --build -d postgis redis adminer redisinsight",
+    "db:stop": "docker compose -p cityborn_resources -f docker-compose.resources.yml stop postgis redis adminer redisinsight",
     "db:up": "prisma migrate deploy",
     "db:migrate": "prisma migrate dev --name",
     "db:reset": "prisma migrate reset && prisma db seed",
@@ -28,7 +28,9 @@
     "check": "biome check .",
     "fullcheck": "pnpm typecheck && pnpm check",
     "db:test:start": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test up -d --wait postgis-test redis-test",
-    "db:test:stop": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test stop postgis-test redis-test"
+    "db:test:stop": "docker compose -p cityborn_tests -f docker-compose.resources.yml --profile test stop postgis-test redis-test",
+    "db:recette:start": "docker compose -p cityborn_recette -f docker-compose.resources.yml --profile recette up -d --wait postgis-recette redis-recette",
+    "db:recette:stop": "docker compose -p cityborn_recette -f docker-compose.resources.yml --profile recette stop postgis-recette redis-recette"
   },
   "dependencies": {
     "@axiomhq/pino": "^2.0.0",
