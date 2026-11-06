@@ -1,10 +1,22 @@
+import { type ErrorReporter, useErrorReporter } from '@cityborn/client';
 import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
+import { Linking } from 'react-native';
 import { Anchor, View } from 'tamagui';
 
 type LegalLinksProps = { onDarkBackground?: boolean };
 
 export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
+  const { reportError }: ErrorReporter = useErrorReporter();
   const color: 'white' | 'black' = onDarkBackground ? 'white' : 'black';
+
+  const openLegalLink = async (url: string): Promise<void> => {
+    try {
+      await Linking.openURL(url);
+    } catch (error: unknown) {
+      reportError(error, 'Impossible d’ouvrir ce lien sur cet appareil.');
+    }
+  };
+
   return (
     <View
       disableOptimization
@@ -15,7 +27,7 @@ export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
       py="2"
     >
       <Anchor
-        href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
+        onPress={() => void openLegalLink(`mailto:${CITYBORN_CONTACT_EMAIL}`)}
         color={color}
         fontFamily="body"
         fontSize="4"
@@ -26,7 +38,9 @@ export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
         Nous contacter
       </Anchor>
       <Anchor
-        href="https://www.cityborn.app/terms-and-policies"
+        onPress={() =>
+          void openLegalLink('https://www.cityborn.app/terms-and-policies')
+        }
         color={color}
         fontFamily="body"
         fontSize="4"
