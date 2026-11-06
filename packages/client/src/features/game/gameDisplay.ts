@@ -1,6 +1,6 @@
 import type { Game, GuessObjectId, PlayerId } from '@cityborn/api';
 import { GameStatus, RoundStatus } from '@cityborn/api';
-import { roundGuessObjectIds } from '@cityborn/core';
+import { currentRoundIndex, roundGuessObjectIds } from '@cityborn/core';
 
 type GameDisplayBase = {
   showNextRound: boolean;
@@ -27,9 +27,7 @@ export function createGameDisplay(
 
   const currentRound = game.state.currentRound;
   const guessObjectIds: GuessObjectId[] = roundGuessObjectIds(game);
-  const roundIndex = currentRound
-    ? guessObjectIds.indexOf(currentRound.guessObjectId)
-    : -1;
+  const roundIndex: number = currentRoundIndex(game);
   const gameDisplayBase: GameDisplayBase = {
     showNextRound: currentRound?.status === RoundStatus.SHOWING_RESULTS,
     showResults: game.status === GameStatus.IN_RESULTS,

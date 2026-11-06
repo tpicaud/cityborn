@@ -16,6 +16,7 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 import {
+  currentRoundIndex,
   hideGuessingRoundGuesses,
   playerScore,
   removePlayer,
@@ -139,6 +140,29 @@ describe('roundGuessObjectIds', () => {
   });
 });
 
+describe('currentRoundIndex', () => {
+  it('gives the position of the current round in the round order', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        guessObjectsIds: ['object-1', 'object-2'],
+        roundGuessObjects: [
+          buildRoundGuessObject({ id: 'object-1' }),
+          buildRoundGuessObject({ id: 'object-2' }),
+        ],
+        currentRound: buildRound({ guessObjectId: 'object-2' }),
+      }),
+    });
+
+    assert.equal(currentRoundIndex(game), 1);
+  });
+
+  it('gives -1 for a game without current round', () => {
+    const game: Game = buildGame();
+
+    assert.equal(currentRoundIndex(game), -1);
+  });
+});
+
 describe('removePlayer', () => {
   it('removes the results and the guess of the player', () => {
     const game: Game = buildGame({
@@ -193,6 +217,33 @@ describe('removePlayer', () => {
       status: RoundStatus.SHOWING_RESULTS,
       guessObjectId: 'guess-object-1',
       playersGuesses: { [bob]: buildGuess() },
+    });
+  });
+
+  it('keeps a round showing its results as it is, without the guess of the player', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: { [alice]: { results: [] }, [bob]: { results: [] } },
+        currentRound: buildRound({
+          status: RoundStatus.SHOWING_RESULTS,
+          playersGuesses: {
+            [alice]: buildGuess({ points: 900 }),
+            [bob]: buildGuess({ points: 800 }),
+          },
+        }),
+      }),
+    });
+
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID: alice,
+      connectedPlayerIDs: [bob],
+    });
+
+    assert.deepEqual(remainingGame.state.currentRound, {
+      status: RoundStatus.SHOWING_RESULTS,
+      guessObjectId: 'guess-object-1',
+      playersGuesses: { [bob]: buildGuess({ points: 800 }) },
     });
   });
 

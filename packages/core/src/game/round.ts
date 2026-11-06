@@ -23,6 +23,13 @@ export function roundGuessObjectIds(game: Game): GuessObjectId[] {
   );
 }
 
+export function currentRoundIndex(game: Game): number {
+  const currentRound: Round | undefined = game.state.currentRound;
+  return currentRound
+    ? roundGuessObjectIds(game).indexOf(currentRound.guessObjectId)
+    : -1;
+}
+
 export function beginGame(game: Game): Game {
   return {
     ...game,
@@ -98,10 +105,11 @@ export function applyGuess(
   guess: Guess,
   connectedPlayerIds: PlayerId[],
 ): Game {
-  const currentRound = game.state.currentRound;
+  const currentRound: Round | undefined = game.state.currentRound;
   if (!currentRound) return game;
 
-  const existingGuesses = currentRound.playersGuesses ?? {};
+  const existingGuesses: Record<PlayerId, Guess> =
+    currentRound.playersGuesses ?? {};
   if (existingGuesses[playerID]) return game;
 
   return closeRoundOnceAllGuessed({
@@ -210,10 +218,7 @@ export function resolveNextRound(game: Game): {
 } {
   const results = aggregateGameResults(game);
   const guessObjectIds: GuessObjectId[] = roundGuessObjectIds(game);
-  const currentGuessObjectId = game.state.currentRound?.guessObjectId;
-  const currentIndex = currentGuessObjectId
-    ? guessObjectIds.indexOf(currentGuessObjectId)
-    : -1;
+  const currentIndex: number = currentRoundIndex(game);
 
   if (currentIndex + 1 >= guessObjectIds.length) {
     return {
