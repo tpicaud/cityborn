@@ -10,7 +10,7 @@ import { Backdrop } from '@mui/material';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import Guess from '@/features/game/guess/Guess';
-import { GameOptions } from './game-options/GameOptions';
+import { GameOptions } from './GameOptions';
 import Results from './Results';
 
 export const Game = ({

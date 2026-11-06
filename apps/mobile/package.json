@@ -20,8 +20,7 @@
     "check-env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check",
-    "test": "tsx --test 'features/**/*.test.ts'"
+    "fullcheck": "pnpm typecheck && pnpm check"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
@@ -85,12 +84,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
     "@types/geojson": "^7946.0.16",
-    "@types/node": "^26.1.2",
     "@types/react": "~19.2.14",
     "dotenv-cli": "^11.0.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
-    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
   "private": true
