@@ -1,21 +1,41 @@
 import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
-import Link from 'next/link';
+import { Anchor, View } from 'tamagui';
 
-export function LegalLinks() {
+type LegalLinksProps = { onDarkBackground?: boolean };
+
+export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
+  const color: 'white' | 'black' = onDarkBackground ? 'white' : 'black';
   return (
-    <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-      <a
+    <View
+      disableOptimization
+      flexDirection="row"
+      flexWrap="wrap"
+      justify="center"
+      gap="4"
+      py="2"
+    >
+      <Anchor
         href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
-        className="text-sm text-gray-600 hover:underline"
+        color={color}
+        fontFamily="body"
+        fontSize="4"
+        minH="11"
+        py="2"
+        textDecorationLine="underline"
       >
         Nous contacter
-      </a>
-      <Link
+      </Anchor>
+      <Anchor
         href="/terms-and-policies"
-        className="text-sm text-gray-600 hover:underline text-center"
+        color={color}
+        fontFamily="body"
+        fontSize="4"
+        minH="11"
+        py="2"
+        textDecorationLine="underline"
       >
         Politiques et conditions
-      </Link>
-    </footer>
+      </Anchor>
+    </View>
   );
 }

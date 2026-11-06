@@ -2,82 +2,110 @@
 
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { Box, Button, FormControl, TextField, Typography } from '@mui/material';
+import { Button, TextButton, TextField } from '@cityborn/design-system';
+import { Controller } from 'react-hook-form';
+import { View } from 'tamagui';
 import { useNavigation } from '@/lib/navigation';
+import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export const SignUpForm = () => {
+export function SignUpForm() {
   const navigation: Navigation = useNavigation();
   const {
     form: {
-      register,
+      control,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignUpFlow = useSignUpFlow({
-    onSignedIn: () => navigation.returnTo('/'),
-  });
-
+  }: SignUpFlow = useSignUpFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <Box
-      component="form"
-      onSubmit={submit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
-    >
-      <Typography variant="h5" align="center">
-        Inscription
-      </Typography>
-
-      <FormControl>
-        <TextField
-          label="Username"
-          {...register('username')}
-          error={!!errors.username}
-          helperText={errors.username?.message}
-        />
-      </FormControl>
-
-      <FormControl>
-        <TextField
-          type="email"
-          label="Email"
-          {...register('email')}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-        />
-      </FormControl>
-
-      <FormControl>
-        <TextField
-          type="password"
-          label="Password"
-          {...register('password')}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-        />
-      </FormControl>
-
-      <FormControl>
-        <TextField
-          type="password"
-          label="Confirm Password"
-          {...register('confirmPassword')}
-          error={!!errors.confirmPassword}
-          helperText={errors.confirmPassword?.message}
-        />
-      </FormControl>
-
-      <Button variant="contained" type="submit" loading={isSubmitting}>
-        S'inscrire
-      </Button>
-
-      <div className="flex flex-row gap-3 items-center w-full">
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-        <Typography>OU</Typography>
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-      </div>
-
-      <SignInWithGoogleButton />
-    </Box>
+    <AuthScreen title="Inscription" bottomSafeArea>
+      <form onSubmit={submit}>
+        <View disableOptimization gap="3 md:4">
+          <Controller
+            control={control}
+            name="username"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Nom d’utilisateur"
+                autoComplete="username"
+                error={errors.username?.message}
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Adresse e-mail"
+                autoComplete="email"
+                error={errors.email?.message}
+                disabled={isSubmitting}
+                inputMode="email"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Mot de passe"
+                autoComplete="new-password"
+                error={errors.password?.message}
+                disabled={isSubmitting}
+                secureTextEntry
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Confirme ton mot de passe"
+                autoComplete="new-password"
+                error={errors.confirmPassword?.message}
+                disabled={isSubmitting}
+                secureTextEntry
+                returnKeyType="done"
+              />
+            )}
+          />
+          <Button
+            compact
+            label="S’inscrire"
+            onPress={submit}
+            loading={isSubmitting}
+          />
+        </View>
+        <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+      </form>
+      <TextButton
+        label="Déjà un compte ? Se connecter"
+        onPress={() => navigation.returnTo('/profile')}
+      />
+      <View gap="4 md:6" items="center">
+        <SignInWithGoogleButton />
+      </View>
+    </AuthScreen>
   );
-};
+}

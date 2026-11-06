@@ -11,6 +11,7 @@ type ButtonProps = {
   variant?: ButtonVariant;
   disabled?: boolean;
   loading?: boolean;
+  compact?: boolean;
 };
 
 const ButtonSocket = styled(View, {
@@ -87,6 +88,7 @@ const ButtonFace = styled(PressableFrame, {
         opacity: 'press:0.8',
       },
     },
+    compact: { true: { minH: '16 md:24', rounded: '8 md:10' } },
   } as const,
 });
 
@@ -117,6 +119,7 @@ const ButtonLabel = styled(Text, {
         color: 'outline-cta-label',
       },
     },
+    compact: { true: { fontSize: '6 md:8', lineHeight: '6 md:8' } },
     hidden: {
       true: { opacity: 0 },
     },
@@ -144,6 +147,7 @@ export function Button({
   variant = 'primary',
   disabled = false,
   loading = false,
+  compact = false,
 }: ButtonProps) {
   const [pending, setPending] = useState<boolean>(false);
   const busy: boolean = loading || pending;
@@ -166,13 +170,14 @@ export function Button({
     <ButtonSocket variant={variant} dimmed={disabled}>
       <ButtonFace
         variant={variant}
+        compact={compact}
         pointerEvents={inactive ? 'none' : 'auto'}
         aria-disabled={inactive}
         aria-busy={busy}
         aria-label={label}
         onPress={inactive ? undefined : press}
       >
-        <ButtonLabel variant={variant} hidden={busy}>
+        <ButtonLabel variant={variant} compact={compact} hidden={busy}>
           {label}
         </ButtonLabel>
         {busy && <ButtonSpinner variant={variant} />}
