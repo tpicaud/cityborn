@@ -11,11 +11,13 @@ import { Profile } from '@/features/profile/Profile';
 export default function ProfilePage() {
   const { user }: CurrentUser = useCurrentUser();
 
+  if (!user) return <SignInForm />;
+
   return (
     <Screen title="Profil">
+      {user.isVerified === false && <EmailVerificationNotice />}
       <LegacyCard>
-        {user?.isVerified === false && <EmailVerificationNotice />}
-        {user ? <Profile user={user} /> : <SignInForm />}
+        <Profile user={user} />
         <LegalLinks />
       </LegacyCard>
     </Screen>
