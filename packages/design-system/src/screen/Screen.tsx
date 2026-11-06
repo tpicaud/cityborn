@@ -36,8 +36,8 @@ const BackSlot = styled(View, {
 const ScreenTitle = styled(Text, {
   role: 'heading',
   fontFamily: 'heading',
-  fontSize: '10 md:11',
-  lineHeight: '10 md:11',
+  fontSize: '13 md:14',
+  lineHeight: '13 md:14',
   fontWeight: '700',
   color: 'white',
   textShadow: 'screen-title',
@@ -52,11 +52,11 @@ export function Screen({ title, onBack, children }: ScreenProps) {
         <ScreenColumn>
           {hasHeader && (
             <View>
-              <BackSlot>
-                {onBack && (
+              {onBack && (
+                <BackSlot>
                   <IconButton icon="back" label="Retour" onPress={onBack} />
-                )}
-              </BackSlot>
+                </BackSlot>
+              )}
               {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
             </View>
           )}
