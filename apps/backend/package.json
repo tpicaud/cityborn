@@ -15,7 +15,7 @@
     "test": "jest --selectProjects unit",
     "test:int": "jest --selectProjects integration",
     "test:e2e": "jest --selectProjects e2e",
-    "test:all": "node ../../scripts/tests/run-all.mts --backend",
+    "test:all": "bash ../../scripts/tests/run-all.sh --backend",
     "test:cov": "jest --selectProjects unit --coverage",
     "test:watch": "jest --selectProjects unit --watch",
     "db:start": "docker compose -f docker-compose.resources.yml up --build --remove-orphans -d",

@@ -239,42 +239,14 @@ jobs:
       - name: Build static back-office
         run: pnpm back-office:build
 
-  affected-tests:
-    name: Select affected test suites
-    if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.selection.outputs.packages }}
-      backend: ${{ steps.selection.outputs.backend }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24.x
-      - name: Install pnpm
-        run: npm install -g pnpm@10.33.2
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Select suites and consumers
-        id: selection
-        env:
-          TEST_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          TEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: node scripts/tests/affected.mts "$TEST_BASE_SHA" "$TEST_HEAD_SHA"
-      - name: Test orchestration
-        run: node --test scripts/tests/*.test.mts
-
   package-tests:
     name: Tests (${{ matrix.package }})
-    needs: affected-tests
-    if: github.event.pull_request.draft == false && needs.affected-tests.outputs.packages != '[]'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ fromJSON(needs.affected-tests.outputs.packages) }}
+        package: ["@cityborn/api", "@cityborn/core", "@cityborn/client", "cityborn-backend"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -291,8 +263,7 @@ jobs:
 
   backend-integration:
     name: Backend integration tests
-    needs: affected-tests
-    if: github.event.pull_request.draft == false && needs.affected-tests.outputs.backend == 'true'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test
@@ -347,8 +318,7 @@ jobs:
 
   backend-e2e:
     name: Backend e2e tests
-    needs: affected-tests
-    if: github.event.pull_request.draft == false && needs.affected-tests.outputs.backend == 'true'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://cityborn_test:cityborn_test@localhost:5433/cityborn_test

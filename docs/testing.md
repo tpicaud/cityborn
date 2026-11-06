@@ -2,6 +2,7 @@
 
 Après `pnpm install`, `pnpm test` lance toutes les suites sans infrastructure : API, Core, Client et tests unitaires backend.
 L'installation prépare aussi oasdiff 1.26.1, avec vérification SHA-256, dans le cache local de `packages/api`.
+Cet outillage prend en charge Linux et macOS, sur x64 et arm64.
 Aucune installation globale de cet outil n'est requise pour les tests ou `pnpm check:api-compat`.
 
 `pnpm test:cov` exécute les mêmes tests et produit la couverture dans chaque package, sans seuil bloquant.
@@ -19,7 +20,6 @@ Ces deux suites partagent alors la même base et doivent se lancer séquentielle
 Le lanceur exhaustif transmet ses adresses par `TEST_DATABASE_URL` et `TEST_REDIS_URL`.
 Les valeurs par défaut restent les ressources de test locales sur les ports 5433 et 6380.
 
-En CI, hors PR draft, Turbo sélectionne les packages modifiés et leurs consommateurs transitifs.
+En CI, chaque PR hors draft lance toutes les suites, sans sélection des fichiers modifiés.
 Chaque package a son propre résultat ; les suites backend d'intégration et e2e ont chacune leurs propres services.
-Les fichiers racine, workflows, règles de lint et scripts de test déclenchent toutes les suites.
 Les hashes des dépendances partagées invalident les caches de test des consommateurs sans lancer leurs suites.

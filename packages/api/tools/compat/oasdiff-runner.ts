@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
-import { oasdiffBinary } from '../oasdiff/binary';
+import { oasdiffBinary } from '../oasdiff/install';
 import { findRequestSchemaTightenings } from './request-schema-check';
 import type { OasdiffChange } from './types';
 
