@@ -2,15 +2,21 @@
   "versions": [
     {
       "versionNumber": 1,
-      "releasedAt": "2026-07-28T18:13:17.000Z"
+      "releasedAt": "2026-07-28T18:13:17.000Z",
+      "deprecatedAt": "2026-11-06",
+      "deprecationReason": "Released more than 30 days ago and superseded by at least three published API versions (v4, v5, v6)."
     },
     {
       "versionNumber": 2,
-      "releasedAt": "2026-08-14T10:05:21.535Z"
+      "releasedAt": "2026-08-14T10:05:21.535Z",
+      "deprecatedAt": "2026-11-06",
+      "deprecationReason": "Released more than 30 days ago and superseded by at least three published API versions (v4, v5, v6)."
     },
     {
       "versionNumber": 3,
-      "releasedAt": "2026-08-30T16:34:53.466Z"
+      "releasedAt": "2026-08-30T16:34:53.466Z",
+      "deprecatedAt": "2026-11-06",
+      "deprecationReason": "Released more than 30 days ago and superseded by three published API versions (v4, v5, v6)."
     },
     {
       "versionNumber": 4,

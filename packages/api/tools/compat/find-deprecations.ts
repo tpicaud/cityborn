@@ -115,7 +115,10 @@ export function resolveDeprecationStatus(
   const sinceMs = new Date(deprecatedSince).getTime();
   const origin = [...manifest.versions]
     .sort((a, b) => a.versionNumber - b.versionNumber)
-    .find((entry) => new Date(entry.releasedAt).getTime() >= sinceMs);
+    .find(
+      (entry) =>
+        entry.draft !== true && new Date(entry.releasedAt).getTime() >= sinceMs,
+    );
 
   if (!origin) return { kind: 'not-shipped' };
 
@@ -129,7 +132,8 @@ export function resolveDeprecationStatus(
     new Date(origin.releasedAt).getTime() + policy.min_days_supported * DAY_MS,
   ).toISOString();
   const versionsNewerThanOrigin = manifest.versions.filter(
-    (entry) => entry.versionNumber > origin.versionNumber,
+    (entry) =>
+      entry.draft !== true && entry.versionNumber > origin.versionNumber,
   ).length;
   const versionsStillNeeded = Math.max(
     0,
