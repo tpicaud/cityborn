@@ -175,9 +175,6 @@ describe('Database backup restoration', () => {
       '--name',
       container,
       '--network=none',
-      ...(process.env.TEST_DOCKER_RUN_ID
-        ? ['--label', `cityborn.test-run=${process.env.TEST_DOCKER_RUN_ID}`]
-        : []),
       '-e',
       'POSTGRES_HOST_AUTH_METHOD=trust',
       '-e',

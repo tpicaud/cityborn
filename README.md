@@ -40,6 +40,8 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm <app>:dev` n'en lance qu'une (`backend`, `frontend`, `back-office` ou `mobile`). `pnpm db:stop` arrête PostgreSQL et Redis.
 
+`pnpm test` lance les tests sans infrastructure. Pour toutes les suites, lancer `pnpm db:test:start`, puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Voir [les commandes de test](docs/testing.md).
+
 La seed crée deux comptes :
 
 | Identifiant | Mot de passe | Rôle |

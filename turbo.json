@@ -128,7 +128,6 @@
     "//#db:restore": {
       "cache": false,
       "passThroughEnv": [
-        "TEST_DOCKER_RUN_ID",
         "RESTORE_STAGING_DB_URL",
         "RESTORE_STAGING_SSL_ROOT_CERT",
         "RESTORE_STAGING_PROJECT_REF",
@@ -158,6 +157,15 @@
       "dependsOn": ["^test:inputs"],
       "outputs": ["coverage/**"],
       "env": ["TEST_DATABASE_URL", "TEST_REDIS_URL"]
+    },
+    "test:all": {
+      "cache": false,
+      "outputs": []
+    },
+    "cityborn-backend#test:all": {
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_DATABASE_URL", "TEST_REDIS_URL"]
     }
   },
   "globalPassThroughEnv": ["NEXT_RUNTIME"],
@@ -167,7 +175,6 @@
     "pnpm-workspace.yaml",
     ".npmrc",
     "lint-rules/**",
-    "scripts/tests/**",
     ".github/workflows/**"
   ]
 }

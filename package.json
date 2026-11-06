@@ -47,7 +47,7 @@
     "test:e2e": "pnpm backend test:e2e",
     "test:watch": "turbo run test:watch",
     "test:cov": "turbo run test:cov",
-    "test:all": "bash scripts/tests/run-all.sh"
+    "test:all": "turbo run test:all"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
