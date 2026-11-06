@@ -10,7 +10,7 @@ import { useNavigation } from '@/lib/navigation';
 
 export default function SoloPlay() {
   const navigation: Navigation = useNavigation();
-  const { playSolo, launchQuickPlay }: SessionLauncher = useSessionLauncher({
+  const { playSolo }: SessionLauncher = useSessionLauncher({
     navigation,
   });
 
@@ -23,14 +23,6 @@ export default function SoloPlay() {
         onClick={playSolo}
       >
         <b>SOLO</b>
-      </LoadingButton>
-      <LoadingButton
-        variant="contained"
-        color="primary"
-        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded w-full"
-        onClick={launchQuickPlay}
-      >
-        <b>PARTIE RAPIDE</b>
       </LoadingButton>
     </div>
   );

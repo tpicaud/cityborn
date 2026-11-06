@@ -9,7 +9,7 @@ import { useNavigation } from '@/lib/navigation';
 
 export default function SoloPlay() {
   const navigation: Navigation = useNavigation();
-  const { playSolo, launchQuickPlay }: SessionLauncher = useSessionLauncher({
+  const { playSolo }: SessionLauncher = useSessionLauncher({
     navigation,
   });
 
@@ -23,13 +23,6 @@ export default function SoloPlay() {
           label="SOLO"
           size="large"
           onPress={playSolo}
-        />
-        <Button
-          color="primary"
-          variant="filled"
-          label="PARTIE RAPIDE"
-          size="large"
-          onPress={launchQuickPlay}
         />
       </View>
     </View>
