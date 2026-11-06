@@ -84,4 +84,5 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 - La doc agents porte des règles réutilisables, jamais l'implémentation d'un changement : une règle n'entre que si elle s'applique à du code que le changement ne touche pas.
 - Une convention modifiée met à jour, dans le même lot, ce fichier si elle est transverse, sinon le skill concerné ; jamais les deux.
+- Le `README.md` racine se limite à une courte présentation du projet, à ce qu'il faut à un dev pour l'installer et le lancer, et à l'arborescence du monorepo ; le fonctionnement du projet va dans `docs/`.
 - Le `README.md` racine reste à jour, dans le même lot, de tout changement de ce qu'il décrit.
