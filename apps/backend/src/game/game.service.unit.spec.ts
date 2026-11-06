@@ -16,6 +16,7 @@ import {
   buildPack,
   buildPlayer,
   buildRound,
+  buildRoundGuessObject,
   buildWorldLocation,
   defaultGuess,
   ErrorCode,
@@ -460,6 +461,121 @@ describe('GameService.applyGuess', () => {
     ).rejects.toMatchObject({
       response: { code: ErrorCode.GUESS_OBJECTS_NOT_FOUND },
     });
+  });
+});
+
+describe('GameService.abandonGame', () => {
+  const alice: PlayerId = PlayerIdSchema.parse('alice');
+  const bob: PlayerId = PlayerIdSchema.parse('bob');
+  const guessObject: FullGuessObject = buildFullGuessObject({ id: 'object-2' });
+  const { world_location, source, ...hiddenGuessObject }: FullGuessObject =
+    guessObject;
+
+  function buildSecondRoundGame(): Game {
+    return buildGame({
+      state: buildGameState({
+        guessObjectsIds: ['object-1', 'object-2'],
+        results: {
+          alice: {
+            results: [{ guessObjectId: 'object-1', distance: 10, points: 990 }],
+          },
+          bob: {
+            results: [{ guessObjectId: 'object-1', distance: 20, points: 980 }],
+          },
+        },
+        roundGuessObjects: [
+          buildRoundGuessObject({ id: 'object-1' }),
+          hiddenGuessObject,
+        ],
+        currentRound: buildRound({
+          guessObjectId: 'object-2',
+          playersGuesses: { bob: buildGuess() },
+        }),
+      }),
+    });
+  }
+
+  it('tracks the mode, the round and the score of the leaving player', async () => {
+    const {
+      gameService,
+      guessObjectService,
+      eventService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([guessObject]);
+
+    await gameService.abandonGame({
+      game: buildSecondRoundGame(),
+      playerID: alice,
+      connectedPlayerIDs: [bob],
+      mode: SessionMode.MULTI,
+      quickPlay: false,
+      visitorId: 'visitor-1',
+    });
+
+    expect(eventService.trackEvent).toHaveBeenCalledWith({
+      name: 'game_abandoned',
+      visitorId: 'visitor-1',
+      properties: {
+        gameId: 'game-1',
+        mode: SessionMode.MULTI,
+        quickPlay: false,
+        round: 2,
+        score: 990,
+      },
+    });
+  });
+
+  it('reveals the guess object when the remaining players have all guessed', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([guessObject]);
+
+    const game: Game = await gameService.abandonGame({
+      game: buildSecondRoundGame(),
+      playerID: alice,
+      connectedPlayerIDs: [bob],
+      mode: SessionMode.MULTI,
+      quickPlay: false,
+    });
+
+    expect(Object.keys(game.state.results)).toEqual(['bob']);
+    expect(game.state.currentRound?.status).toBe(RoundStatus.SHOWING_RESULTS);
+    expect(game.state.roundGuessObjects?.[1]).toEqual(guessObject);
+  });
+
+  it('keeps the round hidden while a remaining player has not guessed', async () => {
+    const {
+      gameService,
+      guessObjectService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+
+    const game: Game = await gameService.abandonGame({
+      game: buildSecondRoundGame(),
+      playerID: bob,
+      connectedPlayerIDs: [alice],
+      mode: SessionMode.MULTI,
+      quickPlay: false,
+    });
+
+    expect(game.state.currentRound?.status).toBe(RoundStatus.GUESSING);
+    expect(guessObjectService.findFullBy).not.toHaveBeenCalled();
+  });
+
+  it('does not track an anonymous abandonment', async () => {
+    const { gameService, eventService }: ReturnType<typeof buildGameService> =
+      buildGameService();
+
+    await gameService.abandonGame({
+      game: buildSecondRoundGame(),
+      playerID: bob,
+      connectedPlayerIDs: [alice],
+      mode: SessionMode.MULTI,
+      quickPlay: false,
+    });
+
+    expect(eventService.trackEvent).not.toHaveBeenCalled();
   });
 });
 

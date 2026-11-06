@@ -246,6 +246,23 @@ export class SessionGateway
     this.broadcastSession(session);
   }
 
+  @WsMessage(sessionWsChannel, 'leaveGame')
+  async leaveGame(
+    @ConnectedSocket() socket: AppSocket,
+    @CurrentVisitorId() visitorId: VisitorId | undefined,
+  ): Promise<void> {
+    const { playerID, sessionID } = this.resolvePlayer(socket);
+    const session: Session = await this.sessionService.leaveGame({
+      playerID,
+      sessionID,
+      visitorId,
+    });
+    this.enrichGame(session);
+    socket.data.player = null;
+    await socket.leave(sessionID);
+    this.broadcastSession(session);
+  }
+
   //////////////////////
   // Connection event //
   //////////////////////

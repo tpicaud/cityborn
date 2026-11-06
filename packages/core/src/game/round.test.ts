@@ -17,6 +17,8 @@ import {
 } from '@cityborn/api';
 import {
   hideGuessingRoundGuesses,
+  playerScore,
+  removePlayer,
   resolveNextRound,
   revealGuessObject,
   roundGuessObjectIds,
@@ -24,6 +26,7 @@ import {
 
 const alice: PlayerId = PlayerIdSchema.parse('alice');
 const bob: PlayerId = PlayerIdSchema.parse('bob');
+const carol: PlayerId = PlayerIdSchema.parse('carol');
 
 describe('hideGuessingRoundGuesses', () => {
   it('replaces each guess of a guessing round with the default guess', () => {
@@ -133,5 +136,128 @@ describe('roundGuessObjectIds', () => {
     });
 
     assert.deepEqual(roundGuessObjectIds(game), ['object-1', 'object-2']);
+  });
+});
+
+describe('removePlayer', () => {
+  it('removes the results and the guess of the player', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: {
+          [alice]: { results: [] },
+          [bob]: { results: [] },
+          [carol]: { results: [] },
+        },
+        currentRound: buildRound({
+          status: RoundStatus.GUESSING,
+          playersGuesses: { [alice]: buildGuess(), [bob]: buildGuess() },
+        }),
+      }),
+    });
+
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID: alice,
+      connectedPlayerIDs: [bob, carol],
+    });
+
+    assert.deepEqual(remainingGame.state.results, {
+      [bob]: { results: [] },
+      [carol]: { results: [] },
+    });
+    assert.deepEqual(remainingGame.state.currentRound, {
+      status: RoundStatus.GUESSING,
+      guessObjectId: 'guess-object-1',
+      playersGuesses: { [bob]: buildGuess() },
+    });
+  });
+
+  it('closes the round when every remaining connected player has guessed', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: { [alice]: { results: [] }, [bob]: { results: [] } },
+        currentRound: buildRound({
+          status: RoundStatus.GUESSING,
+          playersGuesses: { [bob]: buildGuess() },
+        }),
+      }),
+    });
+
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID: alice,
+      connectedPlayerIDs: [bob],
+    });
+
+    assert.deepEqual(remainingGame.state.currentRound, {
+      status: RoundStatus.SHOWING_RESULTS,
+      guessObjectId: 'guess-object-1',
+      playersGuesses: { [bob]: buildGuess() },
+    });
+  });
+
+  it('keeps the round of a game without remaining player open', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: { [alice]: { results: [] } },
+        currentRound: buildRound({
+          status: RoundStatus.GUESSING,
+          playersGuesses: {},
+        }),
+      }),
+    });
+
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID: alice,
+      connectedPlayerIDs: [],
+    });
+
+    assert.deepEqual(remainingGame.state.results, {});
+    assert.equal(
+      remainingGame.state.currentRound?.status,
+      RoundStatus.GUESSING,
+    );
+  });
+});
+
+describe('playerScore', () => {
+  it('adds the points of the revealed round to the completed rounds', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: {
+          [alice]: {
+            results: [
+              { guessObjectId: 'object-1', distance: 10, points: 990 },
+              { guessObjectId: 'object-2', distance: 200, points: 819 },
+            ],
+          },
+        },
+        currentRound: buildRound({
+          status: RoundStatus.SHOWING_RESULTS,
+          playersGuesses: { [alice]: buildGuess({ points: 500 }) },
+        }),
+      }),
+    });
+
+    assert.equal(playerScore({ game, playerID: alice }), 2309);
+  });
+
+  it('ignores the guess of the round still being guessed', () => {
+    const game: Game = buildGame({
+      state: buildGameState({
+        results: {
+          [alice]: {
+            results: [{ guessObjectId: 'object-1', distance: 10, points: 990 }],
+          },
+        },
+        currentRound: buildRound({
+          status: RoundStatus.GUESSING,
+          playersGuesses: { [alice]: buildGuess({ points: 500 }) },
+        }),
+      }),
+    });
+
+    assert.equal(playerScore({ game, playerID: alice }), 990);
   });
 });

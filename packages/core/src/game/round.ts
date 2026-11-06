@@ -12,6 +12,7 @@ import {
   type Round,
   RoundStatus,
 } from '@cityborn/api';
+import { calculateTotalPoints } from './utils';
 
 export const roundCountdownInSeconds: number = 3;
 
@@ -37,35 +38,24 @@ export function beginGame(game: Game): Game {
   };
 }
 
-export function applyGuess(
-  game: Game,
-  playerID: PlayerId,
-  guess: Guess,
-  connectedPlayerIds: PlayerId[],
-): Game {
-  const currentRound = game.state.currentRound;
-  if (!currentRound) return game;
-
-  const existingGuesses = currentRound.playersGuesses ?? {};
-  if (existingGuesses[playerID]) return game;
-
+function closeRoundOnceAllGuessed({
+  game,
+  round,
+  connectedPlayerIDs,
+}: {
+  game: Game;
+  round: Round;
+  connectedPlayerIDs: PlayerId[];
+}): Game {
   const playersGuesses: Record<PlayerId, Guess> = {
-    ...existingGuesses,
-    [playerID]: guess,
+    ...(round.playersGuesses ?? {}),
   };
-
-  const allConnectedPlayersGuessed = connectedPlayerIds.every((playerId) =>
-    Object.hasOwn(playersGuesses, playerId),
+  const allConnectedPlayersGuessed: boolean = connectedPlayerIDs.every(
+    (playerId) => Object.hasOwn(playersGuesses, playerId),
   );
 
   if (!allConnectedPlayersGuessed) {
-    return {
-      ...game,
-      state: {
-        ...game.state,
-        currentRound: { ...currentRound, playersGuesses },
-      },
-    };
+    return { ...game, state: { ...game.state, currentRound: round } };
   }
 
   Object.keys(game.state.results).forEach((rawPlayerId: string) => {
@@ -78,12 +68,111 @@ export function applyGuess(
     state: {
       ...game.state,
       currentRound: {
-        ...currentRound,
+        ...round,
         playersGuesses,
         status: RoundStatus.SHOWING_RESULTS,
       },
     },
   };
+}
+
+function withoutPlayer<Value>({
+  record,
+  playerID,
+}: {
+  record: Record<PlayerId, Value>;
+  playerID: PlayerId;
+}): Record<PlayerId, Value> {
+  return Object.keys(record)
+    .map((rawPlayerId: string) => PlayerIdSchema.parse(rawPlayerId))
+    .filter((playerId: PlayerId) => playerId !== playerID)
+    .reduce<Record<PlayerId, Value>>((remainingRecord, playerId) => {
+      remainingRecord[playerId] = record[playerId];
+      return remainingRecord;
+    }, {});
+}
+
+export function applyGuess(
+  game: Game,
+  playerID: PlayerId,
+  guess: Guess,
+  connectedPlayerIds: PlayerId[],
+): Game {
+  const currentRound = game.state.currentRound;
+  if (!currentRound) return game;
+
+  const existingGuesses = currentRound.playersGuesses ?? {};
+  if (existingGuesses[playerID]) return game;
+
+  return closeRoundOnceAllGuessed({
+    game,
+    round: {
+      ...currentRound,
+      playersGuesses: { ...existingGuesses, [playerID]: guess },
+    },
+    connectedPlayerIDs: connectedPlayerIds,
+  });
+}
+
+export function removePlayer({
+  game,
+  playerID,
+  connectedPlayerIDs,
+}: {
+  game: Game;
+  playerID: PlayerId;
+  connectedPlayerIDs: PlayerId[];
+}): Game {
+  const remainingGame: Game = {
+    ...game,
+    state: {
+      ...game.state,
+      results: withoutPlayer({ record: game.state.results, playerID }),
+    },
+  };
+  const currentRound: Round | undefined = game.state.currentRound;
+  if (!currentRound) return remainingGame;
+
+  const round: Round = currentRound.playersGuesses
+    ? {
+        ...currentRound,
+        playersGuesses: withoutPlayer({
+          record: currentRound.playersGuesses,
+          playerID,
+        }),
+      }
+    : currentRound;
+  const hasRemainingPlayer: boolean =
+    Object.keys(remainingGame.state.results).length > 0;
+  if (currentRound.status !== RoundStatus.GUESSING || !hasRemainingPlayer)
+    return {
+      ...remainingGame,
+      state: { ...remainingGame.state, currentRound: round },
+    };
+
+  return closeRoundOnceAllGuessed({
+    game: remainingGame,
+    round,
+    connectedPlayerIDs,
+  });
+}
+
+export function playerScore({
+  game,
+  playerID,
+}: {
+  game: Game;
+  playerID: PlayerId;
+}): number {
+  const currentRound: Round | undefined = game.state.currentRound;
+  const revealedRoundPoints: number =
+    currentRound?.status === RoundStatus.SHOWING_RESULTS
+      ? (currentRound.playersGuesses?.[playerID]?.points ?? 0)
+      : 0;
+  const completedRoundsPoints: number = calculateTotalPoints(
+    game.state.results[playerID] ?? { results: [] },
+  );
+  return completedRoundsPoints + revealedRoundPoints;
 }
 
 export function aggregateGameResults(

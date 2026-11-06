@@ -10,6 +10,7 @@ import {
   GameIdSchema,
   GameStatus,
   type Guess,
+  type GuessObjectId,
   type Pack,
   type PlayerId,
   type PlayerResults,
@@ -23,6 +24,8 @@ import {
   beginGame,
   createGuess,
   hideGuessingRoundGuesses,
+  playerScore,
+  removePlayer,
   resolveNextRound,
   revealGuessObject,
   roundGuessObjectIds,
@@ -43,6 +46,25 @@ export type CreateGameParams = {
   quickPlay: boolean;
   visitorId?: string;
 };
+
+function isRoundRevealed({
+  previousGame,
+  game,
+}: {
+  previousGame: Game;
+  game: Game;
+}): boolean {
+  return (
+    previousGame.state.currentRound?.status === RoundStatus.GUESSING &&
+    game.state.currentRound?.status === RoundStatus.SHOWING_RESULTS
+  );
+}
+
+function currentRoundNumber(game: Game): number {
+  const currentRound: Round | undefined = game.state.currentRound;
+  if (!currentRound) return 0;
+  return roundGuessObjectIds(game).indexOf(currentRound.guessObjectId) + 1;
+}
 
 @Injectable()
 export class GameService {
@@ -179,17 +201,9 @@ export class GameService {
     const currentRound: Round | undefined = game.state.currentRound;
     if (!currentRound) return game;
 
-    const [guessObject]: FullGuessObject[] =
-      await this.guessObjectService.findFullBy({
-        ids: [currentRound.guessObjectId],
-      });
-    if (!guessObject) {
-      throw new NotFoundException({
-        code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
-        message: 'Guess object of the current round not found',
-      });
-    }
-
+    const guessObject: FullGuessObject = await this.findRoundGuessObject(
+      currentRound.guessObjectId,
+    );
     const guess: Guess = coordinates
       ? createGuess(guessObject, coordinates)
       : defaultGuess;
@@ -199,13 +213,59 @@ export class GameService {
       guess,
       connectedPlayerIDs,
     );
-    const isRoundRevealed: boolean =
-      currentRound.status === RoundStatus.GUESSING &&
-      guessedGame.state.currentRound?.status === RoundStatus.SHOWING_RESULTS;
 
-    return isRoundRevealed
+    return isRoundRevealed({ previousGame: game, game: guessedGame })
       ? revealGuessObject({ game: guessedGame, guessObject })
       : guessedGame;
+  }
+
+  async abandonGame({
+    game,
+    playerID,
+    connectedPlayerIDs,
+    mode,
+    quickPlay,
+    visitorId,
+  }: {
+    game: Game;
+    playerID: PlayerId;
+    connectedPlayerIDs: PlayerId[];
+    mode: SessionMode;
+    quickPlay: boolean;
+    visitorId?: string;
+  }): Promise<Game> {
+    if (visitorId) {
+      await this.eventService.trackEvent(
+        createEvent({
+          name: 'game_abandoned',
+          visitorId,
+          properties: {
+            gameId: game.id,
+            mode,
+            quickPlay,
+            round: currentRoundNumber(game),
+            score: playerScore({ game, playerID }),
+          },
+        }),
+      );
+    }
+
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID,
+      connectedPlayerIDs,
+    });
+    const currentRound: Round | undefined = remainingGame.state.currentRound;
+    if (
+      !currentRound ||
+      !isRoundRevealed({ previousGame: game, game: remainingGame })
+    )
+      return remainingGame;
+
+    return revealGuessObject({
+      game: remainingGame,
+      guessObject: await this.findRoundGuessObject(currentRound.guessObjectId),
+    });
   }
 
   hideGuessingRoundGuesses(game: Game): Game {
@@ -234,6 +294,20 @@ export class GameService {
       ({ themeId, image, ...pack }) => pack,
     );
     return { ...gameConfig, packs };
+  }
+
+  private async findRoundGuessObject(
+    guessObjectId: GuessObjectId,
+  ): Promise<FullGuessObject> {
+    const [guessObject]: FullGuessObject[] =
+      await this.guessObjectService.findFullBy({ ids: [guessObjectId] });
+    if (!guessObject) {
+      throw new NotFoundException({
+        code: ErrorCode.GUESS_OBJECTS_NOT_FOUND,
+        message: 'Guess object of the current round not found',
+      });
+    }
+    return guessObject;
   }
 
   private async generateUniqueGameID(): Promise<GameId> {
