@@ -11,6 +11,7 @@ import { useNavigation } from '@/lib/navigation';
 import { ConnectionLostDialog } from './ConnectionLostDialog';
 import { MultiLobby } from './lobby/MultiLobby';
 import { SoloLobby } from './lobby/SoloLobby';
+import { PlayerDepartureNotice } from './PlayerDepartureNotice';
 
 type SessionProps = {
   sessionID: SessionId;
@@ -45,6 +46,7 @@ export default function Session({ sessionID }: SessionProps) {
           handleEndGame={sessionController.endGame}
           handlePlayAgain={sessionController.playAgain}
           handleExitGame={sessionController.exitGame}
+          handleLeaveGame={sessionController.leaveGame}
         />
       ) : sessionController.isLaunchingQuickPlay ? (
         <View className="flex-1 items-center justify-center">
@@ -68,6 +70,10 @@ export default function Session({ sessionID }: SessionProps) {
           handleJoinSession={sessionController.join}
         />
       )}
+
+      <PlayerDepartureNotice
+        departedPlayerIDs={sessionController.departedPlayerIDs}
+      />
 
       {sessionController.connectionStatus === 'reconnecting' && (
         <View className="absolute inset-0 items-center justify-center bg-black/30">

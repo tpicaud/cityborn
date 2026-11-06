@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text } from '@/components/ui/native/NativeComponents';
+import { GameOptions } from './GameOptions';
 import Guess from './guess/Guess';
 import Results from './Results';
 
@@ -23,6 +24,7 @@ export const Game = ({
   handleNextRound,
   handlePlayAgain,
   handleExitGame,
+  handleLeaveGame,
 }: GameComponentProps) => {
   const expoNavigation = useExpoNavigation();
   const gameDisplay = createGameDisplay(game, localPlayerID);
@@ -65,6 +67,10 @@ export const Game = ({
           handleNextRound={handleNextRound}
         />
       </View>
+
+      {gameDisplay.showOptions && (
+        <GameOptions handleLeaveGame={handleLeaveGame} />
+      )}
 
       {gameDisplay.showResults && (
         <View>

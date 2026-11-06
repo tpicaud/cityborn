@@ -18,6 +18,11 @@ export {
   useRoundTimer,
 } from './roundTimer';
 export {
+  type GameOptionsMenu,
+  type GameOptionsMenuOptions,
+  useGameOptionsMenu,
+} from './useGameOptionsMenu';
+export {
   type GameRound,
   type GameRoundOptions,
   useGameRound,

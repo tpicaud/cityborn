@@ -5,6 +5,7 @@ import { roundGuessObjectIds } from '@cityborn/core';
 type GameDisplayBase = {
   showNextRound: boolean;
   showResults: boolean;
+  showOptions: boolean;
   roundNumber: number | undefined;
   roundCount: number;
 };
@@ -32,6 +33,7 @@ export function createGameDisplay(
   const gameDisplayBase: GameDisplayBase = {
     showNextRound: currentRound?.status === RoundStatus.SHOWING_RESULTS,
     showResults: game.status === GameStatus.IN_RESULTS,
+    showOptions: false,
     roundNumber: roundIndex === -1 ? undefined : roundIndex + 1,
     roundCount: guessObjectIds.length,
   };
@@ -52,5 +54,10 @@ export function createGameDisplay(
     };
   }
 
-  return { ...gameDisplayBase, state: 'playing', localPlayerID };
+  return {
+    ...gameDisplayBase,
+    showOptions: game.status === GameStatus.IN_GAME,
+    state: 'playing',
+    localPlayerID,
+  };
 }
