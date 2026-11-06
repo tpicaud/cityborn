@@ -14,6 +14,7 @@ export * from './src/Panel';
 export * from './src/Popup';
 export * from './src/ProgressBar';
 export { gradients } from './src/palette';
+export * from './src/screen/BrandScreen';
 export * from './src/screen/LoadingScreen';
 export * from './src/screen/Screen';
 export * from './src/TabBar';
