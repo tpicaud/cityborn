@@ -47,7 +47,13 @@
     "test:e2e": "pnpm backend test:e2e",
     "test:watch": "turbo run test:watch",
     "test:cov": "turbo run test:cov",
-    "test:all": "turbo run test:all"
+    "test:all": "turbo run test:all",
+    "db:recette:start": "pnpm backend db:recette:start",
+    "db:recette:stop": "pnpm backend db:recette:stop",
+    "recette:prepare": "bash scripts/recette/launch.sh prepare",
+    "recette:backend": "bash scripts/recette/launch.sh backend",
+    "recette:frontend": "bash scripts/recette/launch.sh frontend",
+    "recette:captures": "bash scripts/recette/publish-captures.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",

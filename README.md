@@ -42,6 +42,10 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm test` lance les tests sans infrastructure. Pour toutes les suites, lancer `pnpm db:test:start`, puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Voir [les commandes de test](docs/testing.md).
 
+Pour une recette web isolée : `pnpm recette:prepare`, puis `pnpm recette:backend` et `pnpm recette:frontend`
+dans deux terminaux. Frontend sur `http://localhost:3100`, backend sur `http://localhost:4100`.
+Voir [les prérequis, l'arrêt et les captures de recette](docs/recette.md).
+
 La seed crée deux comptes :
 
 | Identifiant | Mot de passe | Rôle |

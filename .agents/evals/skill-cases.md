@@ -24,7 +24,12 @@ Relire ces cas quand la description d'un skill change : pour chaque prompt, seul
 | « Aide-moi à planifier le partage d'une partie multi. » | `manage-issue`, puis `grilling` avant le brouillon |
 | « Explique-moi ce que demande l'issue #400. » | `manage-issue` |
 | « Ajoute un commentaire sur l'issue #410 pour préciser ce qui est hors périmètre. » | `manage-issue` |
-| « Développe-moi l'issue #123. » | `deliver-issue` |
+| « Développe-moi l'issue #123. » | `deliver-issue`, puis `recette` après les correctifs si le diff affecte le web |
+| « Fais la recette web de la PR #300. » | `recette` |
+| « Termine la livraison d'une PR qui modifie le rendu via le package client ou design-system. » | `deliver-issue`, puis `recette` |
+| « Livre une modification exclusivement backend sans effet web. » | `deliver-issue`, sans `recette` |
+| « Fais la review de la PR #300 sans la lancer dans un navigateur. » | `review-pr`, sans `recette` |
+| « Vérifie l'app mobile sur téléphone. » | Le skill de conventions du périmètre, sans `recette` |
 | « Fais la review de la PR #300. » | `review-pr`, puis les skills de conventions des périmètres du diff |
 | « Challenge-moi sur mon plan de découpage du domaine session. » | `grilling` |
 | « Vérifie les dépréciations de l'API. » | `remove-deprecations` |

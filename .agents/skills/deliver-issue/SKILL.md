@@ -1,6 +1,6 @@
 ---
 name: deliver-issue
-description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, review puis correctifs par sous-agents."
+description: "Issue GitHub Cityborn à développer, corriger ou délivrer : dev, review, correctifs puis recette visuelle web par sous-agents."
 ---
 
 # Délivrer une issue
@@ -15,7 +15,7 @@ La préparation est terminée quand le worktree retenu utilise la branche liée,
 
 ## Lancer un sous-agent
 
-Ces règles valent pour les trois étapes.
+Ces règles valent pour chaque étape.
 
 - Lancer un sous-agent au contexte neuf et attendre son rapport avant l'étape suivante.
 - Lui transmettre le chemin absolu du worktree et la branche liée : il y exécute chaque commande et chaque modification.
@@ -51,6 +51,16 @@ Dans tous les cas, ajouter ensuite les findings hors périmètre à « Pistes »
 
 L'étape est terminée quand chaque finding a un statut, que chaque correctif commité est poussé et que « Pistes » liste chaque finding hors périmètre.
 
+## Étape 4 — Recette web
+
+- Après la review et les éventuels correctifs, examiner l'impact du diff sur le frontend, y compris via les packages partagés client et design-system.
+- Sans impact sur le web, inscrire dans « Recette » : « Sans objet : aucun impact web. » et passer au compte rendu final.
+- Sinon, lancer un sous-agent au contexte neuf avec Sonnet en effort medium ; si Sonnet est indisponible, utiliser `gpt-6.1-terra` en effort medium.
+- Lui transmettre les URL de l'issue et de la PR, le worktree, la branche liée et l'instruction d'appliquer `.agents/skills/recette/SKILL.md`.
+- Le rapport de recette donne les scénarios, résultats, anomalies et captures, ou le motif explicite de non-exécution ; les anomalies restent dans le rapport, sans nouvelle boucle de correctifs.
+
+L'étape est terminée quand la section « Recette » de la PR porte ce rapport et que seules les vérifications web exécutées et réussies sont cochées.
+
 ## Compte rendu final
 
-Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; le cas échéant, ajouter les vérifications en échec ou non exécutées et que les étapes ont tourné sans sous-agent.
+Indiquer l'issue traitée, le lien de la PR et le chemin du worktree, puis le rapport de livraison, identique à la description de la PR ; inclure « Recette » avec ses captures et résultats ou son motif de non-exécution ; le cas échéant, ajouter les vérifications en échec ou non exécutées et que les étapes ont tourné sans sous-agent.
