@@ -77,6 +77,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return await this.redisClient.hget(key, field);
   }
 
+  async hdel(key: string, field: string): Promise<void> {
+    await this.redisClient.hdel(key, field);
+  }
+
   async expire(key: string, ttlSeconds: number): Promise<void> {
     await this.redisClient.expire(key, ttlSeconds);
   }

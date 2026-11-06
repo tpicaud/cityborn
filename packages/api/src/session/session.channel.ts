@@ -51,6 +51,7 @@ export const sessionWsChannel = {
     },
     nextRound: {},
     playAgain: {},
+    leaveGame: {},
   },
   serverToClient: {
     update: { payload: SessionSchema },
@@ -67,6 +68,7 @@ export const sessionWsEvent = {
   submitGuess: wsEventName(sessionWsChannel, 'submitGuess'),
   nextRound: wsEventName(sessionWsChannel, 'nextRound'),
   playAgain: wsEventName(sessionWsChannel, 'playAgain'),
+  leaveGame: wsEventName(sessionWsChannel, 'leaveGame'),
 } satisfies WsClientEventNames<typeof sessionWsChannel>;
 
 export const sessionWsServerEvent = {

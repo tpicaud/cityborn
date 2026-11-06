@@ -9,6 +9,7 @@ export type GameComponentProps = {
   handleEndGame: () => Promise<void>;
   handlePlayAgain: () => Promise<void>;
   handleExitGame: () => Promise<void>;
+  handleLeaveGame: () => Promise<void>;
 };
 
 export type MapProps = {

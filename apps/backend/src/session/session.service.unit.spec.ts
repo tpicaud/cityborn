@@ -32,7 +32,11 @@ import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
-import { type JoinedSession, SessionService } from './session.service';
+import {
+  type JoinedSession,
+  type LeaveGameResult,
+  SessionService,
+} from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
@@ -757,6 +761,175 @@ describe('SessionService game operations', () => {
         '1045000',
         600,
       );
+    });
+  });
+
+  describe('leaveGame', () => {
+    it('removes the player from the session and from its game', async () => {
+      const game: Game = buildGame();
+      const remainingGame: Game = buildGame({ id: game.id });
+      const session: Session = buildSession({
+        status: SessionStatus.IN_GAME,
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'alice' }),
+          buildPlayer({ username: 'bob', connected: false }),
+        ],
+        currentGame: game,
+      });
+      const {
+        sessionService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.abandonGame.mockResolvedValue(remainingGame);
+
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
+        playerID: playerId('alice'),
+        sessionID: session.id,
+        visitorId: 'visitor-1',
+      });
+
+      expect(gameService.abandonGame).toHaveBeenCalledWith({
+        game,
+        playerID: playerId('alice'),
+        connectedPlayerIDs: [playerId('host')],
+        mode: SessionMode.MULTI,
+        quickPlay: false,
+        visitorId: 'visitor-1',
+      });
+      expect(
+        leaveGameResult.session.players.map((player) => player.username),
+      ).toEqual([playerId('host'), playerId('bob')]);
+      expect(leaveGameResult.session.currentGame).toBe(remainingGame);
+    });
+
+    it('gives the host role to the earliest connected player', async () => {
+      const session: Session = buildSession({
+        status: SessionStatus.IN_GAME,
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'alice', connected: false }),
+          buildPlayer({ username: 'bob' }),
+          buildPlayer({ username: 'carol' }),
+        ],
+        currentGame: buildGame(),
+      });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
+        playerID: playerId('host'),
+        sessionID: session.id,
+      });
+
+      expect(leaveGameResult.session.hostID).toBe(playerId('bob'));
+    });
+
+    it('revokes the reconnect token of the leaving player', async () => {
+      const session: Session = buildSession({ currentGame: buildGame() });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      await sessionService.leaveGame({
+        playerID: playerId('bob'),
+        sessionID: session.id,
+      });
+
+      expect(redisService.hdel).toHaveBeenCalledWith(
+        `session:${session.id}:reconnect-token-hashes`,
+        playerId('bob'),
+      );
+    });
+
+    it('keeps the player and its reconnect token when the game cannot be abandoned', async () => {
+      const session: Session = buildSession({
+        status: SessionStatus.IN_GAME,
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'bob' }),
+        ],
+        currentGame: buildGame(),
+      });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.abandonGame.mockRejectedValue(new Error('reveal failed'));
+
+      await expect(
+        sessionService.leaveGame({
+          playerID: playerId('bob'),
+          sessionID: session.id,
+        }),
+      ).rejects.toThrow('reveal failed');
+
+      expect(redisService.hdel).not.toHaveBeenCalled();
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
+    it('drops the game once its last player has left', async () => {
+      const session: Session = buildSession({
+        mode: SessionMode.SOLO,
+        status: SessionStatus.IN_GAME,
+        players: [buildPlayer({ username: 'host' })],
+        currentGame: buildGame(),
+      });
+      const {
+        sessionService,
+        redisService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
+        playerID: playerId('host'),
+        sessionID: session.id,
+      });
+
+      expect(leaveGameResult).toMatchObject({
+        session: {
+          status: SessionStatus.IN_LOBBY,
+          currentGame: undefined,
+          players: [],
+        },
+        gameId: 'game-1',
+      });
+      expect(redisService.setJSON).toHaveBeenCalledWith(
+        `session:${session.id}`,
+        expect.objectContaining({ currentGame: undefined, players: [] }),
+        600,
+      );
+    });
+
+    it('rejects leaving a session without a game in progress', async () => {
+      const session: Session = buildSession();
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.leaveGame({
+          playerID: playerId('bob'),
+          sessionID: session.id,
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_NO_CURRENT_GAME },
+      });
+    });
+
+    it('rejects a player who is not in the session', async () => {
+      const session: Session = buildSession({ currentGame: buildGame() });
+      const { sessionService }: ReturnType<typeof buildSessionService> =
+        buildSessionService(session);
+
+      await expect(
+        sessionService.leaveGame({
+          playerID: playerId('mallory'),
+          sessionID: session.id,
+        }),
+      ).rejects.toMatchObject({
+        response: { code: ErrorCode.SESSION_PLAYER_NOT_FOUND },
+      });
     });
   });
 

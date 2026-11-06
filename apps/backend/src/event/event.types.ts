@@ -25,6 +25,13 @@ export interface EventMap {
     numberOfPlayers: number;
     average_score: number;
   };
+  game_abandoned: {
+    gameId: string;
+    mode: SessionMode;
+    quickPlay: boolean;
+    round: number;
+    score: number;
+  };
 }
 
 export type Event<Name extends keyof EventMap = keyof EventMap> = {

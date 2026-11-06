@@ -207,6 +207,7 @@ describe('resolveWsAction', () => {
       'session.submitGuess',
       'session.nextRound',
       'session.playAgain',
+      'session.leaveGame',
       'session.connect',
       'session.disconnect',
     ]);

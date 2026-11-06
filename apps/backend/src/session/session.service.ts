@@ -6,6 +6,7 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
+  type GameId,
   type Guess,
   type GuessSubmission,
   type PlayerId,
@@ -46,6 +47,11 @@ import {
 export type JoinedSession = {
   session: Session;
   reconnectToken: SessionReconnectToken | undefined;
+};
+
+export type LeaveGameResult = {
+  session: Session;
+  gameId: GameId;
 };
 
 @Injectable()
@@ -375,6 +381,63 @@ export class SessionService {
       session.status = SessionStatus.IN_LOBBY;
       session.currentGame = undefined;
       return this.hideRoundGuesses(finishedGameSession);
+    });
+  }
+
+  async leaveGame({
+    playerID,
+    sessionID,
+    visitorId,
+  }: {
+    playerID: PlayerId;
+    sessionID: SessionId;
+    visitorId?: string;
+  }): Promise<LeaveGameResult> {
+    return await this.updateSession(sessionID, async (session) => {
+      if (!session.currentGame)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_NO_CURRENT_GAME,
+          message: `No current game in this session`,
+        });
+      const game: Game = session.currentGame;
+
+      const playerExists: boolean = session.players.some(
+        (player) => player.username === playerID,
+      );
+      if (!playerExists)
+        throw new NotFoundException({
+          code: ErrorCode.SESSION_PLAYER_NOT_FOUND,
+          message: `Player not found in session`,
+        });
+
+      session.players = session.players.filter(
+        (player) => player.username !== playerID,
+      );
+      this.reassignHostAfterRemoval(session, playerID);
+
+      const remainingGame: Game = await this.gameService.abandonGame({
+        game,
+        playerID,
+        connectedPlayerIDs: session.players
+          .filter((player) => player.connected)
+          .map((player) => player.username),
+        mode: session.mode,
+        quickPlay: session.quickPlay ?? false,
+        visitorId,
+      });
+      await this.redisService.hdel(
+        this.getReconnectTokenHashesKey(sessionID),
+        playerID,
+      );
+
+      if (session.players.length === 0) {
+        session.status = SessionStatus.IN_LOBBY;
+        session.currentGame = undefined;
+        return { session, gameId: game.id };
+      }
+
+      session.currentGame = remainingGame;
+      return { session: this.hideRoundGuesses(session), gameId: game.id };
     });
   }
 

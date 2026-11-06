@@ -10,6 +10,7 @@ import { Backdrop } from '@mui/material';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import Guess from '@/features/game/guess/Guess';
+import { GameOptions } from './GameOptions';
 import Results from './Results';
 
 export const Game = ({
@@ -22,6 +23,7 @@ export const Game = ({
   handleEndGame,
   handlePlayAgain,
   handleExitGame,
+  handleLeaveGame,
 }: GameComponentProps & {
   session: Session;
 }) => {
@@ -39,6 +41,9 @@ export const Game = ({
         game={game}
         handleGuess={handleGuess}
       />
+      {gameDisplay.showOptions && (
+        <GameOptions handleLeaveGame={handleLeaveGame} />
+      )}
       {gameDisplay.roundNumber !== undefined && (
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
           <div className="flex flex-col gap-2">

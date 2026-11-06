@@ -44,6 +44,7 @@ import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
 import { isHostOf, withStatus } from './sessionState';
+import { usePlayerDepartures } from './usePlayerDepartures';
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
@@ -66,6 +67,8 @@ export type SessionController = {
   endGame: () => Promise<void>;
   playAgain: () => Promise<void>;
   exitGame: () => Promise<void>;
+  leaveGame: () => Promise<void>;
+  departedPlayerIDs: PlayerId[];
 };
 
 type JoinedPlayer = {
@@ -106,6 +109,7 @@ export function useSessionController({
   const joinedPlayer: RefObject<JoinedPlayer | null> =
     useRef<JoinedPlayer | null>(null);
   const joinAttempted: RefObject<boolean> = useRef<boolean>(false);
+  const departedPlayerIDs: PlayerId[] = usePlayerDepartures(session?.players);
 
   const restoreSession = useCallback(
     async (restoredChannel: SessionChannel) => {
@@ -266,6 +270,12 @@ export function useSessionController({
     navigation.returnTo('/');
   };
 
+  const leaveGame: () => Promise<void> = async () => {
+    await emit(sessionWsEvent.leaveGame);
+    joinedPlayer.current = null;
+    navigation.returnTo('/');
+  };
+
   return {
     session,
     localPlayerID,
@@ -286,5 +296,7 @@ export function useSessionController({
     endGame: reportActionErrors({ action: endGame, reportError }),
     playAgain: reportActionErrors({ action: playAgain, reportError }),
     exitGame: reportActionErrors({ action: exitGame, reportError }),
+    leaveGame: reportActionErrors({ action: leaveGame, reportError }),
+    departedPlayerIDs,
   };
 }

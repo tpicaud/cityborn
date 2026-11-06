@@ -59,6 +59,9 @@ const ICONS = {
   close_outline: {
     ionicons: 'close-outline',
   },
+  settings_fill: {
+    ionicons: 'settings',
+  },
 };
 
 type IconName = keyof typeof ICONS;

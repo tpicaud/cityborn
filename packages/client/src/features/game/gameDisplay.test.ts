@@ -43,9 +43,21 @@ describe('createGameDisplay', () => {
       localPlayerID,
       showNextRound: true,
       showResults: true,
+      showOptions: false,
       roundNumber: 2,
       roundCount: 2,
     });
+  });
+
+  it('offers the options while a round is played', () => {
+    const playedGame: Game = {
+      ...gameShowingLastRoundResults,
+      status: GameStatus.IN_GAME,
+    };
+
+    const display: GameDisplay = createGameDisplay(playedGame, localPlayerID);
+
+    assert.equal(display.showOptions, true);
   });
 
   it('reports a starting game as loading', () => {
