@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {
   buildSession,
+  GameIdSchema,
   type Session,
   sessionWsEvent,
   sessionWsServerEvent,
@@ -50,7 +51,10 @@ describe('SessionGateway.leaveGame', () => {
     const session: Session = buildSession();
     const sessionService: DeepMocked<SessionService> =
       createMock<SessionService>();
-    sessionService.leaveGame.mockResolvedValue(session);
+    sessionService.leaveGame.mockResolvedValue({
+      session,
+      gameId: GameIdSchema.parse('game-1'),
+    });
     const gateway: SessionGateway = new SessionGateway(
       sessionService,
       createMock<WideEventService>(),
@@ -81,5 +85,33 @@ describe('SessionGateway.leaveGame', () => {
       session,
     );
     expect(actions).toEqual(['leave', 'broadcast']);
+  });
+
+  it('records the left game in the wide event once the game is dropped', async () => {
+    const session: Session = buildSession({ currentGame: undefined });
+    const sessionService: DeepMocked<SessionService> =
+      createMock<SessionService>();
+    sessionService.leaveGame.mockResolvedValue({
+      session,
+      gameId: GameIdSchema.parse('game-1'),
+    });
+    const wideEventService: DeepMocked<WideEventService> =
+      createMock<WideEventService>();
+    const gateway: SessionGateway = new SessionGateway(
+      sessionService,
+      wideEventService,
+      createMock<WsWideEventLifecycle>(),
+      sessionPresenceTiming,
+    );
+    gateway.io = createMock<AppServer>();
+    const socket: DeepMocked<AppSocket> = createMock<AppSocket>({
+      data: { player: { sessionID: session.id, playerID: session.hostID } },
+    });
+
+    await gateway.leaveGame(socket, undefined);
+
+    expect(wideEventService.enrichBusinessContext).toHaveBeenCalledWith({
+      gameId: 'game-1',
+    });
   });
 });

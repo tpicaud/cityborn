@@ -6,6 +6,7 @@ import {
   ErrorCode,
   type Game,
   type GameConfig,
+  type GameId,
   type Guess,
   type GuessSubmission,
   type PlayerId,
@@ -46,6 +47,11 @@ import {
 export type JoinedSession = {
   session: Session;
   reconnectToken: SessionReconnectToken | undefined;
+};
+
+export type LeftGame = {
+  session: Session;
+  gameId: GameId;
 };
 
 @Injectable()
@@ -386,7 +392,7 @@ export class SessionService {
     playerID: PlayerId;
     sessionID: SessionId;
     visitorId?: string;
-  }): Promise<Session> {
+  }): Promise<LeftGame> {
     return await this.updateSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({
@@ -408,10 +414,6 @@ export class SessionService {
         (player) => player.username !== playerID,
       );
       this.reassignHostAfterRemoval(session, playerID);
-      await this.redisService.hdel(
-        this.getReconnectTokenHashesKey(sessionID),
-        playerID,
-      );
 
       const remainingGame: Game = await this.gameService.abandonGame({
         game,
@@ -423,15 +425,19 @@ export class SessionService {
         quickPlay: session.quickPlay ?? false,
         visitorId,
       });
+      await this.redisService.hdel(
+        this.getReconnectTokenHashesKey(sessionID),
+        playerID,
+      );
 
       if (session.players.length === 0) {
         session.status = SessionStatus.IN_LOBBY;
         session.currentGame = undefined;
-        return session;
+        return { session, gameId: game.id };
       }
 
       session.currentGame = remainingGame;
-      return this.hideRoundGuesses(session);
+      return { session: this.hideRoundGuesses(session), gameId: game.id };
     });
   }
 

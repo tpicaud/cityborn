@@ -32,7 +32,11 @@ import type { GameService } from '../game/game.service';
 import type { IdService } from '../id/id.service';
 import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
-import { type JoinedSession, SessionService } from './session.service';
+import {
+  type JoinedSession,
+  type LeftGame,
+  SessionService,
+} from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
 
 const playerId: (value: string) => PlayerId = (value: string) =>
@@ -779,7 +783,7 @@ describe('SessionService game operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.abandonGame.mockResolvedValue(remainingGame);
 
-      const result: Session = await sessionService.leaveGame({
+      const leftGame: LeftGame = await sessionService.leaveGame({
         playerID: playerId('alice'),
         sessionID: session.id,
         visitorId: 'visitor-1',
@@ -793,11 +797,10 @@ describe('SessionService game operations', () => {
         quickPlay: false,
         visitorId: 'visitor-1',
       });
-      expect(result.players.map((player) => player.username)).toEqual([
-        playerId('host'),
-        playerId('bob'),
-      ]);
-      expect(result.currentGame).toBe(remainingGame);
+      expect(leftGame.session.players.map((player) => player.username)).toEqual(
+        [playerId('host'), playerId('bob')],
+      );
+      expect(leftGame.session.currentGame).toBe(remainingGame);
     });
 
     it('gives the host role to the earliest connected player', async () => {
@@ -814,12 +817,12 @@ describe('SessionService game operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const result: Session = await sessionService.leaveGame({
+      const leftGame: LeftGame = await sessionService.leaveGame({
         playerID: playerId('host'),
         sessionID: session.id,
       });
 
-      expect(result.hostID).toBe(playerId('bob'));
+      expect(leftGame.session.hostID).toBe(playerId('bob'));
     });
 
     it('revokes the reconnect token of the leaving player', async () => {
@@ -840,6 +843,33 @@ describe('SessionService game operations', () => {
       );
     });
 
+    it('keeps the player and its reconnect token when the game cannot be abandoned', async () => {
+      const session: Session = buildSession({
+        status: SessionStatus.IN_GAME,
+        players: [
+          buildPlayer({ username: 'host' }),
+          buildPlayer({ username: 'bob' }),
+        ],
+        currentGame: buildGame(),
+      });
+      const {
+        sessionService,
+        redisService,
+        gameService,
+      }: ReturnType<typeof buildSessionService> = buildSessionService(session);
+      gameService.abandonGame.mockRejectedValue(new Error('reveal failed'));
+
+      await expect(
+        sessionService.leaveGame({
+          playerID: playerId('bob'),
+          sessionID: session.id,
+        }),
+      ).rejects.toThrow('reveal failed');
+
+      expect(redisService.hdel).not.toHaveBeenCalled();
+      expect(redisService.setJSON).not.toHaveBeenCalled();
+    });
+
     it('drops the game once its last player has left', async () => {
       const session: Session = buildSession({
         mode: SessionMode.SOLO,
@@ -852,15 +882,18 @@ describe('SessionService game operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const result: Session = await sessionService.leaveGame({
+      const leftGame: LeftGame = await sessionService.leaveGame({
         playerID: playerId('host'),
         sessionID: session.id,
       });
 
-      expect(result).toMatchObject({
-        status: SessionStatus.IN_LOBBY,
-        currentGame: undefined,
-        players: [],
+      expect(leftGame).toMatchObject({
+        session: {
+          status: SessionStatus.IN_LOBBY,
+          currentGame: undefined,
+          players: [],
+        },
+        gameId: 'game-1',
       });
       expect(redisService.setJSON).toHaveBeenCalledWith(
         `session:${session.id}`,

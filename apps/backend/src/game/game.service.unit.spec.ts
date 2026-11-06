@@ -563,6 +563,30 @@ describe('GameService.abandonGame', () => {
     expect(guessObjectService.findFullBy).not.toHaveBeenCalled();
   });
 
+  it('does not track the abandonment when the guess object to reveal is missing', async () => {
+    const {
+      gameService,
+      guessObjectService,
+      eventService,
+    }: ReturnType<typeof buildGameService> = buildGameService();
+    guessObjectService.findFullBy.mockResolvedValue([]);
+
+    await expect(
+      gameService.abandonGame({
+        game: buildSecondRoundGame(),
+        playerID: alice,
+        connectedPlayerIDs: [bob],
+        mode: SessionMode.MULTI,
+        quickPlay: false,
+        visitorId: 'visitor-1',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: ErrorCode.GUESS_OBJECTS_NOT_FOUND },
+    });
+
+    expect(eventService.trackEvent).not.toHaveBeenCalled();
+  });
+
   it('does not track an anonymous abandonment', async () => {
     const { gameService, eventService }: ReturnType<typeof buildGameService> =
       buildGameService();

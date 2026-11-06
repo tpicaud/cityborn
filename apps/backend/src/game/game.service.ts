@@ -23,6 +23,7 @@ import {
   applyGuess,
   beginGame,
   createGuess,
+  currentRoundIndex,
   hideGuessingRoundGuesses,
   playerScore,
   removePlayer,
@@ -58,12 +59,6 @@ function isRoundRevealed({
     previousGame.state.currentRound?.status === RoundStatus.GUESSING &&
     game.state.currentRound?.status === RoundStatus.SHOWING_RESULTS
   );
-}
-
-function currentRoundNumber(game: Game): number {
-  const currentRound: Round | undefined = game.state.currentRound;
-  if (!currentRound) return 0;
-  return roundGuessObjectIds(game).indexOf(currentRound.guessObjectId) + 1;
 }
 
 @Injectable()
@@ -234,6 +229,23 @@ export class GameService {
     quickPlay: boolean;
     visitorId?: string;
   }): Promise<Game> {
+    const remainingGame: Game = removePlayer({
+      game,
+      playerID,
+      connectedPlayerIDs,
+    });
+    const currentRound: Round | undefined = remainingGame.state.currentRound;
+    const abandonedGame: Game =
+      currentRound &&
+      isRoundRevealed({ previousGame: game, game: remainingGame })
+        ? revealGuessObject({
+            game: remainingGame,
+            guessObject: await this.findRoundGuessObject(
+              currentRound.guessObjectId,
+            ),
+          })
+        : remainingGame;
+
     if (visitorId) {
       await this.eventService.trackEvent(
         createEvent({
@@ -243,29 +255,14 @@ export class GameService {
             gameId: game.id,
             mode,
             quickPlay,
-            round: currentRoundNumber(game),
+            round: currentRoundIndex(game) + 1,
             score: playerScore({ game, playerID }),
           },
         }),
       );
     }
 
-    const remainingGame: Game = removePlayer({
-      game,
-      playerID,
-      connectedPlayerIDs,
-    });
-    const currentRound: Round | undefined = remainingGame.state.currentRound;
-    if (
-      !currentRound ||
-      !isRoundRevealed({ previousGame: game, game: remainingGame })
-    )
-      return remainingGame;
-
-    return revealGuessObject({
-      game: remainingGame,
-      guessObject: await this.findRoundGuessObject(currentRound.guessObjectId),
-    });
+    return abandonedGame;
   }
 
   hideGuessingRoundGuesses(game: Game): Game {
