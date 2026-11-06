@@ -9,7 +9,10 @@
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "check": "biome check .",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test '**/*.test.ts'",
+    "test:all": "pnpm test",
+    "test:watch": "tsx --test --watch '**/*.test.ts'",
+    "test:cov": "c8 --reporter=text --reporter=lcov tsx --test '**/*.test.ts'"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
@@ -20,7 +23,8 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "c8": "^11.0.0"
   },
   "license": "ISC"
 }

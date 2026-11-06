@@ -72,20 +72,17 @@ const config: Config = {
     {
       ...baseProject,
       displayName: 'unit',
-      testMatch: [
-        '<rootDir>/src/**/*.unit.spec.ts',
-        '<rootDir>/test/support/**/*.unit.spec.ts',
-      ],
+      testMatch: ['<rootDir>/**/*.unit.spec.ts'],
     },
     {
       ...infrastructureProject,
       displayName: 'integration',
-      testMatch: ['<rootDir>/test/integration/**/*.integration.spec.ts'],
+      testMatch: ['<rootDir>/**/*.integration.spec.ts'],
     },
     {
       ...infrastructureProject,
       displayName: 'e2e',
-      testMatch: ['<rootDir>/test/e2e/**/*.e2e.spec.ts'],
+      testMatch: ['<rootDir>/**/*.e2e.spec.ts'],
     },
   ],
 };

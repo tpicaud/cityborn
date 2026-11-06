@@ -44,7 +44,10 @@
     "db:test:start": "pnpm backend db:test:start",
     "db:test:stop": "pnpm backend db:test:stop",
     "test:int": "pnpm backend test:int",
-    "test:e2e": "pnpm backend test:e2e"
+    "test:e2e": "pnpm backend test:e2e",
+    "test:watch": "turbo run test:watch",
+    "test:cov": "turbo run test:cov",
+    "test:all": "turbo run test:all"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
