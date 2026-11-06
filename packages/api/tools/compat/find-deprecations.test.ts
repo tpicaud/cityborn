@@ -50,4 +50,52 @@ describe('resolveDeprecationStatus', () => {
       versionsStillNeeded: 1,
     });
   });
+
+  it('does not count a draft as a newer release', () => {
+    const status: DeprecationStatus = resolveDeprecationStatus(
+      '2026-06-30',
+      {
+        versions: [
+          ...manifest.versions,
+          {
+            versionNumber: 4,
+            releasedAt: '2026-10-23T00:00:00.000Z',
+            draft: true,
+          },
+        ],
+      },
+      { min_days_supported: 90, min_num_of_version_supported: 2 },
+      new Date('2026-10-24T00:00:00.000Z'),
+    );
+
+    assert.deepEqual(status, {
+      kind: 'pending',
+      originVersion: {
+        versionNumber: 2,
+        releasedAt: '2026-07-01T00:00:00.000Z',
+      },
+      dayWindowExpiresAt: '2026-09-29T00:00:00.000Z',
+      versionsStillNeeded: 1,
+    });
+  });
+
+  it('reports a deprecation introduced only in a draft as not shipped', () => {
+    const status: DeprecationStatus = resolveDeprecationStatus(
+      '2026-10-22',
+      {
+        versions: [
+          ...manifest.versions,
+          {
+            versionNumber: 4,
+            releasedAt: '2026-10-23T00:00:00.000Z',
+            draft: true,
+          },
+        ],
+      },
+      { min_days_supported: 90, min_num_of_version_supported: 2 },
+      new Date('2026-10-24T00:00:00.000Z'),
+    );
+
+    assert.deepEqual(status, { kind: 'not-shipped' });
+  });
 });

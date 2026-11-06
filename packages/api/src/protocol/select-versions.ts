@@ -36,7 +36,9 @@ export function selectVersionsToCheck(
     (entry) => new Date(entry.releasedAt).getTime() >= cutoff,
   );
 
-  const mostRecent = sortedDesc.slice(0, policy.min_num_of_version_supported);
+  const mostRecent = sortedDesc
+    .filter((entry) => entry.draft !== true)
+    .slice(0, policy.min_num_of_version_supported);
 
   const union: ManifestEntry[] = [...withinWindow, ...mostRecent].filter(
     (entry, index, entries) =>
