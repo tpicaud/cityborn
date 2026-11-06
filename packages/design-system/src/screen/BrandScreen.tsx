@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import { styled, Text, View } from 'tamagui';
+import { ScrollView, styled, Text, View } from 'tamagui';
 import { type AssetImageProps, useAssetImage } from '../assetImage';
 import { Screen } from './Screen';
 
@@ -79,15 +79,24 @@ export function BrandScreen({ kicker, title, children }: BrandScreenProps) {
 
   return (
     <Screen>
-      <Logo role="img" aria-label="Cityborn">
-        <AssetImage asset="logo" />
-      </Logo>
-      <Separator />
-      <Headline>
-        {kicker !== undefined && <HeadlineKicker>{kicker}</HeadlineKicker>}
-        <HeadlineTitle>{title}</HeadlineTitle>
-      </Headline>
-      <Actions>{children}</Actions>
+      <ScrollView
+        flex={1}
+        mx="-4 md:-10"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View px="4 md:10" pb="4 md:6">
+          <Logo role="img" aria-label="Cityborn">
+            <AssetImage asset="logo" />
+          </Logo>
+          <Separator />
+          <Headline>
+            {kicker !== undefined && <HeadlineKicker>{kicker}</HeadlineKicker>}
+            <HeadlineTitle>{title}</HeadlineTitle>
+          </Headline>
+          <Actions>{children}</Actions>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
