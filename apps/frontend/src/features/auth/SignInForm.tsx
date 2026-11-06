@@ -2,73 +2,87 @@
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { Box, FormControl, TextField, Typography } from '@mui/material';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/buttons/Button';
+import { Button, FormText, TextField } from '@cityborn/design-system';
+import { Controller } from 'react-hook-form';
+import { View } from 'tamagui';
+import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { useNavigation } from '@/lib/navigation';
+import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
-export const SignInForm = () => {
-  const router: AppRouterInstance = useRouter();
+export function SignInForm() {
   const navigation: Navigation = useNavigation();
   const {
     form: {
-      register,
+      control,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignInFlow({
-    onSignedIn: () => navigation.returnTo('/'),
-  });
-
+  }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <Box
-      component="form"
-      onSubmit={submit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
-    >
-      <Typography variant="h5" align="center">
-        Connexion
-      </Typography>
-
-      <FormControl>
-        <TextField
-          label="Username"
-          {...register('identifier')}
-          error={!!errors.identifier}
-          helperText={errors.identifier?.message}
-        />
-      </FormControl>
-
-      <FormControl>
-        <TextField
-          type="password"
-          label="Password"
-          {...register('password')}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-        />
-      </FormControl>
-
-      <Button variant="contained" type="submit" loading={isSubmitting}>
-        Se connecter
-      </Button>
-
+    <AuthScreen title="Connexion">
+      <form onSubmit={submit}>
+        <View disableOptimization gap="3 md:4">
+          <Controller
+            control={control}
+            name="identifier"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="E-mail ou nom d’utilisateur"
+                autoComplete="username"
+                error={errors.identifier?.message}
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Mot de passe"
+                autoComplete="current-password"
+                error={errors.password?.message}
+                disabled={isSubmitting}
+                secureTextEntry
+                returnKeyType="done"
+              />
+            )}
+          />
+          <Button
+            compact
+            label="Se connecter"
+            onPress={submit}
+            loading={isSubmitting}
+          />
+        </View>
+        <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+      </form>
       <RequestPasswordResetDialog />
-
-      <Button variant="text" onClick={() => router.push('/auth/sign-up')}>
-        Pas de compte ? Inscris-toi ici !
-      </Button>
-
-      <div className="flex flex-row gap-3 items-center w-full">
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-        <Typography>OU</Typography>
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-      </div>
-
-      <SignInWithGoogleButton />
-    </Box>
+      <View gap="3" self="center" w="100%" maxW="md:96">
+        <FormText disableOptimization fontWeight="700">
+          Pas encore de compte ?
+        </FormText>
+        <Button
+          compact
+          label="S’inscrire"
+          variant="secondary"
+          onPress={() => navigation.push('/auth/sign-up')}
+        />
+      </View>
+      <View gap="4 md:6" items="center">
+        <SignInWithGoogleButton />
+      </View>
+      <LegalLinks onDarkBackground />
+    </AuthScreen>
   );
-};
+}

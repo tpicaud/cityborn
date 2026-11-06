@@ -3,15 +3,17 @@ import {
   type IdentityProviderSignIn,
   useIdentityProviderSignIn,
 } from '@cityborn/client/auth';
+import { BrandedButton } from '@cityborn/design-system';
 import {
   GoogleSignin,
+  isCancelledResponse,
+  isErrorWithCode,
   isSuccessResponse,
+  type SignInResponse,
+  statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, Pressable } from 'react-native';
 import { mobileClientConfig } from '@/config/client';
-import { cn } from '@/lib/classNames';
 
 GoogleSignin.configure({
   webClientId: mobileClientConfig.googleOAuthWebClientId,
@@ -20,49 +22,40 @@ GoogleSignin.configure({
 
 export const SignInWithGoogleButton = () => {
   const { reportError }: ErrorReporter = useErrorReporter();
-  const router = useRouter();
+  const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
     useIdentityProviderSignIn({
       onSignedIn: () => router.dismissTo('/'),
     });
-  const [isLoading, setIsLoading] = useState(false);
 
-  const signIn = async () => {
+  const signIn = async (): Promise<void> => {
     try {
       await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
+      const response: SignInResponse = await GoogleSignin.signIn();
+
+      if (isCancelledResponse(response)) return;
 
       if (isSuccessResponse(response)) {
-        const userInfo = response.data;
-        const idToken = userInfo.idToken;
+        const idToken: string | null = response.data.idToken;
         if (!idToken) return;
 
         await signInWithGoogle({ idToken });
       }
     } catch (error: unknown) {
+      if (
+        isErrorWithCode(error) &&
+        error.code === statusCodes.SIGN_IN_CANCELLED
+      )
+        return;
       reportError(error, 'La connexion avec Google a échoué.');
     }
   };
 
-  const handlePress = async () => {
-    try {
-      setIsLoading(true);
-      await signIn();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <Pressable
-      onPress={handlePress}
-      disabled={isLoading}
-      className={cn(isLoading ? 'opacity-50' : 'opacity-100')}
-    >
-      <Image
-        source={require('../../assets/images/google/android_light_rd_ctn.png')}
-        resizeMode="contain"
-      />
-    </Pressable>
+    <BrandedButton
+      label="Continuer avec Google"
+      icon="providers/google"
+      onPress={signIn}
+    />
   );
 };
