@@ -52,11 +52,11 @@ export function Screen({ title, onBack, children }: ScreenProps) {
         <ScreenColumn>
           {hasHeader && (
             <View>
-              <BackSlot>
-                {onBack && (
+              {onBack && (
+                <BackSlot>
                   <IconButton icon="back" label="Retour" onPress={onBack} />
-                )}
-              </BackSlot>
+                </BackSlot>
+              )}
               {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
             </View>
           )}
