@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-export type GameOptionsMenuStep = 'closed' | 'options' | 'leaveConfirmation';
+type GameOptionsMenuStep = 'closed' | 'options' | 'leaveConfirmation';
 
 export type GameOptionsMenuOptions = {
   leaveGame: () => Promise<void>;
@@ -22,11 +22,14 @@ export function useGameOptionsMenu({
 }: GameOptionsMenuOptions): GameOptionsMenu {
   const [step, setStep] = useState<GameOptionsMenuStep>('closed');
 
-  const open = useCallback(() => setStep('options'), []);
-  const close = useCallback(() => setStep('closed'), []);
-  const requestLeave = useCallback(() => setStep('leaveConfirmation'), []);
+  const open: () => void = useCallback(() => setStep('options'), []);
+  const close: () => void = useCallback(() => setStep('closed'), []);
+  const requestLeave: () => void = useCallback(
+    () => setStep('leaveConfirmation'),
+    [],
+  );
 
-  const confirmLeave = useCallback(async () => {
+  const confirmLeave: () => Promise<void> = useCallback(async () => {
     await leaveGame();
     setStep('closed');
   }, [leaveGame]);

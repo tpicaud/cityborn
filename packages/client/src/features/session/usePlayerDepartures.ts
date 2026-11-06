@@ -3,7 +3,7 @@
 import type { PlayerId, SessionPlayer } from '@cityborn/api';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
-const PLAYER_DEPARTURE_NOTICE_MS = 4000;
+const PLAYER_DEPARTURE_NOTICE_MS: number = 4000;
 
 export function departedPlayerIDs({
   previousPlayers,

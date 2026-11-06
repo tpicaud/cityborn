@@ -270,7 +270,7 @@ export function useSessionController({
     navigation.returnTo('/');
   };
 
-  const leaveGame = async () => {
+  const leaveGame: () => Promise<void> = async () => {
     await emit(sessionWsEvent.leaveGame);
     joinedPlayer.current = null;
     navigation.returnTo('/');

@@ -3,8 +3,14 @@ import {
   useGameOptionsMenu,
 } from '@cityborn/client/game';
 import { useNavigation } from 'expo-router';
-import { usePreventRemove } from 'expo-router/react-navigation';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  type NavigationProp,
+  usePreventRemove,
+} from 'expo-router/react-navigation';
+import {
+  type EdgeInsets,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { View } from '@/components/ui/native/NativeComponents';
@@ -16,7 +22,8 @@ type GameOptionsProps = {
 const BACK_ACTION_TYPES: string[] = ['GO_BACK', 'POP'];
 
 function useBackInterception(onBack: () => void): void {
-  const navigation = useNavigation();
+  const navigation: NavigationProp<ReactNavigation.RootParamList> =
+    useNavigation();
 
   usePreventRemove(true, ({ data }) => {
     if (BACK_ACTION_TYPES.includes(data.action.type)) {
@@ -28,7 +35,7 @@ function useBackInterception(onBack: () => void): void {
 }
 
 export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
-  const insets = useSafeAreaInsets();
+  const insets: EdgeInsets = useSafeAreaInsets();
   const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
     leaveGame: handleLeaveGame,
   });

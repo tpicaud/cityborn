@@ -1,5 +1,8 @@
 import type { PlayerId } from '@cityborn/api';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  type EdgeInsets,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Text, View } from '@/components/ui/native/NativeComponents';
 
 type PlayerDepartureNoticeProps = {
@@ -9,7 +12,7 @@ type PlayerDepartureNoticeProps = {
 export function PlayerDepartureNotice({
   departedPlayerIDs,
 }: PlayerDepartureNoticeProps) {
-  const insets = useSafeAreaInsets();
+  const insets: EdgeInsets = useSafeAreaInsets();
 
   if (departedPlayerIDs.length === 0) return null;
 
