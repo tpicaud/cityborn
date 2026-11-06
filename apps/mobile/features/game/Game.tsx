@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import LoaderIcon from '@/components/ui/LoaderIcon';
 import { Text } from '@/components/ui/native/NativeComponents';
-import { GameOptions } from './GameOptions';
+import { GameOptions } from './game-options/GameOptions';
 import Guess from './guess/Guess';
 import Results from './Results';
 

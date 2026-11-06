@@ -38,7 +38,7 @@ import { WideEventService } from '../common/wide-event/wide-event.service';
 import { WsWideEventLifecycle } from '../common/wide-event/ws-wide-event.lifecycle';
 import {
   type JoinedSession,
-  type LeftGame,
+  type LeaveGameResult,
   SessionService,
 } from './session.service';
 import {
@@ -256,11 +256,12 @@ export class SessionGateway
     @CurrentVisitorId() visitorId: VisitorId | undefined,
   ): Promise<void> {
     const { playerID, sessionID }: SocketPlayer = this.resolvePlayer(socket);
-    const { session, gameId }: LeftGame = await this.sessionService.leaveGame({
-      playerID,
-      sessionID,
-      visitorId,
-    });
+    const { session, gameId }: LeaveGameResult =
+      await this.sessionService.leaveGame({
+        playerID,
+        sessionID,
+        visitorId,
+      });
     this.wideEventService.enrichBusinessContext({ gameId });
     socket.data.player = null;
     await socket.leave(sessionID);

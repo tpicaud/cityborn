@@ -34,7 +34,7 @@ import type { LockService } from '../lock/lock.service';
 import type { RedisService } from '../redis/redis.service';
 import {
   type JoinedSession,
-  type LeftGame,
+  type LeaveGameResult,
   SessionService,
 } from './session.service';
 import { sessionPresenceTiming } from './session-presence-timing';
@@ -783,7 +783,7 @@ describe('SessionService game operations', () => {
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
       gameService.abandonGame.mockResolvedValue(remainingGame);
 
-      const leftGame: LeftGame = await sessionService.leaveGame({
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
         playerID: playerId('alice'),
         sessionID: session.id,
         visitorId: 'visitor-1',
@@ -797,10 +797,10 @@ describe('SessionService game operations', () => {
         quickPlay: false,
         visitorId: 'visitor-1',
       });
-      expect(leftGame.session.players.map((player) => player.username)).toEqual(
-        [playerId('host'), playerId('bob')],
-      );
-      expect(leftGame.session.currentGame).toBe(remainingGame);
+      expect(
+        leaveGameResult.session.players.map((player) => player.username),
+      ).toEqual([playerId('host'), playerId('bob')]);
+      expect(leaveGameResult.session.currentGame).toBe(remainingGame);
     });
 
     it('gives the host role to the earliest connected player', async () => {
@@ -817,12 +817,12 @@ describe('SessionService game operations', () => {
       const { sessionService }: ReturnType<typeof buildSessionService> =
         buildSessionService(session);
 
-      const leftGame: LeftGame = await sessionService.leaveGame({
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
         playerID: playerId('host'),
         sessionID: session.id,
       });
 
-      expect(leftGame.session.hostID).toBe(playerId('bob'));
+      expect(leaveGameResult.session.hostID).toBe(playerId('bob'));
     });
 
     it('revokes the reconnect token of the leaving player', async () => {
@@ -882,12 +882,12 @@ describe('SessionService game operations', () => {
         redisService,
       }: ReturnType<typeof buildSessionService> = buildSessionService(session);
 
-      const leftGame: LeftGame = await sessionService.leaveGame({
+      const leaveGameResult: LeaveGameResult = await sessionService.leaveGame({
         playerID: playerId('host'),
         sessionID: session.id,
       });
 
-      expect(leftGame).toMatchObject({
+      expect(leaveGameResult).toMatchObject({
         session: {
           status: SessionStatus.IN_LOBBY,
           currentGame: undefined,

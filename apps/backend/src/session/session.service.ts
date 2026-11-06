@@ -49,7 +49,7 @@ export type JoinedSession = {
   reconnectToken: SessionReconnectToken | undefined;
 };
 
-export type LeftGame = {
+export type LeaveGameResult = {
   session: Session;
   gameId: GameId;
 };
@@ -392,7 +392,7 @@ export class SessionService {
     playerID: PlayerId;
     sessionID: SessionId;
     visitorId?: string;
-  }): Promise<LeftGame> {
+  }): Promise<LeaveGameResult> {
     return await this.updateSession(sessionID, async (session) => {
       if (!session.currentGame)
         throw new NotFoundException({

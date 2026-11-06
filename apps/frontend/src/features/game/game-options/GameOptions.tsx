@@ -6,27 +6,15 @@ import {
 } from '@cityborn/client/game';
 import { Settings } from '@mui/icons-material';
 import { Box } from '@mui/material';
-import { useEffect } from 'react';
 import Button from '@/components/ui/buttons/Button';
 import IconButton from '@/components/ui/buttons/IconButton';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import { Dialog } from '@/components/ui/dialogs/Dialog';
+import { useBrowserBackInterception } from './useBrowserBackInterception';
 
 type GameOptionsProps = {
   handleLeaveGame: () => Promise<void>;
 };
-
-function useBrowserBackInterception(onBack: () => void): void {
-  useEffect(() => {
-    window.history.pushState(window.history.state, '', window.location.href);
-    const handlePopState: () => void = () => {
-      window.history.pushState(window.history.state, '', window.location.href);
-      onBack();
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [onBack]);
-}
 
 export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
   const optionsMenu: GameOptionsMenu = useGameOptionsMenu({

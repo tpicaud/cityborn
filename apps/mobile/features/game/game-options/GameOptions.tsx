@@ -17,23 +17,22 @@ import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
 import { Icon } from '@/components/ui/Icon';
 import { View } from '@/components/ui/native/NativeComponents';
+import { interceptBackAction } from './interceptBackAction';
 
 type GameOptionsProps = {
   handleLeaveGame: () => Promise<void>;
 };
-
-const BACK_ACTION_TYPES: string[] = ['GO_BACK', 'POP'];
 
 function useBackInterception(onBack: () => void): void {
   const navigation: NavigationProp<ReactNavigation.RootParamList> =
     useNavigation();
 
   usePreventRemove(true, ({ data }) => {
-    if (BACK_ACTION_TYPES.includes(data.action.type)) {
-      onBack();
-      return;
-    }
-    navigation.dispatch(data.action);
+    interceptBackAction({
+      action: data.action,
+      onBack,
+      resume: navigation.dispatch,
+    });
   });
 }
 
