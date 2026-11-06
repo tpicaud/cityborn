@@ -2,17 +2,20 @@ import {
   type GameOptionsMenu,
   useGameOptionsMenu,
 } from '@cityborn/client/game';
+import { colors } from '@cityborn/design-system';
 import { useNavigation } from 'expo-router';
 import {
   type NavigationProp,
   usePreventRemove,
 } from 'expo-router/react-navigation';
+import { Pressable } from 'react-native';
 import {
   type EdgeInsets,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
+import { Icon } from '@/components/ui/Icon';
 import { View } from '@/components/ui/native/NativeComponents';
 
 type GameOptionsProps = {
@@ -51,7 +54,18 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
           zIndex: 30,
         }}
       >
-        <Button label="Options" onPress={optionsMenu.open} />
+        <Pressable
+          accessibilityLabel="Options"
+          accessibilityRole="button"
+          onPress={optionsMenu.open}
+          className="h-11 w-11 items-center justify-center rounded-full bg-primary-500"
+        >
+          <Icon
+            name="settings_fill"
+            size={24}
+            color={colors.background.DEFAULT}
+          />
+        </Pressable>
       </View>
 
       <Dialog
@@ -70,15 +84,17 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
         className="h-auto"
       >
         {optionsMenu.step === 'leaveConfirmation' ? (
-          <View className="flex-row gap-3">
+          <View className="w-full flex-row gap-3">
             <Button
               label="Annuler"
               variant="outlined"
+              className="w-auto flex-1"
               onPress={optionsMenu.cancelLeave}
             />
             <Button
               label="Quitter"
               color="destructive"
+              className="w-auto flex-1"
               onPress={optionsMenu.confirmLeave}
             />
           </View>
@@ -87,6 +103,7 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
             <Button
               size="medium"
               label="Reprendre"
+              className="w-full"
               onPress={optionsMenu.resume}
             />
             <Button
@@ -94,6 +111,7 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
               label="Quitter"
               variant="outlined"
               color="destructive"
+              className="w-full"
               onPress={optionsMenu.requestLeave}
             />
           </View>

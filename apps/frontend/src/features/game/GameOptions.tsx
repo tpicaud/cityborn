@@ -8,6 +8,7 @@ import { Settings } from '@mui/icons-material';
 import { Box } from '@mui/material';
 import { useEffect } from 'react';
 import Button from '@/components/ui/buttons/Button';
+import IconButton from '@/components/ui/buttons/IconButton';
 import LoadingButton from '@/components/ui/buttons/LoadingButton';
 import { Dialog } from '@/components/ui/dialogs/Dialog';
 
@@ -36,15 +37,17 @@ export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
   return (
     <>
       <div className="absolute top-2 left-6 z-[1300]">
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Settings />}
+        <IconButton
+          aria-label="Options"
           onClick={optionsMenu.open}
-          sx={{ borderRadius: 6, fontWeight: 'bold' }}
+          sx={{
+            bgcolor: 'background.paper',
+            boxShadow: 2,
+            '&:hover': { bgcolor: 'background.paper' },
+          }}
         >
-          Options
-        </Button>
+          <Settings />
+        </IconButton>
       </div>
 
       <Dialog
