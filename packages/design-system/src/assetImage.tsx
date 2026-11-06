@@ -10,6 +10,7 @@ export type ImageAsset =
   | `navigation/${TabIcon}-pressed`
   | 'backgrounds/phone'
   | 'backgrounds/tablet'
+  | 'logo'
   | 'monogram';
 
 export type AssetImageProps = {

@@ -32,6 +32,13 @@ const componentColors = {
   scrim: 'rgba(0, 0, 0, 0.6)',
   'tab-highlight-fill': 'rgba(26, 255, 217, 0.09)',
   'tab-highlight-border': 'rgba(26, 255, 217, 0.48)',
+  'outline-cta-fill': 'rgba(46, 21, 0, 0.25)',
+  'outline-cta-border': 'rgba(248, 175, 112, 0.6)',
+  'outline-cta-ring': 'rgba(0, 0, 0, 0.22)',
+  'outline-cta-label': '#F8AF70',
+  'separator-shade': 'rgba(0, 0, 0, 0.4)',
+  'separator-light': 'rgba(255, 255, 255, 0.28)',
+  'headline-kicker': 'rgba(255, 255, 255, 0.38)',
 } as const;
 
 type GradientStops = readonly [string, string];
