@@ -12,6 +12,7 @@ Aucune installation globale de cet outil n'est requise pour les tests ou `pnpm c
 La commande lance ses propres conteneurs PostgreSQL/PostGIS et Redis, sur des ports locaux attribués par Docker.
 Elle applique les migrations via le setup des suites, lance intégration puis e2e, puis supprime ses conteneurs et volumes.
 Le nettoyage s'exécute après réussite, échec ou interruption SIGINT/SIGTERM, y compris si le démarrage échoue.
+Les conteneurs temporaires des tests de restauration sont étiquetés par `TEST_DOCKER_RUN_ID` et nettoyés eux aussi.
 Les services déjà présents sont conservés. Deux exécutions peuvent coexister.
 `pnpm backend test:all` exécute uniquement les suites backend avec la même isolation.
 

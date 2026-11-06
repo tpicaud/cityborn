@@ -128,6 +128,7 @@
     "//#db:restore": {
       "cache": false,
       "passThroughEnv": [
+        "TEST_DOCKER_RUN_ID",
         "RESTORE_STAGING_DB_URL",
         "RESTORE_STAGING_SSL_ROOT_CERT",
         "RESTORE_STAGING_PROJECT_REF",

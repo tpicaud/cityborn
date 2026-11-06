@@ -10,6 +10,7 @@ fi
 
 directory=$(mktemp -d "${TMPDIR:-/tmp}/cityborn-tests.XXXXXXXX")
 project=$(basename "$directory" | tr '[:upper:].' '[:lower:]-')
+export TEST_DOCKER_RUN_ID="$project"
 child=''
 compose() {
   docker compose -p "$project" -f scripts/tests/compose.yml "$@"
@@ -24,6 +25,10 @@ cleanup() {
     kill -KILL -- "-$child" 2>/dev/null || true
     wait "$child" 2>/dev/null || true
   fi
+  containers=$(docker ps -aq --filter "label=cityborn.test-run=$TEST_DOCKER_RUN_ID") || status=1
+  while IFS= read -r container; do
+    [[ -z "$container" ]] || docker rm -fv "$container" || status=1
+  done <<< "$containers"
   compose down --volumes --remove-orphans || status=1
   rmdir "$directory"
   exit "$status"
