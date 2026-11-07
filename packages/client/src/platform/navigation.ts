@@ -1,7 +1,6 @@
 export type NavigationPath =
   | '/'
   | '/profile'
-  | '/profile/sign-up'
   | `/session/solo/${string}`
   | `/session/multi/${string}`;
 

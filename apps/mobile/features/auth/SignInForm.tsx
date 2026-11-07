@@ -11,7 +11,7 @@ import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
-export function SignInForm() {
+export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
   const navigation: Navigation = useNavigation();
   const {
     form: {
@@ -72,7 +72,7 @@ export function SignInForm() {
           compact
           label="S’inscrire"
           variant="secondary"
-          onPress={() => navigation.push('/profile/sign-up')}
+          onPress={onSignUp}
         />
       </View>
       <View gap="4 md:6" items="center">

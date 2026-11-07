@@ -1,30 +1,22 @@
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
-import type { Navigation } from '@cityborn/client/platform';
 import { Button, TextButton, TextField } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { View } from 'tamagui';
-import { useNavigation } from '@/lib/navigation';
 import { SignInWithAppleButton } from './AppleSignIn';
 import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
-export function SignUpForm() {
-  const navigation: Navigation = useNavigation();
+export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   const {
     form: {
       control,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignUpFlow = useSignUpFlow({
-    onSignedIn: () => navigation.returnTo('/profile'),
-  });
+  }: SignUpFlow = useSignUpFlow();
   return (
-    <AuthScreen
-      title="Inscription"
-      onBack={() => navigation.returnTo('/profile')}
-    >
+    <AuthScreen title="Inscription">
       <View gap="3 md:4">
         <Controller
           control={control}
@@ -102,10 +94,7 @@ export function SignUpForm() {
           loading={isSubmitting}
         />
       </View>
-      <TextButton
-        label="Déjà un compte ? Se connecter"
-        onPress={() => navigation.returnTo('/profile')}
-      />
+      <TextButton label="Déjà un compte ? Se connecter" onPress={onSignIn} />
       <View gap="4 md:6" items="center">
         <SignInWithGoogleButton />
         {Platform.OS === 'ios' && <SignInWithAppleButton />}
