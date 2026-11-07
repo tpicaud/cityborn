@@ -7,7 +7,6 @@ import { Controller } from 'react-hook-form';
 import { View } from 'tamagui';
 import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { useNavigation } from '@/lib/navigation';
-import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
@@ -21,7 +20,7 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
     submit,
   }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <AuthScreen title="Connexion">
+    <>
       <form onSubmit={submit}>
         <View disableOptimization gap="3 md:4">
           <Controller
@@ -83,6 +82,6 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
         <SignInWithGoogleButton />
       </View>
       <LegalLinks onDarkBackground />
-    </AuthScreen>
+    </>
   );
 }
