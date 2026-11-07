@@ -1,6 +1,8 @@
 import {
   API_CURRENT_VERSION_HEADER_NAME,
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
+  buildFullGuessObject,
+  buildGame,
   buildSession,
   buildUser,
   buildWorldLocation,
@@ -9,6 +11,7 @@ import {
   contract,
   ErrorCode,
   getApiVersionInfo,
+  type Session,
   SessionSchema,
   type User,
   UserSchema,
@@ -114,6 +117,42 @@ describe('Production bootstrap', () => {
     expect(response.body).toMatchObject({
       statusCode: 401,
       code: ErrorCode.USER_TOKEN_MISSING,
+    });
+  });
+
+  it('parses a replayed game with its geometries on game creation', async () => {
+    const session: Session = buildSession({
+      currentGame: buildGame({
+        state: {
+          guessObjectsIds: [],
+          results: {},
+          guessObjects: [
+            buildFullGuessObject({
+              world_location: buildWorldLocation({
+                geometry: {
+                  type: 'Polygon',
+                  coordinates: [
+                    Array.from({ length: 40_000 }, (_, index: number) => [
+                      120.1 + index / 100_000,
+                      30.2512345,
+                    ]),
+                  ],
+                },
+              }),
+            }),
+          ],
+        },
+      }),
+    });
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createGame.path)
+      .send(session)
+      .expect(404);
+
+    expect(response.body).toMatchObject({
+      statusCode: 404,
+      code: ErrorCode.GAME_NO_PUBLISHED_PACK,
     });
   });
 
