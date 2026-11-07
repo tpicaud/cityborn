@@ -8,6 +8,7 @@ import {
   type ViewProps,
 } from 'tamagui';
 import { type AssetImageProps, useAssetImage } from '../assetImage';
+import { IconButton } from '../IconButton';
 import { Screen } from './Screen';
 
 type LogoSize = {
@@ -119,6 +120,7 @@ type BrandScreenProps = {
   children: ReactNode;
   form?: boolean;
   bottomSafeArea?: boolean;
+  onBack?: () => void;
 };
 
 export function BrandScreen({
@@ -127,6 +129,7 @@ export function BrandScreen({
   children,
   form = false,
   bottomSafeArea = false,
+  onBack,
 }: BrandScreenProps) {
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
   const [compactForm, setCompactForm] = useState<boolean>(true);
@@ -156,6 +159,11 @@ export function BrandScreen({
           showsVerticalScrollIndicator={false}
         >
           <View px="4 md:10" pb="4 md:6">
+            {onBack && (
+              <View position="absolute" t="0" l="2 md:8">
+                <IconButton icon="back" label="Retour" onPress={onBack} />
+              </View>
+            )}
             <Logo formDensity={formDensity} role="img" aria-label="Cityborn">
               <AssetImage asset="logo" />
             </Logo>
