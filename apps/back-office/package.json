@@ -32,7 +32,7 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-hook-form": "^7.86.0",
-    "swagger-ui-react": "^5.32.4",
+    "swagger-ui-react": "^5.34.1",
     "tailwind-merge": "^3.5.0",
     "zod": "^3.25.76"
   },
