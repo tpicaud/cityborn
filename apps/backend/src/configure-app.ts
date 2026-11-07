@@ -1,4 +1,4 @@
-import { installFrenchZodErrorMap } from '@cityborn/api';
+import { contract, installFrenchZodErrorMap } from '@cityborn/api';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
@@ -8,6 +8,13 @@ import { apiVersionHeaderMiddleware } from './common/middlewares/api-version-hea
 import { HttpWideEventMiddleware } from './common/middlewares/http-wide-event.middleware';
 import { backendConfig } from './config/backend.config';
 import { RedisIoAdapter } from './redis/redis.adapter';
+
+const DEFAULT_BODY_LIMIT: string = '100kb';
+const GEOMETRY_BODY_LIMIT: string = '3mb';
+const GEOMETRY_BODY_PATHS: string[] = [
+  contract.admin.worldLocation.createWorldLocation.path,
+  contract.session.createGame.path,
+];
 
 export async function configureApp(app: NestExpressApplication): Promise<void> {
   installFrenchZodErrorMap();
@@ -31,8 +38,9 @@ export async function configureApp(app: NestExpressApplication): Promise<void> {
   const redisIoAdapter = await RedisIoAdapter.create(app);
   app.useWebSocketAdapter(redisIoAdapter);
 
-  app.use(bodyParser.json({ limit: '10mb' }));
-  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+  app.use(GEOMETRY_BODY_PATHS, bodyParser.json({ limit: GEOMETRY_BODY_LIMIT }));
+  app.use(bodyParser.json({ limit: DEFAULT_BODY_LIMIT }));
+  app.use(bodyParser.urlencoded({ limit: DEFAULT_BODY_LIMIT, extended: true }));
   app.use(
     compression({
       level: 6,

@@ -3,6 +3,9 @@ import {
   API_MIN_SUPPORTED_VERSION_HEADER_NAME,
   buildSession,
   buildUser,
+  buildWorldLocation,
+  type CreateWorldLocation,
+  CreateWorldLocationSchema,
   contract,
   ErrorCode,
   getApiVersionInfo,
@@ -72,6 +75,45 @@ describe('Production bootstrap', () => {
       statusCode: 400,
       code: ErrorCode.BAD_REQUEST,
       fieldErrors: [{ path: 'mode', message: expect.any(String) }],
+    });
+  });
+
+  it('rejects a body over 100kb outside the geometry routes', async () => {
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.session.createSession.path)
+      .send({ mode: 'solo', padding: 'x'.repeat(200_000) })
+      .expect(413);
+
+    expect(response.body).toMatchObject({
+      statusCode: 413,
+      code: ErrorCode.BAD_REQUEST,
+      message: 'Request body too large',
+    });
+  });
+
+  it('parses a country-sized geometry on world location creation', async () => {
+    const worldLocation: CreateWorldLocation = CreateWorldLocationSchema.parse(
+      buildWorldLocation({
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            Array.from({ length: 80_000 }, (_, index: number) => [
+              73.5 + index / 100_000,
+              39.3812345,
+            ]),
+          ],
+        },
+      }),
+    );
+
+    const response: request.Response = await request(app.getHttpServer())
+      .post(contract.admin.worldLocation.createWorldLocation.path)
+      .send(worldLocation)
+      .expect(401);
+
+    expect(response.body).toMatchObject({
+      statusCode: 401,
+      code: ErrorCode.USER_TOKEN_MISSING,
     });
   });
 
