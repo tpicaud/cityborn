@@ -7,22 +7,15 @@ type AuthScreenProps = {
   title: string;
   children: ReactNode;
   bottomSafeArea?: boolean;
-  onBack?: () => void;
 };
 
 export function AuthScreen({
   title,
   children,
   bottomSafeArea = false,
-  onBack,
 }: AuthScreenProps) {
   return (
-    <BrandScreen
-      title={title}
-      form
-      bottomSafeArea={bottomSafeArea}
-      onBack={onBack}
-    >
+    <BrandScreen title={title} form bottomSafeArea={bottomSafeArea}>
       {children}
     </BrandScreen>
   );
