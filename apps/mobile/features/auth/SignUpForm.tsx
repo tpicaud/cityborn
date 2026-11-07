@@ -4,7 +4,6 @@ import { Controller } from 'react-hook-form';
 import { Platform } from 'react-native';
 import { View } from 'tamagui';
 import { SignInWithAppleButton } from './AppleSignIn';
-import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
@@ -16,7 +15,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
     submit,
   }: SignUpFlow = useSignUpFlow();
   return (
-    <AuthScreen title="Inscription">
+    <>
       <View gap="3 md:4">
         <Controller
           control={control}
@@ -99,6 +98,6 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
         <SignInWithGoogleButton />
         {Platform.OS === 'ios' && <SignInWithAppleButton />}
       </View>
-    </AuthScreen>
+    </>
   );
 }
