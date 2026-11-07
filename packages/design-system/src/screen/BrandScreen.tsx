@@ -140,6 +140,7 @@ export function BrandScreen({
   const [compactForm, setCompactForm] = useState<boolean>(true);
   const scrollViewRef: RefObject<GetRef<typeof ScrollView> | null> =
     useRef<GetRef<typeof ScrollView>>(null);
+  const scrolledTitleRef: RefObject<string> = useRef<string>(title);
   const formDensity: FormDensity = form
     ? compactForm
       ? 'compact'
@@ -154,6 +155,8 @@ export function BrandScreen({
     : undefined;
 
   useEffect(() => {
+    if (scrolledTitleRef.current === title) return;
+    scrolledTitleRef.current = title;
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [title]);
 
