@@ -40,7 +40,7 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm <app>:dev` n'en lance qu'une (`backend`, `frontend`, `back-office` ou `mobile`). `pnpm db:stop` arrête PostgreSQL et Redis.
 
-`pnpm test` lance les tests sans infrastructure. Pour toutes les suites, lancer `pnpm db:test:start`, puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. Voir [les commandes de test](docs/testing.md).
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
 
 La seed crée deux comptes :
 

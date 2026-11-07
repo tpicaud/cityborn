@@ -1,6 +1,6 @@
 # Observabilité — drain Axiom
 
-Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours sur stdout — donc dans Railway, qui reste le filet — et vers Axiom quand il est configuré. Construction des events : [référence d'observabilité](../../.agents/skills/conventions-backend/references/observability.md).
+Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours sur stdout — donc dans Railway, qui reste le filet — et vers Axiom quand il est configuré. Construction des events : [référence d'observabilité](../.agents/skills/conventions-backend/references/observability.md).
 
 ## Configuration
 
@@ -9,7 +9,7 @@ Un wide event par requête HTTP, message WS, connexion et déconnexion, toujours
 | `AXIOM_TOKEN` | token d'API, permission `ingest`, restreint au dataset |
 | `AXIOM_DATASET` | `cityborn-backend-dev`, `-staging`, `-production` |
 
-Sans les deux, [`logger.params.ts`](../../apps/backend/src/common/logger/logger.params.ts) n'ajoute pas la cible Axiom et rien d'autre ne change. En local elles vont dans `apps/backend/.env` : `main.ts` précharge `dotenv/config` avant `AppModule`, sans quoi `logger.params` lirait l'environnement trop tôt.
+Sans les deux, [`logger.params.ts`](../apps/backend/src/common/logger/logger.params.ts) n'ajoute pas la cible Axiom et rien d'autre ne change. En local elles vont dans `apps/backend/.env` : `main.ts` précharge `dotenv/config` avant `AppModule`, sans quoi `logger.params` lirait l'environnement trop tôt.
 
 ## Provisionnement
 
@@ -31,7 +31,7 @@ Le drain tourne dans un worker : une panne d'ingestion n'interrompt ni la requê
 
 ## Champs
 
-Contrat entre [`wide-event.ts`](../../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom : renommer, supprimer ou changer le sens d'un champ ou d'une de ses valeurs oblige à reprendre, dans la même PR, les dashboards de [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/) et, hors de portée de `grep`, les requêtes sauvegardées et les monitors.
+Contrat entre [`wide-event.ts`](../apps/backend/src/common/wide-event/wide-event.ts) et les requêtes Axiom : renommer, supprimer ou changer le sens d'un champ ou d'une de ses valeurs oblige à reprendre, dans la même PR, les dashboards de [`infra/axiom/dashboards/`](../infra/axiom/dashboards/) et, hors de portée de `grep`, les requêtes sauvegardées et les monitors.
 
 - **Communs** — `event` (`http_request` | `ws_message` | `ws_connection` | `ws_disconnection` | `operation_error`), `transport`, `requestId`, `domain`, `action` (opérations du contrat), `operation`, `outcome`, `statusCode`, `durationMs`, `ip`, `userAgent`, `visitorId`, `client`, `clientVersion`
 - **HTTP** — `method`, `route`, `apiVersion`
@@ -50,7 +50,7 @@ Une ligne sous `LOG_LEVEL` (défaut `info`) n'atteint aucune cible ; les wide ev
 
 ## Dashboards
 
-Source de vérité : [`infra/axiom/dashboards/`](../../infra/axiom/dashboards/), un fichier par dashboard, commun à tous les environnements.
+Source de vérité : [`infra/axiom/dashboards/`](../infra/axiom/dashboards/), un fichier par dashboard, commun à tous les environnements.
 
 - Le fichier est le document Axiom du dashboard ([format](https://axiom.co/docs/restapi/endpoints/createDashboard)), sans `uid`. `{{environment}}` y vaut `dev`, `staging` ou `production`, et chaque requête lit `['cityborn-backend-{{environment}}']`.
 - Le déploiement crée ou remplace le dashboard `cityborn-<environnement>-<fichier>` et supprime ceux de l'environnement dont le fichier a disparu.
@@ -66,7 +66,7 @@ Une modification faite dans l'interface Axiom est écrasée au déploiement suiv
 
 ## MCP Axiom
 
-[`.mcp.json`](../../.mcp.json) déclare le serveur MCP Axiom du projet ; la première utilisation ouvre une authentification OAuth dans le navigateur (`/mcp` dans Claude Code). Il sert à explorer les datasets, tester une requête APL, lire un dashboard et déployer les dashboards `dev` ; staging et production ne se déploient que par la CI.
+[`.mcp.json`](../.mcp.json) déclare le serveur MCP Axiom du projet ; la première utilisation ouvre une authentification OAuth dans le navigateur (`/mcp` dans Claude Code). Il sert à explorer les datasets, tester une requête APL, lire un dashboard et déployer les dashboards `dev` ; staging et production ne se déploient que par la CI.
 
 ## Requêtes et alertes
 
