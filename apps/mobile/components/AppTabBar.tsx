@@ -25,7 +25,10 @@ export function AppTabBar() {
           key={path}
           icon={icon}
           label={label}
-          active={path === pathname}
+          active={
+            path === pathname ||
+            (path !== '/' && pathname.startsWith(`${path}/`))
+          }
           onPress={() => router.navigate(path)}
         />
       ))}

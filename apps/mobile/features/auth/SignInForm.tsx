@@ -72,7 +72,7 @@ export function SignInForm() {
           compact
           label="S’inscrire"
           variant="secondary"
-          onPress={() => navigation.push('/auth/sign-up')}
+          onPress={() => navigation.push('/profile/sign-up')}
         />
       </View>
       <View gap="4 md:6" items="center">
