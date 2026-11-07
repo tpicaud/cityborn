@@ -1,5 +1,13 @@
-import { type ComponentType, type ReactNode, useState } from 'react';
 import {
+  type ComponentType,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  type GetRef,
   ScrollView,
   type ScrollViewProps,
   styled,
@@ -130,6 +138,8 @@ export function BrandScreen({
 }: BrandScreenProps) {
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
   const [compactForm, setCompactForm] = useState<boolean>(true);
+  const scrollViewRef: RefObject<GetRef<typeof ScrollView> | null> =
+    useRef<GetRef<typeof ScrollView>>(null);
   const formDensity: FormDensity = form
     ? compactForm
       ? 'compact'
@@ -143,11 +153,15 @@ export function BrandScreen({
       }
     : undefined;
 
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+  }, [title]);
+
   return (
     <Screen>
       <View flex={1} minH="0" pb={form && bottomSafeArea ? 'safe' : '0'}>
         <ScrollView
-          key={title}
+          ref={scrollViewRef}
           flex={1}
           minH="0"
           mx="-4 md:-10"
