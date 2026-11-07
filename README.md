@@ -93,7 +93,7 @@ cityborn/
 │   ├── client/          # Code partagé entre les clients
 │   ├── core/            # Logique partagée backend et clients
 │   └── design-system/   # Composants UI partagés
-├── docs/                # Documentation technique
+├── docs/                # Documentation technique et ton éditorial
 ├── infra/               # Infrastructure
 ├── lint-rules/          # Règles Biome du monorepo (plugins GritQL)
 └── scripts/             # Scripts du monorepo
