@@ -4,7 +4,6 @@ import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
 import { Button, TextButton, TextField } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
 import { View } from 'tamagui';
-import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
@@ -16,7 +15,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
     submit,
   }: SignUpFlow = useSignUpFlow();
   return (
-    <AuthScreen title="Inscription">
+    <>
       <form onSubmit={submit}>
         <View disableOptimization gap="3 md:4">
           <Controller
@@ -100,6 +99,6 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
       <View gap="4 md:6" items="center">
         <SignInWithGoogleButton />
       </View>
-    </AuthScreen>
+    </>
   );
 }

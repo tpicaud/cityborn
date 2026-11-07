@@ -147,6 +147,7 @@ export function BrandScreen({
     <Screen>
       <View flex={1} minH="0" pb={form && bottomSafeArea ? 'safe' : '0'}>
         <ScrollView
+          key={title}
           flex={1}
           minH="0"
           mx="-4 md:-10"

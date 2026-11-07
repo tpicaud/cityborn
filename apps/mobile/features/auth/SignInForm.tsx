@@ -7,7 +7,6 @@ import { View } from 'tamagui';
 import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { useNavigation } from '@/lib/navigation';
 import { SignInWithAppleButton } from './AppleSignIn';
-import { AuthScreen } from './AuthScreen';
 import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
@@ -21,7 +20,7 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
     submit,
   }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <AuthScreen title="Connexion">
+    <>
       <View gap="3 md:4">
         <Controller
           control={control}
@@ -80,6 +79,6 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
         {Platform.OS === 'ios' && <SignInWithAppleButton />}
       </View>
       <LegalLinks onDarkBackground />
-    </AuthScreen>
+    </>
   );
 }
