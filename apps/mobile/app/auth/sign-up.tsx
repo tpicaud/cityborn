@@ -1,5 +1,5 @@
-import { SignUpForm } from '@/features/auth/SignUpForm';
+import { Redirect } from 'expo-router';
 
-export default function SignUpPage() {
-  return <SignUpForm />;
+export default function SignUpRedirect() {
+  return <Redirect href="/profile/sign-up" />;
 }
