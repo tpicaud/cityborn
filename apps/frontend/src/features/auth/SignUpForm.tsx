@@ -17,9 +17,14 @@ export function SignUpForm() {
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignUpFlow = useSignUpFlow({ onSignedIn: () => navigation.returnTo('/') });
+  }: SignUpFlow = useSignUpFlow({
+    onSignedIn: () => navigation.returnTo('/profile'),
+  });
   return (
-    <AuthScreen title="Inscription" bottomSafeArea>
+    <AuthScreen
+      title="Inscription"
+      onBack={() => navigation.returnTo('/profile')}
+    >
       <form onSubmit={submit}>
         <View disableOptimization gap="3 md:4">
           <Controller
