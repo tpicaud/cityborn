@@ -2,11 +2,14 @@ import assert from 'node:assert/strict';
 import { describe, it, type Mock, mock } from 'node:test';
 import {
   ApiResponseError,
+  buildGame,
   buildPlayer,
   buildSession,
   ErrorCode,
+  isApiError,
   type PlayerId,
   PlayerIdSchema,
+  resolveErrorMessage,
   type Session,
   type SessionJoinAck,
   SessionReconnectTokenSchema,
@@ -20,15 +23,18 @@ import type { SocketConnection } from '../../../ws/socketConnection';
 import { createWsEmit } from '../../../ws/wsEmit';
 import {
   admitSessionPlayer,
+  createSessionAdmissionDecision,
   isSessionEntryRejected,
   type JoinedSessionPlayer,
+  type SessionAdmission,
+  type SessionAdmissionDecision,
 } from './sessionAdmission';
 
 const userId: UserId = UserIdSchema.parse('user-1');
 const playerID: PlayerId = PlayerIdSchema.parse('friend');
 
 function createChannel(
-  acknowledgement: SessionJoinAck = {
+  acknowledgement: SessionJoinAck | ApiResponseError = {
     reconnectToken: SessionReconnectTokenSchema.parse('guest-token'),
   },
 ): Pick<SessionChannel, 'emit'> {
@@ -40,7 +46,11 @@ function createChannel(
     emit: (_event, ...args) => {
       const respond: unknown = args[args.length - 1];
       if (typeof respond === 'function')
-        respond({ success: true, ...acknowledgement });
+        respond(
+          acknowledgement instanceof ApiResponseError
+            ? { success: false, error: acknowledgement.apiError }
+            : { success: true, ...acknowledgement },
+        );
     },
     on: () => {},
     off: () => {},
@@ -56,16 +66,24 @@ describe('admitSessionPlayer', () => {
       status: SessionStatus.IN_GAME,
       players: [buildPlayer({ username: 'friend', id: userId, isGuest: true })],
     });
-    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const rejection: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.SESSION_ALREADY_IN_GAME,
+      statusCode: 403,
+      message: 'game started',
+    });
+    const channel: Pick<SessionChannel, 'emit'> = createChannel(rejection);
     const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId }),
       (error: unknown) =>
-        error instanceof ApiResponseError &&
-        error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
+        isApiError(error) && error.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(emit.mock.callCount(), 0);
+    assert.deepEqual(emit.mock.calls[0]?.arguments, [
+      sessionWsEvent.join,
+      { sessionID: 'session-1', playerID: 'friend' },
+    ]);
+    assert.equal(emit.mock.callCount(), 1);
   });
 
   it('does not restore an account by nickname when the requester is anonymous', async () => {
@@ -73,16 +91,24 @@ describe('admitSessionPlayer', () => {
       status: SessionStatus.IN_GAME,
       players: [buildPlayer({ username: 'friend', id: userId })],
     });
-    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const rejection: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.SESSION_ALREADY_IN_GAME,
+      statusCode: 403,
+      message: 'game started',
+    });
+    const channel: Pick<SessionChannel, 'emit'> = createChannel(rejection);
     const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId: undefined }),
       (error: unknown) =>
-        error instanceof ApiResponseError &&
-        error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
+        isApiError(error) && error.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(emit.mock.callCount(), 0);
+    assert.deepEqual(emit.mock.calls[0]?.arguments, [
+      sessionWsEvent.join,
+      { sessionID: 'session-1', playerID: 'friend' },
+    ]);
+    assert.equal(emit.mock.callCount(), 1);
   });
   it('joins a new guest and keeps the reconnect token in memory', async () => {
     const channel: Pick<SessionChannel, 'emit'> = createChannel();
@@ -172,21 +198,29 @@ describe('admitSessionPlayer', () => {
     );
   });
 
-  it('refuses new participants in a game even when their nickname already exists', async () => {
+  it('lets the backend refuse new participants even when their nickname already exists', async () => {
     const session: Session = buildSession({
-      status: SessionStatus.IN_GAME,
+      currentGame: buildGame(),
       players: [buildPlayer({ username: 'friend', id: 'someone-else' })],
     });
-    const channel: Pick<SessionChannel, 'emit'> = createChannel();
+    const rejection: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.SESSION_ALREADY_IN_GAME,
+      statusCode: 403,
+      message: 'game started',
+    });
+    const channel: Pick<SessionChannel, 'emit'> = createChannel(rejection);
     const emit: Mock<SessionChannel['emit']> = mock.method(channel, 'emit');
 
     await assert.rejects(
       admitSessionPlayer({ session, channel, playerID, userId }),
       (error: unknown) =>
-        error instanceof ApiResponseError &&
-        error.apiError.code === ErrorCode.SESSION_ALREADY_IN_GAME,
+        isApiError(error) && error.code === ErrorCode.SESSION_ALREADY_IN_GAME,
     );
-    assert.equal(emit.mock.callCount(), 0);
+    assert.deepEqual(emit.mock.calls[0]?.arguments, [
+      sessionWsEvent.join,
+      { sessionID: 'session-1', playerID: 'friend' },
+    ]);
+    assert.equal(emit.mock.callCount(), 1);
   });
 
   it('propagates a game starting while the guest enters a nickname', async () => {
@@ -232,5 +266,178 @@ describe('isSessionEntryRejected', () => {
 
     assert.equal(isSessionEntryRejected(new TypeError('fetch failed')), false);
     assert.equal(isSessionEntryRejected(unavailable), false);
+  });
+});
+
+describe('createSessionAdmissionDecision', () => {
+  it('allows an anonymous visitor to enter a nickname in the lobby', () => {
+    const decision: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session: buildSession(),
+      admission: { status: 'idle' },
+      automaticPlayerID: undefined,
+    });
+
+    assert.equal(decision.isAdmitting, false);
+    assert.equal(decision.returnToHome, false);
+  });
+
+  it('rejects an idle visitor when the game starts during nickname entry', () => {
+    const decision: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session: buildSession({ status: SessionStatus.IN_GAME }),
+      admission: { status: 'idle' },
+      automaticPlayerID: undefined,
+    });
+
+    assert.equal(decision.returnToHome, true);
+    assert.equal(
+      resolveErrorMessage(decision.error),
+      'La partie a déjà commencé',
+    );
+  });
+
+  it('rejects a visitor when the game starts after a duplicate nickname or network rejection', () => {
+    const failures: Error[] = [
+      new ApiResponseError({
+        code: ErrorCode.SESSION_PLAYER_ALREADY_EXISTS,
+        statusCode: 409,
+        message: 'nickname already exists',
+      }),
+      new TypeError('network unavailable'),
+    ];
+
+    failures.forEach((error) => {
+      const admission: SessionAdmission = { status: 'rejected', error };
+      const lobby: SessionAdmissionDecision = createSessionAdmissionDecision({
+        session: buildSession(),
+        admission,
+        automaticPlayerID: undefined,
+      });
+      const started: SessionAdmissionDecision = createSessionAdmissionDecision({
+        session: buildSession({ status: SessionStatus.IN_GAME }),
+        admission,
+        automaticPlayerID: undefined,
+      });
+
+      assert.equal(lobby.error, error);
+      assert.equal(lobby.returnToHome, false);
+      assert.equal(lobby.isAdmitting, false);
+      assert.equal(
+        resolveErrorMessage(started.error),
+        'La partie a déjà commencé',
+      );
+      assert.equal(started.returnToHome, true);
+    });
+  });
+
+  it('waits for a successful acknowledgement when the game starts during admission', () => {
+    const session: Session = buildSession({ status: SessionStatus.IN_GAME });
+    const pending: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session,
+      admission: { status: 'pending' },
+      automaticPlayerID: undefined,
+    });
+    const admitted: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session,
+      admission: { status: 'admitted', playerID },
+      automaticPlayerID: undefined,
+    });
+
+    assert.equal(pending.isAdmitting, true);
+    assert.equal(pending.error, undefined);
+    assert.equal(pending.returnToHome, false);
+    assert.equal(admitted.localPlayerID, 'friend');
+    assert.equal(admitted.isAdmitting, false);
+    assert.equal(admitted.error, undefined);
+    assert.equal(admitted.returnToHome, false);
+  });
+
+  it('keeps the same server rejection before and after the game update', () => {
+    const error: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.SESSION_ALREADY_IN_GAME,
+      statusCode: 403,
+      message: 'game started',
+    });
+    const admission: SessionAdmission = { status: 'rejected', error };
+    const beforeUpdate: SessionAdmissionDecision =
+      createSessionAdmissionDecision({
+        session: buildSession(),
+        admission,
+        automaticPlayerID: undefined,
+      });
+    const afterUpdate: SessionAdmissionDecision =
+      createSessionAdmissionDecision({
+        session: buildSession({ status: SessionStatus.IN_GAME }),
+        admission,
+        automaticPlayerID: undefined,
+      });
+
+    assert.equal(beforeUpdate.error, error);
+    assert.equal(afterUpdate.error, error);
+    assert.equal(beforeUpdate.returnToHome, true);
+    assert.equal(afterUpdate.returnToHome, true);
+  });
+
+  it('leaves a restored account protected until the backend admits it', () => {
+    const session: Session = buildSession({ status: SessionStatus.IN_GAME });
+    const waitingStates: SessionAdmission[] = [
+      { status: 'idle' },
+      { status: 'pending' },
+    ];
+
+    waitingStates.forEach((admission) => {
+      const decision: SessionAdmissionDecision = createSessionAdmissionDecision(
+        {
+          session,
+          admission,
+          automaticPlayerID: playerID,
+        },
+      );
+
+      assert.equal(decision.error, undefined);
+      assert.equal(decision.returnToHome, false);
+      assert.equal(decision.localPlayerID, undefined);
+      assert.equal(decision.isAdmitting, true);
+    });
+    const admitted: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session,
+      admission: {
+        status: 'admitted',
+        playerID: PlayerIdSchema.parse('old-name'),
+      },
+      automaticPlayerID: playerID,
+    });
+
+    assert.equal(admitted.localPlayerID, 'old-name');
+    assert.equal(admitted.isAdmitting, false);
+    assert.equal(admitted.error, undefined);
+    assert.equal(admitted.returnToHome, false);
+  });
+
+  it('returns home with the original failure when automatic admission fails', () => {
+    const error: Error = new TypeError('network unavailable');
+    const decision: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session: buildSession({ status: SessionStatus.IN_GAME }),
+      admission: { status: 'rejected', error },
+      automaticPlayerID: playerID,
+    });
+
+    assert.equal(decision.error, error);
+    assert.equal(decision.returnToHome, true);
+  });
+
+  it('returns home for an expired session without replacing the server error', () => {
+    const error: ApiResponseError = new ApiResponseError({
+      code: ErrorCode.SESSION_NOT_FOUND,
+      statusCode: 404,
+      message: 'missing',
+    });
+    const decision: SessionAdmissionDecision = createSessionAdmissionDecision({
+      session: buildSession(),
+      admission: { status: 'rejected', error },
+      automaticPlayerID: undefined,
+    });
+
+    assert.equal(decision.error, error);
+    assert.equal(decision.returnToHome, true);
   });
 });
