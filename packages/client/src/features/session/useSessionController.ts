@@ -9,9 +9,7 @@ import type {
   UserId,
 } from '@cityborn/api';
 import {
-  ApiResponseError,
   applyGameConfigChanges,
-  ErrorCode,
   GameStatus,
   SessionStatus,
   type sessionWsChannel,
@@ -40,18 +38,17 @@ import type { WsConnectionStatus } from '../../ws/wsConnection';
 import { type CurrentUser, useCurrentUser } from '../auth/authContext';
 import {
   admitSessionPlayer,
+  createSessionAdmissionDecision,
   isSessionEntryRejected,
   type JoinedSessionPlayer,
+  type SessionAdmission,
+  type SessionAdmissionDecision,
 } from './admission/sessionAdmission';
 import { createGuessSubmission } from './guessSubmission';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 import { reportActionErrors } from './reportedAction';
 import { presetPlayerID } from './sessionPlayers';
 import { isHostOf, withStatus } from './sessionState';
-
-type SessionAdmission =
-  | { status: 'idle' | 'pending' | 'rejected' }
-  | { status: 'admitted'; playerID: PlayerId };
 
 export type SessionControllerOptions = {
   sessionID: SessionId;
@@ -88,11 +85,19 @@ export function useSessionController({
   const [admission, setAdmission] = useState<SessionAdmission>({
     status: 'idle',
   });
-  const localPlayerID: PlayerId | undefined =
-    admission.status === 'admitted' ? admission.playerID : undefined;
   const automaticPlayerID: PlayerId | undefined = presetPlayerID({
     mode: session?.mode,
     username: user?.username,
+  });
+  const {
+    localPlayerID,
+    isAdmitting,
+    error,
+    returnToHome,
+  }: SessionAdmissionDecision = createSessionAdmissionDecision({
+    session,
+    admission,
+    automaticPlayerID,
   });
   const joinedPlayer: RefObject<JoinedSessionPlayer | null> =
     useRef<JoinedSessionPlayer | null>(null);
@@ -183,8 +188,7 @@ export function useSessionController({
         joinedPlayer.current = admittedPlayer;
         setAdmission({ status: 'admitted', playerID: admittedPlayer.playerID });
       } catch (error: unknown) {
-        setAdmission({ status: 'rejected' });
-        throw error;
+        setAdmission({ status: 'rejected', error });
       }
     },
     [session, emit, user?.id],
@@ -199,51 +203,17 @@ export function useSessionController({
     )
       return;
 
-    join(automaticPlayerID).catch((error: unknown) => {
-      reportError(
-        error,
-        'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
-      );
-      navigation.returnTo('/');
-    });
-  }, [
-    connectionStatus,
-    session,
-    automaticPlayerID,
-    join,
-    reportError,
-    navigation,
-  ]);
+    join(automaticPlayerID);
+  }, [connectionStatus, session, automaticPlayerID, join]);
 
   useEffect(() => {
-    if (
-      !session ||
-      admission.status !== 'idle' ||
-      automaticPlayerID ||
-      session.status !== SessionStatus.IN_GAME
-    )
-      return;
+    if (error === undefined) return;
     reportError(
-      new ApiResponseError({
-        code: ErrorCode.SESSION_ALREADY_IN_GAME,
-        statusCode: 403,
-        message: 'Session already in game',
-      }),
+      error,
+      'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
     );
-    navigation.returnTo('/');
-  }, [session, admission.status, automaticPlayerID, reportError, navigation]);
-
-  const joinFromPlayerName = async (playerID: PlayerId): Promise<void> => {
-    try {
-      await join(playerID);
-    } catch (error: unknown) {
-      reportError(
-        error,
-        'Impossible de rejoindre la partie. Vérifiez votre connexion et réessayez.',
-      );
-      if (isSessionEntryRejected(error)) navigation.returnTo('/');
-    }
-  };
+    if (returnToHome) navigation.returnTo('/');
+  }, [error, returnToHome, reportError, navigation]);
 
   const requireSession = (operation: string): Session => {
     if (!session)
@@ -304,16 +274,11 @@ export function useSessionController({
   return {
     session,
     localPlayerID,
-    isAdmitting:
-      !localPlayerID &&
-      (admission.status === 'pending' ||
-        !!automaticPlayerID ||
-        session?.status === SessionStatus.IN_GAME ||
-        !!session?.currentGame),
+    isAdmitting,
     isHost: isHostOf(session, localPlayerID),
     connectionStatus,
     retryConnection,
-    join: joinFromPlayerName,
+    join,
     updateHost: reportActionErrors({ action: updateHost, reportError }),
     updateGameConfig: reportActionErrors({
       action: updateGameConfig,
