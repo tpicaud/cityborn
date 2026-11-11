@@ -1,10 +1,13 @@
 'use client';
 
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
-import { Button, TextButton, TextField } from '@cityborn/design-system';
+import {
+  Button,
+  FormFields,
+  TextButton,
+  TextField,
+} from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
-import { View } from 'tamagui';
-import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   const {
@@ -17,7 +20,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   return (
     <>
       <form onSubmit={submit}>
-        <View disableOptimization gap="3 md:4">
+        <FormFields disableOptimization>
           <Controller
             control={control}
             name="username"
@@ -92,13 +95,10 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
             onPress={submit}
             loading={isSubmitting}
           />
-        </View>
+        </FormFields>
         <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
       </form>
       <TextButton label="Déjà un compte ? Se connecter" onPress={onSignIn} />
-      <View gap="4 md:6" items="center">
-        <SignInWithGoogleButton />
-      </View>
     </>
   );
 }

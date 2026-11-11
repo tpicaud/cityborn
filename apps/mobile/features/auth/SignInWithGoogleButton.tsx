@@ -20,7 +20,7 @@ GoogleSignin.configure({
   iosClientId: mobileClientConfig.googleOAuthIosClientId,
 });
 
-export const SignInWithGoogleButton = () => {
+export function SignInWithGoogleButton() {
   const { reportError }: ErrorReporter = useErrorReporter();
   const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
@@ -58,4 +58,4 @@ export const SignInWithGoogleButton = () => {
       onPress={signIn}
     />
   );
-};
+}

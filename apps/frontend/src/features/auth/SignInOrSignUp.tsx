@@ -1,8 +1,11 @@
 'use client';
 
+import { ProviderButtonGroup } from '@cityborn/design-system';
 import { useState } from 'react';
+import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { AuthScreen } from './AuthScreen';
 import { SignInForm } from './SignInForm';
+import { SignInWithGoogleButton } from './SignInWithGoogleButton';
 import { SignUpForm } from './SignUpForm';
 
 export function SignInOrSignUp() {
@@ -15,6 +18,10 @@ export function SignInOrSignUp() {
       ) : (
         <SignInForm onSignUp={() => setSigningUp(true)} />
       )}
+      <ProviderButtonGroup disableOptimization>
+        <SignInWithGoogleButton />
+      </ProviderButtonGroup>
+      {!signingUp && <LegalLinks onDarkBackground />}
     </AuthScreen>
   );
 }

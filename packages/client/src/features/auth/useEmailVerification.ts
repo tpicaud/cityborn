@@ -10,19 +10,63 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 
-export type EmailVerificationStatus =
+type EmailVerificationStatus =
   | 'verifying'
   | 'verified'
   | 'expired'
   | 'invalid'
   | 'renewed';
 
+export type EmailVerificationContent = {
+  title: string;
+  message: string;
+  pending: boolean;
+  renewable: boolean;
+};
+
+const emailVerificationContents: Record<
+  EmailVerificationStatus,
+  EmailVerificationContent
+> = {
+  verifying: {
+    title: 'Vérification',
+    message: 'Validation de ton adresse e-mail en cours…',
+    pending: true,
+    renewable: false,
+  },
+  verified: {
+    title: 'E-mail vérifié',
+    message: 'Ton adresse e-mail est maintenant vérifiée.',
+    pending: false,
+    renewable: false,
+  },
+  expired: {
+    title: 'Lien expiré',
+    message:
+      'Ce lien a expiré. Demande un nouveau lien pour vérifier ton adresse e-mail.',
+    pending: false,
+    renewable: true,
+  },
+  invalid: {
+    title: 'Vérification impossible',
+    message: 'Le lien de vérification est invalide ou a déjà été utilisé.',
+    pending: false,
+    renewable: false,
+  },
+  renewed: {
+    title: 'Vérifie tes e-mails',
+    message: 'Un nouveau lien de vérification vient de t’être envoyé.',
+    pending: false,
+    renewable: false,
+  },
+};
+
 export type EmailVerificationOptions = {
   verificationToken: string;
 };
 
 export type EmailVerification = {
-  status: EmailVerificationStatus;
+  content: EmailVerificationContent;
   renew: () => Promise<void>;
 };
 
@@ -73,5 +117,5 @@ export function useEmailVerification({
     }
   };
 
-  return { status, renew };
+  return { content: emailVerificationContents[status], renew };
 }

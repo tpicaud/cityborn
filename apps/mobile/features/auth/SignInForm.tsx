@@ -1,13 +1,13 @@
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
 import type { Navigation } from '@cityborn/client/platform';
-import { Button, FormText, TextField } from '@cityborn/design-system';
+import {
+  ActionPrompt,
+  Button,
+  FormFields,
+  TextField,
+} from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
-import { Platform } from 'react-native';
-import { View } from 'tamagui';
-import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { useNavigation } from '@/lib/navigation';
-import { SignInWithAppleButton } from './AppleSignIn';
-import { SignInWithGoogleButton } from './GoogleSignIn';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
 export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
@@ -21,7 +21,7 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
   }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
     <>
-      <View gap="3 md:4">
+      <FormFields>
         <Controller
           control={control}
           name="identifier"
@@ -63,22 +63,16 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
           onPress={submit}
           loading={isSubmitting}
         />
-      </View>
+      </FormFields>
       <RequestPasswordResetDialog />
-      <View gap="3" self="center" w="100%" maxW="md:96">
-        <FormText fontWeight="700">Pas encore de compte ?</FormText>
+      <ActionPrompt prompt="Pas encore de compte ?">
         <Button
           compact
           label="S’inscrire"
           variant="secondary"
           onPress={onSignUp}
         />
-      </View>
-      <View gap="4 md:6" items="center">
-        <SignInWithGoogleButton />
-        {Platform.OS === 'ios' && <SignInWithAppleButton />}
-      </View>
-      <LegalLinks onDarkBackground />
+      </ActionPrompt>
     </>
   );
 }
