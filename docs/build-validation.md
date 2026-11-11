@@ -3,6 +3,7 @@
 Les builds web valident les sources originales et les packages partagés avant le bundling.
 Le frontend conserve ensuite la vérification TypeScript de Next sur les sources compilées par Tamagui.
 Les options strictes et la détection des imports inutilisés restent actives.
+Le graphe de typecheck Turbo propage les changements des packages partagés aux caches de leurs consommateurs.
 
 Les scripts natifs `prebuild`, `android`, `ios` et `build-android:local` passent par la même validation mobile.
 Le hook `eas-build-post-install` l'impose aussi aux builds EAS locaux et distants, Android comme iOS.
@@ -35,6 +36,7 @@ Le nettoyage des imports de la CLI est une piste de contribution au [dépôt Tam
   Les sources et le CSS sont comparés après succès et après échec de la commande exécutée par Tamagui.
 - `pnpm check:mobile-build` : les entrées de build natif rejettent un import mobile inutilisé.
   Une erreur dans un package partagé bloque les builds web et le hook EAS.
+  Après préchauffage du cache, un contrat partagé valide mais incompatible avec le mobile doit aussi bloquer le hook EAS.
 
 Le contrôle frontend supprime les sorties locales `.next/` et `out/` pour partir à froid.
 Il utilise la configuration publique habituelle du frontend ; les valeurs factices du workflow suffisent.
