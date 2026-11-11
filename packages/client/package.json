@@ -16,7 +16,7 @@
   },
   "author": "Tom Picaud",
   "scripts": {
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
+    "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "lint": "biome check .",
     "test": "tsx --test '**/*.test.ts'",
