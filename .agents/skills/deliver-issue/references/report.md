@@ -18,9 +18,10 @@ Le rapport de livraison sert à la fois de description de la PR et de compte ren
 - **Décisions prises** et **Déploiement** : chaque bullet commence par un libellé court en gras qui nomme son sujet ; dans « Décisions prises », les points liés partagent une bullet.
 - **Déploiement** : toujours présente ; une case par action hors du déploiement habituel, backend puis clients, et une bullet par effet de transition qui change ce que le dev fait ou surveille au déploiement. Sans rien de tel, la section contient seulement `Aucune action particulière à effectuer.`.
 - Les autres sections listent chaque élément.
-- **Recette** : toujours présente ; chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`.
+- **Recette** : toujours présente ; un parcours est un scénario de bout en bout, joué dans l'app lancée comme le ferait un utilisateur.
+  - Chaque parcours a un titre de niveau 3 au format `### <statut> <parcours> — <plateforme>`.
   - Sous chaque titre, écrire une courte liste numérotée des actions utilisateur et vérifications attendues, puis `**Résultat :**` sur une ligne distincte et enfin les captures associées.
-  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus.
+  - À la rédaction, retenir les parcours utilisateur directement modifiés, du plus risqué au moins risqué, cinq au plus. Sans parcours modifié, la section contient seulement `Non applicable : aucun parcours utilisateur modifié.`.
   - Avant recette, lister les actions prévues ; après recette, restituer les actions effectuées et signaler celles non exécutées.
   - Le statut du titre est `✅` pour une réussite, `❌` pour un échec ou `⏸️` pour une non-exécution ; le résultat donne l’observé ou le motif de non-exécution.
   - Remplacer les résultats rejoués ; invalider les validations affectées par un correctif. Conserver tous les scénarios et leurs attentes.
