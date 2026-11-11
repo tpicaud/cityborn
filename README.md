@@ -53,11 +53,6 @@ La seed crée deux comptes :
 | `admin` | `Password123` | `admin` (back-office) |
 | `player` | `Password123` | `player` (frontend) |
 
-Chaque pack porte un visuel, renseigné en collant le lien de l'image et
-prévisualisé dans le formulaire et la liste des packs. Un pack sans visuel
-s'enregistre mais ne se publie pas. Les apps joueur affichent le visuel en
-carré et le remplacent par un visuel neutre s'il ne se charge pas.
-
 ## Mobile
 
 L'application utilise des modules natifs : elle nécessite un **dev build** (application `Cityborn (Dev)`) installé sur le téléphone, à réinstaller seulement quand le code natif ou les dépendances natives changent.
