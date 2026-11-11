@@ -45,7 +45,12 @@ const ButtonSocket = styled(View, {
       },
     },
     small: {
-      true: { pb: '0', borderWidth: '0', bg: 'transparent' },
+      true: {
+        p: '0.5 md:1',
+        pb: '0.5 md:1',
+        borderWidth: '0',
+        bg: 'transparent',
+      },
     },
     dimmed: {
       true: { opacity: 0.5 },

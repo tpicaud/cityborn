@@ -16,11 +16,17 @@ type ImageCardProps = {
   onAction: () => void | Promise<void>;
 };
 
+const ImageCardEdge = styled(View, {
+  p: 'px md:0.5',
+  rounded: '6 md:10',
+  backgroundImage: verticalGradient('card-edge'),
+  boxShadow: 'card md:card-tablet',
+});
+
 const ImageCardFrame = styled(View, {
   overflow: 'hidden',
   rounded: '6 md:10',
   backgroundColor: 'card-fill',
-  boxShadow: 'card md:card-tablet',
 });
 
 const Visual = styled(View, {
@@ -35,8 +41,8 @@ const VisualFade = styled(View, {
   position: 'absolute',
   l: '0',
   r: '0',
-  b: '0',
-  h: '45%',
+  t: '55%',
+  b: '-1',
   backgroundImage: verticalGradient('card-fade'),
   pointerEvents: 'none',
 });
@@ -49,8 +55,8 @@ const NeutralVisual = styled(View, {
 
 const Body = styled(View, {
   position: 'relative',
-  gap: '3 md:6',
-  mt: '-5 md:-12',
+  gap: '4 md:11',
+  mt: '-4 md:-11',
   px: '4 md:10',
   pb: '1.5 md:3.5',
 });
@@ -75,28 +81,30 @@ export function ImageCard({
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
 
   return (
-    <ImageCardFrame>
-      <Visual>
-        {imageUrl === undefined ? (
-          <NeutralVisual>
-            <AssetImage asset="monogram" />
-          </NeutralVisual>
-        ) : (
-          <Image
-            src={imageUrl}
-            alt=""
-            objectFit="cover"
-            w="100%"
-            h="100%"
-            onError={onImageError}
-          />
-        )}
-        <VisualFade />
-      </Visual>
-      <Body>
-        <Title>{title}</Title>
-        <Button small label={actionLabel} onPress={onAction} />
-      </Body>
-    </ImageCardFrame>
+    <ImageCardEdge>
+      <ImageCardFrame>
+        <Visual>
+          {imageUrl === undefined ? (
+            <NeutralVisual>
+              <AssetImage asset="monogram" />
+            </NeutralVisual>
+          ) : (
+            <Image
+              src={imageUrl}
+              alt=""
+              objectFit="cover"
+              w="100%"
+              h="100%"
+              onError={onImageError}
+            />
+          )}
+          <VisualFade />
+        </Visual>
+        <Body>
+          <Title>{title}</Title>
+          <Button small label={actionLabel} onPress={onAction} />
+        </Body>
+      </ImageCardFrame>
+    </ImageCardEdge>
   );
 }
