@@ -10,7 +10,7 @@ import { backendConfig } from './config/backend.config';
 import { RedisIoAdapter } from './redis/redis.adapter';
 
 const DEFAULT_BODY_LIMIT: string = '100kb';
-const GEOMETRY_BODY_LIMIT: string = '3mb';
+const GEOMETRY_BODY_LIMIT: string = '5mb';
 const GEOMETRY_BODY_PATHS: string[] = [
   contract.admin.worldLocation.createWorldLocation.path,
   contract.session.createGame.path,
