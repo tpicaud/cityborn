@@ -1,6 +1,11 @@
 'use client';
 
-import { type SessionId, SessionStatus } from '@cityborn/api';
+import {
+  type PackId,
+  type SessionId,
+  SessionMode,
+  SessionStatus,
+} from '@cityborn/api';
 import type { Navigation } from '@cityborn/client/platform';
 import {
   type SessionController,
@@ -8,20 +13,23 @@ import {
 } from '@cityborn/client/session';
 import LoadingDialog from '@/components/ui/loaders/LoadingDialog';
 import { Game } from '@/features/game/Game';
-import { Lobby } from '@/features/session/Lobby';
 import { useNavigation } from '@/lib/navigation';
 import { ConnectionLostDialog } from './ConnectionLostDialog';
+import { MultiLobby } from './lobby/MultiLobby';
+import { SoloLobby } from './lobby/SoloLobby';
 import { PlayerDepartureNotice } from './PlayerDepartureNotice';
 
 type SessionProps = {
   sessionID: SessionId;
+  launchedPackId: PackId | undefined;
 };
 
-export default function Session({ sessionID }: SessionProps) {
+export default function Session({ sessionID, launchedPackId }: SessionProps) {
   const navigation: Navigation = useNavigation();
   const sessionController: SessionController = useSessionController({
     sessionID,
     navigation,
+    launchedPackId,
   });
 
   if (!sessionController.session)
@@ -43,15 +51,16 @@ export default function Session({ sessionID }: SessionProps) {
           handleExitGame={sessionController.exitGame}
           handleLeaveGame={sessionController.leaveGame}
         />
-      ) : sessionController.isLaunchingQuickPlay ? (
+      ) : sessionController.isLaunchingGame ? (
         <LoadingDialog message="Lancement de la partie" />
+      ) : sessionController.session.mode === SessionMode.SOLO ? (
+        <SoloLobby handlePlayPack={sessionController.playPack} />
       ) : (
-        <Lobby
+        <MultiLobby
           localPlayerID={sessionController.localPlayerID}
           isHost={sessionController.isHost}
           session={sessionController.session}
-          handleUpdateGameConfig={sessionController.updateGameConfig}
-          handleStartGame={sessionController.startGame}
+          handlePlayPack={sessionController.playPack}
           handleJoinSession={sessionController.join}
         />
       )}

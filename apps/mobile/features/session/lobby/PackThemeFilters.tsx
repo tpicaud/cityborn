@@ -1,5 +1,5 @@
 import type { Theme, ThemeIcon } from '@cityborn/api';
-import type { PackSelection } from '@cityborn/client/session';
+import type { ThemeFilteredPacks } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import { Pressable, ScrollView } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/native/NativeComponents';
 import { cn } from '@/lib/classNames';
 
 type PackThemeFiltersProps = Pick<
-  PackSelection,
+  ThemeFilteredPacks,
   'themes' | 'selectedTheme' | 'selectTheme'
 >;
 

@@ -1,19 +1,14 @@
 'use client';
 
+import type { Pack, PlayerId, Session } from '@cityborn/api';
 import {
-  type GameConfigChanges,
-  type PlayerId,
-  type Session,
-  SessionMode,
-} from '@cityborn/api';
-import {
-  type PackSelection,
   type PlayerConnectionStatus,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
-  usePackSelection,
+  type ThemeFilteredPacks,
   usePlayerNameForm,
+  useThemeFilteredPacks,
 } from '@cityborn/client/session';
 import 'leaflet/dist/leaflet.css';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
@@ -38,12 +33,11 @@ import { useNavigation } from '@/lib/navigation';
 import { PackThemeFilters } from './PackThemeFilters';
 import { PackVisual } from './PackVisual';
 
-type LobbyComponentProps = {
+type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
-  handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
-  handleStartGame: () => Promise<void>;
+  handlePlayPack: (pack: Pack) => Promise<void>;
   handleJoinSession?: (playerID: PlayerId) => Promise<void>;
 };
 
@@ -65,14 +59,13 @@ const TileLayer = dynamic(
   { ssr: false },
 );
 
-export const Lobby = ({
+export const MultiLobby = ({
   localPlayerID,
   session,
   isHost,
-  handleUpdateGameConfig,
-  handleStartGame,
+  handlePlayPack,
   handleJoinSession,
-}: LobbyComponentProps) => {
+}: MultiLobbyProps) => {
   const [copied, setCopied] = useState(false);
   const playerNameForm: PlayerNameForm = usePlayerNameForm();
   const navigation = useNavigation();
@@ -82,11 +75,7 @@ export const Lobby = ({
     selectedTheme,
     selectTheme,
     packs,
-    playPack,
-  }: PackSelection = usePackSelection({
-    updateGameConfig: handleUpdateGameConfig,
-    startGame: handleStartGame,
-  });
+  }: ThemeFilteredPacks = useThemeFilteredPacks();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(session.id);
@@ -123,89 +112,73 @@ export const Lobby = ({
         className="relative z-10 flex flex-col items-center justify-center 
                             bg-transparent h-full w-full pointer-events-none"
       >
-        <Box
-          className={
-            session.mode === SessionMode.SOLO
-              ? 'flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[95%] min-w-80 sm:w-[70%] md:w-[55%] lg:max-w-xl max-h-[92%] overflow-y-auto pointer-events-auto'
-              : 'flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[95%] min-w-80 sm:w-[85%] md:w-[75%] lg:max-w-3xl max-h-[92%] overflow-y-auto pointer-events-auto'
-          }
-        >
+        <Box className="flex flex-col items-center gap-2 p-6 bg-slate-100 shadow-xl rounded-2xl max-w-[95%] min-w-80 sm:w-[85%] md:w-[75%] lg:max-w-3xl max-h-[92%] overflow-y-auto pointer-events-auto">
           <Typography variant="h5">{session.mode.toUpperCase()}</Typography>
 
-          {session.mode === SessionMode.MULTI && (
-            <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
-              <Typography variant="subtitle1">Code</Typography>
-              <TextField
-                fullWidth
-                value={session.id}
-                variant="outlined"
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    endAdornment: (
-                      <IconButton onClick={handleCopy}>
-                        <ContentCopyIcon />
-                      </IconButton>
-                    ),
-                  },
-                }}
-              />
+          <div className="flex flex-col items-center justify-center w-[30%] min-w-40">
+            <Typography variant="subtitle1">Code</Typography>
+            <TextField
+              fullWidth
+              value={session.id}
+              variant="outlined"
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  endAdornment: (
+                    <IconButton onClick={handleCopy}>
+                      <ContentCopyIcon />
+                    </IconButton>
+                  ),
+                },
+              }}
+            />
 
-              {copied && (
-                <Typography variant="caption" color="success.main">
-                  Copié !
-                </Typography>
-              )}
-            </div>
-          )}
+            {copied && (
+              <Typography variant="caption" color="success.main">
+                Copié !
+              </Typography>
+            )}
+          </div>
 
           <div className="flex flex-col sm:flex-row justify-start items-stretch gap-4 sm:gap-8 max-w-full w-full">
-            {session.mode !== SessionMode.SOLO && (
-              <List
-                sx={{
-                  flex: { xs: '1 1 auto', sm: '1 1 50%' },
-                  p: 0,
-                  '& .MuiListItem-root': {
-                    py: 0.5,
-                  },
-                  '& .MuiListItemText-primary': {
-                    fontSize: { xs: '0.85rem', md: '1rem' },
-                  },
-                  '& .MuiListItemText-secondary': {
-                    fontSize: { xs: '0.75rem', md: '0.90rem' },
-                  },
-                }}
-              >
-                {sortPlayersConnectedFirst(session.players).map((player) => (
-                  <ListItem key={player.username} divider>
-                    <ListItemText
-                      primary={
-                        player.username === session.hostID
-                          ? `${player.username} (Host)`
-                          : `${player.username}`
-                      }
-                      secondary={
-                        playerConnectionLabels[playerConnectionStatus(player)]
-                      }
-                      sx={{
-                        color:
-                          playerConnectionStatus(player) === 'disconnected'
-                            ? 'text.disabled'
-                            : 'text.primary',
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-
-            <div
-              className={
-                session.mode === SessionMode.SOLO
-                  ? 'w-full max-w-full sm:max-w-xl mx-auto flex flex-col gap-3'
-                  : 'w-full sm:w-[300px] md:w-[400px] max-w-full sm:shrink-0 flex flex-col gap-3'
-              }
+            <List
+              sx={{
+                flex: { xs: '1 1 auto', sm: '1 1 50%' },
+                p: 0,
+                '& .MuiListItem-root': {
+                  py: 0.5,
+                },
+                '& .MuiListItemText-primary': {
+                  fontSize: { xs: '0.85rem', md: '1rem' },
+                },
+                '& .MuiListItemText-secondary': {
+                  fontSize: { xs: '0.75rem', md: '0.90rem' },
+                },
+              }}
             >
+              {sortPlayersConnectedFirst(session.players).map((player) => (
+                <ListItem key={player.username} divider>
+                  <ListItemText
+                    primary={
+                      player.username === session.hostID
+                        ? `${player.username} (Host)`
+                        : `${player.username}`
+                    }
+                    secondary={
+                      playerConnectionLabels[playerConnectionStatus(player)]
+                    }
+                    sx={{
+                      color:
+                        playerConnectionStatus(player) === 'disconnected'
+                          ? 'text.disabled'
+                          : 'text.primary',
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+
+            <div className="w-full sm:w-[300px] md:w-[400px] max-w-full sm:shrink-0 flex flex-col gap-3">
               <PackThemeFilters
                 themes={themes}
                 selectedTheme={selectedTheme}
@@ -255,7 +228,7 @@ export const Lobby = ({
                       size="small"
                       variant="contained"
                       disabled={!isHost}
-                      onClick={() => playPack(pack)}
+                      onClick={() => handlePlayPack(pack)}
                       sx={{ width: 96, fontSize: '0.7rem', flexShrink: 0 }}
                     >
                       Jouer
@@ -278,7 +251,7 @@ export const Lobby = ({
         </Box>
       </div>
 
-      <Dialog open={session.mode === SessionMode.MULTI && !localPlayerID}>
+      <Dialog open={!localPlayerID}>
         <DialogTitle>
           <p>Entrez votre pseudo</p>
         </DialogTitle>

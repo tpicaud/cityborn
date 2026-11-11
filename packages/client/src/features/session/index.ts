@@ -10,19 +10,23 @@ export {
   type SessionLauncherOptions,
   useSessionLauncher,
 } from './sessionLauncher';
-export { sessionIdFromSessionPath } from './sessionPath';
+export {
+  launchedPackIdFromQueryParam,
+  launchedPackQueryParam,
+  sessionIdFromSessionPath,
+} from './sessionPath';
 export {
   type PlayerConnectionStatus,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
 } from './sessionPlayers';
 export {
-  type PackSelection,
-  type PackSelectionOptions,
-  usePackSelection,
-} from './usePackSelection';
-export {
   type SessionController,
   type SessionControllerOptions,
   useSessionController,
 } from './useSessionController';
+export {
+  type ThemeFilteredPacks,
+  type ThemeFilteredPacksOptions,
+  useThemeFilteredPacks,
+} from './useThemeFilteredPacks';
