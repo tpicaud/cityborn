@@ -11,14 +11,14 @@ Tu es l'**orchestrateur** : chaque étape tourne dans un sous-agent au contexte 
 
 Appliquer [la préparation](references/prepare.md) avant tout sous-agent, quelle que soit l'origine du checkout.
 
-La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur `origin/main`, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
+La préparation est terminée quand le worktree retenu utilise la branche liée, à jour d'`origin` et basée sur la branche cible, que les `.env` requis sont présents et que `pnpm install` a réussi. Un échec bloque le développement et figure dans le rapport.
 
 ## Lancer un sous-agent
 
 Ces règles valent pour les trois étapes.
 
 - Lancer un sous-agent au contexte neuf et attendre son rapport avant l'étape suivante.
-- Lui transmettre le chemin absolu du worktree et la branche liée : il y exécute chaque commande et chaque modification.
+- Lui transmettre le chemin absolu du worktree, la branche liée et la branche cible : il y exécute chaque commande et chaque modification.
 - Désigner chaque document à appliquer par son chemin : le sous-agent le lit et l'applique.
 - Exiger un rapport qui commence par `statut: done` ou `statut: blocked`.
 - Toute question destinée à l'utilisateur arrête le sous-agent : il rend `statut: blocked` avec la question et l'état dans lequel il laisse le checkout. Poser la question telle quelle à l'utilisateur, puis transmettre la réponse au même sous-agent si l'outil le permet, sinon à un nouveau sous-agent avec l'état décrit.

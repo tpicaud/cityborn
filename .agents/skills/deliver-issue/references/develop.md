@@ -1,6 +1,6 @@
 # Développer une issue
 
-Travailler dans le worktree transmis, déjà sur la branche liée à l'issue.
+Travailler dans le worktree transmis, déjà sur la branche liée à l'issue et à jour de la branche cible.
 
 ## Développer
 
@@ -12,8 +12,14 @@ Travailler dans le worktree transmis, déjà sur la branche liée à l'issue.
 
 1. Créer un commit dès qu'une étape cohérente est complète et vérifiée, en gardant séparées les étapes indépendantes.
 2. Après les vérifications finales, pousser le développement initial et les correctifs de review sur la branche liée à la même PR.
-3. Créer la PR draft si la branche n'en a pas, sinon la mettre à jour, avec pour description le rapport de `.agents/skills/deliver-issue/references/report.md`. L'assigner au compte authentifié (`@me`).
-4. Passer la PR en ready, la merger, modifier l'issue ou changer un statut de projet seulement à la demande explicite de l'utilisateur.
+3. Créer la PR draft vers la branche cible si la branche n'en a pas, sinon la mettre à jour, avec pour description le rapport de `.agents/skills/deliver-issue/references/report.md`. L'assigner au compte authentifié (`@me`).
+4. Vérifier que la PR figure dans `gh issue view <numéro> --json closedByPullRequestsReferences`. Vers une autre branche que `main`, `Closes #<numéro>` ne lie pas la PR à l'issue : la lier avec
+
+   ```sh
+   gh api graphql -f issue="$(gh issue view <numéro> --json id -q .id)" -f pr="$(gh pr view <PR> --json id -q .id)" \
+     -f query='mutation($issue:ID!,$pr:ID!){addCloseIssueReferences(input:{issueId:$issue,pullRequestIds:[$pr]}){clientMutationId}}'
+   ```
+5. Passer la PR en ready, la merger, modifier l'issue ou changer un statut de projet seulement à la demande explicite de l'utilisateur.
 
 ## Compte rendu final
 
@@ -21,4 +27,4 @@ Donner l'URL de la PR draft, dont la description porte le rapport de livraison, 
 
 ## Critère de fin
 
-La branche liée est poussée et sa PR draft est à jour.
+La branche liée est poussée, sa PR draft vers la branche cible est à jour et liée à l'issue.
