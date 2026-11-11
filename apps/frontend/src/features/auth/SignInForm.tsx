@@ -24,6 +24,7 @@ export const SignInForm = () => {
       <Typography variant="h5" align="center">
         Connexion
       </Typography>
+      <Typography align="center">Prêt à explorer le monde ?</Typography>
 
       <FormControl>
         <TextField
