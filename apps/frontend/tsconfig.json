@@ -31,7 +31,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/app/session/solo/[gameID]/results",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
