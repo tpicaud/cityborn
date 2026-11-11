@@ -28,7 +28,6 @@ const phoneLogoSize: LogoSize = { width: 156, height: 162 };
 const tabletLogoSize: LogoSize = { width: 244, height: 253 };
 
 const tabletActionsWidth: number = 560;
-const tabletAdaptiveActionsWidth: number = 746;
 const spaciousMinHeight: number = 768;
 
 type Density = 'compact' | 'spacious' | undefined;
@@ -102,13 +101,11 @@ const Actions = styled(View, {
   variants: {
     density: {
       compact: {
-        maxW: tabletAdaptiveActionsWidth,
         mt: '4',
         px: '5 md:0',
         gap: '3',
       },
       spacious: {
-        maxW: tabletAdaptiveActionsWidth,
         mt: '6 md:8',
         px: '5 md:0',
         gap: '6 md:10',
