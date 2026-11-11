@@ -284,7 +284,10 @@ export function useSessionController({
     })
       .catch((error: unknown) => {
         reportError(error);
-        if (session.mode === SessionMode.SOLO) navigation.returnTo('/');
+        if (session.mode === SessionMode.SOLO)
+          navigation.returnTo(
+            launchedPackId === undefined ? '/' : '/collection',
+          );
       })
       .finally(() => setIsLaunchPending(false));
   }, [
