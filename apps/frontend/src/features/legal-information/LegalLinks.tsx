@@ -1,21 +1,23 @@
 import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
-import Link from 'next/link';
+import { FooterLink, FooterLinks } from '@cityborn/design-system';
 
-export function LegalLinks() {
+type LegalLinksProps = { onDarkBackground?: boolean };
+
+export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
   return (
-    <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-      <a
+    <FooterLinks disableOptimization>
+      <FooterLink
         href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
-        className="text-sm text-gray-600 hover:underline"
+        onDarkBackground={onDarkBackground}
       >
         Nous contacter
-      </a>
-      <Link
+      </FooterLink>
+      <FooterLink
         href="/terms-and-policies"
-        className="text-sm text-gray-600 hover:underline text-center"
+        onDarkBackground={onDarkBackground}
       >
         Politiques et conditions
-      </Link>
-    </footer>
+      </FooterLink>
+    </FooterLinks>
   );
 }
