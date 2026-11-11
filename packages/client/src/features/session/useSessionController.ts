@@ -91,6 +91,33 @@ function toGameConfigPack(pack: Pack): GameConfigPack {
   };
 }
 
+export function findLaunchedPack({
+  packs,
+  packId,
+}: {
+  packs: Pack[];
+  packId: PackId;
+}): Pack {
+  const pack: Pack | undefined = packs.find(
+    (publishedPack: Pack) => publishedPack.id === packId,
+  );
+  if (!pack)
+    throw new UserFacingError(
+      getFriendlyErrorMessage({ code: ErrorCode.PACK_NOT_FOUND }),
+    );
+  return pack;
+}
+
+export function launchesGameOnEntry({
+  session,
+  launchedPackId,
+}: {
+  session: Pick<Session, 'quickPlay'>;
+  launchedPackId: PackId | undefined;
+}): boolean {
+  return session.quickPlay || launchedPackId !== undefined;
+}
+
 export async function enterSession({
   session,
   playerID,
@@ -233,14 +260,7 @@ export function useSessionController({
       const packs: Pack[] = await queryClient.query(
         publishedPacksQueryOptions(packApi),
       );
-      const pack: Pack | undefined = packs.find(
-        (publishedPack: Pack) => publishedPack.id === packId,
-      );
-      if (!pack)
-        throw new UserFacingError(
-          getFriendlyErrorMessage({ code: ErrorCode.PACK_NOT_FOUND }),
-        );
-      await playPack(pack);
+      await playPack(findLaunchedPack({ packs, packId }));
     },
     [queryClient, packApi, playPack],
   );
@@ -333,7 +353,8 @@ export function useSessionController({
     isHost: isHostOf(session, localPlayerID),
     isLaunchingGame:
       isLaunchPending &&
-      (session?.quickPlay === true || launchedPackId !== undefined),
+      session !== undefined &&
+      launchesGameOnEntry({ session, launchedPackId }),
     connectionStatus,
     retryConnection,
     join: reportActionErrors({ action: join, reportError }),
