@@ -24,7 +24,7 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
   return (
     <>
       <form onSubmit={submit}>
-        <FormFields disableOptimization>
+        <FormFields>
           <Controller
             control={control}
             name="identifier"

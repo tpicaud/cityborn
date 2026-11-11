@@ -43,11 +43,9 @@ export function RequestPasswordResetDialog() {
         title="Mot de passe oublié"
       >
         <ScrollView maxH="96" keyboardShouldPersistTaps="handled">
-          <View disableOptimization gap="4">
+          <View gap="4">
             {message ? (
-              <BodyText disableOptimization role="status">
-                {message}
-              </BodyText>
+              <BodyText role="status">{message}</BodyText>
             ) : (
               <>
                 <Controller

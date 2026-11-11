@@ -56,7 +56,6 @@ export default function Session({ sessionID }: SessionProps) {
       ) : sessionController.session.mode === SessionMode.SOLO ? (
         <SoloLobby
           isHost={sessionController.isHost}
-          session={sessionController.session}
           handleUpdateGameConfig={sessionController.updateGameConfig}
           handleStartGame={sessionController.startGame}
         />

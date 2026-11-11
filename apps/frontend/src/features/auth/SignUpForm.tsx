@@ -20,7 +20,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   return (
     <>
       <form onSubmit={submit}>
-        <FormFields disableOptimization>
+        <FormFields>
           <Controller
             control={control}
             name="username"

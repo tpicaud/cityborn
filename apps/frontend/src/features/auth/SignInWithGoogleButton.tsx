@@ -74,13 +74,7 @@ export function SignInWithGoogleButton() {
   }, [signInWithGoogle]);
 
   return (
-    <View
-      disableOptimization
-      items="center"
-      justify="center"
-      minH="11"
-      aria-busy={isSigningIn}
-    >
+    <View items="center" justify="center" minH="11" aria-busy={isSigningIn}>
       <div ref={googleButtonContainer} />
       {isSigningIn && (
         <View

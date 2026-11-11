@@ -27,7 +27,8 @@
     "check-env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check"
+    "fullcheck": "pnpm typecheck && pnpm check",
+    "eas-build-post-install": "pnpm --workspace-root exec turbo run typecheck --filter=cityborn-mobile..."
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
