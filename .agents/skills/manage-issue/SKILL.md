@@ -1,6 +1,6 @@
 ---
 name: manage-issue
-description: "Issues GitHub Cityborn. À utiliser pour planifier une tâche ou une feature, rédiger, publier, modifier, commenter ou abandonner une issue et la rattacher au project Cityborn, ou répondre à une question sur une issue."
+description: "Issues GitHub Cityborn. À utiliser pour planifier une tâche ou une feature, rédiger, publier, modifier, commenter ou abandonner une issue, la rattacher au project Cityborn ou à une branche d'intégration, ou répondre à une question sur une issue."
 ---
 
 # Gérer une issue
@@ -35,6 +35,15 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
    - Status : `A faire dans l'itération` ;
    - Sprint : celui résolu.
 
+## Branche d'intégration
+
+Des sous-issues qui partent ensemble en production passent par la **branche d'intégration** de leur issue parente : la branche liée de la parente, tête de sa PR draft vers `main`. Chaque sous-issue y livre sa propre PR ; le merge de la PR d'intégration dans `main` ferme la parente et ses sous-issues.
+
+1. Ouvrir la branche d'intégration avant le développement de la première sous-issue :
+   - créer la branche liée de la parente avec `gh issue develop <parente> --base main` ;
+   - y pousser un commit vide, puis ouvrir la PR draft vers `main` au titre de la parente, avec `Closes #<parente>`.
+2. Rattacher à la parente chaque issue destinée à cette branche, existante ou nouvelle : `gh api repos/tpicaud/cityborn/issues/<parente>/sub_issues -F sub_issue_id="$(gh api repos/tpicaud/cityborn/issues/<numéro> --jq .id)"`.
+
 ## Garde-fous
 
 - Assigner, fermer ou modifier une issue seulement à la demande de l'utilisateur.
@@ -42,4 +51,4 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 
 ## Critère de fin
 
-L'issue publiée porte ses labels et suit la référence de son template ; son item de project porte son Type, son Status et son Sprint.
+L'issue publiée porte ses labels et suit la référence de son template ; son item de project porte son Type, son Status et son Sprint. Une branche d'intégration a sa PR draft ouverte vers `main`, et chaque issue qui y est destinée est sous-issue de la parente.

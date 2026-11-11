@@ -19,6 +19,7 @@ Pour chaque prompt, vérifier que seuls les skills attendus se déclenchent.
 | « Rédige une issue pour le bug de reconnexion. » | `manage-issue` |
 | « J'aimerais étudier un mode multijoueur et en faire une issue, aide-moi à planifier. » | `manage-issue`, puis `grilling` avant le brouillon |
 | « Explique-moi ce que demande l'issue #400. » | `manage-issue` |
+| « Ouvre une branche d'intégration pour #500 et rattaches-y #501 et #502. » | `manage-issue`, sans `deliver-issue` |
 | « Développe-moi l'issue #123. » | `deliver-issue`, puis `execute-ui-scenarios` en dernière étape |
 | « Fais la recette web de la PR #300 avec les scénarios de sa description. » | `execute-ui-scenarios`, sans `deliver-issue` |
 | « Fais la recette desktop du back-office avec ces scénarios. » | `execute-ui-scenarios`, sans `deliver-issue` |

@@ -9,11 +9,18 @@ L'orchestrateur réalise cette préparation avant de transmettre le worktree au 
    - la branche d'intégration de l'issue parente, tête de sa PR ouverte vers `main`, quand elle existe ;
    - sinon `main`.
 
+   Seule l'issue parente détermine la branche cible. Si l'issue ou l'utilisateur vise une branche d'intégration alors que l'issue n'en est pas une sous-issue, demander de la rattacher à l'issue qui porte cette branche, selon le skill `manage-issue`.
+
    ```sh
    gh api graphql -F n=<numéro> -f query='query($n:Int!){repository(owner:"tpicaud",name:"cityborn"){issue(number:$n){parent{closedByPullRequestsReferences(first:10){nodes{state baseRefName headRefName}}}}}}' \
      --jq '.data.repository.issue.parent.closedByPullRequestsReferences.nodes[]? | select(.state=="OPEN" and .baseRefName=="main") | .headRefName'
    ```
-3. Exécuter `git fetch --all --prune`, puis lire la branche liée avec `gh issue develop <numéro> --list`. Une branche locale au nom proche ne compte pas. Sans branche liée, la créer avec `gh issue develop <numéro> --base <branche cible>`, puis relancer le fetch.
+3. Exécuter `git fetch --all --prune`, puis retenir la **branche liée**, unique branche de l'issue, dans cet ordre :
+   - la tête de la PR ouverte vers la branche cible qui ferme l'issue : `gh pr list --base <branche cible> --json headRefName,closingIssuesReferences --jq '.[] | select(any(.closingIssuesReferences[]; .number==<numéro>)) | .headRefName'` ;
+   - sinon la branche de `gh issue develop <numéro> --list` ;
+   - sinon une branche créée avec `gh issue develop <numéro> --base <branche cible>`, suivie d'un nouveau fetch.
+
+   Une branche locale au nom proche ne compte pas.
 4. Retenir le premier worktree qui convient, la racine courante venant de `git rev-parse --show-toplevel` :
    - le worktree secondaire qui porte déjà la branche liée, où que l'on soit : l'issue y a déjà été traitée et le travail reprend là ;
    - sinon le checkout courant, s'il est secondaire, quelle que soit sa branche ou l'outil qui l'a créé ;
