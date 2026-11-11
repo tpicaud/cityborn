@@ -64,11 +64,7 @@ export function PackCatalog({
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <Screen
-      title={selectedTheme?.name ?? 'Solo'}
-      onBack={selectedTheme ? () => selectTheme(undefined) : undefined}
-      bottomSafeArea={bottomSafeArea}
-    >
+    <Screen title="Solo" bottomSafeArea={bottomSafeArea}>
       <View flex={1} minH="0" gap="4 md:5">
         <FilterBar label="Filtrer les packs par thème">
           <FilterTag
