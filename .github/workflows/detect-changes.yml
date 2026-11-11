@@ -38,6 +38,13 @@ jobs:
           filters: |
             frontendHasChanged:
               - 'apps/frontend/**'
+              - 'scripts/build-validation/**'
+              - 'package.json'
+              - 'turbo.json'
+              - 'patches/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/pr-checks.yml'
               - 'packages/**'
 
             backendHasChanged:

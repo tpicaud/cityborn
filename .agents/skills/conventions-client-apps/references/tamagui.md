@@ -16,5 +16,4 @@
 - Le web charge la police par `next/font/local` et l'expose dans une variable CSS, que lit la famille web de la configuration ; le mobile la charge par `useFonts`, chaque face native nommée comme son fichier.
 - Le CSS Tamagui versionné du frontend reflète la configuration : après un changement de configuration, il se régénère avec `tamagui build --target web ./src` lancé seul, car le build de l'app restaure la version versionnée.
 - Le frontend et le design system utilisent les exports web de Tamagui sans alias `react-native-web`.
-- Le build du frontend vérifie les types des sources après compilation Tamagui, avec `noUnusedLocals` : quand le compilateur aplatit chaque usage d'un composant importé dans un fichier, l'import devient inutilisé et le build échoue. Un seul usage de ce composant par fichier porte alors `disableOptimization` ; le mobile, sans compilateur, n'en porte aucun.
 - Terminé quand `tamagui check --strict` passe et que la recette demandée couvre l'absence de warning `[tamagui]` dans la console.
