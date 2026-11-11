@@ -3,8 +3,7 @@
 import type { PackId, SessionId } from '@cityborn/api';
 import type { Navigation } from '@cityborn/client/platform';
 import {
-  launchedPackIdFromQueryParam,
-  launchedPackQueryParam,
+  launchedPackIdFromSearchParams,
   sessionIdFromSessionPath,
 } from '@cityborn/client/session';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -16,8 +15,8 @@ import { useNavigation } from '@/lib/navigation';
 function SessionRoute() {
   const navigation: Navigation = useNavigation();
   const sessionID: SessionId | null = sessionIdFromSessionPath(usePathname());
-  const launchedPackId: PackId | undefined = launchedPackIdFromQueryParam(
-    useSearchParams().get(launchedPackQueryParam),
+  const launchedPackId: PackId | undefined = launchedPackIdFromSearchParams(
+    Object.fromEntries(useSearchParams()),
   );
 
   useEffect(() => {

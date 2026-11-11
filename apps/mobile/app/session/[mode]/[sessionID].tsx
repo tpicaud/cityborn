@@ -1,8 +1,5 @@
 import { SessionIdSchema } from '@cityborn/api';
-import {
-  launchedPackIdFromQueryParam,
-  launchedPackQueryParam,
-} from '@cityborn/client/session';
+import { launchedPackIdFromSearchParams } from '@cityborn/client/session';
 import { useLocalSearchParams } from 'expo-router';
 import ScreenLayout from '@/components/ScreenLayout';
 import Session from '@/features/session/Session';
@@ -15,9 +12,7 @@ export default function SessionScreen() {
     <ScreenLayout>
       <Session
         sessionID={SessionIdSchema.parse(params.sessionID)}
-        launchedPackId={launchedPackIdFromQueryParam(
-          params[launchedPackQueryParam],
-        )}
+        launchedPackId={launchedPackIdFromSearchParams(params)}
       />
     </ScreenLayout>
   );
