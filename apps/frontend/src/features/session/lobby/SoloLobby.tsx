@@ -8,5 +8,5 @@ type SoloLobbyProps = {
 };
 
 export function SoloLobby({ handlePlayPack }: SoloLobbyProps) {
-  return <PackCatalog onPlay={handlePlayPack} />;
+  return <PackCatalog onPlay={handlePlayPack} bottomSafeArea />;
 }
