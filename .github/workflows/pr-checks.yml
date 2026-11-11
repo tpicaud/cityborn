@@ -205,7 +205,7 @@ jobs:
         run: pnpm install
 
       - name: Build static frontend
-        run: pnpm build:frontend
+        run: pnpm frontend:build
 
   back-office-static-build:
     name: Back-office static build
