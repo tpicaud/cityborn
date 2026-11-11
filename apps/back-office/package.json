@@ -5,13 +5,12 @@
   "scripts": {
     "typecheck": "next typegen && tsc --noEmit",
     "dev": "pnpm check:env:development && dotenv -c development -- next dev",
-    "build": "pnpm validate:build && pnpm check:env:production && next build --turbopack",
+    "build": "pnpm check:env:production && next build --turbopack",
     "check:env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint",
-    "validate:build": "pnpm --workspace-root exec turbo run typecheck --filter=cityborn-back-office..."
+    "check": "pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.26",

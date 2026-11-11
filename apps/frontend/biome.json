@@ -8,6 +8,7 @@
       "next": "recommended"
     },
     "rules": {
+      "correctness": { "noUnusedVariables": "error" },
       "style": {
         "noRestrictedImports": {
           "level": "error",

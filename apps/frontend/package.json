@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm check:env:development && dotenv -c development -- next dev",
-    "build": "pnpm validate:build && pnpm check:env:production && tamagui build --target web ./src -- next build",
+    "build": "pnpm lint && pnpm validate:build && pnpm check:env:production && tamagui build --target web ./src -- next build",
     "typecheck": "next typegen && tsc -noEmit",
     "check:env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
