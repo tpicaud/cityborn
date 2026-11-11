@@ -37,6 +37,7 @@ export default function Home({
         <p className="text-base md:text-lg text-center ">
           Trouve le lieu de naissance des personnalités
         </p>
+        <p className="text-base md:text-lg text-center">🐑 Recette web</p>
       </div>
 
       {user ? (
