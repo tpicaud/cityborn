@@ -5,7 +5,7 @@ import {
   type ImageAsset,
   useAssetImage,
 } from './assetImage';
-import { FormText } from './FormText';
+import { BodyText } from './BodyText';
 import { PressableFrame } from './PressableFrame';
 
 const BrandedButtonFrame = styled(PressableFrame, {
@@ -49,9 +49,9 @@ export function BrandedButton({ label, icon, onPress }: BrandedButtonProps) {
       <View w="5 md:7" h="5 md:7">
         {pending ? <Spinner color="black" /> : <AssetImage asset={icon} />}
       </View>
-      <FormText color="black" fontSize="5 md:7">
+      <BodyText color="black" fontSize="5 md:7">
         {label}
-      </FormText>
+      </BodyText>
     </BrandedButtonFrame>
   );
 }

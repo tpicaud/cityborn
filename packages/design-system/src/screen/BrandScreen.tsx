@@ -28,10 +28,10 @@ const phoneLogoSize: LogoSize = { width: 156, height: 162 };
 const tabletLogoSize: LogoSize = { width: 244, height: 253 };
 
 const tabletActionsWidth: number = 560;
-const tabletFormWidth: number = 746;
-const spaciousFormMinHeight: number = 768;
+const tabletAdaptiveActionsWidth: number = 746;
+const spaciousMinHeight: number = 768;
 
-type FormDensity = 'compact' | 'spacious' | undefined;
+type Density = 'compact' | 'spacious' | undefined;
 
 const Logo = styled(View, {
   self: 'center',
@@ -39,7 +39,7 @@ const Logo = styled(View, {
   w: `${phoneLogoSize.width}px md:${tabletLogoSize.width}px`,
   h: `${phoneLogoSize.height}px md:${tabletLogoSize.height}px`,
   variants: {
-    formDensity: {
+    density: {
       compact: { mt: '2', w: '24', h: '24' },
       spacious: { mt: '6 md:10', w: '32 md:40', h: '32 md:40' },
     },
@@ -49,7 +49,7 @@ const Logo = styled(View, {
 const Separator = styled(View, {
   mt: '11 md:16',
   variants: {
-    formDensity: {
+    density: {
       compact: { mt: '3' },
       spacious: { mt: '6 md:8' },
     },
@@ -66,7 +66,7 @@ const Headline = styled(View, {
   gap: '1.5 md:2.5',
   mt: '8 md:14',
   variants: {
-    formDensity: {
+    density: {
       compact: { mt: '3' },
       spacious: { mt: '3 md:6' },
     },
@@ -100,15 +100,15 @@ const Actions = styled(View, {
   mt: '8 md:12',
   px: '1.5 md:0',
   variants: {
-    formDensity: {
+    density: {
       compact: {
-        maxW: tabletFormWidth,
+        maxW: tabletAdaptiveActionsWidth,
         mt: '4',
         px: '5 md:0',
         gap: '3',
       },
       spacious: {
-        maxW: tabletFormWidth,
+        maxW: tabletAdaptiveActionsWidth,
         mt: '6 md:8',
         px: '5 md:0',
         gap: '6 md:10',
@@ -125,7 +125,7 @@ type BrandScreenProps = {
   kicker?: string;
   title: string;
   children: ReactNode;
-  form?: boolean;
+  adaptiveDensity?: boolean;
   bottomSafeArea?: boolean;
 };
 
@@ -133,23 +133,23 @@ export function BrandScreen({
   kicker,
   title,
   children,
-  form = false,
+  adaptiveDensity = false,
   bottomSafeArea = false,
 }: BrandScreenProps) {
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
-  const [compactForm, setCompactForm] = useState<boolean>(true);
+  const [compact, setCompact] = useState<boolean>(true);
   const scrollViewRef: RefObject<GetRef<typeof ScrollView> | null> =
     useRef<GetRef<typeof ScrollView>>(null);
   const scrolledTitleRef: RefObject<string> = useRef<string>(title);
-  const formDensity: FormDensity = form
-    ? compactForm
+  const density: Density = adaptiveDensity
+    ? compact
       ? 'compact'
       : 'spacious'
     : undefined;
-  const measureFormViewport: ScrollViewProps['onLayout'] = form
+  const measureViewport: ScrollViewProps['onLayout'] = adaptiveDensity
     ? ({ nativeEvent: { layout } }) => {
         if (layout.height > 0) {
-          setCompactForm(layout.height < spaciousFormMinHeight);
+          setCompact(layout.height < spaciousMinHeight);
         }
       }
     : undefined;
@@ -162,30 +162,34 @@ export function BrandScreen({
 
   return (
     <Screen>
-      <View flex={1} minH="0" pb={form && bottomSafeArea ? 'safe' : '0'}>
+      <View
+        flex={1}
+        minH="0"
+        pb={adaptiveDensity && bottomSafeArea ? 'safe' : '0'}
+      >
         <ScrollView
           ref={scrollViewRef}
           flex={1}
           minH="0"
           mx="-4 md:-10"
-          onLayout={measureFormViewport}
+          onLayout={measureViewport}
           bounces={false}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View px="4 md:10" pb="4 md:6">
-            <Logo formDensity={formDensity} role="img" aria-label="Cityborn">
+            <Logo density={density} role="img" aria-label="Cityborn">
               <AssetImage asset="logo" />
             </Logo>
-            <Separator formDensity={formDensity} />
-            <Headline formDensity={formDensity}>
+            <Separator density={density} />
+            <Headline density={density}>
               {kicker !== undefined && (
                 <HeadlineKicker>{kicker}</HeadlineKicker>
               )}
               <HeadlineTitle>{title}</HeadlineTitle>
             </Headline>
-            <Actions formDensity={formDensity}>{children}</Actions>
-            {!form && bottomSafeArea && <View pb="safe" />}
+            <Actions density={density}>{children}</Actions>
+            {!adaptiveDensity && bottomSafeArea && <View pb="safe" />}
           </View>
         </ScrollView>
       </View>

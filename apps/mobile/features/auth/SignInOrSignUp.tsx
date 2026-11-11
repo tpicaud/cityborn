@@ -1,6 +1,11 @@
+import { ProviderButtonGroup } from '@cityborn/design-system';
 import { useState } from 'react';
+import { Platform } from 'react-native';
+import { LegalLinks } from '@/features/legal-information/LegalLinks';
 import { AuthScreen } from './AuthScreen';
 import { SignInForm } from './SignInForm';
+import { SignInWithAppleButton } from './SignInWithAppleButton';
+import { SignInWithGoogleButton } from './SignInWithGoogleButton';
 import { SignUpForm } from './SignUpForm';
 
 export function SignInOrSignUp() {
@@ -13,6 +18,11 @@ export function SignInOrSignUp() {
       ) : (
         <SignInForm onSignUp={() => setSigningUp(true)} />
       )}
+      <ProviderButtonGroup>
+        <SignInWithGoogleButton />
+        {Platform.OS === 'ios' && <SignInWithAppleButton />}
+      </ProviderButtonGroup>
+      {!signingUp && <LegalLinks onDarkBackground />}
     </AuthScreen>
   );
 }

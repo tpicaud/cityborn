@@ -27,7 +27,7 @@ export async function signOutFromGoogle(): Promise<void> {
   }
 }
 
-export const SignInWithGoogleButton = () => {
+export function SignInWithGoogleButton() {
   const { reportError }: ErrorReporter = useErrorReporter();
   const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithGoogle }: IdentityProviderSignIn =
@@ -63,4 +63,4 @@ export const SignInWithGoogleButton = () => {
       onPress={signIn}
     />
   );
-};
+}

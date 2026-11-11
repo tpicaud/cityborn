@@ -30,8 +30,8 @@ export {
 } from './signIn';
 export {
   type EmailVerification,
+  type EmailVerificationContent,
   type EmailVerificationOptions,
-  type EmailVerificationStatus,
   useEmailVerification,
 } from './useEmailVerification';
 export { type SignOut, type SignOutOptions, useSignOut } from './useSignOut';

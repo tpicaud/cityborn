@@ -5,8 +5,8 @@ import {
   usePasswordResetRequestFlow,
 } from '@cityborn/client/auth';
 import {
+  BodyText,
   Button,
-  FormText,
   Popup,
   TextButton,
   TextField,
@@ -45,9 +45,9 @@ export function RequestPasswordResetDialog() {
         <ScrollView maxH="96" keyboardShouldPersistTaps="handled">
           <View disableOptimization gap="4">
             {message ? (
-              <FormText disableOptimization role="status">
+              <BodyText disableOptimization role="status">
                 {message}
-              </FormText>
+              </BodyText>
             ) : (
               <>
                 <Controller

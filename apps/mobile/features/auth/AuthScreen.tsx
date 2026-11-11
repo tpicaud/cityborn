@@ -18,7 +18,11 @@ export function AuthScreen({
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <BrandScreen title={title} form bottomSafeArea={bottomSafeArea}>
+      <BrandScreen
+        title={title}
+        adaptiveDensity
+        bottomSafeArea={bottomSafeArea}
+      >
         {children}
       </BrandScreen>
     </KeyboardAvoidingView>

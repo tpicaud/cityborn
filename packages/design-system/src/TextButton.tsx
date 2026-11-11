@@ -1,5 +1,5 @@
 import { styled } from 'tamagui';
-import { FormText } from './FormText';
+import { BodyText } from './BodyText';
 import { PressableFrame } from './PressableFrame';
 
 const TextButtonFrame = styled(PressableFrame, {
@@ -27,7 +27,7 @@ export function TextButton({
       aria-disabled={disabled}
       opacity={disabled ? 0.5 : 1}
     >
-      <FormText textDecorationLine="underline">{label}</FormText>
+      <BodyText textDecorationLine="underline">{label}</BodyText>
     </TextButtonFrame>
   );
 }

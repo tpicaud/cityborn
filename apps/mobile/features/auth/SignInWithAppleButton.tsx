@@ -10,7 +10,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { CodedError } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
 
-export const SignInWithAppleButton = () => {
+export function SignInWithAppleButton() {
   const { reportError }: ErrorReporter = useErrorReporter();
   const router: ReturnType<typeof useRouter> = useRouter();
   const { signInWithApple }: IdentityProviderSignIn = useIdentityProviderSignIn(
@@ -86,4 +86,4 @@ export const SignInWithAppleButton = () => {
       onPress={signIn}
     />
   );
-};
+}

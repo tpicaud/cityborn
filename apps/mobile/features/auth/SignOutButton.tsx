@@ -1,6 +1,6 @@
 import { type SignOut, useSignOut } from '@cityborn/client/auth';
 import Button from '@/components/ui/Button';
-import { signOutFromGoogle } from './GoogleSignIn';
+import { signOutFromGoogle } from './SignInWithGoogleButton';
 
 type SignOutButtonProps = {
   onSignedOut: () => void;

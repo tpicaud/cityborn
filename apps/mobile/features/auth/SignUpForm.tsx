@@ -1,10 +1,11 @@
 import { type SignUpFlow, useSignUpFlow } from '@cityborn/client/auth';
-import { Button, TextButton, TextField } from '@cityborn/design-system';
+import {
+  Button,
+  FormFields,
+  TextButton,
+  TextField,
+} from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
-import { Platform } from 'react-native';
-import { View } from 'tamagui';
-import { SignInWithAppleButton } from './AppleSignIn';
-import { SignInWithGoogleButton } from './GoogleSignIn';
 
 export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   const {
@@ -16,7 +17,7 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
   }: SignUpFlow = useSignUpFlow();
   return (
     <>
-      <View gap="3 md:4">
+      <FormFields>
         <Controller
           control={control}
           name="username"
@@ -92,12 +93,8 @@ export function SignUpForm({ onSignIn }: { onSignIn: () => void }) {
           onPress={submit}
           loading={isSubmitting}
         />
-      </View>
+      </FormFields>
       <TextButton label="Déjà un compte ? Se connecter" onPress={onSignIn} />
-      <View gap="4 md:6" items="center">
-        <SignInWithGoogleButton />
-        {Platform.OS === 'ios' && <SignInWithAppleButton />}
-      </View>
     </>
   );
 }
