@@ -12,7 +12,7 @@ import {
 import type { NavigationPath } from '../../platform/navigation';
 import {
   joinableSessionPath,
-  launchedPackIdFromQueryParam,
+  launchedPackIdFromSearchParams,
   packLaunchSessionPath,
   sessionIdFromSessionPath,
   sessionPath,
@@ -107,24 +107,26 @@ describe('packLaunchSessionPath', () => {
   });
 });
 
-describe('launchedPackIdFromQueryParam', () => {
-  it('reads the launched pack of the query', () => {
-    const launchedPackId: PackId | undefined =
-      launchedPackIdFromQueryParam('pack nba');
+describe('launchedPackIdFromSearchParams', () => {
+  it('reads the launched pack of the search params', () => {
+    const launchedPackId: PackId | undefined = launchedPackIdFromSearchParams({
+      pack: 'pack nba',
+      mode: 'solo',
+    });
 
     assert.equal(launchedPackId, 'pack nba');
   });
 
-  it('ignores a missing, empty or repeated query param', () => {
-    const queryParams: (string | string[] | null | undefined)[] = [
-      undefined,
-      null,
-      '',
-      ['pack-a', 'pack-b'],
+  it('ignores a missing, empty or repeated launched pack', () => {
+    const searchParams: Record<string, string | string[] | undefined>[] = [
+      {},
+      { pack: undefined },
+      { pack: '' },
+      { pack: ['pack-a', 'pack-b'] },
     ];
 
-    const launchedPackIds: (PackId | undefined)[] = queryParams.map(
-      launchedPackIdFromQueryParam,
+    const launchedPackIds: (PackId | undefined)[] = searchParams.map(
+      launchedPackIdFromSearchParams,
     );
 
     assert.deepEqual(launchedPackIds, [
