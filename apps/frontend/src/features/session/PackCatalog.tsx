@@ -27,13 +27,7 @@ function ThemeIconGlyph({ icon }: { icon: ThemeIcon }) {
   const mask: string = `url("data:image/svg+xml,${encodeURIComponent(icon.svg)}") center / contain no-repeat`;
 
   return (
-    <View
-      disableOptimization
-      w="100%"
-      h="100%"
-      bg="white"
-      style={{ mask, WebkitMask: mask }}
-    />
+    <View w="100%" h="100%" bg="white" style={{ mask, WebkitMask: mask }} />
   );
 }
 
@@ -89,9 +83,7 @@ export function PackCatalog({ onPlay, bottomSafeArea }: PackCatalogProps) {
           ))}
         </FilterBar>
         {packs.length === 0 ? (
-          <BodyText disableOptimization>
-            Aucun pack pour l’instant. Reviens vite !
-          </BodyText>
+          <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
           <CardGrid>
             {packs.map((pack: Pack) => (
