@@ -1,6 +1,8 @@
 import {
   ErrorCode,
   getFriendlyErrorMessage,
+  type PackId,
+  PackIdSchema,
   type Session,
   type SessionId,
   SessionIdSchema,
@@ -18,6 +20,25 @@ export function sessionPath({
   mode,
 }: Pick<Session, 'id' | 'mode'>): NavigationPath {
   return `/session/${mode}/${id}`;
+}
+
+export const launchedPackQueryParam = 'pack';
+
+export function packLaunchSessionPath({
+  session,
+  packId,
+}: {
+  session: Pick<Session, 'id' | 'mode'>;
+  packId: PackId;
+}): NavigationPath {
+  return `/session/${session.mode}/${session.id}?${launchedPackQueryParam}=${encodeURIComponent(packId)}`;
+}
+
+export function launchedPackIdFromQueryParam(
+  queryParam: string | string[] | null | undefined,
+): PackId | undefined {
+  if (typeof queryParam !== 'string' || queryParam === '') return undefined;
+  return PackIdSchema.parse(queryParam);
 }
 
 export function joinableSessionPath(

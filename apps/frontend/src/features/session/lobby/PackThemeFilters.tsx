@@ -1,9 +1,9 @@
 import type { Theme, ThemeIcon } from '@cityborn/api';
-import type { PackSelection } from '@cityborn/client/session';
+import type { ThemeFilteredPacks } from '@cityborn/client/session';
 import { Chip } from '@mui/material';
 
 type PackThemeFiltersProps = Pick<
-  PackSelection,
+  ThemeFilteredPacks,
   'themes' | 'selectedTheme' | 'selectTheme'
 >;
 
