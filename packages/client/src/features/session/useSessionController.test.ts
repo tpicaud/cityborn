@@ -1,15 +1,70 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  buildPack,
+  type Pack,
   type PackId,
   PackIdSchema,
   type PlayerId,
   PlayerIdSchema,
+  UserFacingError,
 } from '@cityborn/api';
-import { enterSession } from './useSessionController';
+import {
+  enterSession,
+  findLaunchedPack,
+  launchesGameOnEntry,
+} from './useSessionController';
 
 const playerID: PlayerId = PlayerIdSchema.parse('guest');
 const packId: PackId = PackIdSchema.parse('pack-nba');
+
+describe('findLaunchedPack', () => {
+  it('returns the published pack of the launched pack', () => {
+    const packs: Pack[] = [
+      buildPack({ id: 'pack-tennis', name: 'Tennis' }),
+      buildPack({ id: 'pack-nba', name: 'NBA' }),
+    ];
+
+    const launchedPack: Pack = findLaunchedPack({ packs, packId });
+
+    assert.equal(launchedPack.name, 'NBA');
+  });
+
+  it('rejects a launched pack missing from the published packs', () => {
+    const packs: Pack[] = [buildPack({ id: 'pack-tennis', name: 'Tennis' })];
+
+    assert.throws(
+      () => findLaunchedPack({ packs, packId }),
+      new UserFacingError('Aucun pack trouvé pour cet identifiant.'),
+    );
+  });
+});
+
+describe('launchesGameOnEntry', () => {
+  it('launches the game of a quick play or a launched pack', () => {
+    const entries: boolean[] = [
+      launchesGameOnEntry({
+        session: { quickPlay: true },
+        launchedPackId: undefined,
+      }),
+      launchesGameOnEntry({
+        session: { quickPlay: false },
+        launchedPackId: packId,
+      }),
+    ];
+
+    assert.deepEqual(entries, [true, true]);
+  });
+
+  it('leaves a classic session in its lobby', () => {
+    const launchesGame: boolean = launchesGameOnEntry({
+      session: { quickPlay: false },
+      launchedPackId: undefined,
+    });
+
+    assert.equal(launchesGame, false);
+  });
+});
 
 describe('enterSession', () => {
   it('starts the game of a quick play once the player has joined', async () => {
