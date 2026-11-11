@@ -86,7 +86,7 @@ async function visitDevelopment(): Promise<void> {
   child.stderr?.on('data', (chunk: Buffer) => {
     output += chunk.toString();
   });
-  const ready = async (remaining: number): Promise<void> => {
+  async function ready(remaining: number): Promise<void> {
     assert.equal(child.exitCode, null, output);
     assert.ok(remaining > 0, output);
     try {
@@ -102,7 +102,7 @@ async function visitDevelopment(): Promise<void> {
       await setTimeout(500);
       await ready(remaining - 1);
     }
-  };
+  }
   try {
     await ready(90);
     const validator: string = await readFile(
@@ -155,7 +155,7 @@ try {
     },
     { source: "export const probe: number = 'invalid';\n", error: /TS2322/ },
   ];
-  const checkProbes = async (remaining: typeof probes): Promise<void> => {
+  async function checkProbes(remaining: typeof probes): Promise<void> {
     const [current, ...rest]: typeof probes = remaining;
     if (!current) return;
     await writeFile(probe, current.source);
@@ -169,7 +169,7 @@ try {
     });
     await rm(probe);
     await checkProbes(rest);
-  };
+  }
   process.stdout.write(
     'Unused import and type errors reject typecheck and direct build\n',
   );
