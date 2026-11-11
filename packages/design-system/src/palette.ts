@@ -24,6 +24,18 @@ function cardFillAt(opacity: number): string {
   return `${cardFill}${alpha}`;
 }
 
+const cardFadeStepCount: number = 24;
+
+function smootherStep(progress: number): number {
+  return progress ** 3 * (progress * (progress * 6 - 15) + 10);
+}
+
+const cardFadeInnerStops: string[] = Array.from(
+  { length: cardFadeStepCount - 1 },
+  (_: unknown, index: number): string =>
+    cardFillAt(smootherStep((index + 1) / cardFadeStepCount)),
+);
+
 const componentColors = {
   'panel-fill': 'rgba(1, 43, 55, 0.51)',
   'panel-edge': '#107599',
@@ -51,7 +63,7 @@ const componentColors = {
   'card-fill': cardFill,
 } as const;
 
-type GradientStops = readonly [string, string, ...string[]];
+type GradientStops = readonly [string, ...string[], string];
 
 const orangeGradientStart: string = '#FF9840';
 
@@ -63,15 +75,7 @@ export const gradients = {
   blue: [figmaColors['common-blue'], '#008ABC'],
   yellow: ['#FFD505', '#FFAE00'],
   green: ['#7BFF61', '#00D540'],
-  'card-fade': [
-    cardFillAt(0),
-    cardFillAt(0.09),
-    cardFillAt(0.25),
-    cardFillAt(0.5),
-    cardFillAt(0.75),
-    cardFillAt(0.91),
-    cardFill,
-  ],
+  'card-fade': [cardFillAt(0), ...cardFadeInnerStops, cardFill],
   'card-edge': ['rgba(0, 61, 87, 0)', '#009380'],
 } as const satisfies Record<string, GradientStops>;
 
