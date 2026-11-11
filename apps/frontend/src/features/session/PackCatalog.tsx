@@ -20,6 +20,7 @@ import { View } from 'tamagui';
 
 type PackCatalogProps = {
   onPlay: (pack: Pack) => Promise<void>;
+  bottomSafeArea?: boolean;
 };
 
 function ThemeIconGlyph({ icon }: { icon: ThemeIcon }) {
@@ -57,7 +58,7 @@ function PackCard({
   );
 }
 
-export function PackCatalog({ onPlay }: PackCatalogProps) {
+export function PackCatalog({ onPlay, bottomSafeArea }: PackCatalogProps) {
   const {
     isLoading,
     themes,
@@ -72,6 +73,7 @@ export function PackCatalog({ onPlay }: PackCatalogProps) {
     <Screen
       title={selectedTheme?.name ?? 'Solo'}
       onBack={selectedTheme ? () => selectTheme(undefined) : undefined}
+      bottomSafeArea={bottomSafeArea}
     >
       <View flex={1} minH="0" gap="4 md:5">
         <FilterBar label="Filtrer les packs par thème">
