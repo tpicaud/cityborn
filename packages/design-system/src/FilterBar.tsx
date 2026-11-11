@@ -10,8 +10,7 @@ export function FilterBar({ label, children }: FilterBarProps) {
   return (
     <ScrollView
       horizontal
-      grow={0}
-      shrink={0}
+      style={{ flexGrow: 0, flexShrink: 0 }}
       mx="-4 md:-10"
       showsHorizontalScrollIndicator={false}
     >

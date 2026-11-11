@@ -24,6 +24,7 @@ const ImageCardFrame = styled(View, {
 });
 
 const Visual = styled(View, {
+  position: 'relative',
   w: '100%',
   aspectRatio: visualAspectRatio,
   items: 'center',
@@ -47,6 +48,7 @@ const NeutralVisual = styled(View, {
 });
 
 const Body = styled(View, {
+  position: 'relative',
   gap: '3 md:6',
   mt: '-5 md:-12',
   px: '4 md:10',
