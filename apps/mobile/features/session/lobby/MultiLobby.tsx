@@ -1,11 +1,11 @@
-import type { GameConfigChanges, PlayerId, Session } from '@cityborn/api';
+import type { Pack, PlayerId, Session } from '@cityborn/api';
 import {
-  type PackSelection,
   type PlayerNameForm,
   playerConnectionStatus,
   sortPlayersConnectedFirst,
-  usePackSelection,
+  type ThemeFilteredPacks,
   usePlayerNameForm,
+  useThemeFilteredPacks,
 } from '@cityborn/client/session';
 import { colors } from '@cityborn/design-system';
 import * as Clipboard from 'expo-clipboard';
@@ -25,8 +25,7 @@ type MultiLobbyProps = {
   localPlayerID: PlayerId | undefined;
   session: Session;
   isHost: boolean;
-  handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
-  handleStartGame: () => Promise<void>;
+  handlePlayPack: (pack: Pack) => Promise<void>;
   handleJoinSession: (playerID: PlayerId) => Promise<void>;
 };
 
@@ -34,8 +33,7 @@ export function MultiLobby({
   localPlayerID,
   session,
   isHost,
-  handleUpdateGameConfig,
-  handleStartGame,
+  handlePlayPack,
   handleJoinSession,
 }: MultiLobbyProps) {
   const [copied, setCopied] = useState(false);
@@ -46,11 +44,7 @@ export function MultiLobby({
     selectedTheme,
     selectTheme,
     packs,
-    playPack,
-  }: PackSelection = usePackSelection({
-    updateGameConfig: handleUpdateGameConfig,
-    startGame: handleStartGame,
-  });
+  }: ThemeFilteredPacks = useThemeFilteredPacks();
 
   const submitPlayerName = playerNameForm.handleSubmit(({ playerID }) =>
     handleJoinSession(playerID),
@@ -137,7 +131,7 @@ export function MultiLobby({
                       size="small"
                       label="Jouer"
                       disabled={!isHost}
-                      onPress={() => playPack(pack)}
+                      onPress={() => handlePlayPack(pack)}
                       className="w-24 h-9 px-0"
                     />
                   </View>

@@ -2,6 +2,8 @@
 
 import {
   type CreateSession,
+  type Pack,
+  type PackId,
   type Session,
   SessionIdSchema,
   SessionMode,
@@ -18,7 +20,11 @@ import {
   useErrorReporter,
 } from '../../shared/errorReporter';
 import type { FormSubmitHandler } from '../../shared/formSubmitHandler';
-import { joinableSessionPath, sessionPath } from './sessionPath';
+import {
+  joinableSessionPath,
+  packLaunchSessionPath,
+  sessionPath,
+} from './sessionPath';
 
 const sessionCodeLength: number = 6;
 const sessionCodePattern: RegExp = new RegExp(`^\\d{${sessionCodeLength}}$`);
@@ -53,7 +59,7 @@ export type SessionLauncherOptions = {
 
 export type SessionLauncher = {
   joinSessionForm: JoinSessionForm;
-  playSolo: () => Promise<void>;
+  playSolo: (pack: Pack) => Promise<void>;
   launchQuickPlay: () => Promise<void>;
   playMulti: () => Promise<void>;
   joinSession: FormSubmitHandler;
@@ -76,18 +82,23 @@ export function useSessionLauncher({
     defaultValues: joinSessionFormDefaultValues,
   });
 
-  const openNewSession: (createSession: CreateSession) => Promise<void> =
-    async (createSession: CreateSession): Promise<void> => {
-      try {
-        const session: Session = await sessionApi.createSession(createSession);
-        navigation.push(sessionPath(session));
-      } catch (error: unknown) {
-        reportError(error);
-      }
-    };
-
-  const playMulti: () => Promise<void> = async (): Promise<void> => {
-    await openNewSession({ mode: SessionMode.MULTI });
+  const openNewSession: ({
+    createSession,
+    launchedPackId,
+  }: {
+    createSession: CreateSession;
+    launchedPackId?: PackId;
+  }) => Promise<void> = async ({ createSession, launchedPackId }) => {
+    try {
+      const session: Session = await sessionApi.createSession(createSession);
+      navigation.push(
+        launchedPackId === undefined
+          ? sessionPath(session)
+          : packLaunchSessionPath({ session, packId: launchedPackId }),
+      );
+    } catch (error: unknown) {
+      reportError(error);
+    }
   };
 
   const joinSession: (values: JoinSessionFormValues) => Promise<void> = async ({
@@ -105,10 +116,17 @@ export function useSessionLauncher({
 
   return {
     joinSessionForm,
-    playSolo: () => openNewSession({ mode: SessionMode.SOLO }),
+    playSolo: (pack: Pack) =>
+      openNewSession({
+        createSession: { mode: SessionMode.SOLO },
+        launchedPackId: pack.id,
+      }),
     launchQuickPlay: () =>
-      openNewSession({ mode: SessionMode.SOLO, quickPlay: true }),
-    playMulti,
+      openNewSession({
+        createSession: { mode: SessionMode.SOLO, quickPlay: true },
+      }),
+    playMulti: () =>
+      openNewSession({ createSession: { mode: SessionMode.MULTI } }),
     joinSession: joinSessionForm.handleSubmit(joinSession),
   };
 }

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  type PackId,
+  PackIdSchema,
   type Session,
   type SessionId,
   SessionIdSchema,
@@ -10,11 +12,14 @@ import {
 import type { NavigationPath } from '../../platform/navigation';
 import {
   joinableSessionPath,
+  launchedPackIdFromQueryParam,
+  packLaunchSessionPath,
   sessionIdFromSessionPath,
   sessionPath,
 } from './sessionPath';
 
 const sessionId: SessionId = SessionIdSchema.parse('brave-golden-lynx');
+const packId: PackId = PackIdSchema.parse('pack nba');
 
 describe('joinableSessionPath', () => {
   it('returns the path of a multi session', () => {
@@ -83,5 +88,50 @@ describe('sessionIdFromSessionPath', () => {
     );
 
     assert.deepEqual(readSessionIds, [null, null]);
+  });
+});
+
+describe('packLaunchSessionPath', () => {
+  it('carries the launched pack in the query of the session path', () => {
+    const soloSession: Pick<Session, 'id' | 'mode'> = {
+      id: sessionId,
+      mode: SessionMode.SOLO,
+    };
+
+    const path: NavigationPath = packLaunchSessionPath({
+      session: soloSession,
+      packId,
+    });
+
+    assert.equal(path, '/session/solo/brave-golden-lynx?pack=pack%20nba');
+  });
+});
+
+describe('launchedPackIdFromQueryParam', () => {
+  it('reads the launched pack of the query', () => {
+    const launchedPackId: PackId | undefined =
+      launchedPackIdFromQueryParam('pack nba');
+
+    assert.equal(launchedPackId, 'pack nba');
+  });
+
+  it('ignores a missing, empty or repeated query param', () => {
+    const queryParams: (string | string[] | null | undefined)[] = [
+      undefined,
+      null,
+      '',
+      ['pack-a', 'pack-b'],
+    ];
+
+    const launchedPackIds: (PackId | undefined)[] = queryParams.map(
+      launchedPackIdFromQueryParam,
+    );
+
+    assert.deepEqual(launchedPackIds, [
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 });
