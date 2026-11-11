@@ -1,4 +1,4 @@
-import { rm, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { runCommand } from './run.mts';
 
@@ -8,6 +8,35 @@ const mobileProbe: string = fileURLToPath(
 const sharedProbe: string = fileURLToPath(
   new URL('../../packages/core/build-validation-probe.ts', import.meta.url),
 );
+const sharedScreen: string = fileURLToPath(
+  new URL(
+    '../../packages/design-system/src/screen/BrandScreen.tsx',
+    import.meta.url,
+  ),
+);
+
+async function rejectChangedSharedContract(): Promise<void> {
+  const source: string = await readFile(sharedScreen, 'utf8');
+
+  try {
+    await writeFile(
+      sharedScreen,
+      source.replace(
+        'type BrandScreenProps = {',
+        'type BrandScreenProps = {\n  buildValidationRequired: never;',
+      ),
+    );
+    await runCommand({
+      args: ['--filter', '@cityborn/design-system', 'typecheck'],
+    });
+    await runCommand({
+      args: ['mobile', 'eas-build-post-install'],
+      rejects: /Property 'buildValidationRequired' is missing/,
+    });
+  } finally {
+    await writeFile(sharedScreen, source);
+  }
+}
 
 async function rejectSequentially(commands: string[][]): Promise<void> {
   const [args, ...rest]: string[][] = commands;
@@ -21,6 +50,11 @@ try {
     'EAS post-install validates mobile and shared packages\n',
   );
   await runCommand({ args: ['mobile', 'eas-build-post-install'] });
+
+  process.stdout.write(
+    'A valid shared contract change invalidates the cached mobile consumer\n',
+  );
+  await rejectChangedSharedContract();
 
   process.stdout.write(
     'Unused mobile imports reject every native build entry point\n',
