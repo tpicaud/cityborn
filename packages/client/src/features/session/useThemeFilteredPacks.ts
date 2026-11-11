@@ -1,14 +1,8 @@
 'use client';
 
-import type {
-  GameConfigChanges,
-  GameConfigPack,
-  Pack,
-  Theme,
-  ThemeId,
-} from '@cityborn/api';
+import type { Pack, Theme, ThemeId } from '@cityborn/api';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type DomainApis, useDomainApis } from '../../domains/apiProvider';
 import { publishedPacksQueryOptions } from '../../domains/pack/packQueries';
 import { playableThemesQueryOptions } from '../../domains/theme/themeQueries';
@@ -17,45 +11,43 @@ import { selectThemePacks } from './themePacks';
 const noPacks: Pack[] = [];
 const noThemes: Theme[] = [];
 
-function toGameConfigPack(pack: Pack): GameConfigPack {
-  return {
-    id: pack.id,
-    name: pack.name,
-    isPublished: pack.isPublished,
-    description: pack.description,
-  };
-}
-
-export type PackSelectionOptions = {
-  updateGameConfig: (changes: GameConfigChanges) => Promise<void>;
-  startGame: () => Promise<void>;
+export type ThemeFilteredPacksOptions = {
+  isScreenFocused?: boolean;
 };
 
-export type PackSelection = {
+export type ThemeFilteredPacks = {
   isLoading: boolean;
   themes: Theme[];
   selectedTheme: Theme | undefined;
   selectTheme: (themeId: ThemeId | undefined) => void;
   packs: Pack[];
-  playPack: (pack: Pack) => Promise<void>;
 };
 
-export function usePackSelection({
-  updateGameConfig,
-  startGame,
-}: PackSelectionOptions): PackSelection {
+export function useThemeFilteredPacks({
+  isScreenFocused = true,
+}: ThemeFilteredPacksOptions = {}): ThemeFilteredPacks {
   const { packApi, themeApi }: DomainApis = useDomainApis();
   const {
     data: publishedPacks = noPacks,
     isPending: isLoadingPacks,
-  }: UseQueryResult<Pack[]> = useQuery(publishedPacksQueryOptions(packApi));
+  }: UseQueryResult<Pack[]> = useQuery({
+    ...publishedPacksQueryOptions(packApi),
+    subscribed: isScreenFocused,
+  });
   const {
     data: themes = noThemes,
     isPending: isLoadingThemes,
-  }: UseQueryResult<Theme[]> = useQuery(playableThemesQueryOptions(themeApi));
+  }: UseQueryResult<Theme[]> = useQuery({
+    ...playableThemesQueryOptions(themeApi),
+    subscribed: isScreenFocused,
+  });
   const [selectedThemeId, setSelectedThemeId] = useState<ThemeId | undefined>(
     undefined,
   );
+
+  useEffect(() => {
+    if (!isScreenFocused) setSelectedThemeId(undefined);
+  }, [isScreenFocused]);
 
   const selectedTheme: Theme | undefined = themes.find(
     (theme: Theme) => theme.id === selectedThemeId,
@@ -67,17 +59,11 @@ export function usePackSelection({
     [publishedPacks, selectedTheme],
   );
 
-  const playPack: PackSelection['playPack'] = async (pack: Pack) => {
-    await updateGameConfig({ packs: [toGameConfigPack(pack)] });
-    await startGame();
-  };
-
   return {
     isLoading: isLoadingPacks || isLoadingThemes,
     themes,
     selectedTheme,
     selectTheme: setSelectedThemeId,
     packs,
-    playPack,
   };
 }
