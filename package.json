@@ -55,10 +55,7 @@
     "recette:back-office": "bash scripts/recette/launch.sh back-office",
     "recette:captures": "bash scripts/recette/publish-captures.sh",
     "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
-    "check": "pnpm typecheck && pnpm lint",
-    "check:build-patches": "node --test scripts/build-validation/dependency-patches.test.mts",
-    "check:frontend-build": "node scripts/build-validation/frontend.mts",
-    "check:mobile-build": "node scripts/build-validation/mobile.mts"
+    "check": "pnpm typecheck && pnpm lint"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",

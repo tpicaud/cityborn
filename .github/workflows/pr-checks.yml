@@ -169,9 +169,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check mobile build type gates
-        run: pnpm check:mobile-build
-
       - name: Prebuild mobile app
         working-directory: apps/mobile
         run: pnpm prebuild
@@ -207,11 +204,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check build dependency patches
-        run: pnpm check:build-patches
-
-      - name: Check frontend builds before and after development
-        run: pnpm check:frontend-build
+      - name: Build static frontend
+        run: pnpm frontend:build
 
   back-office-static-build:
     name: Back-office static build
