@@ -73,13 +73,13 @@ describe('seedDatabase', () => {
     expect(passwordMatches).toEqual([true, true]);
   });
 
-  it('publishes two illustrated packs of two personalities within one theme', async () => {
+  it('publishes two illustrated packs of two personalities in two themes', async () => {
     await seedDatabase(prisma);
 
     const packs: FullPack[] = await packRepository.findFullBy({
       isPublished: true,
     });
-    expect(new Set(packs.map((pack: FullPack) => pack.themeId)).size).toBe(1);
+    expect(new Set(packs.map((pack: FullPack) => pack.themeId)).size).toBe(2);
     expect(
       packs
         .map(
@@ -157,7 +157,7 @@ describe('seedDatabase', () => {
       geometryCount,
     }).toEqual({
       userCount: 2,
-      themeCount: 1,
+      themeCount: 2,
       packCount: 2,
       guessObjectCount: 4,
       worldLocationCount: 4,
