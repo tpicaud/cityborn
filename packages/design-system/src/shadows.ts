@@ -17,6 +17,11 @@ export const shadows = {
   'nav-bar': 'inset 0 1px 0 0 rgba(26, 255, 217, 0.26)',
   'icon-button': '0 3px 7.9px 0 rgba(0, 0, 0, 0.25)',
   card: '0 4px 12px 0 rgba(0, 0, 0, 0.28)',
+  'card-tablet': '0 10px 29px 0 rgba(0, 0, 0, 0.28)',
+  'card-cta':
+    'inset 0 1px 0 0 rgba(255, 255, 255, 0.5), inset 0 -2px 0.9px 0 rgba(0, 0, 0, 0.47)',
+  'card-cta-tablet':
+    'inset 0 2px 0 0 rgba(255, 255, 255, 0.5), inset 0 -5px 2px 0 rgba(0, 0, 0, 0.47)',
   panel: '0 11px 16.7px 0 rgba(0, 0, 0, 0.29)',
 } as const;
 

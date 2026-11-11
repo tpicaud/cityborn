@@ -15,6 +15,8 @@ const ctaFrameColors = {
   'cta-backdrop': 'rgba(0, 0, 0, 0.35)',
 } as const;
 
+const cardFill: string = '#004C61';
+
 const componentColors = {
   'panel-fill': 'rgba(1, 43, 55, 0.51)',
   'panel-edge': '#107599',
@@ -39,6 +41,7 @@ const componentColors = {
   'separator-shade': 'rgba(0, 0, 0, 0.4)',
   'separator-light': 'rgba(255, 255, 255, 0.28)',
   'headline-kicker': 'rgba(255, 255, 255, 0.38)',
+  'card-fill': cardFill,
 } as const;
 
 type GradientStops = readonly [string, string];
@@ -53,6 +56,7 @@ export const gradients = {
   blue: [figmaColors['common-blue'], '#008ABC'],
   yellow: ['#FFD505', '#FFAE00'],
   green: ['#7BFF61', '#00D540'],
+  'card-fade': ['rgba(0, 76, 97, 0)', cardFill],
 } as const satisfies Record<string, GradientStops>;
 
 type GradientName = keyof typeof gradients;
