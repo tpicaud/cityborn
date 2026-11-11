@@ -212,10 +212,16 @@ describe('createCookieContractClient', () => {
   });
 
   it('shares the refresh failure between concurrent requests without replacing it with an authentication error', async (context: TestContext) => {
-    const refreshStarted: PromiseWithResolvers<void> =
-      Promise.withResolvers<void>();
-    const refreshResponse: PromiseWithResolvers<Response> =
-      Promise.withResolvers<Response>();
+    let resolveRefreshStarted: () => void = () => undefined;
+    const refreshStarted: Promise<void> = new Promise<void>((resolve) => {
+      resolveRefreshStarted = resolve;
+    });
+    let resolveRefreshResponse: (response: Response) => void = () => undefined;
+    const refreshResponse: Promise<Response> = new Promise<Response>(
+      (resolve) => {
+        resolveRefreshResponse = resolve;
+      },
+    );
     let refreshCount: number = 0;
     stubFetch({
       context,
@@ -226,8 +232,8 @@ describe('createCookieContractClient', () => {
         }
         if (url.pathname === contract.auth.cookie.refresh.path) {
           refreshCount += 1;
-          refreshStarted.resolve();
-          return refreshResponse.promise;
+          resolveRefreshStarted();
+          return refreshResponse;
         }
         throw new Error(`Unexpected request: ${url.pathname}`);
       },
@@ -241,13 +247,13 @@ describe('createCookieContractClient', () => {
       contractClient.auth.me(),
       isServerFailure,
     );
-    await refreshStarted.promise;
+    await refreshStarted;
     const secondRequest: Promise<void> = assert.rejects(
       contractClient.auth.me(),
       isServerFailure,
     );
     await setImmediate();
-    refreshResponse.resolve(
+    resolveRefreshResponse(
       jsonResponse({ body: backendUnavailableError, status: 503 }),
     );
     await Promise.all([firstRequest, secondRequest]);
