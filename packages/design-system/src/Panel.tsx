@@ -1,4 +1,4 @@
-import { styled, View } from 'tamagui';
+import { styled, View, type ViewProps } from 'tamagui';
 
 export const Panel = styled(View, {
   gap: '2',
@@ -11,4 +11,9 @@ export const Panel = styled(View, {
   borderRightColor: 'panel-edge-faded',
   borderBottomColor: 'panel-edge',
   boxShadow: 'card',
+  variants: {
+    notice: {
+      true: { gap: '3', p: '4', w: '100%' },
+    },
+  } satisfies Record<string, Record<string, ViewProps>>,
 });

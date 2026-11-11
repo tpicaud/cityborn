@@ -15,7 +15,7 @@ export function AuthScreen({
   bottomSafeArea = false,
 }: AuthScreenProps) {
   return (
-    <BrandScreen title={title} form bottomSafeArea={bottomSafeArea}>
+    <BrandScreen title={title} adaptiveDensity bottomSafeArea={bottomSafeArea}>
       {children}
     </BrandScreen>
   );
