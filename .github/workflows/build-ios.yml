@@ -84,7 +84,7 @@ jobs:
       - name: Check environment variables
         if: inputs.profile != 'development'
         working-directory: apps/mobile
-        run: pnpm check-env
+        run: pnpm check:env
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8

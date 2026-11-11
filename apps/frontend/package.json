@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm check-env:development && dotenv -c development -- next dev",
-    "build": "pnpm check-env:production && next build",
+    "dev": "pnpm check:env:development && dotenv -c development -- next dev",
+    "build": "pnpm check:env:production && next build",
     "typecheck": "next typegen && tsc -noEmit",
-    "check-env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
-    "check-env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
+    "check:env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
+    "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "format": "biome check --write .",
-    "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check"
+    "lint": "biome check .",
+    "check": "pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

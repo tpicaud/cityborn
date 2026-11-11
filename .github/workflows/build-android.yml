@@ -90,7 +90,7 @@ jobs:
       - name: Check environment variables
         if: inputs.profile != 'preview' && inputs.profile != 'development'
         working-directory: apps/mobile
-        run: pnpm check-env
+        run: pnpm check:env
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
