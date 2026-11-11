@@ -53,6 +53,7 @@
     "recette:backend": "bash scripts/recette/launch.sh backend",
     "recette:frontend": "bash scripts/recette/launch.sh frontend",
     "recette:back-office": "bash scripts/recette/launch.sh back-office",
+    "recette:captures": "bash scripts/recette/publish-captures.sh",
     "recette:web": "pnpm run \"/^recette:(backend|frontend|back-office)$/\"",
     "check": "pnpm typecheck && pnpm lint"
   },
