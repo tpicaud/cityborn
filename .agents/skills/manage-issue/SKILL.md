@@ -37,7 +37,7 @@ Le template d'une issue fixe son lecteur et son registre, pour tout ce qui s'en 
 
 ## Branche d'intégration
 
-Des sous-issues qui partent ensemble en production passent par la **branche d'intégration** de leur issue parente : la branche liée de la parente, tête de sa PR draft vers `main`. Chaque sous-issue y livre sa propre PR ; le merge de la PR d'intégration dans `main` ferme la parente et ses sous-issues.
+Des sous-issues qui partent ensemble en production passent par la **branche d'intégration** de leur issue parente : la branche liée de la parente, tête de sa PR draft vers `main`. Chaque sous-issue y livre sa propre PR, seule liée à elle, et se ferme à la main au merge de cette PR : GitHub ne ferme une issue qu'au merge dans `main`. Le merge de la PR d'intégration ferme la parente.
 
 1. Ouvrir la branche d'intégration avant le développement de la première sous-issue :
    - créer la branche liée de la parente avec `gh issue develop <parente> --base main` ;
@@ -47,7 +47,7 @@ Des sous-issues qui partent ensemble en production passent par la **branche d'in
 ## Garde-fous
 
 - Assigner, fermer ou modifier une issue seulement à la demande de l'utilisateur.
-- Une issue abandonnée est supprimée (`gh issue delete`) après confirmation, jamais fermée : le project range toute issue fermée dans « En production ».
+- Une issue abandonnée est supprimée (`gh issue delete`) après confirmation, jamais fermée : le project range toute issue fermée dans « En pré-production ».
 
 ## Critère de fin
 
