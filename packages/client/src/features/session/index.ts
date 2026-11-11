@@ -11,8 +11,7 @@ export {
   useSessionLauncher,
 } from './sessionLauncher';
 export {
-  launchedPackIdFromQueryParam,
-  launchedPackQueryParam,
+  launchedPackIdFromSearchParams,
   sessionIdFromSessionPath,
 } from './sessionPath';
 export {
