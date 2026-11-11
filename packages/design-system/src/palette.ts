@@ -15,6 +15,27 @@ const ctaFrameColors = {
   'cta-backdrop': 'rgba(0, 0, 0, 0.35)',
 } as const;
 
+const cardFill: string = '#004C61';
+
+function cardFillAt(opacity: number): string {
+  const alpha: string = Math.round(opacity * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return `${cardFill}${alpha}`;
+}
+
+const cardFadeStepCount: number = 24;
+
+function smootherStep(progress: number): number {
+  return progress ** 3 * (progress * (progress * 6 - 15) + 10);
+}
+
+const cardFadeInnerStops: string[] = Array.from(
+  { length: cardFadeStepCount - 1 },
+  (_: unknown, index: number): string =>
+    cardFillAt(smootherStep((index + 1) / cardFadeStepCount)),
+);
+
 const componentColors = {
   'panel-fill': 'rgba(1, 43, 55, 0.51)',
   'panel-edge': '#107599',
@@ -39,9 +60,10 @@ const componentColors = {
   'separator-shade': 'rgba(0, 0, 0, 0.4)',
   'separator-light': 'rgba(255, 255, 255, 0.28)',
   'headline-kicker': 'rgba(255, 255, 255, 0.38)',
+  'card-fill': cardFill,
 } as const;
 
-type GradientStops = readonly [string, string];
+type GradientStops = readonly [string, ...string[], string];
 
 const orangeGradientStart: string = '#FF9840';
 
@@ -53,13 +75,15 @@ export const gradients = {
   blue: [figmaColors['common-blue'], '#008ABC'],
   yellow: ['#FFD505', '#FFAE00'],
   green: ['#7BFF61', '#00D540'],
+  'card-fade': [cardFillAt(0), ...cardFadeInnerStops, cardFill],
+  'card-edge': ['rgba(0, 61, 87, 0)', '#009380'],
 } as const satisfies Record<string, GradientStops>;
 
 type GradientName = keyof typeof gradients;
 
 export function verticalGradient(name: GradientName): string {
-  const [top, bottom]: GradientStops = gradients[name];
-  return `linear-gradient(180deg, ${top}, ${bottom})`;
+  const stops: GradientStops = gradients[name];
+  return `linear-gradient(180deg, ${stops.join(', ')})`;
 }
 
 const surface = [
