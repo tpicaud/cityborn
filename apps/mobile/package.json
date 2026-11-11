@@ -11,13 +11,13 @@
   },
   "scripts": {
     "dev": "pnpm check-env:client:development && expo start",
-    "prebuild": "dotenv -c development -- expo prebuild --clean",
-    "build-android:local": "pnpm check-env:all && eas build --platform android --local --clear-cache",
+    "prebuild": "pnpm validate:build && dotenv -c development -- expo prebuild --clean",
+    "build-android:local": "pnpm validate:build && pnpm check-env:all && eas build --platform android --local --clear-cache",
     "build-android-development": "dotenv -c development -- pnpm run build-android:local --profile development --output app-builds/cityborn-development-preview.apk",
     "build-android-staging-preview": "dotenv -e .env.staging -- pnpm run build-android:local --profile preview --output app-builds/cityborn-staging-preview.apk",
     "build-android-production-preview": "dotenv -e .env.production -- pnpm run build-android:local --profile preview --output app-builds/cityborn-production-preview.apk",
-    "android": "pnpm check-env:client:development && expo run:android",
-    "ios": "pnpm check-env:client:development && expo run:ios",
+    "android": "pnpm validate:build && pnpm check-env:client:development && expo run:android",
+    "ios": "pnpm validate:build && pnpm check-env:client:development && expo run:ios",
     "web": "pnpm check-env:client:development && expo start --web",
     "typecheck": "tsc --noEmit",
     "check-env": "dotenv -c development -- pnpm check-env:all",
@@ -27,7 +27,9 @@
     "check-env:client": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "check": "biome check .",
-    "fullcheck": "pnpm typecheck && pnpm check"
+    "fullcheck": "pnpm typecheck && pnpm check",
+    "validate:build": "pnpm --workspace-root exec turbo run typecheck --filter=cityborn-mobile...",
+    "eas-build-post-install": "pnpm validate:build"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",

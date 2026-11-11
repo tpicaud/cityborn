@@ -1,0 +1,44 @@
+diff --git a/dist/esm/server/lib/router-utils/typegen.js b/dist/esm/server/lib/router-utils/typegen.js
+index 218b31fbd5da5b699c65738a4b8425bfdb8fcd42..a993e008cd896c30aeca17ea93b0aa0ecf61199d 100644
+--- a/dist/esm/server/lib/router-utils/typegen.js
++++ b/dist/esm/server/lib/router-utils/typegen.js
+@@ -433,7 +433,7 @@ export function generateValidatorFile(routesManifest) {
+     const pagesRouterPageValidations = generateValidations(Array.from(routesManifest.pagesRouterPagePaths).sort(), 'PagesPageConfig');
+     const pagesApiRouteValidations = generateValidations(Array.from(routesManifest.pageApiRoutes).sort(), 'ApiRouteConfig');
+     const layoutValidations = generateValidations(Array.from(routesManifest.layoutPaths).sort(), 'LayoutConfig', routesManifest.filePathToRoute);
+-    const hasAppRouteHandlers = Object.keys(routesManifest.appRouteHandlerRoutes).length > 0;
++    const hasAppRouteHandlers = Boolean(appRouteHandlerValidations);
+     // Build type definitions based on what's actually used
+     let typeDefinitions = '';
+     if (appPageValidations || layoutValidations) {
+@@ -602,7 +602,7 @@ export function generateValidatorFileStrict(routesManifest) {
+     const pagesRouterPageValidations = generateValidations(Array.from(routesManifest.pagesRouterPagePaths).sort(), 'PagesPageConfig');
+     const pagesApiRouteValidations = generateValidations(Array.from(routesManifest.pageApiRoutes).sort(), 'ApiRouteConfig');
+     const layoutValidations = generateValidations(Array.from(routesManifest.layoutPaths).sort(), 'LayoutConfig', routesManifest.filePathToRoute);
+-    const hasAppRouteHandlers = Object.keys(routesManifest.appRouteHandlerRoutes).length > 0;
++    const hasAppRouteHandlers = Boolean(appRouteHandlerValidations);
+     // Build type definitions based on what's actually used
+     let typeDefinitions = '';
+     if (appPageValidations || layoutValidations) {
+diff --git a/dist/server/lib/router-utils/typegen.js b/dist/server/lib/router-utils/typegen.js
+index 932c20bbc971815b074692b43c00e551f9570173..51512a984aae291f668a18e9eb8e450908cf30b4 100644
+--- a/dist/server/lib/router-utils/typegen.js
++++ b/dist/server/lib/router-utils/typegen.js
+@@ -467,7 +467,7 @@ function generateValidatorFile(routesManifest) {
+     const pagesRouterPageValidations = generateValidations(Array.from(routesManifest.pagesRouterPagePaths).sort(), 'PagesPageConfig');
+     const pagesApiRouteValidations = generateValidations(Array.from(routesManifest.pageApiRoutes).sort(), 'ApiRouteConfig');
+     const layoutValidations = generateValidations(Array.from(routesManifest.layoutPaths).sort(), 'LayoutConfig', routesManifest.filePathToRoute);
+-    const hasAppRouteHandlers = Object.keys(routesManifest.appRouteHandlerRoutes).length > 0;
++    const hasAppRouteHandlers = Boolean(appRouteHandlerValidations);
+     // Build type definitions based on what's actually used
+     let typeDefinitions = '';
+     if (appPageValidations || layoutValidations) {
+@@ -636,7 +636,7 @@ function generateValidatorFileStrict(routesManifest) {
+     const pagesRouterPageValidations = generateValidations(Array.from(routesManifest.pagesRouterPagePaths).sort(), 'PagesPageConfig');
+     const pagesApiRouteValidations = generateValidations(Array.from(routesManifest.pageApiRoutes).sort(), 'ApiRouteConfig');
+     const layoutValidations = generateValidations(Array.from(routesManifest.layoutPaths).sort(), 'LayoutConfig', routesManifest.filePathToRoute);
+-    const hasAppRouteHandlers = Object.keys(routesManifest.appRouteHandlerRoutes).length > 0;
++    const hasAppRouteHandlers = Boolean(appRouteHandlerValidations);
+     // Build type definitions based on what's actually used
+     let typeDefinitions = '';
+     if (appPageValidations || layoutValidations) {

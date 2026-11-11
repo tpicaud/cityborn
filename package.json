@@ -44,7 +44,10 @@
     "db:test:start": "pnpm backend db:test:start",
     "db:test:stop": "pnpm backend db:test:stop",
     "test:int": "pnpm backend test:int",
-    "test:e2e": "pnpm backend test:e2e"
+    "test:e2e": "pnpm backend test:e2e",
+    "check:build-patches": "node --test scripts/build-validation/dependency-patches.test.mts",
+    "check:frontend-build": "node scripts/build-validation/frontend.mts",
+    "check:mobile-build": "node scripts/build-validation/mobile.mts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
