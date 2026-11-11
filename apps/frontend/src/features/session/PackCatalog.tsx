@@ -91,7 +91,7 @@ export function PackCatalog({ onPlay }: PackCatalogProps) {
           ))}
         </FilterBar>
         {packs.length === 0 ? (
-          <BodyText>Aucun pack pour l’instant. Reviens vite !</BodyText>
+          <BodyText disableOptimization>Aucun pack pour l’instant. Reviens vite !</BodyText>
         ) : (
           <CardGrid>
             {packs.map((pack: Pack) => (
