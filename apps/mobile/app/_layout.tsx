@@ -94,7 +94,7 @@ function RootLayoutContent() {
               }}
             />
             <Stack.Screen
-              name="auth/sign-up"
+              name="verify-email"
               options={{ headerShown: false }}
             />
             <Stack.Screen name="session/[mode]/[sessionID]" />

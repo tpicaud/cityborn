@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ComponentType, Fragment, type ReactNode } from 'react';
 import { Dialog, styled, View } from 'tamagui';
 import { IconButton } from './IconButton';
 import { verticalGradient } from './palette';
@@ -10,6 +10,7 @@ type PopupProps = {
   onClose: () => void;
   title: string;
   tone?: PopupTone;
+  contentContainer?: ComponentType<{ children: ReactNode }>;
   children: ReactNode;
 };
 
@@ -19,6 +20,8 @@ const PopupOverlay = styled(Dialog.Overlay, {
 
 const PopupFrame = styled(Dialog.Content, {
   w: '90%',
+  maxH: '100%',
+  shrink: 1,
   gap: '3',
   px: '3',
   pt: '5',
@@ -64,6 +67,7 @@ export function Popup({
   onClose,
   title,
   tone = 'blue',
+  contentContainer: ContentContainer = Fragment,
   children,
 }: PopupProps) {
   return (
@@ -78,13 +82,15 @@ export function Popup({
     >
       <Dialog.Portal>
         <PopupOverlay key="overlay" />
-        <PopupFrame key="content" tone={tone} aria-describedby={undefined}>
-          <PopupTitle>{title}</PopupTitle>
-          <View position="absolute" t="3" r="3">
-            <IconButton icon="close" label="Fermer" onPress={onClose} />
-          </View>
-          {children}
-        </PopupFrame>
+        <ContentContainer>
+          <PopupFrame key="content" tone={tone} aria-describedby={undefined}>
+            <PopupTitle>{title}</PopupTitle>
+            <View position="absolute" t="3" r="3">
+              <IconButton icon="close" label="Fermer" onPress={onClose} />
+            </View>
+            {children}
+          </PopupFrame>
+        </ContentContainer>
       </Dialog.Portal>
     </Dialog>
   );
