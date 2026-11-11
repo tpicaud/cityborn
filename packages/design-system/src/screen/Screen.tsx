@@ -8,6 +8,7 @@ const tabletMockupWidth: number = 1024;
 type ScreenProps = {
   title?: string;
   onBack?: () => void;
+  bottomSafeArea?: boolean;
   children: ReactNode;
 };
 
@@ -15,6 +16,11 @@ const ScreenSafeArea = styled(View, {
   flex: 1,
   pt: 'safe',
   px: 'safe',
+  variants: {
+    bottomSafeArea: {
+      true: { pb: 'safe' },
+    },
+  } as const,
 });
 
 const ScreenColumn = styled(View, {
@@ -43,12 +49,17 @@ const ScreenTitle = styled(Text, {
   textShadow: 'screen-title',
 });
 
-export function Screen({ title, onBack, children }: ScreenProps) {
+export function Screen({
+  title,
+  onBack,
+  bottomSafeArea = false,
+  children,
+}: ScreenProps) {
   const hasHeader: boolean = title !== undefined || onBack !== undefined;
 
   return (
     <ScreenFrame>
-      <ScreenSafeArea>
+      <ScreenSafeArea bottomSafeArea={bottomSafeArea}>
         <ScreenColumn>
           {hasHeader && (
             <View>
@@ -60,7 +71,9 @@ export function Screen({ title, onBack, children }: ScreenProps) {
               {title !== undefined && <ScreenTitle>{title}</ScreenTitle>}
             </View>
           )}
-          <View flex={1}>{children}</View>
+          <View flex={1} minH="0">
+            {children}
+          </View>
         </ScreenColumn>
       </ScreenSafeArea>
     </ScreenFrame>

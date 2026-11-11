@@ -12,6 +12,7 @@ type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   compact?: boolean;
+  small?: boolean;
 };
 
 const ButtonSocket = styled(View, {
@@ -42,6 +43,9 @@ const ButtonSocket = styled(View, {
         bg: 'transparent',
         borderColor: 'outline-cta-ring',
       },
+    },
+    small: {
+      true: { pb: '0', borderWidth: '0', bg: 'transparent' },
     },
     dimmed: {
       true: { opacity: 0.5 },
@@ -89,6 +93,16 @@ const ButtonFace = styled(PressableFrame, {
       },
     },
     compact: { true: { minH: '16 md:24', rounded: '8 md:10' } },
+    small: {
+      true: {
+        minH: '9 md:20',
+        px: '2',
+        rounded: '5 md:3xl',
+        boxShadow:
+          'card-cta press:card-cta md:card-cta-tablet md:press:card-cta-tablet',
+        y: 'press:0.5 md:press:1',
+      },
+    },
   } as const,
 });
 
@@ -120,6 +134,13 @@ const ButtonLabel = styled(Text, {
       },
     },
     compact: { true: { fontSize: '6 md:8', lineHeight: '6 md:8' } },
+    small: {
+      true: {
+        fontSize: '3 md:9',
+        lineHeight: '3 md:9',
+        textTransform: 'uppercase',
+      },
+    },
     hidden: {
       true: { opacity: 0 },
     },
@@ -148,6 +169,7 @@ export function Button({
   disabled = false,
   loading = false,
   compact = false,
+  small = false,
 }: ButtonProps) {
   const [pending, setPending] = useState<boolean>(false);
   const busy: boolean = loading || pending;
@@ -167,17 +189,23 @@ export function Button({
   };
 
   return (
-    <ButtonSocket variant={variant} dimmed={disabled}>
+    <ButtonSocket variant={variant} small={small} dimmed={disabled}>
       <ButtonFace
         variant={variant}
         compact={compact}
+        small={small}
         pointerEvents={inactive ? 'none' : 'auto'}
         aria-disabled={inactive}
         aria-busy={busy}
         aria-label={label}
         onPress={inactive ? undefined : press}
       >
-        <ButtonLabel variant={variant} compact={compact} hidden={busy}>
+        <ButtonLabel
+          variant={variant}
+          compact={compact}
+          small={small}
+          hidden={busy}
+        >
           {label}
         </ButtonLabel>
         {busy && <ButtonSpinner variant={variant} />}
