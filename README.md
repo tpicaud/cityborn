@@ -27,20 +27,24 @@ Dans un worktree secondaire, `./scripts/setup-worktree.sh` copie les `.env` du c
 ## Lancement
 
 ```bash
-pnpm db:start   # PostgreSQL et Redis
-pnpm db:reset   # base vidée, migrations et seed de développement
+pnpm db:dev:start   # PostgreSQL et Redis
+pnpm db:dev:reset   # base vidée, migrations et seed de développement
 pnpm dev:web    # frontend, back-office et backend
 ```
 
-`pnpm db:up` applique les nouvelles migrations sans vider la base.
+`pnpm db:dev:up` applique les nouvelles migrations sans vider la base.
+
+`pnpm lint` vérifie le formatage et les règles de code ; `pnpm format` applique les corrections. `pnpm typecheck` vérifie les types. `pnpm check` lance les vérifications de types et Biome. Ces commandes existent aussi dans chaque app et package.
 
 - Frontend : `http://localhost:3000`
 - Back-office : `http://localhost:3001`
 - Backend : `http://localhost:4000`
 
-`pnpm dev` lance toutes les applications, mobile compris ; `pnpm <app>:dev` n'en lance qu'une (`backend`, `frontend`, `back-office` ou `mobile`). `pnpm db:stop` arrête PostgreSQL et Redis.
+`pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`). `pnpm db:dev:stop` arrête PostgreSQL et Redis.
 
 `pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
+
+Pour la recette web isolée, lancer `pnpm recette:prepare`, puis `pnpm recette:web` (frontend, back-office et backend). Les apps sont accessibles sur 3100/3101 et le backend sur 4100. Après arrêt des serveurs, `pnpm db:recette:stop` arrête PostgreSQL et Redis de recette.
 
 La seed crée deux comptes :
 
@@ -48,11 +52,6 @@ La seed crée deux comptes :
 |---|---|---|
 | `admin` | `Password123` | `admin` (back-office) |
 | `player` | `Password123` | `player` (frontend) |
-
-Chaque pack porte un visuel, renseigné en collant le lien de l'image et
-prévisualisé dans le formulaire et la liste des packs. Un pack sans visuel
-s'enregistre mais ne se publie pas. Les apps joueur affichent le visuel en
-carré et le remplacent par un visuel neutre s'il ne se charge pas.
 
 ## Mobile
 
@@ -67,13 +66,13 @@ L'application utilise des modules natifs : elle nécessite un **dev build** (app
 
 Lancer le workflow GitHub Actions `Build Android App` ou `Build iOS App` (**Actions → workflow → Run workflow**, environnement et profil `development`), puis ouvrir sur le téléphone le lien d'installation affiché dans le résumé du run.
 
-- **Android** : autoriser l'installation depuis des sources inconnues. Alternative locale : `pnpm --dir apps/mobile build-android-development` (SDK Android et JDK 17 requis).
+- **Android** : autoriser l'installation depuis des sources inconnues. Alternative locale : `pnpm --dir apps/mobile build:android:development` (SDK Android et JDK 17 requis).
 - **iOS** : la première fois, demander à un admin d'enregistrer l'iPhone (`eas device:create`) puis relancer le workflow. Ouvrir le lien dans Safari, puis activer **Réglages → Confidentialité et sécurité → Mode développeur** et redémarrer.
 
 ### 3. Lancer l'app
 
 ```bash
-pnpm db:start
+pnpm db:dev:start
 pnpm dev:mobile
 ```
 

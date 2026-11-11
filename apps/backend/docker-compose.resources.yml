@@ -1,8 +1,24 @@
 name: cityborn_resources
 
+x-postgis: &postgis
+  image: postgis/postgis:16-3.4
+  healthcheck:
+    test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB']
+    interval: 1s
+    timeout: 5s
+    retries: 30
+
+x-redis: &redis
+  image: redis:8-alpine
+  healthcheck:
+    test: [CMD, redis-cli, ping]
+    interval: 1s
+    timeout: 5s
+    retries: 30
+
 services:
   postgis:
-    image: postgis/postgis:16-3.4
+    <<: *postgis
     container_name: postgis
     environment:
       POSTGRES_USER: postgres
@@ -28,7 +44,7 @@ services:
       - postgis
 
   redis:
-    image: redis:8-alpine
+    <<: *redis
     container_name: redis
     ports:
       - "6379:6379"
@@ -55,7 +71,7 @@ services:
     restart: unless-stopped
 
   postgis-test:
-    image: postgis/postgis:16-3.4
+    <<: *postgis
     profiles: [test]
     environment:
       POSTGRES_USER: cityborn_test
@@ -65,28 +81,40 @@ services:
       - "127.0.0.1:5433:5432"
     volumes:
       - postgres-test-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [CMD-SHELL, "pg_isready -U cityborn_test -d cityborn_test"]
-      interval: 1s
-      timeout: 5s
-      retries: 30
 
   redis-test:
-    image: redis:8-alpine
+    <<: *redis
     profiles: [test]
     ports:
       - "127.0.0.1:6380:6379"
     volumes:
       - redis-test-data:/data
-    healthcheck:
-      test: [CMD, redis-cli, ping]
-      interval: 1s
-      timeout: 5s
-      retries: 30
+
+  postgis-recette:
+    <<: *postgis
+    profiles: [recette]
+    environment:
+      POSTGRES_USER: cityborn_recette
+      POSTGRES_PASSWORD: cityborn_recette
+      POSTGRES_DB: cityborn_recette
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - postgres-recette-data:/var/lib/postgresql/data
+
+  redis-recette:
+    <<: *redis
+    profiles: [recette]
+    ports:
+      - "127.0.0.1:6381:6379"
+    volumes:
+      - redis-recette-data:/data
 
 volumes:
   postgres-test-data:
   redis-test-data:
+  postgres-recette-data:
+  redis-recette-data:
 
 networks:
   pg_network:

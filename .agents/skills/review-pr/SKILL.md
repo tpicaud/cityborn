@@ -19,7 +19,7 @@ L'étape 4 est terminée quand chaque fichier du diff a été confronté à chaq
 
 ## Checklist
 
-- **Issue** : chaque critère d'acceptation est satisfait ; le diff reste dans le périmètre demandé.
+- **Issue** : critères d'acceptation satisfaits, périmètre respecté, scénarios de recette pertinents et suffisants.
 - **Correction** : logique, cas limites, erreurs propagées, concurrence, états partiels.
 - **Sécurité** : authentification et autorisation de chaque route ou event touché, validation zod des entrées, secrets absents du code, des logs et des réponses, données exposées au strict nécessaire, injections.
 - **Règles d'`AGENTS.md`** : chaque règle, dont chaque symptôme de « Découpage ».

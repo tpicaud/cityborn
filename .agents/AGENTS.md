@@ -62,7 +62,7 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 ## Style de code
 
 - **Langue** : code en anglais, sauf les textes vus par l'utilisateur final, en français.
-- **Commentaires** : aucun, JSDoc compris, sauf le marqueur de dépréciation de `conventions-api` ; un *pourquoi* va dans le commit, la PR ou `docs/`.
+- **Commentaires** : aucun, JSDoc compris, sauf le marqueur de dépréciation de `conventions-api`.
 - **Naming exact** : chaque nom dit précisément ce que la chose est ou fait, dans le vocabulaire du domaine et sans collision avec un autre domaine.
 - **Annotations** : chaque `const` et `let` est annoté dès qu'un type pertinent peut être nommé, tests compris ; `satisfies` seulement pour conserver le type inféré.
 - **`type` par défaut** : `interface` seulement pour un contrat à plusieurs implémentations ou une augmentation de déclaration.
@@ -77,12 +77,13 @@ S'applique à l'intérieur d'un domaine métier, d'une feature ou du socle techn
 
 ## Garde-fous
 
-- Créer une nouvelle migration Prisma (`pnpm db:migrate`) plutôt que modifier une migration appliquée ou mergée.
+- Créer une nouvelle migration Prisma (`pnpm db:dev:migrate`) plutôt que modifier une migration appliquée ou mergée.
 - Laisser intacts les `overrides` de `pnpm-workspace.yaml` : la plupart corrigent des CVE.
 
 ## Maintenir ce guide
 
 - La doc agents porte des règles réutilisables, jamais l'implémentation d'un changement : une règle n'entre que si elle s'applique à du code que le changement ne touche pas.
 - Une convention modifiée met à jour, dans le même lot, ce fichier si elle est transverse, sinon le skill concerné ; jamais les deux.
-- Le `README.md` racine se limite à une courte présentation du projet, à ce qu'il faut à un dev pour l'installer et le lancer, et à l'arborescence du monorepo ; le fonctionnement du projet va dans `docs/`.
-- Le `README.md` racine reste à jour, dans le même lot, de tout changement de ce qu'il décrit.
+- Créer ou modifier un document dans `docs/` uniquement sur demande explicite de l'utilisateur.
+- Le `README.md` racine se limite à la présentation, l’installation, le lancement des apps et tests, et l’architecture générale.
+- Actualiser les informations obsolètes du `README.md` dans le même lot ; tout nouveau sujet nécessite une demande explicite.
