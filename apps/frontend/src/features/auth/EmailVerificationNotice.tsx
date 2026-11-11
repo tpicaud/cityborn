@@ -10,10 +10,8 @@ export function EmailVerificationNotice() {
   const { resend, isSending, isSent }: VerificationEmailResend =
     useVerificationEmailResend();
   return (
-    <Panel disableOptimization notice>
-      <BodyText disableOptimization>
-        Ton adresse e-mail n’est pas vérifiée
-      </BodyText>
+    <Panel notice>
+      <BodyText>Ton adresse e-mail n’est pas vérifiée</BodyText>
       <Button
         compact
         label={

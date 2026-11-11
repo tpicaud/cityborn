@@ -5,7 +5,7 @@ type LegalLinksProps = { onDarkBackground?: boolean };
 
 export function LegalLinks({ onDarkBackground = false }: LegalLinksProps) {
   return (
-    <FooterLinks disableOptimization>
+    <FooterLinks>
       <FooterLink
         href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
         onDarkBackground={onDarkBackground}

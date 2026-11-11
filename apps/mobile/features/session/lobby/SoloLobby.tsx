@@ -1,4 +1,4 @@
-import type { GameConfigChanges, Session } from '@cityborn/api';
+import type { GameConfigChanges } from '@cityborn/api';
 import { type PackSelection, usePackSelection } from '@cityborn/client/session';
 import { ScrollView } from 'react-native';
 import Button from '@/components/ui/Button';
@@ -8,14 +8,12 @@ import { PackThemeFilters } from './PackThemeFilters';
 import { PackVisual } from './PackVisual';
 
 type SoloLobbyProps = {
-  session: Session;
   isHost: boolean;
   handleUpdateGameConfig: (changes: GameConfigChanges) => Promise<void>;
   handleStartGame: () => Promise<void>;
 };
 
 export function SoloLobby({
-  session,
   isHost,
   handleUpdateGameConfig,
   handleStartGame,

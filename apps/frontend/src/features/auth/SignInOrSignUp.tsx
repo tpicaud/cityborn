@@ -18,7 +18,7 @@ export function SignInOrSignUp() {
       ) : (
         <SignInForm onSignUp={() => setSigningUp(true)} />
       )}
-      <ProviderButtonGroup disableOptimization>
+      <ProviderButtonGroup>
         <SignInWithGoogleButton />
       </ProviderButtonGroup>
       {!signingUp && <LegalLinks onDarkBackground />}

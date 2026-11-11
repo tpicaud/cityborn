@@ -21,9 +21,9 @@ export function VerifyEmail() {
   });
   return (
     <AuthScreen title={content.title} bottomSafeArea>
-      <View disableOptimization gap="4" role="status">
+      <View gap="4" role="status">
         {content.pending && <Spinner color="white" />}
-        <BodyText disableOptimization>{content.message}</BodyText>
+        <BodyText>{content.message}</BodyText>
         {content.renewable && (
           <Button compact label="Renvoyer un lien" onPress={renew} />
         )}

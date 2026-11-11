@@ -30,6 +30,14 @@ overrides:
   '@react-native/codegen': 0.85.2
   multer@>=2.0.0 <2.5.0: ^2.5.0
 
+patchedDependencies:
+  '@tamagui/cli@3.1.6':
+    hash: 077931b5fdc89eeea231936b7520e99744b937686527c60759961faa02ce681a
+    path: patches/@tamagui__cli@3.1.6.patch
+  next@16.4.1:
+    hash: df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801
+    path: patches/next@16.4.1.patch
+
 importers:
 
   .:
@@ -93,7 +101,7 @@ importers:
         version: 1.26.0(react@19.2.5)
       next:
         specifier: 16.4.1
-        version: 16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        version: 16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       papaparse:
         specifier: ^5.5.3
         version: 5.5.4
@@ -389,7 +397,7 @@ importers:
         version: 9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@mui/material-nextjs':
         specifier: ^9.0.0
-        version: 9.1.1(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(next@16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)
+        version: 9.1.1(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(next@16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)
       '@mui/x-date-pickers':
         specifier: ^9.0.2
         version: 9.10.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@mui/material@9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@mui/system@9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(date-fns@4.4.0)(dayjs@1.11.21)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -431,7 +439,7 @@ importers:
         version: 6.0.2
       next:
         specifier: 16.4.1
-        version: 16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        version: 16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       osmtogeojson:
         specifier: 3.0.0-beta.5
         version: 3.0.0-beta.5
@@ -468,7 +476,7 @@ importers:
     devDependencies:
       '@tamagui/cli':
         specifier: 3.1.6
-        version: 3.1.6(fa53ac7e9deb588ded89f075c7aca245)
+        version: 3.1.6(patch_hash=077931b5fdc89eeea231936b7520e99744b937686527c60759961faa02ce681a)(fa53ac7e9deb588ded89f075c7aca245)
       '@tamagui/core':
         specifier: 3.1.6
         version: 3.1.6(334f1429d1c1664c67846c69487c6c3b)
@@ -682,7 +690,7 @@ importers:
         version: 4.3.3
       '@tamagui/cli':
         specifier: 3.1.6
-        version: 3.1.6(5e796612bedac7431e77b059a9c99c40)
+        version: 3.1.6(patch_hash=077931b5fdc89eeea231936b7520e99744b937686527c60759961faa02ce681a)(5e796612bedac7431e77b059a9c99c40)
       '@tamagui/core':
         specifier: 3.1.6
         version: 3.1.6(0f1b72d6e39db5151ec8af7a7d64fca2)
@@ -13482,11 +13490,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.17
 
-  '@mui/material-nextjs@9.1.1(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(next@16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)':
+  '@mui/material-nextjs@9.1.1(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.5))(@types/react@19.2.17)(next@16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@babel/runtime': 7.29.13
       '@emotion/react': 11.14.0(@types/react@19.2.17)(react@19.2.5)
-      next: 16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      next: 16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
     optionalDependencies:
       '@emotion/cache': 11.14.0
@@ -16781,7 +16789,7 @@ snapshots:
 
   '@tamagui/cli-color@3.1.6': {}
 
-  '@tamagui/cli@3.1.6(5e796612bedac7431e77b059a9c99c40)':
+  '@tamagui/cli@3.1.6(patch_hash=077931b5fdc89eeea231936b7520e99744b937686527c60759961faa02ce681a)(5e796612bedac7431e77b059a9c99c40)':
     dependencies:
       '@tamagui/generate-themes': 3.1.6(esbuild@0.28.1)
       '@tamagui/language-service': 3.1.6
@@ -16830,7 +16838,7 @@ snapshots:
       - vite
       - zeego
 
-  '@tamagui/cli@3.1.6(fa53ac7e9deb588ded89f075c7aca245)':
+  '@tamagui/cli@3.1.6(patch_hash=077931b5fdc89eeea231936b7520e99744b937686527c60759961faa02ce681a)(fa53ac7e9deb588ded89f075c7aca245)':
     dependencies:
       '@tamagui/generate-themes': 3.1.6(esbuild@0.28.1)
       '@tamagui/language-service': 3.1.6
@@ -27915,7 +27923,7 @@ snapshots:
       pino-http: 11.0.0
       rxjs: 7.8.2
 
-  next@16.4.1(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  next@16.4.1(patch_hash=df31bbcf2d9d540a843852095335811a87ad964642ca61448c8935f512c54801)(@babel/core@7.29.13)(@types/node@25.9.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       '@next/env': 16.4.1
       '@swc/helpers': 0.5.23

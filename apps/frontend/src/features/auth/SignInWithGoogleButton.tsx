@@ -92,7 +92,6 @@ export function SignInWithGoogleButton() {
 
   return (
     <View
-      disableOptimization
       items="center"
       justify="center"
       minH="11"

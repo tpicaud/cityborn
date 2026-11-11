@@ -48,6 +48,12 @@ jobs:
       - name: Verify
         run: pnpm verify
 
+      - name: Check build dependency patches
+        run: pnpm check:build-patches
+
+      - name: Check frontend builds before and after development
+        run: pnpm check:frontend-build
+
   mobile-prebuild:
     name: Mobile prebuild
     if: github.event.pull_request.draft == false
@@ -76,6 +82,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Check mobile build type gates
+        run: pnpm check:mobile-build
 
       - name: Prebuild mobile app
         working-directory: apps/mobile

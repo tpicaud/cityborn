@@ -46,7 +46,10 @@
     "test:cov": "turbo run test:cov",
     "test:all": "turbo run test:all",
     "check": "pnpm typecheck && pnpm lint",
-    "verify": "pnpm lint && pnpm check:agent-docs && pnpm check:axiom-dashboards && pnpm check:api-compat && turbo run typecheck test:all --affected && turbo run build --affected --filter=cityborn-frontend --filter=cityborn-back-office"
+    "verify": "pnpm lint && pnpm check:agent-docs && pnpm check:axiom-dashboards && pnpm check:api-compat && turbo run typecheck test:all --affected && turbo run build --affected --filter=cityborn-frontend --filter=cityborn-back-office",
+    "check:build-patches": "node --test scripts/build-validation/dependency-patches.test.mts",
+    "check:frontend-build": "node scripts/build-validation/frontend.mts",
+    "check:mobile-build": "node scripts/build-validation/mobile.mts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
