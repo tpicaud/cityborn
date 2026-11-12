@@ -104,6 +104,12 @@ const distanceInKmFormat: Intl.NumberFormat = new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 0,
 });
 
+export function formatRoundOutcome(outcome: RoundGuessOutcome): string {
+  if (outcome.kind === 'timedOut') return "Tu n'as pas deviné à temps !";
+  if (outcome.kind === 'found') return 'Bien joué ! Tu as deviné !';
+  return `${formatDistanceInKm(outcome.distanceInKm)} km du lieu`;
+}
+
 export function formatDistanceInKm(distanceInKm: number): string {
   return distanceInKmFormat.format(Math.max(distanceInKm, 1));
 }
