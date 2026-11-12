@@ -52,7 +52,7 @@ const zoomPadding: google.maps.Padding = {
   left: 60,
 };
 
-type RoundMapProps = {
+export type RoundMapProps = {
   googleMapsApiKey: string;
   mapProps: MapProps;
 };
