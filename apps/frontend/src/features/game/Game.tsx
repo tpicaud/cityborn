@@ -41,7 +41,7 @@ export const Game = ({
   if (gameDisplay.state === 'loading') return <LoadingScreen />;
   if (gameDisplay.state === 'unavailable') {
     return (
-      <Screen>
+      <Screen bottomSafeArea>
         <ActionPrompt prompt="La partie est déjà en cours">
           <Button compact label="Menu" onPress={handleExitGame} />
         </ActionPrompt>
