@@ -6,17 +6,17 @@ const tabletMockupWidth: number = 1024;
 
 const tabletActionWidth: number = 636;
 
-type RoundScreenProps = {
+type MapHudScreenProps = {
   map: ReactNode;
-  timer?: ReactNode;
-  personality?: ReactNode;
+  gauge?: ReactNode;
+  card?: ReactNode;
   onOpenOptions?: () => void;
-  result?: ReactNode;
+  banner?: ReactNode;
   action?: ReactNode;
   overlay?: ReactNode;
 };
 
-const RoundFrame = styled(View, {
+const HudScreenFrame = styled(View, {
   position: 'relative',
   flex: 1,
   h: '100%',
@@ -79,22 +79,22 @@ const ActionSlot = styled(View, {
   pointerEvents: 'auto',
 });
 
-export function RoundScreen({
+export function MapHudScreen({
   map,
-  timer,
-  personality,
+  gauge,
+  card,
   onOpenOptions,
-  result,
+  banner,
   action,
   overlay,
-}: RoundScreenProps) {
+}: MapHudScreenProps) {
   return (
-    <RoundFrame>
+    <HudScreenFrame>
       <Layer>{map}</Layer>
       <Hud>
         <HudColumn>
           <TopBar>
-            <View pointerEvents="none">{timer}</View>
+            <View pointerEvents="none">{gauge}</View>
             <TopEnd>
               {onOpenOptions && (
                 <View pointerEvents="auto">
@@ -105,16 +105,16 @@ export function RoundScreen({
                   />
                 </View>
               )}
-              <View pointerEvents="none">{personality}</View>
+              <View pointerEvents="none">{card}</View>
             </TopEnd>
           </TopBar>
           <BottomBar>
-            {result}
+            {banner}
             {action !== undefined && <ActionSlot>{action}</ActionSlot>}
           </BottomBar>
         </HudColumn>
       </Hud>
       {overlay}
-    </RoundFrame>
+    </HudScreenFrame>
   );
 }

@@ -3,7 +3,7 @@ import { Spinner, styled, Text, View } from 'tamagui';
 import { PressableFrame } from './PressableFrame';
 import { verticalGradient } from './palette';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline' | 'guess';
+type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline' | 'glow';
 
 type ButtonProps = {
   label: string;
@@ -44,11 +44,11 @@ const ButtonSocket = styled(View, {
         bg: 'transparent',
         borderColor: 'outline-cta-ring',
       },
-      guess: {
+      glow: {
         pb: '0.5 md:1',
         rounded: '3xl md:10',
         bg: 'cta-backdrop',
-        borderColor: 'guess-cta-border',
+        borderColor: 'glow-cta-border',
         borderWidth: '2 md:4',
       },
     },
@@ -104,10 +104,10 @@ const ButtonFace = styled(PressableFrame, {
         bg: 'outline-cta-fill',
         opacity: 'press:0.8',
       },
-      guess: {
+      glow: {
         minH: '20 md:32',
         rounded: '8 md:10',
-        backgroundImage: verticalGradient('guess'),
+        backgroundImage: verticalGradient('green-blue'),
         y: 'press:1 md:press:1.5',
       },
     },
@@ -152,7 +152,7 @@ const ButtonLabel = styled(Text, {
         fontWeight: '600',
         color: 'outline-cta-label',
       },
-      guess: {
+      glow: {
         fontSize: '8 md:11',
         lineHeight: '8 md:11',
         textTransform: 'uppercase',
@@ -184,12 +184,12 @@ const ButtonSpinner = styled(Spinner, {
       outline: {
         color: 'outline-cta-label',
       },
-      guess: {},
+      glow: {},
     },
   } as const,
 });
 
-const GuessGlow = styled(View, {
+const GlowHalo = styled(View, {
   position: 'absolute',
   t: '2.5 md:4',
   b: '2.5 md:4',
@@ -198,12 +198,12 @@ const GuessGlow = styled(View, {
   rounded: '6 md:9',
   borderWidth: '2 md:4',
   borderColor: 'cta-orange',
-  bg: 'guess-cta-glow',
-  boxShadow: 'guess-cta-glow md:guess-cta-glow-tablet',
+  bg: 'glow-cta-halo',
+  boxShadow: 'glow-cta-halo md:glow-cta-halo-tablet',
   pointerEvents: 'none',
 });
 
-const GuessRim = styled(View, {
+const GlowRim = styled(View, {
   position: 'absolute',
   t: '1 md:2',
   b: '1 md:2',
@@ -211,7 +211,7 @@ const GuessRim = styled(View, {
   r: '1 md:2',
   rounded: '7 md:10',
   borderWidth: '2 md:4',
-  borderColor: 'guess-cta-rim',
+  borderColor: 'glow-cta-rim',
   pointerEvents: 'none',
 });
 
@@ -258,10 +258,10 @@ export function Button({
         aria-label={label}
         onPress={inactive ? undefined : press}
       >
-        {variant === 'guess' && (
+        {variant === 'glow' && (
           <>
-            <GuessGlow />
-            <GuessRim />
+            <GlowHalo />
+            <GlowRim />
           </>
         )}
         <ButtonLabel
