@@ -152,7 +152,7 @@ function LocalRoute({ guess, answer }: { guess: Guess; answer: Coord }) {
         anchor={markerCenter}
         tappable={false}
       >
-        <TamaguiView w="32" h="32" items="center" justify="center">
+        <TamaguiView w="32 md:48" h="32 md:48" items="center" justify="center">
           <AngledTag
             label={`${formatDistanceInKm(guess.distance)}km`}
             angleInDegrees={routeLabel.angleInDegrees}
