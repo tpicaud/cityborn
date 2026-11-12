@@ -1,5 +1,4 @@
 import type {
-  Coord,
   FullGuessObject,
   Game,
   Guess,
@@ -21,12 +20,6 @@ export type RoundResult = {
   localOutcome: RoundGuessOutcome;
 };
 
-export type GuessProgress = {
-  hasLocalGuess: boolean;
-  guessedPlayerCount: number;
-  playerCount: number;
-};
-
 export function currentGuessObject(game: Game): RoundGuessObject | undefined {
   const guessObjectID: GuessObjectId | undefined =
     game.state.currentRound?.guessObjectId;
@@ -41,32 +34,6 @@ export function currentRevealedGuessObject(
   return guessObject && worldLocation
     ? { ...guessObject, world_location: worldLocation }
     : undefined;
-}
-
-export function canSubmitGuess(
-  game: Game,
-  localPlayerID: PlayerId,
-  preGuess: Coord | undefined,
-): boolean {
-  return (
-    preGuess !== undefined &&
-    game.state.currentRound?.status === RoundStatus.GUESSING &&
-    !createGuessProgress(game, localPlayerID).hasLocalGuess
-  );
-}
-
-export function createGuessProgress(
-  game: Game,
-  localPlayerID: PlayerId,
-): GuessProgress {
-  const playersGuesses: Record<PlayerId, Guess> =
-    game.state.currentRound?.playersGuesses ?? {};
-
-  return {
-    hasLocalGuess: playersGuesses[localPlayerID] !== undefined,
-    guessedPlayerCount: Object.keys(playersGuesses).length,
-    playerCount: Object.keys(game.state.results).length,
-  };
 }
 
 function roundGuessOutcome(guess: Guess): RoundGuessOutcome {

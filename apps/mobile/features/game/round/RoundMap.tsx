@@ -194,7 +194,6 @@ function RoundMap({
   const handleMapPress = (event: {
     nativeEvent: { coordinate: LatLng };
   }): void => {
-    if (currentRound.status !== RoundStatus.GUESSING || localGuess) return;
     const { latitude, longitude } = event.nativeEvent.coordinate;
     handlePreGuess({ lat: latitude, lng: longitude });
   };
@@ -248,7 +247,7 @@ function RoundMap({
         onPoiClick={handleMapPress}
         onPress={handleMapPress}
       >
-        {preGuess && !isShowingResults && <GuessPin coordinate={preGuess} />}
+        {preGuess && <GuessPin coordinate={preGuess} />}
 
         {isShowingResults && revealedGuessObject && answer && (
           <>

@@ -91,15 +91,8 @@ export default function RoundMap({
 
   if (!currentRound) return null;
 
-  const handleMapClick = (event: MapMouseEvent): void => {
-    if (
-      !event.detail.latLng ||
-      currentRound.status !== RoundStatus.GUESSING ||
-      currentRound.playersGuesses?.[localPlayerID] !== undefined
-    ) {
-      return;
-    }
-    handlePreGuess(event.detail.latLng);
+  const handleMapClick: (event: MapMouseEvent) => void = (event) => {
+    if (event.detail.latLng) handlePreGuess(event.detail.latLng);
   };
 
   return (
@@ -121,9 +114,7 @@ export default function RoundMap({
         }}
         onClick={handleMapClick}
       >
-        {preGuess && currentRound.status === RoundStatus.GUESSING && (
-          <GuessPin position={preGuess} />
-        )}
+        {preGuess && <GuessPin position={preGuess} />}
 
         {currentRound.status === RoundStatus.SHOWING_RESULTS &&
           revealedGuessObject && (

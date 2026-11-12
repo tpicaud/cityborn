@@ -7,7 +7,6 @@ import {
   buildGuess,
   buildRound,
   buildRoundGuessObject,
-  type Coord,
   defaultGuess,
   type Game,
   type Guess,
@@ -18,12 +17,9 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 import {
-  canSubmitGuess,
-  createGuessProgress,
   createRoundResult,
   formatDistanceInKm,
   formatRoundOutcome,
-  type GuessProgress,
   type RoundResult,
 } from './roundResult';
 
@@ -32,7 +28,6 @@ const otherPlayerID: PlayerId = PlayerIdSchema.parse('other-player');
 const guessObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-1');
 
 const missedGuess: Guess = buildGuess({ distance: 391.42, points: 676 });
-const preGuess: Coord = { lat: 45.76, lng: 4.83 };
 
 function buildGameInRound({
   status,
@@ -123,79 +118,6 @@ describe('createRoundResult', () => {
     );
 
     assert.equal(roundResult, undefined);
-  });
-});
-
-describe('canSubmitGuess', () => {
-  it('accepts a pre-guess during a round the player has not guessed yet', () => {
-    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
-
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
-
-    assert.equal(canSubmit, true);
-  });
-
-  it('rejects a submission without a pre-guess', () => {
-    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
-
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, undefined);
-
-    assert.equal(canSubmit, false);
-  });
-
-  it('rejects a second guess in the same round', () => {
-    const game: Game = buildGameInRound({
-      status: RoundStatus.GUESSING,
-      playersGuesses: { [localPlayerID]: missedGuess },
-    });
-
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
-
-    assert.equal(canSubmit, false);
-  });
-});
-
-describe('createGuessProgress', () => {
-  it('counts the players who guessed among the players of the game', () => {
-    const roundGame: Game = buildGameInRound({
-      status: RoundStatus.GUESSING,
-      playersGuesses: { [otherPlayerID]: missedGuess },
-    });
-    const game: Game = {
-      ...roundGame,
-      state: {
-        ...roundGame.state,
-        results: {
-          [localPlayerID]: { results: [] },
-          [otherPlayerID]: { results: [] },
-        },
-      },
-    };
-
-    const guessProgress: GuessProgress = createGuessProgress(
-      game,
-      localPlayerID,
-    );
-
-    assert.deepEqual(guessProgress, {
-      hasLocalGuess: false,
-      guessedPlayerCount: 1,
-      playerCount: 2,
-    });
-  });
-
-  it('reports the local guess once sent', () => {
-    const game: Game = buildGameInRound({
-      status: RoundStatus.GUESSING,
-      playersGuesses: { [localPlayerID]: missedGuess },
-    });
-
-    const guessProgress: GuessProgress = createGuessProgress(
-      game,
-      localPlayerID,
-    );
-
-    assert.equal(guessProgress.hasLocalGuess, true);
   });
 });
 
