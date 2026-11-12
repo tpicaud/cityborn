@@ -8,23 +8,23 @@ import type {
   RoundGuessObject,
   WorldLocation,
 } from '@cityborn/api';
-import { PlayerIdSchema, RoundStatus } from '@cityborn/api';
+import { RoundStatus } from '@cityborn/api';
 
 export type RoundGuessOutcome =
   | { kind: 'timedOut' }
   | { kind: 'found' }
   | { kind: 'missed'; distanceInKm: number };
 
-export type PlayerRoundPoints = {
-  playerID: PlayerId;
-  points: number;
-};
-
 export type RoundResult = {
   guessObject: FullGuessObject;
   localPoints: number;
   localOutcome: RoundGuessOutcome;
-  otherPlayersPoints: PlayerRoundPoints[];
+};
+
+export type GuessProgress = {
+  hasLocalGuess: boolean;
+  guessedPlayerCount: number;
+  playerCount: number;
 };
 
 export function currentGuessObject(game: Game): RoundGuessObject | undefined {
@@ -48,12 +48,25 @@ export function canSubmitGuess(
   localPlayerID: PlayerId,
   preGuess: Coord | undefined,
 ): boolean {
-  const currentRound = game.state.currentRound;
   return (
     preGuess !== undefined &&
-    currentRound?.status === RoundStatus.GUESSING &&
-    currentRound.playersGuesses?.[localPlayerID] === undefined
+    game.state.currentRound?.status === RoundStatus.GUESSING &&
+    !createGuessProgress(game, localPlayerID).hasLocalGuess
   );
+}
+
+export function createGuessProgress(
+  game: Game,
+  localPlayerID: PlayerId,
+): GuessProgress {
+  const playersGuesses: Record<PlayerId, Guess> =
+    game.state.currentRound?.playersGuesses ?? {};
+
+  return {
+    hasLocalGuess: playersGuesses[localPlayerID] !== undefined,
+    guessedPlayerCount: Object.keys(playersGuesses).length,
+    playerCount: Object.keys(game.state.results).length,
+  };
 }
 
 function roundGuessOutcome(guess: Guess): RoundGuessOutcome {
@@ -84,15 +97,13 @@ export function createRoundResult(
     guessObject,
     localPoints: localGuess.points,
     localOutcome: roundGuessOutcome(localGuess),
-    otherPlayersPoints: Object.entries(playersGuesses)
-      .map(([playerID, guess]) => ({
-        playerID: PlayerIdSchema.parse(playerID),
-        points: guess.points,
-      }))
-      .filter(({ playerID }) => playerID !== localPlayerID),
   };
 }
 
+const distanceInKmFormat: Intl.NumberFormat = new Intl.NumberFormat('fr-FR', {
+  maximumFractionDigits: 0,
+});
+
 export function formatDistanceInKm(distanceInKm: number): string {
-  return distanceInKm.toFixed(2);
+  return distanceInKmFormat.format(Math.max(distanceInKm, 1));
 }

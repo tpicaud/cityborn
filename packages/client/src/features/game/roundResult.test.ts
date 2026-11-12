@@ -19,7 +19,10 @@ import {
 } from '@cityborn/api';
 import {
   canSubmitGuess,
+  createGuessProgress,
   createRoundResult,
+  formatDistanceInKm,
+  type GuessProgress,
   type RoundResult,
 } from './roundResult';
 
@@ -51,7 +54,7 @@ function buildGameInRound({
 }
 
 describe('createRoundResult', () => {
-  it('separates the local outcome from the other players points', () => {
+  it('reports the local outcome and points', () => {
     const game: Game = buildGameInRound({
       status: RoundStatus.SHOWING_RESULTS,
       playersGuesses: {
@@ -70,9 +73,6 @@ describe('createRoundResult', () => {
       distanceInKm: 391.42,
     });
     assert.equal(roundResult?.localPoints, 676);
-    assert.deepEqual(roundResult?.otherPlayersPoints, [
-      { playerID: otherPlayerID, points: 900 },
-    ]);
   });
 
   it('reports a guess sent when the timer ends as timed out', () => {
@@ -151,5 +151,63 @@ describe('canSubmitGuess', () => {
     const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
 
     assert.equal(canSubmit, false);
+  });
+});
+
+describe('createGuessProgress', () => {
+  it('counts the players who guessed among the players of the game', () => {
+    const roundGame: Game = buildGameInRound({
+      status: RoundStatus.GUESSING,
+      playersGuesses: { [otherPlayerID]: missedGuess },
+    });
+    const game: Game = {
+      ...roundGame,
+      state: {
+        ...roundGame.state,
+        results: {
+          [localPlayerID]: { results: [] },
+          [otherPlayerID]: { results: [] },
+        },
+      },
+    };
+
+    const guessProgress: GuessProgress = createGuessProgress(
+      game,
+      localPlayerID,
+    );
+
+    assert.deepEqual(guessProgress, {
+      hasLocalGuess: false,
+      guessedPlayerCount: 1,
+      playerCount: 2,
+    });
+  });
+
+  it('reports the local guess once sent', () => {
+    const game: Game = buildGameInRound({
+      status: RoundStatus.GUESSING,
+      playersGuesses: { [localPlayerID]: missedGuess },
+    });
+
+    const guessProgress: GuessProgress = createGuessProgress(
+      game,
+      localPlayerID,
+    );
+
+    assert.equal(guessProgress.hasLocalGuess, true);
+  });
+});
+
+describe('formatDistanceInKm', () => {
+  it('rounds to the kilometre with French digit grouping', () => {
+    const formattedDistance: string = formatDistanceInKm(12345.6);
+
+    assert.equal(formattedDistance, '12\u202f346');
+  });
+
+  it('shows at least one kilometre for a missed guess', () => {
+    const formattedDistance: string = formatDistanceInKm(0.3);
+
+    assert.equal(formattedDistance, '1');
   });
 });
