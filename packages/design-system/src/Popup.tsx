@@ -7,7 +7,7 @@ type PopupTone = 'blue' | 'night';
 
 type PopupProps = {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   title: string;
   tone?: PopupTone;
   contentContainer?: ComponentType<{ children: ReactNode }>;
@@ -76,7 +76,7 @@ export function Popup({
       open={open}
       onOpenChange={(nextOpen: boolean) => {
         if (!nextOpen) {
-          onClose();
+          onClose?.();
         }
       }}
     >
@@ -85,9 +85,11 @@ export function Popup({
         <ContentContainer>
           <PopupFrame key="content" tone={tone} aria-describedby={undefined}>
             <PopupTitle>{title}</PopupTitle>
-            <View position="absolute" t="3" r="3">
-              <IconButton icon="close" label="Fermer" onPress={onClose} />
-            </View>
+            {onClose && (
+              <View position="absolute" t="3" r="3">
+                <IconButton icon="close" label="Fermer" onPress={onClose} />
+              </View>
+            )}
             {children}
           </PopupFrame>
         </ContentContainer>

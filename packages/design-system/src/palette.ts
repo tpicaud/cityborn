@@ -1,6 +1,6 @@
 import { createPaletteThemes } from '@tamagui/config/v6-builder';
 
-const figmaColors = {
+export const brandColors = {
   'dark-blue': '#013548',
   'mid-blue': '#003D57',
   'cta-orange': '#FF7600',
@@ -61,6 +61,16 @@ const componentColors = {
   'separator-light': 'rgba(255, 255, 255, 0.28)',
   'headline-kicker': 'rgba(255, 255, 255, 0.38)',
   'card-fill': cardFill,
+  'timer-track': '#4FA4C8',
+  'guess-cta-border': 'rgba(255, 255, 255, 0.34)',
+  'guess-cta-glow': 'rgba(255, 118, 0, 0.2)',
+  'guess-cta-rim': 'rgba(255, 255, 255, 0.5)',
+  'result-caption': 'rgba(255, 255, 255, 0.6)',
+  'result-unit': 'rgba(255, 255, 255, 0.7)',
+  'result-plate-shade': 'rgba(0, 0, 0, 0.11)',
+  'result-plate-rim': 'rgba(255, 255, 255, 0.24)',
+  'result-points-shade': 'rgba(0, 0, 0, 0.08)',
+  'result-points-rim': 'rgba(255, 255, 255, 0.47)',
 } as const;
 
 type GradientStops = readonly [string, ...string[], string];
@@ -69,21 +79,32 @@ const orangeGradientStart: string = '#FF9840';
 
 export const gradients = {
   'dark-blue': ['#006DA4', '#003D7A'],
-  night: ['#002D52', figmaColors['dark-blue']],
+  night: ['#002D52', brandColors['dark-blue']],
   orange: [orangeGradientStart, '#FF6200'],
-  'cta-orange': [orangeGradientStart, figmaColors['cta-orange']],
-  blue: [figmaColors['common-blue'], '#008ABC'],
+  'cta-orange': [orangeGradientStart, brandColors['cta-orange']],
+  blue: [brandColors['common-blue'], '#008ABC'],
   yellow: ['#FFD505', '#FFAE00'],
   green: ['#7BFF61', '#00D540'],
   'card-fade': [cardFillAt(0), ...cardFadeInnerStops, cardFill],
   'card-edge': ['rgba(0, 61, 87, 0)', '#009380'],
+  guess: ['#00FF88 14%', '#00A9FE'],
 } as const satisfies Record<string, GradientStops>;
 
 type GradientName = keyof typeof gradients;
 
-export function verticalGradient(name: GradientName): string {
+export function linearGradient({
+  name,
+  angleInDegrees,
+}: {
+  name: GradientName;
+  angleInDegrees: number;
+}): string {
   const stops: GradientStops = gradients[name];
-  return `linear-gradient(180deg, ${stops.join(', ')})`;
+  return `linear-gradient(${angleInDegrees}deg, ${stops.join(', ')})`;
+}
+
+export function verticalGradient(name: GradientName): string {
+  return linearGradient({ name, angleInDegrees: 180 });
 }
 
 const surface = [
@@ -91,22 +112,22 @@ const surface = [
   '#C5FFF6',
   '#8DFFEC',
   '#53FFE3',
-  figmaColors['secondary-cyan'],
-  figmaColors['common-blue'],
+  brandColors['secondary-cyan'],
+  brandColors['common-blue'],
   gradients.blue[1],
   gradients['dark-blue'][0],
   gradients['dark-blue'][1],
-  figmaColors['mid-blue'],
-  figmaColors['dark-blue'],
+  brandColors['mid-blue'],
+  brandColors['dark-blue'],
 ] as const;
 
 const brand = [
   '#FFEFE1',
   '#FFDBBC',
   '#FFC38F',
-  figmaColors['light-orange'],
+  brandColors['light-orange'],
   gradients.orange[0],
-  figmaColors['cta-orange'],
+  brandColors['cta-orange'],
   gradients.orange[1],
   '#BF4A00',
   '#803100',
@@ -120,7 +141,7 @@ export const palette = {
   themes: paletteThemes.themes,
   colorTokens: {
     ...paletteThemes.colorTokens,
-    ...figmaColors,
+    ...brandColors,
     ...ctaFrameColors,
     ...componentColors,
   },
