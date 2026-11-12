@@ -7,6 +7,7 @@ export {
   currentGuessObject,
   currentRevealedGuessObject,
   formatDistanceInKm,
+  formatRoundOutcome,
   type GuessProgress,
   type RoundGuessOutcome,
   type RoundResult,

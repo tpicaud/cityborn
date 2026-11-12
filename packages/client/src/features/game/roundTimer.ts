@@ -10,6 +10,7 @@ const criticalThresholdInSeconds = 5;
 
 export type RoundTimerOptions = {
   totalTimeInSeconds: number;
+  isRunning: boolean;
   onTimeUp: () => void;
 };
 
@@ -46,6 +47,7 @@ export function createRoundTimer({
 
 export function useRoundTimer({
   totalTimeInSeconds,
+  isRunning,
   onTimeUp,
 }: RoundTimerOptions): RoundTimer {
   const [timeLeftInSeconds, setTimeLeftInSeconds] =
@@ -54,6 +56,7 @@ export function useRoundTimer({
   onTimeUpRef.current = onTimeUp;
 
   useEffect(() => {
+    if (!isRunning) return;
     const startTime: number = Date.now();
     setTimeLeftInSeconds(totalTimeInSeconds);
 
@@ -71,7 +74,7 @@ export function useRoundTimer({
     }, roundTimerTickInMilliseconds);
 
     return () => clearInterval(intervalId);
-  }, [totalTimeInSeconds]);
+  }, [isRunning, totalTimeInSeconds]);
 
   return createRoundTimer({ timeLeftInSeconds, totalTimeInSeconds });
 }

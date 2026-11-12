@@ -22,6 +22,7 @@ import {
   createGuessProgress,
   createRoundResult,
   formatDistanceInKm,
+  formatRoundOutcome,
   type GuessProgress,
   type RoundResult,
 } from './roundResult';
@@ -209,5 +210,28 @@ describe('formatDistanceInKm', () => {
     const formattedDistance: string = formatDistanceInKm(0.3);
 
     assert.equal(formattedDistance, '1');
+  });
+});
+
+describe('formatRoundOutcome', () => {
+  it('gives the distance between the guess and the place', () => {
+    const formattedOutcome: string = formatRoundOutcome({
+      kind: 'missed',
+      distanceInKm: 575.4,
+    });
+
+    assert.equal(formattedOutcome, '575 km du lieu');
+  });
+
+  it('congratulates a found place', () => {
+    const formattedOutcome: string = formatRoundOutcome({ kind: 'found' });
+
+    assert.equal(formattedOutcome, 'Bien joué ! Tu as deviné !');
+  });
+
+  it('reports a round ended without guess', () => {
+    const formattedOutcome: string = formatRoundOutcome({ kind: 'timedOut' });
+
+    assert.equal(formattedOutcome, "Tu n'as pas deviné à temps !");
   });
 });
