@@ -111,5 +111,7 @@ export function formatRoundOutcome(outcome: RoundGuessOutcome): string {
 }
 
 export function formatDistanceInKm(distanceInKm: number): string {
-  return distanceInKmFormat.format(Math.max(distanceInKm, 1));
+  return distanceInKmFormat.format(
+    distanceInKm > 0 ? Math.max(distanceInKm, 1) : distanceInKm,
+  );
 }
