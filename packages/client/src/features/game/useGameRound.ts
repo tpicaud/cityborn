@@ -88,7 +88,7 @@ export function useGameRound({
     setState('guessing');
   }, []);
 
-  const placeGuess = useCallback(
+  const placeGuess: (coordinates: Coord) => void = useCallback(
     (coordinates: Coord) => {
       if (canPlaceGuess({ game, localPlayerID })) handlePreGuess(coordinates);
     },
@@ -114,7 +114,7 @@ export function useGameRound({
     preGuess,
   });
 
-  const handleRoundAction = useCallback(async (): Promise<void> => {
+  const handleRoundAction: () => Promise<void> = useCallback(async () => {
     if (roundAction?.kind === 'nextRound') {
       await handleNextRound();
       return;
