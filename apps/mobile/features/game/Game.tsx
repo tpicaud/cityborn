@@ -68,7 +68,6 @@ export const Game = ({
         localPlayerID={activePlayerID}
         isHost={isHost}
         game={game}
-        gameDisplay={gameDisplay}
         handleGuess={handleGuess}
         handleNextRound={handleNextRound}
         onOpenOptions={gameDisplay.showOptions ? optionsMenu.open : undefined}

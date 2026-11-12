@@ -1,15 +1,15 @@
 'use client';
 
 import {
-  type RoundTimerOptions,
-  type RoundTimer as RoundTimerState,
-  useRoundTimer,
+  type RoundTimeLeft,
+  type RoundTimeLeftOptions,
+  useRoundTimeLeft,
 } from '@cityborn/client/game';
 import { CountdownGauge } from '@cityborn/design-system';
 
-export function RoundTimer(roundTimerOptions: RoundTimerOptions) {
-  const { secondsLeft, remainingShare, urgency }: RoundTimerState =
-    useRoundTimer(roundTimerOptions);
+export function RoundTimer(roundTimeLeftOptions: RoundTimeLeftOptions) {
+  const { secondsLeft, remainingShare, urgency }: RoundTimeLeft =
+    useRoundTimeLeft(roundTimeLeftOptions);
 
   return (
     <CountdownGauge

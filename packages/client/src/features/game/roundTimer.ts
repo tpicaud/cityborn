@@ -3,34 +3,34 @@
 import { roundCountdownInSeconds } from '@cityborn/core';
 import { useEffect, useRef, useState } from 'react';
 
-const roundTimerTickInMilliseconds = 10;
-const countdownTickInMilliseconds = 1000;
-const warningThresholdInSeconds = 10;
-const criticalThresholdInSeconds = 5;
+const roundTimerTickInMilliseconds: number = 10;
+const countdownTickInMilliseconds: number = 1000;
+const warningThresholdInSeconds: number = 10;
+const criticalThresholdInSeconds: number = 5;
 
-export type RoundTimerOptions = {
+export type RoundTimeLeftOptions = {
   totalTimeInSeconds: number;
   isRunning: boolean;
   onTimeUp: () => void;
 };
 
-export type RoundTimerUrgency = 'calm' | 'warning' | 'critical';
+export type TimeLeftUrgency = 'calm' | 'warning' | 'critical';
 
-export type RoundTimer = {
+export type RoundTimeLeft = {
   secondsLeft: number;
   remainingShare: number;
-  urgency: RoundTimerUrgency;
+  urgency: TimeLeftUrgency;
 };
 
-export function createRoundTimer({
+export function createRoundTimeLeft({
   timeLeftInSeconds,
   totalTimeInSeconds,
 }: {
   timeLeftInSeconds: number;
   totalTimeInSeconds: number;
-}): RoundTimer {
+}): RoundTimeLeft {
   const secondsLeft: number = Math.ceil(timeLeftInSeconds);
-  const urgency: RoundTimerUrgency =
+  const urgency: TimeLeftUrgency =
     secondsLeft <= criticalThresholdInSeconds
       ? 'critical'
       : secondsLeft <= warningThresholdInSeconds
@@ -45,11 +45,11 @@ export function createRoundTimer({
   };
 }
 
-export function useRoundTimer({
+export function useRoundTimeLeft({
   totalTimeInSeconds,
   isRunning,
   onTimeUp,
-}: RoundTimerOptions): RoundTimer {
+}: RoundTimeLeftOptions): RoundTimeLeft {
   const [timeLeftInSeconds, setTimeLeftInSeconds] =
     useState<number>(totalTimeInSeconds);
   const onTimeUpRef = useRef<() => void>(onTimeUp);
@@ -76,7 +76,7 @@ export function useRoundTimer({
     return () => clearInterval(intervalId);
   }, [isRunning, totalTimeInSeconds]);
 
-  return createRoundTimer({ timeLeftInSeconds, totalTimeInSeconds });
+  return createRoundTimeLeft({ timeLeftInSeconds, totalTimeInSeconds });
 }
 
 export type CountdownOptions = {

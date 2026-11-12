@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { createRoundTimer, type RoundTimer } from './roundTimer';
+import { createRoundTimeLeft, type RoundTimeLeft } from './roundTimer';
 
-describe('createRoundTimer', () => {
+describe('createRoundTimeLeft', () => {
   it('rounds up to the started second and keeps the exact remaining share', () => {
-    const roundTimer: RoundTimer = createRoundTimer({
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
       timeLeftInSeconds: 24.2,
       totalTimeInSeconds: 40,
     });
 
-    assert.deepEqual(roundTimer, {
+    assert.deepEqual(roundTimeLeft, {
       secondsLeft: 25,
       remainingShare: 0.605,
       urgency: 'calm',
@@ -17,39 +17,39 @@ describe('createRoundTimer', () => {
   });
 
   it('warns from the last ten seconds', () => {
-    const roundTimer: RoundTimer = createRoundTimer({
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
       timeLeftInSeconds: 10,
       totalTimeInSeconds: 30,
     });
 
-    assert.equal(roundTimer.urgency, 'warning');
+    assert.equal(roundTimeLeft.urgency, 'warning');
   });
 
   it('stays calm just above ten seconds', () => {
-    const roundTimer: RoundTimer = createRoundTimer({
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
       timeLeftInSeconds: 10.01,
       totalTimeInSeconds: 30,
     });
 
-    assert.equal(roundTimer.urgency, 'calm');
+    assert.equal(roundTimeLeft.urgency, 'calm');
   });
 
   it('becomes critical from the last five seconds', () => {
-    const roundTimer: RoundTimer = createRoundTimer({
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
       timeLeftInSeconds: 5,
       totalTimeInSeconds: 30,
     });
 
-    assert.equal(roundTimer.urgency, 'critical');
+    assert.equal(roundTimeLeft.urgency, 'critical');
   });
 
   it('reports no time left once the round is over', () => {
-    const roundTimer: RoundTimer = createRoundTimer({
+    const roundTimeLeft: RoundTimeLeft = createRoundTimeLeft({
       timeLeftInSeconds: 0,
       totalTimeInSeconds: 30,
     });
 
-    assert.deepEqual(roundTimer, {
+    assert.deepEqual(roundTimeLeft, {
       secondsLeft: 0,
       remainingShare: 0,
       urgency: 'critical',
