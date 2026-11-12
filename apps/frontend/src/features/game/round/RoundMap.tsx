@@ -32,7 +32,7 @@ import {
   useMap,
 } from '@vis.gl/react-google-maps';
 import Image from 'next/image';
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 
 type MarkerSize = {
   width: number;
@@ -86,8 +86,10 @@ export default function RoundMap({
   mapProps: { center, zoom, preGuess, localPlayerID, game, handlePreGuess },
 }: RoundMapProps) {
   const currentRound: Round | undefined = game.state.currentRound;
-  const revealedGuessObject: FullGuessObject | undefined =
-    currentRevealedGuessObject(game);
+  const revealedGuessObject: FullGuessObject | undefined = useMemo(
+    () => currentRevealedGuessObject(game),
+    [game],
+  );
 
   if (!currentRound) return null;
 
@@ -139,7 +141,10 @@ function RevealedRound({
   guessObject: FullGuessObject;
   localPlayerID: PlayerId;
 }) {
-  const answer: Coord = guessObjectCenter(guessObject);
+  const answer: Coord = useMemo(
+    () => guessObjectCenter(guessObject),
+    [guessObject],
+  );
   const playersGuesses: [string, Guess][] = Object.entries(
     currentRound.playersGuesses ?? {},
   );
