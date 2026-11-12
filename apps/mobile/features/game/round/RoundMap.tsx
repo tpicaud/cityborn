@@ -19,7 +19,7 @@ import {
 } from '@cityborn/core';
 import { AngledTag, brandColors } from '@cityborn/design-system';
 import type { Position } from 'geojson';
-import { Fragment, useEffect, useMemo, useRef } from 'react';
+import { Fragment, type RefObject, useEffect, useMemo, useRef } from 'react';
 import { Image, type ImageSourcePropType, View } from 'react-native';
 import MapView, {
   type EdgePadding,
@@ -51,7 +51,11 @@ const routeDashPattern: number[] = [2, 2];
 
 const zoomPadding: EdgePadding = { top: 120, right: 50, bottom: 240, left: 50 };
 
-type RoundMapProps = Omit<MapProps, 'game'> & {
+type CoordinatePressEvent = {
+  nativeEvent: { coordinate: LatLng };
+};
+
+type CurrentRoundMapProps = Omit<MapProps, 'game'> & {
   currentRound: Round;
   revealedGuessObject: FullGuessObject | undefined;
 };
@@ -69,8 +73,8 @@ function areaOuterRings(area: GuessObjectArea): Position[][] {
   return area.coordinates.map((polygon) => polygon[0]);
 }
 
-export default function GameMap({ mapProps }: { mapProps: MapProps }) {
-  const { game, ...roundMapProps } = mapProps;
+export default function RoundMap({ mapProps }: { mapProps: MapProps }) {
+  const { game, ...roundMapProps }: MapProps = mapProps;
   const currentRound: Round | undefined = game.state.currentRound;
   const revealedGuessObject: FullGuessObject | undefined = useMemo(
     () => currentRevealedGuessObject(game),
@@ -80,7 +84,7 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
   if (!currentRound) return null;
 
   return (
-    <RoundMap
+    <CurrentRoundMap
       {...roundMapProps}
       currentRound={currentRound}
       revealedGuessObject={revealedGuessObject}
@@ -174,7 +178,7 @@ function AnswerArea({ guessObject }: { guessObject: FullGuessObject }) {
   ));
 }
 
-function RoundMap({
+function CurrentRoundMap({
   center,
   zoom,
   preGuess,
@@ -182,8 +186,8 @@ function RoundMap({
   handlePreGuess,
   currentRound,
   revealedGuessObject,
-}: RoundMapProps) {
-  const mapRef = useRef<MapView>(null);
+}: CurrentRoundMapProps) {
+  const mapRef: RefObject<MapView | null> = useRef<MapView>(null);
   const answer: Coord | undefined = useMemo(
     () => revealedGuessObject && guessObjectCenter(revealedGuessObject),
     [revealedGuessObject],
@@ -195,10 +199,8 @@ function RoundMap({
   const isShowingResults: boolean =
     currentRound.status === RoundStatus.SHOWING_RESULTS;
 
-  const handleMapPress = (event: {
-    nativeEvent: { coordinate: LatLng };
-  }): void => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
+  const handleMapPress: (event: CoordinatePressEvent) => void = (event) => {
+    const { latitude, longitude }: LatLng = event.nativeEvent.coordinate;
     handlePreGuess({ lat: latitude, lng: longitude });
   };
 
