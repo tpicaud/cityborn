@@ -211,6 +211,12 @@ describe('formatDistanceInKm', () => {
 
     assert.equal(formattedDistance, '1');
   });
+
+  it('shows zero kilometre for a found place', () => {
+    const formattedDistance: string = formatDistanceInKm(0);
+
+    assert.equal(formattedDistance, '0');
+  });
 });
 
 describe('formatRoundOutcome', () => {
