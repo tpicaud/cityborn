@@ -126,6 +126,7 @@ const ButtonFace = styled(PressableFrame, {
 });
 
 const ButtonLabel = styled(Text, {
+  position: 'relative',
   fontFamily: 'body',
   fontWeight: '700',
   color: 'white',

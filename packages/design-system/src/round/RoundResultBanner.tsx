@@ -88,6 +88,10 @@ const PlateInset = styled(View, {
   } as const,
 });
 
+const PlateContent = styled(View, {
+  position: 'relative',
+});
+
 const Outcome = styled(Text, {
   fontFamily: 'body',
   fontSize: '4 md:7',
@@ -140,7 +144,7 @@ function ResultPlate({ tone, children }: ResultPlateProps) {
       <PlateBackdrop tone={tone}>
         <PlateInset tone={tone} />
       </PlateBackdrop>
-      {children}
+      <PlateContent>{children}</PlateContent>
     </Plate>
   );
 }
