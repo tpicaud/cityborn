@@ -18,11 +18,16 @@ import {
   ScoreBanner,
 } from '@cityborn/design-system';
 import dynamic from 'next/dynamic';
+import type { ComponentType } from 'react';
 import { frontendClientConfig } from '@/config/client';
+import type { RoundMapProps } from './RoundMap';
 import { RoundStartCountdown } from './RoundStartCountdown';
 import { RoundTimer } from './RoundTimer';
 
-const RoundMap = dynamic(() => import('./RoundMap'), { ssr: false });
+const RoundMap: ComponentType<RoundMapProps> = dynamic(
+  () => import('./RoundMap'),
+  { ssr: false },
+);
 
 type RoundProps = {
   localPlayerID: PlayerId;
