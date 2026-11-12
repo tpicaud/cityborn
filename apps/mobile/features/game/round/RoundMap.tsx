@@ -72,6 +72,10 @@ function areaOuterRings(area: GuessObjectArea): Position[][] {
 export default function GameMap({ mapProps }: { mapProps: MapProps }) {
   const { game, ...roundMapProps } = mapProps;
   const currentRound: Round | undefined = game.state.currentRound;
+  const revealedGuessObject: FullGuessObject | undefined = useMemo(
+    () => currentRevealedGuessObject(game),
+    [game],
+  );
 
   if (!currentRound) return null;
 
@@ -79,7 +83,7 @@ export default function GameMap({ mapProps }: { mapProps: MapProps }) {
     <RoundMap
       {...roundMapProps}
       currentRound={currentRound}
-      revealedGuessObject={currentRevealedGuessObject(game)}
+      revealedGuessObject={revealedGuessObject}
     />
   );
 }
