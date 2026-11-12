@@ -1,20 +1,28 @@
 import {
   createGameDisplay,
   type GameComponentProps,
+  type GameDisplay,
+  type GameOptionsMenu,
+  useGameOptionsMenu,
 } from '@cityborn/client/game';
+import {
+  ActionPrompt,
+  Button as DesignSystemButton,
+  LoadingScreen,
+  Screen,
+} from '@cityborn/design-system';
 import {
   useNavigation as useExpoNavigation,
   useFocusEffect,
 } from 'expo-router';
 import { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'tamagui';
 import Button from '@/components/ui/Button';
 import Dialog from '@/components/ui/Dialog';
-import LoaderIcon from '@/components/ui/LoaderIcon';
-import { Text } from '@/components/ui/native/NativeComponents';
+import { View as LegacyView } from '@/components/ui/native/NativeComponents';
 import { GameOptions } from './GameOptions';
-import Guess from './guess/Guess';
 import Results from './Results';
+import { Round } from './round/Round';
 
 export const Game = ({
   localPlayerID,
@@ -27,7 +35,10 @@ export const Game = ({
   handleLeaveGame,
 }: GameComponentProps) => {
   const expoNavigation = useExpoNavigation();
-  const gameDisplay = createGameDisplay(game, localPlayerID);
+  const gameDisplay: GameDisplay = createGameDisplay(game, localPlayerID);
+  const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
+    leaveGame: handleLeaveGame,
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -39,46 +50,38 @@ export const Game = ({
     }, [expoNavigation.setOptions]),
   );
 
-  if (gameDisplay.state === 'loading') {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <LoaderIcon />
-      </View>
-    );
-  }
+  if (gameDisplay.state === 'loading') return <LoadingScreen />;
   if (gameDisplay.state === 'unavailable') {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text>La partie est déjà en cours</Text>
-        <Button size="large" label="Menu" onPress={handleExitGame} />
-      </View>
+      <Screen bottomSafeArea>
+        <ActionPrompt prompt="La partie est déjà en cours">
+          <DesignSystemButton compact label="Menu" onPress={handleExitGame} />
+        </ActionPrompt>
+      </Screen>
     );
   }
   const activePlayerID = gameDisplay.localPlayerID;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <View style={StyleSheet.absoluteFill}>
-        <Guess
-          localPlayerID={activePlayerID}
-          game={game}
-          isHost={isHost}
-          handleGuess={handleGuess}
-          handleNextRound={handleNextRound}
-        />
-      </View>
-
-      {gameDisplay.showOptions && (
-        <GameOptions handleLeaveGame={handleLeaveGame} />
-      )}
+    <View flex={1}>
+      <Round
+        localPlayerID={activePlayerID}
+        isHost={isHost}
+        game={game}
+        gameDisplay={gameDisplay}
+        handleGuess={handleGuess}
+        handleNextRound={handleNextRound}
+        onOpenOptions={gameDisplay.showOptions ? optionsMenu.open : undefined}
+      />
+      {gameDisplay.showOptions && <GameOptions optionsMenu={optionsMenu} />}
 
       {gameDisplay.showResults && (
-        <View>
+        <LegacyView>
           <Dialog visible={true} className="absolute h-[80%] w-[90%] p-8">
-            <View className="flex-1 w-full">
+            <LegacyView className="flex-1 w-full">
               <Results game={game} localPlayerID={activePlayerID} />
-            </View>
-            <View className="flex gap-4 items-center justify-center">
+            </LegacyView>
+            <LegacyView className="flex gap-4 items-center justify-center">
               <Button
                 variant="filled"
                 size="large"
@@ -94,9 +97,9 @@ export const Game = ({
                   await handleExitGame();
                 }}
               />
-            </View>
+            </LegacyView>
           </Dialog>
-        </View>
+        </LegacyView>
       )}
     </View>
   );
