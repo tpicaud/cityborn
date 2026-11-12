@@ -5,25 +5,43 @@ import { useEffect, useRef, useState } from 'react';
 
 const roundTimerTickInMilliseconds = 10;
 const countdownTickInMilliseconds = 1000;
-const runningOutThresholdInSeconds = 5;
+const warningThresholdInSeconds = 10;
+const criticalThresholdInSeconds = 5;
 
 export type RoundTimerOptions = {
   totalTimeInSeconds: number;
   onTimeUp: () => void;
 };
 
+export type RoundTimerUrgency = 'calm' | 'warning' | 'critical';
+
 export type RoundTimer = {
-  formattedTimeLeft: string;
-  progressPercentage: number;
-  isRunningOut: boolean;
-  isTimeUp: boolean;
+  secondsLeft: number;
+  remainingShare: number;
+  urgency: RoundTimerUrgency;
 };
 
-export function formatTimeLeft(timeLeftInSeconds: number): string {
-  const wholeSecondsLeft: number = Math.ceil(timeLeftInSeconds);
-  const minutes: number = Math.floor(wholeSecondsLeft / 60);
-  const seconds: number = wholeSecondsLeft % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+export function createRoundTimer({
+  timeLeftInSeconds,
+  totalTimeInSeconds,
+}: {
+  timeLeftInSeconds: number;
+  totalTimeInSeconds: number;
+}): RoundTimer {
+  const secondsLeft: number = Math.ceil(timeLeftInSeconds);
+  const urgency: RoundTimerUrgency =
+    secondsLeft <= criticalThresholdInSeconds
+      ? 'critical'
+      : secondsLeft <= warningThresholdInSeconds
+        ? 'warning'
+        : 'calm';
+
+  return {
+    secondsLeft,
+    remainingShare:
+      totalTimeInSeconds > 0 ? timeLeftInSeconds / totalTimeInSeconds : 0,
+    urgency,
+  };
 }
 
 export function useRoundTimer({
@@ -55,12 +73,7 @@ export function useRoundTimer({
     return () => clearInterval(intervalId);
   }, [totalTimeInSeconds]);
 
-  return {
-    formattedTimeLeft: formatTimeLeft(timeLeftInSeconds),
-    progressPercentage: (timeLeftInSeconds / totalTimeInSeconds) * 100,
-    isRunningOut: timeLeftInSeconds <= runningOutThresholdInSeconds,
-    isTimeUp: timeLeftInSeconds === 0,
-  };
+  return createRoundTimer({ timeLeftInSeconds, totalTimeInSeconds });
 }
 
 export type CountdownOptions = {
