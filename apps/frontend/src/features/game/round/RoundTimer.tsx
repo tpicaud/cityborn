@@ -5,14 +5,14 @@ import {
   type RoundTimer as RoundTimerState,
   useRoundTimer,
 } from '@cityborn/client/game';
-import { RoundTimerGauge } from '@cityborn/design-system';
+import { CountdownGauge } from '@cityborn/design-system';
 
 export function RoundTimer(roundTimerOptions: RoundTimerOptions) {
   const { secondsLeft, remainingShare, urgency }: RoundTimerState =
     useRoundTimer(roundTimerOptions);
 
   return (
-    <RoundTimerGauge
+    <CountdownGauge
       secondsLeft={secondsLeft}
       remainingShare={remainingShare}
       urgency={urgency}

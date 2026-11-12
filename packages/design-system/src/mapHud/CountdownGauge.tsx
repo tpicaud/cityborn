@@ -1,12 +1,12 @@
 import { styled, Text, View } from 'tamagui';
 import { verticalGradient } from '../palette';
 
-type TimerUrgency = 'calm' | 'warning' | 'critical';
+type CountdownUrgency = 'calm' | 'warning' | 'critical';
 
-type RoundTimerGaugeProps = {
+type CountdownGaugeProps = {
   secondsLeft: number;
   remainingShare: number;
-  urgency: TimerUrgency;
+  urgency: CountdownUrgency;
 };
 
 type Percentage = `${number}%`;
@@ -36,7 +36,7 @@ const Ring = styled(View, {
   w: '87.5%',
   h: '87.5%',
   rounded: 'full',
-  bg: 'timer-track',
+  bg: 'gauge-track',
 });
 
 const HalfClip = styled(View, {
@@ -89,7 +89,7 @@ const Disk = styled(View, {
 
 type HalfDiskProps = {
   side: 'left' | 'right';
-  urgency: TimerUrgency;
+  urgency: CountdownUrgency;
 };
 
 function HalfDisk({ side, urgency }: HalfDiskProps) {
@@ -150,11 +150,11 @@ function capPosition(angleInDegrees: number): { t: Percentage; l: Percentage } {
   };
 }
 
-export function RoundTimerGauge({
+export function CountdownGauge({
   secondsLeft,
   remainingShare,
   urgency,
-}: RoundTimerGaugeProps) {
+}: CountdownGaugeProps) {
   const arcAngle: number = Math.min(Math.max(remainingShare, 0), 1) * 360;
   const rightAngle: number = Math.min(arcAngle, 180);
   const leftAngle: number = Math.max(arcAngle - 180, 0);

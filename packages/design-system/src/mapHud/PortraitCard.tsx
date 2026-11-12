@@ -6,7 +6,7 @@ const photoAspectRatio: number = 122 / 149;
 
 const monogramAspectRatio: number = 189 / 156;
 
-type PersonalityCardProps = {
+type PortraitCardProps = {
   name: string;
   imageUrl: string | undefined;
 };
@@ -17,7 +17,7 @@ const CardFrame = styled(View, {
   px: '1 md:1.5',
   rounded: '6 md:9',
   bg: 'mid-blue',
-  boxShadow: 'personality-card md:personality-card-tablet',
+  boxShadow: 'portrait-card md:portrait-card-tablet',
 });
 
 const Photo = styled(View, {
@@ -46,7 +46,7 @@ const Name = styled(Text, {
   py: '2 md:3',
 });
 
-export function PersonalityCard({ name, imageUrl }: PersonalityCardProps) {
+export function PortraitCard({ name, imageUrl }: PortraitCardProps) {
   const AssetImage: ComponentType<AssetImageProps> = useAssetImage();
 
   return (

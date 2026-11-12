@@ -21,7 +21,7 @@ import {
   guessObjectArea,
   guessObjectCenter,
 } from '@cityborn/core';
-import { brandColors, RouteDistanceTag } from '@cityborn/design-system';
+import { AngledTag, brandColors } from '@cityborn/design-system';
 import answerMarker from '@cityborn/design-system/assets/map/answer.png';
 import guessPin from '@cityborn/design-system/assets/map/guess-pin.png';
 import {
@@ -217,7 +217,7 @@ function LocalRoute({ guess, answer }: { guess: Guess; answer: Coord }) {
         anchorLeft="-50%"
         anchorTop="-50%"
       >
-        <RouteDistanceTag
+        <AngledTag
           label={`${formatDistanceInKm(guess.distance)}km`}
           angleInDegrees={routeLabel.angleInDegrees}
         />

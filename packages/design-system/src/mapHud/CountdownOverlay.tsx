@@ -1,6 +1,6 @@
 import { styled, Text, View } from 'tamagui';
 
-type RoundCountdownProps = {
+type CountdownOverlayProps = {
   count: number;
 };
 
@@ -26,7 +26,7 @@ const CountdownValue = styled(Text, {
   select: 'none',
 });
 
-export function RoundCountdown({ count }: RoundCountdownProps) {
+export function CountdownOverlay({ count }: CountdownOverlayProps) {
   return (
     <CountdownScrim>
       <CountdownValue>{count}</CountdownValue>

@@ -61,16 +61,16 @@ const componentColors = {
   'separator-light': 'rgba(255, 255, 255, 0.28)',
   'headline-kicker': 'rgba(255, 255, 255, 0.38)',
   'card-fill': cardFill,
-  'timer-track': '#4FA4C8',
-  'guess-cta-border': 'rgba(255, 255, 255, 0.34)',
-  'guess-cta-glow': 'rgba(255, 118, 0, 0.2)',
-  'guess-cta-rim': 'rgba(255, 255, 255, 0.5)',
-  'result-caption': 'rgba(255, 255, 255, 0.6)',
-  'result-unit': 'rgba(255, 255, 255, 0.7)',
-  'result-plate-shade': 'rgba(0, 0, 0, 0.11)',
-  'result-plate-rim': 'rgba(255, 255, 255, 0.24)',
-  'result-points-shade': 'rgba(0, 0, 0, 0.08)',
-  'result-points-rim': 'rgba(255, 255, 255, 0.47)',
+  'gauge-track': '#4FA4C8',
+  'glow-cta-border': 'rgba(255, 255, 255, 0.34)',
+  'glow-cta-halo': 'rgba(255, 118, 0, 0.2)',
+  'glow-cta-rim': 'rgba(255, 255, 255, 0.5)',
+  'banner-caption': 'rgba(255, 255, 255, 0.6)',
+  'banner-unit': 'rgba(255, 255, 255, 0.7)',
+  'banner-title-shade': 'rgba(0, 0, 0, 0.11)',
+  'banner-title-rim': 'rgba(255, 255, 255, 0.24)',
+  'banner-score-shade': 'rgba(0, 0, 0, 0.08)',
+  'banner-score-rim': 'rgba(255, 255, 255, 0.47)',
 } as const;
 
 type GradientStops = readonly [string, ...string[], string];
@@ -87,7 +87,7 @@ export const gradients = {
   green: ['#7BFF61', '#00D540'],
   'card-fade': [cardFillAt(0), ...cardFadeInnerStops, cardFill],
   'card-edge': ['rgba(0, 61, 87, 0)', '#009380'],
-  guess: ['#00FF88 14%', '#00A9FE'],
+  'green-blue': ['#00FF88 14%', '#00A9FE'],
 } as const satisfies Record<string, GradientStops>;
 
 type GradientName = keyof typeof gradients;
