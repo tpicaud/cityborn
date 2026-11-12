@@ -23,8 +23,18 @@ export const shadows = {
   'card-cta-tablet':
     'inset 0 2px 0 0 rgba(255, 255, 255, 0.5), inset 0 -5px 2px 0 rgba(0, 0, 0, 0.47)',
   panel: '0 11px 16.7px 0 rgba(0, 0, 0, 0.29)',
+  'personality-card': '0 4px 5.25px 0 rgba(0, 0, 0, 0.25)',
+  'personality-card-tablet': '0 6px 8.2px 0 rgba(0, 0, 0, 0.25)',
+  'guess-cta-glow': 'inset 0 0 9.4px 0 rgba(255, 255, 255, 0.58)',
+  'guess-cta-glow-tablet': 'inset 0 0 16px 0 rgba(255, 255, 255, 0.58)',
+  'result-plate-blue':
+    '2px 5px 7.3px 0 rgba(0, 0, 0, 0.54), 0 4px 0 0 #013463, inset -1px 1px 0 0 #A6F8FF',
+  'result-plate-yellow':
+    '-1px 5px 7.3px 0 rgba(0, 0, 0, 0.54), 0 4px 0 0 #FF9500, inset 0 2px 0 0 #FFF9A6',
 } as const;
 
 export const textShadows = {
   'screen-title': '0 5px 9.6px rgba(0, 0, 0, 0.25)',
+  'cta-label': '0 2px 4px rgba(0, 0, 0, 0.3)',
+  'result-points': '0 2px 4px rgba(0, 0, 0, 0.13)',
 } as const;
