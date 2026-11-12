@@ -2,10 +2,12 @@ export { createGameDisplay, type GameDisplay } from './gameDisplay';
 export { createGameResults } from './gameResult';
 export {
   canSubmitGuess,
+  createGuessProgress,
   createRoundResult,
   currentGuessObject,
   currentRevealedGuessObject,
   formatDistanceInKm,
+  type GuessProgress,
   type RoundGuessOutcome,
   type RoundResult,
 } from './roundResult';
@@ -17,6 +19,7 @@ export {
   useCountdown,
   useRoundTimer,
 } from './roundTimer';
+export { createRouteLabel, type RouteLabel } from './routeLabel';
 export {
   type GameOptionsMenu,
   type GameOptionsMenuOptions,
