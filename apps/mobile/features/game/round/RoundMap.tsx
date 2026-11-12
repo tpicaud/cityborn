@@ -17,7 +17,7 @@ import {
   guessObjectArea,
   guessObjectCenter,
 } from '@cityborn/core';
-import { brandColors, RouteDistanceTag } from '@cityborn/design-system';
+import { AngledTag, brandColors } from '@cityborn/design-system';
 import type { Position } from 'geojson';
 import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { Image, type ImageSourcePropType, View } from 'react-native';
@@ -145,7 +145,7 @@ function LocalRoute({ guess, answer }: { guess: Guess; answer: Coord }) {
         tappable={false}
       >
         <TamaguiView w="32" h="32" items="center" justify="center">
-          <RouteDistanceTag
+          <AngledTag
             label={`${formatDistanceInKm(guess.distance)}km`}
             angleInDegrees={routeLabel.angleInDegrees}
           />

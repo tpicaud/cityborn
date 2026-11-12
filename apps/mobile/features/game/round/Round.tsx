@@ -19,9 +19,9 @@ import {
 } from '@cityborn/client/game';
 import {
   Button,
-  PersonalityCard,
-  RoundResultBanner,
-  RoundScreen,
+  MapHudScreen,
+  PortraitCard,
+  ScoreBanner,
 } from '@cityborn/design-system';
 import RoundMap from './RoundMap';
 import { RoundStartCountdown } from './RoundStartCountdown';
@@ -56,7 +56,7 @@ function RoundAction({
 
     return (
       <Button
-        variant="guess"
+        variant="glow"
         label={
           hasLocalGuess ? `${guessedPlayerCount}/${playerCount}` : 'Guess !'
         }
@@ -98,9 +98,9 @@ export function Round({ onOpenOptions, ...roundActionProps }: RoundProps) {
   );
 
   return (
-    <RoundScreen
+    <MapHudScreen
       map={<RoundMap mapProps={gameRound.mapProps} />}
-      timer={
+      gauge={
         gameRound.showOverlay ? (
           <RoundTimer
             totalTimeInSeconds={game.config.timer}
@@ -109,21 +109,18 @@ export function Round({ onOpenOptions, ...roundActionProps }: RoundProps) {
           />
         ) : undefined
       }
-      personality={
+      card={
         gameRound.showOverlay && guessObject ? (
-          <PersonalityCard
-            name={guessObject.name}
-            imageUrl={guessObject.image}
-          />
+          <PortraitCard name={guessObject.name} imageUrl={guessObject.image} />
         ) : undefined
       }
       onOpenOptions={onOpenOptions}
-      result={
+      banner={
         gameRound.showOverlay && roundResult ? (
-          <RoundResultBanner
-            outcome={formatRoundOutcome(roundResult.localOutcome)}
-            placeName={roundResult.guessObject.world_location.name}
-            points={roundResult.localPoints}
+          <ScoreBanner
+            caption={formatRoundOutcome(roundResult.localOutcome)}
+            title={roundResult.guessObject.world_location.name}
+            score={roundResult.localPoints}
           />
         ) : undefined
       }

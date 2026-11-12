@@ -4,10 +4,10 @@ import { linearGradient } from '../palette';
 
 const plateSlant: string = '-14deg';
 
-type RoundResultBannerProps = {
-  outcome: string;
-  placeName: string;
-  points: number;
+type ScoreBannerProps = {
+  caption: string;
+  title: string;
+  score: number;
 };
 
 const BannerRow = styled(View, {
@@ -22,8 +22,8 @@ const Plate = styled(View, {
   minH: '20 md:32',
   variants: {
     tone: {
-      place: { flex: 1, maxW: '60 md:96', pl: '5 md:8', pr: '8 md:12' },
-      points: {
+      title: { flex: 1, maxW: '60 md:96', pl: '5 md:8', pr: '8 md:12' },
+      score: {
         ml: 'auto',
         w: '44 md:72',
         items: 'center',
@@ -42,23 +42,23 @@ const PlateBackdrop = styled(View, {
   skewX: plateSlant,
   variants: {
     tone: {
-      place: {
+      title: {
         l: '-8',
         r: '0',
         backgroundImage: linearGradient({
           name: 'dark-blue',
           angleInDegrees: 270,
         }),
-        boxShadow: 'result-plate-blue',
+        boxShadow: 'banner-plate-blue',
       },
-      points: {
+      score: {
         l: '0',
         r: '-8',
         backgroundImage: linearGradient({
           name: 'yellow',
           angleInDegrees: 90,
         }),
-        boxShadow: 'result-plate-yellow',
+        boxShadow: 'banner-plate-yellow',
       },
     },
   } as const,
@@ -72,17 +72,17 @@ const PlateInset = styled(View, {
   borderWidth: '2 md:4',
   variants: {
     tone: {
-      place: {
+      title: {
         l: '0',
         r: '2 md:3',
-        bg: 'result-plate-shade',
-        borderColor: 'result-plate-rim',
+        bg: 'banner-title-shade',
+        borderColor: 'banner-title-rim',
       },
-      points: {
+      score: {
         l: '2 md:3',
         r: '0',
-        bg: 'result-points-shade',
-        borderColor: 'result-points-rim',
+        bg: 'banner-score-shade',
+        borderColor: 'banner-score-rim',
       },
     },
   } as const,
@@ -92,15 +92,15 @@ const PlateContent = styled(View, {
   position: 'relative',
 });
 
-const Outcome = styled(Text, {
+const Caption = styled(Text, {
   fontFamily: 'body',
   fontSize: '4 md:7',
   lineHeight: '4 md:7',
   fontWeight: '600',
-  color: 'result-caption',
+  color: 'banner-caption',
 });
 
-const PlaceName = styled(Text, {
+const Title = styled(Text, {
   role: 'heading',
   fontFamily: 'body',
   fontSize: '8 md:11',
@@ -109,36 +109,36 @@ const PlaceName = styled(Text, {
   color: 'secondary-cyan',
 });
 
-const PointsLine = styled(View, {
+const ScoreLine = styled(View, {
   flexDirection: 'row',
   items: 'baseline',
   gap: '1',
 });
 
-const Points = styled(Text, {
+const Score = styled(Text, {
   fontFamily: 'body',
   fontSize: '11 md:12',
   lineHeight: '11 md:12',
   fontWeight: '700',
   color: 'white',
-  textShadow: 'result-points',
+  textShadow: 'banner-score',
 });
 
-const PointsUnit = styled(Text, {
+const ScoreUnit = styled(Text, {
   fontFamily: 'body',
   fontSize: '6 md:9',
   lineHeight: '6 md:9',
   fontWeight: '600',
-  color: 'result-unit',
-  textShadow: 'result-points',
+  color: 'banner-unit',
+  textShadow: 'banner-score',
 });
 
-type ResultPlateProps = {
-  tone: 'place' | 'points';
+type BannerPlateProps = {
+  tone: 'title' | 'score';
   children: ReactNode;
 };
 
-function ResultPlate({ tone, children }: ResultPlateProps) {
+function BannerPlate({ tone, children }: BannerPlateProps) {
   return (
     <Plate tone={tone}>
       <PlateBackdrop tone={tone}>
@@ -149,23 +149,19 @@ function ResultPlate({ tone, children }: ResultPlateProps) {
   );
 }
 
-export function RoundResultBanner({
-  outcome,
-  placeName,
-  points,
-}: RoundResultBannerProps) {
+export function ScoreBanner({ caption, title, score }: ScoreBannerProps) {
   return (
     <BannerRow role="status">
-      <ResultPlate tone="place">
-        <Outcome>{outcome}</Outcome>
-        <PlaceName>{placeName}</PlaceName>
-      </ResultPlate>
-      <ResultPlate tone="points">
-        <PointsLine>
-          <Points>{points}</Points>
-          <PointsUnit>Pts</PointsUnit>
-        </PointsLine>
-      </ResultPlate>
+      <BannerPlate tone="title">
+        <Caption>{caption}</Caption>
+        <Title>{title}</Title>
+      </BannerPlate>
+      <BannerPlate tone="score">
+        <ScoreLine>
+          <Score>{score}</Score>
+          <ScoreUnit>Pts</ScoreUnit>
+        </ScoreLine>
+      </BannerPlate>
     </BannerRow>
   );
 }

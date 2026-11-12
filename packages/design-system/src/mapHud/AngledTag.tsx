@@ -1,6 +1,6 @@
 import { styled, Text, View } from 'tamagui';
 
-type RouteDistanceTagProps = {
+type AngledTagProps = {
   label: string;
   angleInDegrees: number;
 };
@@ -21,10 +21,7 @@ const TagLabel = styled(Text, {
   select: 'none',
 });
 
-export function RouteDistanceTag({
-  label,
-  angleInDegrees,
-}: RouteDistanceTagProps) {
+export function AngledTag({ label, angleInDegrees }: AngledTagProps) {
   return (
     <TagFrame rotate={`${angleInDegrees}deg`}>
       <TagLabel>{label}</TagLabel>
