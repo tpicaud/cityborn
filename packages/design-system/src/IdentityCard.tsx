@@ -83,7 +83,7 @@ const ActionFace = styled(PressableFrame, {
   backgroundImage: verticalGradient('blue'),
   boxShadow:
     'relief-blue-slim press:relief-pressed-slim md:relief-blue md:press:relief-pressed',
-  y: 'press:2px md:press:3px',
+  y: 'press:0.5 md:press:0.75',
 });
 
 const ActionLabel = styled(Text, {
