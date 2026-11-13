@@ -67,11 +67,13 @@ export function createRoundAction({
     const { hasLocalGuess, guessedPlayerCount, playerCount }: GuessProgress =
       createGuessProgress({ game, localPlayerID });
 
+    if (!hasLocalGuess && preGuess === undefined) return undefined;
+
     return {
       kind: 'guess',
       label: hasLocalGuess ? `${guessedPlayerCount}/${playerCount}` : 'Guess !',
       detail: undefined,
-      isEnabled: preGuess !== undefined && !hasLocalGuess,
+      isEnabled: !hasLocalGuess,
     };
   }
 
