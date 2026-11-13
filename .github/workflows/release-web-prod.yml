@@ -20,6 +20,7 @@ jobs:
     outputs:
       lastProdTag: ${{ steps.get_tag.outputs.lastProdTag }}
       newReleaseTag: ${{ steps.get_tag.outputs.newReleaseTag }}
+      newVersion: ${{ steps.get_tag.outputs.newVersion }}
     steps:
       - name: Get tags
         id: get_tag
@@ -40,6 +41,7 @@ jobs:
 
           echo "lastProdTag=${LAST_PROD}" >> $GITHUB_OUTPUT
           echo "newReleaseTag=web-v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+          echo "newVersion=${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
 
   detect-changes:
     name: Detect changes
@@ -101,6 +103,7 @@ jobs:
   build-and-deploy-web-prod:
     name: Build + Deploy - Web - Prod
     needs:
+      - get-tag
       - detect-changes
       - version-openapi-release
     if: ${{ !failure() && !cancelled() }}
@@ -110,6 +113,7 @@ jobs:
       backendHasChanged: ${{ needs.detect-changes.outputs.backendHasChanged }}
       frontendHasChanged: ${{ needs.detect-changes.outputs.frontendHasChanged }}
       backofficeHasChanged: ${{ needs.detect-changes.outputs.backofficeHasChanged }}
+      appVersion: ${{ needs.get-tag.outputs.newVersion }}
 
   deploy-axiom-dashboards:
     name: Deploy Axiom dashboards

@@ -9,6 +9,7 @@ import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
 import {
   BodyText,
   Button,
+  Footnote,
   FootnoteLink,
   Footnotes,
   IdentityCard,
@@ -18,6 +19,7 @@ import {
 } from '@cityborn/design-system';
 import { useState } from 'react';
 import { View } from 'tamagui';
+import { frontendClientConfig } from '@/config/client';
 import { EmailVerificationNotice } from '@/features/auth/EmailVerificationNotice';
 import { LegalDocumentLinks } from '@/features/legal-information/LegalDocumentLinks';
 import { EditProfile } from './EditProfile';
@@ -58,6 +60,9 @@ export function Profile({ user }: ProfileProps) {
           <FootnoteLink href={`mailto:${CITYBORN_CONTACT_EMAIL}`}>
             {CITYBORN_CONTACT_EMAIL}
           </FootnoteLink>
+          {frontendClientConfig.appVersion !== undefined && (
+            <Footnote>v{frontendClientConfig.appVersion}</Footnote>
+          )}
         </Footnotes>
         <View mt="14 md:28">
           <TextButton
