@@ -64,7 +64,7 @@ const componentColors = {
   'gauge-track': '#4FA4C8',
   'glow-cta-border': 'rgba(255, 255, 255, 0.34)',
   'glow-cta-halo': 'rgba(255, 118, 0, 0.2)',
-  'glow-cta-rim': 'rgba(255, 255, 255, 0.5)',
+  'glow-cta-rim': 'rgba(255, 255, 255, 0.25)',
   'banner-caption': 'rgba(255, 255, 255, 0.6)',
   'banner-unit': 'rgba(255, 255, 255, 0.7)',
   'banner-title-shade': 'rgba(0, 0, 0, 0.11)',

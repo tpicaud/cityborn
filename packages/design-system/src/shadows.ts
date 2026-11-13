@@ -25,8 +25,8 @@ export const shadows = {
   panel: '0 11px 16.7px 0 rgba(0, 0, 0, 0.29)',
   'portrait-card': '0 4px 5.25px 0 rgba(0, 0, 0, 0.25)',
   'portrait-card-tablet': '0 6px 8.2px 0 rgba(0, 0, 0, 0.25)',
-  'glow-cta-halo': 'inset 0 0 9.4px 0 rgba(255, 255, 255, 0.58)',
-  'glow-cta-halo-tablet': 'inset 0 0 16px 0 rgba(255, 255, 255, 0.58)',
+  'glow-cta-halo': 'inset 0 0 9.4px 0 rgba(255, 255, 255, 0.3)',
+  'glow-cta-halo-tablet': 'inset 0 0 16px 0 rgba(255, 255, 255, 0.3)',
   'banner-plate-blue':
     '2px 5px 7.3px 0 rgba(0, 0, 0, 0.54), 0 4px 0 0 #013463, inset -1px 1px 0 0 #A6F8FF',
   'banner-plate-yellow':
