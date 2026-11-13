@@ -248,11 +248,7 @@ export function Button({
   };
 
   return (
-    <ButtonSocket
-      variant={variant}
-      small={small}
-      dimmed={disabled && variant !== 'glow'}
-    >
+    <ButtonSocket variant={variant} small={small} dimmed={disabled}>
       <ButtonFace
         variant={variant}
         compact={compact}
