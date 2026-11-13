@@ -175,6 +175,8 @@
     "pnpm-workspace.yaml",
     ".npmrc",
     "lint-rules/**",
-    ".github/workflows/**"
+    ".github/workflows/**",
+    "package.json",
+    "scripts/**"
   ]
 }
