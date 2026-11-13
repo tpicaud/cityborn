@@ -57,10 +57,9 @@ export function Round({ onOpenOptions, ...gameRoundOptions }: RoundProps) {
         />
       }
       gauge={
-        gameRound.showOverlay ? (
+        gameRound.showTimer ? (
           <RoundTimer
             totalTimeInSeconds={game.config.timer}
-            isRunning={gameRound.isTimerRunning}
             onTimeUp={gameRound.handleIsTimeUp}
           />
         ) : undefined
