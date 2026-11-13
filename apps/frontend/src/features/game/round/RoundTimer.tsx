@@ -8,14 +8,10 @@ import {
 import { CountdownGauge } from '@cityborn/design-system';
 
 export function RoundTimer(roundTimeLeftOptions: RoundTimeLeftOptions) {
-  const { secondsLeft, remainingShare, urgency }: RoundTimeLeft =
+  const { secondsLeft, remainingShare }: RoundTimeLeft =
     useRoundTimeLeft(roundTimeLeftOptions);
 
   return (
-    <CountdownGauge
-      secondsLeft={secondsLeft}
-      remainingShare={remainingShare}
-      urgency={urgency}
-    />
+    <CountdownGauge secondsLeft={secondsLeft} remainingShare={remainingShare} />
   );
 }
