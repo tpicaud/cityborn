@@ -33,9 +33,9 @@ export type GameRoundOptions = {
 export type GameRound = {
   mapProps: MapProps;
   roundAction: RoundAction | undefined;
-  isTimerRunning: boolean;
   showCountdown: boolean;
   showOverlay: boolean;
+  showTimer: boolean;
   handleRoundAction: () => Promise<void>;
   handleCountdownEnd: () => void;
   handleIsTimeUp: () => void;
@@ -72,7 +72,7 @@ export function useGameRound({
     useGuess(handleGuess);
   const [state, setState] = useState<RoundDisplayState>('countdown');
   const roundStatus: RoundStatus | undefined = game.state.currentRound?.status;
-  const isTimerRunning: boolean = roundStatus === RoundStatus.GUESSING;
+  const isGuessing: boolean = roundStatus === RoundStatus.GUESSING;
 
   useEffect(() => {
     const synchronizedDisplayState = synchronizeRoundDisplayState(roundStatus);
@@ -99,12 +99,12 @@ export function useGameRound({
     () => ({
       center: DEFAULT_MAP_CENTER,
       zoom: DEFAULT_MAP_ZOOM,
-      preGuess: isTimerRunning ? preGuess : undefined,
+      preGuess: isGuessing ? preGuess : undefined,
       localPlayerID,
       game,
       handlePreGuess: placeGuess,
     }),
-    [game, isTimerRunning, localPlayerID, placeGuess, preGuess],
+    [game, isGuessing, localPlayerID, placeGuess, preGuess],
   );
 
   const roundAction: RoundAction | undefined = createRoundAction({
@@ -122,12 +122,14 @@ export function useGameRound({
     if (preGuess) await handleGuess(preGuess);
   }, [handleGuess, handleNextRound, preGuess, roundAction?.kind]);
 
+  const showOverlay: boolean = shouldShowRoundOverlay(state, roundStatus);
+
   return {
     mapProps,
     roundAction,
-    isTimerRunning,
     showCountdown: state === 'countdown',
-    showOverlay: shouldShowRoundOverlay(state, roundStatus),
+    showOverlay,
+    showTimer: showOverlay && canPlaceGuess({ game, localPlayerID }),
     handleRoundAction,
     handleCountdownEnd,
     handleIsTimeUp,
