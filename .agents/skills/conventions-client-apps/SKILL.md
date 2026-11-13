@@ -31,7 +31,6 @@ description: "Conventions des apps clientes (apps/frontend, apps/mobile, apps/ba
   - téléphone : valeurs des maquettes téléphone, sans condition de média ;
   - tablette : valeurs des maquettes tablette sous le média `md`, sur le web comme sur le mobile ;
   - desktop : sans maquette, il garde les valeurs tablette, le contenu centré dans la largeur de la maquette tablette ; fond et barre d'onglets restent pleine largeur ;
-  - écran plein carte sur desktop : les éléments ancrés aux coins suivent les bords de l'écran, le reste du contenu reste centré.
 
 ## UI partagée
 
