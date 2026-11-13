@@ -56,8 +56,7 @@ const TopBar = styled(View, {
 });
 
 const TopEnd = styled(View, {
-  flexDirection: 'row',
-  items: 'flex-start',
+  items: 'flex-end',
   gap: '3 md:4',
   pointerEvents: 'box-none',
 });
