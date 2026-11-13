@@ -51,6 +51,8 @@ export function SignInWithGoogleButton() {
   const [scriptStatus, setScriptStatus] =
     useState<GoogleIdentityScriptStatus>('loading');
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
+  const [isGoogleButtonReady, setIsGoogleButtonReady] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const signInWithCredential: GoogleCredentialHandler = async ({
@@ -85,18 +87,25 @@ export function SignInWithGoogleButton() {
       shape: 'pill',
       locale: 'fr',
     });
+    const googleButtonObserver: MutationObserver = new MutationObserver(() => {
+      if (container.querySelector('[role="button"]')) return;
+      setIsGoogleButtonReady(true);
+      googleButtonObserver.disconnect();
+    });
+    googleButtonObserver.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    return () => googleButtonObserver.disconnect();
   }, [scriptStatus]);
 
   const settleScriptStatus: () => void = (): void =>
     setScriptStatus(isGoogleIdentityLoaded() ? 'ready' : 'failed');
 
   return (
-    <View
-      items="center"
-      justify="center"
-      minH="11"
-      aria-busy={isSigningIn}
-    >
+    <View items="center" justify="center" minH="11" aria-busy={isSigningIn}>
       <Script
         src={googleIdentityScriptUrl}
         onLoad={settleScriptStatus}
@@ -108,7 +117,10 @@ export function SignInWithGoogleButton() {
           La connexion avec Google est indisponible pour le moment.
         </FormText>
       ) : (
-        <div ref={googleButtonContainer} />
+        <div
+          ref={googleButtonContainer}
+          style={{ opacity: isGoogleButtonReady ? 1 : 0 }}
+        />
       )}
       {isSigningIn && (
         <View
