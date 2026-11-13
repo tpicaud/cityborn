@@ -17,6 +17,7 @@ describe('UserMapper.toUser', () => {
       updatedAt: new Date('2026-01-02T00:00:00.000Z'),
       isVerified: true,
       appleId: null,
+      googleSubject: null,
     };
 
     const user: User = UserMapper.toUser(prismaUser);
@@ -43,6 +44,7 @@ describe('UserMapper.toUser', () => {
       updatedAt: new Date('2026-01-02T00:00:00.000Z'),
       isVerified: true,
       appleId: null,
+      googleSubject: null,
     };
 
     const input: PrismaUser = {
