@@ -10,7 +10,8 @@
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint"
+    "check": "pnpm typecheck && pnpm lint",
+    "test": "tsx --tsconfig test/tsconfig.json --test '**/*.test.mts'"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.26",
@@ -45,6 +46,7 @@
     "@types/swagger-ui-react": "^5.18.0",
     "dotenv-cli": "^11.0.0",
     "tailwindcss": "^4.2.4",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }

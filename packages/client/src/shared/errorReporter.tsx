@@ -46,7 +46,7 @@ export type ErrorDialogProps = {
 };
 
 type ErrorReporterProviderProps = {
-  children: ReactNode;
+  children?: ReactNode;
   ErrorDialogComponent: React.ComponentType<ErrorDialogProps>;
 };
 

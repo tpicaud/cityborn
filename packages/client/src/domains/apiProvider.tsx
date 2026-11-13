@@ -46,7 +46,7 @@ type ApiProviderProps = {
   contractClient: ContractClient;
   authApi: AuthApi;
   appFocus?: AppFocus;
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 const DomainApisContext = createContext<DomainApis | undefined>(undefined);

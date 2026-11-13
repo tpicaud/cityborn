@@ -33,17 +33,18 @@
     "zod": "^3.25.76"
   },
   "peerDependencies": {
-    "react": "19.2.3",
-    "@types/react": "~19.2.14",
-    "react-hook-form": "^7.86.0",
     "@hookform/resolvers": "^5.9.1",
-    "socket.io-client": "^4.8.3",
-    "@tanstack/react-query": "^5.104.1"
+    "@tanstack/react-query": "^5.104.1",
+    "@types/react": "~19.2.14",
+    "react": "19.2.3",
+    "react-hook-form": "^7.86.0",
+    "socket.io-client": "^4.8.3"
   },
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^26.1.2",
     "c8": "^11.0.0",
-    "tsx": "^4.22.4",
-    "@types/node": "^26.1.2"
+    "react": "19.2.5",
+    "tsx": "^4.22.4"
   }
 }

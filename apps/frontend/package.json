@@ -10,7 +10,8 @@
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
-    "check": "pnpm typecheck && pnpm lint"
+    "check": "pnpm typecheck && pnpm lint",
+    "test": "tsx --tsconfig test/tsconfig.json --test '**/*.test.mts'"
   },
   "dependencies": {
     "@cityborn/api": "workspace:*",
@@ -58,6 +59,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv-cli": "^11.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }
