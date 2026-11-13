@@ -23,6 +23,7 @@ import {
 import {
   type CreateUserData,
   type GoogleAccountAssociation,
+  type PasswordUpdate,
   type UnverifiedAccountReclaim,
   USER_REPOSITORY,
   type UserCredentials,
@@ -195,12 +196,14 @@ export class UserService {
   }
 
   @Transactional()
-  async updatePassword(
-    userId: UserId,
-    passwordHash: string,
-  ): Promise<AuthVersion> {
-    await this.userRepository.updatePassword(userId, passwordHash);
-    return this.userRepository.incrementAuthVersion(userId);
+  async updatePassword(update: PasswordUpdate): Promise<AuthVersion> {
+    const updated: boolean = await this.userRepository.updatePassword(update);
+    if (!updated)
+      throw new UnauthorizedException({
+        code: ErrorCode.USER_CURRENT_PASSWORD_INCORRECT,
+        message: 'Current credentials are no longer valid',
+      });
+    return this.userRepository.incrementAuthVersion(update.userId);
   }
 
   async validateIdentifiers(username: Username, email: string): Promise<void> {
