@@ -17,17 +17,19 @@ export type ResultMapViewport = {
   padding: ViewportRectangle;
 };
 
+type CreateResultMapViewportParameters = {
+  answer: Coord;
+  guess?: Coord;
+  viewport: ViewportRectangle;
+  overlays: ResultMapOverlay[];
+};
+
 export function createResultMapViewport({
   answer,
   guess = answer,
   viewport,
   overlays,
-}: {
-  answer: Coord;
-  guess?: Coord;
-  viewport: ViewportRectangle;
-  overlays: ResultMapOverlay[];
-}): ResultMapViewport | undefined {
+}: CreateResultMapViewportParameters): ResultMapViewport | undefined {
   const margin: number = 48;
   const padding: ViewportRectangle = overlays.reduce<ViewportRectangle>(
     (current, { edge, rectangle }) => {

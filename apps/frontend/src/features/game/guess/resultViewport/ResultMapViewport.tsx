@@ -10,13 +10,15 @@ import {
   type ViewportRectangle,
 } from './resultMapViewport';
 
+type ResultMapViewportProps = {
+  answer: Coord;
+  guess?: Coord;
+};
+
 export default function ResultMapViewport({
   answer,
   guess,
-}: {
-  answer: Coord;
-  guess?: Coord;
-}) {
+}: ResultMapViewportProps) {
   const map: google.maps.Map | null = useMap();
   const answerLat: number = answer.lat;
   const answerLng: number = answer.lng;
