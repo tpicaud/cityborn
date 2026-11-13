@@ -1,10 +1,5 @@
-import ScreenLayout from '@/components/ScreenLayout';
-import Home from '@/features/auth/Home';
+import { GameModeSelection } from '@/features/session/GameModeSelection';
 
 export default function HomeScreen() {
-  return (
-    <ScreenLayout>
-      <Home />
-    </ScreenLayout>
-  );
+  return <GameModeSelection />;
 }

@@ -1,19 +1,12 @@
 'use client';
 
-import {
-  type GameOptionsMenu,
-  useGameOptionsMenu,
-} from '@cityborn/client/game';
-import { Settings } from '@mui/icons-material';
-import { Box } from '@mui/material';
+import type { GameOptionsMenu } from '@cityborn/client/game';
+import { BodyText, Button, Popup } from '@cityborn/design-system';
 import { useEffect } from 'react';
-import Button from '@/components/ui/buttons/Button';
-import IconButton from '@/components/ui/buttons/IconButton';
-import LoadingButton from '@/components/ui/buttons/LoadingButton';
-import { Dialog } from '@/components/ui/dialogs/Dialog';
+import { View } from 'tamagui';
 
 type GameOptionsProps = {
-  handleLeaveGame: () => Promise<void>;
+  optionsMenu: GameOptionsMenu;
 };
 
 function useBrowserBackInterception(onBack: () => void): void {
@@ -28,74 +21,36 @@ function useBrowserBackInterception(onBack: () => void): void {
   }, [onBack]);
 }
 
-export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
-  const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
-    leaveGame: handleLeaveGame,
-  });
+export function GameOptions({ optionsMenu }: GameOptionsProps) {
   useBrowserBackInterception(optionsMenu.open);
 
   return (
     <>
-      <div className="absolute top-2 left-6 z-[1300]">
-        <IconButton
-          aria-label="Options"
-          onClick={optionsMenu.open}
-          sx={{
-            bgcolor: 'background.paper',
-            boxShadow: 2,
-            '&:hover': { bgcolor: 'background.paper' },
-          }}
-        >
-          <Settings />
-        </IconButton>
-      </div>
-
-      <Dialog
-        open={optionsMenu.step !== 'closed'}
-        onClose={
-          optionsMenu.step === 'options'
-            ? optionsMenu.resume
-            : optionsMenu.cancelLeave
-        }
+      <Popup
+        open={optionsMenu.step === 'options'}
+        onClose={optionsMenu.resume}
+        title="Options"
       >
-        <Box className="flex flex-col items-center gap-5 px-12 py-8 bg-slate-100 shadow-xl rounded-2xl">
-          {optionsMenu.step === 'leaveConfirmation' ? (
-            <>
-              <p className="text-center">
-                Quitter la partie ? Ta progression sera perdue.
-              </p>
-              <Box className="flex gap-3">
-                <Button variant="outlined" onClick={optionsMenu.cancelLeave}>
-                  Annuler
-                </Button>
-                <LoadingButton
-                  variant="contained"
-                  color="error"
-                  onClick={optionsMenu.confirmLeave}
-                >
-                  Quitter
-                </LoadingButton>
-              </Box>
-            </>
-          ) : (
-            <>
-              <p className="text-xl font-bold">Options</p>
-              <Box className="flex flex-col gap-3 w-full">
-                <Button variant="contained" onClick={optionsMenu.resume}>
-                  Reprendre
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={optionsMenu.requestLeave}
-                >
-                  Quitter
-                </Button>
-              </Box>
-            </>
-          )}
-        </Box>
-      </Dialog>
+        <View gap="4">
+          <Button compact label="Reprendre" onPress={optionsMenu.resume} />
+          <Button compact label="Quitter" onPress={optionsMenu.requestLeave} />
+        </View>
+      </Popup>
+      <Popup
+        open={optionsMenu.step === 'leaveConfirmation'}
+        onClose={optionsMenu.cancelLeave}
+        title="Quitter la partie ?"
+      >
+        <View gap="4">
+          <BodyText>Ta progression sera perdue.</BodyText>
+          <Button compact label="Quitter" onPress={optionsMenu.confirmLeave} />
+          <Button
+            variant="outline"
+            label="Annuler"
+            onPress={optionsMenu.cancelLeave}
+          />
+        </View>
+      </Popup>
     </>
   );
 }

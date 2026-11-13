@@ -1,62 +1,82 @@
 'use client';
 
 import { type SignInFlow, useSignInFlow } from '@cityborn/client/auth';
-import { Box, FormControl, TextField, Typography } from '@mui/material';
-import Button from '@/components/ui/buttons/Button';
-import { SignInWithGoogleButton } from './GoogleSignIn';
+import type { Navigation } from '@cityborn/client/platform';
+import {
+  ActionPrompt,
+  Button,
+  FormFields,
+  TextField,
+} from '@cityborn/design-system';
+import { Controller } from 'react-hook-form';
+import { useNavigation } from '@/lib/navigation';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
-export const SignInForm = () => {
+export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
+  const navigation: Navigation = useNavigation();
   const {
     form: {
-      register,
+      control,
       formState: { errors, isSubmitting },
     },
     submit,
-  }: SignInFlow = useSignInFlow();
-
+  }: SignInFlow = useSignInFlow({ onSignedIn: () => navigation.returnTo('/') });
   return (
-    <Box
-      component="form"
-      onSubmit={submit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 300 }}
-    >
-      <Typography variant="h5" align="center">
-        Connexion
-      </Typography>
-
-      <FormControl>
-        <TextField
-          label="Username"
-          {...register('identifier')}
-          error={!!errors.identifier}
-          helperText={errors.identifier?.message}
-        />
-      </FormControl>
-
-      <FormControl>
-        <TextField
-          type="password"
-          label="Password"
-          {...register('password')}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-        />
-      </FormControl>
-
-      <Button variant="contained" type="submit" loading={isSubmitting}>
-        Se connecter
-      </Button>
-
+    <>
+      <form onSubmit={submit}>
+        <FormFields>
+          <Controller
+            control={control}
+            name="identifier"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="E-mail ou nom d’utilisateur"
+                autoComplete="username"
+                error={errors.identifier?.message}
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                inputRef={ref}
+                placeholder="Mot de passe"
+                autoComplete="current-password"
+                error={errors.password?.message}
+                disabled={isSubmitting}
+                secureTextEntry
+                returnKeyType="done"
+              />
+            )}
+          />
+          <Button
+            compact
+            label="Se connecter"
+            onPress={submit}
+            loading={isSubmitting}
+          />
+        </FormFields>
+        <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+      </form>
       <RequestPasswordResetDialog />
-
-      <div className="flex flex-row gap-3 items-center w-full">
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-        <Typography>OU</Typography>
-        <div className="flex-1 h-px bg-black rounded-full"></div>
-      </div>
-
-      <SignInWithGoogleButton />
-    </Box>
+      <ActionPrompt prompt="Pas encore de compte ?">
+        <Button
+          compact
+          label="S’inscrire"
+          variant="secondary"
+          onPress={onSignUp}
+        />
+      </ActionPrompt>
+    </>
   );
-};
+}

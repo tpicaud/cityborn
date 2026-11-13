@@ -1,12 +1,22 @@
 'use client';
 
-import type { Coord, Game, PlayerId } from '@cityborn/api';
+import {
+  type Coord,
+  type Game,
+  type PlayerId,
+  RoundStatus,
+} from '@cityborn/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   type RoundDisplayState,
   shouldShowRoundOverlay,
   synchronizeRoundDisplayState,
 } from './gameRound';
+import {
+  canPlaceGuess,
+  createRoundAction,
+  type RoundAction,
+} from './roundAction';
 import type { MapProps } from './viewContracts';
 
 const DEFAULT_MAP_CENTER = { lat: 48.8566, lng: 2.3522 };
@@ -15,19 +25,25 @@ const DEFAULT_MAP_ZOOM = 2;
 export type GameRoundOptions = {
   game: Game;
   localPlayerID: PlayerId;
-  handleGuess: (coordinates: Coord | undefined) => void;
+  isHost: boolean;
+  handleGuess: (coordinates: Coord | undefined) => Promise<void>;
+  handleNextRound: () => Promise<void>;
 };
 
 export type GameRound = {
   mapProps: MapProps;
-  preGuess: Coord | undefined;
+  roundAction: RoundAction | undefined;
   showCountdown: boolean;
   showOverlay: boolean;
+  showTimer: boolean;
+  handleRoundAction: () => Promise<void>;
   handleCountdownEnd: () => void;
   handleIsTimeUp: () => void;
 };
 
-function useGuess(handleGuess: (coordinates: Coord | undefined) => void) {
+function useGuess(
+  handleGuess: (coordinates: Coord | undefined) => Promise<void>,
+) {
   const [preGuess, setPreGuess] = useState<Coord>();
 
   const handlePreGuess = useCallback((coordinates: Coord) => {
@@ -48,12 +64,15 @@ function useGuess(handleGuess: (coordinates: Coord | undefined) => void) {
 export function useGameRound({
   game,
   localPlayerID,
+  isHost,
   handleGuess,
+  handleNextRound,
 }: GameRoundOptions): GameRound {
   const { preGuess, resetPreGuess, handlePreGuess, handleIsTimeUp } =
     useGuess(handleGuess);
   const [state, setState] = useState<RoundDisplayState>('countdown');
-  const roundStatus = game.state.currentRound?.status;
+  const roundStatus: RoundStatus | undefined = game.state.currentRound?.status;
+  const isGuessing: boolean = roundStatus === RoundStatus.GUESSING;
 
   useEffect(() => {
     const synchronizedDisplayState = synchronizeRoundDisplayState(roundStatus);
@@ -69,23 +88,49 @@ export function useGameRound({
     setState('guessing');
   }, []);
 
+  const placeGuess: (coordinates: Coord) => void = useCallback(
+    (coordinates: Coord) => {
+      if (canPlaceGuess({ game, localPlayerID })) handlePreGuess(coordinates);
+    },
+    [game, handlePreGuess, localPlayerID],
+  );
+
   const mapProps = useMemo<MapProps>(
     () => ({
       center: DEFAULT_MAP_CENTER,
       zoom: DEFAULT_MAP_ZOOM,
-      preGuess,
+      preGuess: isGuessing ? preGuess : undefined,
       localPlayerID,
       game,
-      handlePreGuess,
+      handlePreGuess: placeGuess,
     }),
-    [game, handlePreGuess, localPlayerID, preGuess],
+    [game, isGuessing, localPlayerID, placeGuess, preGuess],
   );
+
+  const roundAction: RoundAction | undefined = createRoundAction({
+    game,
+    localPlayerID,
+    isHost,
+    preGuess,
+  });
+
+  const handleRoundAction: () => Promise<void> = useCallback(async () => {
+    if (roundAction?.kind === 'nextRound') {
+      await handleNextRound();
+      return;
+    }
+    if (preGuess) await handleGuess(preGuess);
+  }, [handleGuess, handleNextRound, preGuess, roundAction?.kind]);
+
+  const showOverlay: boolean = shouldShowRoundOverlay(state, roundStatus);
 
   return {
     mapProps,
-    preGuess,
+    roundAction,
     showCountdown: state === 'countdown',
-    showOverlay: shouldShowRoundOverlay(state, roundStatus),
+    showOverlay,
+    showTimer: showOverlay && canPlaceGuess({ game, localPlayerID }),
+    handleRoundAction,
     handleCountdownEnd,
     handleIsTimeUp,
   };
