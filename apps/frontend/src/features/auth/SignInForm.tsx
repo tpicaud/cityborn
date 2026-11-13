@@ -9,6 +9,7 @@ import {
   TextField,
 } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
+import { KeyboardSubmit } from '@/components/KeyboardSubmit';
 import { useNavigation } from '@/lib/navigation';
 import { RequestPasswordResetDialog } from './RequestPasswordResetDialog';
 
@@ -66,7 +67,7 @@ export function SignInForm({ onSignUp }: { onSignUp: () => void }) {
             loading={isSubmitting}
           />
         </FormFields>
-        <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+        <KeyboardSubmit />
       </form>
       <RequestPasswordResetDialog />
       <ActionPrompt prompt="Pas encore de compte ?">

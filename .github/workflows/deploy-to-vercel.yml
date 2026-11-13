@@ -14,6 +14,10 @@ on:
         description: 'Vercel Project ID'
         required: true
         type: string
+      app_version:
+        description: 'App version shown by the frontend'
+        required: false
+        type: string
   workflow_call:
     inputs:
       environment:
@@ -23,6 +27,10 @@ on:
       project_id:
         description: 'Vercel Project ID'
         required: true
+        type: string
+      app_version:
+        description: 'App version shown by the frontend'
+        required: false
         type: string
     secrets:
       VERCEL_TOKEN:
@@ -77,6 +85,8 @@ jobs:
         run: vercel pull --yes --environment=${{ env.VERCEL_ENV }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Project
+        env:
+          NEXT_PUBLIC_APP_VERSION: ${{ inputs.app_version }}
         run: vercel build ${{ env.VERCEL_PROD_FLAG }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel

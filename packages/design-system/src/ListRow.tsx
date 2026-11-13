@@ -1,4 +1,5 @@
-import { styled, Text, View } from 'tamagui';
+import { styled, Text } from 'tamagui';
+import { Chevron } from './Chevron';
 import { PressableFrame } from './PressableFrame';
 
 type ListRowProps = {
@@ -12,30 +13,21 @@ const ListRowFrame = styled(PressableFrame, {
   items: 'center',
   justify: 'space-between',
   gap: '4',
-  px: '4',
-  py: '3',
-  rounded: 'lg',
+  px: '4 md:5',
+  py: '3 md:6',
+  rounded: 'lg md:6',
   backgroundColor: 'row-fill press:row-fill-press',
 });
 
 const ListRowLabel = styled(Text, {
   shrink: 1,
   fontFamily: 'body',
-  fontSize: '4',
-  lineHeight: '4',
+  fontSize: '4 md:8',
+  lineHeight: '4 md:8',
   fontWeight: '500',
   color: 'white',
+  text: 'left',
   select: 'none',
-});
-
-const Chevron = styled(View, {
-  w: '1.5',
-  h: '1.5',
-  mr: '0.5',
-  borderTopWidth: 1.5,
-  borderRightWidth: 1.5,
-  borderColor: 'white',
-  rotate: '45deg',
 });
 
 export function ListRow({ label, onPress }: ListRowProps) {

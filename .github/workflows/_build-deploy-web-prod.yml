@@ -12,6 +12,9 @@ on:
       backofficeHasChanged:
         type: string
         required: true
+      appVersion:
+        type: string
+        required: true
 
 jobs:
   build-frontend:
@@ -49,6 +52,7 @@ jobs:
     with:
       environment: production
       project_id: ${{ vars.VERCEL_FRONTEND_PROJECT_ID }}
+      app_version: ${{ inputs.appVersion }}
 
   deploy-back-office:
     name: Deploy Back Office

@@ -1,378 +1,112 @@
 import type { User } from '@cityborn/api';
 import {
-  type ProfileEditor,
-  type ProfileGames,
-  useProfileEditor,
-  useProfileGames,
+  type AccountDeletion,
+  useAccountDeletion,
 } from '@cityborn/client/profile';
-import { formatDate } from '@cityborn/core';
-import { colors } from '@cityborn/design-system';
-import { useIsFocused, useRouter } from 'expo-router';
-import { Controller } from 'react-hook-form';
-import { Pressable, ScrollView } from 'react-native';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Dialog from '@/components/ui/Dialog';
-import { Icon } from '@/components/ui/Icon';
-import LoaderIcon from '@/components/ui/LoaderIcon';
-import { Text, View } from '@/components/ui/native/NativeComponents';
-import TextInput from '@/components/ui/TextInput';
-import { SignOutButton } from '@/features/auth/SignOutButton';
+import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
+import {
+  BodyText,
+  Button,
+  Footnote,
+  FootnoteLink,
+  Footnotes,
+  IdentityCard,
+  Popup,
+  Screen,
+  TextButton,
+} from '@cityborn/design-system';
+import Constants from 'expo-constants';
+import { type ImperativeRouter, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { BackHandler, type NativeEventSubscription } from 'react-native';
+import { View } from 'tamagui';
+import { EmailVerificationNotice } from '@/features/auth/EmailVerificationNotice';
+import { LegalDocumentLinks } from '@/features/legal-information/LegalDocumentLinks';
+import {
+  type ExternalLinkOpener,
+  useExternalLinkOpener,
+} from '@/lib/externalLink';
+import { EditProfile } from './EditProfile';
+import { GameHistory } from './GameHistory';
+
+const appVersion: string | undefined = Constants.expoConfig?.version;
 
 type ProfileProps = {
   user: User;
 };
 
-export default function Profile({ user }: ProfileProps) {
-  const router = useRouter();
-  const isScreenFocused: boolean = useIsFocused();
-  const { games, isLoading }: ProfileGames = useProfileGames({
-    isScreenFocused,
-  });
+export function Profile({ user }: ProfileProps) {
+  const router: ImperativeRouter = useRouter();
+  const openExternalLink: ExternalLinkOpener = useExternalLinkOpener();
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const {
-    usernameForm,
-    isEditingUsername,
-    startUsernameEdit,
-    cancelUsernameEdit,
-    submitUsername,
-    emailForm,
-    isEditingEmail,
-    isEmailUpdated,
-    startEmailEdit,
-    cancelEmailEdit,
-    submitEmail,
-    passwordForm,
-    isPasswordDialogOpen,
-    isPasswordUpdated,
-    openPasswordDialog,
-    closePasswordDialog,
-    submitPassword,
-    isDeleteAccountDialogOpen,
-    openDeleteAccountDialog,
-    closeDeleteAccountDialog,
+    isConfirmationOpen,
+    openConfirmation,
+    closeConfirmation,
     deleteAccount,
-  }: ProfileEditor = useProfileEditor({
+  }: AccountDeletion = useAccountDeletion({
     onAccountDeleted: () => router.navigate('/'),
   });
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!isEditing) return undefined;
+      const subscription: NativeEventSubscription =
+        BackHandler.addEventListener('hardwareBackPress', () => {
+          setIsEditing(false);
+          return true;
+        });
+      return () => subscription.remove();
+    }, [isEditing]),
+  );
+
+  if (isEditing) {
+    return <EditProfile user={user} onBack={() => setIsEditing(false)} />;
+  }
+
   return (
-    <View className="flex-1">
-      <View className="flex-1 gap-8 mt-10">
-        <View className="flex-1 gap-4">
-          {isEditingUsername ? (
-            <View className="flex-row items-center justify-center gap-2 py-10">
-              <View className="w-52 gap-1">
-                <Controller
-                  control={usernameForm.control}
-                  name="username"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Pseudo"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      autoCapitalize="none"
-                      error={!!usernameForm.formState.errors.username}
-                      className="w-52"
-                    />
-                  )}
-                />
-                {usernameForm.formState.errors.username && (
-                  <Text className="px-4 text-xs leading-4 text-destructive-500">
-                    {usernameForm.formState.errors.username.message}
-                  </Text>
-                )}
-              </View>
-              <Pressable
-                accessibilityLabel="Valider le pseudo"
-                onPress={submitUsername}
-              >
-                <Icon name="check_outline" size={28} />
-              </Pressable>
-              <Pressable
-                accessibilityLabel="Annuler la modification du pseudo"
-                onPress={cancelUsernameEdit}
-              >
-                <Icon name="close_outline" size={28} />
-              </Pressable>
-            </View>
-          ) : (
-            <View className="flex-row items-center justify-center gap-2 py-15 pb-8">
-              <Text className="text-5xl font-bold text-center">
-                {user.username}
-              </Text>
-              <Pressable
-                accessibilityLabel="Modifier le pseudo"
-                onPress={startUsernameEdit}
-              >
-                <Icon name="edit_outline" size={28} />
-              </Pressable>
-            </View>
-          )}
-          <Card>
-            <View className="grid grid-cols-2 gap-6 bg-transparent">
-              <View className="flex flex-col justify-center items-center bg-transparent">
-                <Text className="font-bold text-foreground-on-primary">
-                  Email
-                </Text>
-                <Text className="text-foreground-on-primary">{user.email}</Text>
-              </View>
-              <View className="flex flex-col justify-center items-center bg-transparent">
-                <Text className="font-bold text-foreground-on-primary">
-                  Status
-                </Text>
-                <Text
-                  className={
-                    user.isVerified
-                      ? 'text-foreground-on-primary'
-                      : 'text-destructive-500'
-                  }
-                >
-                  {user.isVerified ? 'Email vérifié' : 'Email non vérifié'}
-                </Text>
-              </View>
-            </View>
-          </Card>
-          {isEditingEmail ? (
-            <View className="flex-row items-center justify-center gap-2">
-              <View className="w-60 gap-1">
-                <Controller
-                  control={emailForm.control}
-                  name="email"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Email"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      error={!!emailForm.formState.errors.email}
-                    />
-                  )}
-                />
-                {emailForm.formState.errors.email && (
-                  <Text className="px-4 text-xs leading-4 text-destructive-500">
-                    {emailForm.formState.errors.email.message}
-                  </Text>
-                )}
-              </View>
-              <Pressable
-                accessibilityLabel="Valider l'adresse e-mail"
-                disabled={emailForm.formState.isSubmitting}
-                onPress={submitEmail}
-              >
-                <Icon name="check_outline" size={28} />
-              </Pressable>
-              <Pressable
-                accessibilityLabel="Annuler la correction de l'adresse e-mail"
-                onPress={cancelEmailEdit}
-              >
-                <Icon name="close_outline" size={28} />
-              </Pressable>
-            </View>
-          ) : (
-            !user.isVerified && (
-              <Button
-                variant="default"
-                label="Corriger mon adresse e-mail"
-                className="self-center"
-                onPress={startEmailEdit}
-              />
-            )
-          )}
-          {isEmailUpdated && (
-            <Text className="text-center text-primary-500">
-              Un lien de vérification a été envoyé à ta nouvelle adresse.
-            </Text>
-          )}
-          {user.type === 'email' && (
-            <Button
-              variant="default"
-              label="Modifier mon mot de passe"
-              className="self-center"
-              onPress={openPasswordDialog}
-            />
-          )}
-          <SignOutButton onSignedOut={() => router.navigate('/')} />
-          <Button
-            variant="default"
+    <Screen title="Profil" scrollable>
+      <View gap="3 md:5">
+        {user.isVerified === false && <EmailVerificationNotice />}
+        <IdentityCard
+          title={user.username}
+          subtitle={user.email}
+          actionLabel="Modifier le profil"
+          onAction={() => setIsEditing(true)}
+        />
+        <GameHistory />
+        <View gap="1 md:2" mt="1 md:3">
+          <LegalDocumentLinks />
+        </View>
+        <Footnotes mt="1 md:4">
+          <FootnoteLink
+            onPress={() =>
+              void openExternalLink(`mailto:${CITYBORN_CONTACT_EMAIL}`)
+            }
+          >
+            {CITYBORN_CONTACT_EMAIL}
+          </FootnoteLink>
+          {appVersion !== undefined && <Footnote>v{appVersion}</Footnote>}
+        </Footnotes>
+        <View mt="14 md:28">
+          <TextButton
+            tone="danger"
             label="Supprimer mon compte"
-            className="self-center"
-            onPress={openDeleteAccountDialog}
+            onPress={openConfirmation}
           />
         </View>
-        <View className="flex-1">
-          <Text className="text-center text-xl font-bold mb-2">
-            Historique des parties
-          </Text>
-          <View className="flex-1 border-t rounded-xl overflow-y-auto p-0">
-            {isLoading ? (
-              <View className="self-center">
-                <LoaderIcon />
-              </View>
-            ) : games.length === 0 ? (
-              <Text className="text-center mt-2 text-neutral-600 italic">
-                Aucune partie trouvée.
-              </Text>
-            ) : (
-              <ScrollView
-                className="flex-1 p-2"
-                contentContainerStyle={{ paddingBottom: 8 }}
-              >
-                {games.map(({ gameRecord, localPlayerPoints }) => (
-                  <View
-                    key={gameRecord.id}
-                    className="flex flex-row justify-between items-center p-4 border border-b rounded-xl mb-2"
-                  >
-                    <View className="flex flex-col justify-between items-start">
-                      <Text>{gameRecord.mode}</Text>
-                      <Text>{formatDate(gameRecord.createdAt)}</Text>
-                    </View>
-                    <View className="flex flex-col justify-between items-center">
-                      <Text className="font-bold">{localPlayerPoints}</Text>
-                      <Text>pts</Text>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-            )}
-          </View>
-        </View>
       </View>
-
-      <Dialog
-        visible={isPasswordDialogOpen}
-        onClose={closePasswordDialog}
-        className="h-auto max-h-[80%]"
+      <Popup
+        open={isConfirmationOpen}
+        onClose={closeConfirmation}
+        title="Supprimer ton compte ?"
       >
-        <ScrollView
-          contentContainerStyle={{
-            alignItems: 'center',
-          }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          style={{ alignSelf: 'stretch', flexGrow: 0, flexShrink: 1 }}
-        >
-          <View className="w-full items-center gap-5">
-            <Text className="text-xl font-bold">Modifier mon mot de passe</Text>
-            <View className="gap-5">
-              <View className="w-70 gap-1">
-                <Controller
-                  control={passwordForm.control}
-                  name="currentPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Mot de passe actuel"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      secureTextEntry
-                      error={!!passwordForm.formState.errors.currentPassword}
-                    />
-                  )}
-                />
-                {passwordForm.formState.errors.currentPassword && (
-                  <Text className="px-4 text-xs leading-4 text-destructive-500">
-                    {passwordForm.formState.errors.currentPassword.message}
-                  </Text>
-                )}
-              </View>
-              <View className="w-70 gap-1">
-                <Controller
-                  control={passwordForm.control}
-                  name="newPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Nouveau mot de passe"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      secureTextEntry
-                      error={!!passwordForm.formState.errors.newPassword}
-                    />
-                  )}
-                />
-                {passwordForm.formState.errors.newPassword && (
-                  <Text className="px-4 text-xs leading-4 text-destructive-500">
-                    {passwordForm.formState.errors.newPassword.message}
-                  </Text>
-                )}
-              </View>
-              <View className="w-70 gap-1">
-                <Controller
-                  control={passwordForm.control}
-                  name="confirmPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Confirmer le nouveau mot de passe"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      secureTextEntry
-                      error={!!passwordForm.formState.errors.confirmPassword}
-                    />
-                  )}
-                />
-                {passwordForm.formState.errors.confirmPassword && (
-                  <Text className="px-4 text-xs leading-4 text-destructive-500">
-                    {passwordForm.formState.errors.confirmPassword.message}
-                  </Text>
-                )}
-              </View>
-            </View>
-            {isPasswordUpdated && (
-              <Text className="text-primary-500">Mot de passe modifié.</Text>
-            )}
-            <View className="flex-row gap-2">
-              <Button
-                variant="outlined"
-                label="Annuler"
-                className="w-32"
-                onPress={closePasswordDialog}
-              />
-              <Button
-                variant="filled"
-                label="Valider"
-                className="w-32"
-                disabled={passwordForm.formState.isSubmitting}
-                onPress={submitPassword}
-              />
-            </View>
-          </View>
-        </ScrollView>
-      </Dialog>
-
-      <Dialog
-        visible={isDeleteAccountDialogOpen}
-        onClose={closeDeleteAccountDialog}
-        className="h-auto"
-      >
-        <View className="flex justify-center items-center gap-4">
-          <View className="flex justify-center items-center gap-4">
-            <Icon name="alert_fill" size={40} color={colors.destructive[500]} />
-            <Text className="text-lg text-center">
-              Veux-tu vraiment supprimer ton compte ?
-            </Text>
-          </View>
-          <View className="flex-row gap-2">
-            <Button
-              variant="outlined"
-              color="destructive"
-              label="Annuler"
-              className="w-32"
-              onPress={closeDeleteAccountDialog}
-            />
-            <Button
-              variant="filled"
-              color="destructive"
-              label="Supprimer"
-              className="w-32"
-              onPress={deleteAccount}
-            />
-          </View>
+        <View gap="4">
+          <BodyText>Ton historique disparaîtra définitivement.</BodyText>
+          <Button compact label="Supprimer" onPress={deleteAccount} />
+          <TextButton label="Annuler" onPress={closeConfirmation} />
         </View>
-      </Dialog>
-    </View>
+      </Popup>
+    </Screen>
   );
 }

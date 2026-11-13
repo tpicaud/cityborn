@@ -17,6 +17,8 @@ const ctaFrameColors = {
 
 const cardFill: string = '#004C61';
 
+const orangeGradientStart: string = '#FF9840';
+
 function cardFillAt(opacity: number): string {
   const alpha: string = Math.round(opacity * 255)
     .toString(16)
@@ -50,6 +52,9 @@ const componentColors = {
   'progress-track': 'rgba(16, 42, 43, 0.61)',
   'row-fill': 'rgba(0, 0, 0, 0.06)',
   'row-fill-press': 'rgba(255, 255, 255, 0.06)',
+  'score-row-fill': 'rgba(255, 255, 255, 0.06)',
+  'score-accent': orangeGradientStart,
+  footnote: 'rgba(255, 255, 255, 0.46)',
   scrim: 'rgba(0, 0, 0, 0.6)',
   'tab-highlight-fill': 'rgba(26, 255, 217, 0.09)',
   'tab-highlight-border': 'rgba(26, 255, 217, 0.48)',
@@ -74,8 +79,6 @@ const componentColors = {
 } as const;
 
 type GradientStops = readonly [string, ...string[], string];
-
-const orangeGradientStart: string = '#FF9840';
 
 export const gradients = {
   'dark-blue': ['#006DA4', '#003D7A'],
