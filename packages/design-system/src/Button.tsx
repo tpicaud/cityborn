@@ -3,7 +3,7 @@ import { Spinner, styled, Text, View } from 'tamagui';
 import { PressableFrame } from './PressableFrame';
 import { verticalGradient } from './palette';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline';
+type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline' | 'glow';
 
 type ButtonProps = {
   label: string;
@@ -13,6 +13,7 @@ type ButtonProps = {
   loading?: boolean;
   compact?: boolean;
   small?: boolean;
+  tabletDetail?: string;
 };
 
 const ButtonSocket = styled(View, {
@@ -42,6 +43,13 @@ const ButtonSocket = styled(View, {
         rounded: '7 md:9',
         bg: 'transparent',
         borderColor: 'outline-cta-ring',
+      },
+      glow: {
+        pb: '0.5 md:1',
+        rounded: '3xl md:10',
+        bg: 'cta-backdrop',
+        borderColor: 'glow-cta-border',
+        borderWidth: '2 md:4',
       },
     },
     small: {
@@ -96,6 +104,12 @@ const ButtonFace = styled(PressableFrame, {
         bg: 'outline-cta-fill',
         opacity: 'press:0.8',
       },
+      glow: {
+        minH: '20 md:32',
+        rounded: '8 md:10',
+        backgroundImage: verticalGradient('green-blue'),
+        y: 'press:1 md:press:1.5',
+      },
     },
     compact: { true: { minH: '16 md:24', rounded: '8 md:10' } },
     small: {
@@ -112,6 +126,7 @@ const ButtonFace = styled(PressableFrame, {
 });
 
 const ButtonLabel = styled(Text, {
+  position: 'relative',
   fontFamily: 'body',
   fontWeight: '700',
   color: 'white',
@@ -136,6 +151,12 @@ const ButtonLabel = styled(Text, {
         lineHeight: '6 md:9',
         fontWeight: '600',
         color: 'outline-cta-label',
+      },
+      glow: {
+        fontSize: '8 md:11',
+        lineHeight: '8 md:11',
+        textTransform: 'uppercase',
+        textShadow: 'cta-label',
       },
     },
     compact: { true: { fontSize: '6 md:8', lineHeight: '6 md:8' } },
@@ -163,8 +184,40 @@ const ButtonSpinner = styled(Spinner, {
       outline: {
         color: 'outline-cta-label',
       },
+      glow: {},
     },
   } as const,
+});
+
+const GlowHalo = styled(View, {
+  position: 'absolute',
+  t: '2.5 md:4',
+  b: '2.5 md:4',
+  l: '2.5 md:4',
+  r: '2.5 md:4',
+  rounded: '6 md:9',
+  borderWidth: '2 md:4',
+  borderColor: 'cta-orange',
+  bg: 'glow-cta-halo',
+  boxShadow: 'glow-cta-halo md:glow-cta-halo-tablet',
+  mixBlendMode: 'plus-lighter',
+  pointerEvents: 'none',
+});
+
+const GlowRim = styled(View, {
+  position: 'absolute',
+  t: '1 md:2',
+  b: '1 md:2',
+  l: '1 md:2',
+  r: '1 md:2',
+  rounded: '7 md:10',
+  borderWidth: '2 md:4',
+  borderColor: 'glow-cta-rim',
+  pointerEvents: 'none',
+});
+
+const TabletDetail = styled(ButtonLabel, {
+  display: 'none md:flex',
 });
 
 export function Button({
@@ -175,6 +228,7 @@ export function Button({
   loading = false,
   compact = false,
   small = false,
+  tabletDetail,
 }: ButtonProps) {
   const [pending, setPending] = useState<boolean>(false);
   const busy: boolean = loading || pending;
@@ -205,6 +259,12 @@ export function Button({
         aria-label={label}
         onPress={inactive ? undefined : press}
       >
+        {variant === 'glow' && (
+          <>
+            <GlowHalo />
+            <GlowRim />
+          </>
+        )}
         <ButtonLabel
           variant={variant}
           compact={compact}
@@ -213,6 +273,11 @@ export function Button({
         >
           {label}
         </ButtonLabel>
+        {tabletDetail !== undefined && (
+          <TabletDetail variant={variant} hidden={busy} aria-hidden>
+            {tabletDetail}
+          </TabletDetail>
+        )}
         {busy && <ButtonSpinner variant={variant} />}
       </ButtonFace>
     </ButtonSocket>

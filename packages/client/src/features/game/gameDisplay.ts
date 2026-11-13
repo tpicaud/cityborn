@@ -1,13 +1,9 @@
-import type { Game, GuessObjectId, PlayerId } from '@cityborn/api';
-import { GameStatus, RoundStatus } from '@cityborn/api';
-import { currentRoundIndex, roundGuessObjectIds } from '@cityborn/core';
+import type { Game, PlayerId } from '@cityborn/api';
+import { GameStatus } from '@cityborn/api';
 
 type GameDisplayBase = {
-  showNextRound: boolean;
   showResults: boolean;
   showOptions: boolean;
-  roundNumber: number | undefined;
-  roundCount: number;
 };
 
 export type GameDisplay = GameDisplayBase &
@@ -25,15 +21,9 @@ export function createGameDisplay(
     (!game.state.currentRound && game.status === GameStatus.IN_GAME) ||
     game.status === GameStatus.STARTING;
 
-  const currentRound = game.state.currentRound;
-  const guessObjectIds: GuessObjectId[] = roundGuessObjectIds(game);
-  const roundIndex: number = currentRoundIndex(game);
   const gameDisplayBase: GameDisplayBase = {
-    showNextRound: currentRound?.status === RoundStatus.SHOWING_RESULTS,
     showResults: game.status === GameStatus.IN_RESULTS,
     showOptions: false,
-    roundNumber: roundIndex === -1 ? undefined : roundIndex + 1,
-    roundCount: guessObjectIds.length,
   };
 
   if (isLoading) {

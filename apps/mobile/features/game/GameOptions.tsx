@@ -1,25 +1,14 @@
-import {
-  type GameOptionsMenu,
-  useGameOptionsMenu,
-} from '@cityborn/client/game';
-import { colors } from '@cityborn/design-system';
+import type { GameOptionsMenu } from '@cityborn/client/game';
+import { BodyText, Button, Popup } from '@cityborn/design-system';
 import { useNavigation } from 'expo-router';
 import {
   type NavigationProp,
   usePreventRemove,
 } from 'expo-router/react-navigation';
-import { Pressable } from 'react-native';
-import {
-  type EdgeInsets,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import Button from '@/components/ui/Button';
-import Dialog from '@/components/ui/Dialog';
-import { Icon } from '@/components/ui/Icon';
-import { View } from '@/components/ui/native/NativeComponents';
+import { View } from 'tamagui';
 
 type GameOptionsProps = {
-  handleLeaveGame: () => Promise<void>;
+  optionsMenu: GameOptionsMenu;
 };
 
 const BACK_ACTION_TYPES: string[] = ['GO_BACK', 'POP'];
@@ -37,86 +26,36 @@ function useBackInterception(onBack: () => void): void {
   });
 }
 
-export function GameOptions({ handleLeaveGame }: GameOptionsProps) {
-  const insets: EdgeInsets = useSafeAreaInsets();
-  const optionsMenu: GameOptionsMenu = useGameOptionsMenu({
-    leaveGame: handleLeaveGame,
-  });
+export function GameOptions({ optionsMenu }: GameOptionsProps) {
   useBackInterception(optionsMenu.open);
 
   return (
     <>
-      <View
-        style={{
-          position: 'absolute',
-          top: insets.top + 72,
-          left: 16,
-          zIndex: 30,
-        }}
+      <Popup
+        open={optionsMenu.step === 'options'}
+        onClose={optionsMenu.resume}
+        title="Options"
       >
-        <Pressable
-          accessibilityLabel="Options"
-          accessibilityRole="button"
-          onPress={optionsMenu.open}
-          className="h-11 w-11 items-center justify-center rounded-full bg-primary-500"
-        >
-          <Icon
-            name="settings_fill"
-            size={24}
-            color={colors.background.DEFAULT}
+        <View gap="4">
+          <Button compact label="Reprendre" onPress={optionsMenu.resume} />
+          <Button compact label="Quitter" onPress={optionsMenu.requestLeave} />
+        </View>
+      </Popup>
+      <Popup
+        open={optionsMenu.step === 'leaveConfirmation'}
+        onClose={optionsMenu.cancelLeave}
+        title="Quitter la partie ?"
+      >
+        <View gap="4">
+          <BodyText>Ta progression sera perdue.</BodyText>
+          <Button compact label="Quitter" onPress={optionsMenu.confirmLeave} />
+          <Button
+            variant="outline"
+            label="Annuler"
+            onPress={optionsMenu.cancelLeave}
           />
-        </Pressable>
-      </View>
-
-      <Dialog
-        visible={optionsMenu.step !== 'closed'}
-        onClose={
-          optionsMenu.step === 'options'
-            ? optionsMenu.resume
-            : optionsMenu.cancelLeave
-        }
-        title={optionsMenu.step === 'options' ? 'Options' : undefined}
-        message={
-          optionsMenu.step === 'leaveConfirmation'
-            ? 'Quitter la partie ? Ta progression sera perdue.'
-            : undefined
-        }
-        className="h-auto"
-      >
-        {optionsMenu.step === 'leaveConfirmation' ? (
-          <View className="w-full flex-row gap-3">
-            <Button
-              label="Annuler"
-              variant="outlined"
-              className="w-auto flex-1"
-              onPress={optionsMenu.cancelLeave}
-            />
-            <Button
-              label="Quitter"
-              color="destructive"
-              className="w-auto flex-1"
-              onPress={optionsMenu.confirmLeave}
-            />
-          </View>
-        ) : (
-          <View className="w-full gap-3">
-            <Button
-              size="medium"
-              label="Reprendre"
-              className="w-full"
-              onPress={optionsMenu.resume}
-            />
-            <Button
-              size="medium"
-              label="Quitter"
-              variant="outlined"
-              color="destructive"
-              className="w-full"
-              onPress={optionsMenu.requestLeave}
-            />
-          </View>
-        )}
-      </Dialog>
+        </View>
+      </Popup>
     </>
   );
 }

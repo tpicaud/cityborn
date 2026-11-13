@@ -7,7 +7,6 @@ import {
   buildGuess,
   buildRound,
   buildRoundGuessObject,
-  type Coord,
   defaultGuess,
   type Game,
   type Guess,
@@ -18,8 +17,9 @@ import {
   RoundStatus,
 } from '@cityborn/api';
 import {
-  canSubmitGuess,
   createRoundResult,
+  formatDistanceInKm,
+  formatRoundOutcome,
   type RoundResult,
 } from './roundResult';
 
@@ -28,7 +28,6 @@ const otherPlayerID: PlayerId = PlayerIdSchema.parse('other-player');
 const guessObjectID: GuessObjectId = GuessObjectIdSchema.parse('object-1');
 
 const missedGuess: Guess = buildGuess({ distance: 391.42, points: 676 });
-const preGuess: Coord = { lat: 45.76, lng: 4.83 };
 
 function buildGameInRound({
   status,
@@ -51,7 +50,7 @@ function buildGameInRound({
 }
 
 describe('createRoundResult', () => {
-  it('separates the local outcome from the other players points', () => {
+  it('reports the local outcome and points', () => {
     const game: Game = buildGameInRound({
       status: RoundStatus.SHOWING_RESULTS,
       playersGuesses: {
@@ -70,9 +69,6 @@ describe('createRoundResult', () => {
       distanceInKm: 391.42,
     });
     assert.equal(roundResult?.localPoints, 676);
-    assert.deepEqual(roundResult?.otherPlayersPoints, [
-      { playerID: otherPlayerID, points: 900 },
-    ]);
   });
 
   it('reports a guess sent when the timer ends as timed out', () => {
@@ -125,31 +121,45 @@ describe('createRoundResult', () => {
   });
 });
 
-describe('canSubmitGuess', () => {
-  it('accepts a pre-guess during a round the player has not guessed yet', () => {
-    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
+describe('formatDistanceInKm', () => {
+  it('rounds to the kilometre with French digit grouping', () => {
+    const formattedDistance: string = formatDistanceInKm(12345.6);
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
-
-    assert.equal(canSubmit, true);
+    assert.equal(formattedDistance, '12\u202f346');
   });
 
-  it('rejects a submission without a pre-guess', () => {
-    const game: Game = buildGameInRound({ status: RoundStatus.GUESSING });
+  it('shows at least one kilometre for a missed guess', () => {
+    const formattedDistance: string = formatDistanceInKm(0.3);
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, undefined);
-
-    assert.equal(canSubmit, false);
+    assert.equal(formattedDistance, '1');
   });
 
-  it('rejects a second guess in the same round', () => {
-    const game: Game = buildGameInRound({
-      status: RoundStatus.GUESSING,
-      playersGuesses: { [localPlayerID]: missedGuess },
+  it('shows zero kilometre for a found place', () => {
+    const formattedDistance: string = formatDistanceInKm(0);
+
+    assert.equal(formattedDistance, '0');
+  });
+});
+
+describe('formatRoundOutcome', () => {
+  it('gives the distance between the guess and the place', () => {
+    const formattedOutcome: string = formatRoundOutcome({
+      kind: 'missed',
+      distanceInKm: 575.4,
     });
 
-    const canSubmit: boolean = canSubmitGuess(game, localPlayerID, preGuess);
+    assert.equal(formattedOutcome, '575 km du lieu');
+  });
 
-    assert.equal(canSubmit, false);
+  it('congratulates a found place', () => {
+    const formattedOutcome: string = formatRoundOutcome({ kind: 'found' });
+
+    assert.equal(formattedOutcome, 'Bien joué ! Tu as deviné !');
+  });
+
+  it('reports a round ended without guess', () => {
+    const formattedOutcome: string = formatRoundOutcome({ kind: 'timedOut' });
+
+    assert.equal(formattedOutcome, "Tu n'as pas deviné à temps !");
   });
 });

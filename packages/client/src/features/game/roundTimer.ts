@@ -3,33 +3,51 @@
 import { roundCountdownInSeconds } from '@cityborn/core';
 import { useEffect, useRef, useState } from 'react';
 
-const roundTimerTickInMilliseconds = 10;
-const countdownTickInMilliseconds = 1000;
-const runningOutThresholdInSeconds = 5;
+const roundTimerTickInMilliseconds: number = 10;
+const countdownTickInMilliseconds: number = 1000;
+const warningThresholdInSeconds: number = 12;
+const criticalThresholdInSeconds: number = 6;
 
-export type RoundTimerOptions = {
+export type RoundTimeLeftOptions = {
   totalTimeInSeconds: number;
   onTimeUp: () => void;
 };
 
-export type RoundTimer = {
-  formattedTimeLeft: string;
-  progressPercentage: number;
-  isRunningOut: boolean;
-  isTimeUp: boolean;
+export type TimeLeftUrgency = 'calm' | 'warning' | 'critical';
+
+export type RoundTimeLeft = {
+  secondsLeft: number;
+  remainingShare: number;
+  urgency: TimeLeftUrgency;
 };
 
-export function formatTimeLeft(timeLeftInSeconds: number): string {
-  const wholeSecondsLeft: number = Math.ceil(timeLeftInSeconds);
-  const minutes: number = Math.floor(wholeSecondsLeft / 60);
-  const seconds: number = wholeSecondsLeft % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+export function createRoundTimeLeft({
+  timeLeftInSeconds,
+  totalTimeInSeconds,
+}: {
+  timeLeftInSeconds: number;
+  totalTimeInSeconds: number;
+}): RoundTimeLeft {
+  const secondsLeft: number = Math.ceil(timeLeftInSeconds);
+  const urgency: TimeLeftUrgency =
+    secondsLeft <= criticalThresholdInSeconds
+      ? 'critical'
+      : secondsLeft <= warningThresholdInSeconds
+        ? 'warning'
+        : 'calm';
+
+  return {
+    secondsLeft,
+    remainingShare:
+      totalTimeInSeconds > 0 ? timeLeftInSeconds / totalTimeInSeconds : 0,
+    urgency,
+  };
 }
 
-export function useRoundTimer({
+export function useRoundTimeLeft({
   totalTimeInSeconds,
   onTimeUp,
-}: RoundTimerOptions): RoundTimer {
+}: RoundTimeLeftOptions): RoundTimeLeft {
   const [timeLeftInSeconds, setTimeLeftInSeconds] =
     useState<number>(totalTimeInSeconds);
   const onTimeUpRef = useRef<() => void>(onTimeUp);
@@ -55,12 +73,7 @@ export function useRoundTimer({
     return () => clearInterval(intervalId);
   }, [totalTimeInSeconds]);
 
-  return {
-    formattedTimeLeft: formatTimeLeft(timeLeftInSeconds),
-    progressPercentage: (timeLeftInSeconds / totalTimeInSeconds) * 100,
-    isRunningOut: timeLeftInSeconds <= runningOutThresholdInSeconds,
-    isTimeUp: timeLeftInSeconds === 0,
-  };
+  return createRoundTimeLeft({ timeLeftInSeconds, totalTimeInSeconds });
 }
 
 export type CountdownOptions = {
