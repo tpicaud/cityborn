@@ -17,7 +17,7 @@ import {
   Screen,
   TextButton,
 } from '@cityborn/design-system';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'tamagui';
 import { frontendClientConfig } from '@/config/client';
 import { EmailVerificationNotice } from '@/features/auth/EmailVerificationNotice';
@@ -38,8 +38,20 @@ export function Profile({ user }: ProfileProps) {
     deleteAccount,
   }: AccountDeletion = useAccountDeletion();
 
+  useEffect(() => {
+    if (!isEditing) return undefined;
+    const closeEditor: () => void = () => setIsEditing(false);
+    window.addEventListener('popstate', closeEditor);
+    return () => window.removeEventListener('popstate', closeEditor);
+  }, [isEditing]);
+
+  const openEditor: () => void = () => {
+    window.history.pushState(window.history.state, '', window.location.href);
+    setIsEditing(true);
+  };
+
   if (isEditing) {
-    return <EditProfile user={user} onBack={() => setIsEditing(false)} />;
+    return <EditProfile user={user} onBack={() => window.history.back()} />;
   }
 
   return (
@@ -50,7 +62,7 @@ export function Profile({ user }: ProfileProps) {
           title={user.username}
           subtitle={user.email}
           actionLabel="Modifier le profil"
-          onAction={() => setIsEditing(true)}
+          onAction={openEditor}
         />
         <GameHistory />
         <View gap="1 md:2" mt="1 md:3">
