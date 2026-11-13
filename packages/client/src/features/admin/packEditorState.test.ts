@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import {
   type AdminTheme,
   buildAdminTheme,
@@ -14,6 +13,7 @@ import {
   QueryObserver,
   type QueryObserverResult,
 } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import type { PackApi } from '../../domains/pack/packApi';
 import { fullPackQueryOptions } from '../../domains/pack/packQueries';
 import type { ThemeApi } from '../../domains/theme/themeApi';
@@ -128,7 +128,7 @@ describe('toPackEditorState', () => {
       getFullPack: async () => null,
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     await loadPackEditorIgnoringFailure({ queryClient, packApi });
 
     const packEditorState: PackEditorState = readPackEditorState(
@@ -149,7 +149,7 @@ describe('toPackEditorState', () => {
       },
     };
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     await loadPackEditorIgnoringFailure({ queryClient, packApi, themeApi });
 
     const packEditorState: PackEditorState = readPackEditorState(
@@ -166,7 +166,7 @@ describe('toPackEditorState', () => {
       getFullPack: () => fullPackResponse(),
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     await loadPackEditorIgnoringFailure({ queryClient, packApi });
     fullPackResponse = async () => {
       throw networkError;
@@ -210,7 +210,7 @@ describe('toPackEditorState', () => {
         );
       },
     );
-    context.after(() => {
+    context.onTestFinished(() => {
       stopObservingFullPack();
       queryClient.clear();
     });

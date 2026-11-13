@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import {
   buildPack,
   buildTheme,
@@ -7,6 +6,7 @@ import {
   type Theme,
   type ThemeId,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import { selectThemePacks } from './themePacks';
 
 const sportThemeId: ThemeId = buildTheme({

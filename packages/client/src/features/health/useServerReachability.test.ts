@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import { buildUser } from '@cityborn/api';
 import { QueryClient } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import { setCurrentUser } from '../../domains/auth/authQueries';
 import type { HealthApi } from '../../domains/health/healthApi';
 import { recheckServerReachability } from './useServerReachability';
@@ -12,7 +12,7 @@ async function createSignedInQueryClient(
   const queryClient: QueryClient = new QueryClient({
     defaultOptions: { queries: { retryDelay: 0 } },
   });
-  context.after(() => queryClient.clear());
+  context.onTestFinished(() => queryClient.clear());
   await setCurrentUser({ queryClient, user: buildUser() });
   return queryClient;
 }

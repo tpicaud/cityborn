@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import {
   buildSession,
   type PlayerId,
@@ -7,6 +6,7 @@ import {
   type Session,
   SessionStatus,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import { isHostOf, withStatus } from './sessionState';
 
 const citizen: PlayerId = PlayerIdSchema.parse('citizen');

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import {
   buildGuessObject,
   buildGuessObjectDraft,
@@ -11,6 +10,7 @@ import {
   type GuessObjectSearchResult,
 } from '@cityborn/api';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import type { GuessObjectApi } from '../../domains/guess-object/guessObjectApi';
 import { guessObjectQueryOptions } from '../../domains/guess-object/guessObjectQueries';
 import type { SearchApi } from '../../domains/search/searchApi';
@@ -47,7 +47,7 @@ const searchApi: SearchApi = {
 describe('saveGuessObject', () => {
   it('marks guess objects and searches stale once the guess object is saved', async (context: TestContext) => {
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     const guessObjectQueryKey: QueryKey = guessObjectQueryOptions({
       guessObjectApi,
       guessObjectId: savedGuessObjectId,

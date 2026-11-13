@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import {
   ApiResponseError,
   buildUser,
   ErrorCode,
   type User,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import type { ContractClient } from '../../api/contractClient';
 import type { TokenStorage } from '../../platform/tokenStorage';
 import { type AuthApi, createAuthApi, createCookieAuthApi } from './authApi';

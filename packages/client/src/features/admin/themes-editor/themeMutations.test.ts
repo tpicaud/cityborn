@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import {
   type AdminTheme,
   ApiResponseError,
@@ -14,6 +13,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
 import { createFormControl } from 'react-hook-form';
+import { describe, it, type TestContext } from 'vitest';
 import type { ThemeApi } from '../../../domains/theme/themeApi';
 import { themesQueryOptions } from '../../../domains/theme/themeQueries';
 import {
@@ -96,7 +96,7 @@ function createManagementFixture({
     ...overrides,
   };
   const queryClient: QueryClient = new QueryClient();
-  context.after(() => queryClient.clear());
+  context.onTestFinished(() => queryClient.clear());
   const themeKey: QueryKey = themesQueryOptions(themeApi).queryKey;
   queryClient.setQueryData(themeKey, themes);
   queryClient.setQueryData(packListKey, []);
@@ -118,7 +118,7 @@ function createManagementFixture({
     defaultValues: { name: '' },
   });
   [creationForm, editForm].forEach((form: ThemeForm) => {
-    context.after(
+    context.onTestFinished(
       form.subscribe({
         formState: { values: true },
         callback: () => undefined,

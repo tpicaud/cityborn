@@ -42,7 +42,9 @@ pnpm dev:web    # frontend, back-office et backend
 
 `pnpm dev` lance toutes les applications, mobile compris ; `pnpm dev:<app>` n'en lance qu'une (`backend`, `frontend` ou `back-office`). `pnpm db:dev:stop` arrête PostgreSQL et Redis.
 
-`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. Pour toutes les suites, lancer `pnpm db:test:start` (PostgreSQL sur le port 5433, Redis sur le port 6380), puis `pnpm test:all` ; `pnpm db:test:stop` arrête les ressources de test. L'intégration et les e2e du backend partagent la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
+`pnpm test` lance les tests sans infrastructure ; `pnpm test:cov` y ajoute la couverture et `pnpm test:watch` les relance en continu. API et Core utilisent Node + tsx ; Client, Frontend et Back-office utilisent Vitest et React Testing Library ; Mobile utilise Jest + jest-expo et React Native Testing Library, sans émulateur. `pnpm exec turbo run test --filter=cityborn-mobile` cible une seule suite ; remplacer le filtre par `@cityborn/client`, `cityborn-frontend` ou `cityborn-back-office` pour les autres suites React.
+
+`pnpm test:all` ajoute l'intégration et les e2e backend. Lancer auparavant `pnpm db:test:start` prépare PostgreSQL sur le port 5433 et Redis sur le port 6380 ; `pnpm db:test:stop` les arrête. L'intégration et les e2e du backend partagent alors la même base : lancer deux exécutions l'une après l'autre. `TEST_DATABASE_URL` et `TEST_REDIS_URL` ciblent d'autres ressources.
 
 Pour la recette web isolée, lancer `pnpm recette:prepare`, puis `pnpm recette:web` (frontend, back-office et backend). Les apps sont accessibles sur 3100/3101 et le backend sur 4100. Après arrêt des serveurs, `pnpm db:recette:stop` arrête PostgreSQL et Redis de recette.
 

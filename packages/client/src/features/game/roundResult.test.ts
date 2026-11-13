@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import {
   buildFullGuessObject,
   buildGame,
@@ -17,6 +16,7 @@ import {
   PlayerIdSchema,
   RoundStatus,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import {
   canSubmitGuess,
   createRoundResult,

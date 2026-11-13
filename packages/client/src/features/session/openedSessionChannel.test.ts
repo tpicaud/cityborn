@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import {
   ApiResponseError,
   ErrorCode,
   resolveErrorMessage,
   sessionWsEvent,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import type { SessionChannel } from '../../domains/session/sessionApi';
 import { requireOpenedSessionChannel } from './openedSessionChannel';
 

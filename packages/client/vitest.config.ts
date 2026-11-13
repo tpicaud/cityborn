@@ -1,0 +1,43 @@
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { dedupe: ['react', 'react-dom'] },
+  test: {
+    globals: false,
+    deps: {
+      optimizer: {
+        client: {
+          enabled: true,
+          include: [
+            'react',
+            'react-dom',
+            'react-dom/client',
+            '@testing-library/react',
+          ],
+        },
+      },
+    },
+    coverage: { provider: 'v8', reporter: ['text', 'lcov'] },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'logic',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'react',
+          environment: 'jsdom',
+          include: ['src/**/*.test.tsx'],
+          setupFiles: ['./test/setup.ts'],
+        },
+      },
+    ],
+  },
+});

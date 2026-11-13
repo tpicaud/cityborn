@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import { buildTheme, type Theme } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import { findThemeName } from './themeName';
 
 describe('findThemeName', () => {

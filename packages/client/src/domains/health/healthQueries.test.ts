@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import { ApiResponseError, ErrorCode } from '@cityborn/api';
 import { QueryClient } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import type { HealthApi } from './healthApi';
 import { serverReachabilityQueryOptions } from './healthQueries';
 
@@ -13,7 +13,7 @@ function fetchServerReachability({
   healthApi: HealthApi;
 }): Promise<boolean> {
   const queryClient: QueryClient = new QueryClient();
-  context.after(() => queryClient.clear());
+  context.onTestFinished(() => queryClient.clear());
   return queryClient.query({
     ...serverReachabilityQueryOptions(healthApi),
     retry: false,

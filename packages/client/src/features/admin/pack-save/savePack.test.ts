@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import {
   buildAdminTheme,
   buildFullPack,
@@ -9,6 +8,7 @@ import {
   type Pack,
 } from '@cityborn/api';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import type { PackApi } from '../../../domains/pack/packApi';
 import {
   fullPackQueryOptions,
@@ -63,7 +63,7 @@ describe('savePack', () => {
       },
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     queryClient.setQueryData(packsQueryOptions(packApi).queryKey, [
       originalPack,
       keptPack,
@@ -117,7 +117,7 @@ describe('savePack', () => {
       updatePack: async () => savedPack,
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     queryClient.setQueryData(packsQueryOptions(packApi).queryKey, [
       originalPack,
     ]);
@@ -158,7 +158,7 @@ describe('savePack', () => {
       },
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     queryClient.setQueryData(packsQueryOptions(packApi).queryKey, [
       originalPack,
     ]);
@@ -198,7 +198,7 @@ describe('savePack', () => {
       updatePack: async () => savedPack,
     });
     const queryClient: QueryClient = new QueryClient();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
 
     await savePack({ packApi, queryClient, pack: savedPack });
 

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
 import type {
   ApiError,
   GameConfig,
@@ -15,6 +14,7 @@ import {
   SessionReconnectTokenSchema,
   sessionWsEvent,
 } from '@cityborn/api';
+import { describe, it } from 'vitest';
 import type { SocketConnection } from './socketConnection';
 import { createWsEmit, type WsEmit } from './wsEmit';
 

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { describe, it, type TestContext } from 'node:test';
 import {
   notifyManager,
   type QueryCacheNotifyEvent,
@@ -7,6 +6,7 @@ import {
   type QueryKey,
   QueryObserver,
 } from '@tanstack/react-query';
+import { describe, it, type TestContext } from 'vitest';
 import { createErrorReportingQueryCache } from './queryErrorReporting';
 
 notifyManager.setScheduler((notify: () => void) => notify());
@@ -66,7 +66,7 @@ describe('createErrorReportingQueryCache', () => {
   it('reports the final error of an observed query that reports its errors', async (context: TestContext) => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     const queryError: Error = new Error('pack trees unavailable');
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -75,7 +75,7 @@ describe('createErrorReportingQueryCache', () => {
       queryFn: () => Promise.reject(queryError),
       reportsError: true,
     });
-    context.after(stopObserving);
+    context.onTestFinished(stopObserving);
     await queryErrorReceived;
 
     assert.deepEqual(reportedErrors, [queryError]);
@@ -84,7 +84,7 @@ describe('createErrorReportingQueryCache', () => {
   it('ignores a query that does not report its errors', async (context: TestContext) => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
     const stopObserving: () => void = observeQuery({
@@ -92,7 +92,7 @@ describe('createErrorReportingQueryCache', () => {
       queryFn: () => Promise.reject(new Error('silent failure')),
       reportsError: false,
     });
-    context.after(stopObserving);
+    context.onTestFinished(stopObserving);
     await queryErrorReceived;
 
     assert.deepEqual(reportedErrors, []);
@@ -101,7 +101,7 @@ describe('createErrorReportingQueryCache', () => {
   it('ignores the error of a query whose last observer left during the fetch', async (context: TestContext) => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     let failPackTreesFetch: (error: Error) => void = () => undefined;
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -123,7 +123,7 @@ describe('createErrorReportingQueryCache', () => {
   it('ignores the refetch error of a query that already has data', async (context: TestContext) => {
     const { queryClient, reportedErrors }: QueryErrorReportingHarness =
       createQueryErrorReportingHarness();
-    context.after(() => queryClient.clear());
+    context.onTestFinished(() => queryClient.clear());
     queryClient.setQueryData<string>(observedQueryKey, 'cached pack trees');
     const queryErrorReceived: Promise<void> = waitForQueryError(queryClient);
 
@@ -132,7 +132,7 @@ describe('createErrorReportingQueryCache', () => {
       queryFn: () => Promise.reject(new Error('pack trees unavailable')),
       reportsError: true,
     });
-    context.after(stopObserving);
+    context.onTestFinished(stopObserving);
     await queryErrorReceived;
 
     assert.deepEqual(reportedErrors, []);

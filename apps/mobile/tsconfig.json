@@ -5,7 +5,8 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["node", "react"]
   },
   "include": [
     "**/*.ts",
@@ -13,5 +14,6 @@
     "nativewind-env.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+  ],
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.test.tsx", "test"]
 }
