@@ -25,7 +25,7 @@ type GoogleIdentityServices = {
 
 declare global {
   interface Window {
-    google?: GoogleIdentityServices;
+    google?: { accounts?: Partial<GoogleIdentityServices['accounts']> };
   }
 }
 
@@ -36,18 +36,19 @@ function initialize(): Promise<GoogleIdentityServices> {
   if (initialization) return initialization;
   initialization = new Promise<GoogleIdentityServices>((resolve, reject) => {
     const complete = (): void => {
-      if (!window.google) {
+      const google: Window['google'] = window.google;
+      if (!google?.accounts?.id) {
         reject(new Error('Google Identity Services unavailable'));
         return;
       }
-      window.google.accounts.id.initialize({
+      google.accounts.id.initialize({
         client_id: frontendClientConfig.googleOAuthWebClientId,
         callback: ({ credential }: GoogleCredentialResponse) =>
           activeHandler?.(credential),
       });
-      resolve(window.google);
+      resolve({ accounts: { id: google.accounts.id } });
     };
-    if (window.google) {
+    if (window.google?.accounts?.id) {
       complete();
       return;
     }
@@ -69,6 +70,9 @@ function initialize(): Promise<GoogleIdentityServices> {
       reject(new Error('Google Identity Services failed to load'));
     };
     document.head.appendChild(script);
+  }).catch((error: unknown) => {
+    initialization = undefined;
+    throw error;
   });
   return initialization;
 }
