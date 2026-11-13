@@ -6,6 +6,7 @@
     "dev": "pnpm check:env:development && dotenv -c development -- next dev",
     "build": "pnpm check:env:production && next build",
     "typecheck": "next typegen && tsc -noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test 'src/**/*.test.ts'",
     "check:env:development": "dotenv -c development -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "check:env:production": "dotenv -c production -- node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/config/client.ts",
     "format": "biome check --write .",

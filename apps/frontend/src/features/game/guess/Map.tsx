@@ -22,11 +22,13 @@ import {
   AdvancedMarkerAnchorPoint,
   APIProvider,
   Map as GoogleMap,
+  type MapProps as GoogleMapProps,
   type MapMouseEvent,
   useMap,
 } from '@vis.gl/react-google-maps';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
+import ResultMapViewport from './resultViewport/ResultMapViewport';
 
 type GameMapProps = {
   googleMapsApiKey: string;
@@ -54,17 +56,19 @@ const GameMap: React.FC<GameMapProps> = ({
     fullscreenControl: false,
     mapTypeControl: false,
     streetViewControl: false,
-    minZoom: 2,
-    defaultLogo: false,
-    restriction: {
-      latLngBounds: {
-        north: 85,
-        south: -85,
-        west: -180,
-        east: 180,
-      },
-    },
-  };
+    minZoom: currentRound.status === RoundStatus.SHOWING_RESULTS ? 0 : 2,
+    restriction:
+      currentRound.status === RoundStatus.SHOWING_RESULTS
+        ? null
+        : {
+            latLngBounds: {
+              north: 85,
+              south: -85,
+              west: -180,
+              east: 180,
+            },
+          },
+  } satisfies GoogleMapProps;
 
   const handleMapClick = (event: MapMouseEvent) => {
     if (!event.detail.latLng) return;
@@ -172,7 +176,7 @@ const LocalPlayerGuess: React.FC<{
         <>
           <AdvancedMarker position={guess.coordinates} />
           {currentRound.status === RoundStatus.SHOWING_RESULTS && (
-            <ZoomToBounds
+            <ResultMapViewport
               answer={guessObjectCenter(guessObject)}
               guess={guess.coordinates}
             />
@@ -187,38 +191,11 @@ const LocalPlayerGuess: React.FC<{
         </>
       ) : (
         currentRound.status === RoundStatus.SHOWING_RESULTS && (
-          <ZoomToBounds answer={guessObjectCenter(guessObject)} />
+          <ResultMapViewport answer={guessObjectCenter(guessObject)} />
         )
       )}
     </>
   );
-};
-
-const ZoomToBounds: React.FC<{ answer: Coord; guess?: Coord }> = ({
-  answer,
-  guess,
-}) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (map) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(new google.maps.LatLng(answer.lat, answer.lng));
-
-      if (guess) {
-        bounds.extend(new google.maps.LatLng(guess.lat, guess.lng));
-      }
-
-      const padding = { top: 100, right: 25, bottom: 25, left: 25 };
-
-      setTimeout(() => {
-        map.fitBounds(bounds, padding);
-        map.panToBounds(bounds, padding);
-      }, 100);
-    }
-  }, [guess, answer, map]);
-
-  return null;
 };
 
 const LineBetween: React.FC<{
