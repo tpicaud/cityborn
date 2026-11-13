@@ -1,40 +1,30 @@
-import { CITYBORN_CONTACT_EMAIL } from '@cityborn/core';
-import Link from 'next/link';
+'use client';
+
+import { Panel, Screen } from '@cityborn/design-system';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useRouter } from 'next/navigation';
+import { View } from 'tamagui';
+import ContactEmail from './ContactEmail';
+import { LegalParagraph } from './LegalText';
 import PrivacyPolicy from './PrivacyPolicy';
 import TermsOfUse from './TermsOfUse';
 
 export default function LegalInformation() {
+  const router: AppRouterInstance = useRouter();
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:py-12">
-      <div className="mx-auto max-w-4xl space-y-10 rounded-xl bg-white p-4 shadow-sm sm:p-8">
-        <header className="space-y-4">
-          <Link href="/" className="text-sm text-gray-600 underline">
-            Retour à Cityborn
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Politiques et conditions
-          </h1>
-          <nav aria-label="Documents légaux" className="flex flex-wrap gap-4">
-            <a href="#privacy-policy" className="text-gray-700 underline">
-              Politique de confidentialité
-            </a>
-            <a href="#terms-of-use" className="text-gray-700 underline">
-              Conditions générales d’utilisation
-            </a>
-          </nav>
-        </header>
-        <PrivacyPolicy />
-        <hr className="border-gray-200" />
-        <TermsOfUse />
-        <footer className="border-t border-gray-200 pt-6">
-          <a
-            href={`mailto:${CITYBORN_CONTACT_EMAIL}`}
-            className="text-gray-700 underline"
-          >
-            Nous contacter : {CITYBORN_CONTACT_EMAIL}
-          </a>
-        </footer>
-      </div>
-    </div>
+    <Screen onBack={() => router.push('/profile')} bottomSafeArea scrollable>
+      <View gap="3 md:5">
+        <Panel p="4 md:8">
+          <PrivacyPolicy />
+        </Panel>
+        <Panel p="4 md:8">
+          <TermsOfUse />
+        </Panel>
+        <LegalParagraph>
+          Nous contacter : <ContactEmail />
+        </LegalParagraph>
+      </View>
+    </Screen>
   );
 }
