@@ -97,13 +97,15 @@ describe('seedDatabase', () => {
       {
         name: 'Cinéma',
         isPublished: true,
-        image: 'https://placehold.co/600x400/png?text=Cinema',
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Bowl_of_Popcorn_%28Unsplash%29.jpg/960px-Bowl_of_Popcorn_%28Unsplash%29.jpg',
         personalities: ['Leonardo DiCaprio', 'Marion Cotillard'],
       },
       {
         name: 'Pop',
         isPublished: true,
-        image: 'https://placehold.co/400x400/png?text=Pop',
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Smoke_and_light_beams_%28Unsplash%29.jpg/960px-Smoke_and_light_beams_%28Unsplash%29.jpg',
         personalities: ['Adele', 'Lady Gaga'],
       },
     ]);

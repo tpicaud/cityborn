@@ -107,7 +107,8 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000001',
     name: 'Cinéma',
     description: 'Des stars du grand écran.',
-    image: 'https://placehold.co/600x400/png?text=Cinema',
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Bowl_of_Popcorn_%28Unsplash%29.jpg/960px-Bowl_of_Popcorn_%28Unsplash%29.jpg',
     theme: ENTERTAINMENT,
     personalities: [
       {
@@ -130,7 +131,8 @@ const SEED_PACKS: SeedPack[] = [
     id: '5eed0000-0000-4000-8000-000000000002',
     name: 'Pop',
     description: 'Des icônes de la musique pop.',
-    image: 'https://placehold.co/400x400/png?text=Pop',
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Smoke_and_light_beams_%28Unsplash%29.jpg/960px-Smoke_and_light_beams_%28Unsplash%29.jpg',
     theme: MUSIC,
     personalities: [
       {
