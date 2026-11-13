@@ -40,6 +40,7 @@ const PlateBackdrop = styled(View, {
   t: '0',
   b: '0',
   rounded: '6 md:9',
+  skewX: plateSlant,
   variants: {
     tone: {
       title: {
@@ -162,7 +163,7 @@ type BannerPlateProps = {
 function BannerPlate({ tone, children }: BannerPlateProps) {
   return (
     <Plate tone={tone}>
-      <PlateBackdrop tone={tone} skewX={plateSlant}>
+      <PlateBackdrop tone={tone}>
         <PlateInset tone={tone} />
       </PlateBackdrop>
       <PlateContent>{children}</PlateContent>
