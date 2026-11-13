@@ -1,9 +1,12 @@
 import { styled, Text, View } from 'tamagui';
 import { verticalGradient } from '../palette';
 
+type CountdownUrgency = 'calm' | 'warning' | 'critical';
+
 type CountdownGaugeProps = {
   secondsLeft: number;
   remainingShare: number;
+  urgency: CountdownUrgency;
 };
 
 type Percentage = `${number}%`;
@@ -71,23 +74,28 @@ const Disk = styled(View, {
   w: '200%',
   h: '100%',
   rounded: 'full',
-  bg: 'cta-orange',
   variants: {
     side: {
       left: { l: '0' },
       right: { l: '-100%' },
+    },
+    urgency: {
+      calm: { bg: 'white' },
+      warning: { bg: 'cta-orange' },
+      critical: { bg: 'common-red' },
     },
   } as const,
 });
 
 type HalfDiskProps = {
   side: 'left' | 'right';
+  urgency: CountdownUrgency;
 };
 
-function HalfDisk({ side }: HalfDiskProps) {
+function HalfDisk({ side, urgency }: HalfDiskProps) {
   return (
     <HalfDiskMask side={side}>
-      <Disk side={side} />
+      <Disk side={side} urgency={urgency} />
     </HalfDiskMask>
   );
 }
@@ -97,7 +105,13 @@ const ArcCap = styled(View, {
   w: percentage(ringThicknessShare),
   h: percentage(ringThicknessShare),
   rounded: 'full',
-  bg: 'cta-orange',
+  variants: {
+    urgency: {
+      calm: { bg: 'white' },
+      warning: { bg: 'cta-orange' },
+      critical: { bg: 'common-red' },
+    },
+  } as const,
 });
 
 const Hub = styled(View, {
@@ -139,6 +153,7 @@ function capPosition(angleInDegrees: number): { t: Percentage; l: Percentage } {
 export function CountdownGauge({
   secondsLeft,
   remainingShare,
+  urgency,
 }: CountdownGaugeProps) {
   const arcAngle: number = Math.min(Math.max(remainingShare, 0), 1) * 360;
   const rightAngle: number = Math.min(arcAngle, 180);
@@ -151,16 +166,16 @@ export function CountdownGauge({
           <>
             <HalfClip l="50%">
               <Rotator l="-100%" rotate={`${rightAngle}deg`}>
-                <HalfDisk side="left" />
+                <HalfDisk side="left" urgency={urgency} />
               </Rotator>
             </HalfClip>
             <HalfClip l="0">
               <Rotator l="0" rotate={`${leftAngle}deg`}>
-                <HalfDisk side="right" />
+                <HalfDisk side="right" urgency={urgency} />
               </Rotator>
             </HalfClip>
-            <ArcCap {...capPosition(0)} />
-            <ArcCap {...capPosition(arcAngle)} />
+            <ArcCap urgency={urgency} {...capPosition(0)} />
+            <ArcCap urgency={urgency} {...capPosition(arcAngle)} />
           </>
         )}
         <Hub>
