@@ -41,9 +41,6 @@ const Hud = styled(Layer, {
 
 const HudColumn = styled(View, {
   flex: 1,
-  self: 'center',
-  w: '100%',
-  maxW: tabletMockupWidth,
   justify: 'space-between',
   pointerEvents: 'box-none',
 });
@@ -66,6 +63,9 @@ const TopEnd = styled(View, {
 });
 
 const BottomBar = styled(View, {
+  self: 'center',
+  w: '100%',
+  maxW: tabletMockupWidth,
   gap: '3 md:10',
   pb: '2 md:4',
   pointerEvents: 'box-none',
