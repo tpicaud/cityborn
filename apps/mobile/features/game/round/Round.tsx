@@ -42,10 +42,9 @@ export function Round({ onOpenOptions, ...gameRoundOptions }: RoundProps) {
     <MapHudScreen
       map={<RoundMap mapProps={gameRound.mapProps} />}
       gauge={
-        gameRound.showOverlay ? (
+        gameRound.showTimer ? (
           <RoundTimer
             totalTimeInSeconds={game.config.timer}
-            isRunning={gameRound.isTimerRunning}
             onTimeUp={gameRound.handleIsTimeUp}
           />
         ) : undefined
