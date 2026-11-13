@@ -40,7 +40,7 @@ const PlateBackdrop = styled(View, {
   t: '0',
   b: '0',
   rounded: '6 md:9',
-  skewX: plateSlant,
+  transform: `skewX(${plateSlant})`,
   variants: {
     tone: {
       title: {
