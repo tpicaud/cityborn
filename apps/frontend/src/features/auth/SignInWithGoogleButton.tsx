@@ -48,6 +48,8 @@ export function SignInWithGoogleButton() {
   const googleButtonContainer: RefObject<HTMLDivElement | null> =
     useRef<HTMLDivElement>(null);
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
+  const [isGoogleButtonReady, setIsGoogleButtonReady] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const container: HTMLDivElement | null = googleButtonContainer.current;
@@ -71,11 +73,27 @@ export function SignInWithGoogleButton() {
       shape: 'pill',
       locale: 'fr',
     });
+
+    const googleButtonObserver: MutationObserver = new MutationObserver(() => {
+      if (container.querySelector('[role="button"]')) return;
+      setIsGoogleButtonReady(true);
+      googleButtonObserver.disconnect();
+    });
+    googleButtonObserver.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    return () => googleButtonObserver.disconnect();
   }, [signInWithGoogle]);
 
   return (
     <View items="center" justify="center" minH="11" aria-busy={isSigningIn}>
-      <div ref={googleButtonContainer} />
+      <div
+        ref={googleButtonContainer}
+        style={{ opacity: isGoogleButtonReady ? 1 : 0 }}
+      />
       {isSigningIn && (
         <View
           position="absolute"
