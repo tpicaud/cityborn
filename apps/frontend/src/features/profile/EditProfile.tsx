@@ -15,16 +15,13 @@ import {
 } from '@cityborn/design-system';
 import { Controller } from 'react-hook-form';
 import { View } from 'tamagui';
+import { KeyboardSubmit } from '@/components/KeyboardSubmit';
 import { useNavigation } from '@/lib/navigation';
 
 type EditProfileProps = {
   user: User;
   onBack: () => void;
 };
-
-function HiddenSubmit() {
-  return <button type="submit" hidden aria-hidden="true" tabIndex={-1} />;
-}
 
 export function EditProfile({ user, onBack }: EditProfileProps) {
   const navigation: Navigation = useNavigation();
@@ -77,7 +74,7 @@ export function EditProfile({ user, onBack }: EditProfileProps) {
                 loading={usernameForm.formState.isSubmitting}
               />
             </FormFields>
-            <HiddenSubmit />
+            <KeyboardSubmit />
           </form>
         </Panel>
         {!user.isVerified && (
@@ -115,7 +112,7 @@ export function EditProfile({ user, onBack }: EditProfileProps) {
                   loading={emailForm.formState.isSubmitting}
                 />
               </FormFields>
-              <HiddenSubmit />
+              <KeyboardSubmit />
             </form>
           </Panel>
         )}
@@ -192,7 +189,7 @@ export function EditProfile({ user, onBack }: EditProfileProps) {
                   loading={passwordForm.formState.isSubmitting}
                 />
               </FormFields>
-              <HiddenSubmit />
+              <KeyboardSubmit />
             </form>
           </Panel>
         )}
